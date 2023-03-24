@@ -64,7 +64,7 @@ Install:
 
 You can create dedicated user account or use your admin account. This account will be used by terraform to access Power Platform as Global Administrator:
 
-```json
+```powershell
 terraform {
   required_providers {
     powerplatform = {
@@ -85,7 +85,7 @@ provider "powerplatform" {
 
 Terraform will need a service principal to access Azure. List of required permissions can be found [here](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/service_principal_client_secret)
 
-```json
+```powershell
 terraform {
   required_providers {
     azuread = {
