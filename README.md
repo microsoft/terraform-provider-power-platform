@@ -120,11 +120,12 @@ provider "azurerm" {
 
 **Note**
 Request Azure Container Registry credentials from provider's owner
+This will be windows based containery
 
 Download the docker image:
 
 ```powershell
-docker login myregistry.azurecr.io -u user -p your_password
+docker login myregistry.azurecr.io -u=your_username -p=your_password
 docker pull myregisry.azurecr.io/terraform_api:latest
 ```
 
