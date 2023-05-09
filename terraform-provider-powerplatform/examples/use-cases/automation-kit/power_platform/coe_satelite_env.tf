@@ -3,10 +3,10 @@ output "coe_automation_satelite_solution_settings_empty_connection_reference_len
 }
 
 resource "powerplatform_environment" "satelite_environment" {
-  display_name = "AutimationKitEnvironmentSatelite"
-  location = "europe"
-  language_name = "1033"
-  currency_name = "USD"
+  display_name     = "AutimationKitEnvironmentSatelite"
+  location         = "europe"
+  language_name    = "1033"
+  currency_name    = "USD"
   environment_type = "Sandbox"
 
   is_custom_controls_in_canvas_apps_enabled = true
@@ -18,9 +18,9 @@ resource "powerplatform_environment" "satelite_environment" {
 
 
 resource "powerplatform_solution" "creator_kit_solution_satelite" {
-  solution_file = var.creator_kit_solution_zip_path
-  settings_file = ""
-  solution_name = "CreatorKitCore"
+  solution_file    = var.creator_kit_solution_zip_path
+  settings_file    = ""
+  solution_name    = "CreatorKitCore"
   environment_name = powerplatform_environment.satelite_environment.environment_name
 
   depends_on = [
@@ -32,9 +32,9 @@ resource "powerplatform_solution" "automation_kit_satelite_solution" {
 
   count = local.empty_connection_reference_satelite_local == 0 ? 1 : 0
 
-  solution_file = var.automation_coe_satellite_solution_zip_path
-  settings_file = "${path.module}${var.setting_file_path}"
-  solution_name = "AutomationCoESatellite"
+  solution_file    = var.automation_coe_satellite_solution_zip_path
+  settings_file    = "${path.module}${var.setting_file_path}"
+  solution_name    = "AutomationCoESatellite"
   environment_name = powerplatform_environment.satelite_environment.environment_name
 
   depends_on = [
@@ -48,8 +48,8 @@ resource "powerplatform_package" "satelite_environment_deployment_package" {
   count = local.empty_connection_reference_satelite_local == 0 ? 1 : 0
 
   environment_name = powerplatform_environment.satelite_environment.environment_name
-  package_name = "Microsoft_AutomationKIT_Satellite_Package"
-  package_file = "${path.module}/data/Microsoft_AutomationKIT_Satellite_Package.zip"
+  package_name     = "Microsoft_AutomationKIT_Satellite_Package"
+  package_file     = "${path.module}/data/Microsoft_AutomationKIT_Satellite_Package.zip"
   package_settings = "installsatellitesolution=False|importconfigdata=True|activateallflows=False"
 
   depends_on = [
@@ -62,10 +62,10 @@ resource "powerplatform_package" "satelite_environment_deployment_package" {
 resource "powerplatform_user" "power_platform_automation_kit_app_user" {
   environment_name = powerplatform_environment.satelite_environment.environment_name
   //aad_id = var.automation_kit_application_id
-  is_app_user = true
+  is_app_user    = true
   application_id = var.automation_kit_application_id
-  first_name = "#" #dataverse will force # as the app user name
-  last_name = "CoE_Automation_Kit_App_User"
+  first_name     = "#" #dataverse will force # as the app user name
+  last_name      = "CoE_Automation_Kit_App_User"
   security_roles = ["System Administrator"]
 
   depends_on = [
@@ -75,7 +75,7 @@ resource "powerplatform_user" "power_platform_automation_kit_app_user" {
 
 #find app id that was deployed to main env
 data "powerplatform_powerapps" "environment_app_filter" {
-  environment_name =  powerplatform_environment.main_environment.environment_name
+  environment_name = powerplatform_environment.main_environment.environment_name
 
   depends_on = [
     powerplatform_solution.automation_kit_main_solution,
@@ -86,18 +86,18 @@ data "powerplatform_powerapps" "environment_app_filter" {
 locals {
   only_specific_name = toset(
     [
-      for each in data.powerplatform_powerapps.environment_app_filter.apps : 
-          each if each.display_name == "Automation Project"
-    ])
+      for each in data.powerplatform_powerapps.environment_app_filter.apps :
+      each if each.display_name == "Automation Project"
+  ])
 }
 #####################
 
 
 
 locals {
-   all_connection_reference_satelite_local = "${var.satelite_conn_ref_shared_office365}${var.satelite_conn_ref_shared_powerplatformforadmins}${var.satelite_conn_ref_shared_commondataserviceforapps}${var.satelite_conn_ref_shared_commondataservice}${var.satelite_conn_ref_shared_flowmanagement}${var.satelite_conn_ref_shared_office365users}"
-   empty_connection_reference_satelite_local = "${length(local.all_connection_reference_satelite_local) - 
-   length(replace(local.all_connection_reference_satelite_local, "replace_with_your_connection_reference", ""))}"
+  all_connection_reference_satelite_local = "${var.satelite_conn_ref_shared_office365}${var.satelite_conn_ref_shared_powerplatformforadmins}${var.satelite_conn_ref_shared_commondataserviceforapps}${var.satelite_conn_ref_shared_commondataservice}${var.satelite_conn_ref_shared_flowmanagement}${var.satelite_conn_ref_shared_office365users}"
+  empty_connection_reference_satelite_local = (length(local.all_connection_reference_satelite_local) -
+  length(replace(local.all_connection_reference_satelite_local, "replace_with_your_connection_reference", "")))
 }
 
 variable "setting_file_path" {
@@ -106,7 +106,7 @@ variable "setting_file_path" {
 
 resource "local_file" "coe_automation_satelite_solution_settings" {
   filename = "${path.module}${var.setting_file_path}"
-  content = <<EOF
+  content  = <<EOF
 {
   "EnvironmentVariables": [
     {

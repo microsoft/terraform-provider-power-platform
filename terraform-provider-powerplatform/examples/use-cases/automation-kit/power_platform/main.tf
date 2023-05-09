@@ -5,7 +5,7 @@ terraform {
       source  = "microsoft/powerplatform"
     }
     local = {
-      source  = "hashicorp/local"
+      source = "hashicorp/local"
     }
   }
 }

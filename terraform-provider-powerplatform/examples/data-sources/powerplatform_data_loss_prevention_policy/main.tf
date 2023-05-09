@@ -13,4 +13,4 @@ provider "powerplatform" {
   host     = var.host
 }
 
-data "powerplatform_environments" "all_environments" {}
+data "powerplatform_data_loss_prevention_policies" "all" {}

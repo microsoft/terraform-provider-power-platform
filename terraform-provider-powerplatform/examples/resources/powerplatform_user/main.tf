@@ -11,24 +11,23 @@ terraform {
   }
 }
 
-
 provider "powerplatform" {
-  username = "${var.username}"
-  password = "${var.password}"
-  host = "http://localhost:8080"
+  username = var.username
+  password = var.password
+  host     = "http://localhost:8080"
 }
-
 
 provider "azuread" {
-  tenant_id     = "${var.aad_tenant_id}"
-  client_id     = "${var.aad_client_id}"
-  client_secret = "${var.aad_client_secret}"
+  tenant_id     = var.aad_tenant_id
+  client_id     = var.aad_client_id
+  client_secret = var.aad_client_secret
 }
-
 
 data "azuread_domains" "aad_domains" {
   only_initial = true
 }
+
+data "azuread_application_published_app_ids" "well_known" {}
 
 #Add user to AAD
 resource "azuread_user" "user" {
@@ -37,29 +36,25 @@ resource "azuread_user" "user" {
   mail_nickname       = "test1"
   given_name          = "Tester"
   surname             = "Testowski"
-  password            = "${var.new_user_password}"
+  password            = var.new_user_password
   usage_location      = "CH"
 }
 
 #AAD Group with licences assigned
 resource "azuread_group_member" "power_platform_licenses_group" {
-  group_object_id  = "11111111-2222-3333-4444-555555555555" #Power Platform Licences Group Id
+  group_object_id  = var.aad_licensing_security_group
   member_object_id = azuread_user.user.id
 }
-
-
-#Add service principal to AAD
-data "azuread_application_published_app_ids" "well_known" {}
 
 resource "azuread_application" "app_user" {
   display_name = "PowerApps-AppService-Test-Terraform"
 
   required_resource_access {
-      resource_app_id = data.azuread_application_published_app_ids.well_known.result.DynamicsCrm
-      resource_access {
-          id = "78ce3f0f-a1ce-49c2-8cde-64b5c0896db4" #"user_impersonation"
-          type = "Scope"
-      }
+    resource_app_id = data.azuread_application_published_app_ids.well_known.result.DynamicsCrm
+    resource_access {
+      id   = "78ce3f0f-a1ce-49c2-8cde-64b5c0896db4" #"user_impersonation"
+      type = "Scope"
+    }
   }
 
   web {
@@ -72,32 +67,29 @@ resource "azuread_service_principal" "app_user_principal" {
   application_id = azuread_application.app_user.application_id
 }
 
-#Add new environment
 resource "powerplatform_environment" "environment" {
-  display_name = "user-test-environment"
-  location = "europe"
-  language_name = "1033"
-  currency_name = "USD"
+  display_name     = "User Test Environment"
+  location         = "europe"
+  language_name    = "1033"
+  currency_name    = "USD"
   environment_type = "Sandbox"
 }
 
-#assign user to the env
 resource "powerplatform_user" "user" {
-  environment_name = powerplatform_environment.environment.environment_name
-  is_app_user = false
-  aad_id = azuread_user.user.id
+  environment_name    = powerplatform_environment.environment.environment_name
+  is_app_user         = false
+  aad_id              = azuread_user.user.id
   user_principal_name = azuread_user.user.user_principal_name
-  first_name = azuread_user.user.given_name
-  last_name = azuread_user.user.surname
-  security_roles = ["Basic User", "Environment Maker"]
+  first_name          = azuread_user.user.given_name
+  last_name           = azuread_user.user.surname
+  security_roles      = ["Basic User", "Environment Maker"]
 }
 
-#assign app user to the env
 resource "powerplatform_user" "app_user" {
   environment_name = powerplatform_environment.environment.environment_name
-  is_app_user = true
-  application_id = azuread_application.app_user.application_id
-  first_name = "Terraform Test"
-  last_name = "App User"
-  security_roles = ["System Administrator", "Basic User"]
+  is_app_user      = true
+  application_id   = azuread_application.app_user.application_id
+  first_name       = "Terraform Test"
+  last_name        = "App User"
+  security_roles   = ["System Administrator", "Basic User"]
 }

@@ -25,11 +25,11 @@ resource "azuread_application" "automation_kit_app_user" {
   display_name = "CoE_Automation_Kit_App_User"
 
   required_resource_access {
-      resource_app_id = data.azuread_application_published_app_ids.well_known.result.DynamicsCrm
-      resource_access {
-          id = "78ce3f0f-a1ce-49c2-8cde-64b5c0896db4" #"user_impersonation"
-          type = "Scope"
-      }
+    resource_app_id = data.azuread_application_published_app_ids.well_known.result.DynamicsCrm
+    resource_access {
+      id   = "78ce3f0f-a1ce-49c2-8cde-64b5c0896db4" #"user_impersonation"
+      type = "Scope"
+    }
   }
 
   web {
@@ -42,15 +42,14 @@ resource "azuread_service_principal" "app_user_principal" {
   application_id = azuread_application.automation_kit_app_user.application_id
 }
 
-
 #Create resource group for all resources
 resource "azurerm_resource_group" "resource_group" {
-  name     = "${var.resource_group_name}"
-  location = "${var.resource_group_location}"
+  name     = var.resource_group_name
+  location = var.resource_group_location
 }
 
 resource "azurerm_key_vault" "kv_dev" {
-  name                = "${var.key_vault_name}"
+  name                = var.key_vault_name
   location            = azurerm_resource_group.resource_group.location
   resource_group_name = azurerm_resource_group.resource_group.name
   tenant_id           = var.tenant_id
@@ -86,7 +85,7 @@ resource "azurerm_key_vault_access_policy" "kv_access_policy_for_terraform" {
 
 resource "azurerm_key_vault_secret" "client_id" {
   name         = "KVS-AutomationCoE-ClientID"
-  value        = "${azuread_application.automation_kit_app_user.application_id}"
+  value        = azuread_application.automation_kit_app_user.application_id
   key_vault_id = azurerm_key_vault.kv_dev.id
 
   depends_on = [azurerm_key_vault_access_policy.kv_access_policy_for_terraform]
@@ -94,7 +93,7 @@ resource "azurerm_key_vault_secret" "client_id" {
 
 resource "azurerm_key_vault_secret" "tenant_id" {
   name         = "KVS-AutomationCoE-TenantID"
-  value        = "${var.tenant_id}"
+  value        = var.tenant_id
   key_vault_id = azurerm_key_vault.kv_dev.id
 
   depends_on = [azurerm_key_vault_access_policy.kv_access_policy_for_terraform]

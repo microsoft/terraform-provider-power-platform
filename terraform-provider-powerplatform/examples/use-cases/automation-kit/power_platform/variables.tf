@@ -46,7 +46,7 @@ variable "satelite_conn_ref_shared_office365users" {
 variable "satelite_conn_ref_shared_powerplatformforadmins" {
 }
 
-variable "satelite_conn_ref_shared_office365"{
+variable "satelite_conn_ref_shared_office365" {
 }
 variable "env_variable_autocoe_default_frequency_values" {
 }

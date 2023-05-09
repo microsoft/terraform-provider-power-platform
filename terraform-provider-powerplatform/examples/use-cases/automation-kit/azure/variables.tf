@@ -1,7 +1,7 @@
 variable "tenant_id" {
 }
 
-variable "domain_name" { 
+variable "domain_name" {
 }
 
 variable "terraform_service_principal_object_id" {
