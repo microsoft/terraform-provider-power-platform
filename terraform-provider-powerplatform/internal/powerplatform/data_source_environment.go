@@ -15,6 +15,7 @@ func dataSourceEnvironments() *schema.Resource {
 	return &schema.Resource{
 		ReadContext: dataSourceEnvironmentRead,
 		Schema: map[string]*schema.Schema{
+			// magodo: No need for this "environment" layer, just keep the schema as same as the managed resource counterpart
 			"environments": &schema.Schema{
 				Type:     schema.TypeList,
 				Computed: true,
@@ -51,12 +52,12 @@ func dataSourceEnvironments() *schema.Resource {
 						"language_name": &schema.Schema{
 							Type:     schema.TypeInt,
 							Required: true,
-							ForceNew: true,
+							//ForceNew: true, // magodo: data source attribute don't require ForceNew
 						},
 						"currency_name": &schema.Schema{
 							Type:     schema.TypeString,
 							Required: true,
-							ForceNew: true,
+							//ForceNew: true, // magodo: data source attribute don't require ForceNew
 						},
 					},
 				},
@@ -94,6 +95,7 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, m in
 		return diag.FromErr(err)
 	}
 
+	// magodo: you can use the environment name as its ID, just as how the managed resource counterpart does
 	d.SetId(strconv.FormatInt(time.Now().Unix(), 10))
 
 	return diags

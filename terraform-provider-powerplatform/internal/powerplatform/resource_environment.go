@@ -26,7 +26,7 @@ func resourceEnvironment() *schema.Resource {
 			"environment_name": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
-				ForceNew: true,
+				//ForceNew: true, // compute only attribute can't be forcenew
 			},
 			"display_name": &schema.Schema{
 				Type:     schema.TypeString,
@@ -35,7 +35,7 @@ func resourceEnvironment() *schema.Resource {
 			"url": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
-				ForceNew: true,
+				//ForceNew: true, // compute only attribute can't be forcenew
 			},
 			"domain": &schema.Schema{
 				Type:     schema.TypeString,
@@ -54,12 +54,12 @@ func resourceEnvironment() *schema.Resource {
 			"common_data_service_database_type": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
-				ForceNew: true,
+				//ForceNew: true,// compute only attribute can't be forcenew
 			},
 			"organization_id": &schema.Schema{
 				Type:     schema.TypeString,
 				Computed: true,
-				ForceNew: true,
+				//ForceNew: true,// compute only attribute can't be forcenew
 			},
 			"security_group_id": &schema.Schema{
 				Type:     schema.TypeString,
@@ -91,6 +91,9 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, m in
 
 	var diags diag.Diagnostics
 
+	// magodo: Before creating the resource, you'd better ensure the resource is not already existing.
+	// E.g. https://github.com/hashicorp/terraform-provider-azurerm/blob/94bbd836a9c931dfc6cd3285f51e8beb9e305058/internal/services/resource/resource_group_resource.go#L59
+
 	envToCreate := powerplatform.EnvironmentCreate{
 		DisplayName:                         d.Get("display_name").(string),
 		Location:                            d.Get("location").(string),
@@ -100,12 +103,13 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, m in
 		IsCustomControlsInCanvasAppsEnabled: d.Get("is_custom_controls_in_canvas_apps_enabled").(bool),
 	}
 
-	env, err := client.CreateEnvironment(envToCreate)
+	env, err := client.CreateEnvironment(ctx, envToCreate)
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	d.SetId(env.EnvironmentName)
+
 	d.Set("environment_name", env.EnvironmentName)
 	d.Set("display_name", env.DisplayName)
 	d.Set("url", env.Url)
@@ -118,9 +122,10 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, m in
 	d.Set("environment_type", env.EnvironmentType)
 	d.Set("language_name", env.LanguageName)
 	d.Set("currency_name", env.CurrencyName)
-	d.Set("IsCustomControlsInCanvasAppsEnabled", env.IsCustomControlsInCanvasAppsEnabled)
+	d.Set("is_custom_controls_in_canvas_apps_enabled", env.IsCustomControlsInCanvasAppsEnabled)
 
 	return diags
+	// You can probably remove the d.Set above and "return resourceEnvironmentRead()"
 }
 
 func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
@@ -128,10 +133,13 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, m inte
 
 	var diags diag.Diagnostics
 
-	env, err := client.GetEnvironment(d.Id())
+	env, err := client.GetEnvironment(ctx, d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
+
+	// magodo: In case of 404 (not exist any more), you shall set the ID to empty
+	// E.g. https://github.com/hashicorp/terraform-provider-azurerm/blob/94bbd836a9c931dfc6cd3285f51e8beb9e305058/internal/services/resource/resource_group_resource.go#L106
 
 	d.Set("environment_name", env.EnvironmentName)
 	d.Set("display_name", env.DisplayName)
@@ -145,8 +153,10 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, m inte
 	d.Set("environment_type", env.EnvironmentType)
 	d.Set("language_name", env.LanguageName)
 	d.Set("currency_name", env.CurrencyName)
-	d.Set("IsCustomControlsInCanvasAppsEnabled", env.IsCustomControlsInCanvasAppsEnabled)
-	d.SetId(env.EnvironmentName)
+	d.Set("is_custom_controls_in_canvas_apps_enabled", env.IsCustomControlsInCanvasAppsEnabled)
+
+	// magodo: ID should be only set by Create
+	//d.SetId(env.EnvironmentName)
 
 	return diags
 }
@@ -154,6 +164,9 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, m inte
 // todo support security_group_id updates
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	//todo validate security_group_id updates
+
+	// magodo: You don't necessarily need to check each property's change, unless you want to PATCH each of them.
+	// Otherwise, you can just do a whole PUT to update them at once.
 	if d.HasChange("display_name") {
 		client := m.(*powerplatform.Client)
 
@@ -169,7 +182,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, m in
 			IsCustomControlsInCanvasAppsEnabled: d.Get("is_custom_controls_in_canvas_apps_enabled").(bool),
 		}
 
-		err := client.UpdateEnvironment(d.Id(), envToUpdate)
+		err := client.UpdateEnvironment(ctx, d.Id(), envToUpdate)
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -182,7 +195,7 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, m in
 
 	var diags diag.Diagnostics
 
-	err := client.DeleteEnvironment(d.Id())
+	err := client.DeleteEnvironment(ctx, d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
