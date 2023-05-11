@@ -53,24 +53,14 @@ func providerConfigure(ctx context.Context, d *schema.ResourceData) (interface{}
 	username := d.Get("username").(string)
 	password := d.Get("password").(string)
 
-	var host *string
-	hVal, ok := d.GetOk("host")
-	if ok {
-		tempHost := hVal.(string)
-		host = &tempHost
+	host := d.Get("host").(string)
+	if host == "" {
+		return nil, diag.Errorf(`"host" is not specified`)
 	}
 
-	if (username != "") && (password != "") {
-		c, error := powerplatform.NewClient(host, &username, &password)
-		if error != nil {
-			return nil, diag.FromErr(error)
-		}
-		return c, diags
-	}
-
-	c, error := powerplatform.NewClient(host, nil, nil)
-	if error != nil {
-		return nil, diag.FromErr(error)
+	c, err := powerplatform.NewClient(host, username, password)
+	if err != nil {
+		return nil, diag.FromErr(err)
 	}
 	return c, diags
 
