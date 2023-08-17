@@ -4,146 +4,61 @@ The Power Platform Terraform Provider allows managing resources within Power Pla
 
 **⚠️ WARNING:** This code is experimental and provided solely for evaluation purposes. It is **NOT** intended for production use and may contain bugs, incomplete features, or other issues. Use at your own risk, as it may undergo significant changes without notice, and no guarantees or support are provided. By using this code, you acknowledge and agree to these conditions. Consult the documentation or contact the maintainer if you have questions or concerns.
 
-This Power Platform provider is not yet published to the Terraform registry, but you can directly reference it from GitHub or build it locally and use it in your Terraform configuration.
-
-See the [example](./examples) directory for an example of how to use it.
+**ℹ INFO:** This Power Platform provider is not yet published to the Terraform registry, but you can directly reference it from GitHub or build it locally and use it in your Terraform configuration.
 
 ## Requirements
 
-- [Terraform](https://www.terraform.io/downloads.html) >= 0.13.x
-- [Go](https://golang.org/doc/install) >= 1.19
-- <https://marketplace.visualstudio.com/items?itemName=golang.go>
+## Usage Example
 
-## Building The Provider
-
-```sh
-go mod init power-platform-terraform-provider
-go mod tidy
-go install .
-```
-
-## Adding Dependencies
-
-This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
-Please see the Go documentation for the most up to date information about using Go modules.
-
-To add a new dependency `github.com/author/dependency` to your Terraform provider:
-
-```sh
-go get github.com/author/dependency
-go mod tidy
-```
-
-## Using the provider
-
-Fill this in for each provider
-
-## Developing the Provider
-
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#requirements) above).
-
-To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
-
-To generate or update documentation, run `go generate`.
-
-To build run `go build`
-
-To install locally run `go install .`
-
-## End User Guidance
-
-### Pre-requisites  
-
-
-```json
+```terraform
+# 1. Source the provider from GitHub
 terraform {
   required_providers {
     powerplatform = {
+      source  = "github.com/microsoft/terraform-provider-power-platform"
       version = "0.2"
-      source  = "microsoft/powerplatform"
     }
   }
 }
 
+# 2. Configure the Power Platform Provider
 provider "powerplatform" {
+  # The Power Platform Provider supports authenticating using Service Principal or user credentials.
   username = var.username
   password = var.password
   tenant_id = var.tenant_id
 }
-```
 
-4. Setup Terraform service principal for Azure
-
-Terraform will need a service principal to access Azure. List of required permissions can be found [here](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/service_principal_client_secret)
-
-```json
-terraform {
-  required_providers {
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~> 2.15.0"
-    }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.0.0"
-    }
-  }
-}
-
-provider "azuread" {
-  tenant_id     = "var.aad_tenant_id"
-  client_id     = "var.aad_client_id"
-  client_secret = "var.aad_client_secret"
-}
-
-provider "azurerm" {
-
-  subscription_id = "var.azure_subscription_id"
-  client_id       = "var.aad_client_id"
-  client_secret   = "var.aad_client_secret"
-  tenant_id       = "var.aad_tenant_id"
+# 3. Create a Power Platform Environment
+resource "powerplatform_environment" "development" {
+  display_name     = "example_environment"
+  location         = "europe"
+  language_code    = "1033"
+  currency_code    = "USD"
+  environment_type = "Sandbox"
+  domain           = "mydomain"
+  security_group_id = "00000000-0000-0000-0000-000000000000"
 }
 ```
 
-## Running Provider locally in VSCode (linux)
+See the [examples](./examples) directory for additional examples of how to use it.
 
-1. Open VSCode, Open with devcontainer. This will install go and terraform tools.
-2. Open bash terminal
-3. `cd` to the same parent folder as this ReadMe.
-4. Execute commands below:
+## Developing and Contributing to the Provider
 
-```bash
+The [DEVELOPER.md](DEVELOPER.md) file is a basic outline on how to build and develop the provider.
 
-go install
+This project welcomes contributions and suggestions.  Most contributions require you to agree to a
+Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
+the rights to use your contribution. For details, visit <https://cla.opensource.microsoft.com>.
 
-export TF_CLI_CONFIG_FILE=<path to dev.tfrc> # dev.tfrc
-export POWER_PLATFORM_USERNAME=<username>
-export POWER_PLATFORM_PASSWORD=<password>
-export POWER_PLATFORM_HOST=<api url>
+When you submit a pull request, a CLA bot will automatically determine whether you need to provide
+a CLA and decorate the PR appropriately (e.g., status check, comment). Simply follow the instructions
+provided by the bot. You will only need to do this once across all repos using our CLA.
 
-# Navigate to a folder that contains main.tf and run below
-terraform plan
-```
+This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
+For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or
+contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-Note: You cannot run `terraform init` when using dev overrides. `terraform init` will validate the versions and provider source, while `terraform plan` will skip those validations when `dev overrides` is part of your config.
-## Debugging provider in VSCode
+## Trademarks
 
-1. Open VSCode with the root folder as the parent of this ReadMe
-1. Click On Run and Debug (F5)
-1. Copy `TF_REATTACH_PROVIDERS` value in the Debug Console
-1. Run `export TF_REATTACH_PROVIDERS=<value>` with the value copied from the above step
-1. Add breakpoints
-1. `cd` to a parent folder where main.tf exists
-1. Run `terraform apply`
-
-## Running Acceptance Tests
-
-1. Set variable `TF_ACC` to `1` by running `export TF_ACC=1`
-1. Go to provider's root folder and run `go test -v ./...`
-1. To run single acceptance test run `go test -v ./... -run TestAcc<test_name>`
-
-## Running Unit Tests
-
-1. Validate that variable TF_ACC is not set by running `echo $TF_ACC`
-1. Go to provider's root folder and run `go test -v ./...`
-1. To run single unit test run `go test -v ./... -run TestUnit<test_name>`
+This project may contain trademarks or logos for projects, products, or services. Authorized use of Microsoft trademarks or logos is subject to and must follow [Microsoft's Trademark & Brand Guidelines](https://www.microsoft.com/legal/intellectualproperty/trademarks/usage/general). Use of Microsoft trademarks or logos in modified versions of this project must not cause confusion or imply Microsoft sponsorship. Any use of third-party trademarks or logos are subject to those third-party's policies.
