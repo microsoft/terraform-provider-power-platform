@@ -21,7 +21,7 @@ func main() {
 	ctx := context.Background()
 	serveOpts := providerserver.ServeOpts{
 		Debug:   debug,
-		Address: "github.com/microsoft/powerplatform",
+		Address: "github.com/microsoft/terraform-provider-power-platform",
 	}
 
 	err := providerserver.Serve(ctx, powerplatform.NewPowerPlatformProvider(), serveOpts)

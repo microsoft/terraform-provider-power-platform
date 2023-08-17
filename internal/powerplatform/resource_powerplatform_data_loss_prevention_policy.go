@@ -149,7 +149,7 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 							Required:            true,
 							//BUG if we don't set this to reqired, it will produce inconsistent state
 							// When applying changes to powerplatform_data_loss_prevention_policy.my_policy,
-							// │ provider "provider[\"github.com/microsoft/powerplatform\"]" produced an unexpected
+							// │ provider "provider[\"github.com/microsoft/terraform-provider-power-platform\"]" produced an unexpected
 							// │ new value: .environments: new element 1 has appeared.
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),

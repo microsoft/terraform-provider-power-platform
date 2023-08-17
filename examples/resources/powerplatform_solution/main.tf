@@ -2,7 +2,7 @@ terraform {
   required_providers {
     powerplatform = {
       version = "0.2"
-      source  = "github.com/microsoft/powerplatform"
+      source  = "github.com/microsoft/terraform-provider-power-platform"
     }
     local = {
       version = "2.4.0"
