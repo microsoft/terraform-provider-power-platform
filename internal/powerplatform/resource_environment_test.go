@@ -8,10 +8,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	powerplatform_mock "github.com/microsoft/terraform-provider-powerplatform/internal/mocks"
-	powerplatform "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/api"
-	models "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/bapi/models"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/helpers"
+	powerplatform_mock "github.com/microsoft/terraform-provider-power-platform/internal/mocks"
+	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
+	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
