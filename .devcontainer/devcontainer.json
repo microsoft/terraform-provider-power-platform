@@ -1,9 +1,10 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/debian
 {
-	"name": "Terraform Provider Development",
+	"name": "Power Platform Terraform Provider Development",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/base:bullseye",
+	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
 		"ghcr.io/devcontainers/features/azure-cli:1": {
 			"version": "latest"
@@ -25,10 +26,15 @@
 			"installDockerBuildx": true,
 			"version": "latest",
 			"dockerDashComposeVersion": "v1"
+		},
+		"ghcr.io/devcontainers/features/dotnet:1": {
+			"version": "latest"
+		},
+		"./features/pac": {
 		}
-	}
+	},
 
-	// Features to add to the dev container. More info: https://containers.dev/features.
+
 	// "features": {},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
@@ -36,7 +42,6 @@
 
 	// Configure tool-specific properties.
 	// "customizations": {},
-
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }
