@@ -1,1 +1,1 @@
-dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+dotnet tool install --global Microsoft.PowerApps.CLI.Tool --interactive false
