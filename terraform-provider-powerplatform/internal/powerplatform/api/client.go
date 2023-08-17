@@ -6,10 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 )
-
-const HostUrl string = "http://localhost:8080"
 
 type Client struct {
 	HostURL    string
@@ -18,20 +15,17 @@ type Client struct {
 }
 
 // TODO support Oauth instead of basic auth
-func NewClient(host, username, password *string) (*Client, error) {
+func NewClient(host, username, password string) (*Client, error) {
 	client := Client{
-		HttpClient: &http.Client{Timeout: 1200 * time.Second}, //20 minutes
-		HostURL:    HostUrl,
+		HttpClient: http.DefaultClient,
+		HostURL:    host,
 	}
 
-	if host != nil {
-		client.HostURL = *host
-	}
-
-	if username == nil || password == nil {
+	if username == "" {
 		return &client, nil
 	}
 
+	// magodo: This is not a good practice to bind the authentication thing in the client builder. Instead, you might want to make it to be some kind of middleware.
 	authResponse, error := client.doBasicAuth(username, password)
 	if error != nil {
 		return nil, error
@@ -42,7 +36,6 @@ func NewClient(host, username, password *string) (*Client, error) {
 }
 
 func (client *Client) doRequest(request *http.Request) ([]byte, error) {
-
 	if request.Header.Get("Content-Type") == "" {
 		request.Header.Set("Content-Type", "application/json")
 	}
@@ -55,6 +48,7 @@ func (client *Client) doRequest(request *http.Request) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
@@ -73,6 +67,5 @@ func (client *Client) doRequest(request *http.Request) ([]byte, error) {
 			return nil, fmt.Errorf("status: %d", response.StatusCode)
 		}
 	}
-	defer response.Body.Close()
 	return body, nil
 }
