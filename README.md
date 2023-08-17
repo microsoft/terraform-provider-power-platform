@@ -1,6 +1,10 @@
-# Terraform Power Platform Provider
+# Terraform Provider for Power Platform
 
-This is a Terraform provider for the Power Platform. It is currently in development and is not ready for production use. It is not yet published to the Terraform registry. You can build it locally and use it in your Terraform configuration.
+The Power Platform Terraform Provider allows managing resources within Power Platform.
+
+**⚠️ WARNING:** This code is experimental and provided solely for evaluation purposes. It is **NOT** intended for production use and may contain bugs, incomplete features, or other issues. Use at your own risk, as it may undergo significant changes without notice, and no guarantees or support are provided. By using this code, you acknowledge and agree to these conditions. Consult the documentation or contact the maintainer if you have questions or concerns.
+
+This Power Platform provider is not yet published to the Terraform registry, but you can directly reference it from GitHub or build it locally and use it in your Terraform configuration.
 
 See the [example](./examples) directory for an example of how to use it.
 
