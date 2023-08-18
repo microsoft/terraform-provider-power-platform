@@ -10,26 +10,49 @@ The Power Platform Terraform Provider allows managing resources within Power Pla
 
 ## Usage Example
 
+The following is a basic example of using the Terraform Provider for Power Platform.  See the [examples](./examples) directory for additional examples.
+
+### Register the provider
+
 ```terraform
-# 1. Source the provider from GitHub
 terraform {
   required_providers {
     powerplatform = {
-      source  = "github.com/microsoft/terraform-provider-power-platform"
-      version = "0.2"
+      source  = "microsoft/power-platform"
     }
   }
 }
+```
 
-# 2. Configure the Power Platform Provider
+### Configure the Power Platform Provider
+
+The provider allows authentication via service principal or user credentials.  All sensitive information should be passed into Terraform using environment variables (don't put secrets in your tf files).
+
+```terraform 
+# Configure the Power Platform Provider using username/password
 provider "powerplatform" {
   # The Power Platform Provider supports authenticating using Service Principal or user credentials.
   username = var.username
   password = var.password
   tenant_id = var.tenant_id
 }
+```
 
-# 3. Create a Power Platform Environment
+Or configure the Power Platform Provider using a service principal.  Service principals should be configured following [this](https://learn.microsoft.com/en-us/power-platform/admin/programmability-authentication-v2) and [this](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal).
+
+```terraform 
+# Configure the Power Platform Provider using username/password
+provider "powerplatform" {
+  # The Power Platform Provider supports authenticating using Service Principal or user credentials.
+  client_id = var.client_id
+  secret = var.secret
+  tenant_id = var.tenant_id
+}
+```
+
+### Create a Power Platform Environment
+
+```terraform 
 resource "powerplatform_environment" "development" {
   display_name     = "example_environment"
   location         = "europe"
@@ -40,8 +63,6 @@ resource "powerplatform_environment" "development" {
   security_group_id = "00000000-0000-0000-0000-000000000000"
 }
 ```
-
-See the [examples](./examples) directory for additional examples of how to use it.
 
 ## Developing and Contributing to the Provider
 
