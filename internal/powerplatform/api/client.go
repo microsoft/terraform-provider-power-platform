@@ -11,7 +11,7 @@ import (
 
 var _ ClientInterface = &Client{}
 
-//go:generate mockgen -destination=../../mocks/client_mocks.go -package=powerplatform_mocks "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/api" ClientInterface
+//go:generate mockgen -destination=../../mocks/client_mocks.go -package=powerplatform_mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api" ClientInterface
 type ClientInterface interface {
 	DoBasicAuth(baseUrl, username, password string) (*AuthResponse, error)
 

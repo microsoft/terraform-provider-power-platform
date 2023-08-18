@@ -6,7 +6,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform"
 )
 
 // Generate the provider document.
@@ -21,7 +21,7 @@ func main() {
 	ctx := context.Background()
 	serveOpts := providerserver.ServeOpts{
 		Debug:   debug,
-		Address: "github.com/microsoft/terraform-provider-power-platform",
+		Address: "registry.terraform.io/microsoft/power-platform",
 	}
 
 	err := providerserver.Serve(ctx, powerplatform.NewPowerPlatformProvider(), serveOpts)

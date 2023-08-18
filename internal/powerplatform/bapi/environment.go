@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	models "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/bapi/models"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 )
 
 func (client *ApiClient) GetEnvironments(ctx context.Context) ([]models.EnvironmentDto, error) {

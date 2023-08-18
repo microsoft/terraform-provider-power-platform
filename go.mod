@@ -1,4 +1,4 @@
-module github.com/microsoft/terraform-provider-powerplatform
+module github.com/microsoft/terraform-provider-power-platform
 
 go 1.19
 

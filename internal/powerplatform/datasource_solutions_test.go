@@ -9,9 +9,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	powerplatform_mock "github.com/microsoft/terraform-provider-powerplatform/internal/mocks"
-	models "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/bapi/models"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/helpers"
+	powerplatform_mock "github.com/microsoft/terraform-provider-power-platform/internal/mocks"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
+	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func TestUnitSolutionsDataSource_Validate_Read(t *testing.T) {
