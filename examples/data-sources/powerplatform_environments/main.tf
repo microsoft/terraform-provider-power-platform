@@ -1,15 +1,14 @@
 terraform {
   required_providers {
     powerplatform = {
-      version = "0.2"
-      source  = "github.com/microsoft/terraform-provider-power-platform"
+      source  = "microsoft/power-platform"
     }
   }
 }
 
 provider "powerplatform" {
-  username = var.username
-  password = var.password
+  client_id = var.client_id
+  secret = var.secret
   tenant_id = var.tenant_id
 }
 

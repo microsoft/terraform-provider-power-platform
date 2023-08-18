@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	powerplatform_helpers "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/helpers"
+	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func SyncAttributePlanModifier(syncAttribute string) planmodifier.String {

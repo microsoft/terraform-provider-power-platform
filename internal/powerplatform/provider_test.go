@@ -7,8 +7,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-	powerplatform "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/api"
-	powerplatform_bapi "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/bapi"
+	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
 	"github.com/stretchr/testify/require"
 )
 

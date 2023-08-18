@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	gomock "github.com/golang/mock/gomock"
-	powerplatform "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/api"
-	powerplatform_bapi "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/bapi"
+	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
 )
 
 // TODO Remove

@@ -15,9 +15,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	powerplatform_bapi "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/bapi"
-	models "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/bapi/models"
-	powerplatform_modifiers "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/modifiers"
+	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
+	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 )
 
 var _ resource.Resource = &EnvironmentResource{}

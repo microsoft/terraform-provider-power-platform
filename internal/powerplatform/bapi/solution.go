@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	models "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/bapi/models"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 )
 
 func (client *ApiClient) GetSolution(ctx context.Context, environmentId string, solutionName string) (*models.SolutionDto, error) {
