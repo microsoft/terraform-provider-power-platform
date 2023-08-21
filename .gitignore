@@ -50,3 +50,5 @@ override.tf.json
 #.terraformrc
 #terraform.rc
 #terraform
+
+terraform-provider-power-platform
