@@ -67,6 +67,8 @@ func (client *ApiClient) doRequest(request *http.Request) ([]byte, error) {
 		request.Header.Set("Authorization", "Bearer "+client.Token)
 	}
 
+	request.Header.Set("User-Agent", "terraform-provider-power-platform")
+
 	response, err := client.HttpClient.Do(request)
 	if err != nil {
 		return nil, err
