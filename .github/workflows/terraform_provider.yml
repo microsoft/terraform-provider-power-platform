@@ -11,7 +11,6 @@ on:
       - 'README.md'
 
 jobs:
-  # ensure go.mod and go.sum are updated
   depscheck:
     name: Check Dependencies
     runs-on: ubuntu-latest
@@ -32,7 +31,6 @@ jobs:
       run: |
         make depscheck
 
-  # ensure the code builds
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -57,7 +55,6 @@ jobs:
       run: |
         go build -v .
 
-  # run unit tests and linter
   test_and_lint:
     name: Unit Test and Lint
     needs: build
@@ -91,7 +88,6 @@ jobs:
         name: Test Coverage
         path: coverage.html
 
-  # ensure docs are generated
   gencheck:
     name: Check Generated Docs
     needs: build
