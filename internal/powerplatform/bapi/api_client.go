@@ -8,7 +8,7 @@ import (
 	"io"
 	"net/http"
 
-	models "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/bapi/models"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 )
 
 type ApiClient struct {
@@ -32,7 +32,7 @@ type Provider struct {
 
 var _ ApiClientInterface = &ApiClient{}
 
-//go:generate mockgen -destination=../../mocks/client_mocks_bapi.go -package=powerplatform_mocks "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/bapi" ApiClientInterface
+//go:generate mockgen -destination=../../mocks/client_mocks_bapi.go -package=powerplatform_mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi" ApiClientInterface
 type ApiClientInterface interface {
 	DoAuthClientSecret(ctx context.Context, tenantId, applicationId, clientSecret string) (*AuthResponse, error)
 	DoAuthUsernamePassword(ctx context.Context, tenantId, username, password string) (*AuthResponse, error)

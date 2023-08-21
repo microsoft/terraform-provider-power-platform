@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	powerplatform "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/api"
+	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 var _ resource.Resource = &DataLossPreventionPolicyResource{}

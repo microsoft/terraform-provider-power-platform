@@ -3,7 +3,7 @@ provider_installation {
   # If GOBIN env is different from /go/bin, change it to the GOBIN value.
   # If GOBIN is not set, and GOPATH is different from /go/bin, change it to ${GOPATH}/bin
   dev_overrides {
-      "github.com/microsoft/terraform-provider-power-platform" = "/go/bin"
+      "registry.terraform.io/microsoft/power-platform" = "/go/bin"
   }
 
   direct {}

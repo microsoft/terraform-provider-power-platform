@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	models "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/bapi/models"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 )
 
 func (client *ApiClient) GetConnectors(ctx context.Context) ([]models.ConnectorDto, error) {

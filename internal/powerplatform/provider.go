@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	powerplatform "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/api"
-	powerplatform_bapi "github.com/microsoft/terraform-provider-powerplatform/internal/powerplatform/bapi"
+	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
 )
 
 var _ provider.Provider = &PowerPlatformProvider{}
