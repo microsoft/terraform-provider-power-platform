@@ -83,7 +83,7 @@ jobs:
     - name: Run unit tests and linter
       run: |
         go test -coverprofile=coverage.out ./...
-	      go tool cover -html=coverage.out -o coverage.html
+        go tool cover -html=coverage.out -o coverage.html
     
     - name: Upload Coverage Artifacts
       uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
