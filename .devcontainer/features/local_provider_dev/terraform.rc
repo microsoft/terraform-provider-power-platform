@@ -1,14 +1,11 @@
 provider_installation {
-  
-  # If GOBIN env is different from /go/bin, change it to the GOBIN value.
-  # If GOBIN is not set, and GOPATH is different from /go/bin, change it to ${GOPATH}/bin
-  dev_overrides {
-      "registry.terraform.io/microsoft/power-platform" = "/go/bin"
-  }
 
-  direct {}
+  dev_overrides {
+    "microsoft/power-platform" = "/go/bin"
+  }
 
   # For all other providers, install them directly from their origin provider
   # registries as normal. If you omit this, Terraform will _only_ use
   # the dev_overrides block, and so no other providers will be available.
+  direct {}
 }
