@@ -30,7 +30,9 @@ jobs:
 
     - name: Run 'go mod tidy' and check for differences
       run: |
-        make depscheck
+        go mod tidy
+        git diff --exit-code -- go.mod go.sum || \
+        (echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
 
   # ensure the code builds
   build:
@@ -110,5 +112,5 @@ jobs:
 
       - name: Generate docs and check for differences
         run: |
-          go installgithub.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+          go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
           go generate
