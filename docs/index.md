@@ -41,6 +41,7 @@ You can find more information on how to do this in the following articles:
 
 - [Programmability and Extensibility - Authentication - Power Platform | Microsoft Learn](https://learn.microsoft.com/en-us/power-platform/admin/programmability-authentication-v2)
 - [PowerShell: Create a service principal - Power Platform | Microsoft Learn](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal).
+- [Registering an Admin Management Application](https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
 
 ```terraform
 # Configure the Power Platform Provider using a service principal

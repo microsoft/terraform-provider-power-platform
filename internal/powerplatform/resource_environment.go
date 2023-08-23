@@ -135,8 +135,8 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				},
 			},
 			"security_group_id": schema.StringAttribute{
-				Description:         "Unique security group id (guid)",
-				MarkdownDescription: "Unique security group id (guid)",
+				Description:         "Unique security group id (guid).  For an empty security group, set this property to 0000000-0000-0000-0000-000000000000",
+				MarkdownDescription: "Unique security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
 				Required:            true,
 			},
 			"language_code": schema.Int64Attribute{
