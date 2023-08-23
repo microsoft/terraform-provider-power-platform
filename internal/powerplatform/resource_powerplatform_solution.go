@@ -80,8 +80,8 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				},
 			},
 			"settings_file": schema.StringAttribute{
-				MarkdownDescription: "Path to the settings file",
-				Description:         "Path to the settings file",
+				MarkdownDescription: "Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/en-us/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details",
+				Description:         "Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/en-us/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details",
 				Optional:            true,
 			},
 

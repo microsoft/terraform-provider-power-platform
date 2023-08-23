@@ -14,6 +14,10 @@ A Power Platform environment is a space in which you can store, manage, and shar
 - [Create and manage environments in the Power Platform admin center](https://learn.microsoft.com/en-us/power-platform/admin/create-environment)
 - [Establishing an environment strategy - Microsoft Power Platform](https://learn.microsoft.com/en-us/power-platform/guidance/adoption/environment-strategy)
 
+## Known Limitations
+
+- Service principals can't create development type environments
+
 ## Example Usage
 
 
@@ -56,7 +60,7 @@ resource "powerplatform_environment" "development" {
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
 - `language_code` (Number) Unique language LCID (integer)
 - `location` (String) Location of the environment (europe, unitedstates etc.)
-- `security_group_id` (String) Unique security group id (guid)
+- `security_group_id` (String) Unique security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`
 
 ### Read-Only
 

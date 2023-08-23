@@ -93,7 +93,7 @@ resource "powerplatform_solution" "solution" {
 
 ### Optional
 
-- `settings_file` (String) Path to the settings file
+- `settings_file` (String) Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/en-us/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details
 
 ### Read-Only
 
