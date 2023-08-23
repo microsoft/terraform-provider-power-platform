@@ -224,7 +224,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		func() resource.Resource { return NewEnvironmentResource() },
-		//func() resource.Resource { return NewDataLossPreventionPolicyResource() },
+		func() resource.Resource { return NewDataLossPreventionPolicyResource() },
 		func() resource.Resource { return NewSolutionResource() },
 	}
 }
