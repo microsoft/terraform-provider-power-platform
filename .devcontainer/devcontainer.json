@@ -32,7 +32,8 @@
 		},
 		"ghcr.io/devcontainers/features/ruby:1": {},
 		"./features/local_provider_dev": {},
-		"./features/pac": {}
+		"./features/pac": {},
+		"./features/generate_plugins": {}
 	},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
