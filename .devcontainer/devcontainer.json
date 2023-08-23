@@ -30,6 +30,7 @@
 		"ghcr.io/devcontainers/features/dotnet:1": {
 			"version": "latest"
 		},
+		"ghcr.io/devcontainers/features/ruby:1": {},
 		"./features/local_provider_dev": {},
 		"./features/pac": {}
 	},
