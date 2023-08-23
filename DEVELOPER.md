@@ -1,13 +1,15 @@
+# Developer Guide
+
 ## Developer Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) >= 0.13.x
 - [Go](https://golang.org/doc/install) >= 1.19
-- <https://marketplace.visualstudio.com/items?itemName=golang.go>
+- [Visual Studio Code](https://code.visualstudio.com/)
+- [Go Language Support for VS Code](https://marketplace.visualstudio.com/items?itemName=golang.go)
 
 ## Building The Provider
 
 ```sh
-go mod init power-platform-terraform-provider
 go mod tidy
 go install .
 ```

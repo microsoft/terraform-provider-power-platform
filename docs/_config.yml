@@ -1,0 +1,11 @@
+title: Terraform Provider for Power Platform
+description: The Power Platform Terraform Provider allows managing environments and other resources within Power Platform.
+theme: just-the-docs
+
+plugins:
+  - jekyll-default-layout
+
+url: https://microsoft.github.io/terraform-provider-power-platform/
+
+aux_links:
+  Template Repository: https://github.com/microsoft/terraform-provider-power-platform

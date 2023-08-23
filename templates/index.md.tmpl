@@ -1,10 +1,10 @@
 ---
 page_title: "Provider: Power Platform"
 description: |-
-  The Power Platform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/)
+  {{ .Description }}
 ---
 
-# Power Platform Provider
+# {{ .RenderedProviderName }} Provider
 
 The Power Platform provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
@@ -20,14 +20,7 @@ This provider requires **Terraform >= 0.12**.  For more information on provider 
 
 To use the provider you can download the binaries from [Releases](https://github.com/microsoft/terraform-provider-power-platform/releases) to your local file system and configure Terraform to use your local mirror.  See the [Explicit Installation Method Configuration](https://developer.hashicorp.com/terraform/cli/config/config-file#explicit-installation-method-configuration) for more information about using local binaries.
 
-```terraform
-provider_installation  {
-  filesystem_mirror {
-    path = "/usr/share/terraform/providers"
-    include = ["registry.terraform.io/microsoft/power-platform"]
-  }
-}
-```
+{{ tffile "examples/provider/filesystem_mirror.tf" }}
 
 ## Authentication
 
@@ -43,25 +36,11 @@ You can find more information on how to do this in the following articles:
 - [PowerShell: Create a service principal - Power Platform | Microsoft Learn](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal).
 - [Registering an Admin Management Application](https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
 
-```terraform
-# Configure the Power Platform Provider using a service principal
-provider "powerplatform" {
-  client_id = var.client_id
-  secret    = var.secret
-  tenant_id = var.tenant_id
-}
-```
+{{ tffile "examples/provider/provider_sp.tf" }}
 
 ### Using Username and Password
 
-```terraform
-# Configure the Power Platform Provider using username/password
-provider "powerplatform" {
-  username  = var.username
-  password  = var.password
-  tenant_id = var.tenant_id
-}
-```
+{{ tffile "examples/provider/provider_user.tf" }}
 
 ## Resources and Data Sources
 
