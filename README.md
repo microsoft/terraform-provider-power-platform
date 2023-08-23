@@ -1,72 +1,16 @@
 # Terraform Provider for Power Platform
 
-The Power Platform Terraform Provider allows managing resources within Power Platform.
+The Power Platform Terraform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
 **⚠️ WARNING:** This code is experimental and provided solely for evaluation purposes. It is **NOT** intended for production use and may contain bugs, incomplete features, or other issues. Use at your own risk, as it may undergo significant changes without notice, and no guarantees or support are provided. By using this code, you acknowledge and agree to these conditions. Consult the documentation or contact the maintainer if you have questions or concerns.
 
-**ℹ INFO:** This Power Platform provider is not yet published to the Terraform registry, but you can directly reference it from GitHub or build it locally and use it in your Terraform configuration.
+## Using the Provider
 
-## Requirements
+The [user documentation](https://microsoft.github.io/terraform-provider-power-platform) contains information about how to install, configure, and use the provider to manage Power Platform resources and data sources.  Examples, schemas, and other detailed information about the provided resources and data sources make it easy to get started using the provider.
 
-## Usage Example
+## Contributing
 
-The following is a basic example of using the Terraform Provider for Power Platform.  See the [examples](./examples) directory for additional examples.
-
-### Register the provider
-
-```terraform
-terraform {
-  required_providers {
-    powerplatform = {
-      source  = "microsoft/power-platform"
-    }
-  }
-}
-```
-
-### Configure the Power Platform Provider
-
-The provider allows authentication via service principal or user credentials.  All sensitive information should be passed into Terraform using environment variables (don't put secrets in your tf files).
-
-```terraform 
-# Configure the Power Platform Provider using username/password
-provider "powerplatform" {
-  # The Power Platform Provider supports authenticating using Service Principal or user credentials.
-  username = var.username
-  password = var.password
-  tenant_id = var.tenant_id
-}
-```
-
-Or configure the Power Platform Provider using a service principal.  Service principals should be configured following [this](https://learn.microsoft.com/en-us/power-platform/admin/programmability-authentication-v2) and [this](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal).
-
-```terraform 
-# Configure the Power Platform Provider using username/password
-provider "powerplatform" {
-  # The Power Platform Provider supports authenticating using Service Principal or user credentials.
-  client_id = var.client_id
-  secret = var.secret
-  tenant_id = var.tenant_id
-}
-```
-
-### Create a Power Platform Environment
-
-```terraform 
-resource "powerplatform_environment" "development" {
-  display_name     = "example_environment"
-  location         = "europe"
-  language_code    = "1033"
-  currency_code    = "USD"
-  environment_type = "Sandbox"
-  domain           = "mydomain"
-  security_group_id = "00000000-0000-0000-0000-000000000000"
-}
-```
-
-## Developing and Contributing to the Provider
-
-The [DEVELOPER.md](DEVELOPER.md) file is a basic outline on how to build and develop the provider.
+The [developer documentation](DEVELOPER.md) outlines how to build and develop the provider.
 
 This project welcomes contributions and suggestions.  Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us

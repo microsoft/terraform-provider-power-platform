@@ -62,8 +62,8 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 
 	resp.Schema = schema.Schema{
 
-		Description:         "The powerplatform provider allows to interact with the Power Platform resources using available API",
-		MarkdownDescription: "The powerplatform provider allows to interact with the Power Platform resources using available API",
+		Description:         "The Power Platform Terraform Provider allows managing environments and other resources within Power Platform",
+		MarkdownDescription: "The Power Platform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/)",
 		Attributes: map[string]schema.Attribute{
 			"tenant_id": schema.StringAttribute{
 				Description:         "The id of the AAD tenant that Power Platform API uses to authenticate with",
@@ -84,7 +84,7 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 
 			"username": schema.StringAttribute{
 				Description:         "The username of the Power Platform API in user@domain format",
-				MarkdownDescription: "The username of the Power Platform API in user@domain formate",
+				MarkdownDescription: "The username of the Power Platform API in user@domain format",
 				Optional:            true,
 			},
 			"password": schema.StringAttribute{
