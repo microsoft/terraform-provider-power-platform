@@ -1,99 +1,44 @@
 # Developer Guide
 
+If you want to contribute to this project, you can use the devcontainer feature in Visual Studio Code to create a consistent and isolated development environment. A devcontainer is a Docker container that has all the tools and dependencies needed to work with the codebase. You can open any folder inside the container and use VS Code’s full feature set, including IntelliSense, code navigation, debugging, and extensions.
+
 ## Developer Requirements
 
-- [Terraform](https://www.terraform.io/downloads.html) >= 0.13.x
-- [Go](https://golang.org/doc/install) >= 1.19
+To use the devcontainer in this repo, you need to have the following prerequisites:
+
+- [Docker](https://www.docker.com/products/docker-desktop/)
 - [Visual Studio Code](https://code.visualstudio.com/)
-- [Go Language Support for VS Code](https://marketplace.visualstudio.com/items?itemName=golang.go)
+- [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) installed in VS Code.
 
-## Building The Provider
+## Opening the Devcontainer
+Once you have the prerequisites, you can follow these steps to open the repo in a devcontainer:
 
-```sh
-go mod tidy
-go install .
-```
+1. Clone or fork this repo to your local machine.
+1. Open VS Code and press F1 to open the command palette. Type “Remote-Containers: Open Folder in Container…” and select it.
+1. Browse to the folder where you cloned or forked the repo and click “Open”.
+1. VS Code will reload and start building the devcontainer image. This may take a few minutes depending on your network speed and the size of the image.
+1. When the devcontainer is ready, you will see “Dev Container: Power Platform Terraform Provider Development” in the lower left corner of the VS Code status bar. You can also open a new terminal (Ctrl+Shift+`) and see that you are inside the container.
+1. You can now edit, run, debug, and test the code as if you were on your local machine. Any changes you make will be reflected in the container and in your local file system.
 
-## Adding Dependencies
+For more information about devcontainers, you can check out the [devcontainer documentation](https://code.visualstudio.com/docs/devcontainers/containers).
 
-This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
-Please see the Go documentation for the most up to date information about using Go modules.
+## Power Platform Prerequisites
 
-To add a new dependency `github.com/author/dependency` to your Terraform provider:
+### Tenant
 
-```sh
-go get github.com/author/dependency
-go mod tidy
-```
+trial tenant instructions?
 
-## Using the provider
+### Credentials
 
-Fill this in for each provider
+TODO: link to user documentation
 
-## Developing the Provider
+### Environment Variables
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#developer-requirements) above).
+```bash
+export POWER_PLATFORM_USERNAME=<username>
+export POWER_PLATFORM_PASSWORD=<password>
+export POWER_PLATFORM_HOST=<api url>
 
-To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
-
-To generate or update documentation, run `go generate`.
-
-To build run `go build`
-
-To install locally run `go install .`
-
-## End User Guidance
-
-### Pre-requisites  
-
-```json
-terraform {
-  required_providers {
-    powerplatform = {
-      version = "0.2"
-      source  = "microsoft/powerplatform"
-    }
-  }
-}
-
-provider "powerplatform" {
-  username = var.username
-  password = var.password
-  tenant_id = var.tenant_id
-}
-```
-
-1. Setup Terraform service principal for Azure
-
-Terraform will need a service principal to access Azure. List of required permissions can be found [here](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/service_principal_client_secret)
-
-```json
-terraform {
-  required_providers {
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~> 2.15.0"
-    }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.0.0"
-    }
-  }
-}
-
-provider "azuread" {
-  tenant_id     = "var.aad_tenant_id"
-  client_id     = "var.aad_client_id"
-  client_secret = "var.aad_client_secret"
-}
-
-provider "azurerm" {
-
-  subscription_id = "var.azure_subscription_id"
-  client_id       = "var.aad_client_id"
-  client_secret   = "var.aad_client_secret"
-  tenant_id       = "var.aad_tenant_id"
-}
 ```
 
 ## Running Provider locally in VSCode (linux)
@@ -104,7 +49,7 @@ provider "azurerm" {
 4. Execute commands below:
 
 ```bash
-
+go mod tidy
 go install
 
 export TF_CLI_CONFIG_FILE=<path to dev.tfrc> # dev.tfrc
@@ -139,3 +84,48 @@ Note: You cannot run `terraform init` when using dev overrides. `terraform init`
 1. Validate that variable TF_ACC is not set by running `echo $TF_ACC`
 1. Go to provider's root folder and run `go test -v ./...`
 1. To run single unit test run `go test -v ./... -run TestUnit<test_name>`
+
+## Adding Dependencies
+
+This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
+Please see the Go documentation for the most up to date information about using Go modules.
+
+To add a new dependency `github.com/author/dependency` to your Terraform provider:
+
+```sh
+go get github.com/author/dependency
+go mod tidy
+```
+
+## Updating Dependencies
+
+Open a terminal in your devcontainer and type
+
+```sh
+go mod tidy
+```
+
+## Updating Documentation
+
+User documentation markdown files in [/docs](/docs/) are auto-generated by the (terraform plugin docs tool)[https://github.com/hashicorp/terraform-plugin-docs].
+
+Do not manually edit the markdown files in [/docs](/docs/). If you need to edit documentation edit the following sources:
+- schema information in the provider, resource, and data-source golang files that are in [/internal](/internal/)
+- [template files](templates/)
+
+```sh
+tfplugindocs generate --provider-name powerplatform --rendered-provider-name "Power Platform"
+```
+
+User documentation is temporarily served on GitHub Pages which requires the [pages.yml GitHub workflow](/.github/workflows/pages.yml) to transform /docs markdown files into a static website.  Once this provider is published to the Terraform registry, documentation will be hosted on the registry instead. 
+
+## Pull Request Checklist
+
+PRs for new resources or data sources are expected to meeting the following criteria:
+
+- production quality implementation of the resource or datasource in [/internal](/internal/)
+- unit tests and acceptance tests for your contribution in [/internal](/internal/).  Tests should pass and provide >90% coverage of your contribution
+- example code for your contribution in [/examples](/examples/)
+- updated user documentation for your contribution in [/internal](/internal/) and/or [/templates](/templates/)
+- [updated auto-generated documentation](#updating-documentation) in [/docs](/docs/). (Don't manually edit [/docs](/docs/) or your updates will be overwritten)
+- a well written PR description about the feature you're adding

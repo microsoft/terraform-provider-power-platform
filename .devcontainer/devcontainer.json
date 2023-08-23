@@ -3,7 +3,7 @@
 {
 	"name": "Power Platform Terraform Provider Development",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/base:bullseye",
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu",
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
 		"ghcr.io/devcontainers/features/azure-cli:1": {
@@ -20,20 +20,18 @@
 		"ghcr.io/devcontainers/features/go:1": {
 			"version": "latest"
 		},
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {
-			"moby": true,
-			"azureDnsAutoDetection": true,
-			"installDockerBuildx": true,
-			"version": "latest",
-			"dockerDashComposeVersion": "v1"
-		},
-		"ghcr.io/devcontainers/features/dotnet:1": {
-			"version": "latest"
-		},
-		"ghcr.io/devcontainers/features/ruby:1": {},
+		// "ghcr.io/devcontainers/features/dotnet:1": {
+		// 	"version": "latest",
+		// 	"runtimeOnly": false,
+		// 	"installUsingApt": false
+		// },
+		// "ghcr.io/devcontainers/features/ruby:1": {},
+		// "ghcr.io/devcontainers/features/python:1": {},
+		"ghcr.io/devcontainers-contrib/features/mkdocs:2": {},
 		"./features/local_provider_dev": {},
 		"./features/pac": {}
 	},
+	"postCreateCommand": "",
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Configure tool-specific properties.

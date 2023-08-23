@@ -52,3 +52,5 @@ override.tf.json
 #terraform
 
 terraform-provider-power-platform
+
+site

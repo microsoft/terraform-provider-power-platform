@@ -1,15 +1,13 @@
 {
     "id": "pac",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "name": "Power Platform CLI",
     "documentationURL": "https://learn.microsoft.com/en-us/power-platform/developer/cli/introduction",
     "description": "Installs the PAC CLI.",
     "options": {},
-    "containerEnv": {
-    },
+    "containerEnv": {},
     "customizations": {
+        "postCreateCommand": "dotnet tool install --global Microsoft.PowerApps.CLI.Tool --interactive false"
     },
-    "installsAfter": [
-        "ghcr.io/devcontainers/features/dotnet"
-    ]
+    "installsAfter": []
 }

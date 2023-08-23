@@ -1,0 +1,4 @@
+site_name: Terraform Provdier for Power Platform
+theme:
+  name: readthedocs
+  highlightjs: true
