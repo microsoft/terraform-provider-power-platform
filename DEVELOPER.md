@@ -139,3 +139,19 @@ Note: You cannot run `terraform init` when using dev overrides. `terraform init`
 1. Validate that variable TF_ACC is not set by running `echo $TF_ACC`
 1. Go to provider's root folder and run `go test -v ./...`
 1. To run single unit test run `go test -v ./... -run TestUnit<test_name>`
+
+## Generating Documentation
+
+1. Execute below command to generate documentation
+
+```bash
+tfplugindocs generate --provider-name powerplatform --rendered-provider-name "Power Platform"
+```
+
+## Generating Mocks for Unit Tests
+
+1. Execute below command to generate mocks
+
+```bash
+mockgen -destination=./internal/mocks/client_mocks_bapi.go -package=powerplatform_mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi" ApiClientInterface
+```
