@@ -7,6 +7,5 @@ echo "Activating feature 'Power Platform CLI'"
 sudo apt-get update && \
   sudo apt-get install -y dotnet-sdk-7.0
 
-# Install Power Platform CLI
-dotnet tool install --global Microsoft.PowerApps.CLI.Tool --interactive false 
-# BUGBUG: dotnet tool install installs to /root/.dotnet/tools when running as root which is not accessible by the remote user in the dev container.
+# Install Power Platform CLI to vscode user's path
+dotnet tool install Microsoft.PowerApps.CLI.Tool --interactive false --tool-path /home/vscode/.dotnet/tools

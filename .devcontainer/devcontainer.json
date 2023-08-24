@@ -20,18 +20,11 @@
 		"ghcr.io/devcontainers/features/go:1": {
 			"version": "latest"
 		},
-		// "ghcr.io/devcontainers/features/dotnet:1": {
-		// 	"version": "latest",
-		// 	"runtimeOnly": false,
-		// 	"installUsingApt": false
-		// },
-		// "ghcr.io/devcontainers/features/ruby:1": {},
-		// "ghcr.io/devcontainers/features/python:1": {},
-		"ghcr.io/devcontainers-contrib/features/mkdocs:2": {},
+		//"ghcr.io/devcontainers-contrib/features/mkdocs:2": {},
 		"./features/local_provider_dev": {},
 		"./features/pac": {}
 	},
-	"postCreateCommand": "",
+	"postCreateCommand": "git config --global --add safe.directory /workspaces/terraform-provider-power-platform",
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Configure tool-specific properties.
@@ -60,7 +53,7 @@
 	"runArgs": [
 		"--env-file",
 		".devcontainer/devcontainer.env"
-	]
+	],
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+	//"remoteUser": "root"
 }

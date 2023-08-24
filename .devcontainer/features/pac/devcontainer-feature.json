@@ -7,7 +7,7 @@
     "options": {},
     "containerEnv": {},
     "customizations": {
-        "postCreateCommand": "dotnet tool install --global Microsoft.PowerApps.CLI.Tool --interactive false"
+        "postCreateCommand": ""
     },
     "installsAfter": []
 }

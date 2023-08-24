@@ -54,3 +54,4 @@ override.tf.json
 terraform-provider-power-platform
 
 site
+*.cache
