@@ -2,6 +2,7 @@
 page_title: "Provider: Power Platform"
 description: |-
   The Power Platform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/)
+has_children: true
 ---
 
 # Power Platform Provider
