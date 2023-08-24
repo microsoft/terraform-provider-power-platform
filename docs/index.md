@@ -72,7 +72,7 @@ provider "powerplatform" {
 ```bash
 export TF_VAR_username=<username>
 export TF_VAR_password=<password>
-export TF_VAR_tenant_id=<api url>
+export TF_VAR_tenant_id=<tenant_id>
 ```
 
 ## Environment Variables
