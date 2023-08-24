@@ -20,7 +20,6 @@
 		"ghcr.io/devcontainers/features/go:1": {
 			"version": "latest"
 		},
-		//"ghcr.io/devcontainers-contrib/features/mkdocs:2": {},
 		"./features/local_provider_dev": {},
 		"./features/pac": {}
 	},
@@ -53,7 +52,7 @@
 	"runArgs": [
 		"--env-file",
 		".devcontainer/devcontainer.env"
-	],
+	]
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	//"remoteUser": "root"
 }
