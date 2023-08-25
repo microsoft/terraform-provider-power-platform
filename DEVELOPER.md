@@ -42,7 +42,7 @@ See the [provider's user documentation](https://microsoft.github.io/terraform-pr
 
 ### Environment Variables
 
-Use environement variables to configure the provider to use your chosen credentials.  You may either pass credentials as terraform variables (via `TF_VAR_*` environment variables) or by using the provider's own envirionment variables (`POWER_PLATFORM_*`).  See the [provider's user documentation](https://microsoft.github.io/terraform-provider-power-platform#authentication) for more information on configuring credentials for the provider.
+Use environment variables to configure the provider to use your chosen credentials.  You may either pass credentials as terraform variables (via `TF_VAR_*` environment variables) or by using the provider's own envirionment variables (`POWER_PLATFORM_*`).  See the [provider's user documentation](https://microsoft.github.io/terraform-provider-power-platform#authentication) for more information on configuring credentials for the provider.
 
 ## Running Provider locally in VSCode (linux)
 
