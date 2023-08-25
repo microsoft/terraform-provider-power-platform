@@ -1,5 +1,11 @@
 # Developer Guide
 
+The Terraform Provider for Power Platform extends Terraform's capabilities to allow Terraform to manage Power Platform infrastructure and services.  The provider is built on the modern [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) and NOT on the the older Terraform SDK.  Ensure that you are referencing the correct [Plugin Framework documentation](https://developer.hashicorp.com/terraform/plugin/framework) when developing for this provider.
+
+If you want to contribute to the provider, refer to the [Contributing Guide](/CONTRIBUTING.md) which can help you learn about the different types of contributions you can make to the repo.  The following documentation will help developers get setup and prepared to make code contributions to the repo.
+
+## Devcontainer
+
 If you want to contribute to this project, you can use the devcontainer feature in Visual Studio Code to create a consistent and isolated development environment. A devcontainer is a Docker container that has all the tools and dependencies needed to work with the codebase. You can open any folder inside the container and use VS Code’s full feature set, including IntelliSense, code navigation, debugging, and extensions.
 
 ## Developer Requirements
@@ -36,18 +42,7 @@ See the [provider's user documentation](https://microsoft.github.io/terraform-pr
 
 ### Environment Variables
 
-Use environement variables to configure the provider to use your chosen credentials.  For example:
-
-```bash
-export POWER_PLATFORM_USERNAME=<username>
-export POWER_PLATFORM_PASSWORD=<password>
-export POWER_PLATFORM_HOST=<api url>
-
-```
-
-TODO: Environment variables for service principal
-
-TODO: Should probably move environment variable information into user documentation and just reference it from here
+Use environment variables to configure the provider to use your chosen credentials.  You may either pass credentials as terraform variables (via `TF_VAR_*` environment variables) or by using the provider's own envirionment variables (`POWER_PLATFORM_*`).  See the [provider's user documentation](https://microsoft.github.io/terraform-provider-power-platform#authentication) for more information on configuring credentials for the provider.
 
 ## Running Provider locally in VSCode (linux)
 
@@ -140,13 +135,4 @@ make userdocs
 
 User documentation is temporarily served on GitHub Pages which requires the [pages.yml GitHub workflow](/.github/workflows/pages.yml) to transform /docs markdown files into a static website.  Once this provider is published to the Terraform registry, documentation will be hosted on the registry instead. 
 
-## Pull Request Checklist
 
-PRs for new resources or data sources are expected to meeting the following criteria:
-
-- production quality implementation of the resource or datasource in [/internal](/internal/)
-- unit tests and acceptance tests for your contribution in [/internal](/internal/).  Tests should pass and provide >90% coverage of your contribution
-- example code for your contribution in [/examples](/examples/)
-- updated user documentation for your contribution in [/internal](/internal/) and/or [/templates](/templates/)
-- [updated auto-generated documentation](#updating-documentation) in [/docs](/docs/). (Don't manually edit [/docs](/docs/) or your updates will be overwritten)
-- a well written PR description about the feature you're adding

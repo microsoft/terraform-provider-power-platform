@@ -2,7 +2,6 @@
 page_title: "Provider: Power Platform"
 description: |-
   The Power Platform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/)
-has_children: true
 ---
 
 # Power Platform Provider
@@ -53,6 +52,12 @@ provider "powerplatform" {
 }
 ```
 
+```bash
+export TF_VAR_client_id=<client_id>
+export TF_VAR_secret=<secret>
+export TF_VAR_tenant_id=<tenant_id>
+```
+
 ### Using Username and Password
 
 ```terraform
@@ -63,6 +68,27 @@ provider "powerplatform" {
   tenant_id = var.tenant_id
 }
 ```
+
+```bash
+export TF_VAR_username=<username>
+export TF_VAR_password=<password>
+export TF_VAR_tenant_id=<tenant_id>
+```
+
+## Environment Variables
+
+In addition to the variables that are passed into the provider, there are a few environment variables that can be used to configure the provider.
+
+| Name | Description | Default Value |
+|------|-------------|---------------|
+| `POWER_PLATFORM_USERNAME` | The username to use for authentication. | |
+| `POWER_PLATFORM_PASSWORD` | The password to use for authentication. | |
+| `POWER_PLATFORM_CLIENT_ID` | The service principal client id | |
+| `POWER_PLATFORM_SECRET` | The service principal secret | |
+| `POWER_PLATFORM_TENANT_ID` | The guid of the tenant | |
+| `POWER_PLATFORM_HOST` | The API endpoint used for managing Power Platform resources | |
+
+Variables passed into the provider will override the environment variables.
 
 ## Resources and Data Sources
 
