@@ -17,7 +17,6 @@ To use the devcontainer in this repo, you need to have the following prerequisit
 - [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) installed in VS Code.
 
 ## Opening the Devcontainer
-
 Once you have the prerequisites, you can follow these steps to open the repo in a devcontainer:
 
 1. Clone or fork this repo to your local machine.
@@ -83,23 +82,23 @@ To run all acceptance tests
 make acctest
 ```
 
-To run single acceptance test
 
-```bash
+To run single acceptance test
+```bash 
 TF_ACC=1 go test -v ./... -run TestAcc<test_name>
 ```
 
 ## Running Unit Tests
 
-To run all unit tests
+To run all unit tests 
 
 ```bash
 make unittest
 ```
 
-To run single unit test
 
-```bash
+To run single unit test 
+```bash 
 TF_ACC=0 go test -v ./... -run TestUnit<test_name>
 ```
 
@@ -136,4 +135,8 @@ Do not manually edit the markdown files in [/docs](/docs/). If you need to edit 
 make userdocs
 ```
 
-User documentation is temporarily served on GitHub Pages which requires the [pages.yml GitHub workflow](/.github/workflows/pages.yml) to transform /docs markdown files into a static website.  Once this provider is published to the Terraform registry, documentation will be hosted on the registry instead.
+
+User documentation is temporarily served on GitHub Pages which requires the [pages.yml GitHub workflow](/.github/workflows/pages.yml) to transform /docs markdown files into a static website.  Once this provider is published to the Terraform registry, documentation will be hosted on the registry instead. 
+
+
+
