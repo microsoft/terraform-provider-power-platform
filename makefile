@@ -25,3 +25,6 @@ test:
 
 deps:
 	go mod tidy
+
+mocks:
+	mockgen -destination=/workspaces/terraform-provider-power-platform/internal/mocks/client_mocks_bapi.go -package=powerplatform_mocks github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi ApiClientInterface

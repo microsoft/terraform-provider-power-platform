@@ -15,3 +15,6 @@ mkdir /workspaces/terraform-provider-power-platform/ && sudo chown -R vscode /wo
 # install mkdocs
 sudo apt update && sudo apt install -y python3-pip
 pip3 install mkdocs
+
+# install mockgen
+go install github.com/golang/mock/mockgen@latest
