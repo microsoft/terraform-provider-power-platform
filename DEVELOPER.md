@@ -1,118 +1,65 @@
 # Developer Guide
 
+The Terraform Provider for Power Platform extends Terraform's capabilities to allow Terraform to manage Power Platform infrastructure and services.  The provider is built on the modern [Terraform Plugin Framework](https://github.com/hashicorp/terraform-plugin-framework) and NOT on the the older Terraform SDK.  Ensure that you are referencing the correct [Plugin Framework documentation](https://developer.hashicorp.com/terraform/plugin/framework) when developing for this provider.
+
+If you want to contribute to the provider, refer to the [Contributing Guide](/CONTRIBUTING.md) which can help you learn about the different types of contributions you can make to the repo.  The following documentation will help developers get setup and prepared to make code contributions to the repo.
+
+## Devcontainer
+
+If you want to contribute to this project, you can use the devcontainer feature in Visual Studio Code to create a consistent and isolated development environment. A devcontainer is a Docker container that has all the tools and dependencies needed to work with the codebase. You can open any folder inside the container and use VS Code’s full feature set, including IntelliSense, code navigation, debugging, and extensions.
+
 ## Developer Requirements
 
-- [Terraform](https://www.terraform.io/downloads.html) >= 0.13.x
-- [Go](https://golang.org/doc/install) >= 1.19
+To use the devcontainer in this repo, you need to have the following prerequisites:
+
+- [Docker](https://www.docker.com/products/docker-desktop/)
 - [Visual Studio Code](https://code.visualstudio.com/)
-- [Go Language Support for VS Code](https://marketplace.visualstudio.com/items?itemName=golang.go)
+- [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) installed in VS Code.
 
-## Building The Provider
+## Opening the Devcontainer
 
-```sh
-go mod tidy
-go install .
-```
+Once you have the prerequisites, you can follow these steps to open the repo in a devcontainer:
 
-## Adding Dependencies
+1. Clone or fork this repo to your local machine.
+1. Open VS Code and press F1 to open the command palette. Type “Remote-Containers: Open Folder in Container…” and select it.
+1. Browse to the folder where you cloned or forked the repo and click “Open”.
+1. VS Code will reload and start building the devcontainer image. This may take a few minutes depending on your network speed and the size of the image.
+1. When the devcontainer is ready, you will see “Dev Container: Power Platform Terraform Provider Development” in the lower left corner of the VS Code status bar. You can also open a new terminal (Ctrl+Shift+`) and see that you are inside the container.
+1. You can now edit, run, debug, and test the code as if you were on your local machine. Any changes you make will be reflected in the container and in your local file system.
 
-This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
-Please see the Go documentation for the most up to date information about using Go modules.
+For more information about devcontainers, you can check out the [devcontainer documentation](https://code.visualstudio.com/docs/devcontainers/containers).
 
-To add a new dependency `github.com/author/dependency` to your Terraform provider:
+## Power Platform Prerequisites
 
-```sh
-go get github.com/author/dependency
-go mod tidy
-```
+### Tenant
 
-## Using the provider
+Developers should have access to a tenant where they can create and delete Power Platform environments and other resources.
 
-Fill this in for each provider
+TODO: more information about tenant and permissions needed by the dev user
 
-## Developing the Provider
+### Credentials
 
-If you wish to work on the provider, you'll first need [Go](http://www.golang.org) installed on your machine (see [Requirements](#developer-requirements) above).
+See the [provider's user documentation](https://microsoft.github.io/terraform-provider-power-platform#authentication) on getting a service principal or user account credentials configured.
 
-To compile the provider, run `go install`. This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
+### Environment Variables
 
-To generate or update documentation, run `go generate`.
-
-To build run `go build`
-
-To install locally run `go install .`
-
-## End User Guidance
-
-### Pre-requisites  
-
-```json
-terraform {
-  required_providers {
-    powerplatform = {
-      version = "0.2"
-      source  = "microsoft/powerplatform"
-    }
-  }
-}
-
-provider "powerplatform" {
-  username = var.username
-  password = var.password
-  tenant_id = var.tenant_id
-}
-```
-
-1. Setup Terraform service principal for Azure
-
-Terraform will need a service principal to access Azure. List of required permissions can be found [here](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/service_principal_client_secret)
-
-```json
-terraform {
-  required_providers {
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~> 2.15.0"
-    }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 3.0.0"
-    }
-  }
-}
-
-provider "azuread" {
-  tenant_id     = "var.aad_tenant_id"
-  client_id     = "var.aad_client_id"
-  client_secret = "var.aad_client_secret"
-}
-
-provider "azurerm" {
-
-  subscription_id = "var.azure_subscription_id"
-  client_id       = "var.aad_client_id"
-  client_secret   = "var.aad_client_secret"
-  tenant_id       = "var.aad_tenant_id"
-}
-```
+Use environment variables to configure the provider to use your chosen credentials.  You may either pass credentials as terraform variables (via `TF_VAR_*` environment variables) or by using the provider's own envirionment variables (`POWER_PLATFORM_*`).  See the [provider's user documentation](https://microsoft.github.io/terraform-provider-power-platform#authentication) for more information on configuring credentials for the provider.
 
 ## Running Provider locally in VSCode (linux)
 
-1. Open VSCode, Open with devcontainer. This will install go and terraform tools.
-2. Open bash terminal
-3. `cd` to the same parent folder as this ReadMe.
-4. Execute commands below:
+Open bash terminal inside VS Code and execute the following commands:
 
 ```bash
+# you should already be in this directory, but just in case
+cd /workspaces/terraform-provider-power-platform
 
-go install
+# Build and install the provider's binary locally
+make install
 
-export TF_CLI_CONFIG_FILE=<path to dev.tfrc> # dev.tfrc
-export POWER_PLATFORM_USERNAME=<username>
-export POWER_PLATFORM_PASSWORD=<password>
-export POWER_PLATFORM_HOST=<api url>
+# Navigate to a folder that contains *.tf files and run below
+cd examples/data-sources/powerplatform_environments
 
-# Navigate to a folder that contains main.tf and run below
+# Run terraform to validate that provider is functioning
 terraform plan
 ```
 
@@ -130,28 +77,63 @@ Note: You cannot run `terraform init` when using dev overrides. `terraform init`
 
 ## Running Acceptance Tests
 
-1. Set variable `TF_ACC` to `1` by running `export TF_ACC=1`
-1. Go to provider's root folder and run `go test -v ./...`
-1. To run single acceptance test run `go test -v ./... -run TestAcc<test_name>`
+To run all acceptance tests
+
+```bash
+make acctest
+```
+
+To run single acceptance test
+
+```bash
+TF_ACC=1 go test -v ./... -run TestAcc<test_name>
+```
 
 ## Running Unit Tests
 
-1. Validate that variable TF_ACC is not set by running `echo $TF_ACC`
-1. Go to provider's root folder and run `go test -v ./...`
-1. To run single unit test run `go test -v ./... -run TestUnit<test_name>`
-
-## Generating Documentation
-
-1. Execute below command to generate documentation
+To run all unit tests
 
 ```bash
-tfplugindocs generate --provider-name powerplatform --rendered-provider-name "Power Platform"
+make unittest
 ```
 
-## Generating Mocks for Unit Tests
-
-1. Execute below command to generate mocks
+To run single unit test
 
 ```bash
-mockgen -destination=./internal/mocks/client_mocks_bapi.go -package=powerplatform_mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi" ApiClientInterface
+TF_ACC=0 go test -v ./... -run TestUnit<test_name>
 ```
+
+## Adding Dependencies
+
+This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
+Please see the Go documentation for the most up to date information about using Go modules.
+
+To add a new dependency `github.com/author/dependency` to your Terraform provider:
+
+```sh
+go get github.com/author/dependency
+make deps
+```
+
+## Updating Dependencies
+
+Open a terminal in your devcontainer and type
+
+```sh
+make deps
+```
+
+## Updating Documentation
+
+User documentation markdown files in [/docs](/docs/) are auto-generated by the [terraform plugin docs tool](https://github.com/hashicorp/terraform-plugin-docs).
+
+Do not manually edit the markdown files in [/docs](/docs/). If you need to edit documentation edit the following sources:
+
+- schema information in the provider, resource, and data-source golang files that are in [/internal](/internal/)
+- [template files](templates/)
+
+```sh
+make userdocs
+```
+
+User documentation is temporarily served on GitHub Pages which requires the [pages.yml GitHub workflow](/.github/workflows/pages.yml) to transform /docs markdown files into a static website.  Once this provider is published to the Terraform registry, documentation will be hosted on the registry instead.

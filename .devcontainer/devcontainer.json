@@ -3,7 +3,7 @@
 {
 	"name": "Power Platform Terraform Provider Development",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/base:bullseye",
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu",
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
 		"ghcr.io/devcontainers/features/azure-cli:1": {
@@ -20,21 +20,11 @@
 		"ghcr.io/devcontainers/features/go:1": {
 			"version": "latest"
 		},
-		"ghcr.io/devcontainers/features/docker-in-docker:2": {
-			"moby": true,
-			"azureDnsAutoDetection": true,
-			"installDockerBuildx": true,
-			"version": "latest",
-			"dockerDashComposeVersion": "v1"
-		},
-		"ghcr.io/devcontainers/features/dotnet:1": {
-			"version": "latest"
-		},
-		"ghcr.io/devcontainers/features/ruby:1": {},
 		"./features/local_provider_dev": {},
 		"./features/pac": {},
 		"./features/generate_plugins": {}
 	},
+	"postCreateCommand": "git config --global --add safe.directory /workspaces/terraform-provider-power-platform",
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Configure tool-specific properties.
@@ -65,5 +55,5 @@
 		".devcontainer/devcontainer.env"
 	]
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "root"
+	//"remoteUser": "root"
 }
