@@ -15,7 +15,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
 
 	policyId := "00000000-0000-0000-0000-000000000000"
-	policy := models.DlpPolicyDto{
+	policy := models.DlpPolicyModel{
 		Name:             policyId,
 		ETag:             "etag",
 		CreatedBy:        "createdBy",
@@ -322,7 +322,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 		},
 	}
 
-	clientMock.EXPECT().UpdatePolicy(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, name string, policyToUpdate models.DlpPolicyDto) (*models.DlpPolicyDto, error) {
+	clientMock.EXPECT().UpdatePolicy(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, name string, policyToUpdate models.DlpPolicyModel) (*models.DlpPolicyModel, error) {
 		policy.DisplayName = policyToUpdate.DisplayName
 		policy.DefaultConnectorsClassification = policyToUpdate.DefaultConnectorsClassification
 		policy.EnvironmentType = policyToUpdate.EnvironmentType
@@ -332,11 +332,11 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 		return &policy, nil
 	}).Times(len(steps) - 1)
 
-	clientMock.EXPECT().GetPolicy(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, policyId string) (*models.DlpPolicyDto, error) {
+	clientMock.EXPECT().GetPolicy(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, policyId string) (*models.DlpPolicyModel, error) {
 		return &policy, nil
 	}).AnyTimes()
 
-	clientMock.EXPECT().CreatePolicy(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, policyToCreate models.DlpPolicyDto) (*models.DlpPolicyDto, error) {
+	clientMock.EXPECT().CreatePolicy(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, policyToCreate models.DlpPolicyModel) (*models.DlpPolicyModel, error) {
 		policy.DisplayName = policyToCreate.DisplayName
 		policy.DefaultConnectorsClassification = policyToCreate.DefaultConnectorsClassification
 		policy.EnvironmentType = policyToCreate.EnvironmentType
@@ -363,7 +363,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
 
-	policy := models.DlpPolicyDto{}
+	policy := models.DlpPolicyModel{}
 	policy.Name = "00000000-0000-0000-0000-000000000000"
 	policy.ETag = "etag"
 	policy.CreatedBy = "createdBy"
@@ -371,11 +371,11 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 	policy.LastModifiedBy = "lastModifiedBy"
 	policy.LastModifiedTime = "lastModifiedTime"
 
-	clientMock.EXPECT().GetPolicy(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, policyID string) (*models.DlpPolicyDto, error) {
+	clientMock.EXPECT().GetPolicy(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, policyID string) (*models.DlpPolicyModel, error) {
 		return &policy, nil
 	}).AnyTimes()
 
-	clientMock.EXPECT().CreatePolicy(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, policyToCreate models.DlpPolicyDto) (*models.DlpPolicyDto, error) {
+	clientMock.EXPECT().CreatePolicy(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, policyToCreate models.DlpPolicyModel) (*models.DlpPolicyModel, error) {
 		policy.DisplayName = policyToCreate.DisplayName
 		policy.DefaultConnectorsClassification = policyToCreate.DefaultConnectorsClassification
 		policy.EnvironmentType = policyToCreate.EnvironmentType

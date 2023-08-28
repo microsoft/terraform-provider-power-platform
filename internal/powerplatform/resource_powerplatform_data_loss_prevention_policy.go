@@ -144,7 +144,7 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 				Description:         "Default action rule behavior for the connector (\"Allow\", \"Block\")",
 				Optional:            true,
 				Validators: []validator.String{
-					stringvalidator.OneOf("Allow", "Block"),
+					stringvalidator.OneOf("Allow", "Block", ""),
 				},
 			},
 			"action_rules": schema.ListNestedAttribute{
@@ -388,18 +388,18 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 		return
 	}
 
-	policyToCreate := models.DlpPolicyDto{
+	policyToCreate := models.DlpPolicyModel{
 		DefaultConnectorsClassification:      plan.DefaultConnectorsClassification.ValueString(),
 		DisplayName:                          plan.DisplayName.ValueString(),
 		EnvironmentType:                      plan.EnvironmentType.ValueString(),
 		Environments:                         []models.DlpEnvironmentDto{},
-		ConnectorGroups:                      []models.DlpConnectorGroupsDto{},
+		ConnectorGroups:                      []models.DlpConnectorGroupsModel{},
 		CustomConnectorUrlPatternsDefinition: []models.DlpConnectorUrlPatternsDefinitionDto{},
 	}
 
 	policyToCreate.Environments = ConvertToDlpEnvironment(ctx, resp.Diagnostics, plan.Environments)
 	policyToCreate.CustomConnectorUrlPatternsDefinition = ConvertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
-	policyToCreate.ConnectorGroups = make([]models.DlpConnectorGroupsDto, 0)
+	policyToCreate.ConnectorGroups = make([]models.DlpConnectorGroupsModel, 0)
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, ConvertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.BusinessGeneralConnectors))
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, ConvertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.NonBusinessConfidentialConnectors))
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, ConvertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors))
@@ -443,18 +443,18 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 		return
 	}
 
-	policyToUpdate := models.DlpPolicyDto{
+	policyToUpdate := models.DlpPolicyModel{
 		Name:                            plan.Id.ValueString(),
 		DisplayName:                     plan.DisplayName.ValueString(),
 		EnvironmentType:                 plan.EnvironmentType.ValueString(),
 		DefaultConnectorsClassification: plan.DefaultConnectorsClassification.ValueString(),
 		Environments:                    []models.DlpEnvironmentDto{},
-		ConnectorGroups:                 []models.DlpConnectorGroupsDto{},
+		ConnectorGroups:                 []models.DlpConnectorGroupsModel{},
 	}
 
 	policyToUpdate.Environments = ConvertToDlpEnvironment(ctx, resp.Diagnostics, plan.Environments)
 	policyToUpdate.CustomConnectorUrlPatternsDefinition = ConvertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
-	policyToUpdate.ConnectorGroups = make([]models.DlpConnectorGroupsDto, 0)
+	policyToUpdate.ConnectorGroups = make([]models.DlpConnectorGroupsModel, 0)
 	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, ConvertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.BusinessGeneralConnectors))
 	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, ConvertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.NonBusinessConfidentialConnectors))
 	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, ConvertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors))
@@ -523,7 +523,7 @@ func ConvertConnectorRuleClassificationValues(value string) string {
 	}
 }
 
-func ConvertToAttrValueConnectorsGroup(classification string, connectorsGroup []models.DlpConnectorGroupsDto) basetypes.SetValue {
+func ConvertToAttrValueConnectorsGroup(classification string, connectorsGroup []models.DlpConnectorGroupsModel) basetypes.SetValue {
 	var connectorValues []attr.Value
 	for _, conn := range connectorsGroup {
 		if conn.Classification == classification {
@@ -536,18 +536,20 @@ func ConvertToAttrValueConnectorsGroup(classification string, connectorsGroup []
 func ConvertToAttrValueCustomConnectorUrlPatternsDefinition(urlPatterns []models.DlpConnectorUrlPatternsDefinitionDto) basetypes.SetValue {
 	var connUrlPattern []attr.Value
 	for _, connectorUrlPattern := range urlPatterns {
-		connUrlPattern = append(connUrlPattern, types.ObjectValueMust(
-			map[string]attr.Type{
-				"order":            types.Int64Type,
-				"host_url_pattern": types.StringType,
-				"data_group":       types.StringType,
-			},
-			map[string]attr.Value{
-				"order":            types.Int64Value(connectorUrlPattern.Order),
-				"host_url_pattern": types.StringValue(connectorUrlPattern.Pattern),
-				"data_group":       types.StringValue(ConvertConnectorRuleClassificationValues(connectorUrlPattern.ConnectorRuleClassification)),
-			},
-		))
+		for _, rules := range connectorUrlPattern.Rules {
+			connUrlPattern = append(connUrlPattern, types.ObjectValueMust(
+				map[string]attr.Type{
+					"order":            types.Int64Type,
+					"host_url_pattern": types.StringType,
+					"data_group":       types.StringType,
+				},
+				map[string]attr.Value{
+					"order":            types.Int64Value(rules.Order),
+					"host_url_pattern": types.StringValue(rules.Pattern),
+					"data_group":       types.StringValue(ConvertConnectorRuleClassificationValues(rules.ConnectorRuleClassification)),
+				},
+			))
+		}
 	}
 	if len(urlPatterns) == 0 {
 		return types.SetValueMust(customConnectorPatternSetObjectType, []attr.Value{})
@@ -576,7 +578,7 @@ func ConvertToAttrValueEnvironments(environments []models.DlpEnvironmentDto) bas
 	}
 }
 
-func ConvertToAttrValueConnectors(connectorsGroup models.DlpConnectorGroupsDto, connectors []attr.Value) []attr.Value {
+func ConvertToAttrValueConnectors(connectorsGroup models.DlpConnectorGroupsModel, connectors []attr.Value) []attr.Value {
 	for _, connector := range connectorsGroup.Connectors {
 		connectors = append(connectors, types.ObjectValueMust(
 			map[string]attr.Type{
@@ -611,26 +613,32 @@ func ConvertToAttrValueConnectors(connectorsGroup models.DlpConnectorGroupsDto, 
 	return connectors
 }
 
-func ConvertToDlpConnectorGroup(ctx context.Context, diag diag.Diagnostics, classification string, connectorsAttr basetypes.SetValue) models.DlpConnectorGroupsDto {
+func ConvertToDlpConnectorGroup(ctx context.Context, diag diag.Diagnostics, classification string, connectorsAttr basetypes.SetValue) models.DlpConnectorGroupsModel {
 	var connectors []DataLossPreventionPolicyResourceConnectorModel
 	err := connectorsAttr.ElementsAs(ctx, &connectors, true)
 	if err != nil {
 		diag.AddError("Client error when converting DlpConnectorGroups", "")
 	}
 
-	connectorGroup := models.DlpConnectorGroupsDto{
+	connectorGroup := models.DlpConnectorGroupsModel{
 		Classification: classification,
-		Connectors:     make([]models.DlpConnectorDto, 0),
+		Connectors:     make([]models.DlpConnectorModel, 0),
 	}
 
 	for _, connector := range connectors {
 		defaultAction := "Allow"
+
+		//TODO
 		if connector.DefaultActionRuleBehavior.ValueString() != "" {
 			defaultAction = connector.DefaultActionRuleBehavior.ValueString()
 		}
-		connectorGroup.Connectors = append(connectorGroup.Connectors, models.DlpConnectorDto{
-			Id:                        connector.Id.ValueString(),
-			Name:                      connector.Name.ValueString(),
+
+		connectorGroup.Connectors = append(connectorGroup.Connectors, models.DlpConnectorModel{
+			Id:   connector.Id.ValueString(),
+			Name: connector.Name.ValueString(),
+			Type: "Microsoft.PowerApps/apis",
+
+			//todo
 			DefaultActionRuleBehavior: defaultAction,
 			ActionRules:               ConvertToDlpActionRule(connector),
 			EndpointRules:             ConvertToDlpEndpointRule(connector),
@@ -650,6 +658,8 @@ func ConvertToDlpEnvironment(ctx context.Context, diag diag.Diagnostics, environ
 	for _, environment := range envs {
 		environments = append(environments, models.DlpEnvironmentDto{
 			Name: environment.Name.ValueString(),
+			Id:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/" + environment.Name.ValueString(),
+			Type: "Microsoft.BusinessAppPlatform/scopes/environments",
 		})
 	}
 	return environments
@@ -662,13 +672,26 @@ func ConvertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diag 
 		diag.AddError("Client error when converting DlpCustomConnectorUrlPatternsDefinition", "")
 	}
 
+	// customConnectorUrlPatternsDefinition := make([]models.DlpConnectorUrlPatternsDefinitionDto, 0)
+	// for _, customConnectorPattern := range customConnectorsPatterns {
+	// 	customConnectorUrlPatternsDefinition = append(customConnectorUrlPatternsDefinition, models.DlpConnectorUrlPatternsDefinitionDto{
+	// 		Order:                       customConnectorPattern.Order.ValueInt64(),
+	// 		ConnectorRuleClassification: ConvertConnectorRuleClassificationValues(customConnectorPattern.DataGroup.ValueString()),
+	// 		Pattern:                     customConnectorPattern.HostUrlPattern.ValueString(),
+	// 	})
+	// }
+
 	customConnectorUrlPatternsDefinition := make([]models.DlpConnectorUrlPatternsDefinitionDto, 0)
 	for _, customConnectorPattern := range customConnectorsPatterns {
-		customConnectorUrlPatternsDefinition = append(customConnectorUrlPatternsDefinition, models.DlpConnectorUrlPatternsDefinitionDto{
+		urlPattern := models.DlpConnectorUrlPatternsDefinitionDto{
+			Rules: []models.DlpConnectorUrlPatternsRuleDto{},
+		}
+		urlPattern.Rules = append(urlPattern.Rules, models.DlpConnectorUrlPatternsRuleDto{
 			Order:                       customConnectorPattern.Order.ValueInt64(),
 			ConnectorRuleClassification: ConvertConnectorRuleClassificationValues(customConnectorPattern.DataGroup.ValueString()),
 			Pattern:                     customConnectorPattern.HostUrlPattern.ValueString(),
 		})
+		customConnectorUrlPatternsDefinition = append(customConnectorUrlPatternsDefinition, urlPattern)
 	}
 	return customConnectorUrlPatternsDefinition
 }
@@ -696,7 +719,7 @@ func ConvertToDlpEndpointRule(connector DataLossPreventionPolicyResourceConnecto
 	return endpointRules
 }
 
-func ConvertToAtrValueActionRule(connector models.DlpConnectorDto) []attr.Value {
+func ConvertToAtrValueActionRule(connector models.DlpConnectorModel) []attr.Value {
 	var actionRules []attr.Value
 	for _, actionRule := range connector.ActionRules {
 		actionRules = append(actionRules, types.ObjectValueMust(
@@ -713,7 +736,7 @@ func ConvertToAtrValueActionRule(connector models.DlpConnectorDto) []attr.Value 
 	return actionRules
 }
 
-func ConvertToAtrValueEndpointRule(connector models.DlpConnectorDto) []attr.Value {
+func ConvertToAtrValueEndpointRule(connector models.DlpConnectorModel) []attr.Value {
 	var endpointRules []attr.Value
 	for _, endpointRule := range connector.EndpointRules {
 		endpointRules = append(endpointRules, types.ObjectValueMust(

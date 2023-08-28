@@ -52,10 +52,10 @@ func (mr *MockApiClientInterfaceMockRecorder) CreateEnvironment(arg0, arg1 inter
 }
 
 // CreatePolicy mocks base method.
-func (m *MockApiClientInterface) CreatePolicy(arg0 context.Context, arg1 powerplatform_bapi0.DlpPolicyDto) (*powerplatform_bapi0.DlpPolicyDto, error) {
+func (m *MockApiClientInterface) CreatePolicy(arg0 context.Context, arg1 powerplatform_bapi0.DlpPolicyModel) (*powerplatform_bapi0.DlpPolicyModel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePolicy", arg0, arg1)
-	ret0, _ := ret[0].(*powerplatform_bapi0.DlpPolicyDto)
+	ret0, _ := ret[0].(*powerplatform_bapi0.DlpPolicyModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -214,10 +214,10 @@ func (mr *MockApiClientInterfaceMockRecorder) GetEnvironments(arg0 interface{}) 
 }
 
 // GetPolicies mocks base method.
-func (m *MockApiClientInterface) GetPolicies(arg0 context.Context) ([]powerplatform_bapi0.DlpPolicyDto, error) {
+func (m *MockApiClientInterface) GetPolicies(arg0 context.Context) ([]powerplatform_bapi0.DlpPolicyModel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPolicies", arg0)
-	ret0, _ := ret[0].([]powerplatform_bapi0.DlpPolicyDto)
+	ret0, _ := ret[0].([]powerplatform_bapi0.DlpPolicyModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -229,10 +229,10 @@ func (mr *MockApiClientInterfaceMockRecorder) GetPolicies(arg0 interface{}) *gom
 }
 
 // GetPolicy mocks base method.
-func (m *MockApiClientInterface) GetPolicy(arg0 context.Context, arg1 string) (*powerplatform_bapi0.DlpPolicyDto, error) {
+func (m *MockApiClientInterface) GetPolicy(arg0 context.Context, arg1 string) (*powerplatform_bapi0.DlpPolicyModel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPolicy", arg0, arg1)
-	ret0, _ := ret[0].(*powerplatform_bapi0.DlpPolicyDto)
+	ret0, _ := ret[0].(*powerplatform_bapi0.DlpPolicyModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -304,10 +304,10 @@ func (mr *MockApiClientInterfaceMockRecorder) UpdateEnvironment(arg0, arg1, arg2
 }
 
 // UpdatePolicy mocks base method.
-func (m *MockApiClientInterface) UpdatePolicy(arg0 context.Context, arg1 string, arg2 powerplatform_bapi0.DlpPolicyDto) (*powerplatform_bapi0.DlpPolicyDto, error) {
+func (m *MockApiClientInterface) UpdatePolicy(arg0 context.Context, arg1 string, arg2 powerplatform_bapi0.DlpPolicyModel) (*powerplatform_bapi0.DlpPolicyModel, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdatePolicy", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*powerplatform_bapi0.DlpPolicyDto)
+	ret0, _ := ret[0].(*powerplatform_bapi0.DlpPolicyModel)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

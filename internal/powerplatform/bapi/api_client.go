@@ -53,11 +53,11 @@ type ApiClientInterface interface {
 	GetPowerApps(ctx context.Context, environmentId string) ([]models.PowerAppBapi, error)
 
 	GetConnectors(ctx context.Context) ([]models.ConnectorDto, error)
-	GetPolicies(ctx context.Context) ([]models.DlpPolicyDto, error)
-	GetPolicy(ctx context.Context, name string) (*models.DlpPolicyDto, error)
+	GetPolicies(ctx context.Context) ([]models.DlpPolicyModel, error)
+	GetPolicy(ctx context.Context, name string) (*models.DlpPolicyModel, error)
 	DeletePolicy(ctx context.Context, name string) error
-	UpdatePolicy(ctx context.Context, name string, policyToUpdate models.DlpPolicyDto) (*models.DlpPolicyDto, error)
-	CreatePolicy(ctx context.Context, policyToCreate models.DlpPolicyDto) (*models.DlpPolicyDto, error)
+	UpdatePolicy(ctx context.Context, name string, policyToUpdate models.DlpPolicyModel) (*models.DlpPolicyModel, error)
+	CreatePolicy(ctx context.Context, policyToCreate models.DlpPolicyModel) (*models.DlpPolicyModel, error)
 }
 
 func (client *ApiClient) doRequest(request *http.Request) ([]byte, error) {
