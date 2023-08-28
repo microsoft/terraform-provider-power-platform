@@ -5,23 +5,8 @@ import (
 	"testing"
 
 	gomock "github.com/golang/mock/gomock"
-	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
 )
-
-// TODO Remove
-func NewUnitTestsMockClientInterface(t *testing.T) *MockClientInterface {
-	ctrl := gomock.NewController(t)
-	return NewMockClientInterface(ctrl)
-}
-
-// TODO remove
-func DoUnitTestsBasicAuth(clientMock *MockClientInterface) {
-	a := &powerplatform.AuthResponse{
-		AuthHash: "auth_hash_placeholder",
-	}
-	clientMock.EXPECT().DoBasicAuth(gomock.Any(), gomock.Any(), gomock.Any()).Return(a, nil).AnyTimes()
-}
 
 func NewUnitTestsMockApiClientInterface(t *testing.T) *MockApiClientInterface {
 	ctrl := gomock.NewController(t)
