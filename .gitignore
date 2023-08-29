@@ -17,7 +17,7 @@ bin
 
 # Local .terraform directories
 **/.terraform/*
-#**/vendor/*
+**/vendor/*
 
 # .tfstate files
 *.tfstate

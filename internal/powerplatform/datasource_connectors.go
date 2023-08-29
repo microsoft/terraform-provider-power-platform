@@ -44,17 +44,19 @@ type ConnectorsDataSourceModel struct {
 	DisplayName types.String `tfsdk:"display_name"`
 	Tier        types.String `tfsdk:"tier"`
 	Publisher   types.String `tfsdk:"publisher"`
+	Unblockable types.Bool   `tfsdk:"unblockable"`
 }
 
-func ConvertFromConnectorDto(environmentDto models.ConnectorDto) ConnectorsDataSourceModel {
+func ConvertFromConnectorDto(connectorDto models.ConnectorDto) ConnectorsDataSourceModel {
 	return ConnectorsDataSourceModel{
-		Id:          types.StringValue(environmentDto.Id),
-		Name:        types.StringValue(environmentDto.Name),
-		Type:        types.StringValue(environmentDto.Type),
-		Description: types.StringValue(environmentDto.Properties.Description),
-		DisplayName: types.StringValue(environmentDto.Properties.DisplayName),
-		Tier:        types.StringValue(environmentDto.Properties.Tier),
-		Publisher:   types.StringValue(environmentDto.Properties.Publisher),
+		Id:          types.StringValue(connectorDto.Id),
+		Name:        types.StringValue(connectorDto.Name),
+		Type:        types.StringValue(connectorDto.Type),
+		Description: types.StringValue(connectorDto.Properties.Description),
+		DisplayName: types.StringValue(connectorDto.Properties.DisplayName),
+		Tier:        types.StringValue(connectorDto.Properties.Tier),
+		Publisher:   types.StringValue(connectorDto.Properties.Publisher),
+		Unblockable: types.BoolValue(connectorDto.Properties.Unblockable),
 	}
 }
 
@@ -109,6 +111,11 @@ func (d *ConnectorsDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 						"publisher": schema.StringAttribute{
 							MarkdownDescription: "Publisher",
 							Description:         "Publisher",
+							Computed:            true,
+						},
+						"unblockable": schema.BoolAttribute{
+							MarkdownDescription: "Indicates if the connector can be blocked in a Data Loss Prevention policy. If true, the connector has to be in 'Non-Business' connectors group.",
+							Description:         "Indicates if the connector can be blocked in a Data Loss Prevention policy. If true, the connector has to be in 'Non-Business' connectors group.",
 							Computed:            true,
 						},
 					},

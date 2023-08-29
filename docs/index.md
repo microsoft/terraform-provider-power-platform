@@ -52,6 +52,7 @@ provider "powerplatform" {
 }
 ```
 
+
 ```bash
 export TF_VAR_client_id=<client_id>
 export TF_VAR_secret=<secret>
@@ -68,6 +69,7 @@ provider "powerplatform" {
   tenant_id = var.tenant_id
 }
 ```
+
 
 ```bash
 export TF_VAR_username=<username>

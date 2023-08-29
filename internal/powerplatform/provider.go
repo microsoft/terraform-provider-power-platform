@@ -13,13 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
 )
 
 var _ provider.Provider = &PowerPlatformProvider{}
-var _ powerplatform.ClientInterface = &powerplatform.Client{}
-
 var _ powerplatform_bapi.ApiClientInterface = &powerplatform_bapi.ApiClient{}
 
 type PowerPlatformProviderModel struct {
@@ -32,14 +29,12 @@ type PowerPlatformProviderModel struct {
 }
 
 type PowerPlatformProvider struct {
-	client     powerplatform.ClientInterface
 	bapiClient powerplatform_bapi.ApiClientInterface
 }
 
 func NewPowerPlatformProvider() func() provider.Provider {
 	return func() provider.Provider {
 		return &PowerPlatformProvider{
-			client: &powerplatform.Client{},
 			bapiClient: &powerplatform_bapi.ApiClient{
 				HttpClient:      http.DefaultClient,
 				BapiUrl:         "api.bap.microsoft.com",
@@ -224,7 +219,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		func() resource.Resource { return NewEnvironmentResource() },
-		//func() resource.Resource { return NewDataLossPreventionPolicyResource() },
+		func() resource.Resource { return NewDataLossPreventionPolicyResource() },
 		func() resource.Resource { return NewSolutionResource() },
 	}
 }
