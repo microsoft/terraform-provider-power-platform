@@ -17,7 +17,7 @@ terraform {
   required_providers {
     powerplatform = {
       version = "0.2"
-      source  = "github.com/microsoft/terraform-provider-power-platform"
+      source  = "microsoft/power-platform"
     }
   }
 }
@@ -40,6 +40,7 @@ data "powerplatform_connectors" "all_connectors" {}
 - `id` (String) The ID of this resource.
 
 <a id="nestedatt--connectors"></a>
+
 ### Nested Schema for `connectors`
 
 Read-Only:

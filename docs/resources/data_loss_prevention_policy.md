@@ -13,160 +13,113 @@ Data Loss Prevention Policy
 ## Example Usage
 
 ```terraform
-terraform {
+erraform {
   required_providers {
     powerplatform = {
       version = "0.2"
-      source  = "github.com/microsoft/terraform-provider-power-platform"
+      source  = "microsoft/power-platform"
     }
   }
 }
 provider "powerplatform" {
-  username = var.username
-  password = var.password
+  username  = var.username
+  password  = var.password
   tenant_id = var.tenant_id
 }
-resource "powerplatform_data_loss_prevention_policy" "my_policy" {
-  display_name                      = "Test Policy"
-  environment_type                  = "ExceptEnvironments"
-  default_connectors_classification = "Blocked"
-  environments = [
+data "powerplatform_connectors" "all_connectors" {}
+
+locals {
+
+  business_connectors = toset([
     {
-      environment_name = "00000000-0000-0000-0000-000000000000"
-    },
-    {
-      environment_name = "00000000-0000-0000-0000-000000000001"
-    }
-  ]
-
-  connector_groups = [
-    {
-      classification = "Confidential"
-      connectors = [{
-        id   = "/providers/Microsoft.PowerApps/apis/shared_sql"
-        name = "SQL Server"
+      action_rules = [
+        {
+          action_id = "DeleteItem_V2"
+          behavior  = "Block"
         },
         {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_office365"
-          name = "Office 365 Outlook"
+          action_id = "ExecutePassThroughNativeQuery_V2"
+          behavior  = "Block"
         },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_assistantstudio"
-          name = "Dynamics 365 Sales Insights"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_dynamics365marketing"
-          name = "Dynamics 365 Marketing"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_office365users"
-          name = "Office 365 Users"
-      }]
-    },
-    {
-      classification = "General"
-      connectors = [
-
-       
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_onedriveforbusiness"
-          name = "OneDrive for Business"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_approvals"
-          name = "Approvals"
-
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"
-          name = "Defender for Cloud Apps"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_commondataservice"
-          name = "Microsoft Dataverse (legacy)"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps"
-          name = "Microsoft Dataverse"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_excelonlinebusiness"
-          name = "Excel Online (Business)"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_flowpush"
-          name = "Notifications"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_kaizala"
-          name = "Microsoft Kaizala"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_microsoftformspro"
-          name = "Dynamics 365 Customer Voice"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_office365groups"
-          name = "Office 365 Groups"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_office365groupsmail"
-          name = "Office 365 Groups Mail"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_onenote"
-          name = "OneNote (Business)"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_planner"
-          name = "Planner"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_powerappsnotification"
-          name = "Power Apps Notification"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_powerappsnotificationv2"
-          name = "Power Apps Notification V2"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_powerbi"
-          name = "Power BI"
-
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_shifts"
-          name = "Shifts for Microsoft Teams"
-
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_skypeforbiz"
-          name = "Skype for Business Online"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_teams"
-          name = "Microsoft Teams"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_todo"
-          name = "Microsoft To-Do (Business)"
-        },
-        {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_yammer"
-          name = "Yammer"
-        },
-         {
-          id   = "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
-          name = "SharePoint"
-        }
       ]
+      default_action_rule_behavior = "Allow"
+      endpoint_rules = [
+        {
+          behavior = "Allow"
+          endpoint = "contoso.com"
+          order    = 1
+        },
+        {
+          behavior = "Deny"
+          endpoint = "*"
+          order    = 2
+        },
+      ]
+      id   = "/providers/Microsoft.PowerApps/apis/shared_sql"
+      name = "shared_sql"
     },
     {
-      classification = "Blocked"
-      connectors     = []
+      action_rules                 = []
+      default_action_rule_behavior = ""
+      endpoint_rules               = []
+      id                           = "/providers/Microsoft.PowerApps/apis/shared_approvals"
+      name                         = "shared_approvals"
+    },
+    {
+      action_rules                 = []
+      default_action_rule_behavior = ""
+      endpoint_rules               = []
+      id                           = "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"
+      name                         = "shared_cloudappsecurity"
     }
-  ]
+  ])
 
+  non_business_connectors = toset([for conn
+    in data.powerplatform_connectors.all_connectors.connectors :
+    {
+      id                           = conn.id
+      name                         = conn.name
+      default_action_rule_behavior = ""
+      action_rules                 = [],
+      endpoint_rules               = []
+    }
+    if conn.unblockable == true && !contains([for bus_conn in local.business_connectors : bus_conn.id], conn.id)
+  ])
+
+  blocked_connectors = toset([for conn
+    in data.powerplatform_connectors.all_connectors.connectors :
+    {
+      id                           = conn.id
+      name                         = conn.name
+      default_action_rule_behavior = ""
+      action_rules                 = [],
+      endpoint_rules               = []
+    }
+  if conn.unblockable == false && !contains([for bus_conn in local.business_connectors : bus_conn.id], conn.id)])
+}
+
+resource "powerplatform_data_loss_prevention_policy" "my_policy" {
+  display_name                      = "Block All Policy"
+  default_connectors_classification = "Blocked"
+  environment_type                  = "AllEnvironments"
+  environments                      = []
+
+  business_connectors     = local.business_connectors
+  non_business_connectors = local.non_business_connectors
+  blocked_connectors      = local.blocked_connectors
+
+  custom_connectors_patterns = toset([
+    {
+      order            = 1
+      host_url_pattern = "https://*.contoso.com"
+      data_group       = "Blocked"
+    },
+    {
+      order            = 2
+      host_url_pattern = "*"
+      data_group       = "Ignore"
+    }
+  ])
 }
 ```
 
@@ -193,6 +146,7 @@ resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 - `last_modified_time` (String) Time when the policy was last modified
 
 <a id="nestedatt--blocked_connectors"></a>
+
 ### Nested Schema for `blocked_connectors`
 
 Optional:
@@ -204,6 +158,7 @@ Optional:
 - `name` (String) Name of the connector
 
 <a id="nestedatt--blocked_connectors--action_rules"></a>
+
 ### Nested Schema for `blocked_connectors.action_rules`
 
 Required:
@@ -211,8 +166,8 @@ Required:
 - `action_id` (String) ID of the action rule
 - `behavior` (String) Behavior of the action rule ("Allow", "Block")
 
-
 <a id="nestedatt--blocked_connectors--endpoint_rules"></a>
+
 ### Nested Schema for `blocked_connectors.endpoint_rules`
 
 Required:
@@ -221,9 +176,8 @@ Required:
 - `endpoint` (String) Endpoint of the endpoint rule
 - `order` (Number) Order of the endpoint rule
 
-
-
 <a id="nestedatt--business_connectors"></a>
+
 ### Nested Schema for `business_connectors`
 
 Optional:
@@ -235,6 +189,7 @@ Optional:
 - `name` (String) Name of the connector
 
 <a id="nestedatt--business_connectors--action_rules"></a>
+
 ### Nested Schema for `business_connectors.action_rules`
 
 Required:
@@ -242,8 +197,8 @@ Required:
 - `action_id` (String) ID of the action rule
 - `behavior` (String) Behavior of the action rule ("Allow", "Block")
 
-
 <a id="nestedatt--business_connectors--endpoint_rules"></a>
+
 ### Nested Schema for `business_connectors.endpoint_rules`
 
 Required:
@@ -252,9 +207,8 @@ Required:
 - `endpoint` (String) Endpoint of the endpoint rule
 - `order` (Number) Order of the endpoint rule
 
-
-
 <a id="nestedatt--custom_connectors_patterns"></a>
+
 ### Nested Schema for `custom_connectors_patterns`
 
 Required:
@@ -263,16 +217,16 @@ Required:
 - `host_url_pattern` (String) Pattern of the connector
 - `order` (Number) Order of the connector
 
-
 <a id="nestedatt--environments"></a>
+
 ### Nested Schema for `environments`
 
 Required:
 
 - `name` (String) Unique Identifier of the environment
 
-
 <a id="nestedatt--non_business_connectors"></a>
+
 ### Nested Schema for `non_business_connectors`
 
 Optional:
@@ -284,6 +238,7 @@ Optional:
 - `name` (String) Name of the connector
 
 <a id="nestedatt--non_business_connectors--action_rules"></a>
+
 ### Nested Schema for `non_business_connectors.action_rules`
 
 Required:
@@ -291,8 +246,8 @@ Required:
 - `action_id` (String) ID of the action rule
 - `behavior` (String) Behavior of the action rule ("Allow", "Block")
 
-
 <a id="nestedatt--non_business_connectors--endpoint_rules"></a>
+
 ### Nested Schema for `non_business_connectors.endpoint_rules`
 
 Required:

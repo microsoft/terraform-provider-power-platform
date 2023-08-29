@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
@@ -13,15 +15,19 @@ import (
 func (client *ApiClient) GetPolicies(ctx context.Context) ([]models.DlpPolicyModel, error) {
 
 	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/policies
-	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/1dbbeae5-8fa6-462e-a5a1-9932a520a1dc/policies/9faa9dca-9d96-41b3-888e-98b3d8911f88/policyconnectorconfigurations
-	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/1dbbeae5-8fa6-462e-a5a1-9932a520a1dc/policies/9faa9dca-9d96-41b3-888e-98b3d8911f88/urlPatterns
+	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/<tenantId>/policies/<policyId>/policyconnectorconfigurations
+	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/<tenantId>/policies/<policyId>/urlPatterns
 
 	return nil, nil
 }
 
 func (client *ApiClient) GetPolicy(ctx context.Context, name string) (*models.DlpPolicyModel, error) {
-
-	request, err := http.NewRequestWithContext(ctx, "GET", "https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/"+name, nil)
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   "api.bap.microsoft.com",
+		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", name),
+	}
+	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +46,12 @@ func (client *ApiClient) GetPolicy(ctx context.Context, name string) (*models.Dl
 }
 
 func (client *ApiClient) DeletePolicy(ctx context.Context, name string) error {
-	request, err := http.NewRequestWithContext(ctx, "DELETE", "https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/policies/"+name, nil)
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   "api.bap.microsoft.com",
+		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v1/policies/%s", name),
+	}
+	request, err := http.NewRequestWithContext(ctx, "DELETE", apiUrl.String(), nil)
 	if err != nil {
 		return err
 	}
@@ -60,7 +71,12 @@ func (client *ApiClient) UpdatePolicy(ctx context.Context, name string, policy m
 		return nil, err
 	}
 
-	request, err := http.NewRequestWithContext(ctx, "PATCH", "https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/"+policy.Name, bytes.NewReader(body))
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   "api.bap.microsoft.com",
+		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", policy.Name),
+	}
+	request, err := http.NewRequestWithContext(ctx, "PATCH", apiUrl.String(), bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +103,12 @@ func (client *ApiClient) CreatePolicy(ctx context.Context, policy models.DlpPoli
 		return nil, err
 	}
 
-	request, err := http.NewRequestWithContext(ctx, "POST", "https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/", bytes.NewReader(body))
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   "api.bap.microsoft.com",
+		Path:   "/providers/PowerPlatform.Governance/v2/policies/",
+	}
+	request, err := http.NewRequestWithContext(ctx, "POST", apiUrl.String(), bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}

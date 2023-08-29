@@ -5,13 +5,27 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/url"
 	"strings"
 
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 )
 
 func (client *ApiClient) GetConnectors(ctx context.Context) ([]models.ConnectorDto, error) {
-	request, err := http.NewRequestWithContext(ctx, "GET", "https://api.powerapps.com/providers/Microsoft.PowerApps/apis?api-version=2023-06-01&showApisWithToS=true&hideDlpExemptApis=true&showAllDlpEnforceableApis=true&$filter=environment%20eq%20%27~Default%27", nil)
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   "api.powerapps.com",
+		Path:   "/providers/Microsoft.PowerApps/apis",
+	}
+	values := url.Values{}
+	values.Add("api-version", "2023-06-01")
+	values.Add("showApisWithToS", "true")
+	values.Add("hideDlpExemptApis", "true")
+	values.Add("showAllDlpEnforceableApis", "true")
+	values.Add("$filter", "environment eq '~Default'")
+	apiUrl.RawQuery = values.Encode()
+
+	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +41,12 @@ func (client *ApiClient) GetConnectors(ctx context.Context) ([]models.ConnectorD
 		return nil, err
 	}
 
-	request, err = http.NewRequestWithContext(ctx, "GET", "https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/connectors/metadata/unblockable", nil)
+	apiUrl = &url.URL{
+		Scheme: "https",
+		Host:   "api.bap.microsoft.com",
+		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/unblockable",
+	}
+	request, err = http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +68,12 @@ func (client *ApiClient) GetConnectors(ctx context.Context) ([]models.ConnectorD
 		}
 	}
 
-	request, err = http.NewRequestWithContext(ctx, "GET", "https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/connectors/metadata/virtual", nil)
+	apiUrl = &url.URL{
+		Scheme: "https",
+		Host:   "api.bap.microsoft.com",
+		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/virtual",
+	}
+	request, err = http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 	if err != nil {
 		return nil, err
 	}

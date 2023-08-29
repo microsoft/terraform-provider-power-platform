@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -32,7 +33,19 @@ func (client *ApiClient) GetSolutions(ctx context.Context, environmentId string)
 	if err != nil {
 		return nil, err
 	}
-	request, err := http.NewRequestWithContext(ctx, "GET", *environmentUrl+"/api/data/v9.2/solutions?%24expand=publisherid&%24filter=(isvisible%20eq%20true)&%24orderby=createdon%20desc", nil)
+
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(*environmentUrl, "https://"),
+		Path:   "/api/data/v9.2/solutions",
+	}
+	values := url.Values{}
+	values.Add("$expand", "publisherid")
+	values.Add("$filter", "(isvisible eq true)")
+	values.Add("$orderby", "createdon desc")
+	apiUrl.RawQuery = values.Encode()
+
+	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +91,14 @@ func (client *ApiClient) CreateSolution(ctx context.Context, environmentId strin
 	if err != nil {
 		return nil, err
 	}
-	stageSolutionRequest, err := http.NewRequestWithContext(ctx, "POST", *environmentUrl+"/api/data/v9.2/StageSolution", bytes.NewReader(stageSolutionRequestBody))
+
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(*environmentUrl, "https://"),
+		Path:   "/api/data/v9.2/StageSolution",
+	}
+
+	stageSolutionRequest, err := http.NewRequestWithContext(ctx, "POST", apiUrl.String(), bytes.NewReader(stageSolutionRequestBody))
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +133,13 @@ func (client *ApiClient) CreateSolution(ctx context.Context, environmentId strin
 	if err != nil {
 		return nil, err
 	}
-	importSolutionRequest, err := http.NewRequestWithContext(ctx, "POST", *environmentUrl+"/api/data/v9.2/ImportSolutionAsync", bytes.NewReader(importSolutionRequestBody))
+
+	apiUrl = &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(*environmentUrl, "https://"),
+		Path:   "/api/data/v9.2/ImportSolutionAsync",
+	}
+	importSolutionRequest, err := http.NewRequestWithContext(ctx, "POST", apiUrl.String(), bytes.NewReader(importSolutionRequestBody))
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +157,12 @@ func (client *ApiClient) CreateSolution(ctx context.Context, environmentId strin
 	//pull for solution import completion
 	time.Sleep(10 * time.Second)
 
-	asyncSolutionImportRequest, err := http.NewRequestWithContext(ctx, "GET", *environmentUrl+"/api/data/v9.2/asyncoperations("+importSolutionResponse.AsyncOperationId+")", nil)
+	apiUrl = &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(*environmentUrl, "https://"),
+		Path:   fmt.Sprintf("/api/data/v9.2/asyncoperations(%s)", importSolutionResponse.AsyncOperationId),
+	}
+	asyncSolutionImportRequest, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -171,8 +202,12 @@ func (client *ApiClient) DeleteSolution(ctx context.Context, environmentId strin
 	if err != nil {
 		return err
 	}
-
-	deleteSolutionRequest, err := http.NewRequestWithContext(ctx, "DELETE", *environmentUrl+"/api/data/v9.2/solutions("+solution.Id+")", nil)
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(*environmentUrl, "https://"),
+		Path:   fmt.Sprintf("/api/data/v9.2/solutions(%s)", solution.Id),
+	}
+	deleteSolutionRequest, err := http.NewRequestWithContext(ctx, "DELETE", apiUrl.String(), nil)
 	if err != nil {
 		return err
 	}
@@ -234,7 +269,12 @@ func (client *ApiClient) getEnvironmentAuthDetails(ctx context.Context, environm
 }
 
 func (client *ApiClient) validateSolutionImportResult(ctx context.Context, token, environmentUrl, ImportJobKey string) error {
-	validateSolutionImportRequest, err := http.NewRequestWithContext(ctx, "GET", environmentUrl+"/api/data/v9.0/RetrieveSolutionImportResult(ImportJobId="+ImportJobKey+")", nil)
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Path:   fmt.Sprintf("/api/data/v9.0/RetrieveSolutionImportResult(ImportJobId=%s)", ImportJobKey),
+	}
+	validateSolutionImportRequest, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 	if err != nil {
 		return err
 	}

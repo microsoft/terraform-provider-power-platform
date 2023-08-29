@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
+	"net/url"
 
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 )
@@ -17,7 +19,15 @@ func (client *ApiClient) GetPowerApps(ctx context.Context, environmentId string)
 	}
 	apps := make([]models.PowerAppBapi, 0)
 	for _, env := range envs {
-		request, err := http.NewRequestWithContext(ctx, "GET", "https://api.powerapps.com/providers/Microsoft.PowerApps/scopes/admin/environments/"+env.Name+"/apps?api-version=2023-06-01", nil)
+		apiUrl := &url.URL{
+			Scheme: "https",
+			Host:   "api.powerapps.com",
+			Path:   fmt.Sprintf("/providers/Microsoft.PowerApps/scopes/admin/environments/%s/apps", env.Name),
+		}
+		values := url.Values{}
+		values.Add("api-version", "2023-06-01")
+		apiUrl.RawQuery = values.Encode()
+		request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 		if err != nil {
 			return nil, err
 		}
