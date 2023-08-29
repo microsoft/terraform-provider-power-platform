@@ -19,7 +19,6 @@ const (
 	providerConfig = `
 provider "powerplatform" {
 }
-provider "local" {}
 `
 	uniTestsProviderConfig = `
 provider "powerplatform" {

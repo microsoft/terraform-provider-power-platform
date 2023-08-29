@@ -13,15 +13,17 @@ servedocs:
 	tfplugindocs generate --provider-name powerplatform --rendered-provider-name "Power Platform"
 	mkdocs serve
 
-unittest: 
-	TF_ACC=0 go test -v ./...
+unittest:
+	export TF_ACC=0
+	go test -v ./... -run "^TestUnit"
 
 acctest: 
-	TF_ACC=1 go test -v ./...
+	export TF_ACC=1
+	go test -v ./... -run "^TestAcc"
 
 test:
-	TF_ACC=0 go test -v ./...
-	TF_ACC=1 go test -v ./...
+	export TF_ACC=1
+	go test -v ./...
 
 deps:
 	go mod tidy
