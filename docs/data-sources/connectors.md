@@ -23,8 +23,8 @@ terraform {
 }
 
 provider "powerplatform" {
-  username = var.username
-  password = var.password
+  username  = var.username
+  password  = var.password
   tenant_id = var.tenant_id
 }
 
@@ -52,3 +52,4 @@ Read-Only:
 - `publisher` (String) Publisher
 - `tier` (String) Tier
 - `type` (String) Type
+- `unblockable` (Boolean) Indicates if the connector can be blocked in a Data Loss Prevention policy. If true, the connector has to be in 'Non-Business' connectors group.

@@ -13,7 +13,7 @@ Data Loss Prevention Policy
 ## Example Usage
 
 ```terraform
-erraform {
+terraform {
   required_providers {
     powerplatform = {
       version = "0.2"
@@ -55,22 +55,19 @@ locals {
           order    = 2
         },
       ]
-      id   = "/providers/Microsoft.PowerApps/apis/shared_sql"
-      name = "shared_sql"
+      id = "/providers/Microsoft.PowerApps/apis/shared_sql"
     },
     {
       action_rules                 = []
       default_action_rule_behavior = ""
       endpoint_rules               = []
       id                           = "/providers/Microsoft.PowerApps/apis/shared_approvals"
-      name                         = "shared_approvals"
     },
     {
       action_rules                 = []
       default_action_rule_behavior = ""
       endpoint_rules               = []
       id                           = "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"
-      name                         = "shared_cloudappsecurity"
     }
   ])
 
@@ -90,7 +87,6 @@ locals {
     in data.powerplatform_connectors.all_connectors.connectors :
     {
       id                           = conn.id
-      name                         = conn.name
       default_action_rule_behavior = ""
       action_rules                 = [],
       endpoint_rules               = []
@@ -146,7 +142,6 @@ resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 - `last_modified_time` (String) Time when the policy was last modified
 
 <a id="nestedatt--blocked_connectors"></a>
-
 ### Nested Schema for `blocked_connectors`
 
 Optional:
@@ -155,10 +150,8 @@ Optional:
 - `default_action_rule_behavior` (String) Default action rule behavior for the connector ("Allow", "Block")
 - `endpoint_rules` (Attributes List) Endpoint rules for the connector (see [below for nested schema](#nestedatt--blocked_connectors--endpoint_rules))
 - `id` (String) ID of the connector
-- `name` (String) Name of the connector
 
 <a id="nestedatt--blocked_connectors--action_rules"></a>
-
 ### Nested Schema for `blocked_connectors.action_rules`
 
 Required:
@@ -166,8 +159,8 @@ Required:
 - `action_id` (String) ID of the action rule
 - `behavior` (String) Behavior of the action rule ("Allow", "Block")
 
-<a id="nestedatt--blocked_connectors--endpoint_rules"></a>
 
+<a id="nestedatt--blocked_connectors--endpoint_rules"></a>
 ### Nested Schema for `blocked_connectors.endpoint_rules`
 
 Required:
@@ -176,8 +169,9 @@ Required:
 - `endpoint` (String) Endpoint of the endpoint rule
 - `order` (Number) Order of the endpoint rule
 
-<a id="nestedatt--business_connectors"></a>
 
+
+<a id="nestedatt--business_connectors"></a>
 ### Nested Schema for `business_connectors`
 
 Optional:
@@ -186,10 +180,8 @@ Optional:
 - `default_action_rule_behavior` (String) Default action rule behavior for the connector ("Allow", "Block")
 - `endpoint_rules` (Attributes List) Endpoint rules for the connector (see [below for nested schema](#nestedatt--business_connectors--endpoint_rules))
 - `id` (String) ID of the connector
-- `name` (String) Name of the connector
 
 <a id="nestedatt--business_connectors--action_rules"></a>
-
 ### Nested Schema for `business_connectors.action_rules`
 
 Required:
@@ -197,8 +189,8 @@ Required:
 - `action_id` (String) ID of the action rule
 - `behavior` (String) Behavior of the action rule ("Allow", "Block")
 
-<a id="nestedatt--business_connectors--endpoint_rules"></a>
 
+<a id="nestedatt--business_connectors--endpoint_rules"></a>
 ### Nested Schema for `business_connectors.endpoint_rules`
 
 Required:
@@ -207,8 +199,9 @@ Required:
 - `endpoint` (String) Endpoint of the endpoint rule
 - `order` (Number) Order of the endpoint rule
 
-<a id="nestedatt--custom_connectors_patterns"></a>
 
+
+<a id="nestedatt--custom_connectors_patterns"></a>
 ### Nested Schema for `custom_connectors_patterns`
 
 Required:
@@ -217,16 +210,16 @@ Required:
 - `host_url_pattern` (String) Pattern of the connector
 - `order` (Number) Order of the connector
 
-<a id="nestedatt--environments"></a>
 
+<a id="nestedatt--environments"></a>
 ### Nested Schema for `environments`
 
 Required:
 
 - `name` (String) Unique Identifier of the environment
 
-<a id="nestedatt--non_business_connectors"></a>
 
+<a id="nestedatt--non_business_connectors"></a>
 ### Nested Schema for `non_business_connectors`
 
 Optional:
@@ -235,10 +228,8 @@ Optional:
 - `default_action_rule_behavior` (String) Default action rule behavior for the connector ("Allow", "Block")
 - `endpoint_rules` (Attributes List) Endpoint rules for the connector (see [below for nested schema](#nestedatt--non_business_connectors--endpoint_rules))
 - `id` (String) ID of the connector
-- `name` (String) Name of the connector
 
 <a id="nestedatt--non_business_connectors--action_rules"></a>
-
 ### Nested Schema for `non_business_connectors.action_rules`
 
 Required:
@@ -246,8 +237,8 @@ Required:
 - `action_id` (String) ID of the action rule
 - `behavior` (String) Behavior of the action rule ("Allow", "Block")
 
-<a id="nestedatt--non_business_connectors--endpoint_rules"></a>
 
+<a id="nestedatt--non_business_connectors--endpoint_rules"></a>
 ### Nested Schema for `non_business_connectors.endpoint_rules`
 
 Required:

@@ -21,7 +21,7 @@ func (client *ApiClient) GetEnvironments(ctx context.Context) ([]models.Environm
 		Path:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments",
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-05-01")
+	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 	if err != nil {
@@ -50,7 +50,7 @@ func (client *ApiClient) GetEnvironment(ctx context.Context, environmentId strin
 	}
 	values := url.Values{}
 	values.Add("$expand", "permissions,properties.capacity")
-	values.Add("api-version", "2023-05-01")
+	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 	if err != nil {
@@ -84,7 +84,16 @@ func (client *ApiClient) DeleteEnvironment(ctx context.Context, environmentId st
 	values := url.Values{}
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
-	request, err := http.NewRequestWithContext(ctx, "DELETE", apiUrl.String(), nil)
+
+	environmentDelete := models.EnvironmentDeleteDto{
+		Code:    "7", //Application
+		Message: "Deleted using Terraform Provider for Power Platform",
+	}
+	body, err := json.Marshal(environmentDelete)
+	if err != nil {
+		return err
+	}
+	request, err := http.NewRequestWithContext(ctx, "DELETE", apiUrl.String(), bytes.NewReader(body))
 
 	if err != nil {
 		return err
@@ -107,10 +116,10 @@ func (client *ApiClient) CreateEnvironment(ctx context.Context, environment mode
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   "api.bap.microsoft.com",
-		Path:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments",
+		Path:   "/providers/Microsoft.BusinessAppPlatform/environments",
 	}
 	values := url.Values{}
-	values.Add("api-version", "2022-05-01")
+	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 	request, err := http.NewRequestWithContext(ctx, "POST", apiUrl.String(), bytes.NewReader(body))
 	if err != nil {

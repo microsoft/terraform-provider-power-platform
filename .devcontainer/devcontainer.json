@@ -45,7 +45,8 @@
 				"ms-vscode.makefile-tools",
 				"GitHub.copilot",
 				"ms-azuretools.vscode-azureterraform",
-				"DavidAnson.vscode-markdownlint"
+				"DavidAnson.vscode-markdownlint",
+				"GitHub.vscode-github-actions"
 			]
 		}
 	},
