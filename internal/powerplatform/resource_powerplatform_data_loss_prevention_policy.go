@@ -78,7 +78,6 @@ var environmentSetObjectType = types.ObjectType{
 }
 
 type DataLossPreventionPolicyResourceConnectorModel struct {
-	//Name                      types.String                                                 `tfsdk:"name"`
 	Id                        types.String                                                 `tfsdk:"id"`
 	DefaultActionRuleBehavior types.String                                                 `tfsdk:"default_action_rule_behavior"`
 	ActionRules               []DataLossPreventionPolicyResourceConnectorActionRuleModel   `tfsdk:"action_rules"`
@@ -98,7 +97,6 @@ type DataLossPreventionPolicyResourceConnectorActionRuleModel struct {
 
 var connectorSetObjectType = types.ObjectType{
 	AttrTypes: map[string]attr.Type{
-		//"name":                         types.StringType,
 		"id":                           types.StringType,
 		"default_action_rule_behavior": types.StringType,
 		"action_rules":                 types.ListType{ElemType: actionRuleListObjectType},
@@ -628,11 +626,9 @@ func ConvertToDlpConnectorGroup(ctx context.Context, diag diag.Diagnostics, clas
 		}
 
 		connectorGroup.Connectors = append(connectorGroup.Connectors, models.DlpConnectorModel{
-			Id: connector.Id.ValueString(),
-			//Name: connector.Name.ValueString(),
+			Id:   connector.Id.ValueString(),
 			Type: "Microsoft.PowerApps/apis",
 
-			//todo
 			DefaultActionRuleBehavior: defaultAction,
 			ActionRules:               ConvertToDlpActionRule(connector),
 			EndpointRules:             ConvertToDlpEndpointRule(connector),
