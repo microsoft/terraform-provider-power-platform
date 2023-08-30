@@ -15,14 +15,20 @@ servedocs:
 
 unittest:
 	export TF_ACC=0
+	go install
+	go clean -testcache
 	go test -v ./... -run "^TestUnit"
 
 acctest: 
 	export TF_ACC=1
+	go install
+	go clean -testcache
 	go test -v ./... -run "^TestAcc"
 
 test:
 	export TF_ACC=1
+	go install
+	go clean -testcache
 	go test -v ./...
 
 deps:
