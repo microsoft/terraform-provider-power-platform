@@ -40,22 +40,19 @@ locals {
           order    = 2
         },
       ]
-      id   = "/providers/Microsoft.PowerApps/apis/shared_sql"
-      name = "shared_sql"
+      id = "/providers/Microsoft.PowerApps/apis/shared_sql"
     },
     {
       action_rules                 = []
       default_action_rule_behavior = ""
       endpoint_rules               = []
       id                           = "/providers/Microsoft.PowerApps/apis/shared_approvals"
-      name                         = "shared_approvals"
     },
     {
       action_rules                 = []
       default_action_rule_behavior = ""
       endpoint_rules               = []
       id                           = "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"
-      name                         = "shared_cloudappsecurity"
     }
   ])
 
@@ -75,7 +72,6 @@ locals {
     in data.powerplatform_connectors.all_connectors.connectors :
     {
       id                           = conn.id
-      name                         = conn.name
       default_action_rule_behavior = ""
       action_rules                 = [],
       endpoint_rules               = []

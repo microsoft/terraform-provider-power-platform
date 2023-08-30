@@ -78,7 +78,6 @@ var environmentSetObjectType = types.ObjectType{
 }
 
 type DataLossPreventionPolicyResourceConnectorModel struct {
-	Name                      types.String                                                 `tfsdk:"name"`
 	Id                        types.String                                                 `tfsdk:"id"`
 	DefaultActionRuleBehavior types.String                                                 `tfsdk:"default_action_rule_behavior"`
 	ActionRules               []DataLossPreventionPolicyResourceConnectorActionRuleModel   `tfsdk:"action_rules"`
@@ -98,7 +97,6 @@ type DataLossPreventionPolicyResourceConnectorActionRuleModel struct {
 
 var connectorSetObjectType = types.ObjectType{
 	AttrTypes: map[string]attr.Type{
-		"name":                         types.StringType,
 		"id":                           types.StringType,
 		"default_action_rule_behavior": types.StringType,
 		"action_rules":                 types.ListType{ElemType: actionRuleListObjectType},
@@ -129,11 +127,6 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 
 	connectorSchema := schema.NestedAttributeObject{
 		Attributes: map[string]schema.Attribute{
-			"name": schema.StringAttribute{
-				MarkdownDescription: "Name of the connector",
-				Description:         "Name of the connector",
-				Optional:            true,
-			},
 			"id": schema.StringAttribute{
 				MarkdownDescription: "ID of the connector",
 				Description:         "ID of the connector",
@@ -582,7 +575,7 @@ func ConvertToAttrValueConnectors(connectorsGroup models.DlpConnectorGroupsModel
 	for _, connector := range connectorsGroup.Connectors {
 		connectors = append(connectors, types.ObjectValueMust(
 			map[string]attr.Type{
-				"name":                         types.StringType,
+				//"name":                         types.StringType,
 				"id":                           types.StringType,
 				"default_action_rule_behavior": types.StringType,
 				"action_rules": types.ListType{
@@ -602,7 +595,7 @@ func ConvertToAttrValueConnectors(connectorsGroup models.DlpConnectorGroupsModel
 					}},
 			},
 			map[string]attr.Value{
-				"name":                         types.StringValue(connector.Name),
+				//"name":                         types.StringValue(connector.Name),
 				"id":                           types.StringValue(connector.Id),
 				"default_action_rule_behavior": types.StringValue(connector.DefaultActionRuleBehavior),
 				"action_rules":                 types.ListValueMust(actionRuleListObjectType, ConvertToAtrValueActionRule(connector)),
@@ -628,17 +621,14 @@ func ConvertToDlpConnectorGroup(ctx context.Context, diag diag.Diagnostics, clas
 	for _, connector := range connectors {
 		defaultAction := "Allow"
 
-		//TODO
 		if connector.DefaultActionRuleBehavior.ValueString() != "" {
 			defaultAction = connector.DefaultActionRuleBehavior.ValueString()
 		}
 
 		connectorGroup.Connectors = append(connectorGroup.Connectors, models.DlpConnectorModel{
 			Id:   connector.Id.ValueString(),
-			Name: connector.Name.ValueString(),
 			Type: "Microsoft.PowerApps/apis",
 
-			//todo
 			DefaultActionRuleBehavior: defaultAction,
 			ActionRules:               ConvertToDlpActionRule(connector),
 			EndpointRules:             ConvertToDlpEndpointRule(connector),
@@ -671,15 +661,6 @@ func ConvertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diag 
 	if err != nil {
 		diag.AddError("Client error when converting DlpCustomConnectorUrlPatternsDefinition", "")
 	}
-
-	// customConnectorUrlPatternsDefinition := make([]models.DlpConnectorUrlPatternsDefinitionDto, 0)
-	// for _, customConnectorPattern := range customConnectorsPatterns {
-	// 	customConnectorUrlPatternsDefinition = append(customConnectorUrlPatternsDefinition, models.DlpConnectorUrlPatternsDefinitionDto{
-	// 		Order:                       customConnectorPattern.Order.ValueInt64(),
-	// 		ConnectorRuleClassification: ConvertConnectorRuleClassificationValues(customConnectorPattern.DataGroup.ValueString()),
-	// 		Pattern:                     customConnectorPattern.HostUrlPattern.ValueString(),
-	// 	})
-	// }
 
 	customConnectorUrlPatternsDefinition := make([]models.DlpConnectorUrlPatternsDefinitionDto, 0)
 	for _, customConnectorPattern := range customConnectorsPatterns {
