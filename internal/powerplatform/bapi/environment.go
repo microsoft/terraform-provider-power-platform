@@ -77,7 +77,8 @@ func (client *ApiClient) CreateEnvironment(ctx context.Context, environment mode
 		return nil, err
 	}
 
-	request, err := http.NewRequestWithContext(ctx, "POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2022-05-01", bytes.NewReader(body))
+	request, err := http.NewRequestWithContext(ctx, "POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2022-05-01",
+		bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
