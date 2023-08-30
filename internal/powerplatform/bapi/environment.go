@@ -21,7 +21,7 @@ func (client *ApiClient) GetEnvironments(ctx context.Context) ([]models.Environm
 		Path:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments",
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-05-01")
+	values.Add("api-version", "2022-05-01")
 	apiUrl.RawQuery = values.Encode()
 	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 	if err != nil {
@@ -50,7 +50,7 @@ func (client *ApiClient) GetEnvironment(ctx context.Context, environmentId strin
 	}
 	values := url.Values{}
 	values.Add("$expand", "permissions,properties.capacity")
-	values.Add("api-version", "2023-05-01")
+	values.Add("api-version", "2022-05-01")
 	apiUrl.RawQuery = values.Encode()
 	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 	if err != nil {
