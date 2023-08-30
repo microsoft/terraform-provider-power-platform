@@ -121,7 +121,7 @@ jobs:
         export POWER_PLATFORM_CLIENT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}'
         export POWER_PLATFORM_SECRET='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_SECRET }}'
         export TF_ACC=1
-        go test -v ./... -run "^TestAccSolution" -coverprofile=acc_coverage.out
+        go test -v ./... -run "^TestAcc" -coverprofile=acc_coverage.out
         go tool cover -html=acc_coverage.out -o acc_coverage.cov.html
 
     - name: Upload Coverage Artifacts
