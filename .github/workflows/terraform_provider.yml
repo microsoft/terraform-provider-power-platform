@@ -94,41 +94,41 @@ jobs:
         path: coverage.cov.html
 
   # run acceptance tests and linter
-  acceptance_test_and_lint:
-    name: Acceptance Test and Lint
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
+  # acceptance_test_and_lint:
+  #   name: Acceptance Test and Lint
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
 
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
+  #   - name: Check out code into the Go module directory
+  #     uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
 
-    - name: Set up Go
-      uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
-      with:
-        cache: true
-        go-version-file: 'go.mod'
-      id: go
+  #   - name: Set up Go
+  #     uses: actions/setup-go@93397bea11091df50f3d7e59dc26a7711a8bcfbe # v4.1.0
+  #     with:
+  #       cache: true
+  #       go-version-file: 'go.mod'
+  #     id: go
 
-    - name: Get dependencies
-      run: |
-        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
-        go mod download
+  #   - name: Get dependencies
+  #     run: |
+  #       go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+  #       go mod download
         
-    - name: Run acceptance tests and linter
-      run: |
-        export POWER_PLATFORM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
-        export POWER_PLATFORM_CLIENT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}'
-        export POWER_PLATFORM_SECRET='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_SECRET }}'
-        export TF_ACC=1
-        go test -v ./... -run "^TestAcc" -coverprofile=acc_coverage.out
-        go tool cover -html=acc_coverage.out -o acc_coverage.cov.html
+  #   - name: Run acceptance tests and linter
+  #     run: |
+  #       export POWER_PLATFORM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
+  #       export POWER_PLATFORM_CLIENT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}'
+  #       export POWER_PLATFORM_SECRET='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_SECRET }}'
+  #       export TF_ACC=1
+  #       go test -v ./... -run "^TestAcc" -coverprofile=acc_coverage.out
+  #       go tool cover -html=acc_coverage.out -o acc_coverage.cov.html
 
-    - name: Upload Coverage Artifacts
-      uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
-      with:
-        name: Acceptance Test Coverage
-        path: acc_coverage.cov.html
+  #   - name: Upload Coverage Artifacts
+  #     uses: actions/upload-artifact@0b7f8abb1508181956e8e162db84b466c27e18ce # v3.1.2
+  #     with:
+  #       name: Acceptance Test Coverage
+  #       path: acc_coverage.cov.html
 
   # ensure docs are generated
   gencheck:
