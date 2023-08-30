@@ -31,12 +31,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		t.Fatalf("Failed to read solution file: %v", err)
 	}
 
-	currentDir, _ := os.Getwd()
-	tempDir := os.TempDir()
-	os.Chdir(tempDir)
-	defer os.Chdir(currentDir)
-
-	err = os.WriteFile(filepath.Join(tempDir, solutionFileName), solutionFileBytes, 0644)
+	err = os.WriteFile(solutionFileName, solutionFileBytes, 0644)
 	if err != nil {
 		t.Fatalf("Failed to write solution file: %v", err)
 	}
@@ -87,9 +82,6 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 
 	solutionFileName := "test_solution.zip"
 	solutionSettingsFileName := "test_solution_settings.json"
-
-	//tempDir := os.TempDir()
-	//os.Chdir(tempDir)
 
 	solutionFileChecksum := createFile(solutionFileName, "")
 	solutionSettingsFileChecksum := createFile(solutionSettingsFileName, "")
@@ -203,7 +195,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 
 	solutionName := "TerraformTestSolution"
 	solutionFileName := solutionName + "_Complex_1_1_0_0.zip"
-	solutionSettingsFileName := "solution_settings.json"
+	solutionSettingsFileName := "test_solution_settings.json"
 	rand.Seed(time.Now().UnixNano())
 	envDomain := fmt.Sprintf("orgtest%d", rand.Intn(100000))
 
@@ -212,12 +204,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		t.Fatalf("Failed to read solution file: %v", err)
 	}
 
-	currentDir, _ := os.Getwd()
-	tempDir := os.TempDir()
-	os.Chdir(tempDir)
-	defer os.Chdir(currentDir)
-
-	err = os.WriteFile(filepath.Join(tempDir, solutionFileName), solutionFileBytes, 0644)
+	err = os.WriteFile(solutionFileName, solutionFileBytes, 0644)
 	if err != nil {
 		t.Fatalf("Failed to write solution file: %v", err)
 	}
@@ -246,7 +233,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		]
 	  }`)
 
-	err = os.WriteFile(filepath.Join(tempDir, solutionSettingsFileName), solutionSettingsContent, 0644)
+	err = os.WriteFile(solutionSettingsFileName, solutionSettingsContent, 0644)
 	if err != nil {
 		t.Fatalf("Failed to write settings file: %v", err)
 	}
@@ -298,9 +285,6 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
 
 	solutionFileName := "test_solution.zip"
-
-	//tempDir := os.TempDir()
-	//os.Chdir(tempDir)
 
 	solutionFileChecksum := createFile(solutionFileName, "")
 
@@ -416,9 +400,6 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 	solutionFileNameAfter := "test_solution_after.zip"
 	settingsFileBefore := "test_settings_before.json"
 	settingsFileAfter := "test_settings_after.json"
-
-	//tempDir := os.TempDir()
-	//os.Chdir(tempDir)
 
 	solutionFileChecksumAfter := createFile(solutionFileNameAfter, "test_solution_after")
 	solutionFileChecksumBefore := createFile(solutionFileNameBefore, "test_solution_before")
