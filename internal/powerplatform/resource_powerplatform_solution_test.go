@@ -85,11 +85,11 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
 
-	solutionFileName := "solution.zip"
-	solutionSettingsFileName := "solution_settings.json"
+	solutionFileName := "test_solution.zip"
+	solutionSettingsFileName := "test_solution_settings.json"
 
-	tempDir := os.TempDir()
-	os.Chdir(tempDir)
+	//tempDir := os.TempDir()
+	//os.Chdir(tempDir)
 
 	solutionFileChecksum := createFile(solutionFileName, "")
 	solutionSettingsFileChecksum := createFile(solutionSettingsFileName, "")
@@ -297,10 +297,10 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
 
-	solutionFileName := "solution.zip"
+	solutionFileName := "test_solution.zip"
 
-	tempDir := os.TempDir()
-	os.Chdir(tempDir)
+	//tempDir := os.TempDir()
+	//os.Chdir(tempDir)
 
 	solutionFileChecksum := createFile(solutionFileName, "")
 
@@ -412,18 +412,18 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
 
-	solutionFileNameBefore := "solution_before.zip"
-	solutionFileNameAfter := "solution_after.zip"
-	settingsFileBefore := "settings_before.json"
-	settingsFileAfter := "settings_after.json"
+	solutionFileNameBefore := "test_solution_before.zip"
+	solutionFileNameAfter := "test_solution_after.zip"
+	settingsFileBefore := "test_settings_before.json"
+	settingsFileAfter := "test_settings_after.json"
 
-	tempDir := os.TempDir()
-	os.Chdir(tempDir)
+	//tempDir := os.TempDir()
+	//os.Chdir(tempDir)
 
-	solutionFileChecksumAfter := createFile(solutionFileNameAfter, "solution_after")
-	solutionFileChecksumBefore := createFile(solutionFileNameBefore, "solution_before")
-	settingsFileChecksumAfter := createFile(settingsFileAfter, "settings_after")
-	settingsFileChecksumBefore := createFile(settingsFileBefore, "settings_before")
+	solutionFileChecksumAfter := createFile(solutionFileNameAfter, "test_solution_after")
+	solutionFileChecksumBefore := createFile(solutionFileNameBefore, "test_solution_before")
+	settingsFileChecksumAfter := createFile(settingsFileAfter, "test_settings_after")
+	settingsFileChecksumBefore := createFile(settingsFileBefore, "test_settings_before")
 
 	environmentStub := models.EnvironmentDto{
 		Name: "00000000-0000-0000-0000-000000000001",
@@ -557,20 +557,6 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 	}
 
 	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
-		// environmentStub = powerplatform.Environment{
-		// 	EnvironmentName:                     environmentStub.EnvironmentName,
-		// 	DisplayName:                         envToCreate.DisplayName,
-		// 	Url:                                 environmentStub.Url,
-		// 	Domain:                              environmentStub.Domain,
-		// 	Location:                            envToCreate.Location,
-		// 	EnvironmentType:                     envToCreate.EnvironmentType,
-		// 	CommonDataServiceDatabaseType:       environmentStub.CommonDataServiceDatabaseType,
-		// 	OrganizationId:                      environmentStub.OrganizationId,
-		// 	SecurityGroupId:                     environmentStub.SecurityGroupId,
-		// 	LanguageName:                        envToCreate.LanguageName,
-		// 	CurrencyName:                        envToCreate.CurrencyName,
-		// 	IsCustomControlsInCanvasAppsEnabled: envToCreate.IsCustomControlsInCanvasAppsEnabled,
-		// }
 		environmentStub = models.EnvironmentDto{
 			Name:     environmentStub.Name,
 			Id:       environmentStub.Id,

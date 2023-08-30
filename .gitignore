@@ -55,3 +55,8 @@ terraform-provider-power-platform
 
 site
 *.cache
+
+# Ignore all files generated during running tests
+test_solution*.zip
+test_settings*.json
+test_solution*.json
