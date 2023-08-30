@@ -155,11 +155,13 @@ func convertPolicyModelToDlpPolicy(policy models.DlpPolicyModel) models.DlpPolic
 		}
 
 		for _, connector := range connGroups.Connectors {
-			conG.Connectors = append(conG.Connectors, models.DlpConnectorDto{
+			nameSplit := strings.Split(connector.Id, "/")
+			con := models.DlpConnectorDto{
 				Id:   connector.Id,
-				Name: connector.Name,
+				Name: nameSplit[len(nameSplit)-1],
 				Type: connector.Type,
-			})
+			}
+			conG.Connectors = append(conG.Connectors, con)
 		}
 		policyToCreate.PolicyDefinition.ConnectorGroups = append(policyToCreate.PolicyDefinition.ConnectorGroups, conG)
 	}

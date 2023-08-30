@@ -23,8 +23,8 @@ terraform {
 }
 
 provider "powerplatform" {
-  username = var.username
-  password = var.password
+  username  = var.username
+  password  = var.password
   tenant_id = var.tenant_id
 }
 
@@ -46,7 +46,6 @@ data "powerplatform_solutions" "all" {
 - `solutions` (Attributes List) List of Solutions (see [below for nested schema](#nestedatt--solutions))
 
 <a id="nestedatt--solutions"></a>
-
 ### Nested Schema for `solutions`
 
 Read-Only:

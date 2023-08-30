@@ -2,10 +2,12 @@ package powerplatform_bapi
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 type AuthResponse struct {
@@ -31,6 +33,10 @@ func (client *ApiClient) DoAuthUsernamePassword(ctx context.Context, tenantId, u
 
 	authResult, err := publicClientApp.AcquireTokenByUsernamePassword(ctx, scopes, username, password)
 	if err != nil {
+		if strings.Contains(err.Error(), "unable to resolve an endpoint: json decode error") {
+			tflog.Debug(ctx, err.Error())
+			return nil, errors.New("there was an issue authenticating with the provided credentials. Please check the your username/password and try again")
+		}
 		return nil, err
 	}
 
@@ -52,6 +58,10 @@ func (client *ApiClient) DoAuthClientSecret(ctx context.Context, tenantId, appli
 	client.Provider.ClientSecret = clientSecret
 	auth, err := client.authClientSecret(ctx, scopes, tenantId, applicationId, clientSecret)
 	if err != nil {
+		if strings.Contains(err.Error(), "unable to resolve an endpoint: json decode error") {
+			tflog.Debug(ctx, err.Error())
+			return nil, errors.New("there was an issue authenticating with the provided credentials. Please check the your client/secret and try again")
+		}
 		return nil, err
 	}
 	client.Token = auth.Token
