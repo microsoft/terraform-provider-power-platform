@@ -5,7 +5,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -13,7 +15,15 @@ import (
 )
 
 func (client *ApiClient) GetEnvironments(ctx context.Context) ([]models.EnvironmentDto, error) {
-	request, err := http.NewRequestWithContext(ctx, "GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?api-version=2022-05-01", nil)
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   "api.bap.microsoft.com",
+		Path:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments",
+	}
+	values := url.Values{}
+	values.Add("api-version", "2023-05-01")
+	apiUrl.RawQuery = values.Encode()
+	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +43,16 @@ func (client *ApiClient) GetEnvironments(ctx context.Context) ([]models.Environm
 }
 
 func (client *ApiClient) GetEnvironment(ctx context.Context, environmentId string) (*models.EnvironmentDto, error) {
-	request, err := http.NewRequestWithContext(ctx, "GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/"+environmentId+"?$expand=permissions,properties.capacity&api-version=2022-05-01", nil)
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   "api.bap.microsoft.com",
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
+	}
+	values := url.Values{}
+	values.Add("$expand", "permissions,properties.capacity")
+	values.Add("api-version", "2023-05-01")
+	apiUrl.RawQuery = values.Encode()
+	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +76,15 @@ func (client *ApiClient) GetEnvironment(ctx context.Context, environmentId strin
 }
 
 func (client *ApiClient) DeleteEnvironment(ctx context.Context, environmentId string) error {
-	request, err := http.NewRequestWithContext(ctx, "DELETE", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/"+environmentId+"?api-version=2020-06-01", nil)
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   "api.bap.microsoft.com",
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2023-06-01")
+	apiUrl.RawQuery = values.Encode()
+	request, err := http.NewRequestWithContext(ctx, "DELETE", apiUrl.String(), nil)
 
 	if err != nil {
 		return err
@@ -77,8 +104,16 @@ func (client *ApiClient) CreateEnvironment(ctx context.Context, environment mode
 		return nil, err
 	}
 
-	request, err := http.NewRequestWithContext(ctx, "POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2022-05-01",
-		bytes.NewReader(body))
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   "api.bap.microsoft.com",
+		Path:   "/providers/Microsoft.BusinessAppPlatform/environments",
+	}
+	values := url.Values{}
+	values.Add("api-version", "2022-05-01")
+	apiUrl.RawQuery = values.Encode()
+	request, err := http.NewRequestWithContext(ctx, "POST", apiUrl.String(), bytes.NewReader(body))
+
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +154,15 @@ func (client *ApiClient) UpdateEnvironment(ctx context.Context, environmentId st
 	if err != nil {
 		return nil, err
 	}
-	request, err := http.NewRequestWithContext(ctx, "PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/"+environmentId+"?api-version=2022-05-01", bytes.NewReader(body))
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   "api.bap.microsoft.com",
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2022-05-01")
+	apiUrl.RawQuery = values.Encode()
+	request, err := http.NewRequestWithContext(ctx, "PATCH", apiUrl.String(), bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
@@ -153,5 +196,5 @@ func (client *ApiClient) UpdateEnvironment(ctx context.Context, environmentId st
 		}
 	}
 
-	return nil, errors.New("Environment not found")
+	return nil, errors.New("environment not found")
 }

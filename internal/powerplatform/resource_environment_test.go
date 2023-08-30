@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	powerplatform_mock "github.com/microsoft/terraform-provider-power-platform/internal/mocks"
-	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
@@ -256,7 +255,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 		//we expect create to be called twice because we are forcing a recreate
 	}).Times(len(steps))
 
-	clientMock.EXPECT().UpdateEnvironment(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string, envToUpdate powerplatform.Environment) error {
+	clientMock.EXPECT().UpdateEnvironment(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string, envToUpdate models.EnvironmentDto) error {
 		return nil
 		//we expect update to be never called as we are forcing a recreate
 	}).Times(0)

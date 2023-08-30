@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
 	"github.com/stretchr/testify/require"
 )
@@ -28,14 +27,6 @@ provider "powerplatform" {
 }
 `
 )
-
-// todo remove
-func powerPlatformProviderServerMock(client powerplatform.ClientInterface) func() (tfprotov6.ProviderServer, error) {
-	providerMock := providerserver.NewProtocol6WithError(&PowerPlatformProvider{
-		client: client,
-	})
-	return providerMock
-}
 
 func powerPlatformProviderServerApiMock(client powerplatform_bapi.ApiClientInterface) func() (tfprotov6.ProviderServer, error) {
 	providerMock := providerserver.NewProtocol6WithError(&PowerPlatformProvider{

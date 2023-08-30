@@ -17,7 +17,7 @@ terraform {
   required_providers {
     powerplatform = {
       version = "0.2"
-      source  = "github.com/microsoft/terraform-provider-power-platform"
+      source  = "microsoft/power-platform"
     }
   }
 }
@@ -46,6 +46,7 @@ data "powerplatform_solutions" "all" {
 - `solutions` (Attributes List) List of Solutions (see [below for nested schema](#nestedatt--solutions))
 
 <a id="nestedatt--solutions"></a>
+
 ### Nested Schema for `solutions`
 
 Read-Only:

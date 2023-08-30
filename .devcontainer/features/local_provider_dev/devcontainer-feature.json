@@ -5,10 +5,8 @@
     "documentationURL": "https://developer.hashicorp.com/terraform/tutorials/providers-plugin-framework/providers-plugin-framework-provider#prepare-terraform-for-local-provider-install",
     "description": "Installs Terraform Local Provider configuration file",
     "options": {},
-    "containerEnv": {
-    },
-    "customizations": {
-    },
+    "containerEnv": {},
+    "customizations": {},
     "installsAfter": [
         "ghcr.io/devcontainers/features/go",
         "ghcr.io/devcontainers/features/terraform"
