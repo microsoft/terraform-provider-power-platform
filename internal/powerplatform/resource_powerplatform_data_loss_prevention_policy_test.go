@@ -439,7 +439,6 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 							endpoint_rules               = []
 						  },
 					])
-
 					custom_connectors_patterns = toset([
 					  {
 						order            = 1
