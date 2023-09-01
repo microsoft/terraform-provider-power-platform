@@ -21,7 +21,7 @@ bin
 
 # terraformlocal tfstate and vars files
 *.tfplan
-#*.tfvars
+*.tfvars
 
 # .tfstate files
 *.tfstate
