@@ -52,7 +52,8 @@ Alternatively you can create a "secret.tfvars" file and execute the "terraform p
 terraform plan -var-file="secret.tfvars"
 ```
 
-In this repository we already include a sample "secret.tfvars" file and we also include it in .gitignore to avoid save the secrets in it repository.
+Below you will find an example of how to create your "secret.tfvars" file, remember to specify the correct path of it when executing.
+We include "*.tfvars" in .gitignore to avoid save the secrets in it repository.
 
 ```bash
 # sample "secret.tfvars" values
