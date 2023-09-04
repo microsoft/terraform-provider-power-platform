@@ -75,6 +75,3 @@ test_solution*.json
 # makefile
 makefile
 
-# Inore licencing and codeowners
-CODEOWNERS
-LICENSE
