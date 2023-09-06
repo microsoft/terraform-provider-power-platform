@@ -19,6 +19,10 @@ bin
 **/.terraform/*
 **/vendor/*
 
+# terraformlocal tfstate and vars files
+*.tfplan
+*.tfvars
+
 # .tfstate files
 *.tfstate
 *.tfstate.*
@@ -60,3 +64,14 @@ site
 test_solution*.zip
 test_settings*.json
 test_solution*.json
+
+# Ignore all files generated during debugging
+*.log
+*.log.json
+*.log.json.bak
+
+*__debug_bin
+
+# makefile
+makefile
+
