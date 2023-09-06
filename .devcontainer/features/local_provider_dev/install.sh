@@ -12,9 +12,9 @@ go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
 go install github.com/golang/mock/mockgen@latest
 
 # fix permissions issue running as vscode and not root
-sudo chmod -R 777 /go/pkg/mod
-mkdir /workspaces/ && mkdir /workspaces/terraform-provider-power-platform/ 
+mkdir -p /workspaces/terraform-provider-power-platform/ 
 sudo chown -R vscode /workspaces/terraform-provider-power-platform/
+sudo chown -R vscode /go/pkg
 
 # install mkdocs
 sudo apt update && sudo apt install -y python3-pip
