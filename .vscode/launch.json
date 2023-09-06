@@ -12,6 +12,14 @@
             "args": [
                 "-debug",
             ]
+        },
+        {
+            "name": "Debug Quickstart Generator",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            // this assumes your workspace is the root of the repo
+            "program": "${workspaceFolder}/tools/quickstartgen/quickstartgen.go",
         }
     ]
 }

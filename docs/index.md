@@ -52,7 +52,6 @@ provider "powerplatform" {
 }
 ```
 
-
 ```bash
 export TF_VAR_client_id=<client_id>
 export TF_VAR_secret=<secret>
@@ -70,12 +69,30 @@ provider "powerplatform" {
 }
 ```
 
-
 ```bash
 export TF_VAR_username=<username>
 export TF_VAR_password=<password>
 export TF_VAR_tenant_id=<tenant_id>
 ```
+###  Creating a "secret.tfvars" file to store your credentials
+
+Alternatively you can create a "secret.tfvars" file and execute the "terraform plan" command specifying a local variables file:
+
+```bash
+# terraform plan command pointing to a secret.tfvars
+terraform plan -var-file="secret.tfvars"
+```
+Below you will find an example of how to create your "secret.tfvars" file, remember to specify the correct path of it when executing.
+We include "*.tfvars" in .gitignore to avoid save the secrets in it repository.
+
+```bash
+# sample "secret.tfvars" values
+client_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+secret    = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+tenant_id = "XXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+```
+
+In the terraform documentation ["Protect sensitive input variables"](https://developer.hashicorp.com/terraform/tutorials/configuration-language/sensitive-variables) you can find more examples.
 
 ## Environment Variables
 

@@ -1,0 +1,76 @@
+## Example Files
+
+The example files can be found in {{ .Path | relativePath | tt}}
+
+{{- if .RequiredCore}}
+
+## Terraform Version Constraints:
+
+{{- range .RequiredCore }}
+* {{ tt . }}
+{{- end}}{{end}}
+
+{{- if .RequiredProviders}}
+
+## Provider Requirements:
+{{- range $name, $req := .RequiredProviders }}
+* **{{ $name }}{{ if $req.Source }} ({{ $req.Source | tt }}){{ end }}:** {{ if $req.VersionConstraints }}{{ commas $req.VersionConstraints | tt }}{{ else }}(any version){{ end }}
+{{- end}}{{end}}
+
+{{- if .Variables}}
+
+## Input Variables
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+{{- range .Variables }}
+| {{ tt .Name }} | {{ .Description }} | {{ .Type }} | {{ json .Default | tt }} | {{ .Required }} |
+{{- end}}
+{{end}}
+
+{{- if .Outputs}}
+
+## Output Values
+
+| Name | Description |
+|------|-------------|
+{{- range .Outputs }}
+| {{ tt .Name }} | {{ .Description }} |
+{{- end}}
+
+{{end}}
+
+{{- if .ManagedResources}}
+
+## Resources
+{{- range .ManagedResources }}
+* {{ printf "%s.%s" .Type .Name | tt }} from {{ tt .Provider.Name }}
+{{- end}}{{end}}
+
+{{- if .DataResources}}
+
+## Data Sources
+{{- range .DataResources }}
+* {{ printf "data.%s.%s" .Type .Name | tt }} from {{ tt .Provider.Name }}
+{{- end}}{{end}}
+
+{{- if .ModuleCalls}}
+
+## Child Modules
+{{- range .ModuleCalls }}
+* {{ tt .Name }} from {{ tt .Source }}{{ if .Version }} ({{ tt .Version }}){{ end }}
+{{- end}}{{end}}
+
+{{- if .Diagnostics}}
+
+## Problems
+{{- range .Diagnostics }}
+
+## {{ severity .Severity }}{{ .Summary }}{{ if .Pos }}
+
+(at {{ tt .Pos.Filename }} line {{ .Pos.Line }}{{ end }})
+{{ if .Detail }}
+{{ .Detail }}
+{{- end }}
+
+{{- end}}{{end}}

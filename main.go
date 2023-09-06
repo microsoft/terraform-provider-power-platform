@@ -10,7 +10,7 @@ import (
 )
 
 // Generate the provider document.
-//go:generate tfplugindocs generate
+//go:generate tfplugindocs generate --provider-name powerplatform --rendered-provider-name "Power Platform"
 
 func main() {
 	var debug bool
