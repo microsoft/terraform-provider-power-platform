@@ -64,6 +64,7 @@ func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto) Environment
 		Domain:          types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.DomainName),
 		Version:         types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.Version),
 		Templates:       environmentDto.Properties.LinkedEnvironmentMetadata.Templates,
+		//TemplateMetadata: environmentDto.Properties.LinkedEnvironmentMetadata.TemplateMetadata,
 	}
 }
 
@@ -142,12 +143,12 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 							Computed:            true,
 							ElementType:         types.StringType,
 						},
-						// "template_metadata": schema.ObjectAttribute{
-						// 	Description:         "JSON representation of the environment deployment metadata",
-						// 	MarkdownDescription: "JSON representation of the environment deployment metadata",
-						// 	Computed:            true,
-						// 	AttributeTypes:      map[string]schema.Attribute{},
-						// },
+						"template_metadata": schema.ObjectAttribute{
+							Description:         "JSON representation of the environment deployment metadata",
+							MarkdownDescription: "JSON representation of the environment deployment metadata",
+							Computed:            true,
+							//AttributeTypes:      reflect.typeOf(EnvironmentCreateTemplateMetadata),
+						},
 						//Not available in BAPI as for now
 						// "currency_name": &schema.StringAttribute{
 						// 	Description:         "Unique currency name (EUR, USE, GBP etc.)",
