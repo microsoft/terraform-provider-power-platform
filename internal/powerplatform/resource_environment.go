@@ -3,6 +3,7 @@ package powerplatform
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -50,7 +51,9 @@ type EnvironmentResourceModel struct {
 	LanguageName    types.Int64  `tfsdk:"language_code"`
 	CurrencyName    types.String `tfsdk:"currency_code"`
 	//IsCustomControlInCanvasAppsEnabled types.Bool   `tfsdk:"is_custom_control_in_canvas_apps_enabled"`
-	Version types.String `tfsdk:"version"`
+	Version          types.String `tfsdk:"version"`
+	Templates        []string     `tfsdk:"templates"`
+	TemplateMetadata types.String `tfsdk:"template_metadata"`
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -155,6 +158,23 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "Version of the environment",
 				Computed:            true,
 			},
+			"templates": schema.ListAttribute{
+				Description:         "The selected instance provisioning template (if any)",
+				MarkdownDescription: "The selected instance provisioning template (if any)",
+				Optional:            true,
+				ElementType:         types.StringType,
+				// Validators: []validator.String{
+				// 	stringvalidator.OneOf(models.EnvironmentCurrencyCodes...),
+				// },
+			},
+			"template_metadata": schema.StringAttribute{
+				Description:         "JSON representation of the environment deployment metadata",
+				MarkdownDescription: "JSON representation of the environment deployment metadata",
+				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 		},
 	}
 }
@@ -202,6 +222,15 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 				SecurityGroupId: plan.SecurityGroupId.ValueString(),
 				Currency: models.EnvironmentCreateCurrency{
 					Code: plan.CurrencyName.ValueString(),
+				},
+				Templates: plan.Templates,
+				TemplateMetadata: models.EnvironmentCreateTemplateMetadata{
+					PostProvisioningPackages: []models.EnvironmentCreatePostProvisioningPackages{
+						{
+							ApplicationUniqueName: "msdyn_FinanceAndOperationsProvisioningAppAnchor",
+							Parameters:            "DevToolsEnabled=true|DemoDataEnabled=true",
+						},
+					},
 				},
 			},
 		},
@@ -264,6 +293,8 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.Version = env.Version
 	state.LanguageName = env.LanguageName
 	state.Location = env.Location
+	state.Templates = env.Templates
+	//state.TemplateMetadata = env.TemplateMetadata
 
 	//TODO move to separate function
 	ctx = tflog.SetField(ctx, "environment_name", state.EnvironmentName.ValueString())
@@ -277,6 +308,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	ctx = tflog.SetField(ctx, "language_code", state.LanguageName.ValueInt64())
 	ctx = tflog.SetField(ctx, "currency_name", state.CurrencyName.ValueString())
 	ctx = tflog.SetField(ctx, "version", state.Version.ValueString())
+	ctx = tflog.SetField(ctx, "template", strings.Join(state.Templates, " "))
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with environment_name %s", r.ProviderTypeName, state.EnvironmentName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -336,6 +368,8 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		plan.Version = env.Version
 		plan.LanguageName = env.LanguageName
 		plan.Location = env.Location
+		plan.Templates = env.Templates
+		plan.TemplateMetadata = env.TemplateMetadata
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)

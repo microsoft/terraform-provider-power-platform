@@ -48,12 +48,14 @@ type EnvironmentPropertiesDto struct {
 }
 
 type LinkedEnvironmentMetadataDto struct {
-	DomainName      string `json:"domainName,omitempty"`
-	InstanceURL     string `json:"instanceUrl"`
-	BaseLanguage    int    `json:"baseLanguage"`
-	SecurityGroupId string `json:"securityGroupId"`
-	ResourceId      string `json:"resourceId"`
-	Version         string `json:"version"`
+	DomainName       string                            `json:"domainName,omitempty"`
+	InstanceURL      string                            `json:"instanceUrl"`
+	BaseLanguage     int                               `json:"baseLanguage"`
+	SecurityGroupId  string                            `json:"securityGroupId"`
+	ResourceId       string                            `json:"resourceId"`
+	Version          string                            `json:"version"`
+	Templates        []string                          `json:"template"`
+	TemplateMetadata EnvironmentCreateTemplateMetadata `json:"templateMetadata"`
 }
 
 type StatesEnvironmentDto struct {
@@ -82,14 +84,24 @@ type EnvironmentCreatePropertiesDto struct {
 }
 
 type EnvironmentCreateLinkEnvironmentMetadataDto struct {
-	BaseLanguage    int                       `json:"baseLanguage"`
-	DomainName      string                    `json:"domainName,omitempty"`
-	Currency        EnvironmentCreateCurrency `json:"currency"`
-	Templates       []string                  `json:"templates,omitempty"`
-	SecurityGroupId string                    `json:"securityGroupId,omitempty"`
+	BaseLanguage     int                               `json:"baseLanguage"`
+	DomainName       string                            `json:"domainName,omitempty"`
+	Currency         EnvironmentCreateCurrency         `json:"currency"`
+	SecurityGroupId  string                            `json:"securityGroupId,omitempty"`
+	Templates        []string                          `json:"templates,omitempty"`
+	TemplateMetadata EnvironmentCreateTemplateMetadata `json:"templateMetadata,omitempty"`
 }
 type EnvironmentCreateCurrency struct {
 	Code string `json:"code"`
+}
+
+type EnvironmentCreateTemplateMetadata struct {
+	PostProvisioningPackages []EnvironmentCreatePostProvisioningPackages `json:"PostProvisioningPackages"`
+}
+
+type EnvironmentCreatePostProvisioningPackages struct {
+	ApplicationUniqueName string `json:"applicationUniqueName"`
+	Parameters            string `json:"parameters"`
 }
 
 type EnvironmentDeleteDto struct {
