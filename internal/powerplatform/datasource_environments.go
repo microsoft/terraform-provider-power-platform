@@ -37,7 +37,7 @@ type EnvironmentsListDataSourceModel struct {
 }
 
 type EnvironmentDataSourceModel struct {
-	EnvironmentName types.String `tfsdk:"environment_name"`
+	EnvironmentName types.String `tfsdk:"environment_id"`
 	DisplayName     types.String `tfsdk:"display_name"`
 	Url             types.String `tfsdk:"url"`
 	Domain          types.String `tfsdk:"domain"`
@@ -83,7 +83,7 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"environment_name": schema.StringAttribute{
+						"environment_id": schema.StringAttribute{
 							MarkdownDescription: "Unique environment name (guid)",
 							Description:         "Unique environment name (guid)",
 							Computed:            true,

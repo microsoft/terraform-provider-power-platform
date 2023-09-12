@@ -40,7 +40,7 @@ type SolutionResourceModel struct {
 	Id                   types.String `tfsdk:"id"`
 	SolutionFileChecksum types.String `tfsdk:"solution_file_checksum"`
 	SettingsFileChecksum types.String `tfsdk:"settings_file_checksum"`
-	EnvironmentName      types.String `tfsdk:"environment_name"`
+	EnvironmentName      types.String `tfsdk:"environment_id"`
 	SolutionName         types.String `tfsdk:"solution_name"`
 	SolutionVersion      types.String `tfsdk:"solution_version"`
 	SolutionFile         types.String `tfsdk:"solution_file"`
@@ -101,7 +101,7 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"environment_name": schema.StringAttribute{
+			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "Name of the environment where the solution is imported",
 				Description:         "Name of the environment where the solution is imported",
 				Required:            true,

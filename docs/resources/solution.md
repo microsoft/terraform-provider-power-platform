@@ -49,7 +49,7 @@ resource "local_file" "solution_settings_file" {
     },
     {
       "SchemaName": "cra6e_SolutionVariableText",
-      "Value": "${powerplatform_environment.environment.environment_name}"
+      "Value": "${powerplatform_environment.environment.environment_id}"
     }
   ],
   "ConnectionReferences": [
@@ -74,7 +74,7 @@ resource "powerplatform_environment" "environment" {
 }
 
 resource "powerplatform_solution" "solution" {
-  environment_name = powerplatform_environment.environment.environment_name
+  environment_id = powerplatform_environment.environment.environment_id
   solution_file    = "${path.module}/${var.solution_name}_Complex_1_1_0_0.zip"
   solution_name    = var.solution_name
   settings_file    = local_file.solution_settings_file.filename
@@ -87,13 +87,13 @@ resource "powerplatform_solution" "solution" {
 
 ### Required
 
-- `environment_name` (String) Name of the environment where the solution is imported
+- `environment_id` (String) Name of the environment where the solution is imported
 - `solution_file` (String) Path to the solution file
 - `solution_name` (String) Unique name of the solution
 
 ### Optional
 
-- `settings_file` (String) Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/en-us/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details
+- `settings_file` (String) Path to the settings file. The settings file uses the same format as pac cli. See <https://learn.microsoft.com/en-us/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file> for more details
 
 ### Read-Only
 

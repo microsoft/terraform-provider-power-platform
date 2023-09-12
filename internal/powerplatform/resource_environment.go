@@ -38,7 +38,7 @@ type EnvironmentResource struct {
 
 type EnvironmentResourceModel struct {
 	Id              types.String `tfsdk:"id"`
-	EnvironmentName types.String `tfsdk:"environment_name"`
+	EnvironmentName types.String `tfsdk:"environment_id"`
 	DisplayName     types.String `tfsdk:"display_name"`
 	Url             types.String `tfsdk:"url"`
 	Domain          types.String `tfsdk:"domain"`
@@ -78,7 +78,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringvalidator.OneOf(models.EnvironmentCurrencyCodes...),
 				},
 			},
-			"environment_name": schema.StringAttribute{
+			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "Unique environment name 	(guid)",
 				Description:         "Unique environment name (guid)",
 				Computed:            true,
@@ -266,7 +266,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.Location = env.Location
 
 	//TODO move to separate function
-	ctx = tflog.SetField(ctx, "environment_name", state.EnvironmentName.ValueString())
+	ctx = tflog.SetField(ctx, "environment_id", state.EnvironmentName.ValueString())
 	ctx = tflog.SetField(ctx, "display_name", state.DisplayName.ValueString())
 	ctx = tflog.SetField(ctx, "url", state.Url.ValueString())
 	ctx = tflog.SetField(ctx, "domain", state.Domain.ValueString())
@@ -277,7 +277,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	ctx = tflog.SetField(ctx, "language_code", state.LanguageName.ValueInt64())
 	ctx = tflog.SetField(ctx, "currency_name", state.CurrencyName.ValueString())
 	ctx = tflog.SetField(ctx, "version", state.Version.ValueString())
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with environment_name %s", r.ProviderTypeName, state.EnvironmentName.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with environment_id %s", r.ProviderTypeName, state.EnvironmentName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
@@ -364,5 +364,5 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *EnvironmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("environment_name"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("environment_id"), req, resp)
 }

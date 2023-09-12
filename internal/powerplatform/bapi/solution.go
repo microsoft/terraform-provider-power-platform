@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 )
 
@@ -265,6 +266,7 @@ func (client *ApiClient) getEnvironmentAuthDetails(ctx context.Context, environm
 	if err != nil {
 		return nil, nil, err
 	}
+	tflog.Debug(ctx, "Dataverse_token:   "+auth.Token+"  ")
 	return &environmentUrl, &auth.Token, nil
 }
 

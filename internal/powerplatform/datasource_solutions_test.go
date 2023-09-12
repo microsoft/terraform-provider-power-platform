@@ -45,14 +45,14 @@ func TestUnitSolutionsDataSource_Validate_Read(t *testing.T) {
 			{
 				Config: uniTestsProviderConfig + `
 				data "powerplatform_solutions" "all" {
-					environment_name = "00000000-0000-0000-0000-000000000001"
+					environment_id = "00000000-0000-0000-0000-000000000001"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.#", "1"),
 					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.name", sol.Name),
-					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.environment_name", sol.EnvironmentName),
+					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.environment_id", sol.EnvironmentName),
 					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.display_name", sol.DisplayName),
 					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.created_time", sol.CreatedTime),
 					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.modified_time", sol.ModifiedTime),
@@ -85,7 +85,7 @@ func TestAccSolutionsDataSource_Validate_Read(t *testing.T) {
 				}
 
 				data "powerplatform_solutions" "all" {
-					environment_name = powerplatform_environment.development.environment_name
+					environment_id = powerplatform_environment.development.environment_id
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -94,7 +94,7 @@ func TestAccSolutionsDataSource_Validate_Read(t *testing.T) {
 
 					// Verify the first power app to ensure all attributes are set
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.name", regexp.MustCompile(powerplatform_helpers.StringRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.environment_name", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.environment_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.display_name", regexp.MustCompile(powerplatform_helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.created_time", regexp.MustCompile(powerplatform_helpers.TimeRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.modified_time", regexp.MustCompile(powerplatform_helpers.TimeRegex)),

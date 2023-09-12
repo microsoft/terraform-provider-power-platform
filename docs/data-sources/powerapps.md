@@ -40,11 +40,12 @@ data "powerplatform_powerapps" "all" {}
 - `powerapps` (Attributes List) List of Power Apps (see [below for nested schema](#nestedatt--powerapps))
 
 <a id="nestedatt--powerapps"></a>
+
 ### Nested Schema for `powerapps`
 
 Read-Only:
 
 - `created_time` (String) Created time
 - `display_name` (String) Display name
-- `environment_name` (String) Unique environment name (guid)
+- `environment_id` (String) Unique environment name (guid)
 - `name` (String) Name

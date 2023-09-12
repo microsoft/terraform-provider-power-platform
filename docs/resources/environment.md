@@ -20,8 +20,6 @@ A Power Platform environment is a space in which you can store, manage, and shar
 
 ## Example Usage
 
-
-
 ```terraform
 terraform {
   required_providers {
@@ -64,10 +62,8 @@ resource "powerplatform_environment" "development" {
 
 ### Read-Only
 
-- `environment_name` (String) Unique environment name 	(guid)
+- `environment_id` (String) Unique environment name  (guid)
 - `id` (String) The ID of this resource.
 - `organization_id` (String) Unique organization id (guid)
 - `url` (String) Url of the environment
 - `version` (String) Version of the environment
-
-
