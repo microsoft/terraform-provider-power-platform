@@ -119,6 +119,7 @@ func (client *ApiClient) CreateEnvironment(ctx context.Context, environment mode
 		Path:   "/providers/Microsoft.BusinessAppPlatform/environments",
 	}
 	values := url.Values{}
+	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 	request, err := http.NewRequestWithContext(ctx, "POST", apiUrl.String(), bytes.NewReader(body))
 	if err != nil {

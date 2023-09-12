@@ -14,12 +14,12 @@ provider "powerplatform" {
 }
 
 resource "powerplatform_environment" "development" {
-  display_name      = "Sample Terraform-Generated F&O Environment"
+  display_name      = "Sample TF-Generated D365F Environment"
   location          = "canada"
   language_code     = "1033"
   currency_code     = "USD"
   environment_type  = "Sandbox"
-  domain            = "sample-terraform-generated-fno-environment"
+  domain            = "sample-tf-gen-fno-environment"
   templates         = ["D365_FinOps_Finance"]
   template_metadata = "{\"PostProvisioningPackages\": [{ \"applicationUniqueName\": \"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\n \"parameters\": \"DevToolsEnabled=true|DemoDataEnabled=true\"\n }\n ]\n }"
   security_group_id = "00000000-0000-0000-0000-000000000000"
