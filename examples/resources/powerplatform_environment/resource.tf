@@ -14,7 +14,7 @@ provider "powerplatform" {
 }
 
 resource "powerplatform_environment" "development" {
-  display_name      = "Sample TF-Generated D365F Environment"
+  display_name      = "SampleFnoEnvironment"
   location          = "canada"
   language_code     = "1033"
   currency_code     = "USD"

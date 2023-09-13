@@ -47,7 +47,7 @@ type EnvironmentDataSourceModel struct {
 	SecurityGroupId types.String `tfsdk:"security_group_id"`
 	LanguageName    types.Int64  `tfsdk:"language_code"`
 	Version         types.String `tfsdk:"version"`
-	Templates       []string     `tfsdk:"templates"`
+	//Templates       []string     `tfsdk:"templates"`
 	//TemplateMetadata types.String `tfsdk:"template_metadata"`
 }
 
@@ -63,7 +63,7 @@ func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto) Environment
 		Url:             types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.InstanceURL),
 		Domain:          types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.DomainName),
 		Version:         types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.Version),
-		Templates:       environmentDto.Properties.LinkedEnvironmentMetadata.Templates,
+		//Templates:       environmentDto.Properties.LinkedEnvironmentMetadata.Templates,
 		//TemplateMetadata: environmentDto.Properties.LinkedEnvironmentMetadata.TemplateMetadata,
 	}
 }
@@ -137,18 +137,6 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 							MarkdownDescription: "Version of the environment",
 							Computed:            true,
 						},
-						"templates": schema.ListAttribute{
-							Description:         "The selected instance provisioning template (if any)",
-							MarkdownDescription: "The selected instance provisioning template (if any)",
-							Computed:            true,
-							ElementType:         types.StringType,
-						},
-						// "template_metadata": schema.ObjectAttribute{
-						// 	Description:         "JSON representation of the environment deployment metadata",
-						// 	MarkdownDescription: "JSON representation of the environment deployment metadata",
-						// 	Computed:            true,
-						// 	AttributeTypes:      map[string]attr.Type{"template_metadata": types.StringType},
-						// },
 						//Not available in BAPI as for now
 						// "currency_name": &schema.StringAttribute{
 						// 	Description:         "Unique currency name (EUR, USE, GBP etc.)",
