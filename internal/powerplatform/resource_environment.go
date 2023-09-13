@@ -209,26 +209,6 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	// F&O environment names are capped at 20 characters, but the request won't cause an immmediate error,
-	// so catch it here to prevent pain later.
-	// TODO: Figure out how to fold this into the diagnostics error return above.
-	// Define the target string you want to check for
-	target := "D365_FinOps_Finance"
-	// Use a loop to iterate through the Templates array and check if F&O is being deployed.
-	found := false
-	for _, str := range plan.Templates {
-		if str == target {
-			found = true
-			break // Exit the loop early if the target is found
-		}
-	}
-	// Check the 'found' variable to determine if F&O is being deployed
-	// and if so, also check the length of the display name
-	if found && len(plan.DisplayName.ValueString()) > 20 {
-		resp.Diagnostics.AddError("Display Name Too Long", "Display Name property exceeds the maximum length allowed for F&O environment creation, which is 20.")
-		return
-	}
-
 	envToCreate := models.EnvironmentCreateDto{
 		Location: plan.Location.ValueString(),
 		Properties: models.EnvironmentCreatePropertiesDto{
