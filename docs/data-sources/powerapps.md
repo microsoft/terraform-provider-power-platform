@@ -40,7 +40,6 @@ data "powerplatform_powerapps" "all" {}
 - `powerapps` (Attributes List) List of Power Apps (see [below for nested schema](#nestedatt--powerapps))
 
 <a id="nestedatt--powerapps"></a>
-
 ### Nested Schema for `powerapps`
 
 Read-Only:

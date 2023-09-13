@@ -1,0 +1,53 @@
+# Blank Sample (000 level)
+
+This Terraform module aims to provide a fully managed infrastructure that integrates Microsoft's Power Platform and Azure services. Utilizing both powerplatform and azurerm Terraform providers, this module encapsulates best practices and serves as a reference architecture for scalable, reliable, and manageable cloud infrastructure.
+
+## Prerequisites
+
+- Azure subscription
+- Power Platform environment
+- Service Principal or User Account with appropriate permissions
+
+{{ .ModuleDetails }}
+
+## Usage
+
+Include this module in your Terraform scripts as follows:
+
+```hcl
+
+module "power_azure_infra" {
+  source            = "./modules/{{ .ModuleName }}"
+  resource_group    = "myResourceGroup"
+  power_environment = "myPowerEnvironment"
+}
+
+```
+
+## Detailed Behavior
+
+### Azure Kubernetes Service
+
+This module creates an AKS cluster to host containerized applications. The cluster is connected to the Azure Virtual Network.
+
+### Azure SQL Database
+
+The SQL database is provisioned with geo-redundant backups and is accessible only from within the Virtual Network.
+
+### Power Platform Resources
+
+A PowerApps Environment is created, tied to the Azure SQL Database for data storage. Power Automate flows are also defined and triggered by database changes, which in turn can run Kubernetes jobs.
+
+### Network
+
+All resources are provisioned within the same Azure Virtual Network, ensuring that they can communicate securely without exposure to the public internet.
+
+## Limitations and Considerations
+
+- Due to Power Platform limitations, certain resources may not fully support Terraform's state management.
+- Make sure to set appropriate RBAC for Azure and Power Platform resources.
+- This module is provided as a sample only and is not intended for production use without further customization.
+
+## Additional Resources
+
+- [Power Platform Admin Documentation](https://learn.microsoft.com/en-us/power-platform/admin/)

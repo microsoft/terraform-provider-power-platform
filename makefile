@@ -13,6 +13,10 @@ servedocs:
 	tfplugindocs generate --provider-name powerplatform --rendered-provider-name "Power Platform"
 	mkdocs serve
 
+quickstarts: examples/quickstarts/**/*.tf examples/quickstarts/**/*.md.tmpl
+	(cd tools/quickstartgen && go mod tidy && go install)
+	quickstartgen
+
 unittest:
 	export TF_ACC=0
 	go install

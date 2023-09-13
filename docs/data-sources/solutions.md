@@ -46,7 +46,6 @@ data "powerplatform_solutions" "all" {
 - `solutions` (Attributes List) List of Solutions (see [below for nested schema](#nestedatt--solutions))
 
 <a id="nestedatt--solutions"></a>
-
 ### Nested Schema for `solutions`
 
 Read-Only:
