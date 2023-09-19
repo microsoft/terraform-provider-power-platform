@@ -230,5 +230,6 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return NewPowerAppsDataSource() },
 		func() datasource.DataSource { return NewEnvironmentsDataSource() },
 		func() datasource.DataSource { return NewSolutionsDataSource() },
+		func() datasource.DataSource { return NewApplicationUserDataSource() },
 	}
 }

@@ -168,6 +168,21 @@ func (mr *MockApiClientInterfaceMockRecorder) DoAuthUsernamePassword(arg0, arg1,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DoAuthUsernamePassword", reflect.TypeOf((*MockApiClientInterface)(nil).DoAuthUsernamePassword), arg0, arg1, arg2, arg3)
 }
 
+// GetApplicationUser mocks base method.
+func (m *MockApiClientInterface) GetApplicationUser(arg0 context.Context, arg1 string) ([]powerplatform_bapi0.ApplicationUserDto, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetApplicationUser", arg0, arg1)
+	ret0, _ := ret[0].([]powerplatform_bapi0.ApplicationUserDto)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetApplicationUser indicates an expected call of GetApplicationUser.
+func (mr *MockApiClientInterfaceMockRecorder) GetApplicationUser(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetApplicationUser", reflect.TypeOf((*MockApiClientInterface)(nil).GetApplicationUser), arg0, arg1)
+}
+
 // GetConnectors mocks base method.
 func (m *MockApiClientInterface) GetConnectors(arg0 context.Context) ([]powerplatform_bapi0.ConnectorDto, error) {
 	m.ctrl.T.Helper()
