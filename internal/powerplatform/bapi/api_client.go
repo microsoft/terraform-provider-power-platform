@@ -60,7 +60,7 @@ type ApiClientInterface interface {
 	CreatePolicy(ctx context.Context, policyToCreate models.DlpPolicyModel) (*models.DlpPolicyModel, error)
 }
 
-func (client *ApiClient) doRequest(request *http.Request) ([]byte, error) {
+func (client *ApiClient) doRequest(request *http.Request) ([]byte, map[string][]string, error) {
 
 	if request.Header.Get("Content-Type") == "" {
 		request.Header.Set("Content-Type", "application/json")
@@ -76,12 +76,14 @@ func (client *ApiClient) doRequest(request *http.Request) ([]byte, error) {
 
 	response, err := client.HttpClient.Do(request)
 	if err != nil {
-		return nil, err
+		return nil, response.Header, err
 	}
+
+	response.Header.Get("x-ms-diagnostics")
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return nil, response.Header, err
 	}
 	defer response.Body.Close()
 
@@ -90,12 +92,12 @@ func (client *ApiClient) doRequest(request *http.Request) ([]byte, error) {
 			errorResponse := make(map[string]interface{}, 0)
 			err = json.NewDecoder(bytes.NewBuffer(body)).Decode(&errorResponse)
 			if err != nil {
-				return nil, err
+				return nil, response.Header, err
 			}
-			return nil, fmt.Errorf("status: %d, body: %s", response.StatusCode, errorResponse)
+			return nil, response.Header, fmt.Errorf("status: %d, body: %s", response.StatusCode, errorResponse)
 		} else {
-			return nil, fmt.Errorf("status: %d", response.StatusCode)
+			return nil, response.Header, fmt.Errorf("status: %d", response.StatusCode)
 		}
 	}
-	return body, nil
+	return body, response.Header, nil
 }

@@ -30,7 +30,7 @@ func (client *ApiClient) GetConnectors(ctx context.Context) ([]models.ConnectorD
 		return nil, err
 	}
 
-	body, err := client.doRequest(request)
+	body, _, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func (client *ApiClient) GetConnectors(ctx context.Context) ([]models.ConnectorD
 	if err != nil {
 		return nil, err
 	}
-	body, err = client.doRequest(request)
+	body, _, err = client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (client *ApiClient) GetConnectors(ctx context.Context) ([]models.ConnectorD
 	if err != nil {
 		return nil, err
 	}
-	body, err = client.doRequest(request)
+	body, _, err = client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}

@@ -32,7 +32,7 @@ func (client *ApiClient) GetPolicy(ctx context.Context, name string) (*models.Dl
 		return nil, err
 	}
 
-	body, err := client.doRequest(request)
+	body, _, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (client *ApiClient) DeletePolicy(ctx context.Context, name string) error {
 		return err
 	}
 
-	_, err = client.doRequest(request)
+	_, _, err = client.doRequest(request)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (client *ApiClient) UpdatePolicy(ctx context.Context, name string, policy m
 		return nil, err
 	}
 
-	body, err = client.doRequest(request)
+	body, _, err = client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (client *ApiClient) CreatePolicy(ctx context.Context, policy models.DlpPoli
 		return nil, err
 	}
 
-	body, err = client.doRequest(request)
+	body, _, err = client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}

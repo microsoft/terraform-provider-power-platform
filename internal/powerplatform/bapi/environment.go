@@ -7,7 +7,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/textproto"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -28,7 +30,7 @@ func (client *ApiClient) GetEnvironments(ctx context.Context) ([]models.Environm
 		return nil, err
 	}
 
-	body, err := client.doRequest(request)
+	body, _, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +59,7 @@ func (client *ApiClient) GetEnvironment(ctx context.Context, environmentId strin
 		return nil, err
 	}
 
-	body, err := client.doRequest(request)
+	body, _, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +101,7 @@ func (client *ApiClient) DeleteEnvironment(ctx context.Context, environmentId st
 		return err
 	}
 
-	_, err = client.doRequest(request)
+	_, _, err = client.doRequest(request)
 	if err != nil {
 		return err
 	}
@@ -126,35 +128,58 @@ func (client *ApiClient) CreateEnvironment(ctx context.Context, environment mode
 		return nil, err
 	}
 
-	_, err = client.doRequest(request)
+	_, headers, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
 
-	time.Sleep(10 * time.Second)
+	locationHeader := textproto.MIMEHeader(headers).Get("Location")
+	tflog.Debug(ctx, "Location Header: "+locationHeader)
 
-	environments, err := client.GetEnvironments(ctx)
+	_, err = url.Parse(locationHeader)
 	if err != nil {
-		return nil, err
+		tflog.Error(ctx, "Error parsing location header: "+err.Error())
 	}
 
-	for _, env := range environments {
-		if env.Location == environment.Location && env.Properties.DisplayName == environment.Properties.DisplayName {
-			for {
-				createdEnv, err := client.GetEnvironment(ctx, env.Name)
-				if err != nil {
-					return nil, err
-				}
-				tflog.Info(ctx, "Environment State: '"+createdEnv.Properties.States.Management.Id+"'")
-				time.Sleep(1 * time.Second)
-				if createdEnv.Properties.States.Management.Id != "Running" {
-					return createdEnv, nil
-				}
+	createdEnvironmentId := ""
+	for {
+		request, err = http.NewRequestWithContext(ctx, "GET", locationHeader, bytes.NewReader(body))
+		if err != nil {
+			return nil, err
+		}
 
+		body, _, err = client.doRequest(request)
+		if err != nil {
+			return nil, err
+		}
+
+		lifecycleResponse := models.EnvironmentLifecycleDto{}
+		err = json.NewDecoder(bytes.NewReader(body)).Decode(&lifecycleResponse)
+		if err != nil {
+			return nil, err
+		}
+
+		time.Sleep(10 * time.Second)
+
+		tflog.Debug(ctx, "Environment Creation Opeartion State: '"+lifecycleResponse.State.Id+"'")
+
+		if lifecycleResponse.State.Id == "Succeeded" {
+			parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
+			if len(parts) > 0 {
+				createdEnvironmentId = parts[len(parts)-1]
+			} else {
+				return nil, errors.New("can't parse environment id from response " + lifecycleResponse.Links.Environment.Path)
 			}
+			tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
+			break
 		}
 	}
-	return &models.EnvironmentDto{}, errors.New("environment not found")
+
+	env, err := client.GetEnvironment(ctx, createdEnvironmentId)
+	if err != nil {
+		return &models.EnvironmentDto{}, errors.New("environment not found")
+	}
+	return env, err
 }
 
 func (client *ApiClient) UpdateEnvironment(ctx context.Context, environmentId string, environment models.EnvironmentDto) (*models.EnvironmentDto, error) {
@@ -174,7 +199,7 @@ func (client *ApiClient) UpdateEnvironment(ctx context.Context, environmentId st
 	if err != nil {
 		return nil, err
 	}
-	_, err = client.doRequest(request)
+	_, _, err = client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}

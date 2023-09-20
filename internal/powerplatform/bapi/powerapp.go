@@ -32,7 +32,7 @@ func (client *ApiClient) GetPowerApps(ctx context.Context, environmentId string)
 			return nil, err
 		}
 
-		body, err := client.doRequest(request)
+		body, _, err := client.doRequest(request)
 		if err != nil {
 			return nil, err
 		}

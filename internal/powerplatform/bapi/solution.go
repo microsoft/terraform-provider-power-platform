@@ -51,7 +51,7 @@ func (client *ApiClient) GetSolutions(ctx context.Context, environmentId string)
 	}
 
 	request.Header.Set("Authorization", "Bearer "+*token)
-	body, err := client.doRequest(request)
+	body, _, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
@@ -103,7 +103,7 @@ func (client *ApiClient) CreateSolution(ctx context.Context, environmentId strin
 		return nil, err
 	}
 	stageSolutionRequest.Header.Set("Authorization", "Bearer "+*token)
-	stageSolutionResponseBody, err := client.doRequest(stageSolutionRequest)
+	stageSolutionResponseBody, _, err := client.doRequest(stageSolutionRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (client *ApiClient) CreateSolution(ctx context.Context, environmentId strin
 		return nil, err
 	}
 	importSolutionRequest.Header.Set("Authorization", "Bearer "+*token)
-	importSolutionResponseBody, err := client.doRequest(importSolutionRequest)
+	importSolutionResponseBody, _, err := client.doRequest(importSolutionRequest)
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (client *ApiClient) CreateSolution(ctx context.Context, environmentId strin
 	}
 	asyncSolutionImportRequest.Header.Set("Authorization", "Bearer "+*token)
 	for {
-		asyncSolutionImportResponseBody, err := client.doRequest(asyncSolutionImportRequest)
+		asyncSolutionImportResponseBody, _, err := client.doRequest(asyncSolutionImportRequest)
 		if err != nil {
 			return nil, err
 		}
@@ -212,7 +212,7 @@ func (client *ApiClient) DeleteSolution(ctx context.Context, environmentId strin
 		return err
 	}
 	deleteSolutionRequest.Header.Set("Authorization", "Bearer "+*token)
-	_, err = client.doRequest(deleteSolutionRequest)
+	_, _, err = client.doRequest(deleteSolutionRequest)
 	if err != nil {
 		return err
 	}
@@ -279,7 +279,7 @@ func (client *ApiClient) validateSolutionImportResult(ctx context.Context, token
 		return err
 	}
 	validateSolutionImportRequest.Header.Set("Authorization", "Bearer "+token)
-	validateSolutionImportResponseBody, err := client.doRequest(validateSolutionImportRequest)
+	validateSolutionImportResponseBody, _, err := client.doRequest(validateSolutionImportRequest)
 	if err != nil {
 		return err
 	}
