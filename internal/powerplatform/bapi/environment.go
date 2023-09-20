@@ -137,46 +137,59 @@ func (client *ApiClient) CreateEnvironment(ctx context.Context, environment mode
 		return nil, err
 	}
 
-	locationHeader := apiResponse.GetHeader("Location")
-	tflog.Debug(ctx, "Location Header: "+locationHeader)
-
-	_, err = url.Parse(locationHeader)
-	if err != nil {
-		tflog.Error(ctx, "Error parsing location header: "+err.Error())
-	}
+	tflog.Debug(ctx, "Environment Creation Opeartion HTTP Status: '"+apiResponse.Response.Status+"'")
 
 	createdEnvironmentId := ""
-	for {
-		request, err = http.NewRequestWithContext(ctx, "GET", locationHeader, bytes.NewReader(body))
+	if apiResponse.Response.StatusCode == http.StatusAccepted {
+
+		locationHeader := apiResponse.GetHeader("Location")
+		tflog.Debug(ctx, "Location Header: "+locationHeader)
+
+		_, err = url.Parse(locationHeader)
 		if err != nil {
-			return nil, err
+			tflog.Error(ctx, "Error parsing location header: "+err.Error())
 		}
 
-		apiResponse, err = client.doRequest(request)
-		if err != nil {
-			return nil, err
-		}
-
-		lifecycleResponse := models.EnvironmentLifecycleDto{}
-		err = apiResponse.MarshallTo(&lifecycleResponse)
-		if err != nil {
-			return nil, err
-		}
-
-		time.Sleep(10 * time.Second)
-
-		tflog.Debug(ctx, "Environment Creation Opeartion State: '"+lifecycleResponse.State.Id+"'")
-
-		if lifecycleResponse.State.Id == "Succeeded" {
-			parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
-			if len(parts) > 0 {
-				createdEnvironmentId = parts[len(parts)-1]
-			} else {
-				return nil, errors.New("can't parse environment id from response " + lifecycleResponse.Links.Environment.Path)
+		for {
+			request, err = http.NewRequestWithContext(ctx, "GET", locationHeader, bytes.NewReader(body))
+			if err != nil {
+				return nil, err
 			}
-			tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
-			break
+
+			apiResponse, err = client.doRequest(request)
+			if err != nil {
+				return nil, err
+			}
+
+			lifecycleResponse := models.EnvironmentLifecycleDto{}
+			err = apiResponse.MarshallTo(&lifecycleResponse)
+			if err != nil {
+				return nil, err
+			}
+
+			time.Sleep(5 * time.Second)
+
+			tflog.Debug(ctx, "Environment Creation Opeartion State: '"+lifecycleResponse.State.Id+"'")
+			tflog.Debug(ctx, "Environment Creation Opeartion HTTP Status: '"+apiResponse.Response.Status+"'")
+
+			if lifecycleResponse.State.Id == "Succeeded" {
+				parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
+				if len(parts) > 0 {
+					createdEnvironmentId = parts[len(parts)-1]
+				} else {
+					return nil, errors.New("can't parse environment id from response " + lifecycleResponse.Links.Environment.Path)
+				}
+				tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
+				break
+			}
 		}
+	} else if apiResponse.Response.StatusCode == http.StatusCreated {
+		envCreatedResponse := models.EnvironmentLifecycleCreatedDto{}
+		apiResponse.MarshallTo(&envCreatedResponse)
+		if envCreatedResponse.Properties.ProvisioningState != "Succeeded" {
+			return nil, errors.New("environment creation failed. privisioning state: " + envCreatedResponse.Properties.ProvisioningState)
+		}
+		createdEnvironmentId = envCreatedResponse.Name
 	}
 
 	env, err := client.GetEnvironment(ctx, createdEnvironmentId)

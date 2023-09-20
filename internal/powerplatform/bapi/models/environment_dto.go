@@ -134,3 +134,12 @@ type EnvironmentLifecycleRequestedByDto struct {
 	DisplayName string `json:"displayName"`
 	Type        string `json:"type"`
 }
+
+type EnvironmentLifecycleCreatedDto struct {
+	Name       string                                   `json:"name"`
+	Properties EnvironmentLifecycleCreatedPropertiesDto `json:"properties"`
+}
+
+type EnvironmentLifecycleCreatedPropertiesDto struct {
+	ProvisioningState string `json:"provisioningState"`
+}
