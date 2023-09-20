@@ -51,18 +51,18 @@ func (client *ApiClient) GetSolutions(ctx context.Context, environmentId string)
 	}
 
 	request.Header.Set("Authorization", "Bearer "+*token)
-	body, _, err := client.doRequest(request)
+	apiResponse, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
 
 	solutionArray := models.SolutionDtoArray{}
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&solutionArray)
+	err = apiResponse.MarshallTo(&solutionArray)
 	if err != nil {
 		return nil, err
 	}
 
-	for inx, _ := range solutionArray.Value {
+	for inx := range solutionArray.Value {
 		solutionArray.Value[inx].EnvironmentName = environmentId
 	}
 
@@ -103,12 +103,12 @@ func (client *ApiClient) CreateSolution(ctx context.Context, environmentId strin
 		return nil, err
 	}
 	stageSolutionRequest.Header.Set("Authorization", "Bearer "+*token)
-	stageSolutionResponseBody, _, err := client.doRequest(stageSolutionRequest)
+	apiResponse, err := client.doRequest(stageSolutionRequest)
 	if err != nil {
 		return nil, err
 	}
 	stageSolutionResponse := models.StageSolutionImportResponseDto{}
-	err = json.NewDecoder(bytes.NewReader(stageSolutionResponseBody)).Decode(&stageSolutionResponse)
+	err = apiResponse.MarshallTo(&stageSolutionResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -144,12 +144,12 @@ func (client *ApiClient) CreateSolution(ctx context.Context, environmentId strin
 		return nil, err
 	}
 	importSolutionRequest.Header.Set("Authorization", "Bearer "+*token)
-	importSolutionResponseBody, _, err := client.doRequest(importSolutionRequest)
+	apiResponse, err = client.doRequest(importSolutionRequest)
 	if err != nil {
 		return nil, err
 	}
 	importSolutionResponse := models.ImportSolutionResponseDto{}
-	err = json.NewDecoder(bytes.NewReader(importSolutionResponseBody)).Decode(&importSolutionResponse)
+	err = apiResponse.MarshallTo(&importSolutionResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -168,12 +168,12 @@ func (client *ApiClient) CreateSolution(ctx context.Context, environmentId strin
 	}
 	asyncSolutionImportRequest.Header.Set("Authorization", "Bearer "+*token)
 	for {
-		asyncSolutionImportResponseBody, _, err := client.doRequest(asyncSolutionImportRequest)
+		apiResponse, err := client.doRequest(asyncSolutionImportRequest)
 		if err != nil {
 			return nil, err
 		}
 		asyncSolutionPullResponse := models.AsyncSolutionPullResponseDto{}
-		err = json.NewDecoder(bytes.NewReader(asyncSolutionImportResponseBody)).Decode(&asyncSolutionPullResponse)
+		err = apiResponse.MarshallTo(&asyncSolutionPullResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -212,7 +212,11 @@ func (client *ApiClient) DeleteSolution(ctx context.Context, environmentId strin
 		return err
 	}
 	deleteSolutionRequest.Header.Set("Authorization", "Bearer "+*token)
-	_, _, err = client.doRequest(deleteSolutionRequest)
+	apiResponse, err := client.doRequest(deleteSolutionRequest)
+	if err != nil {
+		return err
+	}
+	err = apiResponse.ValidateStatusCode(http.StatusAccepted)
 	if err != nil {
 		return err
 	}
@@ -279,13 +283,13 @@ func (client *ApiClient) validateSolutionImportResult(ctx context.Context, token
 		return err
 	}
 	validateSolutionImportRequest.Header.Set("Authorization", "Bearer "+token)
-	validateSolutionImportResponseBody, _, err := client.doRequest(validateSolutionImportRequest)
+	apiResponse, err := client.doRequest(validateSolutionImportRequest)
 	if err != nil {
 		return err
 	}
 
 	validateSolutionImportResponseDto := models.ValidateSolutionImportResponseDto{}
-	err = json.NewDecoder(bytes.NewReader(validateSolutionImportResponseBody)).Decode(&validateSolutionImportResponseDto)
+	err = apiResponse.MarshallTo(&validateSolutionImportResponseDto)
 	if err != nil {
 		return err
 	}

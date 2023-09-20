@@ -1,9 +1,7 @@
 package powerplatform_bapi
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -32,13 +30,13 @@ func (client *ApiClient) GetPowerApps(ctx context.Context, environmentId string)
 			return nil, err
 		}
 
-		body, _, err := client.doRequest(request)
+		apiResponse, err := client.doRequest(request)
 		if err != nil {
 			return nil, err
 		}
 
 		appsArray := models.PowerAppDtoArray{}
-		err = json.NewDecoder(bytes.NewReader(body)).Decode(&appsArray)
+		err = apiResponse.MarshallTo(&appsArray)
 		if err != nil {
 			return nil, err
 		}

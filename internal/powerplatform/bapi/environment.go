@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"net/textproto"
 	"net/url"
 	"strings"
 	"time"
@@ -30,13 +29,13 @@ func (client *ApiClient) GetEnvironments(ctx context.Context) ([]models.Environm
 		return nil, err
 	}
 
-	body, _, err := client.doRequest(request)
+	apiResponse, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
 
 	envArray := models.EnvironmentDtoArray{}
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&envArray)
+	err = apiResponse.MarshallTo(&envArray)
 	if err != nil {
 		return nil, err
 	}
@@ -59,13 +58,13 @@ func (client *ApiClient) GetEnvironment(ctx context.Context, environmentId strin
 		return nil, err
 	}
 
-	body, _, err := client.doRequest(request)
+	apiResponse, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
 
 	env := models.EnvironmentDto{}
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&env)
+	err = apiResponse.MarshallTo(&env)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +100,12 @@ func (client *ApiClient) DeleteEnvironment(ctx context.Context, environmentId st
 		return err
 	}
 
-	_, _, err = client.doRequest(request)
+	apiResponse, err := client.doRequest(request)
+	if err != nil {
+		return err
+	}
+
+	err = apiResponse.ValidateStatusCode(http.StatusAccepted)
 	if err != nil {
 		return err
 	}
@@ -128,12 +132,12 @@ func (client *ApiClient) CreateEnvironment(ctx context.Context, environment mode
 		return nil, err
 	}
 
-	_, headers, err := client.doRequest(request)
+	apiResponse, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
 
-	locationHeader := textproto.MIMEHeader(headers).Get("Location")
+	locationHeader := apiResponse.GetHeader("Location")
 	tflog.Debug(ctx, "Location Header: "+locationHeader)
 
 	_, err = url.Parse(locationHeader)
@@ -148,13 +152,13 @@ func (client *ApiClient) CreateEnvironment(ctx context.Context, environment mode
 			return nil, err
 		}
 
-		body, _, err = client.doRequest(request)
+		apiResponse, err = client.doRequest(request)
 		if err != nil {
 			return nil, err
 		}
 
 		lifecycleResponse := models.EnvironmentLifecycleDto{}
-		err = json.NewDecoder(bytes.NewReader(body)).Decode(&lifecycleResponse)
+		err = apiResponse.MarshallTo(&lifecycleResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -199,7 +203,11 @@ func (client *ApiClient) UpdateEnvironment(ctx context.Context, environmentId st
 	if err != nil {
 		return nil, err
 	}
-	_, _, err = client.doRequest(request)
+	apiResponse, err := client.doRequest(request)
+	if err != nil {
+		return nil, err
+	}
+	err = apiResponse.ValidateStatusCode(http.StatusAccepted)
 	if err != nil {
 		return nil, err
 	}
