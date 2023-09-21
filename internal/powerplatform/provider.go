@@ -76,6 +76,8 @@ type DataverseClient struct {
 }
 
 type PowerPlatoformApiClient struct {
+	Auth   PowerPlatformAuthInterface
+	Client PowerPlatformClientInterface
 }
 
 func NewPowerPlatformProvider() func() provider.Provider {
@@ -87,11 +89,12 @@ func NewPowerPlatformProvider() func() provider.Provider {
 			Urls: ProviderConfigUrls{
 				BapiUrl:          "api.bap.microsoft.com",
 				PowerAppsUrl:     "api.powerapps.com",
-				PowerPlatformUrl: "",
+				PowerPlatformUrl: "api.powerplatform.com",
 			},
 		}
 		bapiAuth := &BapiAuthImplementation{}
 		dataverseAuth := &DataverseAuthImplementation{}
+		powerplatformAuth := &PowerPlatformAuthImplementation{}
 
 		bapiClient := &BapiClient{
 			Auth: bapiAuth,
@@ -110,6 +113,14 @@ func NewPowerPlatformProvider() func() provider.Provider {
 			},
 		}
 
+		powerplatformClient := &PowerPlatoformApiClient{
+			Auth: powerplatformAuth,
+			Client: &PowerPlatformClientImplementation{
+				Config: config,
+				Auth:   powerplatformAuth,
+			},
+		}
+
 		p := &PowerPlatformProvider{
 			//todo to be removed
 			old_bapiClient: &powerplatform_bapi.ApiClient{
@@ -122,7 +133,7 @@ func NewPowerPlatformProvider() func() provider.Provider {
 			Config:           &config,
 			BapiApi:          bapiClient,
 			DataverseApi:     dataverseClient,
-			PowerPlatformApi: &PowerPlatoformApiClient{},
+			PowerPlatformApi: powerplatformClient,
 		}
 		return p
 	}
