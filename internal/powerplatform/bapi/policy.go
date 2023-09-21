@@ -32,12 +32,12 @@ func (client *ApiClient) GetPolicy(ctx context.Context, name string) (*models.Dl
 		return nil, err
 	}
 
-	body, err := client.doRequest(request)
+	apiResponse, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
 	policy := models.DlpPolicyDto{}
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&policy)
+	err = apiResponse.MarshallTo(&policy)
 	if err != nil {
 		return nil, err
 	}
@@ -56,10 +56,15 @@ func (client *ApiClient) DeletePolicy(ctx context.Context, name string) error {
 		return err
 	}
 
-	_, err = client.doRequest(request)
+	apiResponse, err := client.doRequest(request)
 	if err != nil {
 		return err
 	}
+	err = apiResponse.ValidateStatusCode(http.StatusAccepted)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -81,12 +86,17 @@ func (client *ApiClient) UpdatePolicy(ctx context.Context, name string, policy m
 		return nil, err
 	}
 
-	body, err = client.doRequest(request)
+	apiResponse, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
 	createdPolicy := models.DlpPolicyDto{}
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&createdPolicy)
+	err = apiResponse.MarshallTo(&createdPolicy)
+	if err != nil {
+		return nil, err
+	}
+
+	err = apiResponse.ValidateStatusCode(http.StatusAccepted)
 	if err != nil {
 		return nil, err
 	}
@@ -113,12 +123,12 @@ func (client *ApiClient) CreatePolicy(ctx context.Context, policy models.DlpPoli
 		return nil, err
 	}
 
-	body, err = client.doRequest(request)
+	apiResponse, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
 	createdPolicy := models.DlpPolicyDto{}
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&createdPolicy)
+	err = apiResponse.MarshallTo(&createdPolicy)
 	if err != nil {
 		return nil, err
 	}
