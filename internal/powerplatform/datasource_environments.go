@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 )
 
@@ -26,7 +25,7 @@ func NewEnvironmentsDataSource() datasource.DataSource {
 }
 
 type EnvironmentsDataSource struct {
-	BapiApiClient    powerplatform_bapi.ApiClientInterface
+	BapiClient       BapiClientInterface
 	ProviderTypeName string
 	TypeName         string
 }
@@ -151,7 +150,7 @@ func (d *EnvironmentsDataSource) Configure(_ context.Context, req datasource.Con
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).old_bapiClient.(powerplatform_bapi.ApiClientInterface)
+	client, ok := req.ProviderData.(*PowerPlatformProvider).BapiApi.Client.(BapiClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(
@@ -161,7 +160,7 @@ func (d *EnvironmentsDataSource) Configure(_ context.Context, req datasource.Con
 
 		return
 	}
-	d.BapiApiClient = client
+	d.BapiClient = client
 }
 
 func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -169,7 +168,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENTS START: %s", d.ProviderTypeName))
 
-	envs, err := d.BapiApiClient.GetEnvironments(ctx)
+	envs, err := d.BapiClient.GetEnvironments(ctx)
 
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
