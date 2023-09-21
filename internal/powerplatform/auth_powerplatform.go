@@ -2,7 +2,12 @@ package powerplatform
 
 import (
 	"context"
+	"errors"
+	"strings"
 	"time"
+
+	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 var _ PowerPlatformAuthInterface = &PowerPlatformAuthImplementation{}
@@ -39,6 +44,37 @@ func (client *PowerPlatformAuthImplementation) AuthenticateUserPass(ctx context.
 }
 
 func (client *PowerPlatformAuthImplementation) AuthenticateClientSecret(ctx context.Context, tenantId, applicationId, secret string) (string, error) {
-	//todo implement
-	panic("[AuthenticateClientSecret] not implemented")
+	scopes := []string{"https://api.powerplatform.com/.default"}
+	token, expiry, err := client.authClientSecret(ctx, scopes, tenantId, applicationId, secret)
+	if err != nil {
+		if strings.Contains(err.Error(), "unable to resolve an endpoint: json decode error") {
+			tflog.Debug(ctx, err.Error())
+			return "", errors.New("there was an issue authenticating with the provided credentials. Please check the your client/secret and try again")
+		}
+		return "", err
+	}
+	client.Token = token
+	client.TokenExpiry = expiry
+	return client.Token, nil
+}
+
+func (client *PowerPlatformAuthImplementation) authClientSecret(ctx context.Context, scopes []string, tenantId, applicationId, clientSecret string) (string, time.Time, error) {
+	authority := "https://login.microsoftonline.com/" + tenantId
+
+	cred, err := confidential.NewCredFromSecret(clientSecret)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	confidentialClientApp, err := confidential.New(authority, applicationId, cred)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	authResult, err := confidentialClientApp.AcquireTokenByCredential(ctx, scopes)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	return authResult.AccessToken, authResult.ExpiresOn, nil
 }

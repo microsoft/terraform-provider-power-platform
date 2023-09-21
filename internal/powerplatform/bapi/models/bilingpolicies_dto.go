@@ -50,6 +50,6 @@ type BillingPolicyDto struct {
 	} `json:"lastModifiedBy"`
 }
 
-type BillingPoliciesDto struct {
+type BillingPolicyDtoArray struct {
 	Value []BillingPolicyDto `json:"value"`
 }
