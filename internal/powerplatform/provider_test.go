@@ -30,7 +30,7 @@ provider "powerplatform" {
 
 func powerPlatformProviderServerApiMock(client powerplatform_bapi.ApiClientInterface) func() (tfprotov6.ProviderServer, error) {
 	providerMock := providerserver.NewProtocol6WithError(&PowerPlatformProvider{
-		bapiClient: client,
+		old_bapiClient: client,
 	})
 	return providerMock
 }

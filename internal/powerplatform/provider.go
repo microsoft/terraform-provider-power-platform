@@ -19,7 +19,7 @@ import (
 var _ provider.Provider = &PowerPlatformProvider{}
 var _ powerplatform_bapi.ApiClientInterface = &powerplatform_bapi.ApiClient{}
 
-type PowerPlatformProviderModel struct {
+type ProviderCredentialsModel struct {
 	TenantId types.String `tfsdk:"tenant_id"`
 	ClientId types.String `tfsdk:"client_id"`
 	Secret   types.String `tfsdk:"secret"`
@@ -29,21 +29,102 @@ type PowerPlatformProviderModel struct {
 }
 
 type PowerPlatformProvider struct {
-	bapiClient powerplatform_bapi.ApiClientInterface
+	old_bapiClient powerplatform_bapi.ApiClientInterface
+
+	Config           *ProviderConfig
+	BapiApi          *BapiClient
+	DataverseApi     *DataverseClient
+	PowerPlatformApi *PowerPlatoformApiClient
+}
+
+type ProviderConfig struct {
+	Credentials *ProviderCredentials
+	Urls        ProviderConfigUrls
+}
+
+type ProviderConfigUrls struct {
+	BapiUrl          string
+	PowerAppsUrl     string
+	PowerPlatformUrl string
+}
+
+type ProviderCredentials struct {
+	TenantId string
+	ClientId string
+	Secret   string
+
+	Username string
+	Password string
+}
+
+func (model *ProviderCredentials) IsUserPassCredentialsProvided() bool {
+	return model.Username != "" || model.Password != "" || model.TenantId != ""
+}
+
+func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {
+	return model.ClientId != "" || model.Secret != "" || model.TenantId != ""
+}
+
+type BapiClient struct {
+	Auth   BapiAuthInterface
+	Client BapiClientInterface
+}
+
+type DataverseClient struct {
+	Auth   DataverseAuthInterface
+	Client DataverseClientInterface
+}
+
+type PowerPlatoformApiClient struct {
 }
 
 func NewPowerPlatformProvider() func() provider.Provider {
 	return func() provider.Provider {
-		return &PowerPlatformProvider{
-			bapiClient: &powerplatform_bapi.ApiClient{
-				HttpClient:      http.DefaultClient,
-				BapiUrl:         "api.bap.microsoft.com",
-				PowerAppsApiUrl: "api.powerapps.com",
 
+		cred := ProviderCredentials{}
+		config := ProviderConfig{
+			Credentials: &cred,
+			Urls: ProviderConfigUrls{
+				BapiUrl:          "api.bap.microsoft.com",
+				PowerAppsUrl:     "api.powerapps.com",
+				PowerPlatformUrl: "",
+			},
+		}
+		bapiAuth := &BapiAuthImplementation{}
+		dataverseAuth := &DataverseAuthImplementation{}
+
+		bapiClient := &BapiClient{
+			Auth: bapiAuth,
+			Client: &BapiClientImplementation{
+				Config: config,
+				Auth:   bapiAuth,
+			},
+		}
+
+		dataverseClient := &DataverseClient{
+			Auth: dataverseAuth,
+			Client: &DataverseClientImplementation{
+				Config:     config,
+				Auth:       dataverseAuth,
+				BapiClient: bapiClient.Client,
+			},
+		}
+
+		p := &PowerPlatformProvider{
+			//todo to be removed
+			old_bapiClient: &powerplatform_bapi.ApiClient{
+				HttpClient:       http.DefaultClient,
 				Provider:         &powerplatform_bapi.Provider{},
 				DataverseAuthMap: make(map[string]*powerplatform_bapi.AuthResponse),
 			},
+			//
+
+			Config:           &config,
+			BapiApi:          bapiClient,
+			DataverseApi:     dataverseClient,
+			PowerPlatformApi: &PowerPlatoformApiClient{},
 		}
+		return p
 	}
 }
 
@@ -93,7 +174,7 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 }
 
 func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	var config PowerPlatformProviderModel
+	var config ProviderCredentialsModel
 
 	tflog.Debug(ctx, "Configure request received")
 
@@ -152,7 +233,12 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_secret")
 
 	if clientId != "" && secret != "" && tenantId != "" {
-		authResp, err := p.bapiClient.DoAuthClientSecret(ctx, tenantId, clientId, secret)
+		//todo refarctor remove
+		authResp, err := p.old_bapiClient.DoAuthClientSecret(ctx, tenantId, clientId, secret)
+
+		p.Config.Credentials.TenantId = tenantId
+		p.Config.Credentials.ClientId = clientId
+		p.Config.Credentials.Secret = secret
 
 		if err != nil {
 			resp.Diagnostics.AddError("Provider client's authentication has failed.", err.Error())
@@ -161,7 +247,13 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		}
 
 	} else if username != "" && password != "" && tenantId != "" {
-		authResp, err := p.bapiClient.DoAuthUsernamePassword(ctx, tenantId, username, password)
+		//todo refarctor remove
+		authResp, err := p.old_bapiClient.DoAuthUsernamePassword(ctx, tenantId, username, password)
+
+		p.Config.Credentials.TenantId = tenantId
+		p.Config.Credentials.Username = username
+		p.Config.Credentials.Password = password
+
 		if err != nil {
 			resp.Diagnostics.AddError("Provider client's authentication has failed.", err.Error())
 		} else {

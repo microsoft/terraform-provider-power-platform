@@ -151,7 +151,7 @@ func (d *EnvironmentsDataSource) Configure(_ context.Context, req datasource.Con
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).bapiClient.(powerplatform_bapi.ApiClientInterface)
+	client, ok := req.ProviderData.(*PowerPlatformProvider).old_bapiClient.(powerplatform_bapi.ApiClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(
