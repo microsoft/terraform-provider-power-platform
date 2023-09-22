@@ -60,7 +60,33 @@ type ApiClientInterface interface {
 	CreatePolicy(ctx context.Context, policyToCreate models.DlpPolicyModel) (*models.DlpPolicyModel, error)
 }
 
-func (client *ApiClient) doRequest(request *http.Request) ([]byte, error) {
+type ApiHttpResponse struct {
+	Response    *http.Response
+	BodyAsBytes []byte
+}
+
+func (apiResponse *ApiHttpResponse) MarshallTo(obj interface{}) error {
+	err := json.NewDecoder(bytes.NewReader(apiResponse.BodyAsBytes)).Decode(&obj)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (apiResponse *ApiHttpResponse) GetHeader(name string) string {
+	return apiResponse.Response.Header.Get(name)
+}
+
+func (ApiHttpResponse *ApiHttpResponse) ValidateStatusCode(expectedStatusCode int) error {
+	if ApiHttpResponse.Response.StatusCode != expectedStatusCode {
+		return fmt.Errorf("expected status code %d, got %d", expectedStatusCode, ApiHttpResponse.Response.StatusCode)
+	}
+	return nil
+}
+
+func (client *ApiClient) doRequest(request *http.Request) (*ApiHttpResponse, error) {
+
+	apiHttpResponse := &ApiHttpResponse{}
 
 	if request.Header.Get("Content-Type") == "" {
 		request.Header.Set("Content-Type", "application/json")
@@ -75,11 +101,13 @@ func (client *ApiClient) doRequest(request *http.Request) ([]byte, error) {
 	request.Header.Set("User-Agent", "terraform-provider-power-platform")
 
 	response, err := client.HttpClient.Do(request)
+	apiHttpResponse.Response = response
 	if err != nil {
 		return nil, err
 	}
 
 	body, err := io.ReadAll(response.Body)
+	apiHttpResponse.BodyAsBytes = body
 	if err != nil {
 		return nil, err
 	}
@@ -92,10 +120,11 @@ func (client *ApiClient) doRequest(request *http.Request) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			return nil, fmt.Errorf("status: %d, body: %s", response.StatusCode, errorResponse)
+
+			return apiHttpResponse, fmt.Errorf("status: %d, body: %s", response.StatusCode, errorResponse)
 		} else {
 			return nil, fmt.Errorf("status: %d", response.StatusCode)
 		}
 	}
-	return body, nil
+	return apiHttpResponse, nil
 }
