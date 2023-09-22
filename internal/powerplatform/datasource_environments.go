@@ -25,7 +25,7 @@ func NewEnvironmentsDataSource() datasource.DataSource {
 }
 
 type EnvironmentsDataSource struct {
-	BapiClient       BapiClientInterface
+	BapiApiClient    BapiClientInterface
 	ProviderTypeName string
 	TypeName         string
 }
@@ -160,7 +160,7 @@ func (d *EnvironmentsDataSource) Configure(_ context.Context, req datasource.Con
 
 		return
 	}
-	d.BapiClient = client
+	d.BapiApiClient = client
 }
 
 func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -168,7 +168,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENTS START: %s", d.ProviderTypeName))
 
-	envs, err := d.BapiClient.GetEnvironments(ctx)
+	envs, err := d.BapiApiClient.GetEnvironments(ctx)
 
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())

@@ -13,30 +13,37 @@ import (
 
 var _ BapiAuthInterface = &BapiAuthImplementation{}
 
+type TokeExpiredError struct {
+	message string
+}
+
+func (e *TokeExpiredError) Error() string {
+	return e.message
+}
+
 type BapiAuthInterface interface {
 	IsTokenExpiredOrEmpty() bool
-	RefreshToken() (string, error)
+	GetCurrentToken() (string, error)
 
 	AuthenticateUserPass(ctx context.Context, tenantId, username, password string) (string, error)
 	AuthenticateClientSecret(ctx context.Context, tenantId, applicationid, secret string) (string, error)
 }
 
 type BapiAuthImplementation struct {
+	Config      ProviderConfig
 	Token       string
 	TokenExpiry time.Time
 }
 
-func (client *BapiAuthImplementation) IsTokenExpiredOrEmpty() bool {
-	if client.Token == "" {
-		return true
-	} else {
-		return time.Now().After(client.TokenExpiry)
+func (client *BapiAuthImplementation) GetCurrentToken() (string, error) {
+	if client.IsTokenExpiredOrEmpty() {
+		return "", &TokeExpiredError{"token is expired or empty"}
 	}
+	return client.Token, nil
 }
 
-func (client *BapiAuthImplementation) RefreshToken() (string, error) {
-	//todo implement token refresh
-	panic("[RefreshToken] not implemented")
+func (client *BapiAuthImplementation) IsTokenExpiredOrEmpty() bool {
+	return client.Token == "" || time.Now().After(client.TokenExpiry)
 }
 
 func (client *BapiAuthImplementation) AuthenticateUserPass(ctx context.Context, tenantId, username, password string) (string, error) {
@@ -50,6 +57,7 @@ func (client *BapiAuthImplementation) AuthenticateUserPass(ctx context.Context, 
 	}
 
 	authResult, err := publicClientApp.AcquireTokenByUsernamePassword(ctx, scopes, username, password)
+
 	if err != nil {
 		if strings.Contains(err.Error(), "unable to resolve an endpoint: json decode error") {
 			tflog.Debug(ctx, err.Error())

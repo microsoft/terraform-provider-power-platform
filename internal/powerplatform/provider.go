@@ -92,7 +92,9 @@ func NewPowerPlatformProvider() func() provider.Provider {
 				PowerPlatformUrl: "api.powerplatform.com",
 			},
 		}
-		bapiAuth := &BapiAuthImplementation{}
+		bapiAuth := &BapiAuthImplementation{
+			Config: config,
+		}
 		dataverseAuth := &DataverseAuthImplementation{}
 		powerplatformAuth := &PowerPlatformAuthImplementation{}
 

@@ -41,9 +41,6 @@ type ApiClientInterface interface {
 
 	GetEnvironments(ctx context.Context) ([]models.EnvironmentDto, error)
 	GetEnvironment(ctx context.Context, environmentId string) (*models.EnvironmentDto, error)
-	CreateEnvironment(ctx context.Context, environment models.EnvironmentCreateDto) (*models.EnvironmentDto, error)
-	UpdateEnvironment(ctx context.Context, environmentId string, environment models.EnvironmentDto) (*models.EnvironmentDto, error)
-	DeleteEnvironment(ctx context.Context, environmentId string) error
 
 	CreateSolution(ctx context.Context, environmentId string, solutionToCreate models.ImportSolutionDto, content []byte, settings []byte) (*models.SolutionDto, error)
 	GetSolutions(ctx context.Context, environmentId string) ([]models.SolutionDto, error)
