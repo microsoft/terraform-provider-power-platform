@@ -150,6 +150,15 @@ func (client *ApiClient) CreateEnvironment(ctx context.Context, environment mode
 			tflog.Error(ctx, "Error parsing location header: "+err.Error())
 		}
 
+		retryHeader := apiResponse.GetHeader("Retry-After")
+		tflog.Debug(ctx, "Retry Header: "+retryHeader)
+		retryAfter, err := time.ParseDuration(retryHeader)
+		if err != nil {
+			retryAfter = time.Duration(5) * time.Second
+		} else {
+			retryAfter = retryAfter * time.Second
+		}
+
 		for {
 			request, err = http.NewRequestWithContext(ctx, "GET", locationHeader, bytes.NewReader(body))
 			if err != nil {
@@ -167,7 +176,7 @@ func (client *ApiClient) CreateEnvironment(ctx context.Context, environment mode
 				return nil, err
 			}
 
-			time.Sleep(5 * time.Second)
+			time.Sleep(retryAfter)
 
 			tflog.Debug(ctx, "Environment Creation Opeartion State: '"+lifecycleResponse.State.Id+"'")
 			tflog.Debug(ctx, "Environment Creation Opeartion HTTP Status: '"+apiResponse.Response.Status+"'")
