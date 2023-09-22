@@ -36,21 +36,6 @@ func (m *MockApiClientInterface) EXPECT() *MockApiClientInterfaceMockRecorder {
 	return m.recorder
 }
 
-// CreateEnvironment mocks base method.
-func (m *MockApiClientInterface) CreateEnvironment(arg0 context.Context, arg1 powerplatform_bapi0.EnvironmentCreateDto) (*powerplatform_bapi0.EnvironmentDto, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateEnvironment", arg0, arg1)
-	ret0, _ := ret[0].(*powerplatform_bapi0.EnvironmentDto)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CreateEnvironment indicates an expected call of CreateEnvironment.
-func (mr *MockApiClientInterfaceMockRecorder) CreateEnvironment(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEnvironment", reflect.TypeOf((*MockApiClientInterface)(nil).CreateEnvironment), arg0, arg1)
-}
-
 // CreatePolicy mocks base method.
 func (m *MockApiClientInterface) CreatePolicy(arg0 context.Context, arg1 powerplatform_bapi0.DlpPolicyModel) (*powerplatform_bapi0.DlpPolicyModel, error) {
 	m.ctrl.T.Helper()
@@ -79,20 +64,6 @@ func (m *MockApiClientInterface) CreateSolution(arg0 context.Context, arg1 strin
 func (mr *MockApiClientInterfaceMockRecorder) CreateSolution(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSolution", reflect.TypeOf((*MockApiClientInterface)(nil).CreateSolution), arg0, arg1, arg2, arg3, arg4)
-}
-
-// DeleteEnvironment mocks base method.
-func (m *MockApiClientInterface) DeleteEnvironment(arg0 context.Context, arg1 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteEnvironment", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteEnvironment indicates an expected call of DeleteEnvironment.
-func (mr *MockApiClientInterfaceMockRecorder) DeleteEnvironment(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEnvironment", reflect.TypeOf((*MockApiClientInterface)(nil).DeleteEnvironment), arg0, arg1)
 }
 
 // DeletePolicy mocks base method.
@@ -286,21 +257,6 @@ func (m *MockApiClientInterface) GetSolutions(arg0 context.Context, arg1 string)
 func (mr *MockApiClientInterfaceMockRecorder) GetSolutions(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSolutions", reflect.TypeOf((*MockApiClientInterface)(nil).GetSolutions), arg0, arg1)
-}
-
-// UpdateEnvironment mocks base method.
-func (m *MockApiClientInterface) UpdateEnvironment(arg0 context.Context, arg1 string, arg2 powerplatform_bapi0.EnvironmentDto) (*powerplatform_bapi0.EnvironmentDto, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateEnvironment", arg0, arg1, arg2)
-	ret0, _ := ret[0].(*powerplatform_bapi0.EnvironmentDto)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdateEnvironment indicates an expected call of UpdateEnvironment.
-func (mr *MockApiClientInterfaceMockRecorder) UpdateEnvironment(arg0, arg1, arg2 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEnvironment", reflect.TypeOf((*MockApiClientInterface)(nil).UpdateEnvironment), arg0, arg1, arg2)
 }
 
 // UpdatePolicy mocks base method.

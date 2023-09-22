@@ -1,9 +1,7 @@
 package powerplatform_bapi
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/url"
 	"strings"
@@ -30,13 +28,13 @@ func (client *ApiClient) GetConnectors(ctx context.Context) ([]models.ConnectorD
 		return nil, err
 	}
 
-	body, err := client.doRequest(request)
+	apiRespose, err := client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
 
 	connectorArray := models.ConnectorDtoArray{}
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&connectorArray)
+	err = apiRespose.MarshallTo(&connectorArray)
 	if err != nil {
 		return nil, err
 	}
@@ -50,12 +48,12 @@ func (client *ApiClient) GetConnectors(ctx context.Context) ([]models.ConnectorD
 	if err != nil {
 		return nil, err
 	}
-	body, err = client.doRequest(request)
+	apiRespose, err = client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
 	unblockableConnectorArray := []models.UnblockableConnectorDto{}
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&unblockableConnectorArray)
+	err = apiRespose.MarshallTo(&unblockableConnectorArray)
 	if err != nil {
 		return nil, err
 	}
@@ -77,12 +75,12 @@ func (client *ApiClient) GetConnectors(ctx context.Context) ([]models.ConnectorD
 	if err != nil {
 		return nil, err
 	}
-	body, err = client.doRequest(request)
+	apiRespose, err = client.doRequest(request)
 	if err != nil {
 		return nil, err
 	}
 	virtualConnectorArray := []models.VirtualConnectorDto{}
-	err = json.NewDecoder(bytes.NewReader(body)).Decode(&virtualConnectorArray)
+	err = apiRespose.MarshallTo(&virtualConnectorArray)
 	if err != nil {
 		return nil, err
 	}

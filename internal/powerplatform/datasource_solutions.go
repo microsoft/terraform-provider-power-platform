@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 )
 
@@ -26,7 +25,7 @@ func NewSolutionsDataSource() datasource.DataSource {
 }
 
 type SolutionsDataSource struct {
-	BapiApiClient    powerplatform_bapi.ApiClientInterface
+	DataverseClient  DataverseClientInterface
 	ProviderTypeName string
 	TypeName         string
 }
@@ -143,7 +142,7 @@ func (d *SolutionsDataSource) Configure(_ context.Context, req datasource.Config
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).bapiClient.(powerplatform_bapi.ApiClientInterface)
+	client, ok := req.ProviderData.(*PowerPlatformProvider).DataverseApi.Client.(DataverseClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(
@@ -154,7 +153,7 @@ func (d *SolutionsDataSource) Configure(_ context.Context, req datasource.Config
 		return
 	}
 
-	d.BapiApiClient = client
+	d.DataverseClient = client
 }
 
 func (d *SolutionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -163,7 +162,7 @@ func (d *SolutionsDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SOLUTIONS START: %s", d.ProviderTypeName))
 
-	solutions, err := d.BapiApiClient.GetSolutions(ctx, state.EnvironmentName.ValueString())
+	solutions, err := d.DataverseClient.GetSolutions(ctx, state.EnvironmentName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return

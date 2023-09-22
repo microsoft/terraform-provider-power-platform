@@ -11,8 +11,8 @@ terraform {
 }
 
 provider "powerplatform" {
-  username  = var.username
-  password  = var.password
+  client_id = var.client_id
+  secret    = var.secret
   tenant_id = var.tenant_id
 }
 
@@ -29,7 +29,7 @@ resource "powerplatform_environment" "development" {
 
 data "powerplatform_connectors" "all_connectors" {}
 
-data "azurerm_resource_group" "example" {
-  name     = "example"
-  location = "West Europe"
-}
+# data "azurerm_resource_group" "example" {
+#   name     = "example"
+#   location = "West Europe"
+# }

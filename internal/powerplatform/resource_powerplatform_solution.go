@@ -140,7 +140,7 @@ func (r *SolutionResource) Configure(ctx context.Context, req resource.Configure
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).bapiClient.(powerplatform_bapi.ApiClientInterface)
+	client, ok := req.ProviderData.(*PowerPlatformProvider).old_bapiClient.(powerplatform_bapi.ApiClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(
