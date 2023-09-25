@@ -1,4 +1,4 @@
-# D365 Finance Deployment (101 level)
+# D365 Finance Deployment (201 level)
 
 This Terraform module aims to provide a template for automating and standardizing the deployment and management of D365 Finance environments. It utilizes the deployment model outlined at https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/finance-operations-apps-overview .
 
@@ -16,10 +16,8 @@ Include this module in your Terraform scripts as follows:
 
 ```hcl
 
-module "power_azure_infra" {
+module "d365_finance_environment" {
   source            = "./modules/{{ .ModuleName }}"
-  resource_group    = "myResourceGroup"
-  power_environment = "myPowerEnvironment"
 }
 
 ```
@@ -28,16 +26,16 @@ module "power_azure_infra" {
 
 ### Power Platform Environment
 
-This module creates a Power Platform environment using a combination of the parameters in the terraform files as well as the default settings specified by the Template property.
+This module creates a Power Platform environment using a combination of the parameters in the terraform files as well as the default settings specified by the 'templates' property.
 
 ### Dynamics 365 Finance Environment
 
-This module creates a Dynamics 365 Finance environment using the default settings specified by the Template property.
+This module creates a Dynamics 365 Finance environment using the default settings specified by the 'templates' and 'template_metadata' properties.
 
 ## Limitations and Considerations
 
 - Provisioning can take over an hour, so refrain from rerunning the same environment creation Terraform files more than hourly, as this will cause unexpected behavior.
-- Be sure the relevant users are assigned the correct Dynamics 365 licenses, as this can cause seemingly unrelated errors.
+- Be sure the relevant users are assigned the correct Dynamics 365 licenses, as this can cause unexpected errors.
 
 ## Additional Resources
 
