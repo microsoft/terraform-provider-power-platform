@@ -312,7 +312,7 @@ func (client *BapiClientImplementation) GetPowerApps(ctx context.Context, enviro
 	for _, env := range envs {
 		apiUrl := &url.URL{
 			Scheme: "https",
-			Host:   "api.powerapps.com",
+			Host:   client.BaseApi.GetConfig().Urls.PowerAppsUrl,
 			Path:   fmt.Sprintf("/providers/Microsoft.PowerApps/scopes/admin/environments/%s/apps", env.Name),
 		}
 		values := url.Values{}
@@ -342,7 +342,7 @@ func (client *BapiClientImplementation) GetPowerApps(ctx context.Context, enviro
 func (client *BapiClientImplementation) GetConnectors(ctx context.Context) ([]models.ConnectorDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   "api.powerapps.com",
+		Host:   client.BaseApi.GetConfig().Urls.PowerAppsUrl,
 		Path:   "/providers/Microsoft.PowerApps/apis",
 	}
 	values := url.Values{}
@@ -371,7 +371,7 @@ func (client *BapiClientImplementation) GetConnectors(ctx context.Context) ([]mo
 
 	apiUrl = &url.URL{
 		Scheme: "https",
-		Host:   "api.bap.microsoft.com",
+		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/unblockable",
 	}
 	request, err = http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
@@ -398,7 +398,7 @@ func (client *BapiClientImplementation) GetConnectors(ctx context.Context) ([]mo
 
 	apiUrl = &url.URL{
 		Scheme: "https",
-		Host:   "api.bap.microsoft.com",
+		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/virtual",
 	}
 	request, err = http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
@@ -448,7 +448,7 @@ func (client *BapiClientImplementation) GetPolicies(ctx context.Context) ([]mode
 func (client *BapiClientImplementation) GetPolicy(ctx context.Context, name string) (*models.DlpPolicyModel, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   "api.bap.microsoft.com",
+		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", name),
 	}
 	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
@@ -473,7 +473,7 @@ func (client *BapiClientImplementation) GetPolicy(ctx context.Context, name stri
 func (client *BapiClientImplementation) DeletePolicy(ctx context.Context, name string) error {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   "api.bap.microsoft.com",
+		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v1/policies/%s", name),
 	}
 	request, err := http.NewRequestWithContext(ctx, "DELETE", apiUrl.String(), nil)
@@ -485,7 +485,7 @@ func (client *BapiClientImplementation) DeletePolicy(ctx context.Context, name s
 	if err != nil {
 		return err
 	}
-	err = apiResponse.ValidateStatusCode(http.StatusAccepted)
+	err = apiResponse.ValidateStatusCode(http.StatusNoContent)
 	if err != nil {
 		return err
 	}
@@ -503,7 +503,7 @@ func (client *BapiClientImplementation) UpdatePolicy(ctx context.Context, name s
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   "api.bap.microsoft.com",
+		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", policy.Name),
 	}
 	request, err := http.NewRequestWithContext(ctx, "PATCH", apiUrl.String(), bytes.NewReader(body))
@@ -670,7 +670,7 @@ func (client *BapiClientImplementation) CreatePolicy(ctx context.Context, policy
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   "api.bap.microsoft.com",
+		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v2/policies/",
 	}
 	request, err := http.NewRequestWithContext(ctx, "POST", apiUrl.String(), bytes.NewReader(body))

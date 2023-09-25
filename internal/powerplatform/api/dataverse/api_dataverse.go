@@ -340,7 +340,7 @@ func (client *DataverseClientImplementation) DeleteSolution(ctx context.Context,
 	if err != nil {
 		return err
 	}
-	err = apiResponse.ValidateStatusCode(http.StatusAccepted)
+	err = apiResponse.ValidateStatusCode(http.StatusNoContent)
 	if err != nil {
 		return err
 	}

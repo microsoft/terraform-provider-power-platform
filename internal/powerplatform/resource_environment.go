@@ -356,7 +356,7 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	err := r.BapiApiClient.DeleteEnvironment(ctx, state.EnvironmentName.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
 
