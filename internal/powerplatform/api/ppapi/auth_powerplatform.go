@@ -6,23 +6,23 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 var _ PowerPlatformAuthInterface = &PowerPlatformAuthImplementation{}
 
 type PowerPlatformAuthInterface interface {
-	GetBase() common.AuthInterface
+	GetBase() api.AuthInterface
 
 	AuthenticateUserPass(ctx context.Context, tenantId, username, password string) (string, error)
 	AuthenticateClientSecret(ctx context.Context, tenantId, applicationid, secret string) (string, error)
 }
 
 type PowerPlatformAuthImplementation struct {
-	BaseAuth common.AuthInterface
+	BaseAuth api.AuthInterface
 }
 
-func (client *PowerPlatformAuthImplementation) GetBase() common.AuthInterface {
+func (client *PowerPlatformAuthImplementation) GetBase() api.AuthInterface {
 	return client.BaseAuth
 }
 

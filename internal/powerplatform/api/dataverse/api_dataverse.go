@@ -13,7 +13,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
@@ -29,12 +30,12 @@ type DataverseClientInterface interface {
 }
 
 type DataverseClientImplementation struct {
-	BaseApi    common.ApiClientInterface
+	BaseApi    api.ApiClientInterface
 	Auth       DataverseAuthInterface
-	BapiClient BapiClientInterface
+	BapiClient bapi.BapiClientInterface
 }
 
-func (client *DataverseClientImplementation) doRequest(ctx context.Context, environmentUrl string, request *http.Request) (*common.ApiHttpResponse, error) {
+func (client *DataverseClientImplementation) doRequest(ctx context.Context, environmentUrl string, request *http.Request) (*api.ApiHttpResponse, error) {
 	token, err := client.Initialize(ctx, environmentUrl)
 	if err != nil {
 		return nil, err
@@ -55,7 +56,7 @@ func (client *DataverseClientImplementation) Initialize(ctx context.Context, env
 
 	token, err := client.Auth.GetToken(environmentUrl)
 
-	if _, ok := err.(*common.TokeExpiredError); ok {
+	if _, ok := err.(*api.TokeExpiredError); ok {
 		tflog.Debug(ctx, "Token expired. authenticating...")
 
 		if client.BaseApi.GetConfig().Credentials.IsClientSecretCredentialsProvided() {

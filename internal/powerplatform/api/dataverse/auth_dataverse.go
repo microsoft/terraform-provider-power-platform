@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 var _ DataverseAuthInterface = &DataverseAuthImplementation{}
@@ -17,7 +17,7 @@ type DataverseAuthInterface interface {
 }
 
 type DataverseAuthImplementation struct {
-	BaseAuth               common.AuthInterface
+	BaseAuth               api.AuthInterface
 	tokensByEnvironmentUrl map[string]*DataverseAuth
 }
 
@@ -50,7 +50,7 @@ func (client *DataverseAuthImplementation) getAuthDataFromCache(environmentUrl s
 
 func (client *DataverseAuthImplementation) GetToken(environmentUrl string) (string, error) {
 	if client.isTokenExpiredOrEmpty(environmentUrl) {
-		return "", &common.TokeExpiredError{Message: "token is expired or empty"}
+		return "", &api.TokeExpiredError{Message: "token is expired or empty"}
 	}
 	return client.getAuthDataFromCache(environmentUrl).Token, nil
 }

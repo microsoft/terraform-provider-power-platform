@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	dvapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/dataverse"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
@@ -30,7 +31,7 @@ func NewSolutionResource() resource.Resource {
 }
 
 type SolutionResource struct {
-	DataverseApiClient DataverseClientInterface
+	DataverseApiClient dvapi.DataverseClientInterface
 	ProviderTypeName   string
 	TypeName           string
 }
@@ -139,7 +140,7 @@ func (r *SolutionResource) Configure(ctx context.Context, req resource.Configure
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).DataverseApi.Client.(DataverseClientInterface)
+	client, ok := req.ProviderData.(*PowerPlatformProvider).DataverseApi.Client.(dvapi.DataverseClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(

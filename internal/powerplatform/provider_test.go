@@ -7,6 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi"
+	dvapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/dataverse"
+	ppapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/ppapi"
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 	"github.com/stretchr/testify/require"
 )
@@ -28,7 +31,7 @@ provider "powerplatform" {
 `
 )
 
-func powerPlatformProviderServerApiMock(bapiClient BapiClientInterface, dvClient DataverseClientInterface, ppClient PowerPlatformClientInterface) func() (tfprotov6.ProviderServer, error) {
+func powerPlatformProviderServerApiMock(bapiClient bapi.BapiClientInterface, dvClient dvapi.DataverseClientInterface, ppClient ppapi.PowerPlatformClientInterface) func() (tfprotov6.ProviderServer, error) {
 	providerMock := providerserver.NewProtocol6WithError(&PowerPlatformProvider{
 		Config: &common.ProviderConfig{
 			Credentials: &common.ProviderCredentials{},

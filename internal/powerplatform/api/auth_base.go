@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
+	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
 
 var _ AuthInterface = &AuthImplementation{}
@@ -30,7 +31,7 @@ type AuthInterface interface {
 }
 
 type AuthImplementation struct {
-	Config      ProviderConfig
+	Config      common.ProviderConfig
 	Token       string
 	TokenExpiry time.Time
 }

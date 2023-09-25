@@ -10,16 +10,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi"
+	dvapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/dataverse"
+	ppapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/ppapi"
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
 
 var _ provider.Provider = &PowerPlatformProvider{}
 
-//var _ powerplatform_bapi.ApiClientInterface = &powerplatform_bapi.ApiClient{}
-
 type PowerPlatformProvider struct {
-	//old_bapiClient powerplatform_bapi.ApiClientInterface
-
 	Config           *common.ProviderConfig
 	BapiApi          *BapiClient
 	DataverseApi     *DataverseClient
@@ -27,18 +27,18 @@ type PowerPlatformProvider struct {
 }
 
 type BapiClient struct {
-	Auth   BapiAuthInterface
-	Client BapiClientInterface
+	Auth   bapi.BapiAuthInterface
+	Client bapi.BapiClientInterface
 }
 
 type DataverseClient struct {
-	Auth   DataverseAuthInterface
-	Client DataverseClientInterface
+	Auth   dvapi.DataverseAuthInterface
+	Client dvapi.DataverseClientInterface
 }
 
 type PowerPlatoformApiClient struct {
-	Auth   PowerPlatformAuthInterface
-	Client PowerPlatformClientInterface
+	Auth   ppapi.PowerPlatformAuthInterface
+	Client ppapi.PowerPlatformClientInterface
 }
 
 func NewPowerPlatformProvider() func() provider.Provider {
@@ -55,19 +55,19 @@ func NewPowerPlatformProvider() func() provider.Provider {
 		}
 
 		//bapi
-		baseAuthBapi := &common.AuthImplementation{
+		baseAuthBapi := &api.AuthImplementation{
 			Config: config,
 		}
-		bapiAuth := &BapiAuthImplementation{
+		bapiAuth := &bapi.BapiAuthImplementation{
 			BaseAuth: baseAuthBapi,
 		}
-		baseApiForBapi := &common.ApiClientImplementation{
+		baseApiForBapi := &api.ApiClientImplementation{
 			Config:   config,
 			BaseAuth: baseAuthBapi,
 		}
 		bapiClient := &BapiClient{
 			Auth: bapiAuth,
-			Client: &BapiClientImplementation{
+			Client: &bapi.BapiClientImplementation{
 				BaseApi: baseApiForBapi,
 				Auth:    bapiAuth,
 			},
@@ -76,20 +76,20 @@ func NewPowerPlatformProvider() func() provider.Provider {
 		//
 
 		//powerplatform
-		baseAuthPowerPlatform := &common.AuthImplementation{
+		baseAuthPowerPlatform := &api.AuthImplementation{
 			Config: config,
 		}
-		powerplatformAuth := &PowerPlatformAuthImplementation{
+		powerplatformAuth := &ppapi.PowerPlatformAuthImplementation{
 			BaseAuth: baseAuthPowerPlatform,
 		}
 
-		baseApiForPpApi := &common.ApiClientImplementation{
+		baseApiForPpApi := &api.ApiClientImplementation{
 			Config:   config,
 			BaseAuth: baseAuthPowerPlatform,
 		}
 		powerplatformClient := &PowerPlatoformApiClient{
 			Auth: powerplatformAuth,
-			Client: &PowerPlatformClientImplementation{
+			Client: &ppapi.PowerPlatformClientImplementation{
 				BaseApi: baseApiForPpApi,
 				Auth:    powerplatformAuth,
 			},
@@ -98,19 +98,19 @@ func NewPowerPlatformProvider() func() provider.Provider {
 		//
 
 		//dataverse
-		baseAuthDataverse := &common.AuthImplementation{
+		baseAuthDataverse := &api.AuthImplementation{
 			Config: config,
 		}
-		dataverseAuth := &DataverseAuthImplementation{
+		dataverseAuth := &dvapi.DataverseAuthImplementation{
 			BaseAuth: baseAuthDataverse,
 		}
-		baseApiForDataverse := &common.ApiClientImplementation{
+		baseApiForDataverse := &api.ApiClientImplementation{
 			Config:   config,
 			BaseAuth: baseAuthDataverse,
 		}
 		dataverseClient := &DataverseClient{
 			Auth: dataverseAuth,
-			Client: &DataverseClientImplementation{
+			Client: &dvapi.DataverseClientImplementation{
 				BaseApi:    baseApiForDataverse,
 				Auth:       dataverseAuth,
 				BapiClient: bapiClient.Client,

@@ -10,6 +10,7 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
 
 var _ ApiClientInterface = &ApiClientImplementation{}
@@ -18,7 +19,7 @@ func (client *ApiClientImplementation) SetAuth(auth AuthBaseOperationInterface) 
 	client.Auth = auth
 }
 
-func (client *ApiClientImplementation) GetConfig() ProviderConfig {
+func (client *ApiClientImplementation) GetConfig() common.ProviderConfig {
 	return client.Config
 }
 
@@ -26,11 +27,11 @@ type ApiClientInterface interface {
 	Initialize(ctx context.Context) (string, error)
 	DoRequest(token string, request *http.Request) (*ApiHttpResponse, error)
 	SetAuth(auth AuthBaseOperationInterface)
-	GetConfig() ProviderConfig
+	GetConfig() common.ProviderConfig
 }
 
 type ApiClientImplementation struct {
-	Config   ProviderConfig
+	Config   common.ProviderConfig
 	BaseAuth AuthInterface
 	Auth     AuthBaseOperationInterface
 }

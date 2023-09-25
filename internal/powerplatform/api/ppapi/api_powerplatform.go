@@ -5,28 +5,28 @@ import (
 	"net/http"
 	"net/url"
 
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 var _ PowerPlatformClientInterface = &PowerPlatformClientImplementation{}
 
 type PowerPlatformClientInterface interface {
-	GetBase() common.ApiClientInterface
+	GetBase() api.ApiClientInterface
 
 	GetBillingPolicies(ctx context.Context) ([]models.BillingPolicyDto, error)
 }
 
 type PowerPlatformClientImplementation struct {
-	BaseApi common.ApiClientInterface
+	BaseApi api.ApiClientInterface
 	Auth    PowerPlatformAuthInterface
 }
 
-func (client *PowerPlatformClientImplementation) GetBase() common.ApiClientInterface {
+func (client *PowerPlatformClientImplementation) GetBase() api.ApiClientInterface {
 	return client.BaseApi
 }
 
-func (client *PowerPlatformClientImplementation) doRequest(ctx context.Context, request *http.Request) (*common.ApiHttpResponse, error) {
+func (client *PowerPlatformClientImplementation) doRequest(ctx context.Context, request *http.Request) (*api.ApiHttpResponse, error) {
 	token, err := client.BaseApi.Initialize(ctx)
 	if err != nil {
 		return nil, err

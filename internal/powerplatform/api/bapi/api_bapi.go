@@ -1,4 +1,4 @@
-package powerplatform
+package powerplatform_api_bapi
 
 import (
 	"bytes"
@@ -12,14 +12,14 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 var _ BapiClientInterface = &BapiClientImplementation{}
 
 type BapiClientInterface interface {
-	GetBase() common.ApiClientInterface
+	GetBase() api.ApiClientInterface
 
 	GetEnvironments(ctx context.Context) ([]models.EnvironmentDto, error)
 	GetEnvironment(ctx context.Context, environmentId string) (*models.EnvironmentDto, error)
@@ -38,15 +38,15 @@ type BapiClientInterface interface {
 }
 
 type BapiClientImplementation struct {
-	BaseApi common.ApiClientInterface
+	BaseApi api.ApiClientInterface
 	Auth    BapiAuthInterface
 }
 
-func (client *BapiClientImplementation) GetBase() common.ApiClientInterface {
+func (client *BapiClientImplementation) GetBase() api.ApiClientInterface {
 	return client.BaseApi
 }
 
-func (client *BapiClientImplementation) doRequest(ctx context.Context, request *http.Request) (*common.ApiHttpResponse, error) {
+func (client *BapiClientImplementation) doRequest(ctx context.Context, request *http.Request) (*api.ApiHttpResponse, error) {
 	token, err := client.BaseApi.Initialize(ctx)
 	if err != nil {
 		return nil, err

@@ -1,4 +1,4 @@
-package powerplatform
+package powerplatform_api_bapi
 
 import (
 	"context"
@@ -7,23 +7,23 @@ import (
 
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 var _ BapiAuthInterface = &BapiAuthImplementation{}
 
 type BapiAuthInterface interface {
-	GetBase() common.AuthInterface
+	GetBase() api.AuthInterface
 
 	AuthenticateUserPass(ctx context.Context, tenantId, username, password string) (string, error)
 	AuthenticateClientSecret(ctx context.Context, tenantId, applicationid, secret string) (string, error)
 }
 
 type BapiAuthImplementation struct {
-	BaseAuth common.AuthInterface
+	BaseAuth api.AuthInterface
 }
 
-func (client *BapiAuthImplementation) GetBase() common.AuthInterface {
+func (client *BapiAuthImplementation) GetBase() api.AuthInterface {
 	return client.BaseAuth
 }
 
