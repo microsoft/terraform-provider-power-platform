@@ -8,9 +8,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	powerplatform_mock "github.com/microsoft/terraform-provider-power-platform/internal/mocks"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
@@ -20,7 +20,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: providerConfig + `
-				resource "powerplatform_environment" "development" { 
+				resource "powerplatform_environment" "development" {
 					display_name                              = "Example2"
 					location                                  = "europe"
 					language_code                             = "1033"
@@ -48,7 +48,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 			},
 			{
 				Config: providerConfig + `
-				resource "powerplatform_environment" "development" { 
+				resource "powerplatform_environment" "development" {
 					display_name                              = "Example3"
 					domain									  = "terraformtest3"
 					location                                  = "europe"
@@ -76,7 +76,7 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: providerConfig + `
-				resource "powerplatform_environment" "development" { 
+				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "europe"
 					language_code                             = "1033"
@@ -108,7 +108,7 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 }
 
 func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.T) {
-	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
+	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
 
 	envIdBeforeChanges := "00000000-0000-0000-0000-000000000001"
 	envIdAfterLocationChanges := "00000000-0000-0000-0000-000000000002"
@@ -132,7 +132,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 	steps := []resource.TestStep{
 		{
 			Config: uniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" { 
+			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -140,7 +140,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				environment_type                          = "Sandbox"
 				domain									  = "domain"
 				security_group_id 						  = "security1"
-				
+
 			}`,
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdBeforeChanges),
@@ -188,7 +188,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				currency_code                             = "EUR"
 				environment_type                          = "Trial"
 				domain									  = "domain"
-				security_group_id 						  = "security1"	
+				security_group_id 						  = "security1"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterEnvironmentTypeChanges),
@@ -204,7 +204,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				currency_code                             = "EUR"
 				environment_type                          = "Sandbox"
 				domain									  = "domain"
-				security_group_id 						  = "security1"	
+				security_group_id 						  = "security1"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterLanguageChanges),
@@ -267,7 +267,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, nil, nil),
 		},
 		Steps: steps,
 	})
@@ -275,7 +275,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 }
 
 func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
-	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
+	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
 
 	envId := "00000000-0000-0000-0000-000000000001"
 	env := models.EnvironmentDto{
@@ -295,7 +295,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 	steps := []resource.TestStep{
 		{
 			Config: uniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" { 
+			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -313,7 +313,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 		},
 		{
 			Config: uniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" { 
+			resource "powerplatform_environment" "development" {
 				display_name                              = "Example123"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -331,7 +331,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 		},
 		{
 			Config: uniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" { 
+			resource "powerplatform_environment" "development" {
 				display_name                              = "Example123"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -349,7 +349,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 		},
 		{
 			Config: uniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" { 
+			resource "powerplatform_environment" "development" {
 				display_name                              = "Example123"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -408,7 +408,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, nil, nil),
 		},
 		Steps: steps,
 	})
@@ -416,7 +416,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 }
 
 func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
-	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
+	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
 
 	env := models.EnvironmentDto{
 		Name: "00000000-0000-0000-0000-000000000001",
@@ -464,12 +464,12 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, nil, nil),
 		},
 		Steps: []resource.TestStep{
 			{
 				Config: uniTestsProviderConfig + `
-				resource "powerplatform_environment" "development" { 
+				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "europe"
 					language_code                             = "1033"

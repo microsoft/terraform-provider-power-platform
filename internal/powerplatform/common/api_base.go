@@ -1,4 +1,4 @@
-package powerplatform
+package powerplatform_common
 
 import (
 	"bytes"
@@ -10,7 +10,6 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
 )
 
 var _ ApiClientInterface = &ApiClientImplementation{}
@@ -25,7 +24,7 @@ func (client *ApiClientImplementation) GetConfig() ProviderConfig {
 
 type ApiClientInterface interface {
 	Initialize(ctx context.Context) (string, error)
-	DoRequest(token string, request *http.Request) (*powerplatform_bapi.ApiHttpResponse, error)
+	DoRequest(token string, request *http.Request) (*ApiHttpResponse, error)
 	SetAuth(auth AuthBaseOperationInterface)
 	GetConfig() ProviderConfig
 }
@@ -36,8 +35,32 @@ type ApiClientImplementation struct {
 	Auth     AuthBaseOperationInterface
 }
 
-func (client *ApiClientImplementation) DoRequest(token string, request *http.Request) (*powerplatform_bapi.ApiHttpResponse, error) {
-	apiHttpResponse := &powerplatform_bapi.ApiHttpResponse{}
+type ApiHttpResponse struct {
+	Response    *http.Response
+	BodyAsBytes []byte
+}
+
+func (apiResponse *ApiHttpResponse) MarshallTo(obj interface{}) error {
+	err := json.NewDecoder(bytes.NewReader(apiResponse.BodyAsBytes)).Decode(&obj)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (apiResponse *ApiHttpResponse) GetHeader(name string) string {
+	return apiResponse.Response.Header.Get(name)
+}
+
+func (ApiHttpResponse *ApiHttpResponse) ValidateStatusCode(expectedStatusCode int) error {
+	if ApiHttpResponse.Response.StatusCode != expectedStatusCode {
+		return fmt.Errorf("expected status code %d, got %d", expectedStatusCode, ApiHttpResponse.Response.StatusCode)
+	}
+	return nil
+}
+
+func (client *ApiClientImplementation) DoRequest(token string, request *http.Request) (*ApiHttpResponse, error) {
+	apiHttpResponse := &ApiHttpResponse{}
 
 	if request.Header.Get("Content-Type") == "" {
 		request.Header.Set("Content-Type", "application/json")

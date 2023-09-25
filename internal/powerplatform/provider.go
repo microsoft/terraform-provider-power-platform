@@ -2,7 +2,6 @@ package powerplatform
 
 import (
 	"context"
-	"net/http"
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -10,59 +9,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
-	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
+	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
 
 var _ provider.Provider = &PowerPlatformProvider{}
-var _ powerplatform_bapi.ApiClientInterface = &powerplatform_bapi.ApiClient{}
 
-type ProviderCredentialsModel struct {
-	TenantId types.String `tfsdk:"tenant_id"`
-	ClientId types.String `tfsdk:"client_id"`
-	Secret   types.String `tfsdk:"secret"`
-
-	Username types.String `tfsdk:"username"`
-	Password types.String `tfsdk:"password"`
-}
+//var _ powerplatform_bapi.ApiClientInterface = &powerplatform_bapi.ApiClient{}
 
 type PowerPlatformProvider struct {
-	old_bapiClient powerplatform_bapi.ApiClientInterface
+	//old_bapiClient powerplatform_bapi.ApiClientInterface
 
-	Config           *ProviderConfig
+	Config           *common.ProviderConfig
 	BapiApi          *BapiClient
 	DataverseApi     *DataverseClient
 	PowerPlatformApi *PowerPlatoformApiClient
-}
-
-type ProviderConfig struct {
-	Credentials *ProviderCredentials
-	Urls        ProviderConfigUrls
-}
-
-type ProviderConfigUrls struct {
-	BapiUrl          string
-	PowerAppsUrl     string
-	PowerPlatformUrl string
-}
-
-type ProviderCredentials struct {
-	TenantId string
-	ClientId string
-	Secret   string
-
-	Username string
-	Password string
-}
-
-func (model *ProviderCredentials) IsUserPassCredentialsProvided() bool {
-	return model.Username != "" || model.Password != "" || model.TenantId != ""
-}
-
-func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {
-	return model.ClientId != "" || model.Secret != "" || model.TenantId != ""
 }
 
 type BapiClient struct {
@@ -83,10 +44,10 @@ type PowerPlatoformApiClient struct {
 func NewPowerPlatformProvider() func() provider.Provider {
 	return func() provider.Provider {
 
-		cred := ProviderCredentials{}
-		config := ProviderConfig{
+		cred := common.ProviderCredentials{}
+		config := common.ProviderConfig{
 			Credentials: &cred,
-			Urls: ProviderConfigUrls{
+			Urls: common.ProviderConfigUrls{
 				BapiUrl:          "api.bap.microsoft.com",
 				PowerAppsUrl:     "api.powerapps.com",
 				PowerPlatformUrl: "api.powerplatform.com",
@@ -94,13 +55,13 @@ func NewPowerPlatformProvider() func() provider.Provider {
 		}
 
 		//bapi
-		baseAuthBapi := &AuthImplementation{
+		baseAuthBapi := &common.AuthImplementation{
 			Config: config,
 		}
 		bapiAuth := &BapiAuthImplementation{
 			BaseAuth: baseAuthBapi,
 		}
-		baseApiForBapi := &ApiClientImplementation{
+		baseApiForBapi := &common.ApiClientImplementation{
 			Config:   config,
 			BaseAuth: baseAuthBapi,
 		}
@@ -115,14 +76,14 @@ func NewPowerPlatformProvider() func() provider.Provider {
 		//
 
 		//powerplatform
-		baseAuthPowerPlatform := &AuthImplementation{
+		baseAuthPowerPlatform := &common.AuthImplementation{
 			Config: config,
 		}
 		powerplatformAuth := &PowerPlatformAuthImplementation{
 			BaseAuth: baseAuthPowerPlatform,
 		}
 
-		baseApiForPpApi := &ApiClientImplementation{
+		baseApiForPpApi := &common.ApiClientImplementation{
 			Config:   config,
 			BaseAuth: baseAuthPowerPlatform,
 		}
@@ -137,13 +98,13 @@ func NewPowerPlatformProvider() func() provider.Provider {
 		//
 
 		//dataverse
-		baseAuthDataverse := &AuthImplementation{
+		baseAuthDataverse := &common.AuthImplementation{
 			Config: config,
 		}
 		dataverseAuth := &DataverseAuthImplementation{
 			BaseAuth: baseAuthDataverse,
 		}
-		baseApiForDataverse := &ApiClientImplementation{
+		baseApiForDataverse := &common.ApiClientImplementation{
 			Config:   config,
 			BaseAuth: baseAuthDataverse,
 		}
@@ -158,14 +119,6 @@ func NewPowerPlatformProvider() func() provider.Provider {
 		//
 
 		p := &PowerPlatformProvider{
-			//todo to be removed
-			old_bapiClient: &powerplatform_bapi.ApiClient{
-				HttpClient:       http.DefaultClient,
-				Provider:         &powerplatform_bapi.Provider{},
-				DataverseAuthMap: make(map[string]*powerplatform_bapi.AuthResponse),
-			},
-			//
-
 			Config:           &config,
 			BapiApi:          bapiClient,
 			DataverseApi:     dataverseClient,
@@ -221,7 +174,7 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 }
 
 func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	var config ProviderCredentialsModel
+	var config common.ProviderCredentialsModel
 
 	tflog.Debug(ctx, "Configure request received")
 
@@ -280,32 +233,13 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_secret")
 
 	if clientId != "" && secret != "" && tenantId != "" {
-		//todo refarctor remove
-		authResp, err := p.old_bapiClient.DoAuthClientSecret(ctx, tenantId, clientId, secret)
-
 		p.Config.Credentials.TenantId = tenantId
 		p.Config.Credentials.ClientId = clientId
 		p.Config.Credentials.Secret = secret
-
-		if err != nil {
-			resp.Diagnostics.AddError("Provider client's authentication has failed.", err.Error())
-		} else {
-			tflog.Info(ctx, "Authentication response token", map[string]any{"Token": authResp.Token})
-		}
-
 	} else if username != "" && password != "" && tenantId != "" {
-		//todo refarctor remove
-		authResp, err := p.old_bapiClient.DoAuthUsernamePassword(ctx, tenantId, username, password)
-
 		p.Config.Credentials.TenantId = tenantId
 		p.Config.Credentials.Username = username
 		p.Config.Credentials.Password = password
-
-		if err != nil {
-			resp.Diagnostics.AddError("Provider client's authentication has failed.", err.Error())
-		} else {
-			tflog.Info(ctx, "Authentication response token", map[string]any{"Token": authResp.Token})
-		}
 	} else {
 		if tenantId == "" {
 			resp.Diagnostics.AddAttributeError(

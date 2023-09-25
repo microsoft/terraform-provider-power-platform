@@ -1,4 +1,4 @@
-package powerplatform
+package powerplatform_common
 
 import (
 	"context"
@@ -10,11 +10,11 @@ import (
 var _ AuthInterface = &AuthImplementation{}
 
 type TokeExpiredError struct {
-	message string
+	Message string
 }
 
 func (e *TokeExpiredError) Error() string {
-	return e.message
+	return e.Message
 }
 
 type AuthInterface interface {

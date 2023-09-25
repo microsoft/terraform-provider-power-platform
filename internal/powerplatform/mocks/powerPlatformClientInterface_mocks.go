@@ -9,8 +9,8 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform"
-	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
+	powerplatform_common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	powerplatform_models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 // MockPowerPlatformClientInterface is a mock of PowerPlatformClientInterface interface.
@@ -37,10 +37,10 @@ func (m *MockPowerPlatformClientInterface) EXPECT() *MockPowerPlatformClientInte
 }
 
 // GetBase mocks base method.
-func (m *MockPowerPlatformClientInterface) GetBase() powerplatform.ApiClientInterface {
+func (m *MockPowerPlatformClientInterface) GetBase() powerplatform_common.ApiClientInterface {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBase")
-	ret0, _ := ret[0].(powerplatform.ApiClientInterface)
+	ret0, _ := ret[0].(powerplatform_common.ApiClientInterface)
 	return ret0
 }
 
@@ -51,10 +51,10 @@ func (mr *MockPowerPlatformClientInterfaceMockRecorder) GetBase() *gomock.Call {
 }
 
 // GetBillingPolicies mocks base method.
-func (m *MockPowerPlatformClientInterface) GetBillingPolicies(arg0 context.Context) ([]powerplatform_bapi.BillingPolicyDto, error) {
+func (m *MockPowerPlatformClientInterface) GetBillingPolicies(arg0 context.Context) ([]powerplatform_models.BillingPolicyDto, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetBillingPolicies", arg0)
-	ret0, _ := ret[0].([]powerplatform_bapi.BillingPolicyDto)
+	ret0, _ := ret[0].([]powerplatform_models.BillingPolicyDto)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

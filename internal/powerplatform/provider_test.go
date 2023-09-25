@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
+	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 	"github.com/stretchr/testify/require"
 )
 
@@ -28,9 +28,20 @@ provider "powerplatform" {
 `
 )
 
-func powerPlatformProviderServerApiMock(client powerplatform_bapi.ApiClientInterface) func() (tfprotov6.ProviderServer, error) {
+func powerPlatformProviderServerApiMock(bapiClient BapiClientInterface, dvClient DataverseClientInterface, ppClient PowerPlatformClientInterface) func() (tfprotov6.ProviderServer, error) {
 	providerMock := providerserver.NewProtocol6WithError(&PowerPlatformProvider{
-		old_bapiClient: client,
+		Config: &common.ProviderConfig{
+			Credentials: &common.ProviderCredentials{},
+		},
+		BapiApi: &BapiClient{
+			Client: bapiClient,
+		},
+		DataverseApi: &DataverseClient{
+			Client: dvClient,
+		},
+		PowerPlatformApi: &PowerPlatoformApiClient{
+			Client: ppClient,
+		},
 	})
 	return providerMock
 }
@@ -41,7 +52,7 @@ var (
 	}
 )
 
-func TestPowerPlatformProvider_HasChildDataSources(t *testing.T) {
+func TestUnitPowerPlatformProvider_HasChildDataSources(t *testing.T) {
 	expectedDataSources := []datasource.DataSource{
 		NewPowerAppsDataSource(),
 		NewEnvironmentsDataSource(),
@@ -56,7 +67,7 @@ func TestPowerPlatformProvider_HasChildDataSources(t *testing.T) {
 	}
 }
 
-func TestPowerPlatformProvider_HasChildResources(t *testing.T) {
+func TestUnitPowerPlatformProvider_HasChildResources(t *testing.T) {
 	expectedResources := []resource.Resource{
 		NewEnvironmentResource(),
 		NewDataLossPreventionPolicyResource(),

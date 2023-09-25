@@ -1,4 +1,4 @@
-package powerplatform_bapi
+package powerplatform_models
 
 type SolutionSettings struct {
 	EnvironmentVariables []SolutionSettingsEnvironmentVariable  `json:"environmentvariables"`
