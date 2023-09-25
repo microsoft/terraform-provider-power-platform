@@ -1,16 +1,13 @@
 package powerplatform
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 )
@@ -24,73 +21,34 @@ type DataverseClientInterface interface {
 }
 
 type DataverseClientImplementation struct {
-	Config     ProviderConfig
+	BaseApi    ApiClientInterface
 	Auth       DataverseAuthInterface
 	BapiClient BapiClientInterface
 }
 
-// TODO remove duplicate method that is the same for all clients
 func (client *DataverseClientImplementation) doRequest(ctx context.Context, environmentUrl string, request *http.Request) (*powerplatform_bapi.ApiHttpResponse, error) {
 	token, err := client.Initialize(ctx, environmentUrl)
 	if err != nil {
 		return nil, err
 	}
-
-	apiHttpResponse := &powerplatform_bapi.ApiHttpResponse{}
-
-	if request.Header.Get("Content-Type") == "" {
-		request.Header.Set("Content-Type", "application/json")
-	}
-
-	//todo validate that initializing the http client everytime is ok from performance perspective
-	httpClient := http.DefaultClient
-
-	if request.Header["Authorization"] == nil {
-		request.Header.Set("Authorization", "Bearer "+token)
-	}
-
-	request.Header.Set("User-Agent", "terraform-provider-power-platform")
-
-	response, err := httpClient.Do(request)
-	apiHttpResponse.Response = response
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := io.ReadAll(response.Body)
-	apiHttpResponse.BodyAsBytes = body
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		if len(body) != 0 {
-			errorResponse := make(map[string]interface{}, 0)
-			err = json.NewDecoder(bytes.NewBuffer(body)).Decode(&errorResponse)
-			if err != nil {
-				return nil, err
-			}
-
-			return apiHttpResponse, fmt.Errorf("status: %d, body: %s", response.StatusCode, errorResponse)
-		} else {
-			return nil, fmt.Errorf("status: %d", response.StatusCode)
-		}
-	}
-	return apiHttpResponse, nil
+	return client.BaseApi.DoRequest(token, request)
 }
 
 func (client *DataverseClientImplementation) Initialize(ctx context.Context, environmentUrl string) (string, error) {
 
-	if client.Auth.IsTokenExpiredOrEmpty(environmentUrl) {
-		if client.Config.Credentials.IsClientSecretCredentialsProvided() {
-			token, err := client.Auth.AuthenticateClientSecret(ctx, environmentUrl, client.Config.Credentials.TenantId, client.Config.Credentials.ClientId, client.Config.Credentials.Secret)
+	token, err := client.Auth.GetToken(environmentUrl)
+
+	if _, ok := err.(*TokeExpiredError); ok {
+		tflog.Debug(ctx, "Token expired. authenticating...")
+
+		if client.BaseApi.GetConfig().Credentials.IsClientSecretCredentialsProvided() {
+			token, err := client.Auth.AuthenticateClientSecret(ctx, environmentUrl, client.BaseApi.GetConfig().Credentials.TenantId, client.BaseApi.GetConfig().Credentials.ClientId, client.BaseApi.GetConfig().Credentials.Secret)
 			if err != nil {
 				return "", err
 			}
 			return token, nil
-		} else if client.Config.Credentials.IsUserPassCredentialsProvided() {
-			token, err := client.Auth.AuthenticateUserPass(ctx, environmentUrl, client.Config.Credentials.TenantId, client.Config.Credentials.Username, client.Config.Credentials.Password)
+		} else if client.BaseApi.GetConfig().Credentials.IsUserPassCredentialsProvided() {
+			token, err := client.Auth.AuthenticateUserPass(ctx, environmentUrl, client.BaseApi.GetConfig().Credentials.TenantId, client.BaseApi.GetConfig().Credentials.Username, client.BaseApi.GetConfig().Credentials.Password)
 			if err != nil {
 				return "", err
 			}
@@ -98,14 +56,11 @@ func (client *DataverseClientImplementation) Initialize(ctx context.Context, env
 		} else {
 			return "", errors.New("no credentials provided")
 		}
-	} else {
-		//todo this is not implemented yet
-		token, err := client.Auth.RefreshToken(environmentUrl)
-		if err != nil {
-			return "", err
-		}
-		return token, nil
 
+	} else if err != nil {
+		return "", err
+	} else {
+		return token, nil
 	}
 }
 

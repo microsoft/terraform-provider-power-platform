@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -20,7 +19,7 @@ import (
 var _ BapiClientInterface = &BapiClientImplementation{}
 
 type BapiClientInterface interface {
-	Initialize(context.Context) (string, error)
+	GetBase() ApiClientInterface
 
 	GetEnvironments(ctx context.Context) ([]models.EnvironmentDto, error)
 	GetEnvironment(ctx context.Context, environmentId string) (*models.EnvironmentDto, error)
@@ -30,94 +29,27 @@ type BapiClientInterface interface {
 }
 
 type BapiClientImplementation struct {
-	Config ProviderConfig
-	Auth   BapiAuthInterface
+	BaseApi ApiClientInterface
+	Auth    BapiAuthInterface
+}
+
+func (client *BapiClientImplementation) GetBase() ApiClientInterface {
+	return client.BaseApi
 }
 
 func (client *BapiClientImplementation) doRequest(ctx context.Context, request *http.Request) (*powerplatform_bapi.ApiHttpResponse, error) {
-	token, err := client.Initialize(ctx)
+	token, err := client.BaseApi.Initialize(ctx)
 	if err != nil {
 		return nil, err
 	}
-
-	apiHttpResponse := &powerplatform_bapi.ApiHttpResponse{}
-
-	if request.Header.Get("Content-Type") == "" {
-		request.Header.Set("Content-Type", "application/json")
-	}
-
-	//todo validate that initializing the http client everytime is ok from performance perspective
-	httpClient := http.DefaultClient
-
-	if request.Header["Authorization"] == nil {
-		request.Header.Set("Authorization", "Bearer "+token)
-	}
-
-	request.Header.Set("User-Agent", "terraform-provider-power-platform")
-
-	response, err := httpClient.Do(request)
-	apiHttpResponse.Response = response
-	if err != nil {
-		return nil, err
-	}
-
-	body, err := io.ReadAll(response.Body)
-	apiHttpResponse.BodyAsBytes = body
-	if err != nil {
-		return nil, err
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		if len(body) != 0 {
-			errorResponse := make(map[string]interface{}, 0)
-			err = json.NewDecoder(bytes.NewBuffer(body)).Decode(&errorResponse)
-			if err != nil {
-				return nil, err
-			}
-
-			return apiHttpResponse, fmt.Errorf("status: %d, body: %s", response.StatusCode, errorResponse)
-		} else {
-			return nil, fmt.Errorf("status: %d", response.StatusCode)
-		}
-	}
-	return apiHttpResponse, nil
-}
-
-func (client *BapiClientImplementation) Initialize(ctx context.Context) (string, error) {
-
-	token, err := client.Auth.GetCurrentToken()
-
-	if _, ok := err.(*TokeExpiredError); ok {
-		tflog.Debug(ctx, "Token expired. authenticating...")
-
-		if client.Config.Credentials.IsClientSecretCredentialsProvided() {
-			token, err := client.Auth.AuthenticateClientSecret(ctx, client.Config.Credentials.TenantId, client.Config.Credentials.ClientId, client.Config.Credentials.Secret)
-			if err != nil {
-				return "", err
-			}
-			return token, nil
-		} else if client.Config.Credentials.IsUserPassCredentialsProvided() {
-			token, err := client.Auth.AuthenticateUserPass(ctx, client.Config.Credentials.TenantId, client.Config.Credentials.Username, client.Config.Credentials.Password)
-			if err != nil {
-				return "", err
-			}
-			return token, nil
-		} else {
-			return "", errors.New("no credentials provided")
-		}
-
-	} else if err != nil {
-		return "", err
-	} else {
-		return token, nil
-	}
+	return client.BaseApi.DoRequest(token, request)
 }
 
 func (client *BapiClientImplementation) GetEnvironment(ctx context.Context, environmentId string) (*models.EnvironmentDto, error) {
+
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.Config.Urls.BapiUrl,
+		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
@@ -151,7 +83,7 @@ func (client *BapiClientImplementation) GetEnvironments(ctx context.Context) ([]
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.Config.Urls.BapiUrl,
+		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments",
 	}
 	values := url.Values{}
@@ -179,7 +111,7 @@ func (client *BapiClientImplementation) GetEnvironments(ctx context.Context) ([]
 func (client *BapiClientImplementation) DeleteEnvironment(ctx context.Context, environmentId string) error {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.Config.Urls.BapiUrl,
+		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
@@ -221,7 +153,7 @@ func (client *BapiClientImplementation) CreateEnvironment(ctx context.Context, e
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.Config.Urls.BapiUrl,
+		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/environments",
 	}
 	values := url.Values{}
@@ -315,7 +247,7 @@ func (client *BapiClientImplementation) UpdateEnvironment(ctx context.Context, e
 	}
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.Config.Urls.BapiUrl,
+		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}

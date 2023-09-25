@@ -92,36 +92,70 @@ func NewPowerPlatformProvider() func() provider.Provider {
 				PowerPlatformUrl: "api.powerplatform.com",
 			},
 		}
-		bapiAuth := &BapiAuthImplementation{
+
+		//bapi
+		baseAuthBapi := &AuthImplementation{
 			Config: config,
 		}
-		dataverseAuth := &DataverseAuthImplementation{}
-		powerplatformAuth := &PowerPlatformAuthImplementation{}
-
+		bapiAuth := &BapiAuthImplementation{
+			BaseAuth: baseAuthBapi,
+		}
+		baseApiForBapi := &ApiClientImplementation{
+			Config:   config,
+			BaseAuth: baseAuthBapi,
+		}
 		bapiClient := &BapiClient{
 			Auth: bapiAuth,
 			Client: &BapiClientImplementation{
-				Config: config,
-				Auth:   bapiAuth,
+				BaseApi: baseApiForBapi,
+				Auth:    bapiAuth,
 			},
 		}
+		bapiClient.Client.GetBase().SetAuth(bapiAuth)
+		//
 
+		//powerplatform
+		baseAuthPowerPlatform := &AuthImplementation{
+			Config: config,
+		}
+		powerplatformAuth := &PowerPlatformAuthImplementation{
+			BaseAuth: baseAuthPowerPlatform,
+		}
+
+		baseApiForPpApi := &ApiClientImplementation{
+			Config:   config,
+			BaseAuth: baseAuthPowerPlatform,
+		}
+		powerplatformClient := &PowerPlatoformApiClient{
+			Auth: powerplatformAuth,
+			Client: &PowerPlatformClientImplementation{
+				BaseApi: baseApiForPpApi,
+				Auth:    powerplatformAuth,
+			},
+		}
+		powerplatformClient.Client.GetBase().SetAuth(powerplatformAuth)
+		//
+
+		//dataverse
+		baseAuthDataverse := &AuthImplementation{
+			Config: config,
+		}
+		dataverseAuth := &DataverseAuthImplementation{
+			BaseAuth: baseAuthDataverse,
+		}
+		baseApiForDataverse := &ApiClientImplementation{
+			Config:   config,
+			BaseAuth: baseAuthDataverse,
+		}
 		dataverseClient := &DataverseClient{
 			Auth: dataverseAuth,
 			Client: &DataverseClientImplementation{
-				Config:     config,
+				BaseApi:    baseApiForDataverse,
 				Auth:       dataverseAuth,
 				BapiClient: bapiClient.Client,
 			},
 		}
-
-		powerplatformClient := &PowerPlatoformApiClient{
-			Auth: powerplatformAuth,
-			Client: &PowerPlatformClientImplementation{
-				Config: config,
-				Auth:   powerplatformAuth,
-			},
-		}
+		//
 
 		p := &PowerPlatformProvider{
 			//todo to be removed
