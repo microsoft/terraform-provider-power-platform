@@ -40,4 +40,9 @@ deps:
 
 mocks:
 	mockgen -destination=/workspaces/terraform-provider-power-platform/internal/mocks/client_mocks_bapi.go -package=powerplatform_mocks github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi ApiClientInterface
+	mockgen -destination=/workspaces/terraform-provider-power-platform/internal/mocks/bapiClientInterface_mocks.go -package=powerplatform_mocks github.com/microsoft/terraform-provider-power-platform/internal/powerplatform BapiClientInterface
+	mockgen -destination=/workspaces/terraform-provider-power-platform/internal/mocks/dataverseClientInterface_mocks.go -package=powerplatform_mocks github.com/microsoft/terraform-provider-power-platform/internal/powerplatform DataverseClientInterface
+	mockgen -destination=/workspaces/terraform-provider-power-platform/internal/mocks/powerPlatformClientInterface_mocks.go -package=powerplatform_mocks github.com/microsoft/terraform-provider-power-platform/internal/powerplatform PowerPlatformClientInterface
+  
+
   
