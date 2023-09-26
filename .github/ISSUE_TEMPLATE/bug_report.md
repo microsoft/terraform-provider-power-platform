@@ -41,3 +41,7 @@ A clear and concise description of what you expected to happen.
 
 ## Additional context
 Add any other context about the problem here.
+
+Do you plan to raise a PR to address this issue?
+[ ] Yes
+[ ] No
