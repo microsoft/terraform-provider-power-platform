@@ -41,6 +41,8 @@ data "powerplatform_[your data source name]" "example_data_source" {
 - [ ] Example in the /examples folder
 - [ ] Schema Documentation in code
 - [ ] Updated auto-generated provider docs with `make docs`
-
+Do you plan to raise a PR to address this issue? 
+[ ] Yes
+[ ] No
 See the [contributing guide](/CONTRIBUTING.md?) for more information about what's expected for contributions.
 
