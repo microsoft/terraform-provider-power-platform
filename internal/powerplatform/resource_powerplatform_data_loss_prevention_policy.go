@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
+	bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 var _ resource.Resource = &DataLossPreventionPolicyResource{}
@@ -32,7 +32,7 @@ func NewDataLossPreventionPolicyResource() resource.Resource {
 }
 
 type DataLossPreventionPolicyResource struct {
-	BapiApiClient    powerplatform_bapi.ApiClientInterface
+	BapiApiClient    bapi.BapiClientInterface
 	ProviderTypeName string
 	TypeName         string
 }
@@ -320,7 +320,7 @@ func (r *DataLossPreventionPolicyResource) Configure(ctx context.Context, req re
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).bapiClient.(powerplatform_bapi.ApiClientInterface)
+	client, ok := req.ProviderData.(*PowerPlatformProvider).BapiApi.Client.(bapi.BapiClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(
@@ -399,7 +399,7 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 
 	policy, err_client := r.BapiApiClient.CreatePolicy(ctx, policyToCreate)
 	if err_client != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.TypeName), err_client.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err_client.Error())
 		return
 	}
 

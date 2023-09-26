@@ -1,4 +1,4 @@
-package powerplatform_bapi
+package powerplatform_models
 
 type DlpPolicyModel struct {
 	Name                                 string                                  `json:"name"`

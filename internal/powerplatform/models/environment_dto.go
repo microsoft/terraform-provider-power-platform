@@ -1,4 +1,4 @@
-package powerplatform_bapi
+package powerplatform_models
 
 var (
 	//https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies?api-version=2023-06-01
@@ -95,4 +95,51 @@ type EnvironmentCreateCurrency struct {
 type EnvironmentDeleteDto struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+}
+
+type EnvironmentLifecycleDto struct {
+	Id                 string                             `json:"id"`
+	Links              EnvironmentLifecycleLinksDto       `json:"links"`
+	State              EnvironmentLifecycleStateDto       `json:"state"`
+	Type               EnvironmentLifecycleStateDto       `json:"type"`
+	CreatedDateTime    string                             `json:"createdDateTime"`
+	LastActionDateTime string                             `json:"lastActionDateTime"`
+	RequestedBy        EnvironmentLifecycleRequestedByDto `json:"requestedBy"`
+	Stages             []EnvironmentLifecycleStageDto     `json:"stages"`
+}
+
+type EnvironmentLifecycleStageDto struct {
+	Id                  string                       `json:"id"`
+	Name                string                       `json:"name"`
+	State               EnvironmentLifecycleStateDto `json:"state"`
+	FirstActionDateTime string                       `json:"firstActionDateTime"`
+	LastActionDateTime  string                       `json:"lastActionDateTime"`
+}
+
+type EnvironmentLifecycleLinksDto struct {
+	Self        EnvironmentLifecycleLinkDto `json:"self"`
+	Environment EnvironmentLifecycleLinkDto `json:"environment"`
+}
+
+type EnvironmentLifecycleLinkDto struct {
+	Path string `json:"path"`
+}
+
+type EnvironmentLifecycleStateDto struct {
+	Id string `json:"id"`
+}
+
+type EnvironmentLifecycleRequestedByDto struct {
+	Id          string `json:"id"`
+	DisplayName string `json:"displayName"`
+	Type        string `json:"type"`
+}
+
+type EnvironmentLifecycleCreatedDto struct {
+	Name       string                                   `json:"name"`
+	Properties EnvironmentLifecycleCreatedPropertiesDto `json:"properties"`
+}
+
+type EnvironmentLifecycleCreatedPropertiesDto struct {
+	ProvisioningState string `json:"provisioningState"`
 }
