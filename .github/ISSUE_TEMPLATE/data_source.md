@@ -1,7 +1,7 @@
 ---
 name: "powerplatform_[your data source name] Data Source"
 about: "Request a new data source to be added to the Terraform provider."
-labels: [enhancement, datasource, triage]
+labels: [enhancement, data source, triage]
 assignees: ""
 
 ---
