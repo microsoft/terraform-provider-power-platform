@@ -1,7 +1,7 @@
 ---
-name: ""
-about: "Request documentation or examples of Terraform provider."
-labels: [triage, documenation]
+name: "Documentation Request"
+about: "Request new documentation or updates to existing documentation to improve clarity or usefulness."
+labels: [triage,documenation]
 assignees: ""
 
 ---
