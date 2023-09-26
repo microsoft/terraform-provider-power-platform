@@ -45,6 +45,6 @@ data "powerplatform_[your data source name]" "example_data_source" {
 ## Contribution
 Do you plan to raise a PR to address this issue? 
 [ ] Yes
-[ ] No
+- [ ] No
 See the [contributing guide](/CONTRIBUTING.md?) for more information about what's expected for contributions.
 
