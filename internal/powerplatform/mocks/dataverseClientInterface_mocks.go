@@ -9,6 +9,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	powerplatform_common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	powerplatform_models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
@@ -62,6 +63,21 @@ func (m *MockDataverseClientInterface) DeleteSolution(arg0 context.Context, arg1
 func (mr *MockDataverseClientInterfaceMockRecorder) DeleteSolution(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSolution", reflect.TypeOf((*MockDataverseClientInterface)(nil).DeleteSolution), arg0, arg1, arg2)
+}
+
+// Execute mocks base method.
+func (m *MockDataverseClientInterface) Execute(arg0 context.Context, arg1, arg2, arg3 string, arg4 interface{}, arg5 []int, arg6 interface{}) (*powerplatform_common.ApiHttpResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Execute", arg0, arg1, arg2, arg3, arg4, arg5, arg6)
+	ret0, _ := ret[0].(*powerplatform_common.ApiHttpResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Execute indicates an expected call of Execute.
+func (mr *MockDataverseClientInterfaceMockRecorder) Execute(arg0, arg1, arg2, arg3, arg4, arg5, arg6 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Execute", reflect.TypeOf((*MockDataverseClientInterface)(nil).Execute), arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 // GetSolution mocks base method.

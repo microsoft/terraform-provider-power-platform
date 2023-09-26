@@ -38,7 +38,7 @@ type DataverseClient struct {
 
 type PowerPlatoformApiClient struct {
 	Auth   ppapi.PowerPlatformAuthInterface
-	Client ppapi.PowerPlatformClientInterface
+	Client ppapi.PowerPlatformClientApiInterface
 }
 
 func NewPowerPlatformProvider() func() provider.Provider {
@@ -55,19 +55,19 @@ func NewPowerPlatformProvider() func() provider.Provider {
 		}
 
 		//bapi
-		baseAuthBapi := &api.AuthImplementation{
+		baseAuthBapi := &api.AuthBase{
 			Config: config,
 		}
-		bapiAuth := &bapi.BapiAuthImplementation{
+		bapiAuth := &bapi.BapiAuth{
 			BaseAuth: baseAuthBapi,
 		}
-		baseApiForBapi := &api.ApiClientImplementation{
+		baseApiForBapi := &api.ApiClientBase{
 			Config:   config,
 			BaseAuth: baseAuthBapi,
 		}
 		bapiClient := &BapiClient{
 			Auth: bapiAuth,
-			Client: &bapi.BapiClientImplementation{
+			Client: &bapi.BapiClientApi{
 				BaseApi: baseApiForBapi,
 				Auth:    bapiAuth,
 			},
@@ -76,20 +76,20 @@ func NewPowerPlatformProvider() func() provider.Provider {
 		//
 
 		//powerplatform
-		baseAuthPowerPlatform := &api.AuthImplementation{
+		baseAuthPowerPlatform := &api.AuthBase{
 			Config: config,
 		}
-		powerplatformAuth := &ppapi.PowerPlatformAuthImplementation{
+		powerplatformAuth := &ppapi.PowerPlatformAuth{
 			BaseAuth: baseAuthPowerPlatform,
 		}
 
-		baseApiForPpApi := &api.ApiClientImplementation{
+		baseApiForPpApi := &api.ApiClientBase{
 			Config:   config,
 			BaseAuth: baseAuthPowerPlatform,
 		}
 		powerplatformClient := &PowerPlatoformApiClient{
 			Auth: powerplatformAuth,
-			Client: &ppapi.PowerPlatformClientImplementation{
+			Client: &ppapi.PowerPlatformClientApi{
 				BaseApi: baseApiForPpApi,
 				Auth:    powerplatformAuth,
 			},
@@ -98,19 +98,19 @@ func NewPowerPlatformProvider() func() provider.Provider {
 		//
 
 		//dataverse
-		baseAuthDataverse := &api.AuthImplementation{
+		baseAuthDataverse := &api.AuthBase{
 			Config: config,
 		}
-		dataverseAuth := &dvapi.DataverseAuthImplementation{
+		dataverseAuth := &dvapi.DataverseAuth{
 			BaseAuth: baseAuthDataverse,
 		}
-		baseApiForDataverse := &api.ApiClientImplementation{
+		baseApiForDataverse := &api.ApiClientBase{
 			Config:   config,
 			BaseAuth: baseAuthDataverse,
 		}
 		dataverseClient := &DataverseClient{
 			Auth: dataverseAuth,
-			Client: &dvapi.DataverseClientImplementation{
+			Client: &dvapi.DataverseClientApi{
 				BaseApi:    baseApiForDataverse,
 				Auth:       dataverseAuth,
 				BapiClient: bapiClient.Client,

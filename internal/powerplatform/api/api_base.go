@@ -13,54 +13,71 @@ import (
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
 
-var _ ApiClientInterface = &ApiClientImplementation{}
+var _ ApiClientInterface = &ApiClientBase{}
 
-func (client *ApiClientImplementation) SetAuth(auth AuthBaseOperationInterface) {
+func (client *ApiClientBase) SetAuth(auth AuthBaseOperationInterface) {
 	client.Auth = auth
 }
 
-func (client *ApiClientImplementation) GetConfig() common.ProviderConfig {
+func (client *ApiClientBase) GetConfig() common.ProviderConfig {
 	return client.Config
 }
 
-type ApiClientInterface interface {
-	Initialize(ctx context.Context) (string, error)
-	DoRequest(token string, request *http.Request) (*ApiHttpResponse, error)
-	SetAuth(auth AuthBaseOperationInterface)
-	GetConfig() common.ProviderConfig
-}
-
-type ApiClientImplementation struct {
+type ApiClientBase struct {
 	Config   common.ProviderConfig
 	BaseAuth AuthInterface
 	Auth     AuthBaseOperationInterface
 }
 
-type ApiHttpResponse struct {
-	Response    *http.Response
-	BodyAsBytes []byte
+type ApiClientInterface interface {
+	//DoRequest(token string, request *http.Request) (*ApiHttpResponse, error)
+	SetAuth(auth AuthBaseOperationInterface)
+	GetConfig() common.ProviderConfig
+
+	InitializeBase(ctx context.Context) (string, error)
+	ExecuteBase(ctx context.Context, token, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error)
 }
 
-func (apiResponse *ApiHttpResponse) MarshallTo(obj interface{}) error {
-	err := json.NewDecoder(bytes.NewReader(apiResponse.BodyAsBytes)).Decode(&obj)
+func (client *ApiClientBase) ExecuteBase(ctx context.Context, token, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+	var bodyBuffer io.Reader = nil
+	if body != nil {
+		bodyBytes, err := json.Marshal(body)
+		if err != nil {
+			return nil, err
+		}
+		bodyBuffer = bytes.NewBuffer(bodyBytes)
+	}
+
+	request, err := http.NewRequestWithContext(ctx, method, url, bodyBuffer)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
-}
-
-func (apiResponse *ApiHttpResponse) GetHeader(name string) string {
-	return apiResponse.Response.Header.Get(name)
-}
-
-func (ApiHttpResponse *ApiHttpResponse) ValidateStatusCode(expectedStatusCode int) error {
-	if ApiHttpResponse.Response.StatusCode != expectedStatusCode {
-		return fmt.Errorf("expected status code %d, got %d", expectedStatusCode, ApiHttpResponse.Response.StatusCode)
+	apiResponse, err := client.doRequest(token, request)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+
+	isStatusCodeValid := false
+	for _, statusCode := range acceptableStatusCodes {
+		if apiResponse.Response.StatusCode == statusCode {
+			isStatusCodeValid = true
+			break
+		}
+	}
+	if !isStatusCodeValid {
+		return nil, fmt.Errorf("expected status code: %d, recieved: %d", acceptableStatusCodes, apiResponse.Response.StatusCode)
+	}
+
+	if responseObj != nil {
+		err = apiResponse.MarshallTo(responseObj)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return apiResponse, nil
 }
 
-func (client *ApiClientImplementation) DoRequest(token string, request *http.Request) (*ApiHttpResponse, error) {
+func (client *ApiClientBase) doRequest(token string, request *http.Request) (*ApiHttpResponse, error) {
 	apiHttpResponse := &ApiHttpResponse{}
 
 	if request.Header.Get("Content-Type") == "" {
@@ -106,7 +123,7 @@ func (client *ApiClientImplementation) DoRequest(token string, request *http.Req
 
 }
 
-func (client *ApiClientImplementation) Initialize(ctx context.Context) (string, error) {
+func (client *ApiClientBase) InitializeBase(ctx context.Context) (string, error) {
 
 	token, err := client.BaseAuth.GetToken()
 
@@ -134,4 +151,28 @@ func (client *ApiClientImplementation) Initialize(ctx context.Context) (string, 
 	} else {
 		return token, nil
 	}
+}
+
+type ApiHttpResponse struct {
+	Response    *http.Response
+	BodyAsBytes []byte
+}
+
+func (apiResponse *ApiHttpResponse) MarshallTo(obj interface{}) error {
+	err := json.NewDecoder(bytes.NewReader(apiResponse.BodyAsBytes)).Decode(&obj)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (apiResponse *ApiHttpResponse) GetHeader(name string) string {
+	return apiResponse.Response.Header.Get(name)
+}
+
+func (ApiHttpResponse *ApiHttpResponse) ValidateStatusCode(expectedStatusCode int) error {
+	if ApiHttpResponse.Response.StatusCode != expectedStatusCode {
+		return fmt.Errorf("expected status code: %d, recieved: %d", expectedStatusCode, ApiHttpResponse.Response.StatusCode)
+	}
+	return nil
 }

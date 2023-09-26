@@ -209,7 +209,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 
 	envDto, err := r.BapiApiClient.CreateEnvironment(ctx, envToCreate)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
 

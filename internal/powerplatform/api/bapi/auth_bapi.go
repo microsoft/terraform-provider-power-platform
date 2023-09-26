@@ -10,7 +10,7 @@ import (
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
-var _ BapiAuthInterface = &BapiAuthImplementation{}
+var _ BapiAuthInterface = &BapiAuth{}
 
 type BapiAuthInterface interface {
 	GetBase() api.AuthInterface
@@ -19,15 +19,15 @@ type BapiAuthInterface interface {
 	AuthenticateClientSecret(ctx context.Context, tenantId, applicationid, secret string) (string, error)
 }
 
-type BapiAuthImplementation struct {
+type BapiAuth struct {
 	BaseAuth api.AuthInterface
 }
 
-func (client *BapiAuthImplementation) GetBase() api.AuthInterface {
+func (client *BapiAuth) GetBase() api.AuthInterface {
 	return client.BaseAuth
 }
 
-func (client *BapiAuthImplementation) AuthenticateUserPass(ctx context.Context, tenantId, username, password string) (string, error) {
+func (client *BapiAuth) AuthenticateUserPass(ctx context.Context, tenantId, username, password string) (string, error) {
 	scopes := []string{"https://service.powerapps.com//.default"}
 	publicClientApplicationID := "1950a258-227b-4e31-a9cf-717495945fc2"
 	authority := "https://login.microsoftonline.com/" + tenantId
@@ -53,7 +53,7 @@ func (client *BapiAuthImplementation) AuthenticateUserPass(ctx context.Context, 
 	return client.BaseAuth.GetToken()
 }
 
-func (client *BapiAuthImplementation) AuthenticateClientSecret(ctx context.Context, tenantId, applicationId, secret string) (string, error) {
+func (client *BapiAuth) AuthenticateClientSecret(ctx context.Context, tenantId, applicationId, secret string) (string, error) {
 	scopes := []string{"https://service.powerapps.com//.default"}
 	token, expiry, err := client.BaseAuth.AuthClientSecret(ctx, scopes, tenantId, applicationId, secret)
 	if err != nil {

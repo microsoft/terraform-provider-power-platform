@@ -399,7 +399,7 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 
 	policy, err_client := r.BapiApiClient.CreatePolicy(ctx, policyToCreate)
 	if err_client != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.TypeName), err_client.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err_client.Error())
 		return
 	}
 

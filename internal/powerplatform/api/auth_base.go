@@ -8,7 +8,7 @@ import (
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
 
-var _ AuthInterface = &AuthImplementation{}
+var _ AuthInterface = &AuthBase{}
 
 type TokeExpiredError struct {
 	Message string
@@ -30,7 +30,7 @@ type AuthInterface interface {
 	AuthClientSecret(ctx context.Context, scopes []string, tenantId, applicationId, clientSecret string) (string, time.Time, error)
 }
 
-type AuthImplementation struct {
+type AuthBase struct {
 	Config      common.ProviderConfig
 	Token       string
 	TokenExpiry time.Time
@@ -41,7 +41,7 @@ type AuthBaseOperationInterface interface {
 	AuthenticateClientSecret(ctx context.Context, tenantId, applicationid, secret string) (string, error)
 }
 
-func (client *AuthImplementation) AuthClientSecret(ctx context.Context, scopes []string, tenantId, applicationId, clientSecret string) (string, time.Time, error) {
+func (client *AuthBase) AuthClientSecret(ctx context.Context, scopes []string, tenantId, applicationId, clientSecret string) (string, time.Time, error) {
 	authority := "https://login.microsoftonline.com/" + tenantId
 
 	cred, err := confidential.NewCredFromSecret(clientSecret)
@@ -62,25 +62,25 @@ func (client *AuthImplementation) AuthClientSecret(ctx context.Context, scopes [
 	return authResult.AccessToken, authResult.ExpiresOn, nil
 }
 
-func (client *AuthImplementation) SetToken(token string) {
+func (client *AuthBase) SetToken(token string) {
 	client.Token = token
 }
 
-func (client *AuthImplementation) SetTokenExpiry(tokenExpiry time.Time) {
+func (client *AuthBase) SetTokenExpiry(tokenExpiry time.Time) {
 	client.TokenExpiry = tokenExpiry
 }
 
-func (client *AuthImplementation) GetTokenExpiry() time.Time {
+func (client *AuthBase) GetTokenExpiry() time.Time {
 	return client.TokenExpiry
 }
 
-func (client *AuthImplementation) GetToken() (string, error) {
+func (client *AuthBase) GetToken() (string, error) {
 	if client.IsTokenExpiredOrEmpty() {
 		return "", &TokeExpiredError{"token is expired or empty"}
 	}
 	return client.Token, nil
 }
 
-func (client *AuthImplementation) IsTokenExpiredOrEmpty() bool {
+func (client *AuthBase) IsTokenExpiredOrEmpty() bool {
 	return client.Token == "" || time.Now().After(client.TokenExpiry)
 }

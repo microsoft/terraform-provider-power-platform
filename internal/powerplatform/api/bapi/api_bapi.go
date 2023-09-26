@@ -1,9 +1,7 @@
 package powerplatform_api_bapi
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -16,10 +14,11 @@ import (
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
-var _ BapiClientInterface = &BapiClientImplementation{}
+var _ BapiClientInterface = &BapiClientApi{}
 
 type BapiClientInterface interface {
 	GetBase() api.ApiClientInterface
+	Execute(ctx context.Context, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*api.ApiHttpResponse, error)
 
 	GetEnvironments(ctx context.Context) ([]models.EnvironmentDto, error)
 	GetEnvironment(ctx context.Context, environmentId string) (*models.EnvironmentDto, error)
@@ -37,24 +36,24 @@ type BapiClientInterface interface {
 	CreatePolicy(ctx context.Context, policyToCreate models.DlpPolicyModel) (*models.DlpPolicyModel, error)
 }
 
-type BapiClientImplementation struct {
+type BapiClientApi struct {
 	BaseApi api.ApiClientInterface
 	Auth    BapiAuthInterface
 }
 
-func (client *BapiClientImplementation) GetBase() api.ApiClientInterface {
+func (client *BapiClientApi) GetBase() api.ApiClientInterface {
 	return client.BaseApi
 }
 
-func (client *BapiClientImplementation) doRequest(ctx context.Context, request *http.Request) (*api.ApiHttpResponse, error) {
-	token, err := client.BaseApi.Initialize(ctx)
+func (client *BapiClientApi) Execute(ctx context.Context, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*api.ApiHttpResponse, error) {
+	token, err := client.BaseApi.InitializeBase(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return client.BaseApi.DoRequest(token, request)
+	return client.BaseApi.ExecuteBase(ctx, token, method, url, body, acceptableStatusCodes, responseObj)
 }
 
-func (client *BapiClientImplementation) GetEnvironment(ctx context.Context, environmentId string) (*models.EnvironmentDto, error) {
+func (client *BapiClientApi) GetEnvironment(ctx context.Context, environmentId string) (*models.EnvironmentDto, error) {
 
 	apiUrl := &url.URL{
 		Scheme: "https",
@@ -65,18 +64,9 @@ func (client *BapiClientImplementation) GetEnvironment(ctx context.Context, envi
 	values.Add("$expand", "permissions,properties.capacity")
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
-	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	apiResponse, err := client.doRequest(ctx, request)
-	if err != nil {
-		return nil, err
-	}
 
 	env := models.EnvironmentDto{}
-	err = apiResponse.MarshallTo(&env)
+	_, err := client.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +78,7 @@ func (client *BapiClientImplementation) GetEnvironment(ctx context.Context, envi
 	return &env, nil
 }
 
-func (client *BapiClientImplementation) GetEnvironments(ctx context.Context) ([]models.EnvironmentDto, error) {
+func (client *BapiClientApi) GetEnvironments(ctx context.Context) ([]models.EnvironmentDto, error) {
 
 	apiUrl := &url.URL{
 		Scheme: "https",
@@ -98,18 +88,9 @@ func (client *BapiClientImplementation) GetEnvironments(ctx context.Context) ([]
 	values := url.Values{}
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
-	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	apiResponse, err := client.doRequest(ctx, request)
-	if err != nil {
-		return nil, err
-	}
 
 	envArray := models.EnvironmentDtoArray{}
-	err = apiResponse.MarshallTo(&envArray)
+	_, err := client.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &envArray)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +98,7 @@ func (client *BapiClientImplementation) GetEnvironments(ctx context.Context) ([]
 	return envArray.Value, nil
 }
 
-func (client *BapiClientImplementation) DeleteEnvironment(ctx context.Context, environmentId string) error {
+func (client *BapiClientApi) DeleteEnvironment(ctx context.Context, environmentId string) error {
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
@@ -131,22 +112,8 @@ func (client *BapiClientImplementation) DeleteEnvironment(ctx context.Context, e
 		Code:    "7", //Application
 		Message: "Deleted using Terraform Provider for Power Platform",
 	}
-	body, err := json.Marshal(environmentDelete)
-	if err != nil {
-		return err
-	}
-	request, err := http.NewRequestWithContext(ctx, "DELETE", apiUrl.String(), bytes.NewReader(body))
 
-	if err != nil {
-		return err
-	}
-
-	apiResponse, err := client.doRequest(ctx, request)
-	if err != nil {
-		return err
-	}
-
-	err = apiResponse.ValidateStatusCode(http.StatusAccepted)
+	_, err := client.Execute(ctx, "DELETE", apiUrl.String(), environmentDelete, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
@@ -154,11 +121,7 @@ func (client *BapiClientImplementation) DeleteEnvironment(ctx context.Context, e
 	return nil
 }
 
-func (client *BapiClientImplementation) CreateEnvironment(ctx context.Context, environment models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
-	body, err := json.Marshal(environment)
-	if err != nil {
-		return nil, err
-	}
+func (client *BapiClientApi) CreateEnvironment(ctx context.Context, environment models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 
 	apiUrl := &url.URL{
 		Scheme: "https",
@@ -168,12 +131,7 @@ func (client *BapiClientImplementation) CreateEnvironment(ctx context.Context, e
 	values := url.Values{}
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
-	request, err := http.NewRequestWithContext(ctx, "POST", apiUrl.String(), bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
-
-	apiResponse, err := client.doRequest(ctx, request)
+	apiResponse, err := client.Execute(ctx, "POST", apiUrl.String(), environment, []int{http.StatusAccepted, http.StatusCreated}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -201,18 +159,9 @@ func (client *BapiClientImplementation) CreateEnvironment(ctx context.Context, e
 		}
 
 		for {
-			request, err = http.NewRequestWithContext(ctx, "GET", locationHeader, bytes.NewReader(body))
-			if err != nil {
-				return nil, err
-			}
-
-			apiResponse, err = client.doRequest(ctx, request)
-			if err != nil {
-				return nil, err
-			}
 
 			lifecycleResponse := models.EnvironmentLifecycleDto{}
-			err = apiResponse.MarshallTo(&lifecycleResponse)
+			apiResponse, err = client.Execute(ctx, "GET", locationHeader, nil, []int{http.StatusOK}, &lifecycleResponse)
 			if err != nil {
 				return nil, err
 			}
@@ -249,11 +198,7 @@ func (client *BapiClientImplementation) CreateEnvironment(ctx context.Context, e
 	return env, err
 }
 
-func (client *BapiClientImplementation) UpdateEnvironment(ctx context.Context, environmentId string, environment models.EnvironmentDto) (*models.EnvironmentDto, error) {
-	body, err := json.Marshal(environment)
-	if err != nil {
-		return nil, err
-	}
+func (client *BapiClientApi) UpdateEnvironment(ctx context.Context, environmentId string, environment models.EnvironmentDto) (*models.EnvironmentDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
@@ -262,15 +207,7 @@ func (client *BapiClientImplementation) UpdateEnvironment(ctx context.Context, e
 	values := url.Values{}
 	values.Add("api-version", "2022-05-01")
 	apiUrl.RawQuery = values.Encode()
-	request, err := http.NewRequestWithContext(ctx, "PATCH", apiUrl.String(), bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
-	apiResponse, err := client.doRequest(ctx, request)
-	if err != nil {
-		return nil, err
-	}
-	err = apiResponse.ValidateStatusCode(http.StatusAccepted)
+	_, err := client.Execute(ctx, "PATCH", apiUrl.String(), environment, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +240,7 @@ func (client *BapiClientImplementation) UpdateEnvironment(ctx context.Context, e
 	return nil, errors.New("environment not found")
 }
 
-func (client *BapiClientImplementation) GetPowerApps(ctx context.Context, environmentId string) ([]models.PowerAppBapi, error) {
+func (client *BapiClientApi) GetPowerApps(ctx context.Context, environmentId string) ([]models.PowerAppBapi, error) {
 	envs, err := client.GetEnvironments(ctx)
 	if err != nil {
 		return nil, err
@@ -318,18 +255,9 @@ func (client *BapiClientImplementation) GetPowerApps(ctx context.Context, enviro
 		values := url.Values{}
 		values.Add("api-version", "2023-06-01")
 		apiUrl.RawQuery = values.Encode()
-		request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
-		if err != nil {
-			return nil, err
-		}
-
-		apiResponse, err := client.doRequest(ctx, request)
-		if err != nil {
-			return nil, err
-		}
 
 		appsArray := models.PowerAppDtoArray{}
-		err = apiResponse.MarshallTo(&appsArray)
+		_, err := client.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &appsArray)
 		if err != nil {
 			return nil, err
 		}
@@ -339,7 +267,7 @@ func (client *BapiClientImplementation) GetPowerApps(ctx context.Context, enviro
 	return apps, nil
 }
 
-func (client *BapiClientImplementation) GetConnectors(ctx context.Context) ([]models.ConnectorDto, error) {
+func (client *BapiClientApi) GetConnectors(ctx context.Context) ([]models.ConnectorDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.BaseApi.GetConfig().Urls.PowerAppsUrl,
@@ -353,18 +281,8 @@ func (client *BapiClientImplementation) GetConnectors(ctx context.Context) ([]mo
 	values.Add("$filter", "environment eq '~Default'")
 	apiUrl.RawQuery = values.Encode()
 
-	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	apiRespose, err := client.doRequest(ctx, request)
-	if err != nil {
-		return nil, err
-	}
-
 	connectorArray := models.ConnectorDtoArray{}
-	err = apiRespose.MarshallTo(&connectorArray)
+	_, err := client.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &connectorArray)
 	if err != nil {
 		return nil, err
 	}
@@ -374,16 +292,8 @@ func (client *BapiClientImplementation) GetConnectors(ctx context.Context) ([]mo
 		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/unblockable",
 	}
-	request, err = http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	apiRespose, err = client.doRequest(ctx, request)
-	if err != nil {
-		return nil, err
-	}
 	unblockableConnectorArray := []models.UnblockableConnectorDto{}
-	err = apiRespose.MarshallTo(&unblockableConnectorArray)
+	_, err = client.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &unblockableConnectorArray)
 	if err != nil {
 		return nil, err
 	}
@@ -401,16 +311,8 @@ func (client *BapiClientImplementation) GetConnectors(ctx context.Context) ([]mo
 		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/virtual",
 	}
-	request, err = http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-	apiRespose, err = client.doRequest(ctx, request)
-	if err != nil {
-		return nil, err
-	}
 	virtualConnectorArray := []models.VirtualConnectorDto{}
-	err = apiRespose.MarshallTo(&virtualConnectorArray)
+	_, err = client.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &virtualConnectorArray)
 	if err != nil {
 		return nil, err
 	}
@@ -437,7 +339,7 @@ func (client *BapiClientImplementation) GetConnectors(ctx context.Context) ([]mo
 	return connectorArray.Value, nil
 }
 
-func (client *BapiClientImplementation) GetPolicies(ctx context.Context) ([]models.DlpPolicyModel, error) {
+func (client *BapiClientApi) GetPolicies(ctx context.Context) ([]models.DlpPolicyModel, error) {
 	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/policies
 	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/<tenantId>/policies/<policyId>/policyconnectorconfigurations
 	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/<tenantId>/policies/<policyId>/urlPatterns
@@ -445,23 +347,14 @@ func (client *BapiClientImplementation) GetPolicies(ctx context.Context) ([]mode
 	return nil, nil
 }
 
-func (client *BapiClientImplementation) GetPolicy(ctx context.Context, name string) (*models.DlpPolicyModel, error) {
+func (client *BapiClientApi) GetPolicy(ctx context.Context, name string) (*models.DlpPolicyModel, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", name),
 	}
-	request, err := http.NewRequestWithContext(ctx, "GET", apiUrl.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	apiResponse, err := client.doRequest(ctx, request)
-	if err != nil {
-		return nil, err
-	}
 	policy := models.DlpPolicyDto{}
-	err = apiResponse.MarshallTo(&policy)
+	_, err := client.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
 	if err != nil {
 		return nil, err
 	}
@@ -470,58 +363,30 @@ func (client *BapiClientImplementation) GetPolicy(ctx context.Context, name stri
 
 }
 
-func (client *BapiClientImplementation) DeletePolicy(ctx context.Context, name string) error {
+func (client *BapiClientApi) DeletePolicy(ctx context.Context, name string) error {
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v1/policies/%s", name),
 	}
-	request, err := http.NewRequestWithContext(ctx, "DELETE", apiUrl.String(), nil)
+	_, err := client.Execute(ctx, "DELETE", apiUrl.String(), nil, []int{http.StatusNoContent}, nil)
 	if err != nil {
 		return err
 	}
-
-	apiResponse, err := client.doRequest(ctx, request)
-	if err != nil {
-		return err
-	}
-	err = apiResponse.ValidateStatusCode(http.StatusNoContent)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-func (client *BapiClientImplementation) UpdatePolicy(ctx context.Context, name string, policy models.DlpPolicyModel) (*models.DlpPolicyModel, error) {
+func (client *BapiClientApi) UpdatePolicy(ctx context.Context, name string, policy models.DlpPolicyModel) (*models.DlpPolicyModel, error) {
 	policyToCreate := convertPolicyModelToDlpPolicy(policy)
-
-	body, err := json.Marshal(policyToCreate)
-	if err != nil {
-		return nil, err
-	}
 
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", policy.Name),
 	}
-	request, err := http.NewRequestWithContext(ctx, "PATCH", apiUrl.String(), bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
-
-	apiResponse, err := client.doRequest(ctx, request)
-	if err != nil {
-		return nil, err
-	}
 	createdPolicy := models.DlpPolicyDto{}
-	err = apiResponse.MarshallTo(&createdPolicy)
-	if err != nil {
-		return nil, err
-	}
 
-	err = apiResponse.ValidateStatusCode(http.StatusAccepted)
+	_, err := client.Execute(ctx, "PATCH", apiUrl.String(), policyToCreate, []int{http.StatusAccepted}, &createdPolicy)
 	if err != nil {
 		return nil, err
 	}
@@ -659,34 +524,20 @@ func covertDlpPolicyToPolicyModel(policy models.DlpPolicyDto) (*models.DlpPolicy
 	return &policyModel, nil
 }
 
-func (client *BapiClientImplementation) CreatePolicy(ctx context.Context, policy models.DlpPolicyModel) (*models.DlpPolicyModel, error) {
+func (client *BapiClientApi) CreatePolicy(ctx context.Context, policy models.DlpPolicyModel) (*models.DlpPolicyModel, error) {
 
 	policyToCreate := convertPolicyModelToDlpPolicy(policy)
-
-	body, err := json.Marshal(policyToCreate)
-	if err != nil {
-		return nil, err
-	}
 
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.BaseApi.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v2/policies/",
 	}
-	request, err := http.NewRequestWithContext(ctx, "POST", apiUrl.String(), bytes.NewReader(body))
-	if err != nil {
-		return nil, err
-	}
 
-	apiResponse, err := client.doRequest(ctx, request)
-	if err != nil {
-		return nil, err
-	}
 	createdPolicy := models.DlpPolicyDto{}
-	err = apiResponse.MarshallTo(&createdPolicy)
+	_, err := client.Execute(ctx, "POST", apiUrl.String(), policyToCreate, []int{http.StatusAccepted}, &createdPolicy)
 	if err != nil {
 		return nil, err
 	}
-
 	return covertDlpPolicyToPolicyModel(createdPolicy)
 }

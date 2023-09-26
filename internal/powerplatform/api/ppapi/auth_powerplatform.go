@@ -9,7 +9,7 @@ import (
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
-var _ PowerPlatformAuthInterface = &PowerPlatformAuthImplementation{}
+var _ PowerPlatformAuthInterface = &PowerPlatformAuth{}
 
 type PowerPlatformAuthInterface interface {
 	GetBase() api.AuthInterface
@@ -18,20 +18,20 @@ type PowerPlatformAuthInterface interface {
 	AuthenticateClientSecret(ctx context.Context, tenantId, applicationid, secret string) (string, error)
 }
 
-type PowerPlatformAuthImplementation struct {
+type PowerPlatformAuth struct {
 	BaseAuth api.AuthInterface
 }
 
-func (client *PowerPlatformAuthImplementation) GetBase() api.AuthInterface {
+func (client *PowerPlatformAuth) GetBase() api.AuthInterface {
 	return client.BaseAuth
 }
 
-func (client *PowerPlatformAuthImplementation) AuthenticateUserPass(ctx context.Context, tenantId, username, password string) (string, error) {
+func (client *PowerPlatformAuth) AuthenticateUserPass(ctx context.Context, tenantId, username, password string) (string, error) {
 	//todo implement
 	panic("[AuthenticateUserPass] not implemented")
 }
 
-func (client *PowerPlatformAuthImplementation) AuthenticateClientSecret(ctx context.Context, tenantId, applicationId, secret string) (string, error) {
+func (client *PowerPlatformAuth) AuthenticateClientSecret(ctx context.Context, tenantId, applicationId, secret string) (string, error) {
 	scopes := []string{"https://api.powerplatform.com/.default"}
 	token, expiry, err := client.BaseAuth.AuthClientSecret(ctx, scopes, tenantId, applicationId, secret)
 	if err != nil {
