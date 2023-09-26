@@ -10,7 +10,6 @@ assignees: ""
 
 <!-- Short description here describing the documentation that you're requesting.  Include a use case for why users need this documentation. -->
 
-## Contribution
 Do you plan to open a PR to address this? [YES / NO]
 
 See the [contributing guide](/CONTRIBUTING.md?) for more information about what's expected for contributions.
