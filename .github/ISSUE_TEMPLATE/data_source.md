@@ -33,9 +33,14 @@ data "powerplatform_[your data source name]" "example_data_source" {
 ## Definition of Done
 - [ ] Data Transfer Objects (dtos)
 - [ ] Data Client functions
-- [ ] Data Source Implementation
-- [ ] Data Source Added to Provider
+- [ ] Resource Implementation
+- [ ] Resource Added to Provider
 - [ ] Unit Tests for Happy Path
 - [ ] Unit Tests for error path
 - [ ] Acceptance Tests
+- [ ] Example in the /examples folder
+- [ ] Schema Documentation in code
+- [ ] Updated auto-generated provider docs with `make docs`
+
+See the [contributing guide](/CONTRIBUTING.md?) for more information about what's expected for contributions.
 

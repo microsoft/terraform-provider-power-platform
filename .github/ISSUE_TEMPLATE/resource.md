@@ -14,7 +14,7 @@ assignees: ""
 
 - Resource Name: powerplatform_[your resource name]
 - API documentation: <!-- links to API documentation (if public).  What APIs are needed for create, read, update, delete? What APIs are relevant? -->
-- Estimated complexity/effort: <!--  (e.g., easy, moderate, hard) -->
+- Estimated complexity/effort: <!--  (e.g., easy, moderate, hard). and why?-->
 - Related resources/data sources: <!-- are there any existing or potential data sources that are related to this one -->
 
 ### Potential Terraform Configuration
@@ -38,3 +38,8 @@ resource "example_resource" {
 - [ ] Unit Tests for Happy Path
 - [ ] Unit Tests for error path
 - [ ] Acceptance Tests
+- [ ] Example in the /examples folder
+- [ ] Schema Documentation in code
+- [ ] Updated auto-generated provider docs with `make docs`
+
+See the [contributing guide](/CONTRIBUTING.md?) for more information about what's expected for contributions.
