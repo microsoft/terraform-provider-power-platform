@@ -1,7 +1,7 @@
 ---
-name: "[Example Name] Quickstart"
+name: "Quickstart Example Request"
 about: "Request a new quickstart example to be added to the Terraform provider repository."
-labels: [guide, triage]
+labels: [guide,triage]
 assignees: ""
 
 ---
