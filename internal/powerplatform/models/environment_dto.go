@@ -1,4 +1,4 @@
-package powerplatform_bapi
+package powerplatform_models
 
 var (
 	//https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies?api-version=2023-06-01
