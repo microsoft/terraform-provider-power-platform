@@ -38,5 +38,4 @@ data "powerplatform_[your data source name]" "example_data_source" {
 - [ ] Unit Tests for Happy Path
 - [ ] Unit Tests for error path
 - [ ] Acceptance Tests
-- [ ] Acceptance Tests
 
