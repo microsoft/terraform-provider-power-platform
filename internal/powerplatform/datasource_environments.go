@@ -46,8 +46,6 @@ type EnvironmentDataSourceModel struct {
 	SecurityGroupId types.String `tfsdk:"security_group_id"`
 	LanguageName    types.Int64  `tfsdk:"language_code"`
 	Version         types.String `tfsdk:"version"`
-	//Templates       []string     `tfsdk:"templates"`
-	//TemplateMetadata types.String `tfsdk:"template_metadata"`
 }
 
 func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto) EnvironmentDataSourceModel {
@@ -62,8 +60,6 @@ func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto) Environment
 		Url:             types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.InstanceURL),
 		Domain:          types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.DomainName),
 		Version:         types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.Version),
-		//Templates:       environmentDto.Properties.LinkedEnvironmentMetadata.Templates,
-		//TemplateMetadata: environmentDto.Properties.LinkedEnvironmentMetadata.TemplateMetadata,
 	}
 }
 
