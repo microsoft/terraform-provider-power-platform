@@ -35,7 +35,10 @@ data "powerplatform_[your data source name]" "example_data_source" {
 - [ ] Example documentation in README.md.tmpl
 - [ ] Updated auto-generated provider docs with `make quickstarts`
 - [ ] Confirmation that you have manually tested this
+
+## Contributions
 Do you plan to raise a PR to address this issue?
-[ ] Yes
-[ ] No
+- [ ] Yes
+- [ ] No
+      
 See the [contributing guide](/CONTRIBUTING.md?) for more information about what's expected for contributions.
