@@ -9,6 +9,6 @@ variable "secret" {
   type        = string
 }
 variable "tenant_id" {
-  description = "The AAD tenant id of service principal or user"
+  description = "The AAD tenant id of service principal or user at Power Platform"
   type        = string
 }
