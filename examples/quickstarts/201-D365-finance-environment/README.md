@@ -6,7 +6,7 @@ This Terraform module aims to provide a template for automating and standardizin
 ## Prerequisites
 
 - Service Principal or User Account with appropriate permissions
-- A properly assigned D365 license (for example, a Dynamics 365 Finance or Dynamics 365 Supply Chain Management license)
+- A properly assigned D365 license (for example, a Dynamics 365 Finance or Dynamics 365 Supply Chain Management license). For more information on the new license requirements, see https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/finance-operations-apps-overview#transition-from-an-environment-slot-purchasing-model-to-a-capacity-based-model .
 - At least 1 gigabyte of available Operations and Dataverse database capacities
 
 ## Example Files
@@ -32,6 +32,7 @@ The example files can be found in `examples/quickstarts/201-D365-finance-environ
 | `location` | The Azure region where the environment will be deployed | string | `"canada"` | false |
 | `secret` | The client secret of the service principal (app registration) | string | `null` | true |
 | `security_group_id` | The security group the environment will be associated with | string | `"00000000-0000-0000-0000-000000000000"` | false |
+| `template_metadata` | Any additional JSON-formatted metadata required to augment the selected templates. | string | `"{\"PostProvisioningPackages\": [{ \"applicationUniqueName\": \"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\n \"parameters\": \"DevToolsEnabled=true|DemoDataEnabled=true\"\n }\n ]\n }"` | false |
 | `templates` | The list of application templates to use when deploying the environment. | list(string) | `["D365_FinOps_Finance"]` | false |
 | `tenant_id` | The Entra (AAD) tenant id of service principal or user | string | `null` | true |
 
@@ -70,7 +71,7 @@ This module creates a Power Platform environment using a combination of the para
 
 ### Dynamics 365 Finance Environment
 
-This module creates a Dynamics 365 Finance environment using the default settings specified by the 'templates' and 'template_metadata' properties.
+This module creates a Dynamics 365 Finance development environment using the default settings specified by the 'templates' and 'template_metadata' properties.
 
 ## Limitations and Considerations
 

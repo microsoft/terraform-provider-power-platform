@@ -255,8 +255,6 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	plan.Url = env.Url
 	plan.EnvironmentType = env.EnvironmentType
 	plan.Version = env.Version
-	//plan.Templates = env.Templates
-	//plan.TemplateMetadata = env.TemplateMetadata
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.EnvironmentName.ValueString()))
 
@@ -295,10 +293,6 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.Version = env.Version
 	state.LanguageName = env.LanguageName
 	state.Location = env.Location
-	//state.Templates = env.Templates
-	//state.TemplateMetadata = env.TemplateMetadata
-
-	//TODO move to separate function
 	ctx = tflog.SetField(ctx, "environment_name", state.EnvironmentName.ValueString())
 	ctx = tflog.SetField(ctx, "display_name", state.DisplayName.ValueString())
 	ctx = tflog.SetField(ctx, "url", state.Url.ValueString())
@@ -370,8 +364,6 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		plan.Version = env.Version
 		plan.LanguageName = env.LanguageName
 		plan.Location = env.Location
-		//plan.Templates = env.Templates
-		//plan.TemplateMetadata = env.TemplateMetadata
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
