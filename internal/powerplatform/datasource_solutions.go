@@ -9,7 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
+	dvapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/dataverse"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 var (
@@ -25,7 +26,7 @@ func NewSolutionsDataSource() datasource.DataSource {
 }
 
 type SolutionsDataSource struct {
-	DataverseClient  DataverseClientInterface
+	DataverseClient  dvapi.DataverseClientInterface
 	ProviderTypeName string
 	TypeName         string
 }
@@ -142,7 +143,7 @@ func (d *SolutionsDataSource) Configure(_ context.Context, req datasource.Config
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).DataverseApi.Client.(DataverseClientInterface)
+	client, ok := req.ProviderData.(*PowerPlatformProvider).DataverseApi.Client.(dvapi.DataverseClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(

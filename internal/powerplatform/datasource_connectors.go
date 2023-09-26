@@ -9,8 +9,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
+	bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 var (
@@ -26,7 +26,7 @@ func NewConnectorsDataSource() datasource.DataSource {
 }
 
 type ConnectorsDataSource struct {
-	BapiApiClient    powerplatform_bapi.ApiClientInterface
+	BapiApiClient    bapi.BapiClientInterface
 	ProviderTypeName string
 	TypeName         string
 }
@@ -130,7 +130,7 @@ func (d *ConnectorsDataSource) Configure(_ context.Context, req datasource.Confi
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).old_bapiClient.(powerplatform_bapi.ApiClientInterface)
+	client, ok := req.ProviderData.(*PowerPlatformProvider).BapiApi.Client.(bapi.BapiClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(

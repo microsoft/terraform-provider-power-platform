@@ -14,9 +14,9 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	powerplatform_mock "github.com/microsoft/terraform-provider-power-platform/internal/mocks"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
@@ -45,7 +45,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 			{
 				Config: providerConfig + `
 
-				resource "powerplatform_environment" "environment" { 
+				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + envDomain + `"
 					location                                  = "europe"
 					language_code                             = "1033"
@@ -78,7 +78,8 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 }
 
 func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
-	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
+	clientDataverseMock := mocks.NewUnitTestMockDataverseClientInterface(t)
+	clientBapiMock := mocks.NewUnitTestsMockBapiClientInterface(t)
 
 	solutionFileName := "test_solution.zip"
 	solutionSettingsFileName := "test_solution_settings.json"
@@ -111,7 +112,7 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		IsManaged:       true,
 	}
 
-	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
+	clientBapiMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		environmentStub = models.EnvironmentDto{
 			Name:     environmentStub.Name,
 			Id:       environmentStub.Id,
@@ -132,35 +133,35 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		return &environmentStub, nil
 	}).Times(1)
 
-	clientMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
+	clientBapiMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
 		return &environmentStub, nil
 	}).AnyTimes()
 
-	clientMock.EXPECT().DeleteEnvironment(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	clientBapiMock.EXPECT().DeleteEnvironment(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	clientMock.EXPECT().GetSolutions(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, environmentId string) ([]models.SolutionDto, error) {
+	clientDataverseMock.EXPECT().GetSolutions(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, environmentId string) ([]models.SolutionDto, error) {
 		solutions := []models.SolutionDto{}
 		solutions = append(solutions, solutionStub)
 
 		return solutions, nil
 	}).AnyTimes()
 
-	clientMock.EXPECT().CreateSolution(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, EnvironmentName string, solutionToCreate models.ImportSolutionDto, content []byte, settings []byte) (*models.SolutionDto, error) {
+	clientDataverseMock.EXPECT().CreateSolution(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, EnvironmentName string, solutionToCreate models.ImportSolutionDto, content []byte, settings []byte) (*models.SolutionDto, error) {
 		return &solutionStub, nil
 	}).Times(1)
 
-	clientMock.EXPECT().DeleteSolution(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	clientDataverseMock.EXPECT().DeleteSolution(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock),
+			"powerplatform": powerPlatformProviderServerApiMock(clientBapiMock, clientDataverseMock, nil),
 		},
 		Steps: []resource.TestStep{
 			{
 				Config: uniTestsProviderConfig + `
 
-				resource "powerplatform_environment" "environment" { 
+				resource "powerplatform_environment" "environment" {
 					display_name                              = "Solution Import Acceptance Test"
 					location                                  = "europe"
 					language_code                             = "1033"
@@ -248,7 +249,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 			{
 				Config: providerConfig + `
 
-				resource "powerplatform_environment" "environment" { 
+				resource "powerplatform_environment" "environment" {
 					display_name                              = "TestAccSolutionResource_Settings_File"
 					location                                  = "europe"
 					language_code                             = "1033"
@@ -282,7 +283,8 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 }
 
 func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
-	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
+	clientDataverseMock := mocks.NewUnitTestMockDataverseClientInterface(t)
+	clientBapiMock := mocks.NewUnitTestsMockBapiClientInterface(t)
 
 	solutionFileName := "test_solution.zip"
 
@@ -313,7 +315,7 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		IsManaged:       true,
 	}
 
-	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
+	clientBapiMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		environmentStub = models.EnvironmentDto{
 			Name:     environmentStub.Name,
 			Id:       environmentStub.Id,
@@ -334,35 +336,35 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		return &environmentStub, nil
 	}).Times(1)
 
-	clientMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
+	clientBapiMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
 		return &environmentStub, nil
 	}).AnyTimes()
 
-	clientMock.EXPECT().DeleteEnvironment(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	clientBapiMock.EXPECT().DeleteEnvironment(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	clientMock.EXPECT().GetSolutions(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, environmentId string) ([]models.SolutionDto, error) {
+	clientDataverseMock.EXPECT().GetSolutions(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, environmentId string) ([]models.SolutionDto, error) {
 		solutions := []models.SolutionDto{}
 		solutions = append(solutions, solutionStub)
 
 		return solutions, nil
 	}).AnyTimes()
 
-	clientMock.EXPECT().CreateSolution(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, EnvironmentName string, solutionToCreate models.ImportSolutionDto, content []byte, settings []byte) (*models.SolutionDto, error) {
+	clientDataverseMock.EXPECT().CreateSolution(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, EnvironmentName string, solutionToCreate models.ImportSolutionDto, content []byte, settings []byte) (*models.SolutionDto, error) {
 		return &solutionStub, nil
 	}).Times(1)
 
-	clientMock.EXPECT().DeleteSolution(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	clientDataverseMock.EXPECT().DeleteSolution(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock),
+			"powerplatform": powerPlatformProviderServerApiMock(clientBapiMock, clientDataverseMock, nil),
 		},
 		Steps: []resource.TestStep{
 			{
 				Config: uniTestsProviderConfig + `
 
-				resource "powerplatform_environment" "environment" { 
+				resource "powerplatform_environment" "environment" {
 					display_name                              = "Solution Import Acceptance Test"
 					location                                  = "europe"
 					language_code                             = "1033"
@@ -394,7 +396,8 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 }
 
 func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
-	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
+	clientDataverseMock := mocks.NewUnitTestMockDataverseClientInterface(t)
+	clientBapiMock := mocks.NewUnitTestsMockBapiClientInterface(t)
 
 	solutionFileNameBefore := "test_solution_before.zip"
 	solutionFileNameAfter := "test_solution_after.zip"
@@ -435,7 +438,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 		{
 			Config: uniTestsProviderConfig + `
 
-			resource "powerplatform_environment" "environment" { 
+			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -460,7 +463,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 		{
 			Config: uniTestsProviderConfig + `
 
-			resource "powerplatform_environment" "environment" { 
+			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -486,7 +489,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 		{
 			Config: uniTestsProviderConfig + `
 
-			resource "powerplatform_environment" "environment" { 
+			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -512,7 +515,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 		{
 			Config: uniTestsProviderConfig + `
 
-			resource "powerplatform_environment" "environment" { 
+			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -537,7 +540,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 		},
 	}
 
-	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
+	clientBapiMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		environmentStub = models.EnvironmentDto{
 			Name:     environmentStub.Name,
 			Id:       environmentStub.Id,
@@ -558,29 +561,29 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 		return &environmentStub, nil
 	}).Times(1)
 
-	clientMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
+	clientBapiMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
 		return &environmentStub, nil
 	}).AnyTimes()
 
-	clientMock.EXPECT().DeleteEnvironment(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	clientBapiMock.EXPECT().DeleteEnvironment(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
-	clientMock.EXPECT().GetSolutions(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, environmentId string) ([]models.SolutionDto, error) {
+	clientDataverseMock.EXPECT().GetSolutions(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, environmentId string) ([]models.SolutionDto, error) {
 		solutions := []models.SolutionDto{}
 		solutions = append(solutions, solutionStub)
 
 		return solutions, nil
 	}).AnyTimes()
 
-	clientMock.EXPECT().CreateSolution(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, EnvironmentName string, solutionToCreate models.ImportSolutionDto, content []byte, settings []byte) (*models.SolutionDto, error) {
+	clientDataverseMock.EXPECT().CreateSolution(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, EnvironmentName string, solutionToCreate models.ImportSolutionDto, content []byte, settings []byte) (*models.SolutionDto, error) {
 		return &solutionStub, nil
 	}).Times(len(steps))
 
-	clientMock.EXPECT().DeleteSolution(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	clientDataverseMock.EXPECT().DeleteSolution(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock),
+			"powerplatform": powerPlatformProviderServerApiMock(clientBapiMock, clientDataverseMock, nil),
 		},
 		Steps: steps,
 	})
