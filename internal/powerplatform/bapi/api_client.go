@@ -34,6 +34,9 @@ var _ ApiClientInterface = &ApiClient{}
 
 //go:generate mockgen -destination=../../mocks/client_mocks_bapi.go -package=powerplatform_mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi" ApiClientInterface
 type ApiClientInterface interface {
+	GetApplicationUser(ctx context.Context, environmentId string) ([]models.ApplicationUserDto, error)
+	//GetApplicationUser(ctx context.Context, environmentId string, applicationUserName string, applicationUserId string) (*models.ApplicationUserDto, error)
+
 	DoAuthClientSecret(ctx context.Context, tenantId, applicationId, clientSecret string) (*AuthResponse, error)
 	DoAuthUsernamePassword(ctx context.Context, tenantId, username, password string) (*AuthResponse, error)
 

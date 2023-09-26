@@ -1,10 +1,17 @@
 package powerplatform_bapi
 
 type ApplicationUserDto struct {
-	Name       string                       `json:"name"`
-	Id         string                       `json:"id"`
-	Type       string                       `json:"type"`
-	Properties ApplicationUserPropertiesDto `json:"properties"`
+	EnvironmentName string                       `json:"environmentName"`
+	DisplayName     string                       `json:"displayName"`
+	CreatedTime     string                       `json:"createdTime"`
+	ModifiedTime    string                       `json:"modifiedTime"`
+	InstallTime     string                       `json:"installTime"`
+	Version         string                       `json:"version"`
+	IsManaged       bool                         `json:"isManaged"`
+	Name            string                       `json:"name"`
+	Id              string                       `json:"id"`
+	Type            string                       `json:"type"`
+	Properties      ApplicationUserPropertiesDto `json:"properties"`
 }
 
 type ApplicationUserPropertiesDto struct {
@@ -38,4 +45,17 @@ type VirtualApplicationUserMetadataDto struct {
 	Name                   string `json:"name"`
 	Type                   string `json:"type"`
 	DisplayName            string `json:"displayName"`
+}
+
+type ImportApplicationUserDto struct {
+	PublishWorkflows                 bool                                `json:"PublishWorkflows"`
+	OverwriteUnmanagedCustomizations bool                                `json:"OverwriteUnmanagedCustomizations"`
+	ComponentParameters              []interface{}                       `json:"ComponentParameters"`
+	SolutionParameters               ImportSolutionSolutionParametersDto `json:"SolutionParameters"`
+}
+
+type CreateApplicationUserDto struct {
+	DisplayName string `json:"displayName"`
+	Description string `json:"description"`
+	Tier        string `json:"tier"`
 }
