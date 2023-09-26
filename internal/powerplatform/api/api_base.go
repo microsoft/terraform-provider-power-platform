@@ -30,7 +30,6 @@ type ApiClientBase struct {
 }
 
 type ApiClientInterface interface {
-	//DoRequest(token string, request *http.Request) (*ApiHttpResponse, error)
 	SetAuth(auth AuthBaseOperationInterface)
 	GetConfig() common.ProviderConfig
 
