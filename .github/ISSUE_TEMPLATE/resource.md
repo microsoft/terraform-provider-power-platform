@@ -1,7 +1,7 @@
 ---
-name: "powerplatform_[your resource name] Resource"
+name: "New Resource Request"
 about: "Request a new resource to be added to the Terraform provider."
-labels: [enhancement, resource, triage]
+labels: [enhancement,resource,triage]
 assignees: ""
 
 ---
