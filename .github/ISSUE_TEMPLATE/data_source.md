@@ -42,7 +42,7 @@ data "powerplatform_[your data source name]" "example_data_source" {
 - [ ] Schema Documentation in code
 - [ ] Updated auto-generated provider docs with `make docs`
 
-## Contribution
+## Contributions
 Do you plan to raise a PR to address this issue? 
 - [ ] Yes
 - [ ] No
