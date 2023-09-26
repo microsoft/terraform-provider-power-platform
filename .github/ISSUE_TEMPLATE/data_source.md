@@ -31,6 +31,7 @@ data "powerplatform_[your data source name]" "example_data_source" {
 ```
 
 ## Definition of Done
+
 - [ ] Data Transfer Objects (dtos)
 - [ ] Data Client functions
 - [ ] Resource Implementation
@@ -43,9 +44,10 @@ data "powerplatform_[your data source name]" "example_data_source" {
 - [ ] Updated auto-generated provider docs with `make docs`
 
 ## Contributions
-Do you plan to raise a PR to address this issue? 
+
+Do you plan to raise a PR to address this issue?
+
 - [ ] Yes
 - [ ] No
-      
-See the [contributing guide](/CONTRIBUTING.md?) for more information about what's expected for contributions.
 
+See the [contributing guide](/CONTRIBUTING.md?) for more information about what's expected for contributions.

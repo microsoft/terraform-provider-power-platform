@@ -31,6 +31,7 @@ resource "example_resource" {
 ```
 
 ## Definition of Done
+
 - [ ] Data Transfer Objects (dtos)
 - [ ] Data Client functions
 - [ ] Resource Implementation
@@ -43,7 +44,9 @@ resource "example_resource" {
 - [ ] Updated auto-generated provider docs with `make docs`
 
 ## Contributions
+
 Do you plan to raise a PR to address this issue?
+
 - [ ] Yes
 - [ ] No
 
