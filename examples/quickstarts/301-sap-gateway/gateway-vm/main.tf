@@ -4,11 +4,23 @@ terraform {
     azurerm = {
       source = "hashicorp/azurerm"
     }
+    azurecaf = {
+      source  = "aztfmod/azurecaf"
+      version = ">=1.2.26"
+    }
   }
 }
 
+resource "azurecaf_name" "vm-opgw" {
+  name          = var.base_name
+  resource_type = "azurerm_windows_virtual_machine"
+  prefixes      = [var.prefix]
+  random_length = 3
+  clean_input   = true
+}
+
 resource "azurerm_windows_virtual_machine" "vm-opgw" {
-  name                  = "vm-opgw"
+  name                  = azurecaf_name.vm-opgw.result
   location              = var.region
   resource_group_name   = var.resource_group_name
   network_interface_ids = [var.nic_id]
