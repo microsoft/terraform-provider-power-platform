@@ -56,7 +56,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 				}
 
 				resource "powerplatform_solution" "solution" {
-					environment_name = powerplatform_environment.environment.environment_name
+					environment_id = powerplatform_environment.environment.environment_id
 					solution_name    = "` + solutionName + `"
 					solution_file    = "` + solutionFileName + `"
 				}`,
@@ -69,7 +69,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file", solutionFileName),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", "Terraform Test Solution"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", "false"),
-					resource.TestMatchResourceAttr("powerplatform_solution.solution", "environment_name", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_solution.solution", "environment_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", "1.1.0.0"),
 				),
 			},
@@ -172,14 +172,14 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 				}
 
 				resource "powerplatform_solution" "solution" {
-					environment_name = powerplatform_environment.environment.environment_name
+					environment_id = powerplatform_environment.environment.environment_id
 					solution_name    = "` + solutionStub.Name + `"
 					solution_file    = "` + solutionFileName + `"
 					settings_file 	 = "` + solutionSettingsFileName + `"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.environment", "environment_name", environmentStub.Name),
+					resource.TestCheckResourceAttr("powerplatform_environment.environment", "environment_id", environmentStub.Name),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", solutionStub.Version),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksum),
@@ -260,7 +260,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 				}
 
 				resource "powerplatform_solution" "solution" {
-					environment_name = powerplatform_environment.environment.environment_name
+					environment_id = powerplatform_environment.environment.environment_id
 					solution_name    = "TerraformTestSolution"
 					solution_file    = "` + solutionFileName + `"
 					settings_file 	 = "` + solutionSettingsFileName + `"
@@ -274,7 +274,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file", solutionFileName),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", "Terraform Test Solution"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", "false"),
-					resource.TestMatchResourceAttr("powerplatform_solution.solution", "environment_name", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_solution.solution", "environment_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", "1.1.0.0"),
 				),
 			},
@@ -375,7 +375,7 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 				}
 
 				resource "powerplatform_solution" "solution" {
-					environment_name = powerplatform_environment.environment.environment_name
+					environment_id = powerplatform_environment.environment.environment_id
 					solution_name    = "` + solutionStub.Name + `"
 					solution_file    = "` + solutionFileName + `"
 				}`,
@@ -383,7 +383,7 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
 					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file"),
-					resource.TestCheckResourceAttr("powerplatform_environment.environment", "environment_name", environmentStub.Name),
+					resource.TestCheckResourceAttr("powerplatform_environment.environment", "environment_id", environmentStub.Name),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", solutionStub.Version),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksum),
@@ -449,7 +449,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			}
 
 			resource "powerplatform_solution" "solution" {
-				environment_name = powerplatform_environment.environment.environment_name
+				environment_id = powerplatform_environment.environment.environment_id
 				solution_name    = "` + solutionStub.Name + `"
 				solution_file    = "` + solutionFileNameBefore + `"
 			}`,
@@ -474,7 +474,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			}
 
 			resource "powerplatform_solution" "solution" {
-				environment_name = powerplatform_environment.environment.environment_name
+				environment_id = powerplatform_environment.environment.environment_id
 				solution_name    = "` + solutionStub.Name + `"
 				solution_file    = "` + solutionFileNameBefore + `"
 				settings_file 	 = "` + settingsFileBefore + `"
@@ -500,7 +500,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			}
 
 			resource "powerplatform_solution" "solution" {
-				environment_name = powerplatform_environment.environment.environment_name
+				environment_id = powerplatform_environment.environment.environment_id
 				solution_name    = "` + solutionStub.Name + `"
 				solution_file    = "` + solutionFileNameAfter + `"
 				settings_file 	 = "` + settingsFileBefore + `"
@@ -526,7 +526,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			}
 
 			resource "powerplatform_solution" "solution" {
-				environment_name = powerplatform_environment.environment.environment_name
+				environment_id = powerplatform_environment.environment.environment_id
 				solution_name    = "` + solutionStub.Name + `"
 				solution_file    = "` + solutionFileNameAfter + `"
 				settings_file 	 = "` + settingsFileAfter + `"

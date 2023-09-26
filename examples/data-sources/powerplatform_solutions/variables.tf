@@ -16,7 +16,7 @@ variable "tenant_id" {
   type        = string
 }
 
-variable "environment_name" {
+variable "environment_id" {
   default     = "<env_id>"
   description = "The name of the environment"
   type        = string

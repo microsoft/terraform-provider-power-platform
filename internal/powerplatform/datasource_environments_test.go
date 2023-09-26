@@ -29,7 +29,7 @@ func TestAccEnvironmentsDataSource(t *testing.T) {
 					// Verify the first power app to ensure all attributes are set
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.display_name", regexp.MustCompile(powerplatform_helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.domain", regexp.MustCompile(powerplatform_helpers.StringRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.environment_name", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.environment_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.environment_type", regexp.MustCompile(`^(Default|Sandbox|Developer)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.language_code", regexp.MustCompile(`^(1033|1031)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
@@ -101,7 +101,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.display_name", env.DisplayName.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.domain", env.Domain.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.environment_name", env.EnvironmentName.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.environment_id", env.EnvironmentName.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.environment_type", env.EnvironmentType.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.language_code", strconv.Itoa(int(env.LanguageName.ValueInt64()))),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.organization_id", env.OrganizationId.ValueString()),

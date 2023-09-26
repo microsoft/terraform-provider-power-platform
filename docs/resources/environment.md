@@ -64,7 +64,7 @@ resource "powerplatform_environment" "development" {
 
 ### Read-Only
 
-- `environment_name` (String) Unique environment name 	(guid)
+- `environment_id` (String) Unique environment id 	(guid)
 - `id` (String) The ID of this resource.
 - `organization_id` (String) Unique organization id (guid)
 - `url` (String) Url of the environment

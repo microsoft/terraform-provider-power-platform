@@ -18,7 +18,7 @@ type SolutionSettingsConnectionReferences struct {
 
 type SolutionDto struct {
 	Id              string `json:"solutionid"`
-	EnvironmentName string `json:"environment_name"`
+	EnvironmentName string `json:"environment_id"`
 	Name            string `json:"uniquename"`
 	DisplayName     string `json:"friendlyname"`
 	IsManaged       bool   `json:"ismanaged"`

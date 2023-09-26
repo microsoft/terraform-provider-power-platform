@@ -33,12 +33,12 @@ type SolutionsDataSource struct {
 
 type SolutionListDataSourceModel struct {
 	Id              types.String               `tfsdk:"id"`
-	EnvironmentName types.String               `tfsdk:"environment_name"`
+	EnvironmentName types.String               `tfsdk:"environment_id"`
 	Solutions       []SolutionsDataSourceModel `tfsdk:"solutions"`
 }
 
 type SolutionsDataSourceModel struct {
-	EnvironmentName types.String `tfsdk:"environment_name"`
+	EnvironmentName types.String `tfsdk:"environment_id"`
 	DisplayName     types.String `tfsdk:"display_name"`
 	Name            types.String `tfsdk:"name"`
 	CreatedTime     types.String `tfsdk:"created_time"`
@@ -75,9 +75,9 @@ func (d *SolutionsDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"environment_name": schema.StringAttribute{
-				Description:         "Unique environment name (guid)",
-				MarkdownDescription: "Unique environment name (guid)",
+			"environment_id": schema.StringAttribute{
+				Description:         "Unique environment id (guid)",
+				MarkdownDescription: "Unique environment id (guid)",
 				Required:            true,
 			},
 			"solutions": schema.ListNestedAttribute{
@@ -91,9 +91,9 @@ func (d *SolutionsDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 							Description:         "Solution id",
 							Computed:            true,
 						},
-						"environment_name": schema.StringAttribute{
-							MarkdownDescription: "Unique environment name (guid)",
-							Description:         "Unique environment name (guid)",
+						"environment_id": schema.StringAttribute{
+							MarkdownDescription: "Unique environment id (guid)",
+							Description:         "Unique environment id (guid)",
 							Computed:            true,
 						},
 						"display_name": schema.StringAttribute{

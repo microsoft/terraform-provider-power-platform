@@ -14,5 +14,5 @@ provider "powerplatform" {
 }
 
 data "powerplatform_solutions" "all" {
-  environment_name = var.environment_name
+  environment_id = var.environment_id
 }
