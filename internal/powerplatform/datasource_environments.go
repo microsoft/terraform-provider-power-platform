@@ -47,6 +47,9 @@ type EnvironmentDataSourceModel struct {
 	SecurityGroupId types.String `tfsdk:"security_group_id"`
 	LanguageName    types.Int64  `tfsdk:"language_code"`
 	Version         types.String `tfsdk:"version"`
+	LinkedAppType   types.String `tfsdk:"linked_app_type"`
+	LinkedAppId     types.String `tfsdk:"linked_app_id"`
+	LinkedAppURL    types.String `tfsdk:"linked_app_url"`
 }
 
 func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto) EnvironmentDataSourceModel {
@@ -61,6 +64,9 @@ func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto) Environment
 		Url:             types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.InstanceURL),
 		Domain:          types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.DomainName),
 		Version:         types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.Version),
+		LinkedAppType:   types.StringValue(environmentDto.Properties.LinkedAppMetadata.Type),
+		LinkedAppId:     types.StringValue(environmentDto.Properties.LinkedAppMetadata.Id),
+		LinkedAppURL:    types.StringValue(environmentDto.Properties.LinkedAppMetadata.Url),
 	}
 }
 
@@ -139,6 +145,21 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 						// 	MarkdownDescription: "Unique currency name (EUR, USE, GBP etc.)",
 						// 	Computed:            true,
 						// },
+						"linked_app_type": schema.StringAttribute{
+							Description:         "Type of the linked app (Internal, External etc.)",
+							MarkdownDescription: "Type of the linked app (Internal, External etc.)",
+							Computed:            true,
+						},
+						"linked_app_id": schema.StringAttribute{
+							Description:         "Unique linked app id (guid)",
+							MarkdownDescription: "Unique linked app id (guid)",
+							Computed:            true,
+						},
+						"linked_app_url": schema.StringAttribute{
+							Description:         "URL of the linked D365 app",
+							MarkdownDescription: "URL of the linked D365 app",
+							Computed:            true,
+						},
 					},
 				},
 			},

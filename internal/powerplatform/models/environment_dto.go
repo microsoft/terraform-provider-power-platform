@@ -39,12 +39,13 @@ type EnvironmentDto struct {
 }
 
 type EnvironmentPropertiesDto struct {
-	TenantID                  string                       `json:"tenantId"`
+	DatabaseType              string                       `json:"databaseType"`
 	DisplayName               string                       `json:"displayName"`
 	EnvironmentSku            string                       `json:"environmentSku"`
-	DatabaseType              string                       `json:"databaseType"`
+	LinkedAppMetadata         LinkedAppMetadataDto         `json:"linkedAppMetadata"`
 	LinkedEnvironmentMetadata LinkedEnvironmentMetadataDto `json:"linkedEnvironmentMetadata"`
 	States                    StatesEnvironmentDto         `json:"states"`
+	TenantID                  string                       `json:"tenantId"`
 }
 
 type LinkedEnvironmentMetadataDto struct {
@@ -56,6 +57,12 @@ type LinkedEnvironmentMetadataDto struct {
 	Version          string                            `json:"version"`
 	Templates        []string                          `json:"template"`
 	TemplateMetadata EnvironmentCreateTemplateMetadata `json:"templateMetadata"`
+}
+
+type LinkedAppMetadataDto struct {
+	Id   string `json:"id"`
+	Type string `json:"type"`
+	Url  string `json:"url"`
 }
 
 type StatesEnvironmentDto struct {
@@ -76,9 +83,9 @@ type EnvironmentCreateDto struct {
 }
 
 type EnvironmentCreatePropertiesDto struct {
-	DisplayName               string                                      `json:"displayName"`
-	DataBaseType              string                                      `json:"databaseType,omitempty"`
 	BillingPolicy             string                                      `json:"billingPolicy,omitempty"`
+	DataBaseType              string                                      `json:"databaseType,omitempty"`
+	DisplayName               string                                      `json:"displayName"`
 	EnvironmentSku            string                                      `json:"environmentSku"`
 	LinkedEnvironmentMetadata EnvironmentCreateLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata"`
 }
@@ -102,6 +109,12 @@ type EnvironmentCreateTemplateMetadata struct {
 type EnvironmentCreatePostProvisioningPackages struct {
 	ApplicationUniqueName string `json:"applicationUniqueName"`
 	Parameters            string `json:"parameters"`
+}
+
+type EnvironmentCreateLinkedAppMetadataDto struct {
+	Id   string `json:"id"`
+	Type string `json:"type"`
+	Url  string `json:"url"`
 }
 
 type EnvironmentDeleteDto struct {

@@ -54,6 +54,9 @@ type EnvironmentResourceModel struct {
 	Version          types.String `tfsdk:"version"`
 	Templates        []string     `tfsdk:"templates"`
 	TemplateMetadata types.String `tfsdk:"template_metadata"`
+	LinkedAppType    types.String `tfsdk:"linked_app_type"`
+	LinkedAppId      types.String `tfsdk:"linked_app_id"`
+	LinkedAppUrl     types.String `tfsdk:"linked_app_url"`
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -175,6 +178,21 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"linked_app_type": schema.StringAttribute{
+				Description:         "The type of the linked D365 application",
+				MarkdownDescription: "The type of the linked D365 application",
+				Computed:            true,
+			},
+			"linked_app_id": schema.StringAttribute{
+				Description:         "The GUID of the linked D365 application",
+				MarkdownDescription: "The GUID of the linked D365 application",
+				Computed:            true,
+			},
+			"linked_app_url": schema.StringAttribute{
+				Description:         "The URL of the linked D365 application",
+				MarkdownDescription: "The URL of the linked D365 application",
+				Computed:            true,
+			},
 		},
 	}
 }
@@ -293,6 +311,9 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.Version = env.Version
 	state.LanguageName = env.LanguageName
 	state.Location = env.Location
+	state.LinkedAppId = env.LinkedAppId
+	state.LinkedAppType = env.LinkedAppType
+	state.LinkedAppUrl = env.LinkedAppURL
 	ctx = tflog.SetField(ctx, "environment_name", state.EnvironmentName.ValueString())
 	ctx = tflog.SetField(ctx, "display_name", state.DisplayName.ValueString())
 	ctx = tflog.SetField(ctx, "url", state.Url.ValueString())
