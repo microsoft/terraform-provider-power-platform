@@ -131,6 +131,11 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				InstanceURL:     "url",
 				Version:         "version",
 			},
+			LinkedAppMetadata: models.LinkedAppMetadataDto{
+				Type: "Internal",
+				Id:   "00000000-0000-0000-0000-000000000000",
+				Url:  "https://url.operations.dynamics.com",
+			},
 		},
 	}
 

@@ -42,6 +42,9 @@ The example files can be found in `examples/quickstarts/201-D365-finance-environ
 | Name | Description |
 |------|-------------|
 | `id` | Unique identifier of the environment |
+| `linked_app_id` | Unique identifier of the linked D365 Finance app |
+| `linked_app_type` | Type of the linked D365 app |
+| `linked_app_url` | URL of the linked D365 Finance app |
 | `name` | Display name of the environment |
 | `url` | URL of the environment |
 
@@ -76,7 +79,6 @@ This module creates a Dynamics 365 Finance development environment using the def
 ## Limitations and Considerations
 
 - Provisioning can take over an hour, so refrain from rerunning the same environment creation Terraform files more than hourly, as this will cause unexpected behavior.
-- Be sure the relevant users are assigned the correct Dynamics 365 licenses, as this can cause unexpected errors.
 
 ## Additional Resources
 
