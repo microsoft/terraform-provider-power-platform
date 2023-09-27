@@ -102,8 +102,8 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				},
 			},
 			"environment_id": schema.StringAttribute{
-				MarkdownDescription: "Name of the environment where the solution is imported",
-				Description:         "Name of the environment where the solution is imported",
+				MarkdownDescription: "Id of the environment where the solution is imported",
+				Description:         "Id of the environment where the solution is imported",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),

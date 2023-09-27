@@ -87,13 +87,13 @@ resource "powerplatform_solution" "solution" {
 
 ### Required
 
-- `environment_id` (String) Name of the environment where the solution is imported
+- `environment_id` (String) Id of the environment where the solution is imported
 - `solution_file` (String) Path to the solution file
 - `solution_name` (String) Unique name of the solution
 
 ### Optional
 
-- `settings_file` (String) Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/en-us/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details
+- `settings_file` (String) Path to the settings file. The settings file uses the same format as pac cli. See <https://learn.microsoft.com/en-us/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file> for more details
 
 ### Read-Only
 
