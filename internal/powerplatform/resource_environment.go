@@ -273,6 +273,9 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	plan.Url = env.Url
 	plan.EnvironmentType = env.EnvironmentType
 	plan.Version = env.Version
+	plan.LinkedAppType = env.LinkedAppType
+	plan.LinkedAppId = env.LinkedAppId
+	plan.LinkedAppUrl = env.LinkedAppURL
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.EnvironmentName.ValueString()))
 
