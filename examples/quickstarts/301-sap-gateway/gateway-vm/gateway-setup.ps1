@@ -7,8 +7,6 @@ if (!(Get-Module "DataGateway")) {
 Install-Module -Name DataGateway 
 }
 
-
-
 #Gateway Login
 
 Connect-DataGatewayServiceAccount -ApplicationId $ApplicationId -ClientSecret $securePassword  -Tenant $Tenant
