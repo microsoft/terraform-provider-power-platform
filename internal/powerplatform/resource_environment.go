@@ -366,6 +366,11 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 					SecurityGroupId: plan.SecurityGroupId.ValueString(),
 					DomainName:      plan.Domain.ValueString(),
 				},
+				LinkedAppMetadata: models.LinkedAppMetadataDto{
+					Type: plan.LinkedAppType.ValueString(),
+					Id:   plan.LinkedAppId.ValueString(),
+					Url:  plan.LinkedAppUrl.ValueString(),
+				},
 			},
 		}
 
@@ -388,6 +393,9 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		plan.Version = env.Version
 		plan.LanguageName = env.LanguageName
 		plan.Location = env.Location
+		plan.LinkedAppType = env.LinkedAppType
+		plan.LinkedAppId = env.LinkedAppId
+		plan.LinkedAppUrl = env.LinkedAppURL
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
