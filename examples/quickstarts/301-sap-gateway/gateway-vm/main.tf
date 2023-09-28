@@ -49,3 +49,28 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
   }
 }
 
+#Run PowerShell script on the DC01 VM
+resource "azurerm_virtual_machine_extension" "install_ps7" {
+  name                 = "install_ps7"
+  virtual_machine_id   = azurerm_windows_virtual_machine.vm-opgw.id
+  publisher            = "Microsoft.Compute"
+  type                 = "CustomScriptExtension"
+  type_handler_version = "1.9"
+
+  settings = <<SETTINGS
+{
+   "commandToExecute": "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.ps7.rendered)}')) | Out-File -filepath ps7.ps1\" | powershell -ExecutionPolicy RemoteSigned -File ps7.ps1 -AdmincredsUserName ${data.template_file.ps7.vars.AdmincredsUserName} -AdmincredsPassword ${data.template_file.ps7.vars.AdmincredsPassword}"
+}
+SETTINGS
+  #"commandToExecute": "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.ps7.rendered)}')) | Out-File -filepath ps7.ps1\" && powershell -ExecutionPolicy Unrestricted -File ps7.ps1 -AdmincredsUserName ${data.template_file.ps7.vars.AdmincredsUserName} -AdmincredsPassword ${data.template_file.ps7.vars.AdmincredsPassword}"
+}
+
+#Variable input for the powershell7-setup.ps1 script
+data "template_file" "ps7" {
+  template = file("./gateway-vm/powershell7-setup.ps1")
+
+  vars = {
+    AdmincredsUserName = "sapadmin"
+    AdmincredsPassword = "${var.vm_pwd}"
+  }
+}
