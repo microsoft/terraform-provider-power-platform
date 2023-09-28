@@ -37,6 +37,7 @@ func TestAccEnvironmentsDataSource(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.url", regexp.MustCompile(powerplatform_helpers.UrlValidStringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.location", regexp.MustCompile(`^(unitedstates|europe)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.version", regexp.MustCompile(powerplatform_helpers.VersionRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.currency_code", regexp.MustCompile(powerplatform_helpers.StringRegex)),
 				),
 			},
 		},
@@ -45,6 +46,11 @@ func TestAccEnvironmentsDataSource(t *testing.T) {
 
 func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
+	dataverseMock := mocks.NewUnitTestMockDataverseClientInterface(t)
+
+	currencyCode := &models.TransactionCurrencyDto{
+		IsoCurrencyCode: "EUR",
+	}
 
 	envs := make([]models.EnvironmentDto, 0)
 	envs = append(envs, models.EnvironmentDto{
@@ -81,13 +87,14 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 	})
 
 	clientMock.EXPECT().GetEnvironments(gomock.Any()).Return(envs, nil).AnyTimes()
+	dataverseMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(currencyCode, nil).AnyTimes()
 
-	env := ConvertFromEnvironmentDto(envs[0])
+	env := ConvertFromEnvironmentDto(envs[0], currencyCode.IsoCurrencyCode)
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock, nil, nil),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, dataverseMock, nil),
 		},
 		Steps: []resource.TestStep{
 			{
@@ -109,6 +116,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.url", env.Url.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.location", env.Location.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.version", env.Version.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.currency_code", env.CurrencyCode.ValueString()),
 				),
 			},
 		},

@@ -13,26 +13,19 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
-var _ DataverseClientInterface = &DataverseClientApi{}
-
-type DataverseClientInterface interface {
-	Initialize(ctx context.Context, environmentUrl string) (string, error)
-	Execute(ctx context.Context, environmentUrl, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*api.ApiHttpResponse, error)
-
-	GetSolutions(ctx context.Context, environmentId string) ([]models.SolutionDto, error)
-	CreateSolution(ctx context.Context, environmentId string, solutionToCreate models.ImportSolutionDto, content []byte, settings []byte) (*models.SolutionDto, error)
-	GetSolution(ctx context.Context, environmentId string, solutionName string) (*models.SolutionDto, error)
-	DeleteSolution(ctx context.Context, environmentId string, solutionName string) error
-}
+var _ api.DataverseClientInterface = &DataverseClientApi{}
 
 type DataverseClientApi struct {
 	BaseApi    api.ApiClientInterface
 	Auth       DataverseAuthInterface
-	BapiClient bapi.BapiClientInterface
+	BapiClient api.BapiClientInterface
+}
+
+func (client *DataverseClientApi) SetBapiClient(bapiClient api.BapiClientInterface) {
+	client.BapiClient = bapiClient
 }
 
 func (client *DataverseClientApi) Initialize(ctx context.Context, environmentUrl string) (string, error) {
@@ -297,4 +290,47 @@ func (client *DataverseClientApi) DeleteSolution(ctx context.Context, environmen
 		return err
 	}
 	return nil
+}
+
+func (client *DataverseClientApi) GetTableData(ctx context.Context, environmentId, tableName, odataQuery string, responseObj interface{}) error {
+	environmentUrl, err := client.getEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return err
+	}
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Path:   fmt.Sprintf("/api/data/v9.2/%s", tableName),
+	}
+	if odataQuery != "" {
+		apiUrl.RawQuery = odataQuery
+	}
+	_, err = client.Execute(ctx, environmentUrl, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &responseObj)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (client *DataverseClientApi) GetDefaultCurrencyForEnvironment(ctx context.Context, environmentId string) (*models.TransactionCurrencyDto, error) {
+	orgSettings := models.OrganizationSettingsArrayDto{}
+	err := client.GetTableData(ctx, environmentId, "organizations", "", &orgSettings)
+	if err != nil {
+		return nil, err
+	} else {
+		values := url.Values{}
+		values.Add("$filter", "transactioncurrencyid eq "+orgSettings.Value[0].BaseCurrencyId)
+
+		currencies := models.TransactionCurrencyArrayDto{}
+		err := client.GetTableData(ctx, environmentId, "transactioncurrencies", values.Encode(), &currencies)
+		if err != nil {
+			return nil, err
+		} else {
+			if currencies.Value != nil && len(currencies.Value) >= 1 {
+				return &currencies.Value[0], nil
+			} else {
+				return nil, fmt.Errorf("no default currency found for environment %s", environmentId)
+			}
+		}
+	}
 }

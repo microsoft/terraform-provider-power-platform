@@ -28,17 +28,17 @@ type PowerPlatformProvider struct {
 
 type BapiClient struct {
 	Auth   bapi.BapiAuthInterface
-	Client bapi.BapiClientInterface
+	Client api.BapiClientInterface
 }
 
 type DataverseClient struct {
 	Auth   dvapi.DataverseAuthInterface
-	Client dvapi.DataverseClientInterface
+	Client api.DataverseClientInterface
 }
 
 type PowerPlatoformApiClient struct {
 	Auth   ppapi.PowerPlatformAuthInterface
-	Client ppapi.PowerPlatformClientApiInterface
+	Client api.PowerPlatformClientApiInterface
 }
 
 func NewPowerPlatformProvider() func() provider.Provider {
@@ -111,12 +111,13 @@ func NewPowerPlatformProvider() func() provider.Provider {
 		dataverseClient := &DataverseClient{
 			Auth: dataverseAuth,
 			Client: &dvapi.DataverseClientApi{
-				BaseApi:    baseApiForDataverse,
-				Auth:       dataverseAuth,
-				BapiClient: bapiClient.Client,
+				BaseApi: baseApiForDataverse,
+				Auth:    dataverseAuth,
 			},
 		}
 		//
+		bapiClient.Client.SetDataverseClient(dataverseClient.Client)
+		dataverseClient.Client.SetBapiClient(bapiClient.Client)
 
 		p := &PowerPlatformProvider{
 			Config:           &config,

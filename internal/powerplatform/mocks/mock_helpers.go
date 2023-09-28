@@ -20,9 +20,9 @@ func NewUnitTestMockDataverseClientInterface(t *testing.T) *MockDataverseClientI
 	return clientMock
 }
 
-func NewUnitTestMockPowerPlatformClientInterface(t *testing.T) *MockPowerPlatformClientInterface {
+func NewUnitTestMockPowerPlatformClientInterface(t *testing.T) *MockPowerPlatformClientApiInterface {
 	ctrl := gomock.NewController(t)
-	clientMock := NewMockPowerPlatformClientInterface(ctrl)
+	clientMock := NewMockPowerPlatformClientApiInterface(ctrl)
 
 	return clientMock
 }

@@ -1,4 +1,4 @@
-package powerplatform_common
+package powerplatform_api
 
 import (
 	"bytes"
@@ -27,15 +27,6 @@ type ApiClientBase struct {
 	Config   common.ProviderConfig
 	BaseAuth AuthInterface
 	Auth     AuthBaseOperationInterface
-}
-
-type ApiClientInterface interface {
-	//DoRequest(token string, request *http.Request) (*ApiHttpResponse, error)
-	SetAuth(auth AuthBaseOperationInterface)
-	GetConfig() common.ProviderConfig
-
-	InitializeBase(ctx context.Context) (string, error)
-	ExecuteBase(ctx context.Context, token, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error)
 }
 
 func (client *ApiClientBase) ExecuteBase(ctx context.Context, token, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {

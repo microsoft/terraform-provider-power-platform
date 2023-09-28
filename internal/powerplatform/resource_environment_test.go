@@ -108,7 +108,9 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 }
 
 func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.T) {
+
 	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
+	dataverseClientMock := mocks.NewUnitTestMockDataverseClientInterface(t)
 
 	envIdBeforeChanges := "00000000-0000-0000-0000-000000000001"
 	envIdAfterLocationChanges := "00000000-0000-0000-0000-000000000002"
@@ -145,6 +147,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdBeforeChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "USD"),
 			),
 		},
 		{
@@ -161,6 +164,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterLocationChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "unitedstates"),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "USD"),
 			),
 		},
 		{
@@ -193,6 +197,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterEnvironmentTypeChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Trial"),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
 			),
 		},
 		{
@@ -209,12 +214,25 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterLanguageChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1031"),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
 			),
 		},
 	}
 
 	clientMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
 		return &env, nil
+	}).AnyTimes()
+
+	dataverseClientMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, environmentId string) (*models.TransactionCurrencyDto, error) {
+		if environmentId == envIdBeforeChanges || environmentId == envIdAfterLocationChanges {
+			return &models.TransactionCurrencyDto{
+				IsoCurrencyCode: "USD",
+			}, nil
+		} else {
+			return &models.TransactionCurrencyDto{
+				IsoCurrencyCode: "EUR",
+			}, nil
+		}
 	}).AnyTimes()
 
 	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
@@ -267,7 +285,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock, nil, nil),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, dataverseClientMock, nil),
 		},
 		Steps: steps,
 	})
@@ -276,6 +294,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 
 func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
+	dataverseClientMock := mocks.NewUnitTestMockDataverseClientInterface(t)
 
 	envId := "00000000-0000-0000-0000-000000000001"
 	env := models.EnvironmentDto{
@@ -371,6 +390,8 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 		return &env, nil
 	}).AnyTimes()
 
+	dataverseClientMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
+
 	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		env = models.EnvironmentDto{
 			Id:       envId,
@@ -408,7 +429,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock, nil, nil),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, dataverseClientMock, nil),
 		},
 		Steps: steps,
 	})
@@ -417,6 +438,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 
 func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
+	dataverseClientMock := mocks.NewUnitTestMockDataverseClientInterface(t)
 
 	env := models.EnvironmentDto{
 		Name: "00000000-0000-0000-0000-000000000001",
@@ -436,6 +458,8 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 	clientMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
 		return &env, nil
 	}).Times(1)
+
+	dataverseClientMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
 
 	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		env = models.EnvironmentDto{
@@ -464,7 +488,7 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock, nil, nil),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, dataverseClientMock, nil),
 		},
 		Steps: []resource.TestStep{
 			{
