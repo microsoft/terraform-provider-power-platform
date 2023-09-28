@@ -18,6 +18,16 @@ Include this module in your Terraform scripts as follows:
 
 module "d365_finance_environment" {
   source            = "./modules/{{ .ModuleName }}"
+  client_id = "Your App Registration ID (GUID) here"
+  secret = "Your App Registration Secret here"
+  tenant_id = "Your Entra (Azure) Tenant ID (GUID) here"
+  d365_finance_environment_name = "d365fin-dev1"
+  location = "unitedstates"
+  language_code = "1033"
+  currency_code = "USD"
+  environment_type = "Sandbox"
+  security_group_id = "00000000-0000-0000-0000-000000000000"
+  domain = "d365fin-dev1"
 }
 
 ```
@@ -35,6 +45,7 @@ This module creates a Dynamics 365 Finance development environment using the def
 ## Limitations and Considerations
 
 - Provisioning can take over an hour, so refrain from rerunning the same environment creation Terraform files more than hourly, as this will cause unexpected behavior.
+- This quickstart is configured for service-principal-based authentication as outlined in [the provider's user documentation](https://microsoft.github.io/terraform-provider-power-platform#authentication). If you wish to use user-based authentication, you will need to ensure that the selected user is assigned a D365 Finance or D365 Supply Chain Management license as outlined in the [Unified Admin Experience Overview](https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/finance-operations-apps-overview).
 
 ## Additional Resources
 

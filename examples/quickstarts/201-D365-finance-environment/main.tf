@@ -23,8 +23,8 @@ resource "powerplatform_environment" "development" {
   domain           = var.domain
   //There are many template options, including for other business applications.
   //They can be explored at https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/[YOUR ENVIRONMENT LOCATION]//templates?api-version=2023-06-01
-  templates = var.templates
+  templates = ["D365_FinOps_Finance"]
   //This is a special JSON-formatted parameter specification that is currently required for D365 Finance deployments.
-  template_metadata = var.template_metadata
+  template_metadata = "{\"PostProvisioningPackages\": [{ \"applicationUniqueName\": \"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\n \"parameters\": \"DevToolsEnabled=true|DemoDataEnabled=true\"\n }\n ]\n }"
   security_group_id = var.security_group_id
 }

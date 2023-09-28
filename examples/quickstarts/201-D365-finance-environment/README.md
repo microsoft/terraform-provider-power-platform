@@ -24,16 +24,14 @@ The example files can be found in `examples/quickstarts/201-D365-finance-environ
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | `client_id` | The client ID of the service principal (app registration) | string | `null` | true |
-| `currency_code` | The desired Currency Code for the environment | string | `"USD"` | false |
-| `d365_finance_environment_name` | The name of the D365 Finance environment | string | `"d365fin-environment"` | false |
-| `domain` | The domain of the environment | string | `"sample-d365f-environment"` | false |
-| `environment_type` | The type of environment to deploy | string | `"Sandbox"` | false |
-| `language_code` | The desired Language Code for the environment | string | `"1033"` | false |
-| `location` | The Azure region where the environment will be deployed | string | `"canada"` | false |
+| `currency_code` | The desired Currency Code for the environment, such as 'USD' | string | `null` | true |
+| `d365_finance_environment_name` | The name of the D365 Finance environment, such as 'd365fin-dev1 | string | `null` | true |
+| `domain` | The domain of the environment, such as 'd365fin-dev1' | string | `null` | true |
+| `environment_type` | The type of environment to deploy, such as 'Sandbox' | string | `null` | true |
+| `language_code` | The desired Language Code for the environment, such as '1033' (U.S. english) | string | `null` | true |
+| `location` | The region where the environment will be deployed, such as 'unitedstates' | string | `null` | true |
 | `secret` | The client secret of the service principal (app registration) | string | `null` | true |
-| `security_group_id` | The security group the environment will be associated with | string | `"00000000-0000-0000-0000-000000000000"` | false |
-| `template_metadata` | Any additional JSON-formatted metadata required to augment the selected templates. | string | `"{\"PostProvisioningPackages\": [{ \"applicationUniqueName\": \"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\n \"parameters\": \"DevToolsEnabled=true|DemoDataEnabled=true\"\n }\n ]\n }"` | false |
-| `templates` | The list of application templates to use when deploying the environment. | list(string) | `["D365_FinOps_Finance"]` | false |
+| `security_group_id` | The security group the environment will be associated with, a GUID which can be set to 00000000-0000-0000-0000-000000000000 for default behavior | string | `null` | true |
 | `tenant_id` | The Entra (AAD) tenant id of service principal or user | string | `null` | true |
 
 
@@ -62,6 +60,16 @@ Include this module in your Terraform scripts as follows:
 
 module "d365_finance_environment" {
   source            = "./modules/201-D365-finance-environment"
+  client_id = "Your App Registration ID (GUID) here"
+  secret = "Your App Registration Secret here"
+  tenant_id = "Your Entra (Azure) Tenant ID (GUID) here"
+  d365_finance_environment_name = "d365fin-dev1"
+  location = "unitedstates"
+  language_code = "1033"
+  currency_code = "USD"
+  environment_type = "Sandbox"
+  security_group_id = "00000000-0000-0000-0000-000000000000"
+  domain = "d365fin-dev1"
 }
 
 ```
@@ -79,6 +87,7 @@ This module creates a Dynamics 365 Finance development environment using the def
 ## Limitations and Considerations
 
 - Provisioning can take over an hour, so refrain from rerunning the same environment creation Terraform files more than hourly, as this will cause unexpected behavior.
+- This quickstart is configured for service-principal-based authentication as outlined in [the provider's user documentation](https://microsoft.github.io/terraform-provider-power-platform#authentication). If you plan to use user-based authentication, you will need to ensure that the selected user is assigned a D365 Finance or D365 Supply Chain Management license as outlined in the [Unified Admin Experience Overview](https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/finance-operations-apps-overview).
 
 ## Additional Resources
 

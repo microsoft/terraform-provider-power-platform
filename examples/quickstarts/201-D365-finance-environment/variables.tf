@@ -12,60 +12,47 @@ variable "tenant_id" {
   type        = string
 }
 variable "d365_finance_environment_name" {
-  description = "The name of the D365 Finance environment"
+  description = "The name of the D365 Finance environment, such as 'd365fin-dev1"
   type        = string
   validation {
     condition     = length(var.d365_finance_environment_name) <= 20
     error_message = "The length of the d365_finance_environment_name property cannot exceed 20 characters for D365 Finance environment deployments."
   }
-  default = "d365fin-environment"
 }
 #Available locations are listed at //https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01
 variable "location" {
-  description = "The Azure region where the environment will be deployed"
+  description = "The region where the environment will be deployed, such as 'unitedstates'"
   type        = string
   #This default will eventually be removed when other regions become supported.
-  default = "canada"
 }
 #Available langauge codes are listed at https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages?api-version=2023-06-01
 variable "language_code" {
-  description = "The desired Language Code for the environment"
+  description = "The desired Language Code for the environment, such as '1033' (U.S. english)"
   type        = string
-  default     = "1033"
 }
 #Available currency codes are listed at https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies?api-version=2023-06-01
 variable "currency_code" {
-  description = "The desired Currency Code for the environment"
+  description = "The desired Currency Code for the environment, such as 'USD'"
   type        = string
-  default     = "USD"
 }
 #Options are "Sandbox", "Production", "Trial", "Developer"
 variable "environment_type" {
-  description = "The type of environment to deploy"
+  description = "The type of environment to deploy, such as 'Sandbox'"
   type        = string
-  default     = "Sandbox"
+  validation {
+    condition     = contains(["Sandbox", "Production", "Trial", "Developer"], var.environment_type)
+    error_message = "The selected value for environment_type is not in the list of allowed values in variables.tf"
+  }
 }
 variable "security_group_id" {
-  description = "The security group the environment will be associated with"
+  description = "The security group the environment will be associated with, a GUID which can be set to 00000000-0000-0000-0000-000000000000 for default behavior"
   type        = string
-  default     = "00000000-0000-0000-0000-000000000000"
 }
 variable "domain" {
-  description = "The domain of the environment"
+  description = "The domain of the environment, such as 'd365fin-dev1'"
   type        = string
-  default     = "sample-d365f-environment"
   validation {
     condition     = length(var.domain) <= 32
     error_message = "The length of the domain property cannot exceed 32 characters for D365 Finance environment deployments."
   }
-}
-variable "templates" {
-  description = "The list of application templates to use when deploying the environment."
-  type        = list(string)
-  default     = ["D365_FinOps_Finance"]
-}
-variable "template_metadata" {
-  description = "Any additional JSON-formatted metadata required to augment the selected templates."
-  type        = string
-  default     = "{\"PostProvisioningPackages\": [{ \"applicationUniqueName\": \"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\n \"parameters\": \"DevToolsEnabled=true|DemoDataEnabled=true\"\n }\n ]\n }"
 }
