@@ -161,6 +161,7 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 						"linked_app_url": schema.StringAttribute{
 							Description:         "URL of the linked D365 app",
 							MarkdownDescription: "URL of the linked D365 app",
+						},
 						"currency_code": &schema.StringAttribute{
 							Description:         "Unique currency name (EUR, USE, GBP etc.)",
 							MarkdownDescription: "Unique currency name (EUR, USE, GBP etc.)",
