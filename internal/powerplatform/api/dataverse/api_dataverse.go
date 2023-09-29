@@ -40,14 +40,14 @@ func (client *DataverseClientApi) Initialize(ctx context.Context, environmentUrl
 			if err != nil {
 				return "", err
 			}
-			tflog.Info(ctx, fmt.Sprintln("Dataverse token: ", token))
+			tflog.Info(ctx, fmt.Sprintln("Dataverse token aquired: ", "********"))
 			return token, nil
 		} else if client.BaseApi.GetConfig().Credentials.IsUserPassCredentialsProvided() {
 			token, err := client.Auth.AuthenticateUserPass(ctx, environmentUrl, client.BaseApi.GetConfig().Credentials.TenantId, client.BaseApi.GetConfig().Credentials.Username, client.BaseApi.GetConfig().Credentials.Password)
 			if err != nil {
 				return "", err
 			}
-			tflog.Info(ctx, fmt.Sprintln("Dataverse token: ", token))
+			tflog.Info(ctx, fmt.Sprintln("Dataverse token aquired: ", "********"))
 			return token, nil
 		} else {
 			return "", errors.New("no credentials provided")
@@ -56,7 +56,7 @@ func (client *DataverseClientApi) Initialize(ctx context.Context, environmentUrl
 	} else if err != nil {
 		return "", err
 	} else {
-		tflog.Info(ctx, fmt.Sprintln("Dataverse token: ", token))
+		tflog.Info(ctx, fmt.Sprintln("Dataverse token aquired: ", "********"))
 		return token, nil
 	}
 }
