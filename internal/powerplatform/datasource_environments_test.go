@@ -76,6 +76,12 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 			DisplayName:    "Test Environment 2",
 			EnvironmentSku: "Sandbox",
 
+			LinkedAppMetadata: models.LinkedAppMetadataDto{
+				Type: "Internal",
+				Id:   "00000000-0000-0000-0000-000000000000",
+				Url:  "https://datasource-env-test.sandbox.operations.dynamics.com",
+			},
+
 			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
 				DomainName:      "org2",
 				InstanceURL:     "https://org2.crm.dynamics.com",
@@ -116,6 +122,9 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.url", env.Url.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.location", env.Location.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.version", env.Version.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.linked_app_type", env.LinkedAppType.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.linked_app_id", env.LinkedAppId.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.linked_app_url", env.LinkedAppURL.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.currency_code", env.CurrencyCode.ValueString()),
 				),
 			},

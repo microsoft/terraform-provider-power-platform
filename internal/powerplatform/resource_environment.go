@@ -3,6 +3,7 @@ package powerplatform
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -51,7 +52,12 @@ type EnvironmentResourceModel struct {
 	LanguageName    types.Int64  `tfsdk:"language_code"`
 	CurrencyCode    types.String `tfsdk:"currency_code"`
 	//IsCustomControlInCanvasAppsEnabled types.Bool   `tfsdk:"is_custom_control_in_canvas_apps_enabled"`
-	Version types.String `tfsdk:"version"`
+	Version          types.String `tfsdk:"version"`
+	Templates        []string     `tfsdk:"templates"`
+	TemplateMetadata types.String `tfsdk:"template_metadata"`
+	LinkedAppType    types.String `tfsdk:"linked_app_type"`
+	LinkedAppId      types.String `tfsdk:"linked_app_id"`
+	LinkedAppUrl     types.String `tfsdk:"linked_app_url"`
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -156,6 +162,38 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "Version of the environment",
 				Computed:            true,
 			},
+			"templates": schema.ListAttribute{
+				Description:         "The selected instance provisioning template (if any)",
+				MarkdownDescription: "The selected instance provisioning template (if any)",
+				Optional:            true,
+				ElementType:         types.StringType,
+				// Validators: []validator.String{
+				// 	stringvalidator.OneOf(models.EnvironmentCurrencyCodes...),
+				// },
+			},
+			"template_metadata": schema.StringAttribute{
+				Description:         "JSON representation of the environment deployment metadata",
+				MarkdownDescription: "JSON representation of the environment deployment metadata",
+				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"linked_app_type": schema.StringAttribute{
+				Description:         "The type of the linked D365 application",
+				MarkdownDescription: "The type of the linked D365 application",
+				Computed:            true,
+			},
+			"linked_app_id": schema.StringAttribute{
+				Description:         "The GUID of the linked D365 application",
+				MarkdownDescription: "The GUID of the linked D365 application",
+				Computed:            true,
+			},
+			"linked_app_url": schema.StringAttribute{
+				Description:         "The URL of the linked D365 application",
+				MarkdownDescription: "The URL of the linked D365 application",
+				Computed:            true,
+			},
 		},
 	}
 }
@@ -205,6 +243,15 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 				Currency: models.EnvironmentCreateCurrency{
 					Code: plan.CurrencyCode.ValueString(),
 				},
+				Templates: plan.Templates,
+				TemplateMetadata: models.EnvironmentCreateTemplateMetadata{
+					PostProvisioningPackages: []models.EnvironmentCreatePostProvisioningPackages{
+						{
+							ApplicationUniqueName: "msdyn_FinanceAndOperationsProvisioningAppAnchor",
+							Parameters:            "DevToolsEnabled=true|DemoDataEnabled=true",
+						},
+					},
+				},
 			},
 		},
 	}
@@ -228,6 +275,9 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	plan.Url = env.Url
 	plan.EnvironmentType = env.EnvironmentType
 	plan.Version = env.Version
+	plan.LinkedAppType = env.LinkedAppType
+	plan.LinkedAppId = env.LinkedAppId
+	plan.LinkedAppUrl = env.LinkedAppURL
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.EnvironmentName.ValueString()))
 
@@ -274,8 +324,9 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.Version = env.Version
 	state.LanguageName = env.LanguageName
 	state.Location = env.Location
-
-	//TODO move to separate function
+	state.LinkedAppId = env.LinkedAppId
+	state.LinkedAppType = env.LinkedAppType
+	state.LinkedAppUrl = env.LinkedAppURL
 	ctx = tflog.SetField(ctx, "environment_name", state.EnvironmentName.ValueString())
 	ctx = tflog.SetField(ctx, "display_name", state.DisplayName.ValueString())
 	ctx = tflog.SetField(ctx, "url", state.Url.ValueString())
@@ -287,6 +338,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	ctx = tflog.SetField(ctx, "language_code", state.LanguageName.ValueInt64())
 	ctx = tflog.SetField(ctx, "currency_code", state.CurrencyCode.ValueString())
 	ctx = tflog.SetField(ctx, "version", state.Version.ValueString())
+	ctx = tflog.SetField(ctx, "template", strings.Join(state.Templates, " "))
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with environment_name %s", r.ProviderTypeName, state.EnvironmentName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -324,6 +376,11 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 					SecurityGroupId: plan.SecurityGroupId.ValueString(),
 					DomainName:      plan.Domain.ValueString(),
 				},
+				LinkedAppMetadata: models.LinkedAppMetadataDto{
+					Type: plan.LinkedAppType.ValueString(),
+					Id:   plan.LinkedAppId.ValueString(),
+					Url:  plan.LinkedAppUrl.ValueString(),
+				},
 			},
 		}
 
@@ -346,6 +403,9 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		plan.Version = env.Version
 		plan.LanguageName = env.LanguageName
 		plan.Location = env.Location
+		plan.LinkedAppType = env.LinkedAppType
+		plan.LinkedAppId = env.LinkedAppId
+		plan.LinkedAppUrl = env.LinkedAppURL
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
