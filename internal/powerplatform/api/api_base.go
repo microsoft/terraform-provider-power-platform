@@ -29,14 +29,6 @@ type ApiClientBase struct {
 	Auth     AuthBaseOperationInterface
 }
 
-type ApiClientInterface interface {
-	SetAuth(auth AuthBaseOperationInterface)
-	GetConfig() common.ProviderConfig
-
-	InitializeBase(ctx context.Context) (string, error)
-	ExecuteBase(ctx context.Context, token, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error)
-}
-
 func (client *ApiClientBase) ExecuteBase(ctx context.Context, token, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
 	var bodyBuffer io.Reader = nil
 	if body != nil {
