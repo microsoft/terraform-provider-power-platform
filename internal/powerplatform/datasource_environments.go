@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
@@ -26,9 +26,10 @@ func NewEnvironmentsDataSource() datasource.DataSource {
 }
 
 type EnvironmentsDataSource struct {
-	BapiApiClient    bapi.BapiClientInterface
-	ProviderTypeName string
-	TypeName         string
+	BapiApiClient      api.BapiClientInterface
+	DataverseApiClient api.DataverseClientInterface
+	ProviderTypeName   string
+	TypeName           string
 }
 
 type EnvironmentsListDataSourceModel struct {
@@ -50,9 +51,10 @@ type EnvironmentDataSourceModel struct {
 	LinkedAppType   types.String `tfsdk:"linked_app_type"`
 	LinkedAppId     types.String `tfsdk:"linked_app_id"`
 	LinkedAppURL    types.String `tfsdk:"linked_app_url"`
+	CurrencyCode    types.String `tfsdk:"currency_code"`
 }
 
-func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto) EnvironmentDataSourceModel {
+func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto, currencyCode string) EnvironmentDataSourceModel {
 	return EnvironmentDataSourceModel{
 		EnvironmentName: types.StringValue(environmentDto.Name),
 		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
@@ -67,6 +69,7 @@ func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto) Environment
 		LinkedAppType:   types.StringValue(environmentDto.Properties.LinkedAppMetadata.Type),
 		LinkedAppId:     types.StringValue(environmentDto.Properties.LinkedAppMetadata.Id),
 		LinkedAppURL:    types.StringValue(environmentDto.Properties.LinkedAppMetadata.Url),
+		CurrencyCode:    types.StringValue(currencyCode),
 	}
 }
 
@@ -158,6 +161,9 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 						"linked_app_url": schema.StringAttribute{
 							Description:         "URL of the linked D365 app",
 							MarkdownDescription: "URL of the linked D365 app",
+						"currency_code": &schema.StringAttribute{
+							Description:         "Unique currency name (EUR, USE, GBP etc.)",
+							MarkdownDescription: "Unique currency name (EUR, USE, GBP etc.)",
 							Computed:            true,
 						},
 					},
@@ -172,7 +178,7 @@ func (d *EnvironmentsDataSource) Configure(_ context.Context, req datasource.Con
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).BapiApi.Client.(bapi.BapiClientInterface)
+	client, ok := req.ProviderData.(*PowerPlatformProvider).BapiApi.Client.(api.BapiClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(
@@ -183,6 +189,7 @@ func (d *EnvironmentsDataSource) Configure(_ context.Context, req datasource.Con
 		return
 	}
 	d.BapiApiClient = client
+	d.DataverseApiClient = req.ProviderData.(*PowerPlatformProvider).DataverseApi.Client
 }
 
 func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -198,7 +205,14 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	for _, env := range envs {
-		e := ConvertFromEnvironmentDto(env)
+		currencyCode := ""
+		defaultCurrency, err := d.DataverseApiClient.GetDefaultCurrencyForEnvironment(ctx, env.Name)
+		if err != nil {
+			resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", env.Name), err.Error())
+		} else {
+			currencyCode = defaultCurrency.IsoCurrencyCode
+		}
+		e := ConvertFromEnvironmentDto(env, currencyCode)
 		state.Environments = append(state.Environments, e)
 	}
 	state.Id = types.Int64Value(time.Now().Unix())

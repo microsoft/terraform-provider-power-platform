@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 )
@@ -32,9 +32,10 @@ func NewEnvironmentResource() resource.Resource {
 }
 
 type EnvironmentResource struct {
-	BapiApiClient    bapi.BapiClientInterface
-	ProviderTypeName string
-	TypeName         string
+	BapiApiClient      api.BapiClientInterface
+	DataverseApiClient api.DataverseClientInterface
+	ProviderTypeName   string
+	TypeName           string
 }
 
 type EnvironmentResourceModel struct {
@@ -49,7 +50,7 @@ type EnvironmentResourceModel struct {
 	OrganizationId  types.String `tfsdk:"organization_id"`
 	SecurityGroupId types.String `tfsdk:"security_group_id"`
 	LanguageName    types.Int64  `tfsdk:"language_code"`
-	CurrencyName    types.String `tfsdk:"currency_code"`
+	CurrencyCode    types.String `tfsdk:"currency_code"`
 	//IsCustomControlInCanvasAppsEnabled types.Bool   `tfsdk:"is_custom_control_in_canvas_apps_enabled"`
 	Version          types.String `tfsdk:"version"`
 	Templates        []string     `tfsdk:"templates"`
@@ -202,7 +203,7 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).BapiApi.Client.(bapi.BapiClientInterface)
+	client, ok := req.ProviderData.(*PowerPlatformProvider).BapiApi.Client.(api.BapiClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(
@@ -214,6 +215,7 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 	}
 
 	r.BapiApiClient = client
+	r.DataverseApiClient = req.ProviderData.(*PowerPlatformProvider).DataverseApi.Client.(api.DataverseClientInterface)
 }
 
 func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -239,7 +241,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 				DomainName:      plan.Domain.ValueString(),
 				SecurityGroupId: plan.SecurityGroupId.ValueString(),
 				Currency: models.EnvironmentCreateCurrency{
-					Code: plan.CurrencyName.ValueString(),
+					Code: plan.CurrencyCode.ValueString(),
 				},
 				Templates: plan.Templates,
 				TemplateMetadata: models.EnvironmentCreateTemplateMetadata{
@@ -260,7 +262,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	env := ConvertFromEnvironmentDto(*envDto)
+	env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
 
 	plan.Id = env.EnvironmentName
 	plan.EnvironmentName = env.EnvironmentName
@@ -268,7 +270,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	plan.OrganizationId = env.OrganizationId
 	plan.SecurityGroupId = env.SecurityGroupId
 	plan.LanguageName = env.LanguageName
-	plan.CurrencyName = types.StringValue(envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
+	plan.CurrencyCode = types.StringValue(envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
 	plan.Domain = env.Domain
 	plan.Url = env.Url
 	plan.EnvironmentType = env.EnvironmentType
@@ -301,7 +303,15 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	env := ConvertFromEnvironmentDto(*envDto)
+	defaultCurrency, err := r.DataverseApiClient.GetDefaultCurrencyForEnvironment(ctx, envDto.Name)
+	if err != nil {
+		resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", envDto.Name), err.Error())
+		state.CurrencyCode = types.StringNull()
+	} else {
+		state.CurrencyCode = types.StringValue(defaultCurrency.IsoCurrencyCode)
+	}
+
+	env := ConvertFromEnvironmentDto(*envDto, state.CurrencyCode.ValueString())
 
 	state.Id = env.EnvironmentName
 	state.DisplayName = env.DisplayName
@@ -326,7 +336,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	ctx = tflog.SetField(ctx, "organization_id", state.OrganizationId.ValueString())
 	ctx = tflog.SetField(ctx, "security_group_id", state.SecurityGroupId.ValueString())
 	ctx = tflog.SetField(ctx, "language_code", state.LanguageName.ValueInt64())
-	ctx = tflog.SetField(ctx, "currency_name", state.CurrencyName.ValueString())
+	ctx = tflog.SetField(ctx, "currency_code", state.CurrencyCode.ValueString())
 	ctx = tflog.SetField(ctx, "version", state.Version.ValueString())
 	ctx = tflog.SetField(ctx, "template", strings.Join(state.Templates, " "))
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with environment_name %s", r.ProviderTypeName, state.EnvironmentName.ValueString()))
@@ -380,7 +390,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		env := ConvertFromEnvironmentDto(*envDto)
+		env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
 
 		plan.Id = env.EnvironmentName
 		plan.DisplayName = env.DisplayName

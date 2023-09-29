@@ -14,31 +14,16 @@ import (
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
-var _ BapiClientInterface = &BapiClientApi{}
-
-type BapiClientInterface interface {
-	GetBase() api.ApiClientInterface
-	Execute(ctx context.Context, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*api.ApiHttpResponse, error)
-
-	GetEnvironments(ctx context.Context) ([]models.EnvironmentDto, error)
-	GetEnvironment(ctx context.Context, environmentId string) (*models.EnvironmentDto, error)
-	CreateEnvironment(ctx context.Context, environment models.EnvironmentCreateDto) (*models.EnvironmentDto, error)
-	UpdateEnvironment(ctx context.Context, environmentId string, environment models.EnvironmentDto) (*models.EnvironmentDto, error)
-	DeleteEnvironment(ctx context.Context, environmentId string) error
-
-	GetPowerApps(ctx context.Context, environmentId string) ([]models.PowerAppBapi, error)
-
-	GetConnectors(ctx context.Context) ([]models.ConnectorDto, error)
-	GetPolicies(ctx context.Context) ([]models.DlpPolicyModel, error)
-	GetPolicy(ctx context.Context, name string) (*models.DlpPolicyModel, error)
-	DeletePolicy(ctx context.Context, name string) error
-	UpdatePolicy(ctx context.Context, name string, policyToUpdate models.DlpPolicyModel) (*models.DlpPolicyModel, error)
-	CreatePolicy(ctx context.Context, policyToCreate models.DlpPolicyModel) (*models.DlpPolicyModel, error)
-}
+var _ api.BapiClientInterface = &BapiClientApi{}
 
 type BapiClientApi struct {
-	BaseApi api.ApiClientInterface
-	Auth    BapiAuthInterface
+	BaseApi         api.ApiClientInterface
+	Auth            BapiAuthInterface
+	DataverseClient api.DataverseClientInterface
+}
+
+func (client *BapiClientApi) SetDataverseClient(dataverseClient api.DataverseClientInterface) {
+	client.DataverseClient = dataverseClient
 }
 
 func (client *BapiClientApi) GetBase() api.ApiClientInterface {

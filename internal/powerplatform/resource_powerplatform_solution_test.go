@@ -117,6 +117,8 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		IsManaged:       true,
 	}
 
+	clientDataverseMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
+
 	clientBapiMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		environmentStub = models.EnvironmentDto{
 			Name:     environmentStub.Name,
@@ -319,6 +321,8 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		Version:         "1.2.3.4",
 		IsManaged:       true,
 	}
+
+	clientDataverseMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
 
 	clientBapiMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		environmentStub = models.EnvironmentDto{
@@ -549,6 +553,8 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			),
 		},
 	}
+
+	clientDataverseMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
 
 	clientBapiMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		environmentStub = models.EnvironmentDto{

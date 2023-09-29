@@ -1,4 +1,4 @@
-package powerplatform_common
+package powerplatform_api
 
 import (
 	"bytes"
@@ -134,12 +134,14 @@ func (client *ApiClientBase) InitializeBase(ctx context.Context) (string, error)
 			if err != nil {
 				return "", err
 			}
+			tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
 			return token, nil
 		} else if client.Config.Credentials.IsUserPassCredentialsProvided() {
 			token, err := client.Auth.AuthenticateUserPass(ctx, client.Config.Credentials.TenantId, client.Config.Credentials.Username, client.Config.Credentials.Password)
 			if err != nil {
 				return "", err
 			}
+			tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
 			return token, nil
 		} else {
 			return "", errors.New("no credentials provided")
@@ -148,6 +150,7 @@ func (client *ApiClientBase) InitializeBase(ctx context.Context) (string, error)
 	} else if err != nil {
 		return "", err
 	} else {
+		tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
 		return token, nil
 	}
 }

@@ -1,5 +1,7 @@
 package powerplatform_models
 
+import "time"
+
 var (
 	//https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies?api-version=2023-06-01
 	EnvironmentCurrencyCodes = []string{"DJF", "ZAR", "ETB", "AED", "BHD", "DZD", "EGP", "IQD", "JOD", "KWD",
@@ -167,4 +169,29 @@ type EnvironmentLifecycleCreatedDto struct {
 
 type EnvironmentLifecycleCreatedPropertiesDto struct {
 	ProvisioningState string `json:"provisioningState"`
+}
+
+type OrganizationSettingsArrayDto struct {
+	Value []OrganizationSettingsDto `json:"value"`
+}
+
+type OrganizationSettingsDto struct {
+	ODataEtag      string    `json:"@odata.etag"`
+	CreatedOn      time.Time `json:"createdon"`
+	BaseCurrencyId string    `json:"_basecurrencyid_value"`
+}
+
+type TransactionCurrencyDto struct {
+	OrganizationValue     string  `json:"_organizationid_value"`
+	CurrencyName          string  `json:"currencyname"`
+	CurrencySymbol        string  `json:"currencysymbol"`
+	IsoCurrencyCode       string  `json:"isocurrencycode"`
+	CreatedOn             string  `json:"createdon"`
+	CurrencyPrecision     int     `json:"currencyprecision"`
+	ExchangeRate          float32 `json:"exchangerate"`
+	TransactionCurrencyId string  `json:"transactioncurrencyid"`
+}
+
+type TransactionCurrencyArrayDto struct {
+	Value []TransactionCurrencyDto `json:"value"`
 }
