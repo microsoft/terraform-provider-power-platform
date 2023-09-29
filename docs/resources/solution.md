@@ -49,7 +49,7 @@ resource "local_file" "solution_settings_file" {
     },
     {
       "SchemaName": "cra6e_SolutionVariableText",
-      "Value": "${powerplatform_environment.environment.environment_id}"
+      "Value": "${powerplatform_environment.environment.id}"
     }
   ],
   "ConnectionReferences": [
