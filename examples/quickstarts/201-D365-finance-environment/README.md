@@ -5,7 +5,7 @@ This Terraform module aims to provide a template for automating and standardizin
 
 ## Prerequisites
 
-- Service Principal or User Account with appropriate permissions
+- Service Principal or User Account with permissions configured as referenced in [the provider's user documentation](https://microsoft.github.io/terraform-provider-power-platform#authentication) .
 - A properly assigned D365 license (for example, a Dynamics 365 Finance or Dynamics 365 Supply Chain Management license). For more information on the new license requirements, see https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/finance-operations-apps-overview#transition-from-an-environment-slot-purchasing-model-to-a-capacity-based-model .
 - At least 1 gigabyte of available Operations and Dataverse database capacities
 
@@ -31,7 +31,7 @@ The example files can be found in `examples/quickstarts/201-D365-finance-environ
 | `language_code` | The desired Language Code for the environment, such as '1033' (U.S. english) | string | `null` | true |
 | `location` | The region where the environment will be deployed, such as 'unitedstates' | string | `null` | true |
 | `secret` | The client secret of the service principal (app registration) | string | `null` | true |
-| `security_group_id` | The security group the environment will be associated with, a GUID which can be set to 00000000-0000-0000-0000-000000000000 for default behavior | string | `null` | true |
+| `security_group_id` | The security group the environment will be associated with, a GUID. Can be set to 00000000-0000-0000-0000-000000000000 to indicate no security group restricting Dataverse access. | string | `null` | true |
 | `tenant_id` | The Entra (AAD) tenant id of service principal or user | string | `null` | true |
 
 

@@ -45,7 +45,7 @@ variable "environment_type" {
   }
 }
 variable "security_group_id" {
-  description = "The security group the environment will be associated with, a GUID which can be set to 00000000-0000-0000-0000-000000000000 for default behavior"
+  description = "The security group the environment will be associated with, a GUID. Can be set to 00000000-0000-0000-0000-000000000000 to indicate no security group restricting Dataverse access."
   type        = string
 }
 variable "domain" {
