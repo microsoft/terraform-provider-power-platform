@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 	"github.com/stretchr/testify/require"
 )
@@ -34,13 +35,13 @@ func powerPlatformProviderServerApiMock(bapiClient api.BapiClientInterface, dvCl
 		Config: &common.ProviderConfig{
 			Credentials: &common.ProviderCredentials{},
 		},
-		BapiApi: &BapiClient{
+		BapiApi: &clients.BapiClient{
 			Client: bapiClient,
 		},
-		DataverseApi: &DataverseClient{
+		DataverseApi: &clients.DataverseClient{
 			Client: dvClient,
 		},
-		PowerPlatformApi: &PowerPlatoformApiClient{
+		PowerPlatformApi: &clients.PowerPlatoformApiClient{
 			Client: ppClient,
 		},
 	})
