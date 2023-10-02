@@ -59,7 +59,7 @@ resource "azurerm_virtual_machine_extension" "install_ps7" {
 
   settings = <<SETTINGS
 {
-   "commandToExecute": "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.ps7.rendered)}')) | Out-File -filepath ps7.ps1\" | powershell -ExecutionPolicy Unrestricted -File ps7.ps1 -AdmincredsUserName ${data.template_file.ps7.vars.AdmincredsUserName} -AdmincredsPassword ${data.template_file.ps7.vars.AdmincredsPassword}"
+   "commandToExecute": "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.ps7.rendered)}')) | Out-File -filepath ps7.ps1\" | powershell -ExecutionPolicy Unrestricted -File ps7.ps1"
 }
 SETTINGS
   #"commandToExecute": "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.ps7.rendered)}')) | Out-File -filepath ps7.ps1\" && powershell -ExecutionPolicy Unrestricted -File ps7.ps1 -AdmincredsUserName ${data.template_file.ps7.vars.AdmincredsUserName} -AdmincredsPassword ${data.template_file.ps7.vars.AdmincredsPassword}"
