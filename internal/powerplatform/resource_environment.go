@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 )
@@ -165,7 +166,7 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).BapiApi.Client.(api.BapiClientInterface)
+	client, ok := req.ProviderData.(*clients.ProviderClient).BapiApi.Client.(api.BapiClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(
@@ -177,7 +178,7 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 	}
 
 	r.BapiApiClient = client
-	r.DataverseApiClient = req.ProviderData.(*PowerPlatformProvider).DataverseApi.Client.(api.DataverseClientInterface)
+	r.DataverseApiClient = req.ProviderData.(*clients.ProviderClient).DataverseApi.Client.(api.DataverseClientInterface)
 }
 
 func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
@@ -153,7 +154,7 @@ func (d *EnvironmentsDataSource) Configure(_ context.Context, req datasource.Con
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).BapiApi.Client.(api.BapiClientInterface)
+	client, ok := req.ProviderData.(*clients.ProviderClient).BapiApi.Client.(api.BapiClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(
@@ -164,7 +165,7 @@ func (d *EnvironmentsDataSource) Configure(_ context.Context, req datasource.Con
 		return
 	}
 	d.BapiApiClient = client
-	d.DataverseApiClient = req.ProviderData.(*PowerPlatformProvider).DataverseApi.Client
+	d.DataverseApiClient = req.ProviderData.(*clients.ProviderClient).DataverseApi.Client
 }
 
 func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

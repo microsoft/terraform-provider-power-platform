@@ -40,10 +40,10 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `
+				Config: ProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + envDomain + `"
@@ -161,7 +161,7 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: uniTestsProviderConfig + `
+				Config: UniTestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "Solution Import Acceptance Test"
@@ -246,10 +246,10 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `
+				Config: ProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "TestAccSolutionResource_Settings_File"
@@ -366,7 +366,7 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: uniTestsProviderConfig + `
+				Config: UniTestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "Solution Import Acceptance Test"
@@ -440,7 +440,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 
 	steps := []resource.TestStep{
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UniTestsProviderConfig + `
 
 			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
@@ -465,7 +465,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UniTestsProviderConfig + `
 
 			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
@@ -491,7 +491,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UniTestsProviderConfig + `
 
 			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
@@ -517,7 +517,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UniTestsProviderConfig + `
 
 			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"

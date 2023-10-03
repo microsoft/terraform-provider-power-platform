@@ -1,4 +1,4 @@
-package dlp_policy
+package powerplatform
 
 import (
 	"context"
