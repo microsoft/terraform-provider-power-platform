@@ -76,7 +76,7 @@ func TestUnitPowerPlatformProvider_HasChildDataSources(t *testing.T) {
 func TestUnitPowerPlatformProvider_HasChildResources(t *testing.T) {
 	expectedResources := []resource.Resource{
 		NewEnvironmentResource(),
-		NewDataLossPreventionPolicyResource(),
+		dlp_policy.NewDataLossPreventionPolicyResource(),
 		NewSolutionResource(),
 	}
 	resources := NewPowerPlatformProvider()().(*PowerPlatformProvider).Resources(nil)
