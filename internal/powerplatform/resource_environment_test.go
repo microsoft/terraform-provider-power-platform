@@ -16,10 +16,10 @@ import (
 func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `
+				Config: ProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example2"
 					location                                  = "europe"
@@ -47,7 +47,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: providerConfig + `
+				Config: ProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example3"
 					domain									  = "terraformtest3"
@@ -72,10 +72,10 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `
+				Config: ProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "europe"
@@ -143,7 +143,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 
 	steps := []resource.TestStep{
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UniTestsProviderConfig + `
 			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "europe"
@@ -161,7 +161,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UniTestsProviderConfig + `
 			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "unitedstates"
@@ -178,7 +178,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UniTestsProviderConfig + `
 			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "unitedstates"
@@ -194,7 +194,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UniTestsProviderConfig + `
 			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "unitedstates"
@@ -211,7 +211,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UniTestsProviderConfig + `
 			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "europe"
@@ -328,7 +328,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 
 	steps := []resource.TestStep{
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UniTestsProviderConfig + `
 			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "europe"
@@ -346,7 +346,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UniTestsProviderConfig + `
 			resource "powerplatform_environment" "development" {
 				display_name                              = "Example123"
 				location                                  = "europe"
@@ -364,7 +364,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UniTestsProviderConfig + `
 			resource "powerplatform_environment" "development" {
 				display_name                              = "Example123"
 				location                                  = "europe"
@@ -382,7 +382,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UniTestsProviderConfig + `
 			resource "powerplatform_environment" "development" {
 				display_name                              = "Example123"
 				location                                  = "europe"
@@ -507,7 +507,7 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: uniTestsProviderConfig + `
+				Config: UniTestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "europe"

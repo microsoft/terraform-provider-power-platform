@@ -168,21 +168,6 @@ func (mr *MockBapiClientInterfaceMockRecorder) GetEnvironments(arg0 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEnvironments", reflect.TypeOf((*MockBapiClientInterface)(nil).GetEnvironments), arg0)
 }
 
-// GetPolicies mocks base method.
-func (m *MockBapiClientInterface) GetPolicies(arg0 context.Context) ([]powerplatform_models.DlpPolicyModel, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPolicies", arg0)
-	ret0, _ := ret[0].([]powerplatform_models.DlpPolicyModel)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// GetPolicies indicates an expected call of GetPolicies.
-func (mr *MockBapiClientInterfaceMockRecorder) GetPolicies(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPolicies", reflect.TypeOf((*MockBapiClientInterface)(nil).GetPolicies), arg0)
-}
-
 // GetPolicy mocks base method.
 func (m *MockBapiClientInterface) GetPolicy(arg0 context.Context, arg1 string) (*powerplatform_models.DlpPolicyModel, error) {
 	m.ctrl.T.Helper()
