@@ -9,9 +9,6 @@ import (
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
-// type DlpPolicyClientInterface interface {
-// }
-
 func NewDlpPolicyClient(bapi api.BapiClientInterface) DlpPolicyClient {
 	return DlpPolicyClient{
 		BapiApiClient: bapi,

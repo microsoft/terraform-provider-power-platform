@@ -74,7 +74,7 @@ func TestUnitPowerAppsDataSource_Validate_Read(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: UniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				data "powerplatform_powerapps" "all" {}`,
 
 				Check: resource.ComposeTestCheckFunc(

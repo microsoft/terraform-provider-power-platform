@@ -166,7 +166,7 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: UniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "Solution Import Acceptance Test"
@@ -371,7 +371,7 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: UniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "Solution Import Acceptance Test"
@@ -450,7 +450,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 
 	steps := []resource.TestStep{
 		{
-			Config: UniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 
 			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
@@ -475,7 +475,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			),
 		},
 		{
-			Config: UniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 
 			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
@@ -501,7 +501,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			),
 		},
 		{
-			Config: UniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 
 			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
@@ -527,7 +527,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			),
 		},
 		{
-			Config: UniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 
 			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"

@@ -22,7 +22,7 @@ const (
 provider "powerplatform" {
 }
 `
-	UniTestsProviderConfig = `
+	UnitTestsProviderConfig = `
 provider "powerplatform" {
 	tenant_id = "_"
 	username = "_"

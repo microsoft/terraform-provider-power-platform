@@ -68,7 +68,7 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 			}
 		]
 	}`, policyId1, policyId2)
-	const policy1Responose = `{
+	const policy1Response = `{
 		"policyDefinition": {
 			"name": "16c21e0d-429e-4e37-b496-f3c1bcd78bfe",
 			"displayName": "a1",
@@ -277,7 +277,7 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", fmt.Sprintf(`https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/%s`, policyId1),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, policy1Responose), nil
+			return httpmock.NewStringResponse(http.StatusOK, policy1Response), nil
 		})
 
 	httpmock.RegisterResponder("GET", fmt.Sprintf(`https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/%s`, policyId2),
@@ -290,7 +290,7 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				data "powerplatform_data_loss_prevention_policies" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

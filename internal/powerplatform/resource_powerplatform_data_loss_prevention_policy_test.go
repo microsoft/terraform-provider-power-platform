@@ -26,7 +26,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 
 	steps := []resource.TestStep{
 		{
-			Config: UniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 				display_name                      = "Block All Policy"
 				default_connectors_classification = "Blocked"
@@ -47,7 +47,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: UniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 				display_name                      = "Block All Policy_1"
 				default_connectors_classification = "Blocked"
@@ -65,7 +65,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: UniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 				display_name                      = "Block All Policy"
 				default_connectors_classification = "General"
@@ -90,7 +90,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: UniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 				display_name                      = "Block All Policy"
 				default_connectors_classification = "General"
@@ -151,7 +151,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: UniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 				display_name                      = "Block All Policy"
 				default_connectors_classification = "General"
@@ -228,7 +228,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: UniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 				display_name                      = "Block All Policy"
 				default_connectors_classification = "General"
@@ -384,7 +384,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: UniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy"
 					default_connectors_classification = "Blocked"

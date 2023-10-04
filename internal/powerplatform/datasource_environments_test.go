@@ -104,7 +104,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: UniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				data "powerplatform_environments" "all" {}`,
 
 				Check: resource.ComposeTestCheckFunc(
