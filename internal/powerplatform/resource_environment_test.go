@@ -84,6 +84,8 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 					environment_type                          = "Sandbox"
 					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
 					domain									  = "terraformtest1"
+					templates                                 = ["D365_FinOps_Finance"]
+					template_metadata						  = "{\"PostProvisioningPackages\": [{ \"applicationUniqueName\": \"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\n \"parameters\": \"DevToolsEnabled=true|DemoDataEnabled=true\"\n }\n ]\n }"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -101,6 +103,9 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example1"),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "version", regexp.MustCompile(powerplatform_helpers.VersionRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "templates", regexp.MustCompile(`D365_FinOps_Finance$`)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "template_metadata", regexp.MustCompile(`{"PostProvisioningPackages": [{ "applicationUniqueName": "msdyn_FinanceAndOperationsProvisioningAppAnchor",\n "parameters": "DevToolsEnabled=true\|DemoDataEnabled=true"\n }\n ]\n }`)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "linked_app_url", regexp.MustCompile(`\.operations\.dynamics\.com$`)),
 				),
 			},
 		},
@@ -127,6 +132,11 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				DomainName:      "domain",
 				InstanceURL:     "url",
 				Version:         "version",
+			},
+			LinkedAppMetadata: models.LinkedAppMetadataDto{
+				Type: "Internal",
+				Id:   "00000000-0000-0000-0000-000000000000",
+				Url:  "https://url.operations.dynamics.com",
 			},
 		},
 	}
@@ -307,6 +317,11 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 				DomainName:      "domain",
 				InstanceURL:     "url",
 				Version:         "version",
+			},
+			LinkedAppMetadata: models.LinkedAppMetadataDto{
+				Type: "Internal",
+				Id:   "00000000-0000-0000-0000-000000000000",
+				Url:  "https://url.operations.dynamics.com",
 			},
 		},
 	}

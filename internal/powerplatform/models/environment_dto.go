@@ -41,21 +41,30 @@ type EnvironmentDto struct {
 }
 
 type EnvironmentPropertiesDto struct {
-	TenantID                  string                       `json:"tenantId"`
+	DatabaseType              string                       `json:"databaseType"`
 	DisplayName               string                       `json:"displayName"`
 	EnvironmentSku            string                       `json:"environmentSku"`
-	DatabaseType              string                       `json:"databaseType"`
+	LinkedAppMetadata         LinkedAppMetadataDto         `json:"linkedAppMetadata"`
 	LinkedEnvironmentMetadata LinkedEnvironmentMetadataDto `json:"linkedEnvironmentMetadata"`
 	States                    StatesEnvironmentDto         `json:"states"`
+	TenantID                  string                       `json:"tenantId"`
 }
 
 type LinkedEnvironmentMetadataDto struct {
-	DomainName      string `json:"domainName,omitempty"`
-	InstanceURL     string `json:"instanceUrl"`
-	BaseLanguage    int    `json:"baseLanguage"`
-	SecurityGroupId string `json:"securityGroupId"`
-	ResourceId      string `json:"resourceId"`
-	Version         string `json:"version"`
+	DomainName       string                            `json:"domainName,omitempty"`
+	InstanceURL      string                            `json:"instanceUrl"`
+	BaseLanguage     int                               `json:"baseLanguage"`
+	SecurityGroupId  string                            `json:"securityGroupId"`
+	ResourceId       string                            `json:"resourceId"`
+	Version          string                            `json:"version"`
+	Templates        []string                          `json:"template"`
+	TemplateMetadata EnvironmentCreateTemplateMetadata `json:"templateMetadata"`
+}
+
+type LinkedAppMetadataDto struct {
+	Id   string `json:"id"`
+	Type string `json:"type"`
+	Url  string `json:"url"`
 }
 
 type StatesEnvironmentDto struct {
@@ -76,22 +85,38 @@ type EnvironmentCreateDto struct {
 }
 
 type EnvironmentCreatePropertiesDto struct {
-	DisplayName               string                                      `json:"displayName"`
-	DataBaseType              string                                      `json:"databaseType,omitempty"`
 	BillingPolicy             string                                      `json:"billingPolicy,omitempty"`
+	DataBaseType              string                                      `json:"databaseType,omitempty"`
+	DisplayName               string                                      `json:"displayName"`
 	EnvironmentSku            string                                      `json:"environmentSku"`
 	LinkedEnvironmentMetadata EnvironmentCreateLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata"`
 }
 
 type EnvironmentCreateLinkEnvironmentMetadataDto struct {
-	BaseLanguage    int                       `json:"baseLanguage"`
-	DomainName      string                    `json:"domainName,omitempty"`
-	Currency        EnvironmentCreateCurrency `json:"currency"`
-	Templates       []string                  `json:"templates,omitempty"`
-	SecurityGroupId string                    `json:"securityGroupId,omitempty"`
+	BaseLanguage     int                               `json:"baseLanguage"`
+	DomainName       string                            `json:"domainName,omitempty"`
+	Currency         EnvironmentCreateCurrency         `json:"currency"`
+	SecurityGroupId  string                            `json:"securityGroupId,omitempty"`
+	Templates        []string                          `json:"templates,omitempty"`
+	TemplateMetadata EnvironmentCreateTemplateMetadata `json:"templateMetadata,omitempty"`
 }
 type EnvironmentCreateCurrency struct {
 	Code string `json:"code"`
+}
+
+type EnvironmentCreateTemplateMetadata struct {
+	PostProvisioningPackages []EnvironmentCreatePostProvisioningPackages `json:"PostProvisioningPackages"`
+}
+
+type EnvironmentCreatePostProvisioningPackages struct {
+	ApplicationUniqueName string `json:"applicationUniqueName"`
+	Parameters            string `json:"parameters"`
+}
+
+type EnvironmentCreateLinkedAppMetadataDto struct {
+	Id   string `json:"id"`
+	Type string `json:"type"`
+	Url  string `json:"url"`
 }
 
 type EnvironmentDeleteDto struct {
