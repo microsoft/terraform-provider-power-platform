@@ -49,28 +49,40 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
   }
 }
 
-#Run PowerShell script on the DC01 VM
-resource "azurerm_virtual_machine_extension" "install_ps7" {
-  name                 = "install_ps7"
-  virtual_machine_id   = azurerm_windows_virtual_machine.vm-opgw.id
-  publisher            = "Microsoft.Compute"
-  type                 = "CustomScriptExtension"
-  type_handler_version = "1.9"
 
-  settings = <<SETTINGS
-{
-   "commandToExecute": "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.ps7.rendered)}')) | Out-File -filepath ps7.ps1\" | powershell -ExecutionPolicy Unrestricted -File ps7.ps1"
-}
-SETTINGS
-  #"commandToExecute": "powershell -command \"[System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String('${base64encode(data.template_file.ps7.rendered)}')) | Out-File -filepath ps7.ps1\" && powershell -ExecutionPolicy Unrestricted -File ps7.ps1 -AdmincredsUserName ${data.template_file.ps7.vars.AdmincredsUserName} -AdmincredsPassword ${data.template_file.ps7.vars.AdmincredsPassword}"
+
+resource "azurerm_shared_image_gallery" "example" {
+  name                = "examplegallery"
+  resource_group_name = var.resource_group_name
+  location            = var.region
 }
 
-#Variable input for the powershell7-setup.ps1 script
-data "template_file" "ps7" {
-  template = file("./gateway-vm/scripts/installps7.ps1")
+resource "azurerm_gallery_application" "example" {
+  name              = "example-app"
+  gallery_id        = azurerm_shared_image_gallery.example.id
+  location          = var.region
+  supported_os_type = "Windows"
+}
 
-  vars = {
-    AdmincredsUserName = "sapadmin"
-    AdmincredsPassword = "${var.vm_pwd}"
+resource "azurerm_gallery_application_version" "example" {
+  name                   = "0.0.1"
+  gallery_application_id = azurerm_gallery_application.example.id
+  location               = var.region
+
+  manage_action {
+    install = "move .\\PowerShell7 .\\PowerShell-7.3.7-win-x64.msi & start /wait %windir%\\system32\\msiexec.exe /i PowerShell-7.3.7-win-x64.msi /qn /L*V 'C:Install_Test'"
+    remove  = "echo"
+  }
+
+  source {
+    media_link = "https://opdgwsetup.blob.core.windows.net/installs/PowerShell-7.3.7-win-x64.msi"
+  }
+
+  target_region {
+    name                   = var.region
+    regional_replica_count = 1
   }
 }
+
+
+
