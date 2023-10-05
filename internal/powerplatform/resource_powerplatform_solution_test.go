@@ -106,15 +106,15 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 	}
 
 	solutionStub := models.SolutionDto{
-		Id:              "00000000-0000-0000-0000-000000000002",
-		EnvironmentName: environmentStub.Id,
-		DisplayName:     "Solution",
-		Name:            "solution",
-		CreatedTime:     "2020-01-01T00:00:00Z",
-		ModifiedTime:    "2020-01-01T00:00:00Z",
-		InstallTime:     "2020-01-01T00:00:00Z",
-		Version:         "1.2.3.4",
-		IsManaged:       true,
+		Id:            "00000000-0000-0000-0000-000000000002",
+		EnvironmentId: environmentStub.Id,
+		DisplayName:   "Solution",
+		Name:          "solution",
+		CreatedTime:   "2020-01-01T00:00:00Z",
+		ModifiedTime:  "2020-01-01T00:00:00Z",
+		InstallTime:   "2020-01-01T00:00:00Z",
+		Version:       "1.2.3.4",
+		IsManaged:     true,
 	}
 
 	clientDataverseMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
@@ -311,15 +311,15 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 	}
 
 	solutionStub := models.SolutionDto{
-		Id:              "00000000-0000-0000-0000-000000000002",
-		EnvironmentName: environmentStub.Id,
-		DisplayName:     "Solution",
-		Name:            "solution",
-		CreatedTime:     "2020-01-01T00:00:00Z",
-		ModifiedTime:    "2020-01-01T00:00:00Z",
-		InstallTime:     "2020-01-01T00:00:00Z",
-		Version:         "1.2.3.4",
-		IsManaged:       true,
+		Id:            "00000000-0000-0000-0000-000000000002",
+		EnvironmentId: environmentStub.Id,
+		DisplayName:   "Solution",
+		Name:          "solution",
+		CreatedTime:   "2020-01-01T00:00:00Z",
+		ModifiedTime:  "2020-01-01T00:00:00Z",
+		InstallTime:   "2020-01-01T00:00:00Z",
+		Version:       "1.2.3.4",
+		IsManaged:     true,
 	}
 
 	clientDataverseMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
@@ -437,15 +437,15 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 	}
 
 	solutionStub := models.SolutionDto{
-		Id:              "00000000-0000-0000-0000-000000000002",
-		EnvironmentName: environmentStub.Id,
-		DisplayName:     "Solution",
-		Name:            "solution",
-		CreatedTime:     "2020-01-01T00:00:00Z",
-		ModifiedTime:    "2020-01-01T00:00:00Z",
-		InstallTime:     "2020-01-01T00:00:00Z",
-		Version:         "1.2.3.4",
-		IsManaged:       true,
+		Id:            "00000000-0000-0000-0000-000000000002",
+		EnvironmentId: environmentStub.Id,
+		DisplayName:   "Solution",
+		Name:          "solution",
+		CreatedTime:   "2020-01-01T00:00:00Z",
+		ModifiedTime:  "2020-01-01T00:00:00Z",
+		InstallTime:   "2020-01-01T00:00:00Z",
+		Version:       "1.2.3.4",
+		IsManaged:     true,
 	}
 
 	steps := []resource.TestStep{

@@ -19,15 +19,15 @@ func TestUnitSolutionsDataSource_Validate_Read(t *testing.T) {
 
 	envId := "00000000-0000-0000-0000-000000000001"
 	sol := models.SolutionDto{
-		Id:              "00000000-0000-0000-0000-000000000002",
-		EnvironmentName: envId,
-		DisplayName:     "Solution",
-		Name:            "solution",
-		CreatedTime:     "2020-01-01T00:00:00Z",
-		ModifiedTime:    "2020-01-01T00:00:00Z",
-		InstallTime:     "2020-01-01T00:00:00Z",
-		Version:         "1.2.3.4",
-		IsManaged:       true,
+		Id:            "00000000-0000-0000-0000-000000000002",
+		EnvironmentId: envId,
+		DisplayName:   "Solution",
+		Name:          "solution",
+		CreatedTime:   "2020-01-01T00:00:00Z",
+		ModifiedTime:  "2020-01-01T00:00:00Z",
+		InstallTime:   "2020-01-01T00:00:00Z",
+		Version:       "1.2.3.4",
+		IsManaged:     true,
 	}
 	solutions := make([]models.SolutionDto, 0)
 	solutions = append(solutions, sol)
@@ -52,7 +52,7 @@ func TestUnitSolutionsDataSource_Validate_Read(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.#", "1"),
 					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.name", sol.Name),
-					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.environment_id", sol.EnvironmentName),
+					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.environment_id", sol.EnvironmentId),
 					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.display_name", sol.DisplayName),
 					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.created_time", sol.CreatedTime),
 					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.modified_time", sol.ModifiedTime),

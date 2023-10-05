@@ -17,15 +17,15 @@ type SolutionSettingsConnectionReferences struct {
 }
 
 type SolutionDto struct {
-	Id              string `json:"solutionid"`
-	EnvironmentName string `json:"environment_id"`
-	Name            string `json:"uniquename"`
-	DisplayName     string `json:"friendlyname"`
-	IsManaged       bool   `json:"ismanaged"`
-	CreatedTime     string `json:"createdon"`
-	Version         string `json:"version"`
-	ModifiedTime    string `json:"modifiedon"`
-	InstallTime     string `json:"installedon"`
+	Id            string `json:"solutionid"`
+	EnvironmentId string `json:"environment_name"`
+	Name          string `json:"uniquename"`
+	DisplayName   string `json:"friendlyname"`
+	IsManaged     bool   `json:"ismanaged"`
+	CreatedTime   string `json:"createdon"`
+	Version       string `json:"version"`
+	ModifiedTime  string `json:"modifiedon"`
+	InstallTime   string `json:"installedon"`
 }
 
 type SolutionDtoArray struct {
