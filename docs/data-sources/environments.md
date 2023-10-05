@@ -44,6 +44,7 @@ data "powerplatform_environments" "all_environments" {}
 
 Read-Only:
 
+- `currency_code` (String) Unique currency name (EUR, USE, GBP etc.)
 - `display_name` (String) Display name
 - `domain` (String) Domain name of the environment
 - `environment_id` (String) Unique environment id (guid)

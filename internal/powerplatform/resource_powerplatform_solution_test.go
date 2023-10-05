@@ -40,10 +40,10 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `
+				Config: ProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + envDomain + `"
@@ -97,6 +97,11 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 				InstanceURL:     "url",
 				Version:         "version",
 			},
+			LinkedAppMetadata: models.LinkedAppMetadataDto{
+				Type: "Internal",
+				Id:   "00000000-0000-0000-0000-000000000000",
+				Url:  "https://url.operations.dynamics.com/",
+			},
 		},
 	}
 
@@ -111,6 +116,8 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		Version:         "1.2.3.4",
 		IsManaged:       true,
 	}
+
+	clientDataverseMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
 
 	clientBapiMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		environmentStub = models.EnvironmentDto{
@@ -159,7 +166,7 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: uniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "Solution Import Acceptance Test"
@@ -244,10 +251,10 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `
+				Config: ProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "TestAccSolutionResource_Settings_File"
@@ -315,6 +322,8 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		IsManaged:       true,
 	}
 
+	clientDataverseMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
+
 	clientBapiMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		environmentStub = models.EnvironmentDto{
 			Name:     environmentStub.Name,
@@ -362,7 +371,7 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: uniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "Solution Import Acceptance Test"
@@ -419,6 +428,11 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				InstanceURL:     "url",
 				Version:         "version",
 			},
+			LinkedAppMetadata: models.LinkedAppMetadataDto{
+				Type: "Internal",
+				Id:   "00000000-0000-0000-0000-000000000000",
+				Url:  "https://url.operations.dynamics.com/",
+			},
 		},
 	}
 
@@ -436,7 +450,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 
 	steps := []resource.TestStep{
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 
 			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
@@ -461,7 +475,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 
 			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
@@ -487,7 +501,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 
 			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
@@ -513,7 +527,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 
 			resource "powerplatform_environment" "environment" {
 				display_name                              = "Solution Import Acceptance Test"
@@ -539,6 +553,8 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			),
 		},
 	}
+
+	clientDataverseMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
 
 	clientBapiMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		environmentStub = models.EnvironmentDto{

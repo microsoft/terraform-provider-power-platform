@@ -1,4 +1,4 @@
-package powerplatform_common
+package powerplatform_api
 
 import (
 	"context"

@@ -1,7 +1,6 @@
 variable "client_id" {
-  description = "The client ID of the of the service principal"
+  description = "The client ID of the service principal"
   type        = string
-
 }
 variable "secret" {
   description = "The client secret of the service principal"
