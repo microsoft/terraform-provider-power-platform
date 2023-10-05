@@ -41,7 +41,7 @@ type SolutionResourceModel struct {
 	Id                   types.String `tfsdk:"id"`
 	SolutionFileChecksum types.String `tfsdk:"solution_file_checksum"`
 	SettingsFileChecksum types.String `tfsdk:"settings_file_checksum"`
-	EnvironmentName      types.String `tfsdk:"environment_id"`
+	EnvironmentId        types.String `tfsdk:"environment_id"`
 	SolutionName         types.String `tfsdk:"solution_name"`
 	SolutionVersion      types.String `tfsdk:"solution_version"`
 	SolutionFile         types.String `tfsdk:"solution_file"`
