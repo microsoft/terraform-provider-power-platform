@@ -16,10 +16,10 @@ import (
 func TestAccEnvironmentsDataSource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `
+				Config: ProviderConfig + `
 				data "powerplatform_environments" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -104,7 +104,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: uniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				data "powerplatform_environments" "all" {}`,
 
 				Check: resource.ComposeTestCheckFunc(

@@ -324,13 +324,13 @@ func (client *BapiClientApi) GetConnectors(ctx context.Context) ([]models.Connec
 	return connectorArray.Value, nil
 }
 
-func (client *BapiClientApi) GetPolicies(ctx context.Context) ([]models.DlpPolicyModel, error) {
-	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/policies
-	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/<tenantId>/policies/<policyId>/policyconnectorconfigurations
-	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/<tenantId>/policies/<policyId>/urlPatterns
+// func (client *BapiClientApi) GetPolicies(ctx context.Context) ([]models.DlpPolicyModel, error) {
+// 	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/policies
+// 	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/<tenantId>/policies/<policyId>/policyconnectorconfigurations
+// 	//https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/<tenantId>/policies/<policyId>/urlPatterns
 
-	return nil, nil
-}
+// 	return nil, nil
+// }
 
 func (client *BapiClientApi) GetPolicy(ctx context.Context, name string) (*models.DlpPolicyModel, error) {
 	apiUrl := &url.URL{

@@ -8,23 +8,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	"github.com/stretchr/testify/require"
 )
 
 const (
-	// providerConfig is a shared configuration to combine with the actual
+	// ProviderConfig is a shared configuration to combine with the actual
 	// test configuration so the Power Platform client is properly configured.
 	// It is also possible to use the POWER_PLATFORM_ environment variables instead.
-	providerConfig = `
+	ProviderConfig = `
 provider "powerplatform" {
 }
 `
-	uniTestsProviderConfig = `
+	UnitTestsProviderConfig = `
 provider "powerplatform" {
 	tenant_id = "_"
 	username = "_"
 	password = "_"
+	client_id = "_"
+	secret = "_"
 }
 `
 )
@@ -34,13 +38,13 @@ func powerPlatformProviderServerApiMock(bapiClient api.BapiClientInterface, dvCl
 		Config: &common.ProviderConfig{
 			Credentials: &common.ProviderCredentials{},
 		},
-		BapiApi: &BapiClient{
+		BapiApi: &clients.BapiClient{
 			Client: bapiClient,
 		},
-		DataverseApi: &DataverseClient{
+		DataverseApi: &clients.DataverseClient{
 			Client: dvClient,
 		},
-		PowerPlatformApi: &PowerPlatoformApiClient{
+		PowerPlatformApi: &clients.PowerPlatoformApiClient{
 			Client: ppClient,
 		},
 	})
@@ -48,7 +52,7 @@ func powerPlatformProviderServerApiMock(bapiClient api.BapiClientInterface, dvCl
 }
 
 var (
-	testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
 		"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider()()),
 	}
 )
@@ -59,6 +63,7 @@ func TestUnitPowerPlatformProvider_HasChildDataSources(t *testing.T) {
 		NewEnvironmentsDataSource(),
 		NewConnectorsDataSource(),
 		NewSolutionsDataSource(),
+		dlp_policy.NewDataLossPreventionPolicyDataSource(),
 	}
 	datasources := NewPowerPlatformProvider()().(*PowerPlatformProvider).DataSources(nil)
 

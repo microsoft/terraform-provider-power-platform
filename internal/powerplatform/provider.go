@@ -14,31 +14,18 @@ import (
 	bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi"
 	dvapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/dataverse"
 	ppapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/ppapi"
+	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 )
 
 var _ provider.Provider = &PowerPlatformProvider{}
 
 type PowerPlatformProvider struct {
 	Config           *common.ProviderConfig
-	BapiApi          *BapiClient
-	DataverseApi     *DataverseClient
-	PowerPlatformApi *PowerPlatoformApiClient
-}
-
-type BapiClient struct {
-	Auth   bapi.BapiAuthInterface
-	Client api.BapiClientInterface
-}
-
-type DataverseClient struct {
-	Auth   dvapi.DataverseAuthInterface
-	Client api.DataverseClientInterface
-}
-
-type PowerPlatoformApiClient struct {
-	Auth   ppapi.PowerPlatformAuthInterface
-	Client api.PowerPlatformClientApiInterface
+	BapiApi          *clients.BapiClient
+	DataverseApi     *clients.DataverseClient
+	PowerPlatformApi *clients.PowerPlatoformApiClient
 }
 
 func NewPowerPlatformProvider() func() provider.Provider {
@@ -65,7 +52,7 @@ func NewPowerPlatformProvider() func() provider.Provider {
 			Config:   config,
 			BaseAuth: baseAuthBapi,
 		}
-		bapiClient := &BapiClient{
+		bapiClient := &clients.BapiClient{
 			Auth: bapiAuth,
 			Client: &bapi.BapiClientApi{
 				BaseApi: baseApiForBapi,
@@ -87,7 +74,7 @@ func NewPowerPlatformProvider() func() provider.Provider {
 			Config:   config,
 			BaseAuth: baseAuthPowerPlatform,
 		}
-		powerplatformClient := &PowerPlatoformApiClient{
+		powerplatformClient := &clients.PowerPlatoformApiClient{
 			Auth: powerplatformAuth,
 			Client: &ppapi.PowerPlatformClientApi{
 				BaseApi: baseApiForPpApi,
@@ -108,7 +95,7 @@ func NewPowerPlatformProvider() func() provider.Provider {
 			Config:   config,
 			BaseAuth: baseAuthDataverse,
 		}
-		dataverseClient := &DataverseClient{
+		dataverseClient := &clients.DataverseClient{
 			Auth: dataverseAuth,
 			Client: &dvapi.DataverseClientApi{
 				BaseApi: baseApiForDataverse,
@@ -284,8 +271,14 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		}
 	}
 
-	resp.DataSourceData = p
-	resp.ResourceData = p
+	providerClient := clients.ProviderClient{
+		Config:           p.Config,
+		BapiApi:          p.BapiApi,
+		DataverseApi:     p.DataverseApi,
+		PowerPlatformApi: p.PowerPlatformApi,
+	}
+	resp.DataSourceData = &providerClient
+	resp.ResourceData = &providerClient
 
 	tflog.Info(ctx, "Configured API client", map[string]any{"success": true})
 }
@@ -304,5 +297,6 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return NewPowerAppsDataSource() },
 		func() datasource.DataSource { return NewEnvironmentsDataSource() },
 		func() datasource.DataSource { return NewSolutionsDataSource() },
+		func() datasource.DataSource { return dlp_policy.NewDataLossPreventionPolicyDataSource() },
 	}
 }
