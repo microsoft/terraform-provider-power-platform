@@ -176,7 +176,7 @@ func (r *SolutionResource) Create(ctx context.Context, req resource.CreateReques
 	plan.SolutionVersion = types.StringValue(solution.Version)
 	plan.IsManaged = types.BoolValue(solution.IsManaged)
 	plan.DisplayName = types.StringValue(solution.DisplayName)
-	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.EnvironmentName.ValueString(), solution.Name))
+	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.EnvironmentId.ValueString(), solution.Name))
 
 	plan.SettingsFileChecksum = types.StringUnknown()
 	if !plan.SettingsFile.IsNull() && !plan.SettingsFile.IsUnknown() {
@@ -217,7 +217,7 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	solutions, err := r.DataverseApiClient.GetSolutions(ctx, state.EnvironmentName.ValueString())
+	solutions, err := r.DataverseApiClient.GetSolutions(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
 		return
@@ -226,7 +226,7 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 	solutionFound := false
 	for _, solution := range solutions {
 		if solution.Name == state.SolutionName.ValueString() {
-			state.Id = types.StringValue(fmt.Sprintf("%s_%s", state.EnvironmentName.ValueString(), solution.Name))
+			state.Id = types.StringValue(fmt.Sprintf("%s_%s", state.EnvironmentId.ValueString(), solution.Name))
 			state.SolutionName = types.StringValue(solution.Name)
 			//TODO test a case when solution version changes
 			state.SolutionVersion = types.StringValue(solution.Version)
@@ -277,7 +277,7 @@ func (r *SolutionResource) importSolution(ctx context.Context, plan *SolutionRes
 		}
 	}
 
-	solution, err := r.DataverseApiClient.CreateSolution(ctx, plan.EnvironmentName.ValueString(), s, solutionContent, settingsContent)
+	solution, err := r.DataverseApiClient.CreateSolution(ctx, plan.EnvironmentId.ValueString(), s, solutionContent, settingsContent)
 	if err != nil {
 		diagnostics.AddError(fmt.Sprintf("Client error when importing solution %s", plan.SolutionFile), err.Error())
 	}
@@ -299,7 +299,7 @@ func (r *SolutionResource) Update(ctx context.Context, req resource.UpdateReques
 
 	solution := r.importSolution(ctx, plan, &resp.Diagnostics)
 
-	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.EnvironmentName.ValueString(), solution.Name))
+	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.EnvironmentId.ValueString(), solution.Name))
 
 	plan.SolutionName = types.StringValue(solution.Name)
 	plan.SolutionVersion = types.StringValue(solution.Version)
@@ -341,8 +341,8 @@ func (r *SolutionResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
-	if !state.EnvironmentName.IsNull() && !state.SolutionName.IsNull() {
-		err := r.DataverseApiClient.DeleteSolution(ctx, state.EnvironmentName.ValueString(), state.SolutionName.ValueString())
+	if !state.EnvironmentId.IsNull() && !state.SolutionName.IsNull() {
+		err := r.DataverseApiClient.DeleteSolution(ctx, state.EnvironmentId.ValueString(), state.SolutionName.ValueString())
 
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
