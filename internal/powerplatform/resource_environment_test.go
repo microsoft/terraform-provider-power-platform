@@ -94,7 +94,7 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 
 					// Verify the first power app to ensure all attributes are set
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "terraformtest1"),
-					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_type", regexp.MustCompile(`^(Default|Sandbox|Developer)$`)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1033"),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
