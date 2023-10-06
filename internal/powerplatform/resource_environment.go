@@ -330,7 +330,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.LinkedAppUrl = env.LinkedAppURL
 
 	//TODO move to separate function
-	ctx = tflog.SetField(ctx, "environment_id", state.EnvironmentName.ValueString())
+	ctx = tflog.SetField(ctx, "id", state.EnvironmentName.ValueString())
 	ctx = tflog.SetField(ctx, "display_name", state.DisplayName.ValueString())
 	ctx = tflog.SetField(ctx, "url", state.Url.ValueString())
 	ctx = tflog.SetField(ctx, "domain", state.Domain.ValueString())
