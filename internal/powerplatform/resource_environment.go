@@ -41,7 +41,7 @@ type EnvironmentResource struct {
 
 type EnvironmentResourceModel struct {
 	Id              types.String `tfsdk:"id"`
-	EnvironmentName types.String `tfsdk:"environment_id"`
+	EnvironmentId types.String `tfsdk:"environment_id"`
 	DisplayName     types.String `tfsdk:"display_name"`
 	Url             types.String `tfsdk:"url"`
 	Domain          types.String `tfsdk:"domain"`
