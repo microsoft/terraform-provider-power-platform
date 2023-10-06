@@ -39,7 +39,7 @@ type EnvironmentsListDataSourceModel struct {
 }
 
 type EnvironmentDataSourceModel struct {
-	EnvironmentName types.String `tfsdk:"environment_id"`
+	EnvironmentId types.String `tfsdk:"id"`
 	DisplayName     types.String `tfsdk:"display_name"`
 	Url             types.String `tfsdk:"url"`
 	Domain          types.String `tfsdk:"domain"`
