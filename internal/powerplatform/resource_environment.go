@@ -72,9 +72,9 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 		Description:         "PowerPlatform environment",
 
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
+			//"id": schema.StringAttribute{
+			//	Computed: true,
+			//},
 			"currency_code": schema.StringAttribute{
 				Description:         "Unique currency code",
 				MarkdownDescription: "Unique currency name",
