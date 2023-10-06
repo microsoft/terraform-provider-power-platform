@@ -87,7 +87,7 @@ resource "powerplatform_solution" "solution" {
 
 ### Required
 
-- `environment_id` (String) Id of the environment where the solution is imported
+- `id` (String) Id of the environment where the solution is imported
 - `solution_file` (String) Path to the solution file
 - `solution_name` (String) Unique name of the solution
 
