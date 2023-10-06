@@ -93,7 +93,7 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"environment_id": schema.StringAttribute{
+						"id": schema.StringAttribute{
 							MarkdownDescription: "Unique environment id (guid)",
 							Description:         "Unique environment id (guid)",
 							Computed:            true,
