@@ -41,7 +41,7 @@ type EnvironmentResource struct {
 
 type EnvironmentResourceModel struct {
 	Id              types.String `tfsdk:"id"`
-	EnvironmentId types.String `tfsdk:"environment_id"`
+	EnvironmentId   types.String `tfsdk:"environment_id"`
 	DisplayName     types.String `tfsdk:"display_name"`
 	Url             types.String `tfsdk:"url"`
 	Domain          types.String `tfsdk:"domain"`
@@ -325,7 +325,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.Version = env.Version
 	state.LanguageName = env.LanguageName
 	state.Location = env.Location
-  state.LinkedAppId = env.LinkedAppId
+	state.LinkedAppId = env.LinkedAppId
 	state.LinkedAppType = env.LinkedAppType
 	state.LinkedAppUrl = env.LinkedAppURL
 
@@ -341,9 +341,9 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	ctx = tflog.SetField(ctx, "language_code", state.LanguageName.ValueInt64())
 	ctx = tflog.SetField(ctx, "currency_code", state.CurrencyCode.ValueString())
 	ctx = tflog.SetField(ctx, "version", state.Version.ValueString())
-  ctx = tflog.SetField(ctx, "template", strings.Join(state.Templates, " "))
-  
-  tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with environment_id %s", r.ProviderTypeName, state.EnvironmentName.ValueString()))
+	ctx = tflog.SetField(ctx, "template", strings.Join(state.Templates, " "))
+
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.EnvironmentName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
