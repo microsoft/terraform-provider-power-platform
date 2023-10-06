@@ -47,9 +47,18 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
     sku       = "2022-datacenter-smalldisk"
     version   = "latest"
   }
+
+  gallery_application {
+    version_id = azurerm_gallery_application_version.example.id
+    order      = 1
+  }
+  /*
+  gallery_application {
+    version_id = var.sap_nco_version_id
+    order      = 2
+  }
+  */
 }
-
-
 
 resource "azurerm_shared_image_gallery" "example" {
   name                = "examplegallery"
@@ -75,7 +84,7 @@ resource "azurerm_gallery_application_version" "example" {
   }
 
   source {
-    media_link = "https://opdgwsetup.blob.core.windows.net/installs/PowerShell-7.3.7-win-x64.msi"
+    media_link = "https://opdgwsetup.blob.core.windows.net/binaries/PowerShell-7.3.7-win-x64.msi"
   }
 
   target_region {
@@ -83,6 +92,5 @@ resource "azurerm_gallery_application_version" "example" {
     regional_replica_count = 1
   }
 }
-
 
 

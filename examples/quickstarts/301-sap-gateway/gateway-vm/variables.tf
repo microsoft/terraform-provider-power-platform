@@ -30,3 +30,4 @@ variable "nic_id" {
   description = "The id of the network interface to attach to the VM"
   type        = string
 }
+

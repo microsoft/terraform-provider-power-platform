@@ -160,5 +160,4 @@ module "gateway_vm" {
   region              = var.region_gw
   vm_pwd              = var.vm_pwd_gw
   nic_id              = azurerm_network_interface.nic.id
-  #  gateway_principal = module.gateway_principal.auth_client_id
 }
