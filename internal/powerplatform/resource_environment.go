@@ -86,7 +86,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringvalidator.OneOf(models.EnvironmentCurrencyCodes...),
 				},
 			},
-			"environment_id": schema.StringAttribute{
+			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique environment id 	(guid)",
 				Description:         "Unique environment id (guid)",
 				Computed:            true,
