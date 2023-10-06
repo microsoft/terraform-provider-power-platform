@@ -5,7 +5,7 @@ output "name" {
 
 output "id" {
   description = "Unique identifier of the environment"
-  value       = powerplatform_environment.development.environment_id
+  value       = powerplatform_environment.development.id
 }
 
 output "url" {
