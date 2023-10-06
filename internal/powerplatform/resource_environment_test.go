@@ -357,7 +357,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 				security_group_id 						  = "security1"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_id", envId),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "id", envId),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example123"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "domain"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "security1"),
