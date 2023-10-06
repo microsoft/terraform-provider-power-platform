@@ -38,7 +38,7 @@ type PowerAppsListDataSourceModel struct {
 }
 
 type PowerAppsDataSourceModel struct {
-	EnvironmentName types.String `tfsdk:"environment_id"`
+	EnvironmentName types.String `tfsdk:"id"`
 	DisplayName     types.String `tfsdk:"display_name"`
 	Name            types.String `tfsdk:"name"`
 	CreatedTime     types.String `tfsdk:"created_time"`
