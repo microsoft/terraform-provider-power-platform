@@ -222,7 +222,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				security_group_id 						  = "security1"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_id", envIdAfterLanguageChanges),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "id", envIdAfterLanguageChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1031"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
 			),
