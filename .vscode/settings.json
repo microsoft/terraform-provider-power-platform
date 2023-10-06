@@ -11,16 +11,20 @@
         "gomock",
         "installedon",
         "ismanaged",
+        "LCID",
         "logicalname",
         "modifiedon",
+        "msdyn",
         "orgtest",
         "powerplatform",
         "schemaname",
         "sharepointonline",
         "solutionid",
+        "stringvalidator",
         "testaccsolutionsdatasource",
         "tfprotov",
         "transactioncurrencies",
-        "uniquename"
+        "uniquename",
+        "unitedstates"
     ]
 }
