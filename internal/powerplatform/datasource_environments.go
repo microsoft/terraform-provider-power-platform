@@ -39,7 +39,7 @@ type EnvironmentsListDataSourceModel struct {
 }
 
 type EnvironmentDataSourceModel struct {
-	EnvironmentId types.String `tfsdk:"id"`
+	EnvironmentId   types.String `tfsdk:"id"`
 	DisplayName     types.String `tfsdk:"display_name"`
 	Url             types.String `tfsdk:"url"`
 	Domain          types.String `tfsdk:"domain"`
@@ -57,7 +57,7 @@ type EnvironmentDataSourceModel struct {
 
 func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto, currencyCode string) EnvironmentDataSourceModel {
 	return EnvironmentDataSourceModel{
-		EnvironmentName: types.StringValue(environmentDto.Name),
+		EnvironmentId:   types.StringValue(environmentDto.Id),
 		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
 		Location:        types.StringValue(environmentDto.Location),
 		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),

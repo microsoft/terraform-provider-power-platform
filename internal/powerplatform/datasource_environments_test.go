@@ -114,7 +114,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.display_name", env.DisplayName.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.domain", env.Domain.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.id", env.EnvironmentName.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.id", env.EnvironmentId.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.environment_type", env.EnvironmentType.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.language_code", strconv.Itoa(int(env.LanguageName.ValueInt64()))),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.organization_id", env.OrganizationId.ValueString()),

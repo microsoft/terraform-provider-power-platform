@@ -265,8 +265,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 
 	env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
 
-	plan.Id = env.EnvironmentName
-	plan.EnvironmentName = env.EnvironmentName
+	plan.Id = env.EnvironmentId
 	plan.DisplayName = env.DisplayName
 	plan.OrganizationId = env.OrganizationId
 	plan.SecurityGroupId = env.SecurityGroupId
@@ -280,7 +279,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	plan.LinkedAppId = env.LinkedAppId
 	plan.LinkedAppUrl = env.LinkedAppURL
 
-	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.EnvironmentName.ValueString()))
+	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
@@ -298,7 +297,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	envDto, err := r.BapiApiClient.GetEnvironment(ctx, state.EnvironmentName.ValueString())
+	envDto, err := r.BapiApiClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
 		return
@@ -314,7 +313,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 
 	env := ConvertFromEnvironmentDto(*envDto, state.CurrencyCode.ValueString())
 
-	state.Id = env.EnvironmentName
+	state.Id = env.EnvironmentId
 	state.DisplayName = env.DisplayName
 	state.OrganizationId = env.OrganizationId
 	state.SecurityGroupId = env.SecurityGroupId
@@ -330,7 +329,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.LinkedAppUrl = env.LinkedAppURL
 
 	//TODO move to separate function
-	ctx = tflog.SetField(ctx, "id", state.EnvironmentName.ValueString())
+	ctx = tflog.SetField(ctx, "id", state.EnvironmentId.ValueString())
 	ctx = tflog.SetField(ctx, "display_name", state.DisplayName.ValueString())
 	ctx = tflog.SetField(ctx, "url", state.Url.ValueString())
 	ctx = tflog.SetField(ctx, "domain", state.Domain.ValueString())
@@ -343,7 +342,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	ctx = tflog.SetField(ctx, "version", state.Version.ValueString())
 	ctx = tflog.SetField(ctx, "template", strings.Join(state.Templates, " "))
 
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.EnvironmentName.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.EnvironmentId.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
@@ -370,7 +369,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 
 		envToUpdate := models.EnvironmentDto{
 			Id:       plan.Id.ValueString(),
-			Name:     plan.EnvironmentName.ValueString(),
+			Name:     plan.DisplayName.ValueString(),
 			Type:     plan.EnvironmentType.ValueString(),
 			Location: plan.Location.ValueString(),
 			Properties: models.EnvironmentPropertiesDto{
@@ -388,7 +387,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 			},
 		}
 
-		envDto, err := r.BapiApiClient.UpdateEnvironment(ctx, plan.EnvironmentName.ValueString(), envToUpdate)
+		envDto, err := r.BapiApiClient.UpdateEnvironment(ctx, plan.EnvironmentId.ValueString(), envToUpdate)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
 			return
@@ -396,7 +395,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 
 		env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
 
-		plan.Id = env.EnvironmentName
+		plan.Id = env.EnvironmentId
 		plan.DisplayName = env.DisplayName
 		plan.OrganizationId = env.OrganizationId
 		plan.SecurityGroupId = env.SecurityGroupId
@@ -428,7 +427,7 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	err := r.BapiApiClient.DeleteEnvironment(ctx, state.EnvironmentName.ValueString())
+	err := r.BapiApiClient.DeleteEnvironment(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
