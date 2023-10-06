@@ -155,7 +155,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 
 			}`,
 			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_id", envIdBeforeChanges),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "id", envIdBeforeChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "USD"),
 			),
