@@ -11,6 +11,30 @@ terraform {
   }
 }
 
+resource "azurecaf_name" "sig" {
+  name          = var.base_name
+  resource_type = "azurerm_shared_image_gallery"
+  prefixes      = [var.prefix]
+  random_length = 3
+  clean_input   = true
+}
+
+resource "azurerm_shared_image_gallery" "sig" {
+  name                = azurecaf_name.sig.result
+  resource_group_name = var.resource_group_name
+  location            = var.region
+}
+
+# Create PowerShell 7 version in Shared Image Gallery
+module "powershell-setup" {
+  source              = "./powershell-setup"
+  prefix              = var.prefix
+  base_name           = var.base_name
+  resource_group_name = var.resource_group_name
+  region              = var.region
+  sig_id              = azurerm_shared_image_gallery.sig.id
+}
+
 resource "azurecaf_name" "vm-opgw" {
   name          = var.base_name
   resource_type = "azurerm_windows_virtual_machine"
@@ -48,55 +72,9 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
     version   = "latest"
   }
 
+  # Setup PowerShell 7
   gallery_application {
-    version_id = azurerm_gallery_application_version.igl-app-version.id
+    version_id = module.powershell-setup.powershell_version_id
     order      = 1
-  }
-  /*
-  gallery_application {
-    version_id = var.sap_nco_version_id
-    order      = 2
-  }
-  */
-}
-
-resource "azurecaf_name" "igl" {
-  name          = var.base_name
-  resource_type = "azurerm_shared_image_gallery"
-  prefixes      = [var.prefix]
-  random_length = 3
-  clean_input   = true
-}
-
-resource "azurerm_shared_image_gallery" "igl" {
-  name                = azurecaf_name.igl.result
-  resource_group_name = var.resource_group_name
-  location            = var.region
-}
-
-resource "azurerm_gallery_application" "igl-app" {
-  name              = "PowerShell7"
-  gallery_id        = azurerm_shared_image_gallery.igl.id
-  location          = var.region
-  supported_os_type = "Windows"
-}
-
-resource "azurerm_gallery_application_version" "igl-app-version" {
-  name                   = "0.0.1"
-  gallery_application_id = azurerm_gallery_application.igl-app.id
-  location               = var.region
-
-  manage_action {
-    install = "move .\\PowerShell7 .\\installps7.ps1 & powershell -ExecutionPolicy Unrestricted -File installps7.ps1"
-    remove  = "echo"
-  }
-
-  source {
-    media_link = "https://opdgwsetup.blob.core.windows.net/binaries/installps7.ps1"
-  }
-
-  target_region {
-    name                   = var.region
-    regional_replica_count = 1
   }
 }

@@ -146,6 +146,7 @@ resource "azurerm_network_interface_security_group_association" "rgassociation" 
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
+# It will be included in futures releases.
 #module "gateway_principal" {
 #  source    = "./gateway-principal"
 #  client_id = var.client_id_pp
