@@ -14,9 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 )
 
@@ -31,9 +32,9 @@ func NewSolutionResource() resource.Resource {
 }
 
 type SolutionResource struct {
-	BapiApiClient    powerplatform_bapi.ApiClientInterface
-	ProviderTypeName string
-	TypeName         string
+	DataverseApiClient api.DataverseClientInterface
+	ProviderTypeName   string
+	TypeName           string
 }
 
 type SolutionResourceModel struct {
@@ -140,7 +141,7 @@ func (r *SolutionResource) Configure(ctx context.Context, req resource.Configure
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).bapiClient.(powerplatform_bapi.ApiClientInterface)
+	client, ok := req.ProviderData.(*clients.ProviderClient).DataverseApi.Client.(api.DataverseClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(
@@ -151,7 +152,7 @@ func (r *SolutionResource) Configure(ctx context.Context, req resource.Configure
 		return
 	}
 
-	r.BapiApiClient = client
+	r.DataverseApiClient = client
 }
 
 func (r *SolutionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -216,7 +217,7 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	solutions, err := r.BapiApiClient.GetSolutions(ctx, state.EnvironmentName.ValueString())
+	solutions, err := r.DataverseApiClient.GetSolutions(ctx, state.EnvironmentName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
 		return
@@ -276,7 +277,7 @@ func (r *SolutionResource) importSolution(ctx context.Context, plan *SolutionRes
 		}
 	}
 
-	solution, err := r.BapiApiClient.CreateSolution(ctx, plan.EnvironmentName.ValueString(), s, solutionContent, settingsContent)
+	solution, err := r.DataverseApiClient.CreateSolution(ctx, plan.EnvironmentName.ValueString(), s, solutionContent, settingsContent)
 	if err != nil {
 		diagnostics.AddError(fmt.Sprintf("Client error when importing solution %s", plan.SolutionFile), err.Error())
 	}
@@ -341,10 +342,10 @@ func (r *SolutionResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	if !state.EnvironmentName.IsNull() && !state.SolutionName.IsNull() {
-		err := r.BapiApiClient.DeleteSolution(ctx, state.EnvironmentName.ValueString(), state.SolutionName.ValueString())
+		err := r.DataverseApiClient.DeleteSolution(ctx, state.EnvironmentName.ValueString(), state.SolutionName.ValueString())
 
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.ProviderTypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 			return
 		}
 	}

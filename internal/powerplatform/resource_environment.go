@@ -3,6 +3,7 @@ package powerplatform
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -15,8 +16,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 )
 
@@ -31,9 +33,10 @@ func NewEnvironmentResource() resource.Resource {
 }
 
 type EnvironmentResource struct {
-	BapiApiClient    powerplatform_bapi.ApiClientInterface
-	ProviderTypeName string
-	TypeName         string
+	BapiApiClient      api.BapiClientInterface
+	DataverseApiClient api.DataverseClientInterface
+	ProviderTypeName   string
+	TypeName           string
 }
 
 type EnvironmentResourceModel struct {
@@ -48,9 +51,14 @@ type EnvironmentResourceModel struct {
 	OrganizationId  types.String `tfsdk:"organization_id"`
 	SecurityGroupId types.String `tfsdk:"security_group_id"`
 	LanguageName    types.Int64  `tfsdk:"language_code"`
-	CurrencyName    types.String `tfsdk:"currency_code"`
+	CurrencyCode    types.String `tfsdk:"currency_code"`
 	//IsCustomControlInCanvasAppsEnabled types.Bool   `tfsdk:"is_custom_control_in_canvas_apps_enabled"`
-	Version types.String `tfsdk:"version"`
+	Version          types.String `tfsdk:"version"`
+	Templates        []string     `tfsdk:"templates"`
+	TemplateMetadata types.String `tfsdk:"template_metadata"`
+	LinkedAppType    types.String `tfsdk:"linked_app_type"`
+	LinkedAppId      types.String `tfsdk:"linked_app_id"`
+	LinkedAppUrl     types.String `tfsdk:"linked_app_url"`
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -155,6 +163,38 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "Version of the environment",
 				Computed:            true,
 			},
+			"templates": schema.ListAttribute{
+				Description:         "The selected instance provisioning template (if any)",
+				MarkdownDescription: "The selected instance provisioning template (if any)",
+				Optional:            true,
+				ElementType:         types.StringType,
+				// Validators: []validator.String{
+				// 	stringvalidator.OneOf(models.EnvironmentCurrencyCodes...),
+				// },
+			},
+			"template_metadata": schema.StringAttribute{
+				Description:         "JSON representation of the environment deployment metadata",
+				MarkdownDescription: "JSON representation of the environment deployment metadata",
+				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"linked_app_type": schema.StringAttribute{
+				Description:         "The type of the linked D365 application",
+				MarkdownDescription: "The type of the linked D365 application",
+				Computed:            true,
+			},
+			"linked_app_id": schema.StringAttribute{
+				Description:         "The GUID of the linked D365 application",
+				MarkdownDescription: "The GUID of the linked D365 application",
+				Computed:            true,
+			},
+			"linked_app_url": schema.StringAttribute{
+				Description:         "The URL of the linked D365 application",
+				MarkdownDescription: "The URL of the linked D365 application",
+				Computed:            true,
+			},
 		},
 	}
 }
@@ -164,7 +204,7 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 		return
 	}
 
-	client, ok := req.ProviderData.(*PowerPlatformProvider).bapiClient.(powerplatform_bapi.ApiClientInterface)
+	client, ok := req.ProviderData.(*clients.ProviderClient).BapiApi.Client.(api.BapiClientInterface)
 
 	if !ok {
 		resp.Diagnostics.AddError(
@@ -176,6 +216,7 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 	}
 
 	r.BapiApiClient = client
+	r.DataverseApiClient = req.ProviderData.(*clients.ProviderClient).DataverseApi.Client.(api.DataverseClientInterface)
 }
 
 func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -201,7 +242,16 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 				DomainName:      plan.Domain.ValueString(),
 				SecurityGroupId: plan.SecurityGroupId.ValueString(),
 				Currency: models.EnvironmentCreateCurrency{
-					Code: plan.CurrencyName.ValueString(),
+					Code: plan.CurrencyCode.ValueString(),
+				},
+				Templates: plan.Templates,
+				TemplateMetadata: models.EnvironmentCreateTemplateMetadata{
+					PostProvisioningPackages: []models.EnvironmentCreatePostProvisioningPackages{
+						{
+							ApplicationUniqueName: "msdyn_FinanceAndOperationsProvisioningAppAnchor",
+							Parameters:            "DevToolsEnabled=true|DemoDataEnabled=true",
+						},
+					},
 				},
 			},
 		},
@@ -209,11 +259,11 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 
 	envDto, err := r.BapiApiClient.CreateEnvironment(ctx, envToCreate)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
 
-	env := ConvertFromEnvironmentDto(*envDto)
+	env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
 
 	plan.Id = env.EnvironmentName
 	plan.EnvironmentName = env.EnvironmentName
@@ -221,11 +271,14 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	plan.OrganizationId = env.OrganizationId
 	plan.SecurityGroupId = env.SecurityGroupId
 	plan.LanguageName = env.LanguageName
-	plan.CurrencyName = types.StringValue(envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
+	plan.CurrencyCode = types.StringValue(envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
 	plan.Domain = env.Domain
 	plan.Url = env.Url
 	plan.EnvironmentType = env.EnvironmentType
 	plan.Version = env.Version
+	plan.LinkedAppType = env.LinkedAppType
+	plan.LinkedAppId = env.LinkedAppId
+	plan.LinkedAppUrl = env.LinkedAppURL
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.EnvironmentName.ValueString()))
 
@@ -251,7 +304,15 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	env := ConvertFromEnvironmentDto(*envDto)
+	defaultCurrency, err := r.DataverseApiClient.GetDefaultCurrencyForEnvironment(ctx, envDto.Name)
+	if err != nil {
+		resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", envDto.Name), err.Error())
+		state.CurrencyCode = types.StringNull()
+	} else {
+		state.CurrencyCode = types.StringValue(defaultCurrency.IsoCurrencyCode)
+	}
+
+	env := ConvertFromEnvironmentDto(*envDto, state.CurrencyCode.ValueString())
 
 	state.Id = env.EnvironmentName
 	state.DisplayName = env.DisplayName
@@ -264,8 +325,9 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.Version = env.Version
 	state.LanguageName = env.LanguageName
 	state.Location = env.Location
-
-	//TODO move to separate function
+	state.LinkedAppId = env.LinkedAppId
+	state.LinkedAppType = env.LinkedAppType
+	state.LinkedAppUrl = env.LinkedAppURL
 	ctx = tflog.SetField(ctx, "environment_name", state.EnvironmentName.ValueString())
 	ctx = tflog.SetField(ctx, "display_name", state.DisplayName.ValueString())
 	ctx = tflog.SetField(ctx, "url", state.Url.ValueString())
@@ -275,8 +337,9 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	ctx = tflog.SetField(ctx, "organization_id", state.OrganizationId.ValueString())
 	ctx = tflog.SetField(ctx, "security_group_id", state.SecurityGroupId.ValueString())
 	ctx = tflog.SetField(ctx, "language_code", state.LanguageName.ValueInt64())
-	ctx = tflog.SetField(ctx, "currency_name", state.CurrencyName.ValueString())
+	ctx = tflog.SetField(ctx, "currency_code", state.CurrencyCode.ValueString())
 	ctx = tflog.SetField(ctx, "version", state.Version.ValueString())
+	ctx = tflog.SetField(ctx, "template", strings.Join(state.Templates, " "))
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with environment_name %s", r.ProviderTypeName, state.EnvironmentName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -314,6 +377,11 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 					SecurityGroupId: plan.SecurityGroupId.ValueString(),
 					DomainName:      plan.Domain.ValueString(),
 				},
+				LinkedAppMetadata: models.LinkedAppMetadataDto{
+					Type: plan.LinkedAppType.ValueString(),
+					Id:   plan.LinkedAppId.ValueString(),
+					Url:  plan.LinkedAppUrl.ValueString(),
+				},
 			},
 		}
 
@@ -323,7 +391,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		env := ConvertFromEnvironmentDto(*envDto)
+		env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
 
 		plan.Id = env.EnvironmentName
 		plan.DisplayName = env.DisplayName
@@ -336,6 +404,9 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		plan.Version = env.Version
 		plan.LanguageName = env.LanguageName
 		plan.Location = env.Location
+		plan.LinkedAppType = env.LinkedAppType
+		plan.LinkedAppId = env.LinkedAppId
+		plan.LinkedAppUrl = env.LinkedAppURL
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -356,7 +427,7 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 
 	err := r.BapiApiClient.DeleteEnvironment(ctx, state.EnvironmentName.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
 

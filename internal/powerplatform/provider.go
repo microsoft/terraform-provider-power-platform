@@ -2,7 +2,6 @@ package powerplatform
 
 import (
 	"context"
-	"net/http"
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -10,40 +9,110 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-
-	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi"
+	dvapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/dataverse"
+	ppapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/ppapi"
+	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
+	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 )
 
 var _ provider.Provider = &PowerPlatformProvider{}
-var _ powerplatform_bapi.ApiClientInterface = &powerplatform_bapi.ApiClient{}
-
-type PowerPlatformProviderModel struct {
-	TenantId types.String `tfsdk:"tenant_id"`
-	ClientId types.String `tfsdk:"client_id"`
-	Secret   types.String `tfsdk:"secret"`
-
-	Username types.String `tfsdk:"username"`
-	Password types.String `tfsdk:"password"`
-}
 
 type PowerPlatformProvider struct {
-	bapiClient powerplatform_bapi.ApiClientInterface
+	Config           *common.ProviderConfig
+	BapiApi          *clients.BapiClient
+	DataverseApi     *clients.DataverseClient
+	PowerPlatformApi *clients.PowerPlatoformApiClient
 }
 
 func NewPowerPlatformProvider() func() provider.Provider {
 	return func() provider.Provider {
-		return &PowerPlatformProvider{
-			bapiClient: &powerplatform_bapi.ApiClient{
-				HttpClient:      http.DefaultClient,
-				BapiUrl:         "api.bap.microsoft.com",
-				PowerAppsApiUrl: "api.powerapps.com",
 
-				Provider:         &powerplatform_bapi.Provider{},
-				DataverseAuthMap: make(map[string]*powerplatform_bapi.AuthResponse),
+		cred := common.ProviderCredentials{}
+		config := common.ProviderConfig{
+			Credentials: &cred,
+			Urls: common.ProviderConfigUrls{
+				BapiUrl:          "api.bap.microsoft.com",
+				PowerAppsUrl:     "api.powerapps.com",
+				PowerPlatformUrl: "api.powerplatform.com",
 			},
 		}
+
+		//bapi
+		baseAuthBapi := &api.AuthBase{
+			Config: config,
+		}
+		bapiAuth := &bapi.BapiAuth{
+			BaseAuth: baseAuthBapi,
+		}
+		baseApiForBapi := &api.ApiClientBase{
+			Config:   config,
+			BaseAuth: baseAuthBapi,
+		}
+		bapiClient := &clients.BapiClient{
+			Auth: bapiAuth,
+			Client: &bapi.BapiClientApi{
+				BaseApi: baseApiForBapi,
+				Auth:    bapiAuth,
+			},
+		}
+		bapiClient.Client.GetBase().SetAuth(bapiAuth)
+		//
+
+		//powerplatform
+		baseAuthPowerPlatform := &api.AuthBase{
+			Config: config,
+		}
+		powerplatformAuth := &ppapi.PowerPlatformAuth{
+			BaseAuth: baseAuthPowerPlatform,
+		}
+
+		baseApiForPpApi := &api.ApiClientBase{
+			Config:   config,
+			BaseAuth: baseAuthPowerPlatform,
+		}
+		powerplatformClient := &clients.PowerPlatoformApiClient{
+			Auth: powerplatformAuth,
+			Client: &ppapi.PowerPlatformClientApi{
+				BaseApi: baseApiForPpApi,
+				Auth:    powerplatformAuth,
+			},
+		}
+		powerplatformClient.Client.GetBase().SetAuth(powerplatformAuth)
+		//
+
+		//dataverse
+		baseAuthDataverse := &api.AuthBase{
+			Config: config,
+		}
+		dataverseAuth := &dvapi.DataverseAuth{
+			BaseAuth: baseAuthDataverse,
+		}
+		baseApiForDataverse := &api.ApiClientBase{
+			Config:   config,
+			BaseAuth: baseAuthDataverse,
+		}
+		dataverseClient := &clients.DataverseClient{
+			Auth: dataverseAuth,
+			Client: &dvapi.DataverseClientApi{
+				BaseApi: baseApiForDataverse,
+				Auth:    dataverseAuth,
+			},
+		}
+		//
+		bapiClient.Client.SetDataverseClient(dataverseClient.Client)
+		dataverseClient.Client.SetBapiClient(bapiClient.Client)
+
+		p := &PowerPlatformProvider{
+			Config:           &config,
+			BapiApi:          bapiClient,
+			DataverseApi:     dataverseClient,
+			PowerPlatformApi: powerplatformClient,
+		}
+		return p
 	}
 }
 
@@ -93,7 +162,7 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 }
 
 func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	var config PowerPlatformProviderModel
+	var config common.ProviderCredentialsModel
 
 	tflog.Debug(ctx, "Configure request received")
 
@@ -152,21 +221,13 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_secret")
 
 	if clientId != "" && secret != "" && tenantId != "" {
-		authResp, err := p.bapiClient.DoAuthClientSecret(ctx, tenantId, clientId, secret)
-
-		if err != nil {
-			resp.Diagnostics.AddError("Provider client's authentication has failed.", err.Error())
-		} else {
-			tflog.Info(ctx, "Authentication response token", map[string]any{"Token": authResp.Token})
-		}
-
+		p.Config.Credentials.TenantId = tenantId
+		p.Config.Credentials.ClientId = clientId
+		p.Config.Credentials.Secret = secret
 	} else if username != "" && password != "" && tenantId != "" {
-		authResp, err := p.bapiClient.DoAuthUsernamePassword(ctx, tenantId, username, password)
-		if err != nil {
-			resp.Diagnostics.AddError("Provider client's authentication has failed.", err.Error())
-		} else {
-			tflog.Info(ctx, "Authentication response token", map[string]any{"Token": authResp.Token})
-		}
+		p.Config.Credentials.TenantId = tenantId
+		p.Config.Credentials.Username = username
+		p.Config.Credentials.Password = password
 	} else {
 		if tenantId == "" {
 			resp.Diagnostics.AddAttributeError(
@@ -210,8 +271,14 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		}
 	}
 
-	resp.DataSourceData = p
-	resp.ResourceData = p
+	providerClient := clients.ProviderClient{
+		Config:           p.Config,
+		BapiApi:          p.BapiApi,
+		DataverseApi:     p.DataverseApi,
+		PowerPlatformApi: p.PowerPlatformApi,
+	}
+	resp.DataSourceData = &providerClient
+	resp.ResourceData = &providerClient
 
 	tflog.Info(ctx, "Configured API client", map[string]any{"success": true})
 }
@@ -230,5 +297,6 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return NewPowerAppsDataSource() },
 		func() datasource.DataSource { return NewEnvironmentsDataSource() },
 		func() datasource.DataSource { return NewSolutionsDataSource() },
+		func() datasource.DataSource { return dlp_policy.NewDataLossPreventionPolicyDataSource() },
 	}
 }

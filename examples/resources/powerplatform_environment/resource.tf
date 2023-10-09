@@ -8,8 +8,8 @@ terraform {
 }
 
 provider "powerplatform" {
-  username = var.username
-  password = var.password
+  client_id = var.client_id
+  secret    = var.secret
   tenant_id = var.tenant_id
 }
 
@@ -20,7 +20,6 @@ resource "powerplatform_environment" "development" {
   currency_code    = "USD"
   environment_type = "Sandbox"
   domain           = "mydomain"
-  security_group_id = "00000000-0000-0000-0000-000000000000"
 }
 
 

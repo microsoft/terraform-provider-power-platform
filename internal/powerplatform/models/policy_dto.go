@@ -1,4 +1,4 @@
-package powerplatform_bapi
+package powerplatform_models
 
 type DlpPolicyModel struct {
 	Name                                 string                                  `json:"name"`
@@ -36,6 +36,10 @@ type DlpPolicyDefinitionDto struct {
 	CreatedTime                     string                  `json:"createdTime,omitempty"`
 	LastModifiedBy                  DlpPolicyLastActionDto  `json:"lastModifiedBy,omitempty"`
 	LastModifiedTime                string                  `json:"lastModifiedTime,omitempty"`
+}
+
+type DlpPolicyDefinitionDtoArray struct {
+	Value []DlpPolicyDefinitionDto `json:"value"`
 }
 
 type DlpPolicyLastActionDto struct {

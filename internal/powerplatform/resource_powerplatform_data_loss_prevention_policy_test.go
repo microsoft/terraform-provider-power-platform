@@ -7,12 +7,12 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	powerplatform_mock "github.com/microsoft/terraform-provider-power-platform/internal/mocks"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
+	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
-	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
+	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
 
 	policyId := "00000000-0000-0000-0000-000000000000"
 	policy := models.DlpPolicyModel{
@@ -26,13 +26,13 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 
 	steps := []resource.TestStep{
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 				display_name                      = "Block All Policy"
 				default_connectors_classification = "Blocked"
 				environment_type                  = "AllEnvironments"
 				environments = []
-			  
+
 				business_connectors = []
 				non_business_connectors = []
 				blocked_connectors = []
@@ -47,13 +47,13 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 				display_name                      = "Block All Policy_1"
 				default_connectors_classification = "Blocked"
 				environment_type                  = "AllEnvironments"
 				environments = []
-			  
+
 				business_connectors = []
 				non_business_connectors = []
 				blocked_connectors = []
@@ -65,7 +65,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 				display_name                      = "Block All Policy"
 				default_connectors_classification = "General"
@@ -75,7 +75,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 						name = "00000000-0000-0000-0000-000000000000"
 					}
 				]
-			  
+
 				business_connectors = []
 				non_business_connectors = []
 				blocked_connectors = []
@@ -90,7 +90,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 				display_name                      = "Block All Policy"
 				default_connectors_classification = "General"
@@ -100,7 +100,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 						name = "00000000-0000-0000-0000-000000000000"
 					}
 				]
-			  
+
 				business_connectors = toset([
 						{
 							id                           = "/providers/Microsoft.PowerApps/apis/shared_sql"
@@ -151,7 +151,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 				display_name                      = "Block All Policy"
 				default_connectors_classification = "General"
@@ -161,7 +161,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 						name = "00000000-0000-0000-0000-000000000000"
 					}
 				]
-			  
+
 				business_connectors = toset([
 						{
 							id                           = "/providers/Microsoft.PowerApps/apis/shared_sql"
@@ -228,7 +228,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 				display_name                      = "Block All Policy"
 				default_connectors_classification = "General"
@@ -238,7 +238,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 						name = "00000000-0000-0000-0000-000000000000"
 					}
 				]
-			  
+
 				business_connectors = toset([
 						{
 							id                           = "/providers/Microsoft.PowerApps/apis/shared_sql"
@@ -341,14 +341,14 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, nil, nil),
 		},
 		Steps: steps,
 	})
 }
 
 func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
-	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
+	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
 
 	policy := models.DlpPolicyModel{}
 	policy.Name = "00000000-0000-0000-0000-000000000000"
@@ -380,11 +380,11 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, nil, nil),
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: uniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy"
 					default_connectors_classification = "Blocked"
@@ -394,7 +394,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 							name = "00000000-0000-0000-0000-000000000000"
 						}
 					]
-				  
+
 					business_connectors = toset([
 						{
 							id                           = "/providers/Microsoft.PowerApps/apis/shared_sql"

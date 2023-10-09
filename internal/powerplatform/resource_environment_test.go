@@ -8,19 +8,19 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	powerplatform_mock "github.com/microsoft/terraform-provider-power-platform/internal/mocks"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `
-				resource "powerplatform_environment" "development" { 
+				Config: ProviderConfig + `
+				resource "powerplatform_environment" "development" {
 					display_name                              = "Example2"
 					location                                  = "europe"
 					language_code                             = "1033"
@@ -47,8 +47,8 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: providerConfig + `
-				resource "powerplatform_environment" "development" { 
+				Config: ProviderConfig + `
+				resource "powerplatform_environment" "development" {
 					display_name                              = "Example3"
 					domain									  = "terraformtest3"
 					location                                  = "europe"
@@ -72,11 +72,11 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `
-				resource "powerplatform_environment" "development" { 
+				Config: ProviderConfig + `
+				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "europe"
 					language_code                             = "1033"
@@ -84,6 +84,8 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 					environment_type                          = "Sandbox"
 					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
 					domain									  = "terraformtest1"
+					templates                                 = ["D365_FinOps_Finance"]
+					template_metadata						  = "{\"PostProvisioningPackages\": [{ \"applicationUniqueName\": \"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\n \"parameters\": \"DevToolsEnabled=true|DemoDataEnabled=true\"\n }\n ]\n }"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -101,6 +103,9 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example1"),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "version", regexp.MustCompile(powerplatform_helpers.VersionRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "templates", regexp.MustCompile(`D365_FinOps_Finance$`)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "template_metadata", regexp.MustCompile(`{"PostProvisioningPackages": [{ "applicationUniqueName": "msdyn_FinanceAndOperationsProvisioningAppAnchor",\n "parameters": "DevToolsEnabled=true\|DemoDataEnabled=true"\n }\n ]\n }`)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "linked_app_url", regexp.MustCompile(`\.operations\.dynamics\.com$`)),
 				),
 			},
 		},
@@ -108,7 +113,9 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 }
 
 func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.T) {
-	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
+
+	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
+	dataverseClientMock := mocks.NewUnitTestMockDataverseClientInterface(t)
 
 	envIdBeforeChanges := "00000000-0000-0000-0000-000000000001"
 	envIdAfterLocationChanges := "00000000-0000-0000-0000-000000000002"
@@ -126,13 +133,18 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				InstanceURL:     "url",
 				Version:         "version",
 			},
+			LinkedAppMetadata: models.LinkedAppMetadataDto{
+				Type: "Internal",
+				Id:   "00000000-0000-0000-0000-000000000000",
+				Url:  "https://url.operations.dynamics.com",
+			},
 		},
 	}
 
 	steps := []resource.TestStep{
 		{
-			Config: uniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" { 
+			Config: UnitTestsProviderConfig + `
+			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -140,15 +152,16 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				environment_type                          = "Sandbox"
 				domain									  = "domain"
 				security_group_id 						  = "security1"
-				
+
 			}`,
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdBeforeChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "USD"),
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "unitedstates"
@@ -161,10 +174,11 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterLocationChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "unitedstates"),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "USD"),
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "unitedstates"
@@ -180,7 +194,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "unitedstates"
@@ -188,15 +202,16 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				currency_code                             = "EUR"
 				environment_type                          = "Trial"
 				domain									  = "domain"
-				security_group_id 						  = "security1"	
+				security_group_id 						  = "security1"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterEnvironmentTypeChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Trial"),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
+			Config: UnitTestsProviderConfig + `
 			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "europe"
@@ -204,17 +219,30 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				currency_code                             = "EUR"
 				environment_type                          = "Sandbox"
 				domain									  = "domain"
-				security_group_id 						  = "security1"	
+				security_group_id 						  = "security1"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterLanguageChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1031"),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
 			),
 		},
 	}
 
 	clientMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
 		return &env, nil
+	}).AnyTimes()
+
+	dataverseClientMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, environmentId string) (*models.TransactionCurrencyDto, error) {
+		if environmentId == envIdBeforeChanges || environmentId == envIdAfterLocationChanges {
+			return &models.TransactionCurrencyDto{
+				IsoCurrencyCode: "USD",
+			}, nil
+		} else {
+			return &models.TransactionCurrencyDto{
+				IsoCurrencyCode: "EUR",
+			}, nil
+		}
 	}).AnyTimes()
 
 	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
@@ -267,7 +295,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, dataverseClientMock, nil),
 		},
 		Steps: steps,
 	})
@@ -275,7 +303,8 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 }
 
 func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
-	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
+	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
+	dataverseClientMock := mocks.NewUnitTestMockDataverseClientInterface(t)
 
 	envId := "00000000-0000-0000-0000-000000000001"
 	env := models.EnvironmentDto{
@@ -289,13 +318,18 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 				InstanceURL:     "url",
 				Version:         "version",
 			},
+			LinkedAppMetadata: models.LinkedAppMetadataDto{
+				Type: "Internal",
+				Id:   "00000000-0000-0000-0000-000000000000",
+				Url:  "https://url.operations.dynamics.com",
+			},
 		},
 	}
 
 	steps := []resource.TestStep{
 		{
-			Config: uniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" { 
+			Config: UnitTestsProviderConfig + `
+			resource "powerplatform_environment" "development" {
 				display_name                              = "Example1"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -312,8 +346,8 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" { 
+			Config: UnitTestsProviderConfig + `
+			resource "powerplatform_environment" "development" {
 				display_name                              = "Example123"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -330,8 +364,8 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" { 
+			Config: UnitTestsProviderConfig + `
+			resource "powerplatform_environment" "development" {
 				display_name                              = "Example123"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -348,8 +382,8 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 			),
 		},
 		{
-			Config: uniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" { 
+			Config: UnitTestsProviderConfig + `
+			resource "powerplatform_environment" "development" {
 				display_name                              = "Example123"
 				location                                  = "europe"
 				language_code                             = "1033"
@@ -370,6 +404,8 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 	clientMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
 		return &env, nil
 	}).AnyTimes()
+
+	dataverseClientMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
 
 	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		env = models.EnvironmentDto{
@@ -408,7 +444,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, dataverseClientMock, nil),
 		},
 		Steps: steps,
 	})
@@ -416,7 +452,8 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 }
 
 func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
-	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
+	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
+	dataverseClientMock := mocks.NewUnitTestMockDataverseClientInterface(t)
 
 	env := models.EnvironmentDto{
 		Name: "00000000-0000-0000-0000-000000000001",
@@ -436,6 +473,8 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 	clientMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
 		return &env, nil
 	}).Times(1)
+
+	dataverseClientMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
 
 	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		env = models.EnvironmentDto{
@@ -464,12 +503,12 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, dataverseClientMock, nil),
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: uniTestsProviderConfig + `
-				resource "powerplatform_environment" "development" { 
+				Config: UnitTestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "europe"
 					language_code                             = "1033"

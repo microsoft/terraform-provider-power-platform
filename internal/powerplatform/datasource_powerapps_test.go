@@ -8,19 +8,19 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	powerplatform_mock "github.com/microsoft/terraform-provider-power-platform/internal/mocks"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 func TestAccPowerAppsDataSource(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `
+				Config: ProviderConfig + `
 				data "powerplatform_powerapps" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -39,7 +39,7 @@ func TestAccPowerAppsDataSource(t *testing.T) {
 }
 
 func TestUnitPowerAppsDataSource_Validate_Read(t *testing.T) {
-	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
+	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
 
 	apps := make([]models.PowerAppBapi, 0)
 	apps = append(apps, models.PowerAppBapi{
@@ -70,11 +70,11 @@ func TestUnitPowerAppsDataSource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, nil, nil),
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: uniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				data "powerplatform_powerapps" "all" {}`,
 
 				Check: resource.ComposeTestCheckFunc(

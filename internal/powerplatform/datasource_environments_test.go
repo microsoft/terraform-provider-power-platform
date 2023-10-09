@@ -8,18 +8,18 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	powerplatform_mock "github.com/microsoft/terraform-provider-power-platform/internal/mocks"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi/models"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
+	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 func TestAccEnvironmentsDataSource(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: providerConfig + `
+				Config: ProviderConfig + `
 				data "powerplatform_environments" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -37,6 +37,7 @@ func TestAccEnvironmentsDataSource(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.url", regexp.MustCompile(powerplatform_helpers.UrlValidStringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.location", regexp.MustCompile(`^(unitedstates|europe)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.version", regexp.MustCompile(powerplatform_helpers.VersionRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.currency_code", regexp.MustCompile(powerplatform_helpers.StringRegex)),
 				),
 			},
 		},
@@ -44,7 +45,12 @@ func TestAccEnvironmentsDataSource(t *testing.T) {
 }
 
 func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
-	clientMock := powerplatform_mock.NewUnitTestsMockApiClientInterface(t)
+	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
+	dataverseMock := mocks.NewUnitTestMockDataverseClientInterface(t)
+
+	currencyCode := &models.TransactionCurrencyDto{
+		IsoCurrencyCode: "EUR",
+	}
 
 	envs := make([]models.EnvironmentDto, 0)
 	envs = append(envs, models.EnvironmentDto{
@@ -70,6 +76,12 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 			DisplayName:    "Test Environment 2",
 			EnvironmentSku: "Sandbox",
 
+			LinkedAppMetadata: models.LinkedAppMetadataDto{
+				Type: "Internal",
+				Id:   "00000000-0000-0000-0000-000000000000",
+				Url:  "https://datasource-env-test.sandbox.operations.dynamics.com",
+			},
+
 			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
 				DomainName:      "org2",
 				InstanceURL:     "https://org2.crm.dynamics.com",
@@ -81,17 +93,18 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 	})
 
 	clientMock.EXPECT().GetEnvironments(gomock.Any()).Return(envs, nil).AnyTimes()
+	dataverseMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(currencyCode, nil).AnyTimes()
 
-	env := ConvertFromEnvironmentDto(envs[0])
+	env := ConvertFromEnvironmentDto(envs[0], currencyCode.IsoCurrencyCode)
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock),
+			"powerplatform": powerPlatformProviderServerApiMock(clientMock, dataverseMock, nil),
 		},
 		Steps: []resource.TestStep{
 			{
-				Config: uniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				data "powerplatform_environments" "all" {}`,
 
 				Check: resource.ComposeTestCheckFunc(
@@ -109,6 +122,10 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.url", env.Url.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.location", env.Location.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.version", env.Version.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.linked_app_type", env.LinkedAppType.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.linked_app_id", env.LinkedAppId.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.linked_app_url", env.LinkedAppURL.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.currency_code", env.CurrencyCode.ValueString()),
 				),
 			},
 		},
