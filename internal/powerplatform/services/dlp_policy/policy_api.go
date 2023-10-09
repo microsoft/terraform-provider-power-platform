@@ -109,7 +109,7 @@ func convertPolicyModelToDlpPolicy(policy DlpPolicyModelDto) DlpPolicyDto {
 			Environments:                    policy.Environments,
 			ConnectorGroups:                 []DlpConnectorGroupsDto{},
 		},
-		ConnectorConfigurationsDefinition:    policy.ConnectorConfigurationsDefinition,
+		ConnectorConfigurationsDefinition:    &policy.ConnectorConfigurationsDefinition,
 		CustomConnectorUrlPatternsDefinition: DlpConnectorUrlPatternsDefinitionDto{},
 	}
 
@@ -161,7 +161,7 @@ func convertPolicyModelToDlpPolicy(policy DlpPolicyModelDto) DlpPolicyDto {
 	}
 
 	if len(connectorActionConfigurationsDto) > 0 || len(endpointConfigurationsDto) > 0 {
-		policyToCreate.ConnectorConfigurationsDefinition = DlpConnectorConfigurationsDefinitionDto{}
+		policyToCreate.ConnectorConfigurationsDefinition = &DlpConnectorConfigurationsDefinitionDto{}
 
 		if len(connectorActionConfigurationsDto) > 0 {
 			policyToCreate.ConnectorConfigurationsDefinition.ConnectorActionConfigurations = connectorActionConfigurationsDto
@@ -169,6 +169,8 @@ func convertPolicyModelToDlpPolicy(policy DlpPolicyModelDto) DlpPolicyDto {
 		if len(endpointConfigurationsDto) > 0 {
 			policyToCreate.ConnectorConfigurationsDefinition.EndpointConfigurations = endpointConfigurationsDto
 		}
+	} else {
+		policyToCreate.ConnectorConfigurationsDefinition = nil
 	}
 	return policyToCreate
 }
@@ -203,15 +205,17 @@ func covertDlpPolicyToPolicyModel(policy DlpPolicyDto) (*DlpPolicyModelDto, erro
 				Name: nameSplit[len(nameSplit)-1],
 				Type: connector.Type,
 			}
-			for _, connectorActionConfigurations := range policy.ConnectorConfigurationsDefinition.ConnectorActionConfigurations {
-				if connectorActionConfigurations.ConnectorId == connector.Id {
-					m.DefaultActionRuleBehavior = connectorActionConfigurations.DefaultConnectorActionRuleBehavior
-					m.ActionRules = connectorActionConfigurations.ActionRules
+			if policy.ConnectorConfigurationsDefinition != nil {
+				for _, connectorActionConfigurations := range policy.ConnectorConfigurationsDefinition.ConnectorActionConfigurations {
+					if connectorActionConfigurations.ConnectorId == connector.Id {
+						m.DefaultActionRuleBehavior = connectorActionConfigurations.DefaultConnectorActionRuleBehavior
+						m.ActionRules = connectorActionConfigurations.ActionRules
+					}
 				}
-			}
-			for _, endpointConfigurations := range policy.ConnectorConfigurationsDefinition.EndpointConfigurations {
-				if endpointConfigurations.ConnectorId == connector.Id {
-					m.EndpointRules = endpointConfigurations.EndpointRules
+				for _, endpointConfigurations := range policy.ConnectorConfigurationsDefinition.EndpointConfigurations {
+					if endpointConfigurations.ConnectorId == connector.Id {
+						m.EndpointRules = endpointConfigurations.EndpointRules
+					}
 				}
 			}
 			connGroupModel.Connectors = append(connGroupModel.Connectors, m)
