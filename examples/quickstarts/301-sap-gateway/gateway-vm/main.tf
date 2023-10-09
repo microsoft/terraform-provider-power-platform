@@ -49,7 +49,7 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
   }
 
   gallery_application {
-    version_id = azurerm_gallery_application_version.example.id
+    version_id = azurerm_gallery_application_version.igl-app-version.id
     order      = 1
   }
   /*
@@ -60,31 +60,39 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
   */
 }
 
-resource "azurerm_shared_image_gallery" "example" {
-  name                = "examplegallery"
+resource "azurecaf_name" "igl" {
+  name          = var.base_name
+  resource_type = "azurerm_shared_image_gallery"
+  prefixes      = [var.prefix]
+  random_length = 3
+  clean_input   = true
+}
+
+resource "azurerm_shared_image_gallery" "igl" {
+  name                = azurecaf_name.igl.result
   resource_group_name = var.resource_group_name
   location            = var.region
 }
 
-resource "azurerm_gallery_application" "example" {
-  name              = "example-app"
-  gallery_id        = azurerm_shared_image_gallery.example.id
+resource "azurerm_gallery_application" "igl-app" {
+  name              = "PowerShell7"
+  gallery_id        = azurerm_shared_image_gallery.igl.id
   location          = var.region
   supported_os_type = "Windows"
 }
 
-resource "azurerm_gallery_application_version" "example" {
+resource "azurerm_gallery_application_version" "igl-app-version" {
   name                   = "0.0.1"
-  gallery_application_id = azurerm_gallery_application.example.id
+  gallery_application_id = azurerm_gallery_application.igl-app.id
   location               = var.region
 
   manage_action {
-    install = "move .\\PowerShell7 .\\PowerShell-7.3.7-win-x64.msi & start /wait %windir%\\system32\\msiexec.exe /i PowerShell-7.3.7-win-x64.msi /qn /L*V 'C:Install_Test'"
+    install = "move .\\PowerShell7 .\\installps7.ps1 & powershell -ExecutionPolicy Unrestricted -File installps7.ps1"
     remove  = "echo"
   }
 
   source {
-    media_link = "https://opdgwsetup.blob.core.windows.net/binaries/PowerShell-7.3.7-win-x64.msi"
+    media_link = "https://opdgwsetup.blob.core.windows.net/binaries/installps7.ps1"
   }
 
   target_region {
@@ -92,5 +100,3 @@ resource "azurerm_gallery_application_version" "example" {
     regional_replica_count = 1
   }
 }
-
-
