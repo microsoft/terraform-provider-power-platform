@@ -24,3 +24,8 @@ variable "sig_id" {
   description = "The id of the shared image gallery where the image should be created"
   type        = string
 }
+
+variable "installps7_link" {
+  description = "The Blob link to the PowerShell 7 installation file"
+  type        = string
+}

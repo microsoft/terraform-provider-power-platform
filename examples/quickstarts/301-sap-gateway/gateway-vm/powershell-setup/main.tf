@@ -29,7 +29,7 @@ resource "azurerm_gallery_application_version" "igl-app-version" {
   }
 
   source {
-    media_link = "https://opdgwsetup.blob.core.windows.net/binaries/installps7.ps1"
+    media_link = var.installps7_link
   }
 
   target_region {

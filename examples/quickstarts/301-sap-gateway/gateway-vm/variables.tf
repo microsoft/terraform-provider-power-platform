@@ -31,3 +31,8 @@ variable "nic_id" {
   type        = string
 }
 
+variable "installps7_link" {
+  description = "The Blob link to the PowerShell 7 installation file"
+  type        = string
+}
+

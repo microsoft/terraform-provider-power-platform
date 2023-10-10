@@ -1,18 +1,12 @@
 variable "prefix" {
-  description = "The prefix which should be used for all resources in this example"
+  description = "The prefix which should be used for all resources name"
   default     = "opdgw"
   type        = string
 }
 
 variable "base_name" {
-  description = "The base name which should be used for all resources in this example"
+  description = "The base name which should be used for all resources name"
   default     = "AzureSAPIntegration"
-  type        = string
-}
-
-variable "sulfix" {
-  description = "The sulfix which should be used for all resources in this example"
-  default     = "Sulfix"
   type        = string
 }
 
@@ -59,5 +53,10 @@ variable "region_gw" {
 variable "vm_pwd_gw" {
   description = "The password for the VM of the on-premise data gateway"
   sensitive   = true
+  type        = string
+}
+
+variable "installps7_link" {
+  description = "The Blob link to the PowerShell 7 installation file"
   type        = string
 }

@@ -33,6 +33,7 @@ module "powershell-setup" {
   resource_group_name = var.resource_group_name
   region              = var.region
   sig_id              = azurerm_shared_image_gallery.sig.id
+  installps7_link     = var.installps7_link
 }
 
 resource "azurecaf_name" "vm-opgw" {

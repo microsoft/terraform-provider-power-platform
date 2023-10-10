@@ -161,4 +161,5 @@ module "gateway_vm" {
   region              = var.region_gw
   vm_pwd              = var.vm_pwd_gw
   nic_id              = azurerm_network_interface.nic.id
+  installps7_link     = var.installps7_link
 }
