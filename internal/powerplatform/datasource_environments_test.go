@@ -83,7 +83,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 				"properties": {
 					"tenantId": "123",
 					"azureRegion": "westeurope",
-					"displayName": "currencycode",
+					"displayName": "displayname",
 					"createdTime": "2023-09-27T07:08:27.6057592Z",
 					"createdBy": {
 						"id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
@@ -151,8 +151,8 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					},
 					"databaseType": "CommonDataService",
 					"linkedEnvironmentMetadata": {
-						"resourceId": "11afca7f-025d-ee11-a382-000d3a25be4d",
-						"friendlyName": "currencycode",
+						"resourceId": "orgid",
+						"friendlyName": "displayname",
 						"uniqueName": "%[1]d",
 						"domainName": "%[1]d",
 						"version": "9.2.23092.00206",
@@ -346,7 +346,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 						"properties": {
 							"tenantId": "123",
 							"azureRegion": "westeurope",
-							"displayName": "currencycode",
+							"displayName": "displayname",
 							"createdTime": "2023-09-27T07:08:27.6057592Z",
 							"createdBy": {
 								"id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
@@ -376,8 +376,8 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 							},
 							"databaseType": "CommonDataService",
 							"linkedEnvironmentMetadata": {
-								"resourceId": "11afca7f-025d-ee11-a382-000d3a25be4d",
-								"friendlyName": "currencycode",
+								"resourceId": "orgid",
+								"friendlyName": "displayname",
 								"uniqueName": "xxx",
 								"domainName": "xxx",
 								"version": "9.2.23092.00206",
@@ -468,12 +468,12 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.#", "2"),
 
-					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.display_name", "currencycode"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.display_name", "displayname"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.domain", "xxx"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.environment_name", "123"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.environment_type", "Sandbox"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.language_code", "1033"),
-					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.organization_id", "11afca7f-025d-ee11-a382-000d3a25be4d"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.organization_id", "orgid"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.security_group_id", ""),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.url", "https://xxx.crm4.dynamics.com/"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.location", "europe"),
