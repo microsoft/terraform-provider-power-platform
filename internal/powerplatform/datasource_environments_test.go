@@ -1,7 +1,6 @@
 package powerplatform
 
 import (
-	"net/http"
 	"regexp"
 	"testing"
 
@@ -48,24 +47,6 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 	mock_helpers.ActivateOAuthHttpMocks()
 	mock_helpers.ActivateEnvironmentHttpMocks("00000000-0000-0000-0000-000000000001")
-
-	httpmock.RegisterResponder("GET", `=~^https://([\d-]+)\.crm4\.dynamics\.com/api/data/v9\.2/transactioncurrencies\z`,
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-				"value": [
-					{
-						"isocurrencycode": "PLN"
-					}]}`), nil
-		})
-
-	httpmock.RegisterResponder("GET", `=~^https://([\d-]+)\.crm4\.dynamics\.com/api/data/v9\.2/organizations\z`,
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-				"value": [
-					{
-						"_basecurrencyid_value": "xyz"
-					}]}`), nil
-		})
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,

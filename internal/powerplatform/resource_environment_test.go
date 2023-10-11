@@ -2,13 +2,16 @@ package powerplatform
 
 import (
 	"context"
+	"net/http"
 	"regexp"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/jarcoal/httpmock"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
@@ -452,85 +455,114 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 }
 
 func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
-	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
-	dataverseClientMock := mocks.NewUnitTestMockDataverseClientInterface(t)
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mock_helpers.ActivateOAuthHttpMocks()
+	mock_helpers.ActivateEnvironmentHttpMocks("00000000-0000-0000-0000-000000000001")
 
-	env := models.EnvironmentDto{
-		Name: "00000000-0000-0000-0000-000000000001",
-		Properties: models.EnvironmentPropertiesDto{
-			EnvironmentSku: "Sandbox",
-			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
-				BaseLanguage:    1033,
-				ResourceId:      "org1",
-				SecurityGroupId: "security1",
-				DomainName:      "domain",
-				InstanceURL:     "url",
-				Version:         "version",
-			},
-		},
-	}
-
-	clientMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
-		return &env, nil
-	}).Times(1)
-
-	dataverseClientMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
-
-	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
-		env = models.EnvironmentDto{
-			Name:     "00000000-0000-0000-0000-000000000001",
-			Location: envToCreate.Location,
-			Properties: models.EnvironmentPropertiesDto{
-				DisplayName:    envToCreate.Properties.DisplayName,
-				EnvironmentSku: "Sandbox",
-				LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
-					BaseLanguage:    env.Properties.LinkedEnvironmentMetadata.BaseLanguage,
-					ResourceId:      "org1",
-					SecurityGroupId: "security1",
-					DomainName:      "domain",
-					InstanceURL:     "url",
-					Version:         "version",
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+				"id": "b03e1e6d-73db-4367-90e1-2e378bf7e2fc",
+				"links": {
+					"self": {
+						"path": "/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc"
+					},
+					"environment": {
+						"path": "/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001"
+					}
 				},
-			},
-		}
-		return &env, nil
-	}).Times(1)
+				"type": {
+					"id": "Create"
+				},
+				"typeDisplayName": "Create",
+				"state": {
+					"id": "Succeeded"
+				},
+				"createdDateTime": "2023-10-11T07:45:25.3761337Z",
+				"lastActionDateTime": "2023-10-11T07:45:43.4915067Z",
+				"requestedBy": {
+					"id": "8784d9fb-deb0-4811-96ce-fbf21cf3a1fc",
+					"displayName": "ServicePrincipal",
+					"type": "ServicePrincipal",
+					"tenantId": "123"
+				},
+				"stages": [
+					{
+						"id": "Validate",
+						"name": "Validate",
+						"state": {
+							"id": "Succeeded"
+						},
+						"firstActionDateTime": "2023-10-11T07:45:25.9230185Z",
+						"lastActionDateTime": "2023-10-11T07:45:25.9230185Z"
+					},
+					{
+						"id": "Prepare",
+						"name": "Prepare",
+						"state": {
+							"id": "Succeeded"
+						},
+						"firstActionDateTime": "2023-10-11T07:45:25.9230185Z",
+						"lastActionDateTime": "2023-10-11T07:45:25.9230185Z"
+					},
+					{
+						"id": "Run",
+						"name": "Run",
+						"state": {
+							"id": "Succeeded"
+						},
+						"firstActionDateTime": "2023-10-11T07:45:26.0011473Z",
+						"lastActionDateTime": "2023-10-11T07:45:33.2570938Z"
+					},
+					{
+						"id": "Finalize",
+						"name": "Finalize",
+						"state": {
+							"id": "Succeeded"
+						},
+						"firstActionDateTime": "2023-10-11T07:45:33.3352196Z",
+						"lastActionDateTime": "2023-10-11T07:45:43.4915067Z"
+					}
+				]
+			}`), nil
+		})
 
-	clientMock.EXPECT().DeleteEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) error {
-		return nil
-	}).Times(1)
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
 
 	resource.Test(t, resource.TestCase{
-		IsUnitTest: true,
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock, dataverseClientMock, nil),
-		},
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: UniTestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name                              = "Example1"
+					display_name                              = "displayname"
 					location                                  = "europe"
 					language_code                             = "1033"
-					currency_code                             = "USD"
+					currency_code                             = "PLN"
 					environment_type                          = "Sandbox"
-					domain                                    = "domain"
-					security_group_id                         = "security1"
+					domain                                    = "00000000-0000-0000-0000-000000000001"
+					security_group_id                         = "00000000-0000-0000-0000-000000000000"
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_name", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", env.Name),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example1"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", env.Properties.LinkedEnvironmentMetadata.InstanceURL),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", env.Properties.LinkedEnvironmentMetadata.DomainName),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "displayname"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1033"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "USD"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "organization_id", env.Properties.LinkedEnvironmentMetadata.ResourceId),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", env.Properties.LinkedEnvironmentMetadata.SecurityGroupId),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "version", env.Properties.LinkedEnvironmentMetadata.Version),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "PLN"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "organization_id", "orgid"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "00000000-0000-0000-0000-000000000000"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "version", "9.2.23092.00206"),
 				),
 			},
 		},

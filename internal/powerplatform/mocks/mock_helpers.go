@@ -2,6 +2,7 @@ package powerplatform_mocks
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"testing"
 
@@ -43,6 +44,11 @@ const (
 func ActivateOAuthHttpMocks() {
 
 	httpmock.RegisterNoResponder(func(req *http.Request) (*http.Response, error) {
+		println("No HttpMock responder for: " + req.Method + " " + req.URL.String())
+		if req.Body != nil {
+			body, _ := io.ReadAll(req.Body)
+			println("Body:" + string(body))
+		}
 		return httpmock.NewStringResponse(http.StatusTeapot, ""), nil
 	})
 
@@ -440,4 +446,28 @@ func ActivateEnvironmentHttpMocks(envId string) {
 						}
 					}]}`, envId)), nil
 		})
+
+	httpmock.RegisterResponder("GET", `=~^https://([\d-]+)\.crm4\.dynamics\.com/api/data/v9\.2/transactioncurrencies\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+				"value": [
+					{
+						"isocurrencycode": "PLN"
+					}]}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://([\d-]+)\.crm4\.dynamics\.com/api/data/v9\.2/organizations\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+				"value": [
+					{
+						"_basecurrencyid_value": "xyz"
+					}]}`), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusAccepted, ""), nil
+		})
+
 }
