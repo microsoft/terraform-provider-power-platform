@@ -103,6 +103,15 @@ To run single unit test
 TF_ACC=0 go test -v ./... -run TestUnit<test_name>
 ```
 
+Note: The tests require permissions on the folders, these permissions are assigned when creating your container.
+If you have permission problems when running the unit tests, you can rebuild your development container
+or run the following commands again to assign the permissions to the necessary folders.
+
+```bash
+sudo chown -R vscode /workspaces/terraform-provider-power-platform/
+sudo chown -R vscode /go/pkg
+```
+
 ## Adding Dependencies
 
 This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
