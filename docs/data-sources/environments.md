@@ -50,6 +50,9 @@ Read-Only:
 - `environment_id` (String) Unique environment id (guid)
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
 - `language_code` (Number) Unique language LCID (integer)
+- `linked_app_id` (String) Unique linked app id (guid)
+- `linked_app_type` (String) Type of the linked app (Internal, External etc.)
+- `linked_app_url` (String) URL of the linked D365 app
 - `location` (String) Location of the environment (europe, unitedstates etc.)
 - `organization_id` (String) Unique organization id (guid)
 - `security_group_id` (String) Unique security group id (guid)
