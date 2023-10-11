@@ -178,7 +178,7 @@ func (client *BapiClientApi) CreateEnvironment(ctx context.Context, environment 
 
 	env, err := client.GetEnvironment(ctx, createdEnvironmentId)
 	if err != nil {
-		return &models.EnvironmentDto{}, errors.New("environment not found")
+		return &models.EnvironmentDto{}, fmt.Errorf("environment '%s' not found. '%s'", createdEnvironmentId, err)
 	}
 	return env, err
 }
@@ -222,7 +222,7 @@ func (client *BapiClientApi) UpdateEnvironment(ctx context.Context, environmentI
 		}
 	}
 
-	return nil, errors.New("environment not found")
+	return nil, fmt.Errorf("environment '%s' not found", environmentId)
 }
 
 func (client *BapiClientApi) GetPowerApps(ctx context.Context, environmentId string) ([]models.PowerAppBapi, error) {

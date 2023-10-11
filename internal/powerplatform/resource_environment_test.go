@@ -2,6 +2,7 @@ package powerplatform
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"regexp"
 	"testing"
@@ -116,191 +117,1017 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 }
 
 func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mock_helpers.ActivateOAuthHttpMocks()
+	//mock_helpers.ActivateEnvironmentHttpMocks("00000000-0000-0000-0000-000000000001")
 
-	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
-	dataverseClientMock := mocks.NewUnitTestMockDataverseClientInterface(t)
+	envIdResponseInx := -1
+	envIdResponseArray := []string{"00000000-0000-0000-0000-000000000001",
+		"00000000-0000-0000-0000-000000000002",
+		"00000000-0000-0000-0000-000000000003",
+		"00000000-0000-0000-0000-000000000004",
+		"00000000-0000-0000-0000-000000000005"}
 
-	envIdBeforeChanges := "00000000-0000-0000-0000-000000000001"
-	envIdAfterLocationChanges := "00000000-0000-0000-0000-000000000002"
-	envIdAfterCurrencyChanges := "00000000-0000-0000-0000-000000000003"
-	envIdAfterLanguageChanges := "00000000-0000-0000-0000-000000000004"
-	envIdAfterEnvironmentTypeChanges := "00000000-0000-0000-0000-000000000005"
+	envPropertiesMap := make(map[string]map[string]string)
+	envPropertiesMap["00000000-0000-0000-0000-000000000001"] = make(map[string]string)
+	envPropertiesMap["00000000-0000-0000-0000-000000000001"]["currency"] = "PLN"
+	envPropertiesMap["00000000-0000-0000-0000-000000000002"] = make(map[string]string)
+	envPropertiesMap["00000000-0000-0000-0000-000000000002"]["currency"] = "PLN"
+	envPropertiesMap["00000000-0000-0000-0000-000000000003"] = make(map[string]string)
+	envPropertiesMap["00000000-0000-0000-0000-000000000003"]["currency"] = "EUR"
+	envPropertiesMap["00000000-0000-0000-0000-000000000004"] = make(map[string]string)
+	envPropertiesMap["00000000-0000-0000-0000-000000000004"]["currency"] = "EUR"
+	envPropertiesMap["00000000-0000-0000-0000-000000000005"] = make(map[string]string)
+	envPropertiesMap["00000000-0000-0000-0000-000000000005"]["currency"] = "EUR"
 
-	env := models.EnvironmentDto{
-		Name: envIdBeforeChanges,
-		Properties: models.EnvironmentPropertiesDto{
-			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
-				ResourceId:      "org1",
-				SecurityGroupId: "security1",
-				DomainName:      "domain",
-				InstanceURL:     "url",
-				Version:         "version",
-			},
-			LinkedAppMetadata: models.LinkedAppMetadataDto{
-				Type: "Internal",
-				Id:   "00000000-0000-0000-0000-000000000000",
-				Url:  "https://url.operations.dynamics.com",
-			},
-		},
-	}
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusAccepted, ""), nil
+		})
 
-	steps := []resource.TestStep{
-		{
-			Config: UniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" {
-				display_name                              = "Example1"
-				location                                  = "europe"
-				language_code                             = "1033"
-				currency_code                             = "USD"
-				environment_type                          = "Sandbox"
-				domain									  = "domain"
-				security_group_id 						  = "security1"
+	httpmock.RegisterResponder("GET", `=~^https://([\d-]+)\.crm4\.dynamics\.com/api/data/v9\.2/transactioncurrencies\z`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
 
-			}`,
-			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdBeforeChanges),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "USD"),
-			),
-		},
-		{
-			Config: UniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" {
-				display_name                              = "Example1"
-				location                                  = "unitedstates"
-				language_code                             = "1033"
-				currency_code                             = "USD"
-				environment_type                          = "Sandbox"
-				domain									  = "domain"
-				security_group_id 						  = "security1"
-			}`,
-			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterLocationChanges),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "unitedstates"),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "USD"),
-			),
-		},
-		{
-			Config: UniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" {
-				display_name                              = "Example1"
-				location                                  = "unitedstates"
-				language_code                             = "1033"
-				currency_code                             = "EUR"
-				environment_type                          = "Sandbox"
-				domain									  = "domain"
-				security_group_id 						  = "security1"
-			}`,
-			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterCurrencyChanges),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
-			),
-		},
-		{
-			Config: UniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" {
-				display_name                              = "Example1"
-				location                                  = "unitedstates"
-				language_code                             = "1033"
-				currency_code                             = "EUR"
-				environment_type                          = "Trial"
-				domain									  = "domain"
-				security_group_id 						  = "security1"
-			}`,
-			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterEnvironmentTypeChanges),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Trial"),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
-			),
-		},
-		{
-			Config: UniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" {
-				display_name                              = "Example1"
-				location                                  = "europe"
-				language_code                             = "1031"
-				currency_code                             = "EUR"
-				environment_type                          = "Sandbox"
-				domain									  = "domain"
-				security_group_id 						  = "security1"
-			}`,
-			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterLanguageChanges),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1031"),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
-			),
-		},
-	}
+			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{
+				"value": [
+					{
+						"isocurrencycode": "%s"
+					}]}`, envPropertiesMap[id]["currency"])), nil
+		})
 
-	clientMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
-		return &env, nil
-	}).AnyTimes()
+	httpmock.RegisterResponder("GET", `=~^https://([\d-]+)\.crm4\.dynamics\.com/api/data/v9\.2/organizations\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+				"value": [
+					{
+						"_basecurrencyid_value": "xyz"
+					}]}`), nil
+		})
 
-	dataverseClientMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, environmentId string) (*models.TransactionCurrencyDto, error) {
-		if environmentId == envIdBeforeChanges || environmentId == envIdAfterLocationChanges {
-			return &models.TransactionCurrencyDto{
-				IsoCurrencyCode: "USD",
-			}, nil
-		} else {
-			return &models.TransactionCurrencyDto{
-				IsoCurrencyCode: "EUR",
-			}, nil
-		}
-	}).AnyTimes()
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			envIdResponseInx++
 
-	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
-
-		env = models.EnvironmentDto{
-			Name:     envIdBeforeChanges,
-			Id:       envIdBeforeChanges,
-			Location: envToCreate.Location,
-			Properties: models.EnvironmentPropertiesDto{
-				DisplayName:    envToCreate.Properties.DisplayName,
-				EnvironmentSku: envToCreate.Properties.EnvironmentSku,
-				LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
-					DomainName:      envToCreate.Properties.LinkedEnvironmentMetadata.DomainName,
-					BaseLanguage:    envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage,
-					SecurityGroupId: envToCreate.Properties.LinkedEnvironmentMetadata.SecurityGroupId,
+			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{
+			"id": "b03e1e6d-73db-4367-90e1-2e378bf7e2fc",
+			"links": {
+				"self": {
+					"path": "/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc"
 				},
+				"environment": {
+					"path": "/providers/Microsoft.BusinessAppPlatform/environments/%s"
+				}
 			},
-		}
+			"type": {
+				"id": "Create"
+			},
+			"typeDisplayName": "Create",
+			"state": {
+				"id": "Succeeded"
+			},
+			"createdDateTime": "2023-10-11T07:45:25.3761337Z",
+			"lastActionDateTime": "2023-10-11T07:45:43.4915067Z",
+			"requestedBy": {
+				"id": "8784d9fb-deb0-4811-96ce-fbf21cf3a1fc",
+				"displayName": "ServicePrincipal",
+				"type": "ServicePrincipal",
+				"tenantId": "123"
+			},
+			"stages": [
+				{
+					"id": "Validate",
+					"name": "Validate",
+					"state": {
+						"id": "Succeeded"
+					},
+					"firstActionDateTime": "2023-10-11T07:45:25.9230185Z",
+					"lastActionDateTime": "2023-10-11T07:45:25.9230185Z"
+				},
+				{
+					"id": "Prepare",
+					"name": "Prepare",
+					"state": {
+						"id": "Succeeded"
+					},
+					"firstActionDateTime": "2023-10-11T07:45:25.9230185Z",
+					"lastActionDateTime": "2023-10-11T07:45:25.9230185Z"
+				},
+				{
+					"id": "Run",
+					"name": "Run",
+					"state": {
+						"id": "Succeeded"
+					},
+					"firstActionDateTime": "2023-10-11T07:45:26.0011473Z",
+					"lastActionDateTime": "2023-10-11T07:45:33.2570938Z"
+				},
+				{
+					"id": "Finalize",
+					"name": "Finalize",
+					"state": {
+						"id": "Succeeded"
+					},
+					"firstActionDateTime": "2023-10-11T07:45:33.3352196Z",
+					"lastActionDateTime": "2023-10-11T07:45:43.4915067Z"
+				}
+			]
+		}`, envIdResponseArray[envIdResponseInx])), nil
+		})
 
-		if envToCreate.Location == "unitedstates" {
-			env.Name = envIdAfterLocationChanges
-			env.Id = envIdAfterLocationChanges
-		}
-		if envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code == "EUR" {
-			env.Name = envIdAfterCurrencyChanges
-			env.Id = envIdAfterCurrencyChanges
-		}
-		if envToCreate.Properties.EnvironmentSku == "Trial" {
-			env.Name = envIdAfterEnvironmentTypeChanges
-			env.Id = envIdAfterEnvironmentTypeChanges
-		}
-		if envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage == 1031 {
-			env.Name = envIdAfterLanguageChanges
-			env.Id = envIdAfterLanguageChanges
-		}
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
 
-		return &env, nil
-		//we expect create to be called twice because we are forcing a recreate
-	}).Times(len(steps))
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+				"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+				"type": "Microsoft.BusinessAppPlatform/scopes/environments",
+				"location": "europe",
+				"name": "00000000-0000-0000-0000-000000000001",
+				"properties": {
+					"tenantId": "123",
+					"azureRegion": "westeurope",
+					"displayName": "displayname",
+					"createdTime": "2023-09-27T07:08:27.6057592Z",
+					"createdBy": {
+						"id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+						"displayName": "admin",
+						"email": "admin",
+						"type": "User",
+						"tenantId": "123",
+						"userPrincipalName": "admin"
+					},
+					"lastModifiedTime": "2023-09-27T07:08:34.9205145Z",
+					"provisioningState": "Succeeded",
+					"creationType": "User",
+					"environmentSku": "Sandbox",
+					"isDefault": false,
+					"capacity": [
+						{
+							"capacityType": "Database",
+							"actualConsumption": 885.0391,
+							"ratedConsumption": 1024.0,
+							"capacityUnit": "MB",
+							"updatedOn": "2023-10-10T03:00:35Z"
+						},
+						{
+							"capacityType": "File",
+							"actualConsumption": 1187.142,
+							"ratedConsumption": 1187.142,
+							"capacityUnit": "MB",
+							"updatedOn": "2023-10-10T03:00:35Z"
+						},
+						{
+							"capacityType": "Log",
+							"actualConsumption": 0.0,
+							"ratedConsumption": 0.0,
+							"capacityUnit": "MB",
+							"updatedOn": "2023-10-10T03:00:35Z"
+						},
+						{
+							"capacityType": "FinOpsDatabase",
+							"actualConsumption": 0.0,
+							"ratedConsumption": 0.0,
+							"capacityUnit": "MB",
+							"updatedOn": "2023-10-10T03:00:35Z"
+						},
+						{
+							"capacityType": "FinOpsFile",
+							"actualConsumption": 0.0,
+							"ratedConsumption": 0.0,
+							"capacityUnit": "MB",
+							"updatedOn": "2023-10-10T03:00:35Z"
+						}
+					],
+					"addons": [],
+					"clientUris": {
+						"admin": "https://admin.powerplatform.microsoft.com/environments/environment/456/hub",
+						"maker": "https://make.powerapps.com/environments/456/home"
+					},
+					"runtimeEndpoints": {
+						"microsoft.BusinessAppPlatform": "https://europe.api.bap.microsoft.com",
+						"microsoft.CommonDataModel": "https://europe.api.cds.microsoft.com",
+						"microsoft.PowerApps": "https://europe.api.powerapps.com",
+						"microsoft.PowerAppsAdvisor": "https://europe.api.advisor.powerapps.com",
+						"microsoft.PowerVirtualAgents": "https://powervamg.eu-il107.gateway.prod.island.powerapps.com",
+						"microsoft.ApiManagement": "https://management.EUROPE.azure-apihub.net",
+						"microsoft.Flow": "https://emea.api.flow.microsoft.com"
+					},
+					"databaseType": "CommonDataService",
+					"linkedEnvironmentMetadata": {
+						"resourceId": "orgid",
+						"friendlyName": "displayname",
+						"uniqueName": "00000000-0000-0000-0000-000000000001",
+						"domainName": "00000000-0000-0000-0000-000000000001",
+						"version": "9.2.23092.00206",
+						"instanceUrl": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/",
+						"instanceApiUrl": "https://00000000-0000-0000-0000-000000000001.api.crm4.dynamics.com",
+						"baseLanguage": 1033,
+						"instanceState": "Ready",
+						"createdTime": "2023-09-27T07:08:28.957Z",
+						"backgroundOperationsState": "Enabled",
+						"scaleGroup": "EURCRMLIVESG705",
+						"platformSku": "Standard",
+						"schemaType": "Standard"
+					},
+					"trialScenarioType": "None",
+					"notificationMetadata": {
+						"state": "NotSpecified",
+						"branding": "NotSpecific"
+					},
+					"retentionPeriod": "P7D",
+					"states": {
+						"management": {
+							"id": "Ready"
+						},
+						"runtime": {
+							"runtimeReasonCode": "NotSpecified",
+							"requestedBy": {
+								"displayName": "SYSTEM",
+								"type": "NotSpecified"
+							},
+							"id": "Enabled"
+						}
+					},
+					"updateCadence": {
+						"id": "Frequent"
+					},
+					"retentionDetails": {
+						"retentionPeriod": "P7D",
+						"backupsAvailableFromDateTime": "2023-10-03T09:23:06.1717665Z"
+					},
+					"protectionStatus": {
+						"keyManagedBy": "Microsoft"
+					},
+					"cluster": {
+						"category": "Prod",
+						"number": "107",
+						"uriSuffix": "eu-il107.gateway.prod.island",
+						"geoShortName": "EU",
+						"environment": "Prod"
+					},
+					"connectedGroups": [],
+					"lifecycleOperationsEnforcement": {
+						"allowedOperations": [
+							{
+								"type": {
+									"id": "DisableGovernanceConfiguration"
+								},
+								"reason": {
+									"message": "DisableGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+									"type": "GovernanceConfig"
+								}
+							},
+							{
+								"type": {
+									"id": "UpdateGovernanceConfiguration"
+								},
+								"reason": {
+									"message": "UpdateGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+									"type": "GovernanceConfig"
+								}
+							}
+						]
+					},
+					"governanceConfiguration": {
+						"protectionLevel": "Basic"
+					}
+				}
+			}`), nil
+		})
 
-	clientMock.EXPECT().UpdateEnvironment(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string, envToUpdate models.EnvironmentDto) error {
-		return nil
-		//we expect update to be never called as we are forcing a recreate
-	}).Times(0)
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000002`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+			"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000002",
+			"type": "Microsoft.BusinessAppPlatform/scopes/environments",
+			"location": "unitedstates",
+			"name": "00000000-0000-0000-0000-000000000002",
+			"properties": {
+				"tenantId": "123",
+				"azureRegion": "westeurope",
+				"displayName": "displayname",
+				"createdTime": "2023-09-27T07:08:27.6057592Z",
+				"createdBy": {
+					"id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+					"displayName": "admin",
+					"email": "admin",
+					"type": "User",
+					"tenantId": "123",
+					"userPrincipalName": "admin"
+				},
+				"lastModifiedTime": "2023-09-27T07:08:34.9205145Z",
+				"provisioningState": "Succeeded",
+				"creationType": "User",
+				"environmentSku": "Sandbox",
+				"isDefault": false,
+				"capacity": [
+					{
+						"capacityType": "Database",
+						"actualConsumption": 885.0391,
+						"ratedConsumption": 1024.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "File",
+						"actualConsumption": 1187.142,
+						"ratedConsumption": 1187.142,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "Log",
+						"actualConsumption": 0.0,
+						"ratedConsumption": 0.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "FinOpsDatabase",
+						"actualConsumption": 0.0,
+						"ratedConsumption": 0.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "FinOpsFile",
+						"actualConsumption": 0.0,
+						"ratedConsumption": 0.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					}
+				],
+				"addons": [],
+				"clientUris": {
+					"admin": "https://admin.powerplatform.microsoft.com/environments/environment/00000000-0000-0000-0000-000000000002/hub",
+					"maker": "https://make.powerapps.com/environments/00000000-0000-0000-0000-000000000002/home"
+				},
+				"runtimeEndpoints": {
+					"microsoft.BusinessAppPlatform": "https://europe.api.bap.microsoft.com",
+					"microsoft.CommonDataModel": "https://europe.api.cds.microsoft.com",
+					"microsoft.PowerApps": "https://europe.api.powerapps.com",
+					"microsoft.PowerAppsAdvisor": "https://europe.api.advisor.powerapps.com",
+					"microsoft.PowerVirtualAgents": "https://powervamg.eu-il107.gateway.prod.island.powerapps.com",
+					"microsoft.ApiManagement": "https://management.EUROPE.azure-apihub.net",
+					"microsoft.Flow": "https://emea.api.flow.microsoft.com"
+				},
+				"databaseType": "CommonDataService",
+				"linkedEnvironmentMetadata": {
+					"resourceId": "orgid",
+					"friendlyName": "displayname",
+					"uniqueName": "00000000-0000-0000-0000-000000000002",
+					"domainName": "00000000-0000-0000-0000-000000000002",
+					"version": "9.2.23092.00206",
+					"instanceUrl": "https://00000000-0000-0000-0000-000000000002.crm4.dynamics.com/",
+					"instanceApiUrl": "https://00000000-0000-0000-0000-000000000002.api.crm4.dynamics.com",
+					"baseLanguage": 1033,
+					"instanceState": "Ready",
+					"createdTime": "2023-09-27T07:08:28.957Z",
+					"backgroundOperationsState": "Enabled",
+					"scaleGroup": "EURCRMLIVESG705",
+					"platformSku": "Standard",
+					"schemaType": "Standard"
+				},
+				"trialScenarioType": "None",
+				"notificationMetadata": {
+					"state": "NotSpecified",
+					"branding": "NotSpecific"
+				},
+				"retentionPeriod": "P7D",
+				"states": {
+					"management": {
+						"id": "Ready"
+					},
+					"runtime": {
+						"runtimeReasonCode": "NotSpecified",
+						"requestedBy": {
+							"displayName": "SYSTEM",
+							"type": "NotSpecified"
+						},
+						"id": "Enabled"
+					}
+				},
+				"updateCadence": {
+					"id": "Frequent"
+				},
+				"retentionDetails": {
+					"retentionPeriod": "P7D",
+					"backupsAvailableFromDateTime": "2023-10-03T09:23:06.1717665Z"
+				},
+				"protectionStatus": {
+					"keyManagedBy": "Microsoft"
+				},
+				"cluster": {
+					"category": "Prod",
+					"number": "107",
+					"uriSuffix": "eu-il107.gateway.prod.island",
+					"geoShortName": "EU",
+					"environment": "Prod"
+				},
+				"connectedGroups": [],
+				"lifecycleOperationsEnforcement": {
+					"allowedOperations": [
+						{
+							"type": {
+								"id": "DisableGovernanceConfiguration"
+							},
+							"reason": {
+								"message": "DisableGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+								"type": "GovernanceConfig"
+							}
+						},
+						{
+							"type": {
+								"id": "UpdateGovernanceConfiguration"
+							},
+							"reason": {
+								"message": "UpdateGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+								"type": "GovernanceConfig"
+							}
+						}
+					]
+				},
+				"governanceConfiguration": {
+					"protectionLevel": "Basic"
+				}
+			}
+		}`), nil
+		})
 
-	clientMock.EXPECT().DeleteEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) error {
-		return nil
-	}).AnyTimes()
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000003`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+			"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000003",
+			"type": "Microsoft.BusinessAppPlatform/scopes/environments",
+			"location": "unitedstates",
+			"name": "00000000-0000-0000-0000-000000000003",
+			"properties": {
+				"tenantId": "123",
+				"azureRegion": "westeurope",
+				"displayName": "Example1",
+				"createdTime": "2023-09-27T07:08:27.6057592Z",
+				"createdBy": {
+					"id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+					"displayName": "admin",
+					"email": "admin",
+					"type": "User",
+					"tenantId": "123",
+					"userPrincipalName": "admin"
+				},
+				"lastModifiedTime": "2023-09-27T07:08:34.9205145Z",
+				"provisioningState": "Succeeded",
+				"creationType": "User",
+				"environmentSku": "Sandbox",
+				"isDefault": false,
+				"capacity": [
+					{
+						"capacityType": "Database",
+						"actualConsumption": 885.0391,
+						"ratedConsumption": 1024.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "File",
+						"actualConsumption": 1187.142,
+						"ratedConsumption": 1187.142,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "Log",
+						"actualConsumption": 0.0,
+						"ratedConsumption": 0.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "FinOpsDatabase",
+						"actualConsumption": 0.0,
+						"ratedConsumption": 0.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "FinOpsFile",
+						"actualConsumption": 0.0,
+						"ratedConsumption": 0.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					}
+				],
+				"addons": [],
+				"clientUris": {
+					"admin": "https://admin.powerplatform.microsoft.com/environments/environment/00000000-0000-0000-0000-000000000003/hub",
+					"maker": "https://make.powerapps.com/environments/00000000-0000-0000-0000-000000000003/home"
+				},
+				"runtimeEndpoints": {
+					"microsoft.BusinessAppPlatform": "https://europe.api.bap.microsoft.com",
+					"microsoft.CommonDataModel": "https://europe.api.cds.microsoft.com",
+					"microsoft.PowerApps": "https://europe.api.powerapps.com",
+					"microsoft.PowerAppsAdvisor": "https://europe.api.advisor.powerapps.com",
+					"microsoft.PowerVirtualAgents": "https://powervamg.eu-il107.gateway.prod.island.powerapps.com",
+					"microsoft.ApiManagement": "https://management.EUROPE.azure-apihub.net",
+					"microsoft.Flow": "https://emea.api.flow.microsoft.com"
+				},
+				"databaseType": "CommonDataService",
+				"linkedEnvironmentMetadata": {
+					"resourceId": "orgid",
+					"friendlyName": "displayname",
+					"uniqueName": "00000000-0000-0000-0000-000000000003",
+					"domainName": "00000000-0000-0000-0000-000000000003",
+					"version": "9.2.23092.00206",
+					"instanceUrl": "https://00000000-0000-0000-0000-000000000003.crm4.dynamics.com/",
+					"instanceApiUrl": "https://00000000-0000-0000-0000-000000000003.api.crm4.dynamics.com",
+					"baseLanguage": 1033,
+					"instanceState": "Ready",
+					"createdTime": "2023-09-27T07:08:28.957Z",
+					"backgroundOperationsState": "Enabled",
+					"scaleGroup": "EURCRMLIVESG705",
+					"platformSku": "Standard",
+					"schemaType": "Standard"
+				},
+				"trialScenarioType": "None",
+				"notificationMetadata": {
+					"state": "NotSpecified",
+					"branding": "NotSpecific"
+				},
+				"retentionPeriod": "P7D",
+				"states": {
+					"management": {
+						"id": "Ready"
+					},
+					"runtime": {
+						"runtimeReasonCode": "NotSpecified",
+						"requestedBy": {
+							"displayName": "SYSTEM",
+							"type": "NotSpecified"
+						},
+						"id": "Enabled"
+					}
+				},
+				"updateCadence": {
+					"id": "Frequent"
+				},
+				"retentionDetails": {
+					"retentionPeriod": "P7D",
+					"backupsAvailableFromDateTime": "2023-10-03T09:23:06.1717665Z"
+				},
+				"protectionStatus": {
+					"keyManagedBy": "Microsoft"
+				},
+				"cluster": {
+					"category": "Prod",
+					"number": "107",
+					"uriSuffix": "eu-il107.gateway.prod.island",
+					"geoShortName": "EU",
+					"environment": "Prod"
+				},
+				"connectedGroups": [],
+				"lifecycleOperationsEnforcement": {
+					"allowedOperations": [
+						{
+							"type": {
+								"id": "DisableGovernanceConfiguration"
+							},
+							"reason": {
+								"message": "DisableGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+								"type": "GovernanceConfig"
+							}
+						},
+						{
+							"type": {
+								"id": "UpdateGovernanceConfiguration"
+							},
+							"reason": {
+								"message": "UpdateGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+								"type": "GovernanceConfig"
+							}
+						}
+					]
+				},
+				"governanceConfiguration": {
+					"protectionLevel": "Basic"
+				}
+			}
+		}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000004`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+			"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000004",
+			"type": "Microsoft.BusinessAppPlatform/scopes/environments",
+			"location": "unitedstates",
+			"name": "00000000-0000-0000-0000-000000000004",
+			"properties": {
+				"tenantId": "123",
+				"azureRegion": "westeurope",
+				"displayName": "Example1",
+				"createdTime": "2023-09-27T07:08:27.6057592Z",
+				"createdBy": {
+					"id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+					"displayName": "admin",
+					"email": "admin",
+					"type": "User",
+					"tenantId": "123",
+					"userPrincipalName": "admin"
+				},
+				"lastModifiedTime": "2023-09-27T07:08:34.9205145Z",
+				"provisioningState": "Succeeded",
+				"creationType": "User",
+				"environmentSku": "Trial",
+				"isDefault": false,
+				"capacity": [
+					{
+						"capacityType": "Database",
+						"actualConsumption": 885.0391,
+						"ratedConsumption": 1024.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "File",
+						"actualConsumption": 1187.142,
+						"ratedConsumption": 1187.142,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "Log",
+						"actualConsumption": 0.0,
+						"ratedConsumption": 0.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "FinOpsDatabase",
+						"actualConsumption": 0.0,
+						"ratedConsumption": 0.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "FinOpsFile",
+						"actualConsumption": 0.0,
+						"ratedConsumption": 0.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					}
+				],
+				"addons": [],
+				"clientUris": {
+					"admin": "https://admin.powerplatform.microsoft.com/environments/environment/00000000-0000-0000-0000-000000000004/hub",
+					"maker": "https://make.powerapps.com/environments/00000000-0000-0000-0000-000000000004/home"
+				},
+				"runtimeEndpoints": {
+					"microsoft.BusinessAppPlatform": "https://europe.api.bap.microsoft.com",
+					"microsoft.CommonDataModel": "https://europe.api.cds.microsoft.com",
+					"microsoft.PowerApps": "https://europe.api.powerapps.com",
+					"microsoft.PowerAppsAdvisor": "https://europe.api.advisor.powerapps.com",
+					"microsoft.PowerVirtualAgents": "https://powervamg.eu-il107.gateway.prod.island.powerapps.com",
+					"microsoft.ApiManagement": "https://management.EUROPE.azure-apihub.net",
+					"microsoft.Flow": "https://emea.api.flow.microsoft.com"
+				},
+				"databaseType": "CommonDataService",
+				"linkedEnvironmentMetadata": {
+					"resourceId": "orgid",
+					"friendlyName": "displayname",
+					"uniqueName": "00000000-0000-0000-0000-000000000004",
+					"domainName": "00000000-0000-0000-0000-000000000004",
+					"version": "9.2.23092.00206",
+					"instanceUrl": "https://00000000-0000-0000-0000-000000000004.crm4.dynamics.com/",
+					"instanceApiUrl": "https://00000000-0000-0000-0000-000000000004.api.crm4.dynamics.com",
+					"baseLanguage": 1033,
+					"instanceState": "Ready",
+					"createdTime": "2023-09-27T07:08:28.957Z",
+					"backgroundOperationsState": "Enabled",
+					"scaleGroup": "EURCRMLIVESG705",
+					"platformSku": "Standard",
+					"schemaType": "Standard"
+				},
+				"trialScenarioType": "None",
+				"notificationMetadata": {
+					"state": "NotSpecified",
+					"branding": "NotSpecific"
+				},
+				"retentionPeriod": "P7D",
+				"states": {
+					"management": {
+						"id": "Ready"
+					},
+					"runtime": {
+						"runtimeReasonCode": "NotSpecified",
+						"requestedBy": {
+							"displayName": "SYSTEM",
+							"type": "NotSpecified"
+						},
+						"id": "Enabled"
+					}
+				},
+				"updateCadence": {
+					"id": "Frequent"
+				},
+				"retentionDetails": {
+					"retentionPeriod": "P7D",
+					"backupsAvailableFromDateTime": "2023-10-03T09:23:06.1717665Z"
+				},
+				"protectionStatus": {
+					"keyManagedBy": "Microsoft"
+				},
+				"cluster": {
+					"category": "Prod",
+					"number": "107",
+					"uriSuffix": "eu-il107.gateway.prod.island",
+					"geoShortName": "EU",
+					"environment": "Prod"
+				},
+				"connectedGroups": [],
+				"lifecycleOperationsEnforcement": {
+					"allowedOperations": [
+						{
+							"type": {
+								"id": "DisableGovernanceConfiguration"
+							},
+							"reason": {
+								"message": "DisableGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+								"type": "GovernanceConfig"
+							}
+						},
+						{
+							"type": {
+								"id": "UpdateGovernanceConfiguration"
+							},
+							"reason": {
+								"message": "UpdateGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+								"type": "GovernanceConfig"
+							}
+						}
+					]
+				},
+				"governanceConfiguration": {
+					"protectionLevel": "Basic"
+				}
+			}
+		}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000005`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+			"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000005",
+			"type": "Microsoft.BusinessAppPlatform/scopes/environments",
+			"location": "unitedstates",
+			"name": "00000000-0000-0000-0000-000000000005",
+			"properties": {
+				"tenantId": "123",
+				"azureRegion": "westeurope",
+				"displayName": "Example1",
+				"createdTime": "2023-09-27T07:08:27.6057592Z",
+				"createdBy": {
+					"id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+					"displayName": "admin",
+					"email": "admin",
+					"type": "User",
+					"tenantId": "123",
+					"userPrincipalName": "admin"
+				},
+				"lastModifiedTime": "2023-09-27T07:08:34.9205145Z",
+				"provisioningState": "Succeeded",
+				"creationType": "User",
+				"environmentSku": "Trial",
+				"isDefault": false,
+				"capacity": [
+					{
+						"capacityType": "Database",
+						"actualConsumption": 885.0391,
+						"ratedConsumption": 1024.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "File",
+						"actualConsumption": 1187.142,
+						"ratedConsumption": 1187.142,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "Log",
+						"actualConsumption": 0.0,
+						"ratedConsumption": 0.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "FinOpsDatabase",
+						"actualConsumption": 0.0,
+						"ratedConsumption": 0.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					},
+					{
+						"capacityType": "FinOpsFile",
+						"actualConsumption": 0.0,
+						"ratedConsumption": 0.0,
+						"capacityUnit": "MB",
+						"updatedOn": "2023-10-10T03:00:35Z"
+					}
+				],
+				"addons": [],
+				"clientUris": {
+					"admin": "https://admin.powerplatform.microsoft.com/environments/environment/00000000-0000-0000-0000-000000000005/hub",
+					"maker": "https://make.powerapps.com/environments/00000000-0000-0000-0000-000000000005/home"
+				},
+				"runtimeEndpoints": {
+					"microsoft.BusinessAppPlatform": "https://europe.api.bap.microsoft.com",
+					"microsoft.CommonDataModel": "https://europe.api.cds.microsoft.com",
+					"microsoft.PowerApps": "https://europe.api.powerapps.com",
+					"microsoft.PowerAppsAdvisor": "https://europe.api.advisor.powerapps.com",
+					"microsoft.PowerVirtualAgents": "https://powervamg.eu-il107.gateway.prod.island.powerapps.com",
+					"microsoft.ApiManagement": "https://management.EUROPE.azure-apihub.net",
+					"microsoft.Flow": "https://emea.api.flow.microsoft.com"
+				},
+				"databaseType": "CommonDataService",
+				"linkedEnvironmentMetadata": {
+					"resourceId": "orgid",
+					"friendlyName": "displayname",
+					"uniqueName": "00000000-0000-0000-0000-000000000005",
+					"domainName": "00000000-0000-0000-0000-000000000005",
+					"version": "9.2.23092.00206",
+					"instanceUrl": "https://00000000-0000-0000-0000-000000000005.crm4.dynamics.com/",
+					"instanceApiUrl": "https://00000000-0000-0000-0000-000000000005.api.crm4.dynamics.com",
+					"baseLanguage": 1031,
+					"instanceState": "Ready",
+					"createdTime": "2023-09-27T07:08:28.957Z",
+					"backgroundOperationsState": "Enabled",
+					"scaleGroup": "EURCRMLIVESG705",
+					"platformSku": "Standard",
+					"schemaType": "Standard"
+				},
+				"trialScenarioType": "None",
+				"notificationMetadata": {
+					"state": "NotSpecified",
+					"branding": "NotSpecific"
+				},
+				"retentionPeriod": "P7D",
+				"states": {
+					"management": {
+						"id": "Ready"
+					},
+					"runtime": {
+						"runtimeReasonCode": "NotSpecified",
+						"requestedBy": {
+							"displayName": "SYSTEM",
+							"type": "NotSpecified"
+						},
+						"id": "Enabled"
+					}
+				},
+				"updateCadence": {
+					"id": "Frequent"
+				},
+				"retentionDetails": {
+					"retentionPeriod": "P7D",
+					"backupsAvailableFromDateTime": "2023-10-03T09:23:06.1717665Z"
+				},
+				"protectionStatus": {
+					"keyManagedBy": "Microsoft"
+				},
+				"cluster": {
+					"category": "Prod",
+					"number": "107",
+					"uriSuffix": "eu-il107.gateway.prod.island",
+					"geoShortName": "EU",
+					"environment": "Prod"
+				},
+				"connectedGroups": [],
+				"lifecycleOperationsEnforcement": {
+					"allowedOperations": [
+						{
+							"type": {
+								"id": "DisableGovernanceConfiguration"
+							},
+							"reason": {
+								"message": "DisableGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+								"type": "GovernanceConfig"
+							}
+						},
+						{
+							"type": {
+								"id": "UpdateGovernanceConfiguration"
+							},
+							"reason": {
+								"message": "UpdateGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+								"type": "GovernanceConfig"
+							}
+						}
+					]
+				},
+				"governanceConfiguration": {
+					"protectionLevel": "Basic"
+				}
+			}
+		}`), nil
+		})
 
 	resource.Test(t, resource.TestCase{
-		IsUnitTest: true,
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock, dataverseClientMock, nil),
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: UniTestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					language_code                             = "1033"
+					currency_code                             = "PLN"
+					environment_type                          = "Sandbox"
+					domain									  = "00000000-0000-0000-0000-000000000001"
+					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+	
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "PLN"),
+				),
+			},
+			{
+				Config: UniTestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "unitedstates"
+					language_code                             = "1033"
+					currency_code                             = "PLN"
+					environment_type                          = "Sandbox"
+					domain									  = "00000000-0000-0000-0000-000000000002"
+					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "unitedstates"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "PLN"),
+				),
+			},
+			{
+				Config: UniTestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "Example1"
+					location                                  = "unitedstates"
+					language_code                             = "1033"
+					currency_code                             = "EUR"
+					environment_type                          = "Sandbox"
+					domain									  = "00000000-0000-0000-0000-000000000003"
+					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", "00000000-0000-0000-0000-000000000003"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
+				),
+			},
+			{
+				Config: UniTestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "Example1"
+					location                                  = "unitedstates"
+					language_code                             = "1033"
+					currency_code                             = "EUR"
+					environment_type                          = "Trial"
+					domain									  = "00000000-0000-0000-0000-000000000004"
+					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", "00000000-0000-0000-0000-000000000004"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Trial"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
+				),
+			},
+			{
+				Config: UniTestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "Example1"
+					location                                  = "unitedstates"
+					language_code                             = "1031"
+					currency_code                             = "EUR"
+					environment_type                          = "Trial"
+					domain									  = "00000000-0000-0000-0000-000000000005"
+					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", "00000000-0000-0000-0000-000000000005"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1031"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
+				),
+			},
 		},
-		Steps: steps,
 	})
 
 }
