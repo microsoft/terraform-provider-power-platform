@@ -1,14 +1,12 @@
 package billing_policy
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
 
-	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
+	powerplatformapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/ppapi"
 )
 
 type BillingPolicyClientInterface interface {
@@ -18,7 +16,7 @@ type BillingPolicyClientInterface interface {
 }
 
 type BillingPolicyClient struct {
-	ppapi *http.Client
+	ppapi powerplatformapi.PowerPlatformClientApiInterface
 }
 
 const (
@@ -26,9 +24,7 @@ const (
 )
 
 func NewBillingPolicyClient(ctx context.Context) BillingPolicyClientInterface {
-	return &BillingPolicyClient{
-		ppapi: clients.NewPowerPlatformApiClient(ctx, []int{http.StatusOK}),
-	}
+	return &BillingPolicyClient{}
 }
 
 func (client *BillingPolicyClient) GetBillingPolicy(ctx context.Context, id string) (*BillingPolicyDto, error) {
@@ -38,24 +34,33 @@ func (client *BillingPolicyClient) GetBillingPolicy(ctx context.Context, id stri
 		Path:   fmt.Sprintf("/licensing/billingPolicies/%s", id),
 	}
 
-	resp, err := client.ppapi.Get(apiUrl.String())
-	if err != nil {
-		return nil, err
-	}
-	
 	policy := BillingPolicyDto{}
-	err = json.NewDecoder(resp.Body).Decode(&policy)
-	if err != nil {
-		return nil, err
-	}
+	_, err := client.ppapi.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
 
-	return &policy, nil
+	return &policy, err
 }
 
 func (client *BillingPolicyClient) GetBillingPolicies(ctx context.Context) ([]BillingPolicyDto, error) {
-	return nil, nil
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   "api.powerplatform.com",
+		Path:   "/licensing/billingPolicies",
+	}
+
+	policies := []BillingPolicyDto{}
+	_, err := client.ppapi.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policies)
+
+	return policies, err
 }
 
 func (client *BillingPolicyClient) CreateBillingPolicy(ctx context.Context, policyToCreate BillingPolicyDto) (*BillingPolicyDto, error) {
 	return nil, nil
+}
+
+func (client *BillingPolicyClient) UpdateBillingPolicy(ctx context.Context, policyToUpdate BillingPolicyDto) (*BillingPolicyDto, error) {
+	return nil, nil
+}
+
+func (client *BillingPolicyClient) DeleteBillingPolicy(ctx context.Context, id string) error {
+	return nil
 }

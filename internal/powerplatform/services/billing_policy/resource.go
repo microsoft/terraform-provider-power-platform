@@ -12,14 +12,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	powerplatform_bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/bapi"
+	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform"
+	powerplatform_ppapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/ppapi"
 )
 
 var _ resource.Resource = &BillingPolicyResource{}
 var _ resource.ResourceWithImportState = &BillingPolicyResource{}
 
 type BillingPolicyResource struct {
-	ApiClient        powerplatform_bapi.ApiClientInterface
+	ApiClient        powerplatform_ppapi.PowerPlatformClientApiInterface
 	ProviderTypeName string
 	TypeName         string
 }
@@ -101,13 +102,13 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 
 // Configure
 func (r *BillingPolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	provider, ok := req.ProviderData.(*PowerPlatformProvider)
+	provider, ok := req.ProviderData.(*powerplatform.PowerPlatformProvider)
 	if !ok {
 		resp.Diagnostics.AddError("Unexpected provider type", fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData))
 		return
 	}
 
-	r.ApiClient = provider.bapiClient
+	r.ApiClient = provider.PowerPlatformApi.Client
 }
 
 // ImportState
@@ -138,9 +139,21 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 		},
 	}
 
+	r.ApiClient.Execute().(ctx, dto)
+
 }
 
 // Read
 func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 
+}
+
+// Update
+func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	
+}
+
+// Delete
+func (r *BillingPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	
 }
