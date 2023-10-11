@@ -20,19 +20,8 @@ variable "region" {
   type        = string
 }
 
-variable "vm_pwd" {
-  description = "The password for the VM"
-  sensitive   = true
-  type        = string
-}
-
-variable "nic_id" {
-  description = "The id of the network interface to attach to the VM"
-  type        = string
-}
-
-variable "installps7_link" {
-  description = "The Blob link to the PowerShell 7 installation file"
+variable "sig_id" {
+  description = "The id of the shared image gallery where the image should be created"
   type        = string
 }
 

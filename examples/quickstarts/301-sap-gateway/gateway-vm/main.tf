@@ -36,6 +36,17 @@ module "powershell-setup" {
   installps7_link     = var.installps7_link
 }
 
+# Create Java Runtime version in Shared Image Gallery
+module "java-runtime-setup" {
+  source              = "./java-runtime-setup"
+  prefix              = var.prefix
+  base_name           = var.base_name
+  resource_group_name = var.resource_group_name
+  region              = var.region
+  sig_id              = azurerm_shared_image_gallery.sig.id
+  java_setup_link     = var.java_setup_link
+}
+
 resource "azurecaf_name" "vm-opgw" {
   name          = var.base_name
   resource_type = "azurerm_windows_virtual_machine"
@@ -78,4 +89,11 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
     version_id = module.powershell-setup.powershell_version_id
     order      = 1
   }
+
+  # Setup Java Runtime
+  gallery_application {
+    version_id = module.java-runtime-setup.java_runtime_version_id
+    order      = 2
+  }
+
 }

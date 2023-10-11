@@ -162,4 +162,5 @@ module "gateway_vm" {
   vm_pwd              = var.vm_pwd_gw
   nic_id              = azurerm_network_interface.nic.id
   installps7_link     = var.installps7_link
+  java_setup_link     = var.java_setup_link
 }
