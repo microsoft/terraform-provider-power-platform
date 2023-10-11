@@ -38,18 +38,18 @@ type PowerAppsListDataSourceModel struct {
 }
 
 type PowerAppsDataSourceModel struct {
-	EnvironmentName types.String `tfsdk:"id"`
-	DisplayName     types.String `tfsdk:"display_name"`
-	Name            types.String `tfsdk:"name"`
-	CreatedTime     types.String `tfsdk:"created_time"`
+	EnvironmentId types.String `tfsdk:"id"`
+	DisplayName   types.String `tfsdk:"display_name"`
+	Name          types.String `tfsdk:"name"`
+	CreatedTime   types.String `tfsdk:"created_time"`
 }
 
 func ConvertFromPowerAppDto(powerAppDto models.PowerAppBapi) PowerAppsDataSourceModel {
 	return PowerAppsDataSourceModel{
-		EnvironmentName: types.StringValue(powerAppDto.Properties.Environment.Name),
-		DisplayName:     types.StringValue(powerAppDto.Properties.DisplayName),
-		Name:            types.StringValue(powerAppDto.Name),
-		CreatedTime:     types.StringValue(powerAppDto.Properties.CreatedTime),
+		EnvironmentId: types.StringValue(powerAppDto.Properties.Environment.Id),
+		DisplayName:   types.StringValue(powerAppDto.Properties.DisplayName),
+		Name:          types.StringValue(powerAppDto.Name),
+		CreatedTime:   types.StringValue(powerAppDto.Properties.CreatedTime),
 	}
 }
 
