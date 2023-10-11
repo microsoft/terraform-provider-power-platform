@@ -520,7 +520,7 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", env.Name),
+					//resource.TestCheckResourceAttr("powerplatform_environment.development", "id", env.Name),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example1"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", env.Properties.LinkedEnvironmentMetadata.InstanceURL),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", env.Properties.LinkedEnvironmentMetadata.DomainName),

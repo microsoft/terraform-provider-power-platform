@@ -40,8 +40,8 @@ type EnvironmentResource struct {
 }
 
 type EnvironmentResourceModel struct {
-	Id              types.String `tfsdk:"id"`
-	EnvironmentId   types.String `tfsdk:"environment_id"`
+	Id types.String `tfsdk:"id"`
+	//EnvironmentId   types.String `tfsdk:"environment_id"`
 	DisplayName     types.String `tfsdk:"display_name"`
 	Url             types.String `tfsdk:"url"`
 	Domain          types.String `tfsdk:"domain"`
@@ -297,7 +297,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	envDto, err := r.BapiApiClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
+	envDto, err := r.BapiApiClient.GetEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
 		return
@@ -329,7 +329,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.LinkedAppUrl = env.LinkedAppURL
 
 	//TODO move to separate function
-	ctx = tflog.SetField(ctx, "id", state.EnvironmentId.ValueString())
+	ctx = tflog.SetField(ctx, "id", state.Id.ValueString())
 	ctx = tflog.SetField(ctx, "display_name", state.DisplayName.ValueString())
 	ctx = tflog.SetField(ctx, "url", state.Url.ValueString())
 	ctx = tflog.SetField(ctx, "domain", state.Domain.ValueString())
@@ -342,7 +342,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	ctx = tflog.SetField(ctx, "version", state.Version.ValueString())
 	ctx = tflog.SetField(ctx, "template", strings.Join(state.Templates, " "))
 
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.EnvironmentId.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
@@ -387,7 +387,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 			},
 		}
 
-		envDto, err := r.BapiApiClient.UpdateEnvironment(ctx, plan.EnvironmentId.ValueString(), envToUpdate)
+		envDto, err := r.BapiApiClient.UpdateEnvironment(ctx, plan.Id.ValueString(), envToUpdate)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
 			return
@@ -427,7 +427,7 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	err := r.BapiApiClient.DeleteEnvironment(ctx, state.EnvironmentId.ValueString())
+	err := r.BapiApiClient.DeleteEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
