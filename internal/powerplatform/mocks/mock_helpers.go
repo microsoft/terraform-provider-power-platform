@@ -1,6 +1,7 @@
 package powerplatform_mocks
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -53,5 +54,390 @@ func ActivateOAuthHttpMocks() {
 	httpmock.RegisterResponder("POST", `=~^https://login\.microsoftonline\.com/*./oauth2/v2.0/token`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, oAuthTokenResponse), nil
+		})
+}
+
+func ActivateEnvironmentHttpMocks(envId string) {
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
+			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{
+				"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%[1]s",
+				"type": "Microsoft.BusinessAppPlatform/scopes/environments",
+				"location": "europe",
+				"name": "%[1]s",
+				"properties": {
+					"tenantId": "123",
+					"azureRegion": "westeurope",
+					"displayName": "displayname",
+					"createdTime": "2023-09-27T07:08:27.6057592Z",
+					"createdBy": {
+						"id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+						"displayName": "admin",
+						"email": "admin",
+						"type": "User",
+						"tenantId": "123",
+						"userPrincipalName": "admin"
+					},
+					"lastModifiedTime": "2023-09-27T07:08:34.9205145Z",
+					"provisioningState": "Succeeded",
+					"creationType": "User",
+					"environmentSku": "Sandbox",
+					"isDefault": false,
+					"capacity": [
+						{
+							"capacityType": "Database",
+							"actualConsumption": 885.0391,
+							"ratedConsumption": 1024.0,
+							"capacityUnit": "MB",
+							"updatedOn": "2023-10-10T03:00:35Z"
+						},
+						{
+							"capacityType": "File",
+							"actualConsumption": 1187.142,
+							"ratedConsumption": 1187.142,
+							"capacityUnit": "MB",
+							"updatedOn": "2023-10-10T03:00:35Z"
+						},
+						{
+							"capacityType": "Log",
+							"actualConsumption": 0.0,
+							"ratedConsumption": 0.0,
+							"capacityUnit": "MB",
+							"updatedOn": "2023-10-10T03:00:35Z"
+						},
+						{
+							"capacityType": "FinOpsDatabase",
+							"actualConsumption": 0.0,
+							"ratedConsumption": 0.0,
+							"capacityUnit": "MB",
+							"updatedOn": "2023-10-10T03:00:35Z"
+						},
+						{
+							"capacityType": "FinOpsFile",
+							"actualConsumption": 0.0,
+							"ratedConsumption": 0.0,
+							"capacityUnit": "MB",
+							"updatedOn": "2023-10-10T03:00:35Z"
+						}
+					],
+					"addons": [],
+					"clientUris": {
+						"admin": "https://admin.powerplatform.microsoft.com/environments/environment/456/hub",
+						"maker": "https://make.powerapps.com/environments/456/home"
+					},
+					"runtimeEndpoints": {
+						"microsoft.BusinessAppPlatform": "https://europe.api.bap.microsoft.com",
+						"microsoft.CommonDataModel": "https://europe.api.cds.microsoft.com",
+						"microsoft.PowerApps": "https://europe.api.powerapps.com",
+						"microsoft.PowerAppsAdvisor": "https://europe.api.advisor.powerapps.com",
+						"microsoft.PowerVirtualAgents": "https://powervamg.eu-il107.gateway.prod.island.powerapps.com",
+						"microsoft.ApiManagement": "https://management.EUROPE.azure-apihub.net",
+						"microsoft.Flow": "https://emea.api.flow.microsoft.com"
+					},
+					"databaseType": "CommonDataService",
+					"linkedEnvironmentMetadata": {
+						"resourceId": "orgid",
+						"friendlyName": "displayname",
+						"uniqueName": "%[1]s",
+						"domainName": "%[1]s",
+						"version": "9.2.23092.00206",
+						"instanceUrl": "https://%[1]s.crm4.dynamics.com/",
+						"instanceApiUrl": "https://%[1]s.api.crm4.dynamics.com",
+						"baseLanguage": 1033,
+						"instanceState": "Ready",
+						"createdTime": "2023-09-27T07:08:28.957Z",
+						"backgroundOperationsState": "Enabled",
+						"scaleGroup": "EURCRMLIVESG705",
+						"platformSku": "Standard",
+						"schemaType": "Standard"
+					},
+					"trialScenarioType": "None",
+					"notificationMetadata": {
+						"state": "NotSpecified",
+						"branding": "NotSpecific"
+					},
+					"retentionPeriod": "P7D",
+					"states": {
+						"management": {
+							"id": "Ready"
+						},
+						"runtime": {
+							"runtimeReasonCode": "NotSpecified",
+							"requestedBy": {
+								"displayName": "SYSTEM",
+								"type": "NotSpecified"
+							},
+							"id": "Enabled"
+						}
+					},
+					"updateCadence": {
+						"id": "Frequent"
+					},
+					"retentionDetails": {
+						"retentionPeriod": "P7D",
+						"backupsAvailableFromDateTime": "2023-10-03T09:23:06.1717665Z"
+					},
+					"protectionStatus": {
+						"keyManagedBy": "Microsoft"
+					},
+					"cluster": {
+						"category": "Prod",
+						"number": "107",
+						"uriSuffix": "eu-il107.gateway.prod.island",
+						"geoShortName": "EU",
+						"environment": "Prod"
+					},
+					"connectedGroups": [],
+					"lifecycleOperationsEnforcement": {
+						"allowedOperations": [
+							{
+								"type": {
+									"id": "DisableGovernanceConfiguration"
+								},
+								"reason": {
+									"message": "DisableGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+									"type": "GovernanceConfig"
+								}
+							},
+							{
+								"type": {
+									"id": "UpdateGovernanceConfiguration"
+								},
+								"reason": {
+									"message": "UpdateGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+									"type": "GovernanceConfig"
+								}
+							}
+						]
+					},
+					"governanceConfiguration": {
+						"protectionLevel": "Basic"
+					}
+				}
+			}`, id)), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{
+				"value": [
+					{
+						"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%[1]s",
+						"type": "Microsoft.BusinessAppPlatform/scopes/environments",
+						"location": "europe",
+						"name": "%[1]s",
+						"properties": {
+							"tenantId": "123",
+							"azureRegion": "northeurope",
+							"displayName": "Admin AdminOnMicrosoft's Environment",
+							"createdTime": "2023-02-15T08:02:36.1799125Z",
+							"createdBy": {
+								"id": "SYSTEM",
+								"displayName": "SYSTEM",
+								"type": "NotSpecified"
+							},
+							"usedBy": {
+								"id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+								"type": "User",
+								"tenantId": "123",
+								"userPrincipalName": "admin"
+							},
+							"provisioningState": "Succeeded",
+							"creationType": "Developer",
+							"environmentSku": "Developer",
+							"isDefault": false,
+							"clientUris": {
+								"admin": "https://admin.powerplatform.microsoft.com/environments/environment/456/hub",
+								"maker": "https://make.powerapps.com/environments/456/home"
+							},
+							"runtimeEndpoints": {
+								"microsoft.BusinessAppPlatform": "https://europe.api.bap.microsoft.com",
+								"microsoft.CommonDataModel": "https://europe.api.cds.microsoft.com",
+								"microsoft.PowerApps": "https://europe.api.powerapps.com",
+								"microsoft.PowerAppsAdvisor": "https://europe.api.advisor.powerapps.com",
+								"microsoft.PowerVirtualAgents": "https://powervamg.eu-il106.gateway.prod.island.powerapps.com",
+								"microsoft.ApiManagement": "https://management.EUROPE.azure-apihub.net",
+								"microsoft.Flow": "https://emea.api.flow.microsoft.com"
+							},
+							"databaseType": "CommonDataService",
+							"linkedEnvironmentMetadata": {
+								"resourceId": "6450637c-f9a8-4988-8cf7-b03723d51ab7",
+								"friendlyName": "Admin AdminOnMicrosoft's Environment",
+								"uniqueName": "unq6450637cf9a849888cf7b03723d51",
+								"domainName": "%[1]s",
+								"version": "9.2.23092.00206",
+								"instanceUrl": "https://%[1]s.crm4.dynamics.com/",
+								"instanceApiUrl": "https://%[1]s.api.crm4.dynamics.com",
+								"baseLanguage": 1033,
+								"instanceState": "Ready",
+								"createdTime": "2023-02-15T08:02:46.87Z",
+								"backgroundOperationsState": "Enabled",
+								"scaleGroup": "EURCRMLIVESG633",
+								"platformSku": "Standard",
+								"schemaType": "Standard"
+							},
+							"trialScenarioType": "None",
+							"retentionPeriod": "P7D",
+							"states": {
+								"management": {
+									"id": "NotSpecified"
+								},
+								"runtime": {
+									"runtimeReasonCode": "NotSpecified",
+									"requestedBy": {
+										"displayName": "SYSTEM",
+										"type": "NotSpecified"
+									},
+									"id": "Enabled"
+								}
+							},
+							"updateCadence": {
+								"id": "Frequent"
+							},
+							"retentionDetails": {
+								"retentionPeriod": "P7D",
+								"backupsAvailableFromDateTime": "2023-10-03T08:12:55.5332994Z"
+							},
+							"protectionStatus": {
+								"keyManagedBy": "Microsoft"
+							},
+							"cluster": {
+								"category": "Prod",
+								"number": "106",
+								"uriSuffix": "eu-il106.gateway.prod.island",
+								"geoShortName": "EU",
+								"environment": "Prod"
+							},
+							"connectedGroups": [],
+							"lifecycleOperationsEnforcement": {
+								"allowedOperations": [
+									{
+										"type": {
+											"id": "Move"
+										}
+									}
+								]
+							},
+							"governanceConfiguration": {
+								"protectionLevel": "Basic"
+							}
+						}
+					},
+					{
+						"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/123",
+						"type": "Microsoft.BusinessAppPlatform/scopes/environments",
+						"location": "europe",
+						"name": "123",
+						"properties": {
+							"tenantId": "123",
+							"azureRegion": "westeurope",
+							"displayName": "displayname",
+							"createdTime": "2023-09-27T07:08:27.6057592Z",
+							"createdBy": {
+								"id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+								"displayName": "admin",
+								"email": "admin",
+								"type": "User",
+								"tenantId": "123",
+								"userPrincipalName": "admin"
+							},
+							"lastModifiedTime": "2023-09-27T07:08:34.9205145Z",
+							"provisioningState": "Succeeded",
+							"creationType": "User",
+							"environmentSku": "Sandbox",
+							"isDefault": false,
+							"clientUris": {
+								"admin": "https://admin.powerplatform.microsoft.com/environments/environment/xxx/hub",
+								"maker": "https://make.powerapps.com/environments/xxx/home"
+							},
+							"runtimeEndpoints": {
+								"microsoft.BusinessAppPlatform": "https://europe.api.bap.microsoft.com",
+								"microsoft.CommonDataModel": "https://europe.api.cds.microsoft.com",
+								"microsoft.PowerApps": "https://europe.api.powerapps.com",
+								"microsoft.PowerAppsAdvisor": "https://europe.api.advisor.powerapps.com",
+								"microsoft.PowerVirtualAgents": "https://powervamg.eu-il107.gateway.prod.island.powerapps.com",
+								"microsoft.ApiManagement": "https://management.EUROPE.azure-apihub.net",
+								"microsoft.Flow": "https://emea.api.flow.microsoft.com"
+							},
+							"databaseType": "CommonDataService",
+							"linkedEnvironmentMetadata": {
+								"resourceId": "orgid",
+								"friendlyName": "displayname",
+								"uniqueName": "xxx",
+								"domainName": "xxx",
+								"version": "9.2.23092.00206",
+								"instanceUrl": "https://xxx.crm4.dynamics.com/",
+								"instanceApiUrl": "https://xxx.api.crm4.dynamics.com",
+								"baseLanguage": 1033,
+								"instanceState": "Ready",
+								"createdTime": "2023-09-27T07:08:28.957Z",
+								"backgroundOperationsState": "Enabled",
+								"scaleGroup": "EURCRMLIVESG705",
+								"platformSku": "Standard",
+								"schemaType": "Standard"
+							},
+							"trialScenarioType": "None",
+							"notificationMetadata": {
+								"state": "NotSpecified",
+								"branding": "NotSpecific"
+							},
+							"retentionPeriod": "P7D",
+							"states": {
+								"management": {
+									"id": "Ready"
+								},
+								"runtime": {
+									"runtimeReasonCode": "NotSpecified",
+									"requestedBy": {
+										"displayName": "SYSTEM",
+										"type": "NotSpecified"
+									},
+									"id": "Enabled"
+								}
+							},
+							"updateCadence": {
+								"id": "Frequent"
+							},
+							"retentionDetails": {
+								"retentionPeriod": "P7D",
+								"backupsAvailableFromDateTime": "2023-10-03T08:12:55.5332994Z"
+							},
+							"protectionStatus": {
+								"keyManagedBy": "Microsoft"
+							},
+							"cluster": {
+								"category": "Prod",
+								"number": "107",
+								"uriSuffix": "eu-il107.gateway.prod.island",
+								"geoShortName": "EU",
+								"environment": "Prod"
+							},
+							"connectedGroups": [],
+							"lifecycleOperationsEnforcement": {
+								"allowedOperations": [
+									{
+										"type": {
+											"id": "Move"
+										}
+									}
+								],
+								"disallowedOperations": [
+									{
+										"type": {
+											"id": "Provision"
+										},
+										"reason": {
+											"message": "Provision cannot be performed because there is no linked CDS instance or the CDS instance version is not supported.",
+											"type": "CdsLink"
+										}
+									}
+								]
+							},
+							"governanceConfiguration": {
+								"protectionLevel": "Basic"
+							}
+						}
+					}]}`, envId)), nil
 		})
 }

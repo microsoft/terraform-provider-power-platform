@@ -14,7 +14,6 @@ import (
 func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-
 	mock_helpers.ActivateOAuthHttpMocks()
 
 	const policyId1 = "16c21e0d-429e-4e37-b496-f3c1bcd78bfe"
