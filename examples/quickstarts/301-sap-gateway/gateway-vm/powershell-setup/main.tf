@@ -12,7 +12,7 @@ terraform {
 }
 
 resource "azurerm_gallery_application" "ps7-igl-app" {
-  name              = "PowerShell7"
+  name              = "ps7-setup.ps1"
   gallery_id        = var.sig_id
   location          = var.region
   supported_os_type = "Windows"
@@ -24,7 +24,7 @@ resource "azurerm_gallery_application_version" "ps7-igl-app-version" {
   location               = var.region
 
   manage_action {
-    install = "move .\\PowerShell7 .\\installps7.ps1 & powershell -ExecutionPolicy Unrestricted -File installps7.ps1"
+    install = "powershell -ExecutionPolicy Unrestricted -File ps7-setup.ps1"
     remove  = "echo"
   }
 
