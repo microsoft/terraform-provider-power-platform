@@ -12,7 +12,7 @@ terraform {
 }
 
 resource "azurerm_gallery_application" "java-igl-app" {
-  name              = "JavaRE"
+  name              = "java-setup.ps1"
   gallery_id        = var.sig_id
   location          = var.region
   supported_os_type = "Windows"
@@ -24,8 +24,9 @@ resource "azurerm_gallery_application_version" "java-igl-app-version" {
   location               = var.region
 
   manage_action {
-    install = "move .\\JavaRE .\\java-setup.ps1 & powershell -ExecutionPolicy Unrestricted -File java-setup.ps1"
-    remove  = "echo"
+    install = "powershell -ExecutionPolicy Unrestricted -File java-setup.ps1"
+    #install = "move .\\JavaRE .\\java-setup.ps1 & powershell -ExecutionPolicy Unrestricted -File java-setup.ps1"
+    remove = "echo"
   }
 
   source {
