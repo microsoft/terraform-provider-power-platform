@@ -1,20 +1,15 @@
 package powerplatform
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"regexp"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
-	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
@@ -120,7 +115,6 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mock_helpers.ActivateOAuthHttpMocks()
-	//mock_helpers.ActivateEnvironmentHttpMocks("00000000-0000-0000-0000-000000000001")
 
 	envIdResponseInx := -1
 	envIdResponseArray := []string{"00000000-0000-0000-0000-000000000001",
@@ -1133,152 +1127,85 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 }
 
 func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
-	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
-	dataverseClientMock := mocks.NewUnitTestMockDataverseClientInterface(t)
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mock_helpers.ActivateOAuthHttpMocks()
+	mock_helpers.ActivateEnvironmentHttpMocks("a")
 
-	envId := "00000000-0000-0000-0000-000000000001"
-	env := models.EnvironmentDto{
-		Name: envId,
-		Properties: models.EnvironmentPropertiesDto{
-			EnvironmentSku: "Sandbox",
-			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
-				ResourceId:      "org1",
-				SecurityGroupId: "security1",
-				DomainName:      "domain",
-				InstanceURL:     "url",
-				Version:         "version",
-			},
-			LinkedAppMetadata: models.LinkedAppMetadataDto{
-				Type: "Internal",
-				Id:   "00000000-0000-0000-0000-000000000000",
-				Url:  "https://url.operations.dynamics.com",
-			},
-		},
-	}
+	getLifecycleResponseInx := 0
+	patchResponseInx := 0
 
-	steps := []resource.TestStep{
-		{
-			Config: UniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" {
-				display_name                              = "Example1"
-				location                                  = "europe"
-				language_code                             = "1033"
-				currency_code                             = "USD"
-				environment_type                          = "Sandbox"
-				domain									  = "domain"
-				security_group_id 						  = "security1"
-			}`,
-			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envId),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example1"),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "domain"),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "security1"),
-			),
-		},
-		{
-			Config: UniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" {
-				display_name                              = "Example123"
-				location                                  = "europe"
-				language_code                             = "1033"
-				currency_code                             = "USD"
-				environment_type                          = "Sandbox"
-				domain									  = "domain"
-				security_group_id 						  = "security1"
-			}`,
-			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envId),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example123"),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "domain"),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "security1"),
-			),
-		},
-		{
-			Config: UniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" {
-				display_name                              = "Example123"
-				location                                  = "europe"
-				language_code                             = "1033"
-				currency_code                             = "USD"
-				environment_type                          = "Sandbox"
-				domain									  = "domain123"
-				security_group_id 						  = "security1"
-			}`,
-			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envId),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example123"),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "domain123"),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "security1"),
-			),
-		},
-		{
-			Config: UniTestsProviderConfig + `
-			resource "powerplatform_environment" "development" {
-				display_name                              = "Example123"
-				location                                  = "europe"
-				language_code                             = "1033"
-				currency_code                             = "USD"
-				environment_type                          = "Sandbox"
-				domain									  = "domain123"
-				security_group_id 						  = "security123"
-			}`,
-			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envId),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example123"),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "domain123"),
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "security123"),
-			),
-		},
-	}
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource_environment_test/lifecycle_response_%d.json", getLifecycleResponseInx)).String()), nil
+		})
 
-	clientMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
-		return &env, nil
-	}).AnyTimes()
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			getLifecycleResponseInx++
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
 
-	dataverseClientMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource_environment_test/environment_response_%d.json", patchResponseInx)).String()), nil
+		})
 
-	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
-		env = models.EnvironmentDto{
-			Id:       envId,
-			Location: envToCreate.Location,
-			Name:     envId,
-			Properties: models.EnvironmentPropertiesDto{
-				DisplayName:    envToCreate.Properties.DisplayName,
-				EnvironmentSku: env.Properties.EnvironmentSku,
-				LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
-					DomainName:      "domain",
-					InstanceURL:     "url",
-					BaseLanguage:    envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage,
-					SecurityGroupId: envToCreate.Properties.LinkedEnvironmentMetadata.SecurityGroupId,
-					Version:         "version",
-					ResourceId:      "org1",
-				},
-			},
-		}
-		return &env, nil
-	}).Times(1)
+	httpmock.RegisterResponder("PATCH", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			patchResponseInx++
+			return httpmock.NewStringResponse(http.StatusAccepted, ""), nil
+		})
 
-	clientMock.EXPECT().UpdateEnvironment(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, environmentId string, environment models.EnvironmentDto) (*models.EnvironmentDto, error) {
-		env.Name = environment.Name
-		env.Id = environment.Id
-		env.Properties.DisplayName = environment.Properties.DisplayName
-		env.Properties.LinkedEnvironmentMetadata.DomainName = environment.Properties.LinkedEnvironmentMetadata.DomainName
-		env.Properties.LinkedEnvironmentMetadata.SecurityGroupId = environment.Properties.LinkedEnvironmentMetadata.SecurityGroupId
-		return &env, nil
-	}).Times(len(steps) - 1)
-
-	clientMock.EXPECT().DeleteEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) error {
-		return nil
-	}).AnyTimes()
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource_environment_test/environments_response_%d.json", patchResponseInx)).String()), nil
+		})
 
 	resource.Test(t, resource.TestCase{
-		IsUnitTest: true,
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock, dataverseClientMock, nil),
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: UniTestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "Example1"
+					location                                  = "europe"
+					language_code                             = "1033"
+					currency_code                             = "PLN"
+					environment_type                          = "Sandbox"
+					domain									  = "00000000-0000-0000-0000-000000000001"
+					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example1"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "00000000-0000-0000-0000-000000000000"),
+				),
+			},
+			{
+				Config: UniTestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "Example123"
+					location                                  = "europe"
+					language_code                             = "1033"
+					currency_code                             = "PLN"
+					environment_type                          = "Sandbox"
+					domain									  = "00000000-0000-0000-0000-000000000001"
+					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example123"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "00000000-0000-0000-0000-000000000000"),
+				),
+			},
 		},
-		Steps: steps,
 	})
-
 }
 
 func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {

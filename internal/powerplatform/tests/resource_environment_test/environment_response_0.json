@@ -1,0 +1,155 @@
+{
+    "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+    "type": "Microsoft.BusinessAppPlatform/scopes/environments",
+    "location": "europe",
+    "name": "00000000-0000-0000-0000-000000000001",
+    "properties": {
+        "tenantId": "123",
+        "azureRegion": "westeurope",
+        "displayName": "Example1",
+        "createdTime": "2023-09-27T07:08:27.6057592Z",
+        "createdBy": {
+            "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+            "displayName": "admin",
+            "email": "admin",
+            "type": "User",
+            "tenantId": "123",
+            "userPrincipalName": "admin"
+        },
+        "lastModifiedTime": "2023-09-27T07:08:34.9205145Z",
+        "provisioningState": "Succeeded",
+        "creationType": "User",
+        "environmentSku": "Sandbox",
+        "isDefault": false,
+        "capacity": [
+            {
+                "capacityType": "Database",
+                "actualConsumption": 885.0391,
+                "ratedConsumption": 1024.0,
+                "capacityUnit": "MB",
+                "updatedOn": "2023-10-10T03:00:35Z"
+            },
+            {
+                "capacityType": "File",
+                "actualConsumption": 1187.142,
+                "ratedConsumption": 1187.142,
+                "capacityUnit": "MB",
+                "updatedOn": "2023-10-10T03:00:35Z"
+            },
+            {
+                "capacityType": "Log",
+                "actualConsumption": 0.0,
+                "ratedConsumption": 0.0,
+                "capacityUnit": "MB",
+                "updatedOn": "2023-10-10T03:00:35Z"
+            },
+            {
+                "capacityType": "FinOpsDatabase",
+                "actualConsumption": 0.0,
+                "ratedConsumption": 0.0,
+                "capacityUnit": "MB",
+                "updatedOn": "2023-10-10T03:00:35Z"
+            },
+            {
+                "capacityType": "FinOpsFile",
+                "actualConsumption": 0.0,
+                "ratedConsumption": 0.0,
+                "capacityUnit": "MB",
+                "updatedOn": "2023-10-10T03:00:35Z"
+            }
+        ],
+        "addons": [],
+        "clientUris": {
+            "admin": "https://admin.powerplatform.microsoft.com/environments/environment/456/hub",
+            "maker": "https://make.powerapps.com/environments/456/home"
+        },
+        "runtimeEndpoints": {
+            "microsoft.BusinessAppPlatform": "https://europe.api.bap.microsoft.com",
+            "microsoft.CommonDataModel": "https://europe.api.cds.microsoft.com",
+            "microsoft.PowerApps": "https://europe.api.powerapps.com",
+            "microsoft.PowerAppsAdvisor": "https://europe.api.advisor.powerapps.com",
+            "microsoft.PowerVirtualAgents": "https://powervamg.eu-il107.gateway.prod.island.powerapps.com",
+            "microsoft.ApiManagement": "https://management.EUROPE.azure-apihub.net",
+            "microsoft.Flow": "https://emea.api.flow.microsoft.com"
+        },
+        "databaseType": "CommonDataService",
+        "linkedEnvironmentMetadata": {
+            "resourceId": "orgid",
+            "friendlyName": "displayname",
+            "uniqueName": "00000000-0000-0000-0000-000000000001",
+            "domainName": "00000000-0000-0000-0000-000000000001",
+            "version": "9.2.23092.00206",
+            "instanceUrl": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/",
+            "instanceApiUrl": "https://00000000-0000-0000-0000-000000000001.api.crm4.dynamics.com",
+            "baseLanguage": 1033,
+            "instanceState": "Ready",
+            "createdTime": "2023-09-27T07:08:28.957Z",
+            "backgroundOperationsState": "Enabled",
+            "scaleGroup": "EURCRMLIVESG705",
+            "platformSku": "Standard",
+            "schemaType": "Standard"
+        },
+        "trialScenarioType": "None",
+        "notificationMetadata": {
+            "state": "NotSpecified",
+            "branding": "NotSpecific"
+        },
+        "retentionPeriod": "P7D",
+        "states": {
+            "management": {
+                "id": "Ready"
+            },
+            "runtime": {
+                "runtimeReasonCode": "NotSpecified",
+                "requestedBy": {
+                    "displayName": "SYSTEM",
+                    "type": "NotSpecified"
+                },
+                "id": "Enabled"
+            }
+        },
+        "updateCadence": {
+            "id": "Frequent"
+        },
+        "retentionDetails": {
+            "retentionPeriod": "P7D",
+            "backupsAvailableFromDateTime": "2023-10-03T09:23:06.1717665Z"
+        },
+        "protectionStatus": {
+            "keyManagedBy": "Microsoft"
+        },
+        "cluster": {
+            "category": "Prod",
+            "number": "107",
+            "uriSuffix": "eu-il107.gateway.prod.island",
+            "geoShortName": "EU",
+            "environment": "Prod"
+        },
+        "connectedGroups": [],
+        "lifecycleOperationsEnforcement": {
+            "allowedOperations": [
+                {
+                    "type": {
+                        "id": "DisableGovernanceConfiguration"
+                    },
+                    "reason": {
+                        "message": "DisableGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+                        "type": "GovernanceConfig"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "UpdateGovernanceConfiguration"
+                    },
+                    "reason": {
+                        "message": "UpdateGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+                        "type": "GovernanceConfig"
+                    }
+                }
+            ]
+        },
+        "governanceConfiguration": {
+            "protectionLevel": "Basic"
+        }
+    }
+}
