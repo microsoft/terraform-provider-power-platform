@@ -45,6 +45,8 @@ module "java-runtime-setup" {
   region              = var.region
   sig_id              = azurerm_shared_image_gallery.sig.id
   java_setup_link     = var.java_setup_link
+
+  depends_on = [module.ps7-setup]
 }
 
 # Create On-Premise Gateway version in Shared Image Gallery
@@ -58,6 +60,8 @@ module "opdgw-setup" {
   opdgw_setup_link    = var.opdgw_setup_link
   secret_pp           = var.secret_pp
   userIdAdmin_pp      = var.userIdAdmin_pp
+
+  depends_on = [module.ps7-setup, module.java-runtime-setup]
 }
 
 resource "azurecaf_name" "vm-opgw" {

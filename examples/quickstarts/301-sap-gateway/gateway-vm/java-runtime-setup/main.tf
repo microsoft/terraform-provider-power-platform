@@ -20,9 +20,8 @@ resource "azurerm_gallery_application_version" "java-igl-app-version" {
   location               = var.region
 
   manage_action {
-    install = "powershell -ExecutionPolicy Unrestricted -File java-setup.ps1"
-    #install = "move .\\JavaRE .\\java-setup.ps1 & powershell -ExecutionPolicy Unrestricted -File java-setup.ps1"
-    remove = "echo" # Uninstall script is not applicable.
+    install = "pwsh -ExecutionPolicy Unrestricted -File java-setup.ps1"
+    remove  = "echo" # Uninstall script is not applicable.
   }
 
   source {
