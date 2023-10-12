@@ -4,10 +4,6 @@ terraform {
     azurerm = {
       source = "hashicorp/azurerm"
     }
-    azurecaf = {
-      source  = "aztfmod/azurecaf"
-      version = ">=1.2.26"
-    }
   }
 }
 
@@ -25,11 +21,11 @@ resource "azurerm_gallery_application_version" "ps7-igl-app-version" {
 
   manage_action {
     install = "powershell -ExecutionPolicy Unrestricted -File ps7-setup.ps1"
-    remove  = "echo"
+    remove  = "echo" # Uninstall script is not applicable.
   }
 
   source {
-    media_link = var.installps7_link
+    media_link = var.ps7_setup_link
   }
 
   target_region {

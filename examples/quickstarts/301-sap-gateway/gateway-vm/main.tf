@@ -26,14 +26,14 @@ resource "azurerm_shared_image_gallery" "sig" {
 }
 
 # Create PowerShell 7 version in Shared Image Gallery
-module "powershell-setup" {
-  source              = "./powershell-setup"
+module "ps7-setup" {
+  source              = "./ps7-setup"
   prefix              = var.prefix
   base_name           = var.base_name
   resource_group_name = var.resource_group_name
   region              = var.region
   sig_id              = azurerm_shared_image_gallery.sig.id
-  installps7_link     = var.installps7_link
+  ps7_setup_link      = var.ps7_setup_link
 }
 
 # Create Java Runtime version in Shared Image Gallery
@@ -45,6 +45,19 @@ module "java-runtime-setup" {
   region              = var.region
   sig_id              = azurerm_shared_image_gallery.sig.id
   java_setup_link     = var.java_setup_link
+}
+
+# Create On-Premise Gateway version in Shared Image Gallery
+module "opdgw-setup" {
+  source              = "./opdgw-setup"
+  prefix              = var.prefix
+  base_name           = var.base_name
+  resource_group_name = var.resource_group_name
+  region              = var.region
+  sig_id              = azurerm_shared_image_gallery.sig.id
+  opdgw_setup_link    = var.opdgw_setup_link
+  secret_pp           = var.secret_pp
+  userIdAdmin_pp      = var.userIdAdmin_pp
 }
 
 resource "azurecaf_name" "vm-opgw" {
@@ -86,7 +99,7 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
 
   # Setup PowerShell 7
   gallery_application {
-    version_id = module.powershell-setup.powershell_version_id
+    version_id = module.ps7-setup.powershell_version_id
     order      = 1
   }
 
@@ -94,6 +107,12 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
   gallery_application {
     version_id = module.java-runtime-setup.java_runtime_version_id
     order      = 2
+  }
+
+  # Setup On-Premise Gateway
+  gallery_application {
+    version_id = module.opdgw-setup.opdgw_version_id
+    order      = 3
   }
 
 }

@@ -56,12 +56,22 @@ variable "vm_pwd_gw" {
   type        = string
 }
 
-variable "installps7_link" {
+variable "ps7_setup_link" {
   description = "The Blob link to the PowerShell 7 installation file"
   type        = string
 }
 
 variable "java_setup_link" {
   description = "The Blob link to the Java Runtime installation file"
+  type        = string
+}
+
+variable "opdgw_setup_link" {
+  description = "The Blob link to the opdgw-setup.ps1 script"
+  type        = string
+}
+
+variable "userIdAdmin_pp" {
+  description = "The user id to be assigned as Admin role of the Power Platform"
   type        = string
 }

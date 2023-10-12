@@ -25,7 +25,7 @@ variable "sig_id" {
   type        = string
 }
 
-variable "installps7_link" {
+variable "ps7_setup_link" {
   description = "The Blob link to the PowerShell 7 installation file"
   type        = string
 }
