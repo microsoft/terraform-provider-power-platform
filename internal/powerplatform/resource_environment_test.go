@@ -124,7 +124,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 	envIdAfterEnvironmentTypeChanges := "00000000-0000-0000-0000-000000000005"
 
 	env := models.EnvironmentDto{
-		Name: envIdBeforeChanges,
+		Id: envIdBeforeChanges,
 		Properties: models.EnvironmentPropertiesDto{
 			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
 				ResourceId:      "org1",
@@ -308,7 +308,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 
 	envId := "00000000-0000-0000-0000-000000000001"
 	env := models.EnvironmentDto{
-		Name: envId,
+		Id: envId,
 		Properties: models.EnvironmentPropertiesDto{
 			EnvironmentSku: "Sandbox",
 			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
@@ -456,7 +456,7 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 	dataverseClientMock := mocks.NewUnitTestMockDataverseClientInterface(t)
 
 	env := models.EnvironmentDto{
-		Name: "00000000-0000-0000-0000-000000000001",
+		Id: "00000000-0000-0000-0000-000000000001",
 		Properties: models.EnvironmentPropertiesDto{
 			EnvironmentSku: "Sandbox",
 			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
@@ -478,7 +478,7 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 
 	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		env = models.EnvironmentDto{
-			Name:     "00000000-0000-0000-0000-000000000001",
+			Id:       "00000000-0000-0000-0000-000000000001",
 			Location: envToCreate.Location,
 			Properties: models.EnvironmentPropertiesDto{
 				DisplayName:    envToCreate.Properties.DisplayName,
@@ -520,7 +520,6 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					//resource.TestCheckResourceAttr("powerplatform_environment.development", "id", env.Name),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example1"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", env.Properties.LinkedEnvironmentMetadata.InstanceURL),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", env.Properties.LinkedEnvironmentMetadata.DomainName),
