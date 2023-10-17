@@ -126,16 +126,6 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 			{
 				Config: UnitTestsProviderConfig + `
 
-				resource "powerplatform_environment" "environment" {
-					display_name                              = "Solution Import Acceptance Test"
-					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "USD"
-					environment_type                          = "Sandbox"
-					security_group_id                         = "00000000-0000-0000-0000-000000000000"
-					domain 								  	  = "domain"
-				}
-
 				resource "powerplatform_solution" "solution" {
 					environment_name = "00000000-0000-0000-0000-000000000001"
 					solution_name    = "TerraformTestSolution"
@@ -296,16 +286,6 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 			{
 				Config: UnitTestsProviderConfig + `
 
-				resource "powerplatform_environment" "environment" {
-					display_name                              = "Solution Import Acceptance Test"
-					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "USD"
-					environment_type                          = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000001"
-					domain = "domain"
-				}
-
 				resource "powerplatform_solution" "solution" {
 					environment_name = "00000000-0000-0000-0000-000000000001"
 					solution_name    = "TerraformTestSolution"
@@ -382,7 +362,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 		
 				resource "powerplatform_solution" "solution" {
 					environment_name = "00000000-0000-0000-0000-000000000001"
@@ -391,23 +371,13 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksumBefore),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_before_checksum),
 					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
 				),
 			},
 			{
 				Config: UnitTestsProviderConfig + `
-
-			resource "powerplatform_environment" "environment" {
-				display_name                              = "Solution Import Acceptance Test"
-				location                                  = "europe"
-				language_code                             = "1033"
-				currency_code                            = "USD"
-				environment_type                          = "Sandbox"
-				domain = "domain"
-				security_group_id = "00000000-0000-0000-0000-000000000000"
-			}
 
 				resource "powerplatform_solution" "solution" {
 					environment_name = "00000000-0000-0000-0000-000000000001"
@@ -417,23 +387,13 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksumBefore),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settingsFileChecksumBefore),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_before_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_before_checksum),
 				),
 			},
 			{
 				Config: UnitTestsProviderConfig + `
-
-			resource "powerplatform_environment" "environment" {
-				display_name                              = "Solution Import Acceptance Test"
-				location                                  = "europe"
-				language_code                             = "1033"
-				currency_code                             = "USD"
-				environment_type                          = "Sandbox"
-				domain = "domain"
-				security_group_id = "00000000-0000-0000-0000-000000000000"
-			}
 
 				resource "powerplatform_solution" "solution" {
 					environment_name = "00000000-0000-0000-0000-000000000001"
@@ -443,23 +403,13 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksumAfter),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settingsFileChecksumBefore),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_after_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_before_checksum),
 				),
 			},
 			{
 				Config: UnitTestsProviderConfig + `
-
-			resource "powerplatform_environment" "environment" {
-				display_name                              = "Solution Import Acceptance Test"
-				location                                  = "europe"
-				language_code                             = "1033"
-				currency_code                             = "USD"
-				environment_type                          = "Sandbox"
-				domain = "domain"
-				security_group_id = "00000000-0000-0000-0000-000000000000"
-			}
 
 				resource "powerplatform_solution" "solution" {
 					environment_name = "00000000-0000-0000-0000-000000000001"
