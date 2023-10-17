@@ -44,7 +44,11 @@ type DlpPolicyDefinitionDto struct {
 }
 
 type DlpPolicyDefinitionDtoArray struct {
+<<<<<<<< HEAD:internal/powerplatform/services/dlp_policy/models.go
 	Value []DlpPolicyDto `json:"value"`
+========
+	Value []DlpPolicyDefinitionDto `json:"value"`
+>>>>>>>> origin/main:internal/powerplatform/models/policy_dto.go
 }
 
 type DlpPolicyLastActionDto struct {
