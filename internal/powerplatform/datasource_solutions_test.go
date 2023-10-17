@@ -37,7 +37,7 @@ func TestUnitSolutionsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				data "powerplatform_solutions" "all" {
 					environment_name = "00000000-0000-0000-0000-000000000001"
 				}`,

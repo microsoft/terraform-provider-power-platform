@@ -58,7 +58,7 @@ func TestUnitPowerAppsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				data "powerplatform_powerapps" "all" {}`,
 
 				Check: resource.ComposeTestCheckFunc(

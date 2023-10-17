@@ -69,7 +69,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UniTestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				data "powerplatform_environments" "all" {}`,
 
 				Check: resource.ComposeTestCheckFunc(
