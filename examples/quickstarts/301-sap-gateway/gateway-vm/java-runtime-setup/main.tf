@@ -20,7 +20,7 @@ resource "azurerm_gallery_application_version" "java-igl-app-version" {
   location               = var.region
 
   manage_action {
-    install = "pwsh -ExecutionPolicy Unrestricted -File java-setup.ps1"
+    install = "C:\\powershell7\\7\\pwsh.exe -ExecutionPolicy Unrestricted -File java-setup.ps1 -Verb RunAs"
     remove  = "echo" # Uninstall script is not applicable.
   }
 

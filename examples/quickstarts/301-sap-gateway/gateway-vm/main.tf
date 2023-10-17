@@ -25,6 +25,7 @@ resource "azurerm_shared_image_gallery" "sig" {
   location            = var.region
 }
 
+
 # Create PowerShell 7 version in Shared Image Gallery
 module "ps7-setup" {
   source              = "./ps7-setup"
@@ -118,5 +119,4 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
     version_id = module.opdgw-setup.opdgw_version_id
     order      = 3
   }
-
 }

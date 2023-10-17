@@ -8,10 +8,11 @@ $installerPath = "$env:TEMP\PowerShell-7.3.7-win-x64.msi"
 Invoke-WebRequest -Uri $downloadUrl -OutFile $installerPath
 
 # Define the installation arguments for a silent install
-$installArguments = "/qn"
+$installArguments = '/qn /norestart INSTALLFOLDER="C:\powershell7"'
 
 # Install PowerShell 7 silently.
 Start-Process -Wait -FilePath $installerPath -ArgumentList $installArguments
+
 
 # Clean up the downloaded installer.
 #Remove-Item -Path $installerPath

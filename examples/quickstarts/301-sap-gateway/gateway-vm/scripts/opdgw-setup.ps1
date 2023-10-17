@@ -12,8 +12,8 @@ if($Psversion.Major -ge 7)
 
     if (!(Get-Module "DataGateway")) {
         Write-Host "Installing DataGateway Module"
-        Install-Module -Name DataGateway -Force
     }
+    Install-Module -Name DataGateway -Force
 
     $securePassword = $secretPP | ConvertTo-SecureString -AsPlainText -Force;
     $ApplicationId ="2d0b62aa-765d-4e0f-b7f2-61debc6611d7";
@@ -36,11 +36,15 @@ if($Psversion.Major -ge 7)
     #Configuring Gateway
     $GatewayObjectId = (Get-DataGatewayCluster | Where-Object {$_.Name -eq "OPDGW-SAPAzureIntegration"}).Id
 
-    if([string]::IsNullOrEmpty($GatewayObjectId)) {
-        Write-Host "Add Cluster"
-        $GatewayDetails = Add-DataGatewayCluster -Name $GatewayName -RecoveryKey  $RecoverKey
-        $GatewayObjectId = $GatewayDetails.GatewayObjectId
+    if (![string]::IsNullOrEmpty($GatewayObjectId)) {
+        Write-Host "Remove Cluster"
+        Remove-DataGatewayCluster -GatewayClusterId $GatewayObjectId
     }
+    
+    Write-Host "Add Cluster"
+    $GatewayDetails = Add-DataGatewayCluster -Name $GatewayName -RecoveryKey  $RecoverKey -RegionKey westus3 -OverwriteExistingGateway
+    $GatewayObjectId = $GatewayDetails.GatewayObjectId
+
     Write-Host "$GatewayName ID: $GatewayObjectId"
     #Add User as Admin
     Write-Host "Add User as Admin"
