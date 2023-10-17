@@ -50,6 +50,19 @@ module "java-runtime-setup" {
   depends_on = [module.ps7-setup]
 }
 
+# Create On-Premise Gateway Installation version in Shared Image Gallery
+module "opdgw-install" {
+  source              = "./opdgw-install"
+  prefix              = var.prefix
+  base_name           = var.base_name
+  resource_group_name = var.resource_group_name
+  region              = var.region
+  sig_id              = azurerm_shared_image_gallery.sig.id
+  opdgw_install_link  = var.opdgw_install_link
+
+  depends_on = [module.ps7-setup, module.java-runtime-setup]
+}
+
 # Create On-Premise Gateway version in Shared Image Gallery
 module "opdgw-setup" {
   source              = "./opdgw-setup"
@@ -62,7 +75,7 @@ module "opdgw-setup" {
   secret_pp           = var.secret_pp
   userIdAdmin_pp      = var.userIdAdmin_pp
 
-  depends_on = [module.ps7-setup, module.java-runtime-setup]
+  depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install]
 }
 
 resource "azurecaf_name" "vm-opgw" {
@@ -114,9 +127,15 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
     order      = 2
   }
 
-  # Setup On-Premise Gateway
+  # Install On-Premise Gateway
+  gallery_application {
+    version_id = module.opdgw-install.opdgw_install_version_id
+    order      = 3
+  }
+
+  # Setup On-Premise Gateway setup
   gallery_application {
     version_id = module.opdgw-setup.opdgw_version_id
-    order      = 3
+    order      = 4
   }
 }

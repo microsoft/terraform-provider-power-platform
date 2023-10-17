@@ -52,6 +52,11 @@ variable "java_setup_link" {
   type        = string
 }
 
+variable "opdgw_install_link" {
+  description = "The Blob link to the GatewayInstall.exe file"
+  type        = string
+}
+
 variable "opdgw_setup_link" {
   description = "The Blob link to the opdgw-setup.ps1 script"
   type        = string

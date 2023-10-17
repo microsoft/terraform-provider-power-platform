@@ -165,5 +165,6 @@ module "gateway_vm" {
   userIdAdmin_pp      = var.userIdAdmin_pp
   ps7_setup_link      = var.ps7_setup_link
   java_setup_link     = var.java_setup_link
+  opdgw_install_link  = var.opdgw_install_link
   opdgw_setup_link    = var.opdgw_setup_link
 }
