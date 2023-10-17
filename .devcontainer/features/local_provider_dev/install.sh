@@ -8,9 +8,6 @@ cp terraform.rc /go/bin/
 # install tfplugindocs
 go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
 
-# install mockgen
-go install github.com/golang/mock/mockgen@latest
-
 # fix permissions issue running as vscode and not root
 mkdir -p /workspaces/terraform-provider-power-platform/ 
 sudo chown -R vscode /workspaces/terraform-provider-power-platform/
