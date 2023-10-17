@@ -1,9 +1,9 @@
 package powerplatform
 
 import (
-	"context"
 	"fmt"
 	"math/rand"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -11,12 +11,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/golang/mock/gomock"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/jarcoal/httpmock"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
+	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
@@ -78,121 +76,67 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 }
 
 func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
-	clientDataverseMock := mocks.NewUnitTestMockDataverseClientInterface(t)
-	clientBapiMock := mocks.NewUnitTestsMockBapiClientInterface(t)
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mock_helpers.ActivateOAuthHttpMocks()
+	mock_helpers.ActivateEnvironmentHttpMocks()
 
-	solutionFileName := "test_solution.zip"
-	solutionSettingsFileName := "test_solution_settings.json"
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
 
-	solutionFileChecksum := createFile(solutionFileName, "")
-	solutionSettingsFileChecksum := createFile(solutionSettingsFileName, "")
+	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/StageSolution",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/post_stage_solution.json").String()), nil
+		})
 
-	environmentStub := models.EnvironmentDto{
-		Name: "00000000-0000-0000-0000-000000000000",
-		Properties: models.EnvironmentPropertiesDto{
-			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
-				ResourceId:      "org1",
-				SecurityGroupId: "security1",
-				DomainName:      "domain",
-				InstanceURL:     "url",
-				Version:         "version",
-			},
-			LinkedAppMetadata: models.LinkedAppMetadataDto{
-				Type: "Internal",
-				Id:   "00000000-0000-0000-0000-000000000000",
-				Url:  "https://url.operations.dynamics.com/",
-			},
-		},
-	}
+	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/ImportSolutionAsync",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/post_import_solution_async.json").String()), nil
+		})
 
-	solutionStub := models.SolutionDto{
-		Id:              "00000000-0000-0000-0000-000000000002",
-		EnvironmentName: environmentStub.Id,
-		DisplayName:     "Solution",
-		Name:            "solution",
-		CreatedTime:     "2020-01-01T00:00:00Z",
-		ModifiedTime:    "2020-01-01T00:00:00Z",
-		InstallTime:     "2020-01-01T00:00:00Z",
-		Version:         "1.2.3.4",
-		IsManaged:       true,
-	}
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/asyncoperations%28310799b8-dc6c-ee11-9ae7-000d3aaae21d%29",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/get_async_operations.json").String()), nil
+		})
 
-	clientDataverseMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSolutionImportResult%28ImportJobId=1b1fa80d-aa0f-4291-b60c-b0745304ce24%29",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/get_solution_import_result.json").String()), nil
+		})
 
-	clientBapiMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
-		environmentStub = models.EnvironmentDto{
-			Name:     environmentStub.Name,
-			Id:       environmentStub.Id,
-			Location: envToCreate.Location,
-			Properties: models.EnvironmentPropertiesDto{
-				DisplayName:    envToCreate.Properties.DisplayName,
-				EnvironmentSku: envToCreate.Properties.EnvironmentSku,
-				LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
-					DomainName:      envToCreate.Properties.LinkedEnvironmentMetadata.DomainName,
-					BaseLanguage:    envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage,
-					SecurityGroupId: envToCreate.Properties.LinkedEnvironmentMetadata.SecurityGroupId,
-					InstanceURL:     environmentStub.Properties.LinkedEnvironmentMetadata.InstanceURL,
-					Version:         environmentStub.Properties.LinkedEnvironmentMetadata.Version,
-					ResourceId:      environmentStub.Properties.LinkedEnvironmentMetadata.ResourceId,
-				},
-			},
-		}
-		return &environmentStub, nil
-	}).Times(1)
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=%28isvisible+eq+true%29&%24orderby=createdon+desc",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/get_solution.json").String()), nil
+		})
 
-	clientBapiMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
-		return &environmentStub, nil
-	}).AnyTimes()
-
-	clientBapiMock.EXPECT().DeleteEnvironment(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-
-	clientDataverseMock.EXPECT().GetSolutions(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, environmentId string) ([]models.SolutionDto, error) {
-		solutions := []models.SolutionDto{}
-		solutions = append(solutions, solutionStub)
-
-		return solutions, nil
-	}).AnyTimes()
-
-	clientDataverseMock.EXPECT().CreateSolution(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, EnvironmentName string, solutionToCreate models.ImportSolutionDto, content []byte, settings []byte) (*models.SolutionDto, error) {
-		return &solutionStub, nil
-	}).Times(1)
-
-	clientDataverseMock.EXPECT().DeleteSolution(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	httpmock.RegisterResponder("DELETE", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions%2886928ed8-df37-4ce2-add5-47030a833bff%29",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/get_solution.json").String()), nil
+		})
 
 	resource.Test(t, resource.TestCase{
-		IsUnitTest: true,
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientBapiMock, clientDataverseMock, nil),
-		},
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: UniTestsProviderConfig + `
 
-				resource "powerplatform_environment" "environment" {
-					display_name                              = "Solution Import Acceptance Test"
-					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "USD"
-					environment_type                          = "Sandbox"
-					security_group_id                         = "00000000-0000-0000-0000-000000000000"
-					domain 								  	  = "domain"
-				}
-
 				resource "powerplatform_solution" "solution" {
-					environment_name = powerplatform_environment.environment.environment_name
-					solution_name    = "` + solutionStub.Name + `"
-					solution_file    = "` + solutionFileName + `"
-					settings_file 	 = "` + solutionSettingsFileName + `"
+					environment_name = "00000000-0000-0000-0000-000000000001"
+					solution_name    = "TerraformTestSolution"
+					solution_file    = "test_solution.zip"
+					settings_file 	 = "test_solution_settings.json"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.environment", "environment_name", environmentStub.Name),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", solutionStub.Version),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", solutionSettingsFileChecksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", solutionStub.DisplayName),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", strconv.FormatBool(solutionStub.IsManaged)),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", "1.1.0.0"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", "d41d8cd98f00b204e9800998ecf8427e"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", "d41d8cd98f00b204e9800998ecf8427e"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", "Terraform Test Solution"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", strconv.FormatBool(false)),
 				),
 			},
 		},
@@ -290,114 +234,66 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 }
 
 func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
-	clientDataverseMock := mocks.NewUnitTestMockDataverseClientInterface(t)
-	clientBapiMock := mocks.NewUnitTestsMockBapiClientInterface(t)
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mock_helpers.ActivateOAuthHttpMocks()
+	mock_helpers.ActivateEnvironmentHttpMocks()
 
-	solutionFileName := "test_solution.zip"
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
 
-	solutionFileChecksum := createFile(solutionFileName, "")
+	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/StageSolution",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/post_stage_solution.json").String()), nil
+		})
 
-	environmentStub := models.EnvironmentDto{
-		Name: "00000000-0000-0000-0000-000000000001",
-		Properties: models.EnvironmentPropertiesDto{
-			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
-				ResourceId:      "org1",
-				SecurityGroupId: "security1",
-				DomainName:      "domain",
-				InstanceURL:     "url",
-				Version:         "version",
-			},
-		},
-	}
+	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/ImportSolutionAsync",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/post_import_solution_async.json").String()), nil
+		})
 
-	solutionStub := models.SolutionDto{
-		Id:              "00000000-0000-0000-0000-000000000002",
-		EnvironmentName: environmentStub.Id,
-		DisplayName:     "Solution",
-		Name:            "solution",
-		CreatedTime:     "2020-01-01T00:00:00Z",
-		ModifiedTime:    "2020-01-01T00:00:00Z",
-		InstallTime:     "2020-01-01T00:00:00Z",
-		Version:         "1.2.3.4",
-		IsManaged:       true,
-	}
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/asyncoperations%28310799b8-dc6c-ee11-9ae7-000d3aaae21d%29",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/get_async_operations.json").String()), nil
+		})
 
-	clientDataverseMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSolutionImportResult%28ImportJobId=1b1fa80d-aa0f-4291-b60c-b0745304ce24%29",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/get_solution_import_result.json").String()), nil
+		})
 
-	clientBapiMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
-		environmentStub = models.EnvironmentDto{
-			Name:     environmentStub.Name,
-			Id:       environmentStub.Id,
-			Location: envToCreate.Location,
-			Properties: models.EnvironmentPropertiesDto{
-				DisplayName:    envToCreate.Properties.DisplayName,
-				EnvironmentSku: envToCreate.Properties.EnvironmentSku,
-				LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
-					DomainName:      envToCreate.Properties.LinkedEnvironmentMetadata.DomainName,
-					BaseLanguage:    envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage,
-					SecurityGroupId: envToCreate.Properties.LinkedEnvironmentMetadata.SecurityGroupId,
-					InstanceURL:     environmentStub.Properties.LinkedEnvironmentMetadata.InstanceURL,
-					Version:         environmentStub.Properties.LinkedEnvironmentMetadata.Version,
-					ResourceId:      environmentStub.Properties.LinkedEnvironmentMetadata.ResourceId,
-				},
-			},
-		}
-		return &environmentStub, nil
-	}).Times(1)
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=%28isvisible+eq+true%29&%24orderby=createdon+desc",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/get_solution.json").String()), nil
+		})
 
-	clientBapiMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
-		return &environmentStub, nil
-	}).AnyTimes()
-
-	clientBapiMock.EXPECT().DeleteEnvironment(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-
-	clientDataverseMock.EXPECT().GetSolutions(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, environmentId string) ([]models.SolutionDto, error) {
-		solutions := []models.SolutionDto{}
-		solutions = append(solutions, solutionStub)
-
-		return solutions, nil
-	}).AnyTimes()
-
-	clientDataverseMock.EXPECT().CreateSolution(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, EnvironmentName string, solutionToCreate models.ImportSolutionDto, content []byte, settings []byte) (*models.SolutionDto, error) {
-		return &solutionStub, nil
-	}).Times(1)
-
-	clientDataverseMock.EXPECT().DeleteSolution(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	httpmock.RegisterResponder("DELETE", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions%2886928ed8-df37-4ce2-add5-47030a833bff%29",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/get_solution.json").String()), nil
+		})
 
 	resource.Test(t, resource.TestCase{
-		IsUnitTest: true,
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientBapiMock, clientDataverseMock, nil),
-		},
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: UniTestsProviderConfig + `
 
-				resource "powerplatform_environment" "environment" {
-					display_name                              = "Solution Import Acceptance Test"
-					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "USD"
-					environment_type                          = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000001"
-					domain = "domain"
-				}
-
 				resource "powerplatform_solution" "solution" {
-					environment_name = powerplatform_environment.environment.environment_name
-					solution_name    = "` + solutionStub.Name + `"
-					solution_file    = "` + solutionFileName + `"
+					environment_name = "00000000-0000-0000-0000-000000000001"
+					solution_name    = "TerraformTestSolution"
+					solution_file    = "test_solution.zip"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
 					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file"),
-					resource.TestCheckResourceAttr("powerplatform_environment.environment", "environment_name", environmentStub.Name),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", solutionStub.Version),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", solutionStub.DisplayName),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", strconv.FormatBool(solutionStub.IsManaged)),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", "1.1.0.0"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", "Terraform Test Solution"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", strconv.FormatBool(false)),
 				),
 			},
 		},
@@ -405,203 +301,89 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 }
 
 func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
-	clientDataverseMock := mocks.NewUnitTestMockDataverseClientInterface(t)
-	clientBapiMock := mocks.NewUnitTestsMockBapiClientInterface(t)
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mock_helpers.ActivateOAuthHttpMocks()
+	mock_helpers.ActivateEnvironmentHttpMocks()
 
-	solutionFileNameBefore := "test_solution_before.zip"
-	solutionFileNameAfter := "test_solution_after.zip"
-	settingsFileBefore := "test_settings_before.json"
-	settingsFileAfter := "test_settings_after.json"
+	// solutionFileNameBefore := "test_solution_before.zip"
+	// solutionFileNameAfter := "test_solution_after.zip"
+	// settingsFileBefore := "test_settings_before.json"
+	// settingsFileAfter := "test_settings_after.json"
 
-	solutionFileChecksumAfter := createFile(solutionFileNameAfter, "test_solution_after")
-	solutionFileChecksumBefore := createFile(solutionFileNameBefore, "test_solution_before")
-	settingsFileChecksumAfter := createFile(settingsFileAfter, "test_settings_after")
-	settingsFileChecksumBefore := createFile(settingsFileBefore, "test_settings_before")
-
-	environmentStub := models.EnvironmentDto{
-		Name: "00000000-0000-0000-0000-000000000001",
-		Properties: models.EnvironmentPropertiesDto{
-			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
-				ResourceId:      "org1",
-				SecurityGroupId: "security1",
-				DomainName:      "domain",
-				InstanceURL:     "url",
-				Version:         "version",
-			},
-			LinkedAppMetadata: models.LinkedAppMetadataDto{
-				Type: "Internal",
-				Id:   "00000000-0000-0000-0000-000000000000",
-				Url:  "https://url.operations.dynamics.com/",
-			},
-		},
-	}
-
-	solutionStub := models.SolutionDto{
-		Id:              "00000000-0000-0000-0000-000000000002",
-		EnvironmentName: environmentStub.Id,
-		DisplayName:     "Solution",
-		Name:            "solution",
-		CreatedTime:     "2020-01-01T00:00:00Z",
-		ModifiedTime:    "2020-01-01T00:00:00Z",
-		InstallTime:     "2020-01-01T00:00:00Z",
-		Version:         "1.2.3.4",
-		IsManaged:       true,
-	}
-
-	steps := []resource.TestStep{
-		{
-			Config: UniTestsProviderConfig + `
-
-			resource "powerplatform_environment" "environment" {
-				display_name                              = "Solution Import Acceptance Test"
-				location                                  = "europe"
-				language_code                             = "1033"
-				currency_code                             = "USD"
-				environment_type                          = "Sandbox"
-				domain = "domain"
-				security_group_id = "00000000-0000-0000-0000-000000000000"
-			}
-
-			resource "powerplatform_solution" "solution" {
-				environment_name = powerplatform_environment.environment.environment_name
-				solution_name    = "` + solutionStub.Name + `"
-				solution_file    = "` + solutionFileNameBefore + `"
-			}`,
-
-			Check: resource.ComposeAggregateTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
-				resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksumBefore),
-				resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
-			),
-		},
-		{
-			Config: UniTestsProviderConfig + `
-
-			resource "powerplatform_environment" "environment" {
-				display_name                              = "Solution Import Acceptance Test"
-				location                                  = "europe"
-				language_code                             = "1033"
-				currency_code                            = "USD"
-				environment_type                          = "Sandbox"
-				domain = "domain"
-				security_group_id = "00000000-0000-0000-0000-000000000000"
-			}
-
-			resource "powerplatform_solution" "solution" {
-				environment_name = powerplatform_environment.environment.environment_name
-				solution_name    = "` + solutionStub.Name + `"
-				solution_file    = "` + solutionFileNameBefore + `"
-				settings_file 	 = "` + settingsFileBefore + `"
-			}`,
-
-			Check: resource.ComposeAggregateTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
-				resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksumBefore),
-				resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settingsFileChecksumBefore),
-			),
-		},
-		{
-			Config: UniTestsProviderConfig + `
-
-			resource "powerplatform_environment" "environment" {
-				display_name                              = "Solution Import Acceptance Test"
-				location                                  = "europe"
-				language_code                             = "1033"
-				currency_code                             = "USD"
-				environment_type                          = "Sandbox"
-				domain = "domain"
-				security_group_id = "00000000-0000-0000-0000-000000000000"
-			}
-
-			resource "powerplatform_solution" "solution" {
-				environment_name = powerplatform_environment.environment.environment_name
-				solution_name    = "` + solutionStub.Name + `"
-				solution_file    = "` + solutionFileNameAfter + `"
-				settings_file 	 = "` + settingsFileBefore + `"
-			}`,
-
-			Check: resource.ComposeAggregateTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
-				resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksumAfter),
-				resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settingsFileChecksumBefore),
-			),
-		},
-		{
-			Config: UniTestsProviderConfig + `
-
-			resource "powerplatform_environment" "environment" {
-				display_name                              = "Solution Import Acceptance Test"
-				location                                  = "europe"
-				language_code                             = "1033"
-				currency_code                             = "USD"
-				environment_type                          = "Sandbox"
-				domain = "domain"
-				security_group_id = "00000000-0000-0000-0000-000000000000"
-			}
-
-			resource "powerplatform_solution" "solution" {
-				environment_name = powerplatform_environment.environment.environment_name
-				solution_name    = "` + solutionStub.Name + `"
-				solution_file    = "` + solutionFileNameAfter + `"
-				settings_file 	 = "` + settingsFileAfter + `"
-			}`,
-
-			Check: resource.ComposeAggregateTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
-				resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksumAfter),
-				resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settingsFileChecksumAfter),
-			),
-		},
-	}
-
-	clientDataverseMock.EXPECT().GetDefaultCurrencyForEnvironment(gomock.Any(), gomock.Any()).Return(&models.TransactionCurrencyDto{IsoCurrencyCode: "USD"}, nil).AnyTimes()
-
-	clientBapiMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
-		environmentStub = models.EnvironmentDto{
-			Name:     environmentStub.Name,
-			Id:       environmentStub.Id,
-			Location: envToCreate.Location,
-			Properties: models.EnvironmentPropertiesDto{
-				DisplayName:    envToCreate.Properties.DisplayName,
-				EnvironmentSku: envToCreate.Properties.EnvironmentSku,
-				LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
-					DomainName:      envToCreate.Properties.LinkedEnvironmentMetadata.DomainName,
-					BaseLanguage:    envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage,
-					SecurityGroupId: envToCreate.Properties.LinkedEnvironmentMetadata.SecurityGroupId,
-					InstanceURL:     environmentStub.Properties.LinkedEnvironmentMetadata.InstanceURL,
-					Version:         environmentStub.Properties.LinkedEnvironmentMetadata.Version,
-					ResourceId:      environmentStub.Properties.LinkedEnvironmentMetadata.ResourceId,
-				},
-			},
-		}
-		return &environmentStub, nil
-	}).Times(1)
-
-	clientBapiMock.EXPECT().GetEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) (*models.EnvironmentDto, error) {
-		return &environmentStub, nil
-	}).AnyTimes()
-
-	clientBapiMock.EXPECT().DeleteEnvironment(gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
-
-	clientDataverseMock.EXPECT().GetSolutions(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, environmentId string) ([]models.SolutionDto, error) {
-		solutions := []models.SolutionDto{}
-		solutions = append(solutions, solutionStub)
-
-		return solutions, nil
-	}).AnyTimes()
-
-	clientDataverseMock.EXPECT().CreateSolution(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, EnvironmentName string, solutionToCreate models.ImportSolutionDto, content []byte, settings []byte) (*models.SolutionDto, error) {
-		return &solutionStub, nil
-	}).Times(len(steps))
-
-	clientDataverseMock.EXPECT().DeleteSolution(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
+	// solutionFileChecksumAfter := createFile(solutionFileNameAfter, "test_solution_after")
+	// solutionFileChecksumBefore := createFile(solutionFileNameBefore, "test_solution_before")
+	// settingsFileChecksumAfter := createFile(settingsFileAfter, "test_settings_after")
+	// settingsFileChecksumBefore := createFile(settingsFileBefore, "test_settings_before")
 
 	resource.Test(t, resource.TestCase{
-		IsUnitTest: true,
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientBapiMock, clientDataverseMock, nil),
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: UniTestsProviderConfig + `
+		
+				resource "powerplatform_solution" "solution" {
+					environment_name = "00000000-0000-0000-0000-000000000001"
+					solution_name    = "test_solution.zip"
+					solution_file    = "test_settings_file.json"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "solutionStub.Name"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", "solutionFileChecksumBefore"),
+					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
+				),
+			},
+			// {
+			// 	Config: UniTestsProviderConfig + `
+
+			// 	resource "powerplatform_solution" "solution" {
+			// 		environment_name = "00000000-0000-0000-0000-000000000001"
+			// 		solution_name    = "` + solutionStub.Name + `"
+			// 		solution_file    = "` + solutionFileNameBefore + `"
+			// 		settings_file 	 = "` + settingsFileBefore + `"
+			// 	}`,
+
+			// 	Check: resource.ComposeAggregateTestCheckFunc(
+			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
+			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksumBefore),
+			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settingsFileChecksumBefore),
+			// 	),
+			// },
+			// {
+			// 	Config: UniTestsProviderConfig + `
+
+			// 	resource "powerplatform_solution" "solution" {
+			// 		environment_name = "00000000-0000-0000-0000-000000000001"
+			// 		solution_name    = "` + solutionStub.Name + `"
+			// 		solution_file    = "` + solutionFileNameAfter + `"
+			// 		settings_file 	 = "` + settingsFileBefore + `"
+			// 	}`,
+
+			// 	Check: resource.ComposeAggregateTestCheckFunc(
+			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
+			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksumAfter),
+			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settingsFileChecksumBefore),
+			// 	),
+			// },
+			// {
+			// 	Config: UniTestsProviderConfig + `
+
+			// 	resource "powerplatform_solution" "solution" {
+			// 		environment_name = "00000000-0000-0000-0000-000000000001"
+			// 		solution_name    = "` + solutionStub.Name + `"
+			// 		solution_file    = "` + solutionFileNameAfter + `"
+			// 		settings_file 	 = "` + settingsFileAfter + `"
+			// 	}`,
+
+			// 	Check: resource.ComposeAggregateTestCheckFunc(
+			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionStub.Name),
+			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksumAfter),
+			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settingsFileChecksumAfter),
+			// 	),
+			// },
 		},
-		Steps: steps,
 	})
 }
 

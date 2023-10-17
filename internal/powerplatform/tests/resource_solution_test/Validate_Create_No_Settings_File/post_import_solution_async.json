@@ -1,0 +1,5 @@
+{
+    "@odata.context": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/$metadata#Microsoft.Dynamics.CRM.ImportSolutionAsyncResponse",
+    "ImportJobKey": "1b1fa80d-aa0f-4291-b60c-b0745304ce24",
+    "AsyncOperationId": "310799b8-dc6c-ee11-9ae7-000d3aaae21d"
+}
