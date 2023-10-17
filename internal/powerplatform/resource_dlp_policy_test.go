@@ -797,125 +797,17 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 	mock_helpers.ActivateOAuthHttpMocks()
 
-	policyId := "00000000-0000-0000-0000-000000000000"
-	policyResponse := fmt.Sprintf(`{
-		"policyDefinition": {
-			"name": "%s",
-			"displayName": "Block All Policy",
-			"defaultConnectorsClassification": "Blocked",
-			"connectorGroups": [
-				{
-					"classification": "Confidential",
-					"connectors": [
-						{
-							"id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
-							"name": "shared_sharepointonline",
-							"type": "Microsoft.PowerApps/apis"
-						}
-					]
-				},
-				{
-					"classification": "General",
-					"connectors": [
-						{
-							"id": "/providers/Microsoft.PowerApps/apis/shared_sql",
-							"name": "shared_sql",
-							"type": "Microsoft.PowerApps/apis"
-						}
-					]
-				},
-				{
-					"classification": "Blocked",
-					"connectors": [
-						{
-							"id": "/providers/Microsoft.PowerApps/apis/shared_azureblob",
-							"name": "shared_azureblob",
-							"type": "Microsoft.PowerApps/apis"
-						}
-					]
-				}
-			],
-			"environmentType": "OnlyEnvironments",
-			"environments": [
-				{
-					"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000000",
-					"name": "00000000-0000-0000-0000-000000000000",
-					"type": "Microsoft.BusinessAppPlatform/scopes/environments"
-				}
-			],
-			"createdBy": {
-				"displayName": "createdBy"
-			},
-			"createdTime": "createdTime",
-			"lastModifiedBy": {
-				"displayName": "lastModifiedBy"
-			},
-			"lastModifiedTime": "lastModifiedTime",
-			"etag": "etag",
-			"isLegacySchemaVersion": false
-		},
-		"connectorConfigurationsDefinition": {
-			"connectorActionConfigurations": [
-				{
-					"connectorId": "/providers/Microsoft.PowerApps/apis/shared_sql",
-					"actionRules": [
-						{
-							"actionId": "DeleteItem_V2",
-							"behavior": "Block"
-						},
-						{
-							"actionId": "ExecutePassThroughNativeQuery_V2",
-							"behavior": "Block"
-						}
-					],
-					"defaultConnectorActionRuleBehavior": "Allow"
-				}
-			],
-			"endpointConfigurations": [
-				{
-					"connectorId": "/providers/Microsoft.PowerApps/apis/shared_sql",
-					"endpointRules": [
-						{
-							"order": 1,
-							"behavior": "Allow",
-							"endPoint": "contoso.com"
-						},
-						{
-							"order": 2,
-							"behavior": "Deny",
-							"endPoint": "*"
-						}
-					]
-				}
-			]
-		},
-		"customConnectorUrlPatternsDefinition": {
-			"rules": [
-				{
-					"order": 1,
-					"customConnectorRuleClassification": "Blocked",
-					"pattern": "https://*.contoso.com"
-				},
-				{
-					"order": 2,
-					"customConnectorRuleClassification": "Ignore",
-					"pattern": "*"
-				}
-			]
-		}
-	}`, policyId)
-
 	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusCreated, policyResponse), nil
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource_dlp_policy_test/Validate_Create/get_policy_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("GET", fmt.Sprintf(`https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/%s`, policyId),
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/00000000-0000-0000-0000-000000000001`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, policyResponse), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_dlp_policy_test/Validate_Create/get_policy_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("DELETE", fmt.Sprintf(`https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/policies/%s`, policyId),
+	httpmock.RegisterResponder("DELETE", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/policies/00000000-0000-0000-0000-000000000001`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
@@ -995,7 +887,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 				  }`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "id", policyId),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "display_name", "Block All Policy"),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "default_connectors_classification", "Blocked"),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environment_type", "OnlyEnvironments"),

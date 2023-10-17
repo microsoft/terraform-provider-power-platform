@@ -1,0 +1,20 @@
+[
+    {
+        "id": "/providers/Microsoft.PowerApps/apis/shared_approvals",
+        "metadata": {
+            "unblockable": true
+        }
+    },
+    {
+        "id": "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity",
+        "metadata": {
+            "unblockable": true
+        }
+    },
+    {
+        "id": "/providers/Microsoft.PowerApps/apis/shared_commondataservice",
+        "metadata": {
+            "unblockable": true
+        }
+    }
+]

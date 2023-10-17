@@ -1,7 +1,6 @@
 package powerplatform
 
 import (
-	"fmt"
 	"net/http"
 	"regexp"
 	"testing"
@@ -16,272 +15,19 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 	mock_helpers.ActivateOAuthHttpMocks()
 
-	const policyId1 = "16c21e0d-429e-4e37-b496-f3c1bcd78bfe"
-	const policyId2 = "79ce0ded-5539-4bc6-823e-3176d73371fc"
-
-	policiesResponose := fmt.Sprintf(`{
-		"value": [
-			{
-				"policyDefinition": {
-					"name": "%s",
-					"displayName": "a1",
-					"defaultConnectorsClassification": "General",
-					"environmentType": "AllEnvironments",
-					"environments": [],
-					"createdBy": {
-						"displayName": "admin"
-					},
-					"createdTime": "2023-10-02T07:38:50.3269899Z",
-					"lastModifiedBy": {
-						"displayName": "admin"
-					},
-					"lastModifiedTime": "2023-10-02T07:38:50.3269899Z",
-					"etag": "dcf783da-6eb1-4c5a-a6ee-118a64bafbdb",
-					"isLegacySchemaVersion": false
-				}
-			},
-			{
-				"policyDefinition": {
-					"name": "%s",
-					"displayName": "a2",
-					"defaultConnectorsClassification": "General",
-					"environmentType": "ExceptEnvironments",
-					"environments": [
-						{
-							"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/be0eb809-e58a-ec1b-8fce-ea40b0e53442",
-							"name": "be0eb809-e58a-ec1b-8fce-ea40b0e53442",
-							"type": "Microsoft.BusinessAppPlatform/scopes/environments"
-						}
-					],
-					"createdBy": {
-						"displayName": "admin"
-					},
-					"createdTime": "2023-10-02T07:38:56.6864176Z",
-					"lastModifiedBy": {
-						"displayName": "admin"
-					},
-					"lastModifiedTime": "2023-10-02T07:56:43.9700369Z",
-					"etag": "a872cb45-ee20-4f63-a8e6-fcb537bd8aaf",
-					"isLegacySchemaVersion": false
-				}
-			}
-		]
-	}`, policyId1, policyId2)
-	const policy1Responose = `{
-		"policyDefinition": {
-			"name": "16c21e0d-429e-4e37-b496-f3c1bcd78bfe",
-			"displayName": "a1",
-			"defaultConnectorsClassification": "General",
-			"connectorGroups": [
-				{
-					"classification": "Confidential",
-					"connectors": []
-				},
-				{
-					"classification": "General",
-					"connectors": []
-				},
-				{
-					"classification": "Blocked",
-					"connectors": []
-				}
-			],
-			"environmentType": "AllEnvironments",
-			"environments": [],
-			"createdBy": {
-				"displayName": "admin"
-			},
-			"createdTime": "2023-10-02T07:38:50.3269899Z",
-			"lastModifiedBy": {
-				"displayName": "admin"
-			},
-			"lastModifiedTime": "2023-10-02T07:38:50.3269899Z",
-			"etag": "dcf783da-6eb1-4c5a-a6ee-118a64bafbdb",
-			"isLegacySchemaVersion": false
-		},
-		"customConnectorUrlPatternsDefinition": {
-			"rules": [
-				{
-					"order": 1,
-					"customConnectorRuleClassification": "Ignore",
-					"pattern": "*"
-				}
-			]
-		}
-	}`
-	const policy2Response = `{
-		"policyDefinition": {
-			"name": "79ce0ded-5539-4bc6-823e-3176d73371fc",
-			"displayName": "a2",
-			"defaultConnectorsClassification": "General",
-			"connectorGroups": [
-				{
-					"classification": "Confidential",
-					"connectors": [
-						{
-							"id": "/providers/Microsoft.PowerApps/apis/shared_office365users",
-							"name": "Office 365 Users",
-							"type": "Microsoft.PowerApps/apis"
-						},
-						{
-							"id": "/providers/Microsoft.PowerApps/apis/shared_azureblob",
-							"name": "Azure Blob Storage",
-							"type": "Microsoft.PowerApps/apis"
-						}
-					]
-				},
-				{
-					"classification": "General",
-					"connectors": [
-						{
-							"id": "/providers/Microsoft.PowerApps/apis/shared_powerappsforappmakers",
-							"name": "Power Apps for Makers",
-							"type": "Microsoft.PowerApps/apis"
-						},
-						{
-							"id": "/providers/Microsoft.PowerApps/apis/shared_microsoftspatialservices",
-							"name": "Spatial Services",
-							"type": "Microsoft.PowerApps/apis"
-						},
-						{
-							"id": "/providers/Microsoft.PowerApps/apis/shared_sql",
-							"name": "SQL Server",
-							"type": "Microsoft.PowerApps/apis"
-						},
-						{
-							"id": "/providers/Microsoft.PowerApps/apis/shared_bttn",
-							"name": "bttn",
-							"type": "Microsoft.PowerApps/apis"
-						}
-					]
-				},
-				{
-					"classification": "Blocked",
-					"connectors": []
-				}
-			],
-			"environmentType": "ExceptEnvironments",
-			"environments": [
-				{
-					"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/be0eb809-e58a-ec1b-8fce-ea40b0e53442",
-					"name": "be0eb809-e58a-ec1b-8fce-ea40b0e53442",
-					"type": "Microsoft.BusinessAppPlatform/scopes/environments"
-				}
-			],
-			"createdBy": {
-				"displayName": "admin"
-			},
-			"createdTime": "2023-10-02T07:38:56.6864176Z",
-			"lastModifiedBy": {
-				"displayName": "admin"
-			},
-			"lastModifiedTime": "2023-10-02T07:56:43.9700369Z",
-			"etag": "a872cb45-ee20-4f63-a8e6-fcb537bd8aaf",
-			"isLegacySchemaVersion": false
-		},
-		"connectorConfigurationsDefinition": {
-			"connectorActionConfigurations": [
-				{
-					"connectorId": "/providers/Microsoft.PowerApps/apis/shared_azureblob",
-					"actionRules": [
-						{
-							"actionId": "CreateFile_V2",
-							"behavior": "Allow"
-						},
-						{
-							"actionId": "CreateShareLinkByPath_V2",
-							"behavior": "Allow"
-						},
-						{
-							"actionId": "DeleteFile_V2",
-							"behavior": "Allow"
-						},
-						{
-							"actionId": "ExtractFolder_V3",
-							"behavior": "Allow"
-						},
-						{
-							"actionId": "GetFileMetadata_V2",
-							"behavior": "Allow"
-						},
-						{
-							"actionId": "GetFileMetadataByPath_V2",
-							"behavior": "Allow"
-						},
-						{
-							"actionId": "GetAccessPolicies_V2",
-							"behavior": "Allow"
-						},
-						{
-							"actionId": "GetFileContent_V2",
-							"behavior": "Allow"
-						},
-						{
-							"actionId": "GetFileContentByPath_V2",
-							"behavior": "Allow"
-						},
-						{
-							"actionId": "ListFolder_V4",
-							"behavior": "Allow"
-						},
-						{
-							"actionId": "ListRootFolder_V4",
-							"behavior": "Allow"
-						},
-						{
-							"actionId": "SetBlobTierByPath_V2",
-							"behavior": "Allow"
-						},
-						{
-							"actionId": "UpdateFile_V2",
-							"behavior": "Allow"
-						}
-					],
-					"defaultConnectorActionRuleBehavior": "Block"
-				}
-			],
-			"endpointConfigurations": [
-				{
-					"connectorId": "/providers/Microsoft.PowerApps/apis/shared_azureblob",
-					"endpointRules": [
-						{
-							"order": 1,
-							"behavior": "Deny",
-							"endPoint": "*"
-						}
-					]
-				}
-			]
-		},
-		"customConnectorUrlPatternsDefinition": {
-			"rules": [
-				{
-					"order": 1,
-					"customConnectorRuleClassification": "Confidential",
-					"pattern": "http://aaa.com"
-				},
-				{
-					"order": 2,
-					"customConnectorRuleClassification": "Ignore",
-					"pattern": "*"
-				}
-			]
-		}
-	}`
-
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, policiesResponose), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_dlp_policy_test/Validate_Read/get_policies.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("GET", fmt.Sprintf(`https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/%s`, policyId1),
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/00000000-0000-0000-0000-000000000001`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, policy1Responose), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_dlp_policy_test/Validate_Read/get_policy_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("GET", fmt.Sprintf(`https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/%s`, policyId2),
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/00000000-0000-0000-0000-000000000002`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, policy2Response), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_dlp_policy_test/Validate_Read/get_policy_00000000-0000-0000-0000-000000000002.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -306,7 +52,7 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.created_by", "admin"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.created_time", "2023-10-02T07:38:50.3269899Z"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.default_connectors_classification", "General"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.id", policyId1),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.display_name", "a1"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.last_modified_by", "admin"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.last_modified_time", "2023-10-02T07:38:50.3269899Z"),
@@ -338,7 +84,7 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.created_by", "admin"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.created_time", "2023-10-02T07:38:56.6864176Z"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.default_connectors_classification", "General"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.id", policyId2),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.id", "00000000-0000-0000-0000-000000000002"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.display_name", "a2"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.last_modified_by", "admin"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.last_modified_time", "2023-10-02T07:56:43.9700369Z"),
