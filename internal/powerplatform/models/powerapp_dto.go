@@ -20,6 +20,7 @@ type PowerAppPropertiesBapi struct {
 type PowerAppEnvironmentDto struct {
 	Id       string `json:"id"`
 	Location string `json:"location"`
+	Name     string `json:"name"`
 }
 
 type PowerAppCreatedByDto struct {

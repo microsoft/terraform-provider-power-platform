@@ -179,7 +179,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 	
 				}`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "PLN"),
 				),
@@ -196,7 +196,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
 				}`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000002"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "unitedstates"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "PLN"),
 				),
@@ -213,7 +213,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
 				}`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_id", "00000000-0000-0000-0000-000000000003"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000003"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
 				),
 			},
@@ -229,7 +229,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
 				}`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_id", "00000000-0000-0000-0000-000000000004"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000004"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Trial"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
 				),
@@ -246,7 +246,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
 				}`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_id", "00000000-0000-0000-0000-000000000005"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000005"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1031"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
 				),
@@ -310,7 +310,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
 				}`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example1"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "00000000-0000-0000-0000-000000000000"),
@@ -328,7 +328,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
 				}`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example123"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "00000000-0000-0000-0000-000000000000"),
@@ -379,7 +379,7 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "displayname"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "00000000-0000-0000-0000-000000000001"),

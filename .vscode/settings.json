@@ -8,7 +8,6 @@
         "connectorid",
         "environmentvariables",
         "friendlyname",
-        "gomock",
         "installedon",
         "ismanaged",
         "LCID",

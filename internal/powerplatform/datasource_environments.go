@@ -57,7 +57,7 @@ type EnvironmentDataSourceModel struct {
 
 func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto, currencyCode string) EnvironmentDataSourceModel {
 	return EnvironmentDataSourceModel{
-		EnvironmentId:   types.StringValue(environmentDto.Id),
+		EnvironmentId:   types.StringValue(environmentDto.Name),
 		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
 		Location:        types.StringValue(environmentDto.Location),
 		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),
