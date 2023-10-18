@@ -40,8 +40,8 @@ type EnvironmentResource struct {
 }
 
 type EnvironmentResourceModel struct {
-	Id              types.String `tfsdk:"id"`
-	EnvironmentName types.String `tfsdk:"environment_name"`
+	Id types.String `tfsdk:"id"`
+	//EnvironmentId   types.String `tfsdk:"environment_id"`
 	DisplayName     types.String `tfsdk:"display_name"`
 	Url             types.String `tfsdk:"url"`
 	Domain          types.String `tfsdk:"domain"`
@@ -72,9 +72,9 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 		Description:         "PowerPlatform environment",
 
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
+			//"id": schema.StringAttribute{
+			//	Computed: true,
+			//},
 			"currency_code": schema.StringAttribute{
 				Description:         "Unique currency code",
 				MarkdownDescription: "Unique currency name",
@@ -86,9 +86,9 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringvalidator.OneOf(models.EnvironmentCurrencyCodes...),
 				},
 			},
-			"environment_name": schema.StringAttribute{
-				MarkdownDescription: "Unique environment name 	(guid)",
-				Description:         "Unique environment name (guid)",
+			"id": schema.StringAttribute{
+				MarkdownDescription: "Unique environment id 	(guid)",
+				Description:         "Unique environment id (guid)",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -265,8 +265,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 
 	env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
 
-	plan.Id = env.EnvironmentName
-	plan.EnvironmentName = env.EnvironmentName
+	plan.Id = env.EnvironmentId
 	plan.DisplayName = env.DisplayName
 	plan.OrganizationId = env.OrganizationId
 	plan.SecurityGroupId = env.SecurityGroupId
@@ -280,7 +279,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	plan.LinkedAppId = env.LinkedAppId
 	plan.LinkedAppUrl = env.LinkedAppURL
 
-	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.EnvironmentName.ValueString()))
+	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
@@ -298,7 +297,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	envDto, err := r.BapiApiClient.GetEnvironment(ctx, state.EnvironmentName.ValueString())
+	envDto, err := r.BapiApiClient.GetEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
 		return
@@ -314,7 +313,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 
 	env := ConvertFromEnvironmentDto(*envDto, state.CurrencyCode.ValueString())
 
-	state.Id = env.EnvironmentName
+	state.Id = env.EnvironmentId
 	state.DisplayName = env.DisplayName
 	state.OrganizationId = env.OrganizationId
 	state.SecurityGroupId = env.SecurityGroupId
@@ -328,7 +327,9 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.LinkedAppId = env.LinkedAppId
 	state.LinkedAppType = env.LinkedAppType
 	state.LinkedAppUrl = env.LinkedAppURL
-	ctx = tflog.SetField(ctx, "environment_name", state.EnvironmentName.ValueString())
+
+	//TODO move to separate function
+	ctx = tflog.SetField(ctx, "id", state.Id.ValueString())
 	ctx = tflog.SetField(ctx, "display_name", state.DisplayName.ValueString())
 	ctx = tflog.SetField(ctx, "url", state.Url.ValueString())
 	ctx = tflog.SetField(ctx, "domain", state.Domain.ValueString())
@@ -340,7 +341,8 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	ctx = tflog.SetField(ctx, "currency_code", state.CurrencyCode.ValueString())
 	ctx = tflog.SetField(ctx, "version", state.Version.ValueString())
 	ctx = tflog.SetField(ctx, "template", strings.Join(state.Templates, " "))
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with environment_name %s", r.ProviderTypeName, state.EnvironmentName.ValueString()))
+
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
@@ -367,7 +369,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 
 		envToUpdate := models.EnvironmentDto{
 			Id:       plan.Id.ValueString(),
-			Name:     plan.EnvironmentName.ValueString(),
+			Name:     plan.DisplayName.ValueString(),
 			Type:     plan.EnvironmentType.ValueString(),
 			Location: plan.Location.ValueString(),
 			Properties: models.EnvironmentPropertiesDto{
@@ -385,7 +387,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 			},
 		}
 
-		envDto, err := r.BapiApiClient.UpdateEnvironment(ctx, plan.EnvironmentName.ValueString(), envToUpdate)
+		envDto, err := r.BapiApiClient.UpdateEnvironment(ctx, plan.Id.ValueString(), envToUpdate)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
 			return
@@ -393,7 +395,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 
 		env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
 
-		plan.Id = env.EnvironmentName
+		plan.Id = env.EnvironmentId
 		plan.DisplayName = env.DisplayName
 		plan.OrganizationId = env.OrganizationId
 		plan.SecurityGroupId = env.SecurityGroupId
@@ -425,7 +427,7 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	err := r.BapiApiClient.DeleteEnvironment(ctx, state.EnvironmentName.ValueString())
+	err := r.BapiApiClient.DeleteEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
@@ -435,5 +437,5 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *EnvironmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("environment_name"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

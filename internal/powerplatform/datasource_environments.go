@@ -39,7 +39,7 @@ type EnvironmentsListDataSourceModel struct {
 }
 
 type EnvironmentDataSourceModel struct {
-	EnvironmentName types.String `tfsdk:"environment_name"`
+	EnvironmentId   types.String `tfsdk:"id"`
 	DisplayName     types.String `tfsdk:"display_name"`
 	Url             types.String `tfsdk:"url"`
 	Domain          types.String `tfsdk:"domain"`
@@ -57,7 +57,7 @@ type EnvironmentDataSourceModel struct {
 
 func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto, currencyCode string) EnvironmentDataSourceModel {
 	return EnvironmentDataSourceModel{
-		EnvironmentName: types.StringValue(environmentDto.Name),
+		EnvironmentId:   types.StringValue(environmentDto.Id),
 		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
 		Location:        types.StringValue(environmentDto.Location),
 		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),
@@ -93,9 +93,9 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"environment_name": schema.StringAttribute{
-							MarkdownDescription: "Unique environment name (guid)",
-							Description:         "Unique environment name (guid)",
+						"id": schema.StringAttribute{
+							MarkdownDescription: "Unique environment id (guid)",
+							Description:         "Unique environment id (guid)",
 							Computed:            true,
 						},
 						"display_name": schema.StringAttribute{

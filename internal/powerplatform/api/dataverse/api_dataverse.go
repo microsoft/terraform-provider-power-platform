@@ -102,7 +102,7 @@ func (client *DataverseClientApi) GetSolutions(ctx context.Context, environmentI
 	}
 
 	for inx := range solutionArray.Value {
-		solutionArray.Value[inx].EnvironmentName = environmentId
+		solutionArray.Value[inx].EnvironmentId = environmentId
 	}
 
 	solutions := make([]models.SolutionDto, 0)

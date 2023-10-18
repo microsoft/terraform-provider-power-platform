@@ -27,7 +27,7 @@ func TestAccEnvironmentsDataSource(t *testing.T) {
 					// Verify the first power app to ensure all attributes are set
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.display_name", regexp.MustCompile(powerplatform_helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.domain", regexp.MustCompile(powerplatform_helpers.StringRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.environment_name", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.environment_type", regexp.MustCompile(`^(Default|Sandbox|Developer)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.language_code", regexp.MustCompile(`^(1033|1031)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
@@ -79,7 +79,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.display_name", "Admin AdminOnMicrosoft's Environment"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.domain", "00000000-0000-0000-0000-000000000001"),
-					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.environment_name", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.environment_type", "Developer"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.language_code", "1033"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.organization_id", "6450637c-f9a8-4988-8cf7-b03723d51ab7"),

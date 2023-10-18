@@ -1,6 +1,30 @@
 {
     "cSpell.words": [
+        "completedon",
+        "connectionid",
+        "connectionreferencedisplayname",
+        "connectionreferencelogicalname",
+        "connectionreferences",
+        "connectorid",
+        "environmentvariables",
+        "friendlyname",
+        "gomock",
+        "installedon",
+        "ismanaged",
+        "LCID",
+        "logicalname",
+        "modifiedon",
+        "msdyn",
+        "orgtest",
         "powerplatform",
-        "sharepointonline"
+        "schemaname",
+        "sharepointonline",
+        "solutionid",
+        "stringvalidator",
+        "testaccsolutionsdatasource",
+        "tfprotov",
+        "transactioncurrencies",
+        "uniquename",
+        "unitedstates"
     ]
 }

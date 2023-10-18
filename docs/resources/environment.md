@@ -68,7 +68,7 @@ resource "powerplatform_environment" "development" {
 
 ### Read-Only
 
-- `environment_name` (String) Unique environment name 	(guid)
+- `id` (String) Unique environment id 	(guid)
 - `id` (String) The ID of this resource.
 - `linked_app_id` (String) The GUID of the linked D365 application
 - `linked_app_type` (String) The type of the linked D365 application
