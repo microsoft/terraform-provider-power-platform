@@ -12,13 +12,3 @@ variable "tenant_id" {
   description = "The tenant id of the AAD tenant"
   type        = string
 }
-variable "username" {
-  description = "The username of the user"
-  type        = string
-  sensitive   = false
-}
-variable "password" {
-  description = "The password of the user"
-  type        = string
-  sensitive   = true
-}
