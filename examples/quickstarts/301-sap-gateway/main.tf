@@ -167,4 +167,5 @@ module "gateway_vm" {
   java_setup_link     = var.java_setup_link
   opdgw_install_link  = var.opdgw_install_link
   opdgw_setup_link    = var.opdgw_setup_link
+  sapnco_install_link = var.sapnco_install_link
 }

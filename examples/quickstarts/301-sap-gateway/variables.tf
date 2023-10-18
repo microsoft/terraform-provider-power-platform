@@ -80,3 +80,8 @@ variable "userIdAdmin_pp" {
   description = "The user id to be assigned as Admin role of the Power Platform"
   type        = string
 }
+
+variable "sapnco_install_link" {
+  description = "The Blob link to the SAP NCo installation file"
+  type        = string
+}

@@ -61,3 +61,8 @@ variable "opdgw_setup_link" {
   description = "The Blob link to the opdgw-setup.ps1 script"
   type        = string
 }
+
+variable "sapnco_install_link" {
+  description = "The Blob link to the SAP NCo installation file"
+  type        = string
+}
