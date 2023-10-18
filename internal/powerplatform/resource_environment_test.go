@@ -37,7 +37,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 					// Verify the first power app to ensure all attributes are set
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example2"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "terraformtest2"),
-					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_name", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1033"),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
@@ -94,7 +94,7 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 
 					// Verify the first power app to ensure all attributes are set
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "terraformtest1"),
-					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_name", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_type", regexp.MustCompile(`^(Default|Sandbox|Developer)$`)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1033"),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
@@ -124,7 +124,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 	envIdAfterEnvironmentTypeChanges := "00000000-0000-0000-0000-000000000005"
 
 	env := models.EnvironmentDto{
-		Name: envIdBeforeChanges,
+		Id: envIdBeforeChanges,
 		Properties: models.EnvironmentPropertiesDto{
 			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
 				ResourceId:      "org1",
@@ -155,7 +155,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 
 			}`,
 			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdBeforeChanges),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "id", envIdBeforeChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "USD"),
 			),
@@ -172,7 +172,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				security_group_id 						  = "security1"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterLocationChanges),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "id", envIdAfterLocationChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "unitedstates"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "USD"),
 			),
@@ -189,7 +189,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				security_group_id 						  = "security1"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterCurrencyChanges),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "id", envIdAfterCurrencyChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
 			),
 		},
@@ -205,7 +205,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				security_group_id 						  = "security1"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterEnvironmentTypeChanges),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "id", envIdAfterEnvironmentTypeChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Trial"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
 			),
@@ -222,7 +222,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				security_group_id 						  = "security1"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envIdAfterLanguageChanges),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "id", envIdAfterLanguageChanges),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1031"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
 			),
@@ -308,7 +308,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 
 	envId := "00000000-0000-0000-0000-000000000001"
 	env := models.EnvironmentDto{
-		Name: envId,
+		Id: envId,
 		Properties: models.EnvironmentPropertiesDto{
 			EnvironmentSku: "Sandbox",
 			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
@@ -339,7 +339,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 				security_group_id 						  = "security1"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envId),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "id", envId),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example1"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "domain"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "security1"),
@@ -357,7 +357,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 				security_group_id 						  = "security1"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envId),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "id", envId),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example123"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "domain"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "security1"),
@@ -375,7 +375,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 				security_group_id 						  = "security1"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envId),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "id", envId),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example123"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "domain123"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "security1"),
@@ -393,7 +393,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 				security_group_id 						  = "security123"
 			}`,
 			Check: resource.ComposeTestCheckFunc(
-				resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", envId),
+				resource.TestCheckResourceAttr("powerplatform_environment.development", "id", envId),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example123"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "domain123"),
 				resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "security123"),
@@ -456,7 +456,7 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 	dataverseClientMock := mocks.NewUnitTestMockDataverseClientInterface(t)
 
 	env := models.EnvironmentDto{
-		Name: "00000000-0000-0000-0000-000000000001",
+		Id: "00000000-0000-0000-0000-000000000001",
 		Properties: models.EnvironmentPropertiesDto{
 			EnvironmentSku: "Sandbox",
 			LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
@@ -478,7 +478,7 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 
 	clientMock.EXPECT().CreateEnvironment(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, envToCreate models.EnvironmentCreateDto) (*models.EnvironmentDto, error) {
 		env = models.EnvironmentDto{
-			Name:     "00000000-0000-0000-0000-000000000001",
+			Id:       "00000000-0000-0000-0000-000000000001",
 			Location: envToCreate.Location,
 			Properties: models.EnvironmentPropertiesDto{
 				DisplayName:    envToCreate.Properties.DisplayName,
@@ -519,8 +519,7 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_name", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_name", env.Name),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example1"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", env.Properties.LinkedEnvironmentMetadata.InstanceURL),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", env.Properties.LinkedEnvironmentMetadata.DomainName),

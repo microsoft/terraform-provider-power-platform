@@ -46,5 +46,5 @@ Read-Only:
 
 - `created_time` (String) Created time
 - `display_name` (String) Display name
-- `environment_name` (String) Unique environment name (guid)
+- `environment_id` (String) Unique environment id (guid)
 - `name` (String) Name

@@ -47,7 +47,7 @@ Read-Only:
 - `currency_code` (String) Unique currency name (EUR, USE, GBP etc.)
 - `display_name` (String) Display name
 - `domain` (String) Domain name of the environment
-- `environment_name` (String) Unique environment name (guid)
+- `environment_id` (String) Unique environment id (guid)
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
 - `language_code` (Number) Unique language LCID (integer)
 - `linked_app_id` (String) Unique linked app id (guid)

@@ -29,7 +29,7 @@ func TestAccPowerAppsDataSource(t *testing.T) {
 
 					// Verify the first power app to ensure all attributes are set
 					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.name", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.environment_name", regexp.MustCompile(powerplatform_helpers.UrlValidStringRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.id", regexp.MustCompile(powerplatform_helpers.UrlValidStringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.display_name", regexp.MustCompile(powerplatform_helpers.UrlValidStringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.created_time", regexp.MustCompile(`^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$`)),
 				),
@@ -48,7 +48,7 @@ func TestUnitPowerAppsDataSource_Validate_Read(t *testing.T) {
 			DisplayName: "display_name1",
 			CreatedTime: "created_time1",
 			Environment: models.PowerAppEnvironmentDto{
-				Name: "environment",
+				Id: "id",
 			},
 		},
 	})
@@ -58,7 +58,7 @@ func TestUnitPowerAppsDataSource_Validate_Read(t *testing.T) {
 			DisplayName: "display_name2",
 			CreatedTime: "created_time2",
 			Environment: models.PowerAppEnvironmentDto{
-				Name: "environment",
+				Id: "id",
 			},
 		},
 	})
@@ -83,12 +83,12 @@ func TestUnitPowerAppsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.#", strconv.Itoa(len(apps))),
 
 					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.name", app1.Name.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.environment_name", app1.EnvironmentName.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.id", app1.EnvironmentId.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.display_name", app1.DisplayName.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.created_time", app1.CreatedTime.ValueString()),
 
 					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.1.name", app2.Name.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.1.environment_name", app2.EnvironmentName.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.1.id", app2.EnvironmentId.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.1.display_name", app2.DisplayName.ValueString()),
 					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.1.created_time", app2.CreatedTime.ValueString()),
 				),

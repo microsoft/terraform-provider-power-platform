@@ -33,34 +33,34 @@ type SolutionsDataSource struct {
 }
 
 type SolutionListDataSourceModel struct {
-	Id              types.String               `tfsdk:"id"`
-	EnvironmentName types.String               `tfsdk:"environment_name"`
-	Solutions       []SolutionsDataSourceModel `tfsdk:"solutions"`
+	Id            types.String               `tfsdk:"id"`
+	EnvironmentId types.String               `tfsdk:"environment_id"`
+	Solutions     []SolutionsDataSourceModel `tfsdk:"solutions"`
 }
 
 type SolutionsDataSourceModel struct {
-	EnvironmentName types.String `tfsdk:"environment_name"`
-	DisplayName     types.String `tfsdk:"display_name"`
-	Name            types.String `tfsdk:"name"`
-	CreatedTime     types.String `tfsdk:"created_time"`
-	Id              types.String `tfsdk:"id"`
-	ModifiedTime    types.String `tfsdk:"modified_time"`
-	InstallTime     types.String `tfsdk:"install_time"`
-	Version         types.String `tfsdk:"version"`
-	IsManaged       types.Bool   `tfsdk:"is_managed"`
+	EnvironmentId types.String `tfsdk:"environment_id"`
+	DisplayName   types.String `tfsdk:"display_name"`
+	Name          types.String `tfsdk:"name"`
+	CreatedTime   types.String `tfsdk:"created_time"`
+	Id            types.String `tfsdk:"id"`
+	ModifiedTime  types.String `tfsdk:"modified_time"`
+	InstallTime   types.String `tfsdk:"install_time"`
+	Version       types.String `tfsdk:"version"`
+	IsManaged     types.Bool   `tfsdk:"is_managed"`
 }
 
 func ConvertFromSolutionDto(solutionDto models.SolutionDto) SolutionsDataSourceModel {
 	return SolutionsDataSourceModel{
-		EnvironmentName: types.StringValue(solutionDto.EnvironmentName),
-		DisplayName:     types.StringValue(solutionDto.DisplayName),
-		Name:            types.StringValue(solutionDto.Name),
-		CreatedTime:     types.StringValue(solutionDto.CreatedTime),
-		Id:              types.StringValue(solutionDto.Id),
-		ModifiedTime:    types.StringValue(solutionDto.ModifiedTime),
-		InstallTime:     types.StringValue(solutionDto.InstallTime),
-		Version:         types.StringValue(solutionDto.Version),
-		IsManaged:       types.BoolValue(solutionDto.IsManaged),
+		EnvironmentId: types.StringValue(solutionDto.EnvironmentId),
+		DisplayName:   types.StringValue(solutionDto.DisplayName),
+		Name:          types.StringValue(solutionDto.Name),
+		CreatedTime:   types.StringValue(solutionDto.CreatedTime),
+		Id:            types.StringValue(solutionDto.Id),
+		ModifiedTime:  types.StringValue(solutionDto.ModifiedTime),
+		InstallTime:   types.StringValue(solutionDto.InstallTime),
+		Version:       types.StringValue(solutionDto.Version),
+		IsManaged:     types.BoolValue(solutionDto.IsManaged),
 	}
 }
 
@@ -76,9 +76,9 @@ func (d *SolutionsDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
-			"environment_name": schema.StringAttribute{
-				Description:         "Unique environment name (guid)",
-				MarkdownDescription: "Unique environment name (guid)",
+			"environment_id": schema.StringAttribute{
+				Description:         "Unique environment id (guid)",
+				MarkdownDescription: "Unique environment id (guid)",
 				Required:            true,
 			},
 			"solutions": schema.ListNestedAttribute{
@@ -92,9 +92,9 @@ func (d *SolutionsDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 							Description:         "Solution id",
 							Computed:            true,
 						},
-						"environment_name": schema.StringAttribute{
-							MarkdownDescription: "Unique environment name (guid)",
-							Description:         "Unique environment name (guid)",
+						"environment_id": schema.StringAttribute{
+							MarkdownDescription: "Unique environment id (guid)",
+							Description:         "Unique environment id (guid)",
 							Computed:            true,
 						},
 						"display_name": schema.StringAttribute{
@@ -164,7 +164,7 @@ func (d *SolutionsDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SOLUTIONS START: %s", d.ProviderTypeName))
 
-	solutions, err := d.DataverseClient.GetSolutions(ctx, state.EnvironmentName.ValueString())
+	solutions, err := d.DataverseClient.GetSolutions(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return

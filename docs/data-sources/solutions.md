@@ -29,7 +29,7 @@ provider "powerplatform" {
 }
 
 data "powerplatform_solutions" "all" {
-  environment_name = var.environment_name
+  environment_id = var.environment_id
 }
 ```
 
@@ -38,7 +38,7 @@ data "powerplatform_solutions" "all" {
 
 ### Required
 
-- `environment_name` (String) Unique environment name (guid)
+- `environment_id` (String) Unique environment id (guid)
 
 ### Read-Only
 
@@ -52,7 +52,7 @@ Read-Only:
 
 - `created_time` (String) Created time
 - `display_name` (String) Display name
-- `environment_name` (String) Unique environment name (guid)
+- `environment_id` (String) Unique environment id (guid)
 - `id` (String) Solution id
 - `install_time` (String) Created time
 - `is_managed` (Boolean) Is managed
