@@ -95,7 +95,7 @@ func TestAccSolutionsDataSource_Validate_Read(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.install_time", regexp.MustCompile(powerplatform_helpers.TimeRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.is_managed", regexp.MustCompile(`^(true|false)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.version", regexp.MustCompile(powerplatform_helpers.VersionRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.solutionid", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 				),
 			},
 		},
