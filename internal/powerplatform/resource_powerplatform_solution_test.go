@@ -51,11 +51,10 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 					environment_type                          = "Sandbox"
 					domain = "` + envDomain + `"
 					security_group_id = "00000000-0000-0000-0000-000000000000"
-					environment_id = "00000000-0000-0000-0000-000000000000"
 				}
 
 				resource "powerplatform_solution" "solution" {
-					environment_id = powerplatform_environment.environment.environment_id
+					environment_id = powerplatform_environment.environment.id
 					solution_name    = "` + solutionName + `"
 					solution_file    = "` + solutionFileName + `"
 				}`,
@@ -212,11 +211,10 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 					environment_type                          = "Sandbox"
 					domain 									  = "` + envDomain + `"
 					security_group_id = "00000000-0000-0000-0000-000000000000"
-					environment_id = "00000000-0000-0000-0000-000000000000"
 				}
 
 				resource "powerplatform_solution" "solution" {
-					environment_id = powerplatform_environment.environment.environment_id
+					environment_id = powerplatform_environment.environment.id
 					solution_name    = "TerraformTestSolution"
 					solution_file    = "` + solutionFileName + `"
 					settings_file 	 = "` + solutionSettingsFileName + `"

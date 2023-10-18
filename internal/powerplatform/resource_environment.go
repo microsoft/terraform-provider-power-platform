@@ -40,8 +40,7 @@ type EnvironmentResource struct {
 }
 
 type EnvironmentResourceModel struct {
-	Id types.String `tfsdk:"id"`
-	//EnvironmentId   types.String `tfsdk:"environment_id"`
+	Id              types.String `tfsdk:"id"`
 	DisplayName     types.String `tfsdk:"display_name"`
 	Url             types.String `tfsdk:"url"`
 	Domain          types.String `tfsdk:"domain"`
@@ -244,15 +243,8 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 				Currency: models.EnvironmentCreateCurrency{
 					Code: plan.CurrencyCode.ValueString(),
 				},
-				Templates: plan.Templates,
-				TemplateMetadata: models.EnvironmentCreateTemplateMetadata{
-					PostProvisioningPackages: []models.EnvironmentCreatePostProvisioningPackages{
-						{
-							ApplicationUniqueName: "msdyn_FinanceAndOperationsProvisioningAppAnchor",
-							Parameters:            "DevToolsEnabled=true|DemoDataEnabled=true",
-						},
-					},
-				},
+				//Templates:        plan.Templates,
+				//TemplateMetadata: models.EnvironmentCreateTemplateMetadata{},
 			},
 		},
 	}
@@ -306,7 +298,6 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	defaultCurrency, err := r.DataverseApiClient.GetDefaultCurrencyForEnvironment(ctx, envDto.Name)
 	if err != nil {
 		resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", envDto.Name), err.Error())
-		state.CurrencyCode = types.StringNull()
 	} else {
 		state.CurrencyCode = types.StringValue(defaultCurrency.IsoCurrencyCode)
 	}
@@ -320,6 +311,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.LanguageName = env.LanguageName
 	state.Domain = env.Domain
 	state.Url = env.Url
+	state.CurrencyCode = env.CurrencyCode
 	state.EnvironmentType = env.EnvironmentType
 	state.Version = env.Version
 	state.LanguageName = env.LanguageName
@@ -379,12 +371,16 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 					SecurityGroupId: plan.SecurityGroupId.ValueString(),
 					DomainName:      plan.Domain.ValueString(),
 				},
-				LinkedAppMetadata: models.LinkedAppMetadataDto{
-					Type: plan.LinkedAppType.ValueString(),
-					Id:   plan.LinkedAppId.ValueString(),
-					Url:  plan.LinkedAppUrl.ValueString(),
-				},
 			},
+		}
+		if !plan.LinkedAppId.IsNull() && plan.LinkedAppId.ValueString() != "" {
+			envToUpdate.Properties.LinkedAppMetadata = &models.LinkedAppMetadataDto{
+				Type: plan.LinkedAppType.ValueString(),
+				Id:   plan.LinkedAppId.ValueString(),
+				Url:  plan.LinkedAppUrl.ValueString(),
+			}
+		} else {
+			envToUpdate.Properties.LinkedAppMetadata = nil
 		}
 
 		envDto, err := r.BapiApiClient.UpdateEnvironment(ctx, plan.Id.ValueString(), envToUpdate)
@@ -402,6 +398,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		plan.LanguageName = env.LanguageName
 		plan.Domain = env.Domain
 		plan.Url = env.Url
+		plan.CurrencyCode = env.CurrencyCode
 		plan.EnvironmentType = env.EnvironmentType
 		plan.Version = env.Version
 		plan.LanguageName = env.LanguageName

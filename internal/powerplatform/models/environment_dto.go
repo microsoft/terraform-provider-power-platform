@@ -44,7 +44,7 @@ type EnvironmentPropertiesDto struct {
 	DatabaseType              string                       `json:"databaseType"`
 	DisplayName               string                       `json:"displayName"`
 	EnvironmentSku            string                       `json:"environmentSku"`
-	LinkedAppMetadata         LinkedAppMetadataDto         `json:"linkedAppMetadata"`
+	LinkedAppMetadata         *LinkedAppMetadataDto        `json:"linkedAppMetadata,omitempty"`
 	LinkedEnvironmentMetadata LinkedEnvironmentMetadataDto `json:"linkedEnvironmentMetadata"`
 	States                    StatesEnvironmentDto         `json:"states"`
 	TenantID                  string                       `json:"tenantId"`
@@ -57,8 +57,8 @@ type LinkedEnvironmentMetadataDto struct {
 	SecurityGroupId  string                            `json:"securityGroupId"`
 	ResourceId       string                            `json:"resourceId"`
 	Version          string                            `json:"version"`
-	Templates        []string                          `json:"template"`
-	TemplateMetadata EnvironmentCreateTemplateMetadata `json:"templateMetadata"`
+	Templates        []string                          `json:"template,omitempty"`
+	TemplateMetadata EnvironmentCreateTemplateMetadata `json:"templateMetadata,omitempty"`
 }
 
 type LinkedAppMetadataDto struct {
@@ -105,12 +105,12 @@ type EnvironmentCreateCurrency struct {
 }
 
 type EnvironmentCreateTemplateMetadata struct {
-	PostProvisioningPackages []EnvironmentCreatePostProvisioningPackages `json:"PostProvisioningPackages"`
+	PostProvisioningPackages []EnvironmentCreatePostProvisioningPackages `json:"PostProvisioningPackages,omitempty"`
 }
 
 type EnvironmentCreatePostProvisioningPackages struct {
-	ApplicationUniqueName string `json:"applicationUniqueName"`
-	Parameters            string `json:"parameters"`
+	ApplicationUniqueName string `json:"applicationUniqueName,omitempty"`
+	Parameters            string `json:"parameters,omitempty"`
 }
 
 type EnvironmentCreateLinkedAppMetadataDto struct {
