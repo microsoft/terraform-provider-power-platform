@@ -799,12 +799,12 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 
 	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource_dlp_policy_test/Validate_Create/get_policy_00000000-0000-0000-0000-000000000001.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("services/dlp_policy/tests/resource/Validate_Create/get_policy_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/00000000-0000-0000-0000-000000000001`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_dlp_policy_test/Validate_Create/get_policy_00000000-0000-0000-0000-000000000001.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/dlp_policy/tests/resource/Validate_Create/get_policy_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/policies/00000000-0000-0000-0000-000000000001`,

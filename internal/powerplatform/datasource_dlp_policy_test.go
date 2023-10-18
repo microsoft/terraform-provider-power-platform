@@ -17,17 +17,17 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_dlp_policy_test/Validate_Read/get_policies.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/dlp_policy/tests/datasource/Validate_Read/get_policies.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/00000000-0000-0000-0000-000000000001`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_dlp_policy_test/Validate_Read/get_policy_00000000-0000-0000-0000-000000000001.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/dlp_policy/tests/datasource/Validate_Read/get_policy_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/00000000-0000-0000-0000-000000000002`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_dlp_policy_test/Validate_Read/get_policy_00000000-0000-0000-0000-000000000002.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/dlp_policy/tests/datasource/Validate_Read/get_policy_00000000-0000-0000-0000-000000000002.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
