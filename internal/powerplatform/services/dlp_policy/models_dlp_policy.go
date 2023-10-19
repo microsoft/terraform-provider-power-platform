@@ -18,13 +18,13 @@ type DlpPolicyModelDto struct {
 	Environments                         []DlpEnvironmentDto                     `json:"environments"`
 	ConnectorGroups                      []DlpConnectorGroupsModelDto            `json:"connectorGroups"`
 	CustomConnectorUrlPatternsDefinition []DlpConnectorUrlPatternsDefinitionDto  `json:"customConnectorUrlPatternsDefinition,omitempty"`
-	ConnectorConfigurationsDefinition    DlpConnectorConfigurationsDefinitionDto `json:"connectorConfigurationsDefinition"`
+	ConnectorConfigurationsDefinition    DlpConnectorConfigurationsDefinitionDto `json:"connectorConfigurationsDefinition,omitempty"`
 }
 
 type DlpPolicyDto struct {
-	PolicyDefinition                     DlpPolicyDefinitionDto                  `json:"policyDefinition"`
-	ConnectorConfigurationsDefinition    DlpConnectorConfigurationsDefinitionDto `json:"connectorConfigurationsDefinition,omitempty"`
-	CustomConnectorUrlPatternsDefinition DlpConnectorUrlPatternsDefinitionDto    `json:"customConnectorUrlPatternsDefinition"`
+	PolicyDefinition                     DlpPolicyDefinitionDto                   `json:"policyDefinition"`
+	ConnectorConfigurationsDefinition    *DlpConnectorConfigurationsDefinitionDto `json:"connectorConfigurationsDefinition,omitempty"`
+	CustomConnectorUrlPatternsDefinition DlpConnectorUrlPatternsDefinitionDto     `json:"customConnectorUrlPatternsDefinition"`
 	//ExemptResourcesDefinition            DlpExemptResourcesDefinitionDto         `json:"exemptResourcesDefinition"`
 	//ScopeDefinition                      DlpScopeDefinitionDto                   `json:"scopeDefinition"`
 }
@@ -52,8 +52,8 @@ type DlpPolicyLastActionDto struct {
 }
 
 type DlpConnectorConfigurationsDefinitionDto struct {
-	ConnectorActionConfigurations []DlpConnectorActionConfigurationsDto `json:"connectorActionConfigurations"`
-	EndpointConfigurations        []DlpEndpointConfigurationsDto        `json:"endpointConfigurations"`
+	ConnectorActionConfigurations []DlpConnectorActionConfigurationsDto `json:"connectorActionConfigurations,omitempty"`
+	EndpointConfigurations        []DlpEndpointConfigurationsDto        `json:"endpointConfigurations,omitempty"`
 }
 
 type DlpConnectorActionConfigurationsDto struct {

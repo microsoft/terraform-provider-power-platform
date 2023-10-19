@@ -1,46 +1,40 @@
 package powerplatform
 
 import (
-	"context"
+	"net/http"
 	"regexp"
-	"strconv"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/jarcoal/httpmock"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
+	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestUnitSolutionsDataSource_Validate_Read(t *testing.T) {
-	clientMock := mocks.NewUnitTestMockDataverseClientInterface(t)
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mock_helpers.ActivateOAuthHttpMocks()
+	mock_helpers.ActivateEnvironmentHttpMocks()
 
-	envId := "00000000-0000-0000-0000-000000000001"
-	sol := models.SolutionDto{
-		Id:            "00000000-0000-0000-0000-000000000002",
-		EnvironmentId: envId,
-		DisplayName:   "Solution",
-		Name:          "solution",
-		CreatedTime:   "2020-01-01T00:00:00Z",
-		ModifiedTime:  "2020-01-01T00:00:00Z",
-		InstallTime:   "2020-01-01T00:00:00Z",
-		Version:       "1.2.3.4",
-		IsManaged:     true,
-	}
-	solutions := make([]models.SolutionDto, 0)
-	solutions = append(solutions, sol)
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_solutions_test/Validate_Read/get_environments.json").String()), nil
+		})
 
-	clientMock.EXPECT().GetSolutions(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, id string) ([]models.SolutionDto, error) {
-		return solutions, nil
-	}).AnyTimes()
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_solutions_test/Validate_Read/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=%28isvisible+eq+true%29&%24orderby=createdon+desc`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_solutions_test/Validate_Read/get_solution.json").String()), nil
+		})
 
 	resource.Test(t, resource.TestCase{
-		IsUnitTest: true,
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(nil, clientMock, nil),
-		},
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: UnitTestsProviderConfig + `
@@ -51,15 +45,15 @@ func TestUnitSolutionsDataSource_Validate_Read(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.#", "1"),
-					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.name", sol.Name),
-					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.environment_id", sol.EnvironmentId),
-					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.display_name", sol.DisplayName),
-					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.created_time", sol.CreatedTime),
-					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.modified_time", sol.ModifiedTime),
-					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.install_time", sol.InstallTime),
-					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.is_managed", strconv.FormatBool(sol.IsManaged)),
-					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.version", sol.Version),
-					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.id", sol.Id),
+					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.name", "ProductivityToolsAnchor"),
+					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.environment_id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.display_name", "ProductivityTools"),
+					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.created_time", "2023-10-10T08:09:56Z"),
+					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.modified_time", "2023-10-10T08:09:58Z"),
+					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.install_time", "2023-10-10T08:09:56Z"),
+					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.is_managed", "true"),
+					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.version", "9.2.1.1020"),
+					resource.TestCheckResourceAttr("data.powerplatform_solutions.all", "solutions.0.id", "70edca66-e4c2-4384-92e0-4300465c1894"),
 				),
 			},
 		},
@@ -85,7 +79,7 @@ func TestAccSolutionsDataSource_Validate_Read(t *testing.T) {
 				}
 
 				data "powerplatform_solutions" "all" {
-					environment_id = powerplatform_environment.development.environment_id
+					environment_id = powerplatform_environment.development.id
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -101,7 +95,7 @@ func TestAccSolutionsDataSource_Validate_Read(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.install_time", regexp.MustCompile(powerplatform_helpers.TimeRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.is_managed", regexp.MustCompile(`^(true|false)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.version", regexp.MustCompile(powerplatform_helpers.VersionRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.solutionid", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 				),
 			},
 		},
