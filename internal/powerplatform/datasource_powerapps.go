@@ -46,7 +46,7 @@ type PowerAppsDataSourceModel struct {
 
 func ConvertFromPowerAppDto(powerAppDto models.PowerAppBapi) PowerAppsDataSourceModel {
 	return PowerAppsDataSourceModel{
-		EnvironmentId: types.StringValue(powerAppDto.Properties.Environment.Id),
+		EnvironmentId: types.StringValue(powerAppDto.Properties.Environment.Name),
 		DisplayName:   types.StringValue(powerAppDto.Properties.DisplayName),
 		Name:          types.StringValue(powerAppDto.Name),
 		CreatedTime:   types.StringValue(powerAppDto.Properties.CreatedTime),

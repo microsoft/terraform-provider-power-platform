@@ -56,8 +56,8 @@ type EnvironmentDataSourceModel struct {
 }
 
 func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto, currencyCode string) EnvironmentDataSourceModel {
-	return EnvironmentDataSourceModel{
-		EnvironmentId:   types.StringValue(environmentDto.Id),
+	model := EnvironmentDataSourceModel{
+		EnvironmentId:   types.StringValue(environmentDto.Name),
 		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
 		Location:        types.StringValue(environmentDto.Location),
 		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),
@@ -67,11 +67,14 @@ func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto, currencyCod
 		Url:             types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.InstanceURL),
 		Domain:          types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.DomainName),
 		Version:         types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.Version),
-		LinkedAppType:   types.StringValue(environmentDto.Properties.LinkedAppMetadata.Type),
-		LinkedAppId:     types.StringValue(environmentDto.Properties.LinkedAppMetadata.Id),
-		LinkedAppURL:    types.StringValue(environmentDto.Properties.LinkedAppMetadata.Url),
 		CurrencyCode:    types.StringValue(currencyCode),
 	}
+	if environmentDto.Properties.LinkedAppMetadata != nil {
+		model.LinkedAppType = types.StringValue(environmentDto.Properties.LinkedAppMetadata.Type)
+		model.LinkedAppId = types.StringValue(environmentDto.Properties.LinkedAppMetadata.Id)
+		model.LinkedAppURL = types.StringValue(environmentDto.Properties.LinkedAppMetadata.Url)
+	}
+	return model
 }
 
 func (d *EnvironmentsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {

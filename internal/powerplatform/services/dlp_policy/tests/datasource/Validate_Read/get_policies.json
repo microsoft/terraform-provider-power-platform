@@ -1,0 +1,48 @@
+{
+    "value": [
+        {
+            "policyDefinition": {
+                "name": "00000000-0000-0000-0000-000000000001",
+                "displayName": "a1",
+                "defaultConnectorsClassification": "General",
+                "environmentType": "AllEnvironments",
+                "environments": [],
+                "createdBy": {
+                    "displayName": "admin"
+                },
+                "createdTime": "2023-10-02T07:38:50.3269899Z",
+                "lastModifiedBy": {
+                    "displayName": "admin"
+                },
+                "lastModifiedTime": "2023-10-02T07:38:50.3269899Z",
+                "etag": "dcf783da-6eb1-4c5a-a6ee-118a64bafbdb",
+                "isLegacySchemaVersion": false
+            }
+        },
+        {
+            "policyDefinition": {
+                "name": "00000000-0000-0000-0000-000000000002",
+                "displayName": "a2",
+                "defaultConnectorsClassification": "General",
+                "environmentType": "ExceptEnvironments",
+                "environments": [
+                    {
+                        "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/be0eb809-e58a-ec1b-8fce-ea40b0e53442",
+                        "name": "be0eb809-e58a-ec1b-8fce-ea40b0e53442",
+                        "type": "Microsoft.BusinessAppPlatform/scopes/environments"
+                    }
+                ],
+                "createdBy": {
+                    "displayName": "admin"
+                },
+                "createdTime": "2023-10-02T07:38:56.6864176Z",
+                "lastModifiedBy": {
+                    "displayName": "admin"
+                },
+                "lastModifiedTime": "2023-10-02T07:56:43.9700369Z",
+                "etag": "a872cb45-ee20-4f63-a8e6-fcb537bd8aaf",
+                "isLegacySchemaVersion": false
+            }
+        }
+    ]
+}

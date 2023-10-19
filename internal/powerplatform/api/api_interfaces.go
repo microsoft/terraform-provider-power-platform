@@ -29,11 +29,6 @@ type BapiClientInterface interface {
 	GetPowerApps(ctx context.Context, environmentId string) ([]models.PowerAppBapi, error)
 
 	GetConnectors(ctx context.Context) ([]models.ConnectorDto, error)
-	//GetPolicies(ctx context.Context) ([]models.DlpPolicyModel, error)
-	GetPolicy(ctx context.Context, name string) (*models.DlpPolicyModel, error)
-	DeletePolicy(ctx context.Context, name string) error
-	UpdatePolicy(ctx context.Context, name string, policyToUpdate models.DlpPolicyModel) (*models.DlpPolicyModel, error)
-	CreatePolicy(ctx context.Context, policyToCreate models.DlpPolicyModel) (*models.DlpPolicyModel, error)
 }
 
 type DataverseClientInterface interface {

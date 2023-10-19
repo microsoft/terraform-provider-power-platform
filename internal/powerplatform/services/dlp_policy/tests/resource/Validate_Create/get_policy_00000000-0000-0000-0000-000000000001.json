@@ -1,0 +1,106 @@
+{
+    "policyDefinition": {
+        "name": "00000000-0000-0000-0000-000000000001",
+        "displayName": "Block All Policy",
+        "defaultConnectorsClassification": "Blocked",
+        "connectorGroups": [
+            {
+                "classification": "Confidential",
+                "connectors": [
+                    {
+                        "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                        "name": "shared_sharepointonline",
+                        "type": "Microsoft.PowerApps/apis"
+                    }
+                ]
+            },
+            {
+                "classification": "General",
+                "connectors": [
+                    {
+                        "id": "/providers/Microsoft.PowerApps/apis/shared_sql",
+                        "name": "shared_sql",
+                        "type": "Microsoft.PowerApps/apis"
+                    }
+                ]
+            },
+            {
+                "classification": "Blocked",
+                "connectors": [
+                    {
+                        "id": "/providers/Microsoft.PowerApps/apis/shared_azureblob",
+                        "name": "shared_azureblob",
+                        "type": "Microsoft.PowerApps/apis"
+                    }
+                ]
+            }
+        ],
+        "environmentType": "OnlyEnvironments",
+        "environments": [
+            {
+                "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000000",
+                "name": "00000000-0000-0000-0000-000000000000",
+                "type": "Microsoft.BusinessAppPlatform/scopes/environments"
+            }
+        ],
+        "createdBy": {
+            "displayName": "createdBy"
+        },
+        "createdTime": "createdTime",
+        "lastModifiedBy": {
+            "displayName": "lastModifiedBy"
+        },
+        "lastModifiedTime": "lastModifiedTime",
+        "etag": "etag",
+        "isLegacySchemaVersion": false
+    },
+    "connectorConfigurationsDefinition": {
+        "connectorActionConfigurations": [
+            {
+                "connectorId": "/providers/Microsoft.PowerApps/apis/shared_sql",
+                "actionRules": [
+                    {
+                        "actionId": "DeleteItem_V2",
+                        "behavior": "Block"
+                    },
+                    {
+                        "actionId": "ExecutePassThroughNativeQuery_V2",
+                        "behavior": "Block"
+                    }
+                ],
+                "defaultConnectorActionRuleBehavior": "Allow"
+            }
+        ],
+        "endpointConfigurations": [
+            {
+                "connectorId": "/providers/Microsoft.PowerApps/apis/shared_sql",
+                "endpointRules": [
+                    {
+                        "order": 1,
+                        "behavior": "Allow",
+                        "endPoint": "contoso.com"
+                    },
+                    {
+                        "order": 2,
+                        "behavior": "Deny",
+                        "endPoint": "*"
+                    }
+                ]
+            }
+        ]
+    },
+    "customConnectorUrlPatternsDefinition": {
+        "rules": [
+            {
+                "order": 1,
+                "customConnectorRuleClassification": "Blocked",
+                "pattern": "https://*.contoso.com"
+            },
+            {
+                "order": 2,
+                "customConnectorRuleClassification": "Ignore",
+                "pattern": "*"
+            }
+        ]
+    }
+}
