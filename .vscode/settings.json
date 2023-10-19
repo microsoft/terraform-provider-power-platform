@@ -6,6 +6,7 @@
         "connectionreferencelogicalname",
         "connectionreferences",
         "connectorid",
+        "diffmerge",
         "environmentvariables",
         "friendlyname",
         "gomock",

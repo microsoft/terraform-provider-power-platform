@@ -27,6 +27,21 @@ Once you have the prerequisites, you can follow these steps to open the repo in 
 1. When the devcontainer is ready, you will see “Dev Container: Power Platform Terraform Provider Development” in the lower left corner of the VS Code status bar. You can also open a new terminal (Ctrl+Shift+`) and see that you are inside the container.
 1. You can now edit, run, debug, and test the code as if you were on your local machine. Any changes you make will be reflected in the container and in your local file system.
 
+Note: To work with the repository you will need to verify or configure your GIT credentials, you can do it as follows:
+
+Verify Git user and email
+
+```bash
+git config --list
+```
+
+Change or set your Git username and password:
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "your.email@address"
+```
+
 For more information about devcontainers, you can check out the [devcontainer documentation](https://code.visualstudio.com/docs/devcontainers/containers).
 
 ## Power Platform Prerequisites
