@@ -51,17 +51,17 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?api-version=2023-06-01`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_environment_test/Validate_Read/get_environments.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/datasource/Validate_Read/get_environments.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity&api-version=2023-06-01`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_environment_test/Validate_Read/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/datasource/Validate_Read/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000002?%24expand=permissions%2Cproperties.capacity&api-version=2023-06-01`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_environment_test/Validate_Read/get_environment_00000000-0000-0000-0000-000000000002.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/datasource/Validate_Read/get_environment_00000000-0000-0000-0000-000000000002.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{

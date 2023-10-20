@@ -9,9 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 var (
@@ -27,7 +25,7 @@ func NewPowerAppsDataSource() datasource.DataSource {
 }
 
 type PowerAppsDataSource struct {
-	BapiApiClient    api.BapiClientInterface
+	PowerAppssClient PowerAppssClient
 	ProviderTypeName string
 	TypeName         string
 }
@@ -44,7 +42,7 @@ type PowerAppsDataSourceModel struct {
 	CreatedTime   types.String `tfsdk:"created_time"`
 }
 
-func ConvertFromPowerAppDto(powerAppDto models.PowerAppBapi) PowerAppsDataSourceModel {
+func ConvertFromPowerAppDto(powerAppDto PowerAppBapi) PowerAppsDataSourceModel {
 	return PowerAppsDataSourceModel{
 		EnvironmentId: types.StringValue(powerAppDto.Properties.Environment.Name),
 		DisplayName:   types.StringValue(powerAppDto.Properties.DisplayName),
@@ -103,9 +101,10 @@ func (d *PowerAppsDataSource) Configure(_ context.Context, req datasource.Config
 		return
 	}
 
-	client, ok := req.ProviderData.(*clients.ProviderClient).BapiApi.Client.(api.BapiClientInterface)
+	clientBapi := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
+	clientDv := req.ProviderData.(*clients.ProviderClient).DataverseApi.Client
 
-	if !ok {
+	if clientBapi == nil || clientDv == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
@@ -114,7 +113,7 @@ func (d *PowerAppsDataSource) Configure(_ context.Context, req datasource.Config
 		return
 	}
 
-	d.BapiApiClient = client
+	d.PowerAppssClient = NewPowerAppssClient(clientBapi, clientDv)
 }
 
 func (d *PowerAppsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -122,7 +121,7 @@ func (d *PowerAppsDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POWERAPPS START: %s", d.ProviderTypeName))
 
-	apps, err := d.BapiApiClient.GetPowerApps(ctx, "")
+	apps, err := d.PowerAppssClient.GetPowerApps(ctx, "")
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return

@@ -9,9 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 var (
@@ -27,7 +25,7 @@ func NewSolutionsDataSource() datasource.DataSource {
 }
 
 type SolutionsDataSource struct {
-	DataverseClient  api.DataverseClientInterface
+	SolutionClient   SolutionClient
 	ProviderTypeName string
 	TypeName         string
 }
@@ -50,7 +48,7 @@ type SolutionsDataSourceModel struct {
 	IsManaged     types.Bool   `tfsdk:"is_managed"`
 }
 
-func ConvertFromSolutionDto(solutionDto models.SolutionDto) SolutionsDataSourceModel {
+func ConvertFromSolutionDto(solutionDto SolutionDto) SolutionsDataSourceModel {
 	return SolutionsDataSourceModel{
 		EnvironmentId: types.StringValue(solutionDto.EnvironmentId),
 		DisplayName:   types.StringValue(solutionDto.DisplayName),
@@ -144,9 +142,10 @@ func (d *SolutionsDataSource) Configure(_ context.Context, req datasource.Config
 		return
 	}
 
-	client, ok := req.ProviderData.(*clients.ProviderClient).DataverseApi.Client.(api.DataverseClientInterface)
+	clientBapi := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
+	clientDv := req.ProviderData.(*clients.ProviderClient).DataverseApi.Client
 
-	if !ok {
+	if clientBapi == nil || clientDv == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
@@ -155,7 +154,7 @@ func (d *SolutionsDataSource) Configure(_ context.Context, req datasource.Config
 		return
 	}
 
-	d.DataverseClient = client
+	d.SolutionClient = NewSolutionClient(clientBapi, clientDv)
 }
 
 func (d *SolutionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -164,7 +163,7 @@ func (d *SolutionsDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SOLUTIONS START: %s", d.ProviderTypeName))
 
-	solutions, err := d.DataverseClient.GetSolutions(ctx, state.EnvironmentId.ValueString())
+	solutions, err := d.SolutionClient.GetSolutions(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return

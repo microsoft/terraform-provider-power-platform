@@ -16,9 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 )
 
@@ -33,10 +31,9 @@ func NewEnvironmentResource() resource.Resource {
 }
 
 type EnvironmentResource struct {
-	BapiApiClient      api.BapiClientInterface
-	DataverseApiClient api.DataverseClientInterface
-	ProviderTypeName   string
-	TypeName           string
+	EnvironmentClient EnvironmentClient
+	ProviderTypeName  string
+	TypeName          string
 }
 
 type EnvironmentResourceModel struct {
@@ -82,7 +79,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.OneOf(models.EnvironmentCurrencyCodes...),
+					stringvalidator.OneOf(EnvironmentCurrencyCodes...),
 				},
 			},
 			"id": schema.StringAttribute{
@@ -119,7 +116,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.OneOf(models.EnvironmentLocations...),
+					stringvalidator.OneOf(EnvironmentLocations...),
 				},
 			},
 			"environment_type": schema.StringAttribute{
@@ -130,7 +127,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.OneOf(models.EnvironmentTypes...),
+					stringvalidator.OneOf(EnvironmentTypes...),
 				},
 			},
 			"organization_id": schema.StringAttribute{
@@ -154,7 +151,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 					powerplatform_modifiers.RequireReplaceIntAttributePlanModifier(),
 				},
 				Validators: []validator.Int64{
-					int64validator.OneOf(models.EnvironmentLanguages...),
+					int64validator.OneOf(EnvironmentLanguages...),
 				},
 			},
 			"version": schema.StringAttribute{
@@ -168,7 +165,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional:            true,
 				ElementType:         types.StringType,
 				// Validators: []validator.String{
-				// 	stringvalidator.OneOf(models.EnvironmentCurrencyCodes...),
+				// 	stringvalidator.OneOf(EnvironmentCurrencyCodes...),
 				// },
 			},
 			"template_metadata": schema.StringAttribute{
@@ -203,9 +200,10 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 		return
 	}
 
-	client, ok := req.ProviderData.(*clients.ProviderClient).BapiApi.Client.(api.BapiClientInterface)
+	clientBapi := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
+	clientDv := req.ProviderData.(*clients.ProviderClient).DataverseApi.Client
 
-	if !ok {
+	if clientBapi == nil || clientDv == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
@@ -213,9 +211,7 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 
 		return
 	}
-
-	r.BapiApiClient = client
-	r.DataverseApiClient = req.ProviderData.(*clients.ProviderClient).DataverseApi.Client.(api.DataverseClientInterface)
+	r.EnvironmentClient = NewEnvironmentClient(clientBapi, clientDv)
 }
 
 func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -229,27 +225,27 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	envToCreate := models.EnvironmentCreateDto{
+	envToCreate := EnvironmentCreateDto{
 		Location: plan.Location.ValueString(),
-		Properties: models.EnvironmentCreatePropertiesDto{
+		Properties: EnvironmentCreatePropertiesDto{
 			DisplayName:    plan.DisplayName.ValueString(),
 			DataBaseType:   "CommonDataService",
 			BillingPolicy:  "",
 			EnvironmentSku: plan.EnvironmentType.ValueString(),
-			LinkedEnvironmentMetadata: models.EnvironmentCreateLinkEnvironmentMetadataDto{
+			LinkedEnvironmentMetadata: EnvironmentCreateLinkEnvironmentMetadataDto{
 				BaseLanguage:    int(plan.LanguageName.ValueInt64()),
 				DomainName:      plan.Domain.ValueString(),
 				SecurityGroupId: plan.SecurityGroupId.ValueString(),
-				Currency: models.EnvironmentCreateCurrency{
+				Currency: EnvironmentCreateCurrency{
 					Code: plan.CurrencyCode.ValueString(),
 				},
 				//Templates:        plan.Templates,
-				//TemplateMetadata: models.EnvironmentCreateTemplateMetadata{},
+				//TemplateMetadata: EnvironmentCreateTemplateMetadata{},
 			},
 		},
 	}
 
-	envDto, err := r.BapiApiClient.CreateEnvironment(ctx, envToCreate)
+	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, envToCreate)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
@@ -289,13 +285,13 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	envDto, err := r.BapiApiClient.GetEnvironment(ctx, state.Id.ValueString())
+	envDto, err := r.EnvironmentClient.GetEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
 		return
 	}
 
-	defaultCurrency, err := r.DataverseApiClient.GetDefaultCurrencyForEnvironment(ctx, envDto.Name)
+	defaultCurrency, err := r.EnvironmentClient.GetDefaultCurrencyForEnvironment(ctx, envDto.Name)
 	if err != nil {
 		resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", envDto.Name), err.Error())
 	} else {
@@ -359,22 +355,22 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		plan.SecurityGroupId.ValueString() != state.SecurityGroupId.ValueString() ||
 		plan.Domain.ValueString() != state.Domain.ValueString() {
 
-		envToUpdate := models.EnvironmentDto{
+		envToUpdate := EnvironmentDto{
 			Id:       plan.Id.ValueString(),
 			Name:     plan.DisplayName.ValueString(),
 			Type:     plan.EnvironmentType.ValueString(),
 			Location: plan.Location.ValueString(),
-			Properties: models.EnvironmentPropertiesDto{
+			Properties: EnvironmentPropertiesDto{
 				DisplayName:    plan.DisplayName.ValueString(),
 				EnvironmentSku: plan.EnvironmentType.ValueString(),
-				LinkedEnvironmentMetadata: models.LinkedEnvironmentMetadataDto{
+				LinkedEnvironmentMetadata: LinkedEnvironmentMetadataDto{
 					SecurityGroupId: plan.SecurityGroupId.ValueString(),
 					DomainName:      plan.Domain.ValueString(),
 				},
 			},
 		}
 		if !plan.LinkedAppId.IsNull() && plan.LinkedAppId.ValueString() != "" {
-			envToUpdate.Properties.LinkedAppMetadata = &models.LinkedAppMetadataDto{
+			envToUpdate.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
 				Type: plan.LinkedAppType.ValueString(),
 				Id:   plan.LinkedAppId.ValueString(),
 				Url:  plan.LinkedAppUrl.ValueString(),
@@ -383,7 +379,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 			envToUpdate.Properties.LinkedAppMetadata = nil
 		}
 
-		envDto, err := r.BapiApiClient.UpdateEnvironment(ctx, plan.Id.ValueString(), envToUpdate)
+		envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), envToUpdate)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
 			return
@@ -424,7 +420,7 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		return
 	}
 
-	err := r.BapiApiClient.DeleteEnvironment(ctx, state.Id.ValueString())
+	err := r.EnvironmentClient.DeleteEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return

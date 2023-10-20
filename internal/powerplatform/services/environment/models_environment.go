@@ -1,4 +1,4 @@
-package powerplatform_models
+package powerplatform
 
 import "time"
 
