@@ -159,36 +159,17 @@ resource "random_string" "key_vault_suffix" {
   special = false
 }
 
+# There is an issue in the resource for naming Key Vaults that is preventing to proper naming
+# Name and prefixes are not working properly, with random part
 resource "azurecaf_name" "key_vault" {
-  name = "${var.prefix}-${random_string.key_vault_suffix.result}"
-  #name          = var.base_name
+  name          = var.prefix
   resource_type = "azurerm_key_vault"
-  prefixes      = [var.prefix]
   random_length = 3
   clean_input   = true
-}
-
-
-output "name" {
-  value = "${var.prefix}-${random_string.key_vault_suffix.result}"
-}
-
-resource "azurecaf_name" "key_vault2" {
-  name = var.prefix
-  #name          = var.base_name
-  resource_type = "azurerm_key_vault"
-  #prefixes      = [var.base_name]
-  random_length = 3
-  clean_input   = true
-}
-
-
-output "name2" {
-  value = data.azurerm_client_config.current.object_id
 }
 
 resource "azurerm_key_vault" "key_vault" {
-  name                = azurecaf_name.key_vault2.result
+  name                = azurecaf_name.key_vault.result
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   tenant_id           = var.tenant_id_gw
