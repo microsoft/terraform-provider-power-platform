@@ -10,6 +10,7 @@ terraform {
     }
   }
 }
+/*
 
 resource "azurecaf_name" "sig" {
   name          = var.base_name
@@ -72,12 +73,12 @@ module "opdgw-setup" {
   region              = var.region
   sig_id              = azurerm_shared_image_gallery.sig.id
   opdgw_setup_link    = var.opdgw_setup_link
-  secret_pp           = var.secret_pp
+  keyVaultUri         = var.keyVaultUri
+  secretPPName        = var.secretPPName
   userIdAdmin_pp      = var.userIdAdmin_pp
 
   depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install]
 }
-
 # Create SAP NCo version in Shared Image Gallery
 module "sapnco_install" {
   source              = "./sapnco-install"
@@ -88,8 +89,9 @@ module "sapnco_install" {
   sig_id              = azurerm_shared_image_gallery.sig.id
   sapnco_install_link = var.sapnco_install_link
 
-  depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install, module.opdgw-setup]
+  depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install] #, module.opdgw-setup]
 }
+*/
 
 resource "azurecaf_name" "vm-opgw" {
   name          = var.base_name
@@ -105,6 +107,11 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
   resource_group_name   = var.resource_group_name
   network_interface_ids = [var.nic_id]
 
+  identity {
+    type = "SystemAssigned"
+  }
+
+  # rest of the resource block
   size                                                   = "Standard_D4s_v5"
   admin_username                                         = "sapadmin"
   admin_password                                         = var.vm_pwd
@@ -127,7 +134,7 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
     sku       = "2022-datacenter-smalldisk"
     version   = "latest"
   }
-
+  /*
   # Setup PowerShell 7
   gallery_application {
     version_id = module.ps7-setup.powershell_version_id
@@ -147,14 +154,15 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
   }
 
   # Setup On-Premise Gateway setup
+  
   gallery_application {
     version_id = module.opdgw-setup.opdgw_version_id
     order      = 4
   }
-
   # Install SAP NCo
   gallery_application {
     version_id = module.sapnco_install.sapnco_install_version_id
     order      = 5
   }
+*/
 }

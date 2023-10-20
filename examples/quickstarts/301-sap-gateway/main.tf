@@ -16,12 +16,18 @@ provider "azurerm" {
     resource_group {
       prevent_deletion_if_contains_resources = false
     }
+    key_vault {
+      purge_soft_delete_on_destroy    = true
+      recover_soft_deleted_key_vaults = false
+    }
   }
   client_id       = var.client_id_gw
   client_secret   = var.secret_gw
   tenant_id       = var.tenant_id_gw
   subscription_id = var.subscription_id_gw
 }
+
+data "azurerm_client_config" "current" {}
 
 resource "azurecaf_name" "rg" {
   name          = var.base_name
@@ -146,13 +152,75 @@ resource "azurerm_network_interface_security_group_association" "rgassociation" 
   network_security_group_id = azurerm_network_security_group.nsg.id
 }
 
-# It will be included in futures releases.
-#module "gateway_principal" {
-#  source    = "./gateway-principal"
-#  client_id = var.client_id_pp
-#  secret    = var.secret_pp
-#  tenant_id = var.tenant_id_pp
-#}
+resource "random_string" "key_vault_suffix" {
+  length  = 3
+  upper   = false
+  numeric = false
+  special = false
+}
+
+resource "azurecaf_name" "key_vault" {
+  name = "${var.prefix}-${random_string.key_vault_suffix.result}"
+  #name          = var.base_name
+  resource_type = "azurerm_key_vault"
+  prefixes      = [var.prefix]
+  random_length = 3
+  clean_input   = true
+}
+
+
+output "name" {
+  value = "${var.prefix}-${random_string.key_vault_suffix.result}"
+}
+
+resource "azurecaf_name" "key_vault2" {
+  name = var.prefix
+  #name          = var.base_name
+  resource_type = "azurerm_key_vault"
+  #prefixes      = [var.base_name]
+  random_length = 3
+  clean_input   = true
+}
+
+
+output "name2" {
+  value = data.azurerm_client_config.current.object_id
+}
+
+resource "azurerm_key_vault" "key_vault" {
+  name                = azurecaf_name.key_vault2.result
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  tenant_id           = var.tenant_id_gw
+  sku_name            = "standard"
+
+  access_policy {
+    tenant_id = var.tenant_id_gw
+    object_id = data.azurerm_client_config.current.object_id
+
+    secret_permissions = [
+      "Get",
+      "List",
+      "Delete",
+      "Set",
+      "Purge",
+    ]
+  }
+}
+
+resource "azurecaf_name" "key_vault_secret" {
+  name          = var.base_name
+  resource_type = "azurerm_key_vault_secret"
+  prefixes      = [var.prefix]
+  random_length = 3
+  clean_input   = true
+}
+
+resource "azurerm_key_vault_secret" "key_vault_secret" {
+  name         = azurecaf_name.key_vault_secret.result
+  value        = var.secret_pp
+  key_vault_id = azurerm_key_vault.key_vault.id
+}
 
 module "gateway_vm" {
   source              = "./gateway-vm"
@@ -161,7 +229,8 @@ module "gateway_vm" {
   region              = var.region_gw
   vm_pwd              = var.vm_pwd_gw
   nic_id              = azurerm_network_interface.nic.id
-  secret_pp           = var.secret_pp
+  keyVaultUri         = azurerm_key_vault.key_vault.vault_uri
+  secretPPName        = azurerm_key_vault_secret.key_vault_secret.name
   userIdAdmin_pp      = var.userIdAdmin_pp
   ps7_setup_link      = var.ps7_setup_link
   java_setup_link     = var.java_setup_link
@@ -169,3 +238,22 @@ module "gateway_vm" {
   opdgw_setup_link    = var.opdgw_setup_link
   sapnco_install_link = var.sapnco_install_link
 }
+
+resource "azurerm_key_vault_access_policy" "key_vault_access_policy" {
+  key_vault_id = azurerm_key_vault.key_vault.id
+  tenant_id    = var.tenant_id_gw
+  object_id    = module.gateway_vm.vm_opgw_id
+  secret_permissions = [
+    "Get",
+    "List",
+  ]
+}
+
+# It will be included in futures releases.
+#module "gateway_principal" {
+#  source    = "./gateway-principal"
+#  client_id = var.client_id_pp
+#  secret    = var.secret_pp
+#  tenant_id = var.tenant_id_pp
+#}
+

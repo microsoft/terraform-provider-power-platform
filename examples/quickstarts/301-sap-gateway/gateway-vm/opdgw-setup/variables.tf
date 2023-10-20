@@ -25,9 +25,13 @@ variable "sig_id" {
   type        = string
 }
 
-variable "secret_pp" {
-  description = "The secret of the service principal with Power Platform admin permissions"
-  sensitive   = true
+variable "keyVaultUri" {
+  description = "The URI of the Key Vault"
+  type        = string
+}
+
+variable "secretPPName" {
+  description = "Value of the secret name"
   type        = string
 }
 

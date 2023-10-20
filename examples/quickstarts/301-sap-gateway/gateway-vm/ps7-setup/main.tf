@@ -8,7 +8,7 @@ terraform {
 }
 
 resource "azurerm_gallery_application" "ps7-igl-app" {
-  name              = "PowerShell-7.3.8-win-x64.msi"
+  name              = "ps7-setup.ps1"
   gallery_id        = var.sig_id
   location          = var.region
   supported_os_type = "Windows"
