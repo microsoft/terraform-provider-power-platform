@@ -17,6 +17,7 @@ import (
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
+	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 )
@@ -246,6 +247,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return environment.NewEnvironmentResource() },
 		func() resource.Resource { return dlp_policy.NewDataLossPreventionPolicyResource() },
 		func() resource.Resource { return solution.NewSolutionResource() },
+		func() resource.Resource { return managed_environment.NewManagedEnvironmentResource() },
 	}
 }
 

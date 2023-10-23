@@ -83,7 +83,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				},
 			},
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Unique environment id 	(guid)",
+				MarkdownDescription: "Unique environment id (guid)",
 				Description:         "Unique environment id (guid)",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
