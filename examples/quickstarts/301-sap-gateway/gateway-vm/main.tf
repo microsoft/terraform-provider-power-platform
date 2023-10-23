@@ -10,7 +10,6 @@ terraform {
     }
   }
 }
-/*
 
 resource "azurecaf_name" "sig" {
   name          = var.base_name
@@ -25,7 +24,6 @@ resource "azurerm_shared_image_gallery" "sig" {
   resource_group_name = var.resource_group_name
   location            = var.region
 }
-
 
 # Create PowerShell 7 version in Shared Image Gallery
 module "ps7-setup" {
@@ -79,6 +77,7 @@ module "opdgw-setup" {
 
   depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install]
 }
+
 # Create SAP NCo version in Shared Image Gallery
 module "sapnco_install" {
   source              = "./sapnco-install"
@@ -91,7 +90,6 @@ module "sapnco_install" {
 
   depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install] #, module.opdgw-setup]
 }
-*/
 
 resource "azurecaf_name" "vm-opgw" {
   name          = var.base_name
@@ -134,7 +132,7 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
     sku       = "2022-datacenter-smalldisk"
     version   = "latest"
   }
-  /*
+
   # Setup PowerShell 7
   gallery_application {
     version_id = module.ps7-setup.powershell_version_id
@@ -153,8 +151,7 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
     order      = 3
   }
 
-  # Setup On-Premise Gateway setup
-  
+  # Setup On-Premise Gateway setup  
   gallery_application {
     version_id = module.opdgw-setup.opdgw_version_id
     order      = 4
@@ -164,5 +161,4 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
     version_id = module.sapnco_install.sapnco_install_version_id
     order      = 5
   }
-*/
 }
