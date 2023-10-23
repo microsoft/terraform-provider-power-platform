@@ -46,17 +46,17 @@ func TestUnitConnectorsDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/connectors/metadata/virtual`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_connectors_test/Validate_Read/get_virtual.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/connectors/tests/Validate_Read/get_virtual.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/connectors/metadata/unblockable`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_connectors_test/Validate_Read/get_unblockable.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/connectors/tests/Validate_Read/get_unblockable.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://api.powerapps.com/providers/Microsoft.PowerApps/apis?%24filter=environment+eq+%27~Default%27&api-version=2023-06-01&hideDlpExemptApis=true&showAllDlpEnforceableApis=true&showApisWithToS=true`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_connectors_test/Validate_Read/get_apis.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/connectors/tests/Validate_Read/get_apis.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{

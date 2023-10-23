@@ -44,13 +44,13 @@ func TestUnitPowerAppsDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?api-version=2023-06-01`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_powerapps_test/Validate_Read/get_environments.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/powerapps/tests/Validate_Read/get_environments.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `=~^https://api\.powerapps\.com/providers/Microsoft\.PowerApps/scopes/admin/environments/([\d-]+)/apps`,
 		func(req *http.Request) (*http.Response, error) {
 			id := httpmock.MustGetSubmatch(req, 1)
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource_powerapps_test/Validate_Read/get_apps_"+id+".json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/powerapps/tests/Validate_Read/get_apps_"+id+".json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{

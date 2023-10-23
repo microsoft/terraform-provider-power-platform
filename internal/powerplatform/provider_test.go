@@ -1,16 +1,18 @@
 package powerplatform
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
+	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
+	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
+	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,24 +35,6 @@ provider "powerplatform" {
 `
 )
 
-func powerPlatformProviderServerApiMock(bapiClient api.BapiClientInterface, dvClient api.DataverseClientInterface, ppClient api.PowerPlatformClientApiInterface) func() (tfprotov6.ProviderServer, error) {
-	providerMock := providerserver.NewProtocol6WithError(&PowerPlatformProvider{
-		Config: &common.ProviderConfig{
-			Credentials: &common.ProviderCredentials{},
-		},
-		BapiApi: &clients.BapiClient{
-			Client: bapiClient,
-		},
-		DataverseApi: &clients.DataverseClient{
-			Client: dvClient,
-		},
-		PowerPlatformApi: &clients.PowerPlatoformApiClient{
-			Client: ppClient,
-		},
-	})
-	return providerMock
-}
-
 var (
 	TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
 		"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider()()),
@@ -59,13 +43,13 @@ var (
 
 func TestUnitPowerPlatformProvider_HasChildDataSources(t *testing.T) {
 	expectedDataSources := []datasource.DataSource{
-		NewPowerAppsDataSource(),
-		NewEnvironmentsDataSource(),
-		NewConnectorsDataSource(),
-		NewSolutionsDataSource(),
+		powerapps.NewPowerAppsDataSource(),
+		environment.NewEnvironmentsDataSource(),
+		connectors.NewConnectorsDataSource(),
+		solution.NewSolutionsDataSource(),
 		dlp_policy.NewDataLossPreventionPolicyDataSource(),
 	}
-	datasources := NewPowerPlatformProvider()().(*PowerPlatformProvider).DataSources(nil)
+	datasources := NewPowerPlatformProvider()().(*PowerPlatformProvider).DataSources(context.Background())
 
 	require.Equal(t, len(expectedDataSources), len(datasources), "There are an unexpected number of registered data sources")
 	for _, d := range datasources {
@@ -75,11 +59,11 @@ func TestUnitPowerPlatformProvider_HasChildDataSources(t *testing.T) {
 
 func TestUnitPowerPlatformProvider_HasChildResources(t *testing.T) {
 	expectedResources := []resource.Resource{
-		NewEnvironmentResource(),
+		environment.NewEnvironmentResource(),
 		dlp_policy.NewDataLossPreventionPolicyResource(),
-		NewSolutionResource(),
+		solution.NewSolutionResource(),
 	}
-	resources := NewPowerPlatformProvider()().(*PowerPlatformProvider).Resources(nil)
+	resources := NewPowerPlatformProvider()().(*PowerPlatformProvider).Resources(context.Background())
 
 	require.Equal(t, len(expectedResources), len(resources), "There are an unexpected number of registered resources")
 	for _, r := range resources {

@@ -4,21 +4,17 @@ import (
 	"context"
 	"strings"
 	"time"
-
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
-var _ DataverseAuthInterface = &DataverseAuth{}
-
-type DataverseAuthInterface interface {
-	GetToken(environmentUrl string) (string, error)
-	AuthenticateUserPass(ctx context.Context, environmentUrl, tenantId, username, password string) (string, error)
-	AuthenticateClientSecret(ctx context.Context, environmentUrl, tenantId, applicationid, secret string) (string, error)
+type DataverseAuth struct {
+	baseAuth               *AuthBase
+	tokensByEnvironmentUrl map[string]*DataverseAuthDetails
 }
 
-type DataverseAuth struct {
-	BaseAuth               api.AuthInterface
-	tokensByEnvironmentUrl map[string]*DataverseAuthDetails
+func NewDataverseAuth(baseAuth *AuthBase) *DataverseAuth {
+	return &DataverseAuth{
+		baseAuth: baseAuth,
+	}
 }
 
 type DataverseAuthDetails struct {
@@ -50,7 +46,7 @@ func (client *DataverseAuth) getAuthDataFromCache(environmentUrl string) *Datave
 
 func (client *DataverseAuth) GetToken(environmentUrl string) (string, error) {
 	if client.isTokenExpiredOrEmpty(environmentUrl) {
-		return "", &api.TokeExpiredError{Message: "token is expired or empty"}
+		return "", &TokeExpiredError{Message: "token is expired or empty"}
 	}
 	return client.getAuthDataFromCache(environmentUrl).Token, nil
 }
@@ -69,7 +65,7 @@ func (client *DataverseAuth) AuthenticateClientSecret(ctx context.Context, envir
 	environmentUrl = strings.TrimSuffix(environmentUrl, "/")
 
 	scopes := []string{environmentUrl + "//.default"}
-	token, expiry, err := client.BaseAuth.AuthClientSecret(ctx, scopes, tenantId, applicationid, secret)
+	token, expiry, err := client.baseAuth.AuthClientSecret(ctx, scopes, tenantId, applicationid, secret)
 	if err != nil {
 		return "", err
 	}
