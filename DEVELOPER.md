@@ -44,10 +44,14 @@ establish them following the step below, (to quit the "git config" mode type "q"
 git config --global user.name "Your Name"
 git config --global user.email "your.email@address"
 ```
+
 Note: if you logging to docker container's shell outside the VS Code, in order to work with git repository, run the following commands:
+
 ```bash
 export SSH_AUTH_SOCK=$(ls -t /tmp/vscode-ssh-auth* | head -1)
 export REMOTE_CONTAINERS_IPC=$(ls -t /tmp/vscode-remote-containers-ipc* | head -1)
+```
+
 For more information about devcontainers, you can check out the [devcontainer documentation](https://code.visualstudio.com/docs/devcontainers/containers) and [sharing Git credentials with your container](https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials).
 
 ## Power Platform Prerequisites

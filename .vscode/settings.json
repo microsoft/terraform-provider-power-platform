@@ -1,5 +1,8 @@
 {
     "cSpell.words": [
+        "Anson",
+        "azureterraform",
+        "azuretools",
         "completedon",
         "connectionid",
         "connectionreferencedisplayname",
@@ -9,6 +12,7 @@
         "diffmerge",
         "environmentvariables",
         "friendlyname",
+        "Fsec",
         "installedon",
         "ismanaged",
         "LCID",
@@ -21,7 +25,9 @@
         "sharepointonline",
         "solutionid",
         "stringvalidator",
+        "terragrunt",
         "testaccsolutionsdatasource",
+        "tflint",
         "tfprotov",
         "transactioncurrencies",
         "uniquename",
