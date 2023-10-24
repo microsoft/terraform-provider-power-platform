@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
@@ -43,10 +44,14 @@ func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Con
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), managedEnvSettings, []int{http.StatusAccepted}, nil)
+	_, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), managedEnvSettings, []int{http.StatusNoContent, http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
+
+	//todo look at location header and follow "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/98cd1690-992b-4d7c-b7d6-98c4e1b08fec?api-version=2021-04-01"
+	time.Sleep(10 * time.Second)
+
 	return nil
 }
 

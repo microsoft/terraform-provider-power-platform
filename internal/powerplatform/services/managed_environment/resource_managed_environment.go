@@ -3,21 +3,21 @@ package powerplaform
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
+	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 )
 
 var _ resource.Resource = &ManagedEnvironmentResource{}
@@ -31,13 +31,14 @@ func NewManagedEnvironmentResource() resource.Resource {
 }
 
 type ManagedEnvironmentResource struct {
-	EnvironmentClient ManagedEnvironmentClient
-	ProviderTypeName  string
-	TypeName          string
+	ManagedEnvironmentClient ManagedEnvironmentClient
+	ProviderTypeName         string
+	TypeName                 string
 }
 
 type ManagedEnvironmentResourceModel struct {
 	Id                       types.String `tfsdk:"id"`
+	EnvironmentId            types.String `tfsdk:"environment_id"`
 	ProtectionLevel          types.String `tfsdk:"protection_level"`
 	IsUsageInsightsDisabled  types.Bool   `tfsdk:"is_usage_insights_disabled"`
 	IsGroupSharingDisabled   types.Bool   `tfsdk:"is_group_sharing_disabled"`
@@ -69,60 +70,47 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"protection_level": schema.StringAttribute{
-				MarkdownDescription: "Protection level",
-				Description:         "Protection level",
+			"environment_id": schema.StringAttribute{
+				MarkdownDescription: "Unique environment id (guid), of the environment that is managed by these settings",
+				Description:         "Unique environment id (guid), of the environment that is managed by these settings",
 				Required:            true,
-				Default:             stringdefault.StaticString("Standard"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{
-					stringvalidator.OneOf("Standard", "Basic"),
-				},
+			},
+			"protection_level": schema.StringAttribute{
+				MarkdownDescription: "Protection level",
+				Description:         "Protection level",
+				Computed:            true,
+				Default:             stringdefault.StaticString("Standard"),
 			},
 			"is_usage_insights_disabled": schema.BoolAttribute{
 				MarkdownDescription: "Weekly inishgts digest for the environment",
 				Description:         "Weekly inishgts digest for the environment",
-				Default:             booldefault.StaticBool(false),
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
+				Required:            true,
 			},
 			"is_group_sharing_disabled": schema.BoolAttribute{
 				MarkdownDescription: "Limits how widely canvas apps can be shared",
 				Description:         "Limits how widely canvas apps can be shared",
-				Default:             booldefault.StaticBool(false),
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
+				Required:            true,
 			},
 			"limit_sharing_mode": schema.StringAttribute{
 				MarkdownDescription: "Limits how widely canvas apps can be shared",
 				Description:         "Limits how widely canvas apps can be shared",
-				Default:             stringdefault.StaticString("NoLimit"),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("ExcludeSharingToSecurityGroups", "NoLimit"),
 				},
 			},
 			"max_limit_user_sharing": schema.Int64Attribute{
-				MarkdownDescription: "Limits how many users can share canvas apps. if 'is_group_sharing_disabled' is 'True', then this values should be '-1'",
-				Description:         "Limits how many users can share canvas apps. if 'is_group_sharing_disabled' is 'True', then this values should be '-1'",
-				Default:             int64default.StaticInt64(-1),
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
+				MarkdownDescription: "Limits how many users can share canvas apps. if 'is_group_sharing_disabled' is 'False', then this values should be '-1'",
+				Description:         "Limits how many users can share canvas apps. if 'is_group_sharing_disabled' is 'False', then this values should be '-1'",
+				Required:            true,
 			},
 			"solution_checker_mode": schema.StringAttribute{
 				MarkdownDescription: "Automatically verify solution checker results for security and reliability issues before solution import",
 				Description:         "Automatically verify solution checker results for security and reliability issues before solution import",
-				Default:             stringdefault.StaticString("None"),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("None", "Warn", "Block"),
 				},
@@ -130,29 +118,39 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			"suppress_validation_emails": schema.BoolAttribute{
 				MarkdownDescription: "Send emails only when a solution is blocked. If 'False', you'll also get emails when there are warnings",
 				Description:         "Send emails only when a solution is blocked. If 'False', you'll also get emails when there are warnings",
-				Default:             booldefault.StaticBool(false),
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.RequiresReplace(),
-				},
+				Required:            true,
 			},
 			"maker_onboarding_markdown": schema.StringAttribute{
 				MarkdownDescription: "First-time Power Apps makers will see this content in the Studio",
 				Description:         "First-time Power Apps makers will see this content in the Studio",
-				Default:             stringdefault.StaticString(""),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Required:            true,
 			},
 			"maker_onboarding_url": schema.StringAttribute{
 				MarkdownDescription: "Maker onboarding 'Learn more' URL",
 				Description:         "Maker onboarding 'Learn more' URL",
-				Default:             stringdefault.StaticString(""),
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				Required:            true,
 			},
 		},
 	}
+}
+
+func (r *ManagedEnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	clientBapi := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
+	clientDv := req.ProviderData.(*clients.ProviderClient).DataverseApi.Client
+
+	if clientBapi == nil || clientDv == nil {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+	r.ManagedEnvironmentClient = NewManagedEnvironmentClient(clientBapi, clientDv)
 }
 
 func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -166,53 +164,54 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	// envToCreate := EnvironmentCreateDto{
-	// 	Location: plan.Location.ValueString(),
-	// 	Properties: EnvironmentCreatePropertiesDto{
-	// 		DisplayName:    plan.DisplayName.ValueString(),
-	// 		DataBaseType:   "CommonDataService",
-	// 		BillingPolicy:  "",
-	// 		EnvironmentSku: plan.EnvironmentType.ValueString(),
-	// 		LinkedEnvironmentMetadata: EnvironmentCreateLinkEnvironmentMetadataDto{
-	// 			BaseLanguage:    int(plan.LanguageName.ValueInt64()),
-	// 			DomainName:      plan.Domain.ValueString(),
-	// 			SecurityGroupId: plan.SecurityGroupId.ValueString(),
-	// 			Currency: EnvironmentCreateCurrency{
-	// 				Code: plan.CurrencyCode.ValueString(),
-	// 			},
-	// 			//Templates:        plan.Templates,
-	// 			//TemplateMetadata: EnvironmentCreateTemplateMetadata{},
-	// 		},
-	// 	},
-	// }
+	managedEnvironmentDto := environment.GovernanceConfigurationDto{
+		ProtectionLevel: "Standard", //plan.ProtectionLevel.ValueString(),
+		Settings: &environment.SettingsDto{
+			ExtendedSettings: environment.ExtendedSettingsDto{
+				ExcludeEnvironmentFromAnalysis: strconv.FormatBool(plan.IsUsageInsightsDisabled.ValueBool()),
+				IsGroupSharingDisabled:         strconv.FormatBool(plan.IsGroupSharingDisabled.ValueBool()),
+				MaxLimitUserSharing:            strconv.FormatInt(plan.MaxLimitUserSharing.ValueInt64(), 10),
+				DisableAiGeneratedDescriptions: "false",
+				IncludeOnHomepageInsights:      "false",
+				LimitSharingMode:               strings.ToLower(plan.LimitSharingMode.ValueString()[:1]) + plan.LimitSharingMode.ValueString()[1:],
+				SolutionCheckerMode:            strings.ToLower(plan.SolutionCheckerMode.ValueString()),
+				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
+				//SolutionCheckerRuleOverrides:   "",
+				MakerOnboardingUrl: plan.MakerOnboardingUrl.ValueString(),
+				//MakerOnboardingTimestamp:       nil
+				MakerOnboardingMarkdown: plan.MakerOnboardingMarkdown.ValueString(),
+			},
+		},
+	}
 
-	// envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, envToCreate)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-	// 	return
-	// }
+	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
 
-	// env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
+	env, err := r.ManagedEnvironmentClient.environmentClient.GetEnvironment(ctx, plan.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
 
-	// plan.Id = env.EnvironmentId
-	// plan.DisplayName = env.DisplayName
-	// plan.OrganizationId = env.OrganizationId
-	// plan.SecurityGroupId = env.SecurityGroupId
-	// plan.LanguageName = env.LanguageName
-	// plan.CurrencyCode = types.StringValue(envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
-	// plan.Domain = env.Domain
-	// plan.Url = env.Url
-	// plan.EnvironmentType = env.EnvironmentType
-	// plan.Version = env.Version
-	// plan.LinkedAppType = env.LinkedAppType
-	// plan.LinkedAppId = env.LinkedAppId
-	// plan.LinkedAppUrl = env.LinkedAppURL
+	maxLimitUserSharing, _ := strconv.ParseInt(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MaxLimitUserSharing, 10, 64)
+	plan.Id = plan.EnvironmentId
+	plan.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)
+	plan.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
+	plan.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
+	plan.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
+	plan.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
+	plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
+	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
+	//plan.SolutionCheckerRuleOverrides = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides)
+	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
+	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
 
-	// tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
-	// resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-
-	// tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -226,99 +225,101 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	// envDto, err := r.EnvironmentClient.GetEnvironment(ctx, state.Id.ValueString())
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
-	// 	return
-	// }
+	env, err := r.ManagedEnvironmentClient.environmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
 
-	// defaultCurrency, err := r.EnvironmentClient.GetDefaultCurrencyForEnvironment(ctx, envDto.Name)
-	// if err != nil {
-	// 	resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", envDto.Name), err.Error())
-	// } else {
-	// 	state.CurrencyCode = types.StringValue(defaultCurrency.IsoCurrencyCode)
-	// }
+	state.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)
 
-	// env := ConvertFromEnvironmentDto(*envDto, state.CurrencyCode.ValueString())
+	if env.Properties.GovernanceConfiguration.Settings != nil {
+		maxLimitUserSharing, _ := strconv.ParseInt(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MaxLimitUserSharing, 10, 64)
 
-	// state.Id = env.EnvironmentId
+		state.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
+		state.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
+		state.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
+		state.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
+		state.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
+		state.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
+		//state.SolutionCheckerRuleOverrides = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides)
+		state.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
+		state.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
+	} else {
+		state.IsGroupSharingDisabled = types.BoolUnknown()
+		state.IsUsageInsightsDisabled = types.BoolUnknown()
+		state.MaxLimitUserSharing = types.Int64Unknown()
+		state.LimitSharingMode = types.StringUnknown()
+		state.SolutionCheckerMode = types.StringUnknown()
+		state.SuppressValidationEmails = types.BoolUnknown()
+		//state.SolutionCheckerRuleOverrides = types.StringUnknown()
+		state.MakerOnboardingUrl = types.StringUnknown()
+		state.MakerOnboardingMarkdown = types.StringUnknown()
+	}
 
-	// //TODO move to separate function
-	// ctx = tflog.SetField(ctx, "id", state.Id.ValueString())
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
-	// tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
-
-	// resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-
-	// tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan *ManagedEnvironmentResource
+	var plan *ManagedEnvironmentResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
-	var state *ManagedEnvironmentResource
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	// var state *ManagedEnvironmentResource
+	// resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// if plan.DisplayName.ValueString() != state.DisplayName.ValueString() ||
-	// 	plan.SecurityGroupId.ValueString() != state.SecurityGroupId.ValueString() ||
-	// 	plan.Domain.ValueString() != state.Domain.ValueString() {
+	managedEnvironmentDto := environment.GovernanceConfigurationDto{
+		ProtectionLevel: "Standard", //plan.ProtectionLevel.ValueString(),
+		Settings: &environment.SettingsDto{
+			ExtendedSettings: environment.ExtendedSettingsDto{
+				ExcludeEnvironmentFromAnalysis: strconv.FormatBool(plan.IsUsageInsightsDisabled.ValueBool()),
+				IsGroupSharingDisabled:         strconv.FormatBool(plan.IsGroupSharingDisabled.ValueBool()),
+				MaxLimitUserSharing:            strconv.FormatInt(plan.MaxLimitUserSharing.ValueInt64(), 10),
+				DisableAiGeneratedDescriptions: "false",
+				IncludeOnHomepageInsights:      "false",
+				LimitSharingMode:               strings.ToLower(plan.LimitSharingMode.ValueString()[:1]) + plan.LimitSharingMode.ValueString()[1:],
+				SolutionCheckerMode:            strings.ToLower(plan.SolutionCheckerMode.ValueString()),
+				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
+				//SolutionCheckerRuleOverrides:   "",
+				MakerOnboardingUrl: plan.MakerOnboardingUrl.ValueString(),
+				//MakerOnboardingTimestamp:       nil
+				MakerOnboardingMarkdown: plan.MakerOnboardingMarkdown.ValueString(),
+			},
+		},
+	}
 
-	// 	envToUpdate := EnvironmentDto{
-	// 		Id:       plan.Id.ValueString(),
-	// 		Name:     plan.DisplayName.ValueString(),
-	// 		Type:     plan.EnvironmentType.ValueString(),
-	// 		Location: plan.Location.ValueString(),
-	// 		Properties: EnvironmentPropertiesDto{
-	// 			DisplayName:    plan.DisplayName.ValueString(),
-	// 			EnvironmentSku: plan.EnvironmentType.ValueString(),
-	// 			LinkedEnvironmentMetadata: LinkedEnvironmentMetadataDto{
-	// 				SecurityGroupId: plan.SecurityGroupId.ValueString(),
-	// 				DomainName:      plan.Domain.ValueString(),
-	// 			},
-	// 		},
-	// 	}
-	// 	if !plan.LinkedAppId.IsNull() && plan.LinkedAppId.ValueString() != "" {
-	// 		envToUpdate.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
-	// 			Type: plan.LinkedAppType.ValueString(),
-	// 			Id:   plan.LinkedAppId.ValueString(),
-	// 			Url:  plan.LinkedAppUrl.ValueString(),
-	// 		}
-	// 	} else {
-	// 		envToUpdate.Properties.LinkedAppMetadata = nil
-	// 	}
+	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
 
-	// 	envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), envToUpdate)
-	// 	if err != nil {
-	// 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
-	// 		return
-	// 	}
+	env, err := r.ManagedEnvironmentClient.environmentClient.GetEnvironment(ctx, plan.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
 
-	// 	env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
-
-	// 	plan.Id = env.EnvironmentId
-	// 	plan.DisplayName = env.DisplayName
-	// 	plan.OrganizationId = env.OrganizationId
-	// 	plan.SecurityGroupId = env.SecurityGroupId
-	// 	plan.LanguageName = env.LanguageName
-	// 	plan.Domain = env.Domain
-	// 	plan.Url = env.Url
-	// 	plan.CurrencyCode = env.CurrencyCode
-	// 	plan.EnvironmentType = env.EnvironmentType
-	// 	plan.Version = env.Version
-	// 	plan.LanguageName = env.LanguageName
-	// 	plan.Location = env.Location
-	// 	plan.LinkedAppType = env.LinkedAppType
-	// 	plan.LinkedAppId = env.LinkedAppId
-	// 	plan.LinkedAppUrl = env.LinkedAppURL
-	// }
+	maxLimitUserSharing, _ := strconv.ParseInt(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MaxLimitUserSharing, 10, 64)
+	plan.Id = plan.EnvironmentId
+	plan.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)
+	plan.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
+	plan.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
+	plan.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
+	plan.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
+	plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
+	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
+	//plan.SolutionCheckerRuleOverrides = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides)
+	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
+	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
@@ -336,11 +337,11 @@ func (r *ManagedEnvironmentResource) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	// err := r.EnvironmentClient.DeleteEnvironment(ctx, state.Id.ValueString())
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-	// 	return
-	// }
+	err := r.ManagedEnvironmentClient.DisableManagedEnvironment(ctx, state.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when disabling managed environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
 
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }

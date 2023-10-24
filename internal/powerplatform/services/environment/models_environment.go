@@ -61,18 +61,18 @@ type SettingsDto struct {
 }
 
 type ExtendedSettingsDto struct {
-	ExcludeEnvironmentFromAnalysis string    `json:"excludeEnvironmentFromAnalysis"`
-	IsGroupSharingDisabled         bool      `json:"isGroupSharingDisabled"`
-	MaxLimitUserSharing            int       `json:"maxLimitUserSharing"`
-	DisableAiGeneratedDescriptions bool      `json:"disableAiGeneratedDescriptions"`
-	IncludeOnHomepageInsights      bool      `json:"includeOnHomepageInsights"`
-	LimitSharingMode               string    `json:"limitSharingMode"`
-	SolutionCheckerMode            string    `json:"solutionCheckerMode"`
-	SuppressValidationEmails       bool      `json:"suppressValidationEmails"`
-	SolutionCheckerRuleOverrides   string    `json:"solutionCheckerRuleOverrides"`
-	MakerOnboardingUrl             string    `json:"makerOnboardingUrl"`
-	MakerOnboardingTimestamp       time.Time `json:"makerOnboardingTimestamp"`
-	MakerOnboardingMarkdown        string    `json:"makerOnboardingMarkdown"`
+	ExcludeEnvironmentFromAnalysis string `json:"excludeEnvironmentFromAnalysis"`
+	IsGroupSharingDisabled         string `json:"isGroupSharingDisabled"`
+	MaxLimitUserSharing            string `json:"maxLimitUserSharing"`
+	DisableAiGeneratedDescriptions string `json:"disableAiGeneratedDescriptions"`
+	IncludeOnHomepageInsights      string `json:"includeOnHomepageInsights"`
+	LimitSharingMode               string `json:"limitSharingMode"`
+	SolutionCheckerMode            string `json:"solutionCheckerMode"`
+	SuppressValidationEmails       string `json:"suppressValidationEmails"`
+	SolutionCheckerRuleOverrides   string `json:"solutionCheckerRuleOverrides"`
+	MakerOnboardingUrl             string `json:"makerOnboardingUrl"`
+	//MakerOnboardingTimestamp       time.Time `json:"makerOnboardingTimestamp"`
+	MakerOnboardingMarkdown string `json:"makerOnboardingMarkdown"`
 }
 
 type LinkedEnvironmentMetadataDto struct {
