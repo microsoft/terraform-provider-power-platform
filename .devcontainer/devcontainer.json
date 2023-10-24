@@ -23,7 +23,10 @@
 		"./features/local_provider_dev": {},
 		"./features/pac": {}
 	},
+	// You can configure your Git Hub account using the following git config commands:
+	//	"postCreateCommand": "git config --global --add safe.directory /workspaces/terraform-provider-power-platform && git config --global user.name 'Your Name' && git config --global user.email 'youremail@example.com'",
 	"postCreateCommand": "git config --global --add safe.directory /workspaces/terraform-provider-power-platform",
+	//	"postAttachCommand": "git config --global diff.tool vscode-diffmerge",
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
 	// Configure tool-specific properties.
