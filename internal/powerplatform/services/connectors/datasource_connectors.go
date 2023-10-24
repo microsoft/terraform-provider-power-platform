@@ -9,9 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 var (
@@ -27,7 +25,7 @@ func NewConnectorsDataSource() datasource.DataSource {
 }
 
 type ConnectorsDataSource struct {
-	BapiApiClient    api.BapiClientInterface
+	ConnectorsClient ConnectorsClient
 	ProviderTypeName string
 	TypeName         string
 }
@@ -48,7 +46,7 @@ type ConnectorsDataSourceModel struct {
 	Unblockable types.Bool   `tfsdk:"unblockable"`
 }
 
-func ConvertFromConnectorDto(connectorDto models.ConnectorDto) ConnectorsDataSourceModel {
+func ConvertFromConnectorDto(connectorDto ConnectorDto) ConnectorsDataSourceModel {
 	return ConnectorsDataSourceModel{
 		Id:          types.StringValue(connectorDto.Id),
 		Name:        types.StringValue(connectorDto.Name),
@@ -130,10 +128,9 @@ func (d *ConnectorsDataSource) Configure(_ context.Context, req datasource.Confi
 	if req.ProviderData == nil {
 		return
 	}
+	client := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
 
-	client, ok := req.ProviderData.(*clients.ProviderClient).BapiApi.Client.(api.BapiClientInterface)
-
-	if !ok {
+	if client == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
@@ -142,7 +139,7 @@ func (d *ConnectorsDataSource) Configure(_ context.Context, req datasource.Confi
 		return
 	}
 
-	d.BapiApiClient = client
+	d.ConnectorsClient = NewConnectorsClient(client)
 }
 
 func (d *ConnectorsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -150,7 +147,7 @@ func (d *ConnectorsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE CONNECTORS START: %s", d.ProviderTypeName))
 
-	connectors, err := d.BapiApiClient.GetConnectors(ctx)
+	connectors, err := d.ConnectorsClient.GetConnectors(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return

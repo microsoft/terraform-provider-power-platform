@@ -1,4 +1,4 @@
-package powerplatform_models
+package powerplatform
 
 type SolutionSettings struct {
 	EnvironmentVariables []SolutionSettingsEnvironmentVariable  `json:"environmentvariables"`
@@ -100,4 +100,18 @@ type ValidateSolutionImportResponseSolutionOperationResultDto struct {
 	Status          string        `json:"Status"`
 	WarningMessages []interface{} `json:"WarningMessages"`
 	ErrorMessages   []interface{} `json:"ErrorMessages"`
+}
+
+type EnvironmentIdDto struct {
+	Id         string                     `json:"id"`
+	Name       string                     `json:"name"`
+	Properties EnvironmentIdPropertiesDto `json:"properties"`
+}
+
+type EnvironmentIdPropertiesDto struct {
+	LinkedEnvironmentMetadata LinkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
+}
+
+type LinkedEnvironmentIdMetadataDto struct {
+	InstanceURL string
 }

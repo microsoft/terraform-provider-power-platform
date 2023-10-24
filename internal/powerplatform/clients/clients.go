@@ -1,10 +1,7 @@
 package clients
 
 import (
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi"
-	dvapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/dataverse"
-	ppapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/ppapi"
+	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
 
@@ -16,16 +13,37 @@ type ProviderClient struct {
 }
 
 type BapiClient struct {
-	Auth   bapi.BapiAuthInterface
-	Client api.BapiClientInterface
+	Auth   *powerplatform.BapiAuth
+	Client *powerplatform.BapiClientApi
+}
+
+func NewBapiClient(auth *powerplatform.BapiAuth, client *powerplatform.BapiClientApi) *BapiClient {
+	return &BapiClient{
+		Auth:   auth,
+		Client: client,
+	}
 }
 
 type DataverseClient struct {
-	Auth   dvapi.DataverseAuthInterface
-	Client api.DataverseClientInterface
+	Auth   *powerplatform.DataverseAuth
+	Client *powerplatform.DataverseClientApi
+}
+
+func NewDataverseClient(auth *powerplatform.DataverseAuth, client *powerplatform.DataverseClientApi) *DataverseClient {
+	return &DataverseClient{
+		Auth:   auth,
+		Client: client,
+	}
 }
 
 type PowerPlatoformApiClient struct {
-	Auth   ppapi.PowerPlatformAuthInterface
-	Client api.PowerPlatformClientApiInterface
+	Auth   *powerplatform.PowerPlatformAuth
+	Client *powerplatform.PowerPlatformClientApi
+}
+
+func NewPowerPlatformApiClient(auth *powerplatform.PowerPlatformAuth, client *powerplatform.PowerPlatformClientApi) *PowerPlatoformApiClient {
+	return &PowerPlatoformApiClient{
+		Auth:   auth,
+		Client: client,
+	}
 }

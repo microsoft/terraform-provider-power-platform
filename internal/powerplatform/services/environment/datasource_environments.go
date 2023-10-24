@@ -9,9 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
 )
 
 var (
@@ -27,10 +25,9 @@ func NewEnvironmentsDataSource() datasource.DataSource {
 }
 
 type EnvironmentsDataSource struct {
-	BapiApiClient      api.BapiClientInterface
-	DataverseApiClient api.DataverseClientInterface
-	ProviderTypeName   string
-	TypeName           string
+	EnvironmentClient EnvironmentClient
+	ProviderTypeName  string
+	TypeName          string
 }
 
 type EnvironmentsListDataSourceModel struct {
@@ -55,7 +52,7 @@ type EnvironmentDataSourceModel struct {
 	CurrencyCode    types.String `tfsdk:"currency_code"`
 }
 
-func ConvertFromEnvironmentDto(environmentDto models.EnvironmentDto, currencyCode string) EnvironmentDataSourceModel {
+func ConvertFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode string) EnvironmentDataSourceModel {
 	model := EnvironmentDataSourceModel{
 		EnvironmentId:   types.StringValue(environmentDto.Name),
 		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
@@ -183,10 +180,10 @@ func (d *EnvironmentsDataSource) Configure(_ context.Context, req datasource.Con
 	if req.ProviderData == nil {
 		return
 	}
+	clientBapi := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
+	clientDv := req.ProviderData.(*clients.ProviderClient).DataverseApi.Client
 
-	client, ok := req.ProviderData.(*clients.ProviderClient).BapiApi.Client.(api.BapiClientInterface)
-
-	if !ok {
+	if clientBapi == nil || clientDv == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
@@ -194,8 +191,7 @@ func (d *EnvironmentsDataSource) Configure(_ context.Context, req datasource.Con
 
 		return
 	}
-	d.BapiApiClient = client
-	d.DataverseApiClient = req.ProviderData.(*clients.ProviderClient).DataverseApi.Client
+	d.EnvironmentClient = NewEnvironmentClient(clientBapi, clientDv)
 }
 
 func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -203,7 +199,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENTS START: %s", d.ProviderTypeName))
 
-	envs, err := d.BapiApiClient.GetEnvironments(ctx)
+	envs, err := d.EnvironmentClient.GetEnvironments(ctx)
 
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
@@ -212,7 +208,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	for _, env := range envs {
 		currencyCode := ""
-		defaultCurrency, err := d.DataverseApiClient.GetDefaultCurrencyForEnvironment(ctx, env.Name)
+		defaultCurrency, err := d.EnvironmentClient.GetDefaultCurrencyForEnvironment(ctx, env.Name)
 		if err != nil {
 			resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", env.Name), err.Error())
 		} else {
