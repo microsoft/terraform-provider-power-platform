@@ -1,4 +1,4 @@
-package powerplatform_api
+package powerplatform
 
 import (
 	"bytes"
@@ -13,20 +13,20 @@ import (
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
 
-var _ ApiClientInterface = &ApiClientBase{}
-
-func (client *ApiClientBase) SetAuth(auth AuthBaseOperationInterface) {
-	client.Auth = auth
-}
-
-func (client *ApiClientBase) GetConfig() common.ProviderConfig {
+func (client *ApiClientBase) GetConfig() *common.ProviderConfig {
 	return client.Config
 }
 
 type ApiClientBase struct {
-	Config   common.ProviderConfig
-	BaseAuth AuthInterface
-	Auth     AuthBaseOperationInterface
+	Config   *common.ProviderConfig
+	BaseAuth *AuthBase
+}
+
+func NewApiClientBase(config *common.ProviderConfig, baseAuth *AuthBase) *ApiClientBase {
+	return &ApiClientBase{
+		Config:   config,
+		BaseAuth: baseAuth,
+	}
 }
 
 func (client *ApiClientBase) ExecuteBase(ctx context.Context, token, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
@@ -114,7 +114,7 @@ func (client *ApiClientBase) doRequest(token string, request *http.Request) (*Ap
 
 }
 
-func (client *ApiClientBase) InitializeBase(ctx context.Context) (string, error) {
+func (client *ApiClientBase) InitializeBase(ctx context.Context, auth AuthBaseOperationInterface) (string, error) {
 
 	token, err := client.BaseAuth.GetToken()
 
@@ -122,14 +122,14 @@ func (client *ApiClientBase) InitializeBase(ctx context.Context) (string, error)
 		tflog.Debug(ctx, "Token expired. authenticating...")
 
 		if client.Config.Credentials.IsClientSecretCredentialsProvided() {
-			token, err := client.Auth.AuthenticateClientSecret(ctx, client.Config.Credentials.TenantId, client.Config.Credentials.ClientId, client.Config.Credentials.Secret)
+			token, err := auth.AuthenticateClientSecret(ctx, client.Config.Credentials.TenantId, client.Config.Credentials.ClientId, client.Config.Credentials.Secret)
 			if err != nil {
 				return "", err
 			}
 			tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
 			return token, nil
 		} else if client.Config.Credentials.IsUserPassCredentialsProvided() {
-			token, err := client.Auth.AuthenticateUserPass(ctx, client.Config.Credentials.TenantId, client.Config.Credentials.Username, client.Config.Credentials.Password)
+			token, err := auth.AuthenticateUserPass(ctx, client.Config.Credentials.TenantId, client.Config.Credentials.Username, client.Config.Credentials.Password)
 			if err != nil {
 				return "", err
 			}

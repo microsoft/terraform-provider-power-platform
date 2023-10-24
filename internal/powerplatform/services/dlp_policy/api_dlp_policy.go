@@ -10,24 +10,24 @@ import (
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
-func NewDlpPolicyClient(bapi api.BapiClientInterface) DlpPolicyClient {
+func NewDlpPolicyClient(bapi *api.BapiClientApi) DlpPolicyClient {
 	return DlpPolicyClient{
-		BapiApiClient: bapi,
+		BapiClient: bapi,
 	}
 }
 
 type DlpPolicyClient struct {
-	BapiApiClient api.BapiClientInterface
+	BapiClient *api.BapiClientApi
 }
 
 func (client *DlpPolicyClient) GetPolicies(ctx context.Context) ([]DlpPolicyModelDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.BapiApiClient.GetBase().GetConfig().Urls.BapiUrl,
+		Host:   client.BapiClient.GetConfig().Urls.BapiUrl,
 		Path:   "providers/PowerPlatform.Governance/v2/policies",
 	}
 	policiesArray := DlpPolicyDefinitionDtoArray{}
-	_, err := client.BapiApiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policiesArray)
+	_, err := client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policiesArray)
 	if err != nil {
 		return nil, err
 	}
@@ -37,11 +37,11 @@ func (client *DlpPolicyClient) GetPolicies(ctx context.Context) ([]DlpPolicyMode
 
 		apiUrl := &url.URL{
 			Scheme: "https",
-			Host:   client.BapiApiClient.GetBase().GetConfig().Urls.BapiUrl,
+			Host:   client.BapiClient.GetConfig().Urls.BapiUrl,
 			Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", policy.PolicyDefinition.Name),
 		}
 		policy := DlpPolicyDto{}
-		_, err := client.BapiApiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
+		_, err := client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
 		if err != nil {
 			return nil, err
 		}
@@ -57,11 +57,11 @@ func (client *DlpPolicyClient) GetPolicies(ctx context.Context) ([]DlpPolicyMode
 func (client *DlpPolicyClient) GetPolicy(ctx context.Context, name string) (*DlpPolicyModelDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.BapiApiClient.GetBase().GetConfig().Urls.BapiUrl,
+		Host:   client.BapiClient.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", name),
 	}
 	policy := DlpPolicyDto{}
-	_, err := client.BapiApiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
+	_, err := client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
 	if err != nil {
 		return nil, err
 	}
@@ -71,10 +71,10 @@ func (client *DlpPolicyClient) GetPolicy(ctx context.Context, name string) (*Dlp
 func (client *DlpPolicyClient) DeletePolicy(ctx context.Context, name string) error {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.BapiApiClient.GetBase().GetConfig().Urls.BapiUrl,
+		Host:   client.BapiClient.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v1/policies/%s", name),
 	}
-	_, err := client.BapiApiClient.Execute(ctx, "DELETE", apiUrl.String(), nil, []int{http.StatusNoContent}, nil)
+	_, err := client.BapiClient.Execute(ctx, "DELETE", apiUrl.String(), nil, []int{http.StatusNoContent}, nil)
 	if err != nil {
 		return err
 	}
@@ -86,12 +86,12 @@ func (client *DlpPolicyClient) UpdatePolicy(ctx context.Context, name string, po
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.BapiApiClient.GetBase().GetConfig().Urls.BapiUrl,
+		Host:   client.BapiClient.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", policy.Name),
 	}
 	createdPolicy := DlpPolicyDto{}
 
-	_, err := client.BapiApiClient.Execute(ctx, "PATCH", apiUrl.String(), policyToCreate, []int{http.StatusAccepted}, &createdPolicy)
+	_, err := client.BapiClient.Execute(ctx, "PATCH", apiUrl.String(), policyToCreate, []int{http.StatusAccepted}, &createdPolicy)
 	if err != nil {
 		return nil, err
 	}
@@ -239,12 +239,12 @@ func (client *DlpPolicyClient) CreatePolicy(ctx context.Context, policy DlpPolic
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.BapiApiClient.GetBase().GetConfig().Urls.BapiUrl,
+		Host:   client.BapiClient.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v2/policies",
 	}
 
 	createdPolicy := DlpPolicyDto{}
-	_, err := client.BapiApiClient.Execute(ctx, "POST", apiUrl.String(), policyToCreate, []int{http.StatusCreated}, &createdPolicy)
+	_, err := client.BapiClient.Execute(ctx, "POST", apiUrl.String(), policyToCreate, []int{http.StatusCreated}, &createdPolicy)
 	if err != nil {
 		return nil, err
 	}

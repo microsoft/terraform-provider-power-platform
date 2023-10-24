@@ -86,37 +86,37 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_With_Settings_File/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/StageSolution",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/post_stage_solution.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_With_Settings_File/post_stage_solution.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/ImportSolutionAsync",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/post_import_solution_async.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_With_Settings_File/post_import_solution_async.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/asyncoperations%28310799b8-dc6c-ee11-9ae7-000d3aaae21d%29",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/get_async_operations.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_With_Settings_File/get_async_operations.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSolutionImportResult%28ImportJobId=1b1fa80d-aa0f-4291-b60c-b0745304ce24%29",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/get_solution_import_result.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_With_Settings_File/get_solution_import_result.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=%28isvisible+eq+true%29&%24orderby=createdon+desc",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/get_solution.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_With_Settings_File/get_solution.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions%2886928ed8-df37-4ce2-add5-47030a833bff%29",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("tests/resource_solution_test/Validate_Create_With_Settings_File/get_solution.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("services/solution/tests/resource/Validate_Create_With_Settings_File/get_solution.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -246,37 +246,37 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_No_Settings_File/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/StageSolution",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/post_stage_solution.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_No_Settings_File/post_stage_solution.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/ImportSolutionAsync",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/post_import_solution_async.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_No_Settings_File/post_import_solution_async.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/asyncoperations%28310799b8-dc6c-ee11-9ae7-000d3aaae21d%29",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/get_async_operations.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_No_Settings_File/get_async_operations.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSolutionImportResult%28ImportJobId=1b1fa80d-aa0f-4291-b60c-b0745304ce24%29",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/get_solution_import_result.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_No_Settings_File/get_solution_import_result.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=%28isvisible+eq+true%29&%24orderby=createdon+desc",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/get_solution.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_No_Settings_File/get_solution.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions%2886928ed8-df37-4ce2-add5-47030a833bff%29",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("tests/resource_solution_test/Validate_Create_No_Settings_File/get_solution.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("services/solution/tests/resource/Validate_Create_No_Settings_File/get_solution.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -324,37 +324,37 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_And_Force_Recreate/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_And_Force_Recreate/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/StageSolution",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_And_Force_Recreate/post_stage_solution.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_And_Force_Recreate/post_stage_solution.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/ImportSolutionAsync",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_And_Force_Recreate/post_import_solution_async.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_And_Force_Recreate/post_import_solution_async.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/asyncoperations%28310799b8-dc6c-ee11-9ae7-000d3aaae21d%29",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_And_Force_Recreate/get_async_operations.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_And_Force_Recreate/get_async_operations.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSolutionImportResult%28ImportJobId=1b1fa80d-aa0f-4291-b60c-b0745304ce24%29",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_And_Force_Recreate/get_solution_import_result.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_And_Force_Recreate/get_solution_import_result.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=%28isvisible+eq+true%29&%24orderby=createdon+desc",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource_solution_test/Validate_Create_And_Force_Recreate/get_solution.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/solution/tests/resource/Validate_Create_And_Force_Recreate/get_solution.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions%2886928ed8-df37-4ce2-add5-47030a833bff%29",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("tests/resource_solution_test/Validate_Create_And_Force_Recreate/get_solution.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("services/solution/tests/resource/Validate_Create_And_Force_Recreate/get_solution.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{

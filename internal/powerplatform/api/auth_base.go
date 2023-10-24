@@ -1,4 +1,4 @@
-package powerplatform_api
+package powerplatform
 
 import (
 	"context"
@@ -8,8 +8,6 @@ import (
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
 
-var _ AuthInterface = &AuthBase{}
-
 type TokeExpiredError struct {
 	Message string
 }
@@ -18,22 +16,16 @@ func (e *TokeExpiredError) Error() string {
 	return e.Message
 }
 
-type AuthInterface interface {
-	IsTokenExpiredOrEmpty() bool
-
-	GetToken() (string, error)
-	SetToken(string)
-
-	SetTokenExpiry(time.Time)
-	GetTokenExpiry() time.Time
-
-	AuthClientSecret(ctx context.Context, scopes []string, tenantId, applicationId, clientSecret string) (string, time.Time, error)
+type AuthBase struct {
+	config      *common.ProviderConfig
+	token       string
+	tokenExpiry time.Time
 }
 
-type AuthBase struct {
-	Config      common.ProviderConfig
-	Token       string
-	TokenExpiry time.Time
+func NewAuthBase(config *common.ProviderConfig) *AuthBase {
+	return &AuthBase{
+		config: config,
+	}
 }
 
 type AuthBaseOperationInterface interface {
@@ -63,24 +55,24 @@ func (client *AuthBase) AuthClientSecret(ctx context.Context, scopes []string, t
 }
 
 func (client *AuthBase) SetToken(token string) {
-	client.Token = token
+	client.token = token
 }
 
 func (client *AuthBase) SetTokenExpiry(tokenExpiry time.Time) {
-	client.TokenExpiry = tokenExpiry
+	client.tokenExpiry = tokenExpiry
 }
 
 func (client *AuthBase) GetTokenExpiry() time.Time {
-	return client.TokenExpiry
+	return client.tokenExpiry
 }
 
 func (client *AuthBase) GetToken() (string, error) {
 	if client.IsTokenExpiredOrEmpty() {
 		return "", &TokeExpiredError{"token is expired or empty"}
 	}
-	return client.Token, nil
+	return client.token, nil
 }
 
 func (client *AuthBase) IsTokenExpiredOrEmpty() bool {
-	return client.Token == "" || time.Now().After(client.TokenExpiry)
+	return client.token == "" || time.Now().After(client.tokenExpiry)
 }
