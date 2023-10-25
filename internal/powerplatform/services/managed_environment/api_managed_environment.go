@@ -1,4 +1,4 @@
-package powerplaform
+package powerplatform
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 )
@@ -44,14 +45,51 @@ func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Con
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), managedEnvSettings, []int{http.StatusNoContent, http.StatusAccepted}, nil)
+	apiResponse, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), managedEnvSettings, []int{http.StatusNoContent, http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
 
-	//todo look at location header and follow "https://switzerland.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/98cd1690-992b-4d7c-b7d6-98c4e1b08fec?api-version=2021-04-01"
-	time.Sleep(10 * time.Second)
+	if apiResponse.Response.StatusCode == http.StatusAccepted {
 
+		locationHeader := apiResponse.GetHeader("Location")
+		tflog.Debug(ctx, "Location Header: "+locationHeader)
+
+		_, err = url.Parse(locationHeader)
+		if err != nil {
+			tflog.Error(ctx, "Error parsing location header: "+err.Error())
+		}
+
+		retryHeader := apiResponse.GetHeader("Retry-After")
+		tflog.Debug(ctx, "Retry Header: "+retryHeader)
+		retryAfter, err := time.ParseDuration(retryHeader)
+		if err != nil {
+			retryAfter = time.Duration(5) * time.Second
+		} else {
+			retryAfter = retryAfter * time.Second
+		}
+
+		for {
+
+			lifecycleResponse := OperationLifecycleDto{}
+			apiResponse, err = client.bapiClient.Execute(ctx, "GET", locationHeader, nil, []int{http.StatusOK}, &lifecycleResponse)
+			if err != nil {
+				return err
+			}
+
+			time.Sleep(retryAfter)
+
+			tflog.Debug(ctx, "Managed Environment Enablement Operation State: '"+lifecycleResponse.State.Id+"'")
+			tflog.Debug(ctx, "anaged Environment Enablement Operation HTTP Status: '"+apiResponse.Response.Status+"'")
+
+			if lifecycleResponse.State.Id == "Succeeded" {
+				return nil
+			} else {
+				tflog.Debug(ctx, "Managed Environment Enablement Operation State: '"+lifecycleResponse.State.Id+"'")
+			}
+		}
+
+	}
 	return nil
 }
 
@@ -69,9 +107,48 @@ func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Co
 		ProtectionLevel: "Basic",
 	}
 
-	_, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), managedEnv, []int{http.StatusAccepted}, nil)
+	apiResponse, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), managedEnv, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return err
+	}
+	if apiResponse.Response.StatusCode == http.StatusAccepted {
+
+		locationHeader := apiResponse.GetHeader("Location")
+		tflog.Debug(ctx, "Location Header: "+locationHeader)
+
+		_, err = url.Parse(locationHeader)
+		if err != nil {
+			tflog.Error(ctx, "Error parsing location header: "+err.Error())
+		}
+
+		retryHeader := apiResponse.GetHeader("Retry-After")
+		tflog.Debug(ctx, "Retry Header: "+retryHeader)
+		retryAfter, err := time.ParseDuration(retryHeader)
+		if err != nil {
+			retryAfter = time.Duration(5) * time.Second
+		} else {
+			retryAfter = retryAfter * time.Second
+		}
+
+		for {
+
+			lifecycleResponse := OperationLifecycleDto{}
+			apiResponse, err = client.bapiClient.Execute(ctx, "GET", locationHeader, nil, []int{http.StatusOK}, &lifecycleResponse)
+			if err != nil {
+				return err
+			}
+
+			time.Sleep(retryAfter)
+
+			tflog.Debug(ctx, "Managed Environment Disablement Operation State: '"+lifecycleResponse.State.Id+"'")
+			tflog.Debug(ctx, "anaged Environment Disablement Operation HTTP Status: '"+apiResponse.Response.Status+"'")
+
+			if lifecycleResponse.State.Id == "Succeeded" {
+				return nil
+			} else {
+				tflog.Debug(ctx, "Managed Environment Disablement Operation State: '"+lifecycleResponse.State.Id+"'")
+			}
+		}
 	}
 	return nil
 

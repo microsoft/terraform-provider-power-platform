@@ -1,4 +1,4 @@
-package powerplaform
+package powerplatform
 
 import (
 	"context"
