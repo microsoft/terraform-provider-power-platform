@@ -20,7 +20,7 @@ provider "powerplatform" {
 # }
 
 resource "powerplatform_managed_environment" "managed_development" {
-  environment_id             = "" //powerplatform_environment.development.id
+  environment_id             = "ae6407ff-270b-e60c-b82b-e4e7e4b36154" //powerplatform_environment.development.id
   is_usage_insights_disabled = true
   is_group_sharing_disabled  = true
   limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
