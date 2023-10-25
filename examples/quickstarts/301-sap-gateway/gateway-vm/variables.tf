@@ -32,7 +32,12 @@ variable "keyVaultUri" {
 }
 
 variable "secretPPName" {
-  description = "Value of the secret name"
+  description = "Value of the secret name for Power Platform"
+  type        = string
+}
+
+variable "secretIRKeyName" {
+  description = "Value of the secret name for Integration Runtime Key"
   type        = string
 }
 
@@ -68,5 +73,10 @@ variable "opdgw_setup_link" {
 
 variable "sapnco_install_link" {
   description = "The Blob link to the SAP NCo installation file"
+  type        = string
+}
+
+variable "shir_setup_link" {
+  description = "The Blob link to the SHIR setup script"
   type        = string
 }

@@ -20,6 +20,7 @@ variable "secret_pp" {
   sensitive   = true
   type        = string
 }
+
 /*
 variable "tenant_id_pp" {
   description = "The AAD tenant id of service principal or user at Power Platform"
@@ -84,5 +85,15 @@ variable "userIdAdmin_pp" {
 
 variable "sapnco_install_link" {
   description = "The Blob link to the SAP NCo installation file"
+  type        = string
+}
+
+variable "shir_setup_link" {
+  description = "The Blob link to the SHIR setup script"
+  type        = string
+}
+
+variable "shir_key" {
+  description = "Value of the secret name for the IR key"
   type        = string
 }

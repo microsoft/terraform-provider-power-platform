@@ -88,7 +88,22 @@ module "sapnco_install" {
   sig_id              = azurerm_shared_image_gallery.sig.id
   sapnco_install_link = var.sapnco_install_link
 
-  depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install] #, module.opdgw-setup]
+  depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install, module.opdgw-setup]
+}
+
+# Create SAP NCo version in Shared Image Gallery
+module "shir-setup" {
+  source              = "./shir-setup"
+  prefix              = var.prefix
+  base_name           = var.base_name
+  resource_group_name = var.resource_group_name
+  region              = var.region
+  sig_id              = azurerm_shared_image_gallery.sig.id
+  shir_setup_link     = var.shir_setup_link
+  keyVaultUri         = var.keyVaultUri
+  secretIRKeyName     = var.secretIRKeyName
+
+  depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install, module.opdgw-setup, module.sapnco_install]
 }
 
 resource "azurecaf_name" "vm-opgw" {
@@ -160,5 +175,11 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
   gallery_application {
     version_id = module.sapnco_install.sapnco_install_version_id
     order      = 5
+  }
+
+  # Setup SHIR
+  gallery_application {
+    version_id = module.shir-setup.shir_version_id
+    order      = 6
   }
 }

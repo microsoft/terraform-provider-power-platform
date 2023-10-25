@@ -189,7 +189,7 @@ resource "azurerm_key_vault" "key_vault" {
   }
 }
 
-resource "azurecaf_name" "key_vault_secret" {
+resource "azurecaf_name" "key_vault_secret_pp" {
   name          = var.base_name
   resource_type = "azurerm_key_vault_secret"
   prefixes      = [var.prefix]
@@ -197,9 +197,23 @@ resource "azurecaf_name" "key_vault_secret" {
   clean_input   = true
 }
 
-resource "azurerm_key_vault_secret" "key_vault_secret" {
-  name         = azurecaf_name.key_vault_secret.result
+resource "azurerm_key_vault_secret" "key_vault_secret_pp" {
+  name         = azurecaf_name.key_vault_secret_pp.result
   value        = var.secret_pp
+  key_vault_id = azurerm_key_vault.key_vault.id
+}
+
+resource "azurecaf_name" "key_vault_secret_irkey" {
+  name          = var.base_name
+  resource_type = "azurerm_key_vault_secret"
+  prefixes      = [var.prefix]
+  random_length = 3
+  clean_input   = true
+}
+
+resource "azurerm_key_vault_secret" "key_vault_secret_irkey" {
+  name         = azurecaf_name.key_vault_secret_irkey.result
+  value        = var.shir_key
   key_vault_id = azurerm_key_vault.key_vault.id
 }
 
@@ -211,19 +225,21 @@ module "gateway_vm" {
   vm_pwd              = var.vm_pwd_gw
   nic_id              = azurerm_network_interface.nic.id
   keyVaultUri         = azurerm_key_vault.key_vault.vault_uri
-  secretPPName        = azurerm_key_vault_secret.key_vault_secret.name
+  secretPPName        = azurerm_key_vault_secret.key_vault_secret_pp.name
+  secretIRKeyName     = azurerm_key_vault_secret.key_vault_secret_irkey.name
   userIdAdmin_pp      = var.userIdAdmin_pp
   ps7_setup_link      = var.ps7_setup_link
   java_setup_link     = var.java_setup_link
   opdgw_install_link  = var.opdgw_install_link
   opdgw_setup_link    = var.opdgw_setup_link
   sapnco_install_link = var.sapnco_install_link
+  shir_setup_link     = var.shir_setup_link
 }
 
 resource "azurerm_key_vault_access_policy" "key_vault_access_policy" {
   key_vault_id = azurerm_key_vault.key_vault.id
   tenant_id    = var.tenant_id_gw
-  object_id    = module.gateway_vm.vm_opgw_id
+  object_id    = module.gateway_vm.vm_opgw_principal_id
   secret_permissions = [
     "Get",
     "List",

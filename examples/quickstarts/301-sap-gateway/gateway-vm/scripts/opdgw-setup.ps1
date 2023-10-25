@@ -2,7 +2,7 @@ param (
     [Parameter(Mandatory=$true)]
     [string]$keyVaultUri,
     [Parameter(Mandatory=$true)]
-    [string]$secretPPName
+    [string]$secretPPName,
     [Parameter(Mandatory=$true)]
     [string]$userAdmin
 )
@@ -12,11 +12,13 @@ $Psversion = (Get-Host).Version
 if($Psversion.Major -ge 7)
 {
 
-    #Retrieve the secrete from Key Vault
+    #Retrieve the secret from Key Vault
     Write-Host "Retrieve the secrete from Key Vault"
     $Response = Invoke-RestMethod -Uri 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net' -Method GET -Headers @{Metadata="true"}
     $KeyVaultToken = $Response.access_token
-    $SecretPP = Invoke-RestMethod -Uri '$keyVaultUri/secrets/$secretPPName?api-version=2016-10-01' -Method GET -Headers '@{Authorization="Bearer $KeyVaultToken"}'
+
+    $Uri = "$keyVaultUri" + "secrets/" + $secretPPName + "?api-version=2016-10-01"
+    $SecretPP = Invoke-RestMethod -Uri $Uri -Method GET -Headers @{Authorization="Bearer $KeyVaultToken"}
 
     $securePassword = $SecretPP.value | ConvertTo-SecureString -AsPlainText -Force;
     $ApplicationId ="2d0b62aa-765d-4e0f-b7f2-61debc6611d7";
