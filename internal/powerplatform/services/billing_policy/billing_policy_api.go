@@ -64,3 +64,41 @@ func (client *BillingPolicyClient) UpdateBillingPolicy(ctx context.Context, poli
 func (client *BillingPolicyClient) DeleteBillingPolicy(ctx context.Context, id string) error {
 	return nil
 }
+
+// func (client *PowerPlatformClientApi) GetBillingPolicies(ctx context.Context) ([]models.BillingPolicyDto, error) {
+// 	apiUrl := &url.URL{
+// 		Scheme: "https",
+// 		Host:   client.BaseApi.GetConfig().Urls.PowerPlatformUrl,
+// 		Path:   "/licensing/billingPolicies",
+// 	}
+// 	values := url.Values{}
+// 	values.Add("api-version", "2022-03-01-preview")
+// 	apiUrl.RawQuery = values.Encode()
+
+// 	billingPolicies := models.BillingPolicyDtoArray{}
+// 	_, err := client.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &billingPolicies)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return billingPolicies.Value, nil
+// }
+
+// func (client *PowerPlatformClientApi) GetBillingPolicy(ctx context.Context, id string) (*models.BillingPolicyDto, error) {
+// 	apiUrl := &url.URL{
+// 		Scheme:   "https",
+// 		Host:     "api.powerplatform.com",
+// 		Path:     fmt.Sprintf("/licensing/billingPolicies/%s", id),
+// 		RawQuery: url.Values{"api-version": {"2022-03-01-preview"}}.Encode(),
+// 	}
+
+// 	policy := models.BillingPolicyDto{}
+
+// 	_, err := client.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
+// 	return &policy, err
+
+// }
+
+// func (client *PowerPlatformClientApi) CreateBillingPolicy(ctx context.Context, policyToCreate BillingPolicyDto) (*BillingPolicyDto, error) {
+// 	return nil, nil
+// }

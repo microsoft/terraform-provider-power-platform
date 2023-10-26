@@ -1,4 +1,4 @@
-// package powerplatform
+package powerplatform
 
 // import (
 // 	"context"
