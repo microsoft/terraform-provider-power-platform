@@ -1,68 +1,55 @@
 package powerplatform
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-	bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi"
-	dvapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/dataverse"
-	ppapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/ppapi"
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
+	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
+	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
+	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
+	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 	"github.com/stretchr/testify/require"
 )
 
 const (
-	// providerConfig is a shared configuration to combine with the actual
+	// ProviderConfig is a shared configuration to combine with the actual
 	// test configuration so the Power Platform client is properly configured.
 	// It is also possible to use the POWER_PLATFORM_ environment variables instead.
-	providerConfig = `
+	ProviderConfig = `
 provider "powerplatform" {
 }
 `
-	uniTestsProviderConfig = `
+	UnitTestsProviderConfig = `
 provider "powerplatform" {
 	tenant_id = "_"
 	username = "_"
 	password = "_"
+	client_id = "_"
+	secret = "_"
 }
 `
 )
 
-func powerPlatformProviderServerApiMock(bapiClient bapi.BapiClientInterface, dvClient dvapi.DataverseClientInterface, ppClient ppapi.PowerPlatformClientApiInterface) func() (tfprotov6.ProviderServer, error) {
-	providerMock := providerserver.NewProtocol6WithError(&PowerPlatformProvider{
-		Config: &common.ProviderConfig{
-			Credentials: &common.ProviderCredentials{},
-		},
-		BapiApi: &BapiClient{
-			Client: bapiClient,
-		},
-		DataverseApi: &DataverseClient{
-			Client: dvClient,
-		},
-		PowerPlatformApi: &PowerPlatoformApiClient{
-			Client: ppClient,
-		},
-	})
-	return providerMock
-}
-
 var (
-	testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
 		"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider()()),
 	}
 )
 
 func TestUnitPowerPlatformProvider_HasChildDataSources(t *testing.T) {
 	expectedDataSources := []datasource.DataSource{
-		NewPowerAppsDataSource(),
-		NewEnvironmentsDataSource(),
-		NewConnectorsDataSource(),
-		NewSolutionsDataSource(),
+		powerapps.NewPowerAppsDataSource(),
+		environment.NewEnvironmentsDataSource(),
+		connectors.NewConnectorsDataSource(),
+		solution.NewSolutionsDataSource(),
+		dlp_policy.NewDataLossPreventionPolicyDataSource(),
 	}
-	datasources := NewPowerPlatformProvider()().(*PowerPlatformProvider).DataSources(nil)
+	datasources := NewPowerPlatformProvider()().(*PowerPlatformProvider).DataSources(context.Background())
 
 	require.Equal(t, len(expectedDataSources), len(datasources), "There are an unexpected number of registered data sources")
 	for _, d := range datasources {
@@ -72,11 +59,11 @@ func TestUnitPowerPlatformProvider_HasChildDataSources(t *testing.T) {
 
 func TestUnitPowerPlatformProvider_HasChildResources(t *testing.T) {
 	expectedResources := []resource.Resource{
-		NewEnvironmentResource(),
-		NewDataLossPreventionPolicyResource(),
-		NewSolutionResource(),
+		environment.NewEnvironmentResource(),
+		dlp_policy.NewDataLossPreventionPolicyResource(),
+		solution.NewSolutionResource(),
 	}
-	resources := NewPowerPlatformProvider()().(*PowerPlatformProvider).Resources(nil)
+	resources := NewPowerPlatformProvider()().(*PowerPlatformProvider).Resources(context.Background())
 
 	require.Equal(t, len(expectedResources), len(resources), "There are an unexpected number of registered resources")
 	for _, r := range resources {

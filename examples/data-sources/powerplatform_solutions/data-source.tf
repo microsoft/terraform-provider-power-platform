@@ -8,11 +8,11 @@ terraform {
 }
 
 provider "powerplatform" {
-  username  = var.username
-  password  = var.password
+  client_id = var.client_id
+  secret    = var.secret
   tenant_id = var.tenant_id
 }
 
 data "powerplatform_solutions" "all" {
-  environment_name = var.environment_name
+  environment_id = var.environment_id
 }

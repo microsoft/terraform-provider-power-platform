@@ -1,0 +1,206 @@
+{
+    "@odata.context": "https://org34ba48f5.crm4.dynamics.com/api/data/v9.0/$metadata#Microsoft.Dynamics.CRM.StageSolutionResponse",
+    "StageSolutionResults": {
+        "StageSolutionUploadId": "b3963d4b-dc6c-ee11-9ae7-000d3aaae21d",
+        "StageSolutionStatus": "Passed",
+        "SolutionComponentsDetails": [
+            {
+                "ComponentName": "Terraform Test Solution",
+                "ComponentTypeName": "solution",
+                "IsPresentInOrg": "Unknown",
+                "Attributes": {
+                    "Count": 2,
+                    "Keys": [
+                        "localizedname",
+                        "description"
+                    ],
+                    "Values": [
+                        "Terraform Test Solution",
+                        ""
+                    ]
+                }
+            },
+            {
+                "ComponentName": "Terraform Test Table",
+                "ComponentTypeName": "entity",
+                "IsPresentInOrg": "False",
+                "Attributes": {
+                    "Count": 1,
+                    "Keys": [
+                        "name"
+                    ],
+                    "Values": [
+                        "cra6e_TerraformTestTable"
+                    ]
+                }
+            },
+            {
+                "ComponentName": "cra6e_ConnectionReferenceSharePoint",
+                "ComponentTypeName": "connectionreference",
+                "IsPresentInOrg": "False",
+                "Attributes": {
+                    "Count": 4,
+                    "Keys": [
+                        "connectorid",
+                        "connectionreferencelogicalname",
+                        "connectionreferencedisplayname",
+                        "description"
+                    ],
+                    "Values": [
+                        "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+                        "cra6e_ConnectionReferenceSharePoint",
+                        "ConnectionReferenceSharePoint",
+                        ""
+                    ]
+                }
+            },
+            {
+                "ComponentName": "SolutionVariableText",
+                "ComponentTypeName": "EnvironmentVariableDefinition",
+                "IsPresentInOrg": "False",
+                "Attributes": {
+                    "Count": 9,
+                    "Keys": [
+                        "schemaname",
+                        "displayname",
+                        "description",
+                        "type",
+                        "defaultvalue",
+                        "isrequired",
+                        "parameterkey",
+                        "parentdefinitionid",
+                        "apiid"
+                    ],
+                    "Values": [
+                        "cra6e_SolutionVariableText",
+                        "SolutionVariableText",
+                        "",
+                        "100000000",
+                        "This is a text",
+                        "false",
+                        "",
+                        "",
+                        ""
+                    ]
+                }
+            },
+            {
+                "ComponentName": "SolutionVariableJson",
+                "ComponentTypeName": "EnvironmentVariableDefinition",
+                "IsPresentInOrg": "False",
+                "Attributes": {
+                    "Count": 9,
+                    "Keys": [
+                        "schemaname",
+                        "displayname",
+                        "description",
+                        "type",
+                        "defaultvalue",
+                        "isrequired",
+                        "parameterkey",
+                        "parentdefinitionid",
+                        "apiid"
+                    ],
+                    "Values": [
+                        "cra6e_SolutionVariableJson",
+                        "SolutionVariableJson",
+                        "",
+                        "100000003",
+                        "{ \"aaa\": 123 }",
+                        "false",
+                        "",
+                        "",
+                        ""
+                    ]
+                }
+            },
+            {
+                "ComponentName": "SolutionVariableDataSource",
+                "ComponentTypeName": "EnvironmentVariableDefinition",
+                "IsPresentInOrg": "False",
+                "Attributes": {
+                    "Count": 9,
+                    "Keys": [
+                        "schemaname",
+                        "displayname",
+                        "description",
+                        "type",
+                        "defaultvalue",
+                        "isrequired",
+                        "parameterkey",
+                        "parentdefinitionid",
+                        "apiid"
+                    ],
+                    "Values": [
+                        "cra6e_SolutionVariableDataSource",
+                        "SolutionVariableDataSource",
+                        "",
+                        "100000004",
+                        "",
+                        "false",
+                        "dataset",
+                        "",
+                        "/providers/microsoft.powerapps/apis/shared_sharepointonline"
+                    ]
+                }
+            },
+            {
+                "ComponentName": "cra6e_SolutionVariableText",
+                "ComponentTypeName": "EnvironmentVariableValue",
+                "IsPresentInOrg": "False",
+                "Attributes": {
+                    "Count": 3,
+                    "Keys": [
+                        "schemaname",
+                        "environmentvariablevalueid",
+                        "value"
+                    ],
+                    "Values": [
+                        "cra6e_SolutionVariableText",
+                        "54f916a1-bc98-ed11-aad1-000d3aba63e9",
+                        "tet1"
+                    ]
+                }
+            },
+            {
+                "ComponentName": "cra6e_SolutionVariableDataSource",
+                "ComponentTypeName": "EnvironmentVariableValue",
+                "IsPresentInOrg": "False",
+                "Attributes": {
+                    "Count": 3,
+                    "Keys": [
+                        "schemaname",
+                        "environmentvariablevalueid",
+                        "value"
+                    ],
+                    "Values": [
+                        "cra6e_SolutionVariableDataSource",
+                        "2984943a-bd98-ed11-aad1-000d3aba63e9",
+                        "test"
+                    ]
+                }
+            }
+        ],
+        "SolutionDetails": {
+            "SolutionUniqueName": "TerraformTestSolution",
+            "SolutionFriendlyName": "Terraform Test Solution",
+            "SolutionDescription": "",
+            "PublisherUniqueName": "Crefda7",
+            "PublisherFriendlyName": "CDS Default Publisher",
+            "PreviousSolutionUniqueName": null,
+            "PreviousSolutionFriendlyName": null,
+            "PreviousPublisherUniqueName": null,
+            "PreviousPublisherFriendlyName": null,
+            "IsPatchSolution": false,
+            "IsManaged": false,
+            "PreviousIsManaged": false,
+            "SolutionVersion": "1.1.0.0",
+            "PreviousSolutionVersion": null,
+            "PreviousPatchSolutionsNames": [],
+            "IsPrerequisitesExport": false,
+            "HasPendingUpgrade": false
+        },
+        "MissingDependencies": [],
+        "SolutionValidationResults": []
+    }
+}

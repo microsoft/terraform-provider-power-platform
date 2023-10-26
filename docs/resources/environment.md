@@ -33,8 +33,8 @@ terraform {
 }
 
 provider "powerplatform" {
-  username = var.username
-  password = var.password
+  client_id = var.client_id
+  secret    = var.secret
   tenant_id = var.tenant_id
 }
 
@@ -45,7 +45,6 @@ resource "powerplatform_environment" "development" {
   currency_code    = "USD"
   environment_type = "Sandbox"
   domain           = "mydomain"
-  security_group_id = "00000000-0000-0000-0000-000000000000"
 }
 ```
 
@@ -62,10 +61,17 @@ resource "powerplatform_environment" "development" {
 - `location` (String) Location of the environment (europe, unitedstates etc.)
 - `security_group_id` (String) Unique security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`
 
+### Optional
+
+- `template_metadata` (String) JSON representation of the environment deployment metadata
+- `templates` (List of String) The selected instance provisioning template (if any)
+
 ### Read-Only
 
-- `environment_name` (String) Unique environment name 	(guid)
-- `id` (String) The ID of this resource.
+- `id` (String) Unique environment id 	(guid)
+- `linked_app_id` (String) The GUID of the linked D365 application
+- `linked_app_type` (String) The type of the linked D365 application
+- `linked_app_url` (String) The URL of the linked D365 application
 - `organization_id` (String) Unique organization id (guid)
 - `url` (String) Url of the environment
 - `version` (String) Version of the environment

@@ -27,7 +27,32 @@ Once you have the prerequisites, you can follow these steps to open the repo in 
 1. When the devcontainer is ready, you will see “Dev Container: Power Platform Terraform Provider Development” in the lower left corner of the VS Code status bar. You can also open a new terminal (Ctrl+Shift+`) and see that you are inside the container.
 1. You can now edit, run, debug, and test the code as if you were on your local machine. Any changes you make will be reflected in the container and in your local file system.
 
-For more information about devcontainers, you can check out the [devcontainer documentation](https://code.visualstudio.com/docs/devcontainers/containers).
+Note: To work with the repository you will need to verify or configure your GIT credentials, you can do it as follows in the dev Container terminal:
+
+- Verify Git user name and email:
+
+```bash
+git config --list
+```
+
+You should see your username and email listed, if they do not appear or you want to change them you must
+establish them following the step below, (to quit the "git config" mode type "q").
+
+- Change or set your Git username and email in the Dev Container:
+
+```bash
+git config --global user.name "Your Name"
+git config --global user.email "your.email@address"
+```
+
+Note: if you logging to docker container's shell outside the VS Code, in order to work with git repository, run the following commands:
+
+```bash
+export SSH_AUTH_SOCK=$(ls -t /tmp/vscode-ssh-auth* | head -1)
+export REMOTE_CONTAINERS_IPC=$(ls -t /tmp/vscode-remote-containers-ipc* | head -1)
+```
+
+For more information about devcontainers, you can check out the [devcontainer documentation](https://code.visualstudio.com/docs/devcontainers/containers) and [sharing Git credentials with your container](https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials).
 
 ## Power Platform Prerequisites
 
@@ -101,6 +126,15 @@ To run single unit test
 
 ```bash
 TF_ACC=0 go test -v ./... -run TestUnit<test_name>
+```
+
+Note: The tests require permissions on the folders, these permissions are assigned when creating your container.
+If you have permission problems when running the unit tests, you can rebuild your development container
+or run the following commands again to assign the permissions to the necessary folders.
+
+```bash
+sudo chown -R vscode /workspaces/terraform-provider-power-platform/
+sudo chown -R vscode /go/pkg
 ```
 
 ## Adding Dependencies

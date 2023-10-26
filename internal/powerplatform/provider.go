@@ -11,34 +11,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	bapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi"
-	dvapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/dataverse"
-	ppapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/ppapi"
+
+	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
+	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
+	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
+	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
+	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 )
 
 var _ provider.Provider = &PowerPlatformProvider{}
 
 type PowerPlatformProvider struct {
 	Config           *common.ProviderConfig
-	BapiApi          *BapiClient
-	DataverseApi     *DataverseClient
-	PowerPlatformApi *PowerPlatoformApiClient
-}
-
-type BapiClient struct {
-	Auth   bapi.BapiAuthInterface
-	Client bapi.BapiClientInterface
-}
-
-type DataverseClient struct {
-	Auth   dvapi.DataverseAuthInterface
-	Client dvapi.DataverseClientInterface
-}
-
-type PowerPlatoformApiClient struct {
-	Auth   ppapi.PowerPlatformAuthInterface
-	Client ppapi.PowerPlatformClientApiInterface
+	BapiApi          *clients.BapiClient
+	DataverseApi     *clients.DataverseClient
+	PowerPlatformApi *clients.PowerPlatoformApiClient
 }
 
 func NewPowerPlatformProvider() func() provider.Provider {
@@ -54,69 +43,26 @@ func NewPowerPlatformProvider() func() provider.Provider {
 			},
 		}
 
-		//bapi
-		baseAuthBapi := &api.AuthBase{
-			Config: config,
-		}
-		bapiAuth := &bapi.BapiAuth{
-			BaseAuth: baseAuthBapi,
-		}
-		baseApiForBapi := &api.ApiClientBase{
-			Config:   config,
-			BaseAuth: baseAuthBapi,
-		}
-		bapiClient := &BapiClient{
-			Auth: bapiAuth,
-			Client: &bapi.BapiClientApi{
-				BaseApi: baseApiForBapi,
-				Auth:    bapiAuth,
-			},
-		}
-		bapiClient.Client.GetBase().SetAuth(bapiAuth)
-		//
+		baseAuthBapi := api.NewAuthBase(&config)
+		bapiAuth := api.NewBapiAuth(baseAuthBapi)
+		baseApiForBapi := api.NewApiClientBase(&config, baseAuthBapi)
+		bapiClientApi := api.NewBapiClientApi(baseApiForBapi, bapiAuth, nil)
+		bapiClient := clients.NewBapiClient(bapiAuth, bapiClientApi)
 
-		//powerplatform
-		baseAuthPowerPlatform := &api.AuthBase{
-			Config: config,
-		}
-		powerplatformAuth := &ppapi.PowerPlatformAuth{
-			BaseAuth: baseAuthPowerPlatform,
-		}
+		baseAuthPowerPlatform := api.NewAuthBase(&config)
+		powerplatformAuth := api.NewPowerPlatformAuth(baseAuthPowerPlatform)
+		baseApiForPpApi := api.NewApiClientBase(&config, baseAuthPowerPlatform)
+		powerplatformClientApi := api.NewPowerPlatformClientApi(baseApiForPpApi, powerplatformAuth)
+		powerplatformClient := clients.NewPowerPlatformApiClient(powerplatformAuth, powerplatformClientApi)
 
-		baseApiForPpApi := &api.ApiClientBase{
-			Config:   config,
-			BaseAuth: baseAuthPowerPlatform,
-		}
-		powerplatformClient := &PowerPlatoformApiClient{
-			Auth: powerplatformAuth,
-			Client: &ppapi.PowerPlatformClientApi{
-				BaseApi: baseApiForPpApi,
-				Auth:    powerplatformAuth,
-			},
-		}
-		powerplatformClient.Client.GetBase().SetAuth(powerplatformAuth)
-		//
+		baseAuthDataverse := api.NewAuthBase(&config)
+		dataverseAuth := api.NewDataverseAuth(baseAuthDataverse)
+		baseApiForDataverse := api.NewApiClientBase(&config, baseAuthDataverse)
+		dataverseClientApi := api.NewDataverseClientApi(baseApiForDataverse, dataverseAuth)
+		dataverseClient := clients.NewDataverseClient(dataverseAuth, dataverseClientApi)
 
-		//dataverse
-		baseAuthDataverse := &api.AuthBase{
-			Config: config,
-		}
-		dataverseAuth := &dvapi.DataverseAuth{
-			BaseAuth: baseAuthDataverse,
-		}
-		baseApiForDataverse := &api.ApiClientBase{
-			Config:   config,
-			BaseAuth: baseAuthDataverse,
-		}
-		dataverseClient := &DataverseClient{
-			Auth: dataverseAuth,
-			Client: &dvapi.DataverseClientApi{
-				BaseApi:    baseApiForDataverse,
-				Auth:       dataverseAuth,
-				BapiClient: bapiClient.Client,
-			},
-		}
-		//
+		bapiClient.Client.SetDataverseClient(dataverseClient.Client)
+		dataverseClient.Client.SetBapiClient(bapiClient.Client)
 
 		p := &PowerPlatformProvider{
 			Config:           &config,
@@ -283,25 +229,32 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		}
 	}
 
-	resp.DataSourceData = p
-	resp.ResourceData = p
+	providerClient := clients.ProviderClient{
+		Config:           p.Config,
+		BapiApi:          p.BapiApi,
+		DataverseApi:     p.DataverseApi,
+		PowerPlatformApi: p.PowerPlatformApi,
+	}
+	resp.DataSourceData = &providerClient
+	resp.ResourceData = &providerClient
 
 	tflog.Info(ctx, "Configured API client", map[string]any{"success": true})
 }
 
 func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
-		func() resource.Resource { return NewEnvironmentResource() },
-		func() resource.Resource { return NewDataLossPreventionPolicyResource() },
-		func() resource.Resource { return NewSolutionResource() },
+		func() resource.Resource { return environment.NewEnvironmentResource() },
+		func() resource.Resource { return dlp_policy.NewDataLossPreventionPolicyResource() },
+		func() resource.Resource { return solution.NewSolutionResource() },
 	}
 }
 
 func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
-		func() datasource.DataSource { return NewConnectorsDataSource() },
-		func() datasource.DataSource { return NewPowerAppsDataSource() },
-		func() datasource.DataSource { return NewEnvironmentsDataSource() },
-		func() datasource.DataSource { return NewSolutionsDataSource() },
+		func() datasource.DataSource { return connectors.NewConnectorsDataSource() },
+		func() datasource.DataSource { return powerapps.NewPowerAppsDataSource() },
+		func() datasource.DataSource { return environment.NewEnvironmentsDataSource() },
+		func() datasource.DataSource { return solution.NewSolutionsDataSource() },
+		func() datasource.DataSource { return dlp_policy.NewDataLossPreventionPolicyDataSource() },
 	}
 }

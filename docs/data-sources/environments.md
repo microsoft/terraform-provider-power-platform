@@ -44,11 +44,15 @@ data "powerplatform_environments" "all_environments" {}
 
 Read-Only:
 
+- `currency_code` (String) Unique currency name (EUR, USE, GBP etc.)
 - `display_name` (String) Display name
 - `domain` (String) Domain name of the environment
-- `environment_name` (String) Unique environment name (guid)
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
+- `id` (String) Unique environment id (guid)
 - `language_code` (Number) Unique language LCID (integer)
+- `linked_app_id` (String) Unique linked app id (guid)
+- `linked_app_type` (String) Type of the linked app (Internal, External etc.)
+- `linked_app_url` (String) URL of the linked D365 app
 - `location` (String) Location of the environment (europe, unitedstates etc.)
 - `organization_id` (String) Unique organization id (guid)
 - `security_group_id` (String) Unique security group id (guid)

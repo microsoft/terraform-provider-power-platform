@@ -1,24 +1,19 @@
-variable "username" {
-  default     = "user@domain.onmicrosoft.com"
-  description = "The username of the Power Platform API in user@domain format"
+variable "client_id" {
+  description = "The client ID of the of the service principal"
   type        = string
 
 }
-variable "password" {
-  default     = "<my_passoword>"
-  description = "The password of the Power Platform API user"
+variable "secret" {
+  description = "The client secret of the service principal"
   sensitive   = true
   type        = string
 }
 variable "tenant_id" {
-  default     = "<my_tenant_id>"
   description = "The tenant id of the AAD tenant"
   type        = string
 }
 
-variable "environment_name" {
-  default     = "<env_id>"
-  description = "The name of the environment"
+variable "environment_id" {
+  description = "The Id of the environment"
   type        = string
-  
 }

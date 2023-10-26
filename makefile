@@ -37,11 +37,3 @@ test:
 
 deps:
 	go mod tidy
-
-mocks:
-	mockgen -destination=/workspaces/terraform-provider-power-platform/internal/powerplatform/mocks/bapiClientInterface_mocks.go -package=powerplatform_mocks github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/bapi BapiClientInterface
-	mockgen -destination=/workspaces/terraform-provider-power-platform/internal/powerplatform/mocks/dataverseClientInterface_mocks.go -package=powerplatform_mocks github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/dataverse DataverseClientInterface
-	mockgen -destination=/workspaces/terraform-provider-power-platform/internal/powerplatform/mocks/powerPlatformClientInterface_mocks.go -package=powerplatform_mocks github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/ppapi PowerPlatformClientInterface
-  
-
-  

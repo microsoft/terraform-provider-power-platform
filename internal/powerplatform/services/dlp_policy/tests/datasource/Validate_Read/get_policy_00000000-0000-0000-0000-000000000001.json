@@ -1,0 +1,42 @@
+{
+    "policyDefinition": {
+        "name": "00000000-0000-0000-0000-000000000001",
+        "displayName": "a1",
+        "defaultConnectorsClassification": "General",
+        "connectorGroups": [
+            {
+                "classification": "Confidential",
+                "connectors": []
+            },
+            {
+                "classification": "General",
+                "connectors": []
+            },
+            {
+                "classification": "Blocked",
+                "connectors": []
+            }
+        ],
+        "environmentType": "AllEnvironments",
+        "environments": [],
+        "createdBy": {
+            "displayName": "admin"
+        },
+        "createdTime": "2023-10-02T07:38:50.3269899Z",
+        "lastModifiedBy": {
+            "displayName": "admin"
+        },
+        "lastModifiedTime": "2023-10-02T07:38:50.3269899Z",
+        "etag": "dcf783da-6eb1-4c5a-a6ee-118a64bafbdb",
+        "isLegacySchemaVersion": false
+    },
+    "customConnectorUrlPatternsDefinition": {
+        "rules": [
+            {
+                "order": 1,
+                "customConnectorRuleClassification": "Ignore",
+                "pattern": "*"
+            }
+        ]
+    }
+}
