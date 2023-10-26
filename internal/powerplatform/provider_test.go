@@ -13,6 +13,7 @@ import (
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
+	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
 	"github.com/stretchr/testify/require"
 )
 
@@ -48,6 +49,7 @@ func TestUnitPowerPlatformProvider_HasChildDataSources(t *testing.T) {
 		connectors.NewConnectorsDataSource(),
 		solution.NewSolutionsDataSource(),
 		dlp_policy.NewDataLossPreventionPolicyDataSource(),
+		tenant_settings.NewTenantSettingsDataSource(),
 	}
 	datasources := NewPowerPlatformProvider()().(*PowerPlatformProvider).DataSources(context.Background())
 
