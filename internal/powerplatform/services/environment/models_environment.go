@@ -60,6 +60,7 @@ type SettingsDto struct {
 	ExtendedSettings ExtendedSettingsDto `json:"extendedSettings"`
 }
 
+// Following is the properties for Managed Environments
 type ExtendedSettingsDto struct {
 	ExcludeEnvironmentFromAnalysis string `json:"excludeEnvironmentFromAnalysis"`
 	IsGroupSharingDisabled         string `json:"isGroupSharingDisabled"`

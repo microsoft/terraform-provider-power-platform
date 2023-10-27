@@ -368,24 +368,20 @@ func TestUnitEnvironmentsResource_Validate_Create_And_UpdatetoManaged(t *testing
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/environment/tests/resource/Validate_Create_And_Update/get_environments_%d.json", patchResponseInx)).String()), nil
 		})
 
+	// Http Mock for managed environment
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001/governanceConfiguration?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/environment/tests/resource/Validate_Create_And_Update/get_environments_%d.json", patchResponseInx)).String()), nil
+		})
+
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: ProviderConfig + `
-				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
-					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
-					environment_type = "Sandbox"
-					domain           = "mydomainmanagedenvironment"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
-				}
-				
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_managed_environment" "managed_development" {
-					environment_id             = powerplatform_environment.development.id
+					environment_id             = "00000000-0000-0000-0000-000000000001"
 					is_usage_insights_disabled = true
 					is_group_sharing_disabled  = true
 					limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
@@ -401,19 +397,9 @@ func TestUnitEnvironmentsResource_Validate_Create_And_UpdatetoManaged(t *testing
 				),
 			},
 			{
-				Config: ProviderConfig + `
-				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
-					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
-					environment_type = "Sandbox"
-					domain           = "mydomainmanagedenvironment"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
-				}
-				
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_managed_environment" "managed_development" {
-					environment_id             = powerplatform_environment.development.id
+					environment_id             = "00000000-0000-0000-0000-000000000001"
 					is_usage_insights_disabled = false
 					is_group_sharing_disabled  = true
 					limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
@@ -430,19 +416,9 @@ func TestUnitEnvironmentsResource_Validate_Create_And_UpdatetoManaged(t *testing
 				),
 			},
 			{
-				Config: ProviderConfig + `
-				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
-					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
-					environment_type = "Sandbox"
-					domain           = "mydomainmanagedenvironment"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
-				}
-				
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_managed_environment" "managed_development" {
-					environment_id             = powerplatform_environment.development.id
+					environment_id             = "00000000-0000-0000-0000-000000000001"
 					is_usage_insights_disabled = false
 					is_group_sharing_disabled  = false
 					limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
@@ -459,19 +435,9 @@ func TestUnitEnvironmentsResource_Validate_Create_And_UpdatetoManaged(t *testing
 				),
 			},
 			{
-				Config: ProviderConfig + `
-				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
-					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
-					environment_type = "Sandbox"
-					domain           = "mydomainmanagedenvironment"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
-				}
-				
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_managed_environment" "managed_development" {
-					environment_id             = powerplatform_environment.development.id
+					environment_id             = "00000000-0000-0000-0000-000000000001"
 					is_usage_insights_disabled = false
 					is_group_sharing_disabled  = false
 					limit_sharing_mode         = "NoLimit"
@@ -489,18 +455,8 @@ func TestUnitEnvironmentsResource_Validate_Create_And_UpdatetoManaged(t *testing
 			},
 			{
 				Config: ProviderConfig + `
-				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
-					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
-					environment_type = "Sandbox"
-					domain           = "mydomainmanagedenvironment"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
-				}
-				
 				resource "powerplatform_managed_environment" "managed_development" {
-					environment_id             = powerplatform_environment.development.id
+					environment_id             = "00000000-0000-0000-0000-000000000001"
 					is_usage_insights_disabled = false
 					is_group_sharing_disabled  = false
 					limit_sharing_mode         = "NoLimit"
@@ -517,19 +473,9 @@ func TestUnitEnvironmentsResource_Validate_Create_And_UpdatetoManaged(t *testing
 				),
 			},
 			{
-				Config: ProviderConfig + `
-				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
-					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
-					environment_type = "Sandbox"
-					domain           = "mydomainmanagedenvironment"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
-				}
-				
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_managed_environment" "managed_development" {
-					environment_id             = powerplatform_environment.development.id
+					environment_id             = "00000000-0000-0000-0000-000000000001"
 					is_usage_insights_disabled = false
 					is_group_sharing_disabled  = false
 					limit_sharing_mode         = "NoLimit"
@@ -546,19 +492,9 @@ func TestUnitEnvironmentsResource_Validate_Create_And_UpdatetoManaged(t *testing
 				),
 			},
 			{
-				Config: ProviderConfig + `
-				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
-					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
-					environment_type = "Sandbox"
-					domain           = "mydomainmanagedenvironment"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
-				}
-				
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_managed_environment" "managed_development" {
-					environment_id             = powerplatform_environment.development.id
+					environment_id             = "00000000-0000-0000-0000-000000000001"
 					is_usage_insights_disabled = false
 					is_group_sharing_disabled  = false
 					limit_sharing_mode         = "NoLimit"
@@ -575,19 +511,9 @@ func TestUnitEnvironmentsResource_Validate_Create_And_UpdatetoManaged(t *testing
 				),
 			},
 			{
-				Config: ProviderConfig + `
-				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
-					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
-					environment_type = "Sandbox"
-					domain           = "mydomainmanagedenvironment"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
-				}
-				
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_managed_environment" "managed_development" {
-					environment_id             = powerplatform_environment.development.id
+					environment_id             = "00000000-0000-0000-0000-000000000001"
 					is_usage_insights_disabled = false
 					is_group_sharing_disabled  = false
 					limit_sharing_mode         = "NoLimit"
@@ -604,19 +530,9 @@ func TestUnitEnvironmentsResource_Validate_Create_And_UpdatetoManaged(t *testing
 				),
 			},
 			{
-				Config: ProviderConfig + `
-				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
-					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
-					environment_type = "Sandbox"
-					domain           = "mydomainmanagedenvironment"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
-				}
-				
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_managed_environment" "managed_development" {
-					environment_id             = powerplatform_environment.development.id
+					environment_id             = "00000000-0000-0000-0000-000000000001"
 					is_usage_insights_disabled = false
 					is_group_sharing_disabled  = false
 					limit_sharing_mode         = "NoLimit"
