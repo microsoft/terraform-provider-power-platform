@@ -64,6 +64,7 @@ func TestUnitPowerPlatformProvider_HasChildResources(t *testing.T) {
 		environment.NewEnvironmentResource(),
 		dlp_policy.NewDataLossPreventionPolicyResource(),
 		solution.NewSolutionResource(),
+		tenant_settings.NewTenantSettingsResource(),
 	}
 	resources := NewPowerPlatformProvider()().(*PowerPlatformProvider).Resources(context.Background())
 

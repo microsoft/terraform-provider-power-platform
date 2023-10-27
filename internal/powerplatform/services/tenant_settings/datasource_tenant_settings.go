@@ -3,7 +3,6 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -30,36 +29,37 @@ type TenantSettingsDataSource struct {
 	TypeName             string
 }
 
-type TenantSettingsDataSourceModel struct {
-	Id                                             types.String          `tfsdk:"id"`
-	WalkMeOptOut                                   types.Bool            `tfsdk:"walk_me_opt_out"`
-	DisableNPSCommentsReachout                     types.Bool            `tfsdk:"disable_nps_comments_reachout"`
-	DisableNewsletterSendout                       types.Bool            `tfsdk:"disable_newsletter_sendout"`
-	DisableEnvironmentCreationByNonAdminUsers      types.Bool            `tfsdk:"disable_environment_creation_by_non_admin_users"`
-	DisablePortalsCreationByNonAdminUsers          types.Bool            `tfsdk:"disable_portals_creation_by_non_admin_users"`
-	DisableSurveyFeedback                          types.Bool            `tfsdk:"disable_survey_feedback"`
-	DisableTrialEnvironmentCreationByNonAdminUsers types.Bool            `tfsdk:"disable_trial_environment_creation_by_non_admin_users"`
-	DisableCapacityAllocationByEnvironmentAdmins   types.Bool            `tfsdk:"disable_capacity_allocation_by_environment_admins"`
-	DisableSupportTicketsVisibleByAllUsers         types.Bool            `tfsdk:"disable_support_tickets_visible_by_all_users"`
-	PowerPlatform                                  PowerPlatformSettings `tfsdk:"power_platform"`
+type TenantSettingsSourceModel struct {
+	Id                                             types.String `tfsdk:"id"`
+	WalkMeOptOut                                   types.Bool   `tfsdk:"walk_me_opt_out"`
+	DisableNPSCommentsReachout                     types.Bool   `tfsdk:"disable_nps_comments_reachout"`
+	DisableNewsletterSendout                       types.Bool   `tfsdk:"disable_newsletter_sendout"`
+	DisableEnvironmentCreationByNonAdminUsers      types.Bool   `tfsdk:"disable_environment_creation_by_non_admin_users"`
+	DisablePortalsCreationByNonAdminUsers          types.Bool   `tfsdk:"disable_portals_creation_by_non_admin_users"`
+	DisableSurveyFeedback                          types.Bool   `tfsdk:"disable_survey_feedback"`
+	DisableTrialEnvironmentCreationByNonAdminUsers types.Bool   `tfsdk:"disable_trial_environment_creation_by_non_admin_users"`
+	DisableCapacityAllocationByEnvironmentAdmins   types.Bool   `tfsdk:"disable_capacity_allocation_by_environment_admins"`
+	DisableSupportTicketsVisibleByAllUsers         types.Bool   `tfsdk:"disable_support_tickets_visible_by_all_users"`
+	PowerPlatform                                  types.Object `tfsdk:"power_platform"`
 }
 
-type PowerPlatformSettings struct {
-	Search               SearchSettings               `tfsdk:"search"`
-	TeamsIntegration     TeamsIntegrationSettings     `tfsdk:"teams_integration"`
-	PowerApps            PowerAppsSettings            `tfsdk:"power_apps"`
-	PowerAutomate        PowerAutomateSettings        `tfsdk:"power_automate"`
-	Environments         EnvironmentsSettings         `tfsdk:"environments"`
-	Governance           GovernanceSettings           `tfsdk:"governance"`
-	Licensing            LicensingSettings            `tfsdk:"licensing"`
-	PowerPages           PowerPagesSettings           `tfsdk:"power_pages"`
-	Champions            ChampionsSettings            `tfsdk:"champions"`
-	Intelligence         IntelligenceSettings         `tfsdk:"intelligence"`
-	ModelExperimentation ModelExperimentationSettings `tfsdk:"model_experimentation"`
-	CatalogSettings      CatalogSettingsSettings      `tfsdk:"catalog_settings"`
+type PowerPlatformSettingsModel struct {
+	Search                 types.Map `tfsdk:"search"`
+	TeamsIntegration       types.Map `tfsdk:"teams_integration"`
+	PowerApps              types.Map `tfsdk:"power_apps"`
+	PowerAutomate          types.Map `tfsdk:"power_automate"`
+	Environments           types.Map `tfsdk:"environments"`
+	Governance             types.Map `tfsdk:"governance"`
+	Licensing              types.Map `tfsdk:"licensing"`
+	PowerPages             types.Map `tfsdk:"power_pages"`
+	Champions              types.Map `tfsdk:"champions"`
+	Intelligence           types.Map `tfsdk:"intelligence"`
+	ModelExperimentation   types.Map `tfsdk:"model_experimentation"`
+	CatalogSettings        types.Map `tfsdk:"catalog_settings"`
+	UserManagementSettings types.Map `tfsdk:"user_management_settings"`
 }
 
-type SearchSettings struct {
+type SearchSettingsModel struct {
 	DisableDocsSearch      types.Bool `tfsdk:"disable_docs_search"`
 	DisableCommunitySearch types.Bool `tfsdk:"disable_community_search"`
 	DisableBingVideoSearch types.Bool `tfsdk:"disable_bing_video_search"`
@@ -89,10 +89,10 @@ type EnvironmentsSettings struct {
 }
 
 type GovernanceSettings struct {
-	DisableAdminDigest                                 types.Bool     `tfsdk:"disable_admin_digest"`
-	DisableDeveloperEnvironmentCreationByNonAdminUsers types.Bool     `tfsdk:"disable_developer_environment_creation_by_non_admin_users"`
-	EnableDefaultEnvironmentRouting                    types.Bool     `tfsdk:"enable_default_environment_routing"`
-	Policy                                             PolicySettings `tfsdk:"policy"`
+	DisableAdminDigest                                 types.Bool   `tfsdk:"disable_admin_digest"`
+	DisableDeveloperEnvironmentCreationByNonAdminUsers types.Bool   `tfsdk:"disable_developer_environment_creation_by_non_admin_users"`
+	EnableDefaultEnvironmentRouting                    types.Bool   `tfsdk:"enable_default_environment_routing"`
+	Policy                                             types.Object `tfsdk:"policy"`
 }
 
 type PolicySettings struct {
@@ -129,81 +129,10 @@ type CatalogSettingsSettings struct {
 	PowerCatalogAudienceSetting types.String `tfsdk:"power_catalog_audience_setting"`
 }
 
-// ConvertFromTenantSettingsDto converts a TenantSettingsDto to a TenantSettingsDataSourceModel
-func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) TenantSettingsDataSourceModel {
-	return TenantSettingsDataSourceModel{
-		Id:                         types.StringValue(""),
-		WalkMeOptOut:               types.BoolValue(tenantSettingsDto.WalkMeOptOut),
-		DisableNPSCommentsReachout: types.BoolValue(tenantSettingsDto.DisableNPSCommentsReachout),
-		DisableNewsletterSendout:   types.BoolValue(tenantSettingsDto.DisableNewsletterSendout),
-		DisableEnvironmentCreationByNonAdminUsers:      types.BoolValue(tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers),
-		DisablePortalsCreationByNonAdminUsers:          types.BoolValue(tenantSettingsDto.DisablePortalsCreationByNonAdminUsers),
-		DisableSurveyFeedback:                          types.BoolValue(tenantSettingsDto.DisableSurveyFeedback),
-		DisableTrialEnvironmentCreationByNonAdminUsers: types.BoolValue(tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers),
-		DisableCapacityAllocationByEnvironmentAdmins:   types.BoolValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
-		DisableSupportTicketsVisibleByAllUsers:         types.BoolValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
-		PowerPlatform: PowerPlatformSettings{
-			Search: SearchSettings{
-				DisableDocsSearch:      types.BoolValue(tenantSettingsDto.PowerPlatform.Search.DisableDocsSearch),
-				DisableCommunitySearch: types.BoolValue(tenantSettingsDto.PowerPlatform.Search.DisableCommunitySearch),
-				DisableBingVideoSearch: types.BoolValue(tenantSettingsDto.PowerPlatform.Search.DisableBingVideoSearch),
-			},
-			TeamsIntegration: TeamsIntegrationSettings{
-				ShareWithColleaguesUserLimit: types.Int64Value(tenantSettingsDto.PowerPlatform.TeamsIntegration.ShareWithColleaguesUserLimit),
-			},
-			PowerApps: PowerAppsSettings{
-				DisableShareWithEveryone:             types.BoolValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableShareWithEveryone),
-				EnableGuestsToMake:                   types.BoolValue(tenantSettingsDto.PowerPlatform.PowerApps.EnableGuestsToMake),
-				DisableMembersIndicator:              types.BoolValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableMembersIndicator),
-				DisableMakerMatch:                    types.BoolValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableMakerMatch),
-				DisableUnusedLicenseAssignment:       types.BoolValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableUnusedLicenseAssignment),
-				DisableCreateFromImage:               types.BoolValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableCreateFromImage),
-				DisableCreateFromFigma:               types.BoolValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableCreateFromFigma),
-				DisableConnectionSharingWithEveryone: types.BoolValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableConnectionSharingWithEveryone),
-			},
-			PowerAutomate: PowerAutomateSettings{
-				DisableCopilot: types.BoolValue(tenantSettingsDto.PowerPlatform.PowerAutomate.DisableCopilot),
-			},
-			Environments: EnvironmentsSettings{
-				DisablePreferredDataLocationForTeamsEnvironment: types.BoolValue(tenantSettingsDto.PowerPlatform.Environments.DisablePreferredDataLocationForTeamsEnvironment),
-			},
-			Governance: GovernanceSettings{
-				DisableAdminDigest: types.BoolValue(tenantSettingsDto.PowerPlatform.Governance.DisableAdminDigest),
-				DisableDeveloperEnvironmentCreationByNonAdminUsers: types.BoolValue(tenantSettingsDto.PowerPlatform.Governance.DisableDeveloperEnvironmentCreationByNonAdminUsers),
-				EnableDefaultEnvironmentRouting:                    types.BoolValue(tenantSettingsDto.PowerPlatform.Governance.EnableDefaultEnvironmentRouting),
-				Policy: PolicySettings{
-					EnableDesktopFlowDataPolicyManagement: types.BoolValue(tenantSettingsDto.PowerPlatform.Governance.Policy.EnableDesktopFlowDataPolicyManagement),
-				},
-			},
-			Licensing: LicensingSettings{
-				DisableBillingPolicyCreationByNonAdminUsers:     types.BoolValue(tenantSettingsDto.PowerPlatform.Licensing.DisableBillingPolicyCreationByNonAdminUsers),
-				EnableTenantCapacityReportForEnvironmentAdmins:  types.BoolValue(tenantSettingsDto.PowerPlatform.Licensing.EnableTenantCapacityReportForEnvironmentAdmins),
-				StorageCapacityConsumptionWarningThreshold:      types.Int64Value(tenantSettingsDto.PowerPlatform.Licensing.StorageCapacityConsumptionWarningThreshold),
-				EnableTenantLicensingReportForEnvironmentAdmins: types.BoolValue(tenantSettingsDto.PowerPlatform.Licensing.EnableTenantLicensingReportForEnvironmentAdmins),
-				DisableUseOfUnassignedAIBuilderCredits:          types.BoolValue(tenantSettingsDto.PowerPlatform.Licensing.DisableUseOfUnassignedAIBuilderCredits),
-			},
-			PowerPages: PowerPagesSettings{},
-			Champions: ChampionsSettings{
-				DisableChampionsInvitationReachout:   types.BoolValue(tenantSettingsDto.PowerPlatform.Champions.DisableChampionsInvitationReachout),
-				DisableSkillsMatchInvitationReachout: types.BoolValue(tenantSettingsDto.PowerPlatform.Champions.DisableSkillsMatchInvitationReachout),
-			},
-			Intelligence: IntelligenceSettings{
-				DisableCopilot:            types.BoolValue(tenantSettingsDto.PowerPlatform.Intelligence.DisableCopilot),
-				EnableOpenAiBotPublishing: types.BoolValue(tenantSettingsDto.PowerPlatform.Intelligence.EnableOpenAiBotPublishing),
-			},
-			ModelExperimentation: ModelExperimentationSettings{
-				EnableModelDataSharing: types.BoolValue(tenantSettingsDto.PowerPlatform.ModelExperimentation.EnableModelDataSharing),
-				DisableDataLogging:     types.BoolValue(tenantSettingsDto.PowerPlatform.ModelExperimentation.DisableDataLogging),
-			},
-			CatalogSettings: CatalogSettingsSettings{
-				PowerCatalogAudienceSetting: types.StringValue(tenantSettingsDto.PowerPlatform.CatalogSettings.PowerCatalogAudienceSetting),
-			},
-		},
-	}
+type UserManagementSettings struct {
+	EnableDeleteDisabledUserinAllEnvironments types.Bool `tfsdk:"enable_delete_disabled_user_in_all_environments"`
 }
 
-// Configure of a data source is invoked during terraform init and refresh operations. It is used to configure the data source
-// with the provider's API client. The API client is stored in the datasource's state and used during Read operations.
 func (d *TenantSettingsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
@@ -224,10 +153,8 @@ func (d *TenantSettingsDataSource) Configure(ctx context.Context, req datasource
 
 }
 
-// Read reads the state of the resource from the underlying system. It is invoked during a terraform refresh operation. The
-// state should be read from Power Platform APIs and stored in the State object.
 func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state TenantSettingsDataSourceModel
+	var state TenantSettingsSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT SETTINGS START: %s", d.ProviderTypeName))
 
@@ -238,8 +165,7 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 
 	state = ConvertFromTenantSettingsDto(*tenantSettings)
-
-	state.Id = types.StringValue(fmt.Sprint((time.Now().Unix())))
+	state.Id = types.StringValue(d.TenantSettingsClient.bapiClient.GetConfig().Credentials.TenantId)
 
 	diags := resp.State.Set(ctx, &state)
 
@@ -251,7 +177,6 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 }
 
-// Schema returns the schema for the resource. This is used to validate and normalize input data.
 func (d *TenantSettingsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Power Platform Tenant Settings Data Source",
@@ -494,6 +419,16 @@ func (d *TenantSettingsDataSource) Schema(_ context.Context, _ datasource.Schema
 						Attributes: map[string]schema.Attribute{
 							"power_catalog_audience_setting": schema.StringAttribute{
 								Description: "Power Catalog Audience Setting",
+								Computed:    true,
+							},
+						},
+					},
+					"user_management_settings": schema.SingleNestedAttribute{
+						Description: "User Management Settings",
+						Computed:    true,
+						Attributes: map[string]schema.Attribute{
+							"enable_delete_disabled_user_in_all_environments": schema.BoolAttribute{
+								Description: "Enable Delete Disabled User In All Environments",
 								Computed:    true,
 							},
 						},
