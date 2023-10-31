@@ -1,0 +1,64 @@
+{
+    "id": "b03e1e6d-73db-4367-90e1-2e378bf7e2fc",
+    "links": {
+        "self": {
+            "path": "/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc"
+        },
+        "environment": {
+            "path": "/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000002"
+        }
+    },
+    "type": {
+        "id": "Create"
+    },
+    "typeDisplayName": "Create",
+    "state": {
+        "id": "Succeeded"
+    },
+    "createdDateTime": "2023-10-11T07:45:25.3761337Z",
+    "lastActionDateTime": "2023-10-11T07:45:43.4915067Z",
+    "requestedBy": {
+        "id": "8784d9fb-deb0-4811-96ce-fbf21cf3a1fc",
+        "displayName": "ServicePrincipal",
+        "type": "ServicePrincipal",
+        "tenantId": "123"
+    },
+    "stages": [
+        {
+            "id": "Validate",
+            "name": "Validate",
+            "state": {
+                "id": "Succeeded"
+            },
+            "firstActionDateTime": "2023-10-11T07:45:25.9230185Z",
+            "lastActionDateTime": "2023-10-11T07:45:25.9230185Z"
+        },
+        {
+            "id": "Prepare",
+            "name": "Prepare",
+            "state": {
+                "id": "Succeeded"
+            },
+            "firstActionDateTime": "2023-10-11T07:45:25.9230185Z",
+            "lastActionDateTime": "2023-10-11T07:45:25.9230185Z"
+        },
+        {
+            "id": "Run",
+            "name": "Run",
+            "state": {
+                "id": "Succeeded"
+            },
+            "firstActionDateTime": "2023-10-11T07:45:26.0011473Z",
+            "lastActionDateTime": "2023-10-11T07:45:33.2570938Z"
+        },
+        {
+            "id": "Finalize",
+            "name": "Finalize",
+            "state": {
+                "id": "Succeeded"
+            },
+            "firstActionDateTime": "2023-10-11T07:45:33.3352196Z",
+            "lastActionDateTime": "2023-10-11T07:45:43.4915067Z"
+        }
+    ]
+}
