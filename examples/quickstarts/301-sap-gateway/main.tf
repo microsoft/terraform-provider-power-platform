@@ -190,7 +190,7 @@ resource "azurerm_key_vault" "key_vault" {
 }
 
 resource "azurecaf_name" "key_vault_secret_pp" {
-  name          = var.base_name
+  name          = "pp"
   resource_type = "azurerm_key_vault_secret"
   prefixes      = [var.prefix]
   random_length = 3
@@ -204,7 +204,7 @@ resource "azurerm_key_vault_secret" "key_vault_secret_pp" {
 }
 
 resource "azurecaf_name" "key_vault_secret_irkey" {
-  name          = var.base_name
+  name          = "irkey"
   resource_type = "azurerm_key_vault_secret"
   prefixes      = [var.prefix]
   random_length = 3

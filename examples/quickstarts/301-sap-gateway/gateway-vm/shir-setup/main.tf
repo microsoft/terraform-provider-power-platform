@@ -20,7 +20,8 @@ resource "azurerm_gallery_application_version" "shir-igl-app-version" {
   location               = var.region
 
   manage_action {
-    install = "powershell -ExecutionPolicy Unrestricted -File .\\shir-setup.ps1 -keyVaultUri ${var.keyVaultUri} -irKey ${var.secretIRKeyName}"
+    #install = "powershell -ExecutionPolicy Unrestricted -File .\\shir-setup.ps1 -keyVaultUri ${var.keyVaultUri} -irKey ${var.secretIRKeyName}"
+    install = "mkdir C:\\shir & copy shir-setup.ps1 C:\\shir"
     remove  = "echo" # Uninstall script is not applicable.
   }
 

@@ -10,7 +10,7 @@ param (
 $downloadUrl = "https://download.microsoft.com/download/E/4/7/E4771905-1079-445B-8BF9-8A1A075D8A10/IntegrationRuntime_5.32.8600.2.msi"
 
 # Define the path where the installer will be downloaded.
-$installerPath = "$env:TEMP\IntegrationRuntime.msi"
+$installerPath = "C:\shir\IntegrationRuntime.msi"
 
 # Download the Intergration Runtime MSI installer.
 Invoke-WebRequest -Uri $downloadUrl -OutFile $installerPath

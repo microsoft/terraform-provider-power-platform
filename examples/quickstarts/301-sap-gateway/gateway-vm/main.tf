@@ -88,10 +88,10 @@ module "sapnco_install" {
   sig_id              = azurerm_shared_image_gallery.sig.id
   sapnco_install_link = var.sapnco_install_link
 
-  depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install, module.opdgw-setup]
+  #depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install, module.opdgw-setup]
 }
 
-# Create SAP NCo version in Shared Image Gallery
+# Install Script for SHIR configuration
 module "shir-setup" {
   source              = "./shir-setup"
   prefix              = var.prefix
@@ -103,7 +103,8 @@ module "shir-setup" {
   keyVaultUri         = var.keyVaultUri
   secretIRKeyName     = var.secretIRKeyName
 
-  depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install, module.opdgw-setup, module.sapnco_install]
+  #depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install, module.opdgw-setup, module.sapnco_install]
+  depends_on = [module.sapnco_install]
 }
 
 resource "azurecaf_name" "vm-opgw" {
@@ -133,6 +134,7 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
   bypass_platform_safety_checks_on_user_schedule_enabled = false
   patch_assessment_mode                                  = "ImageDefault"
   patch_mode                                             = "AutomaticByOS"
+  #custom_data                                            = base64encode(file("startup.ps1"))
 
   os_disk {
     caching              = "ReadWrite"
@@ -171,6 +173,7 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
     version_id = module.opdgw-setup.opdgw_version_id
     order      = 4
   }
+
   # Install SAP NCo
   gallery_application {
     version_id = module.sapnco_install.sapnco_install_version_id
@@ -183,3 +186,25 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
     order      = 6
   }
 }
+
+
+resource "azurerm_virtual_machine_extension" "vm-opgw-ps" {
+  name                 = "vm-opgw-ps"
+  virtual_machine_id   = azurerm_windows_virtual_machine.vm-opgw.id
+  publisher            = "Microsoft.Compute"
+  type                 = "CustomScriptExtension"
+  type_handler_version = "1.10"
+
+  settings = <<SETTINGS
+    {
+        "commandToExecute": "powershell -ExecutionPolicy Unrestricted -command \"& {C:\\shir\\shir-setup.ps1 -keyVaultUri ${var.keyVaultUri} -irKey ${var.secretIRKeyName} | Out-File -FilePath C:\\shir\\output.txt}\""
+    }
+SETTINGS
+
+  timeouts {
+    create = "60m"
+    delete = "60m"
+  }
+
+}
+
