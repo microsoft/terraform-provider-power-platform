@@ -41,7 +41,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: ProviderConfig + `
+				Config: AcceptanceTestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + envDomain + `"
@@ -201,7 +201,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: ProviderConfig + `
+				Config: AcceptanceTestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "TestAccSolutionResource_Settings_File"

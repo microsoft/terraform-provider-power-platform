@@ -18,7 +18,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: ProviderConfig + `
+				Config: AcceptanceTestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example2"
 					location                                  = "europe"
@@ -46,7 +46,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: ProviderConfig + `
+				Config: AcceptanceTestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example3"
 					domain									  = "terraformtest3"
@@ -74,7 +74,7 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: ProviderConfig + `
+				Config: AcceptanceTestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "europe"
