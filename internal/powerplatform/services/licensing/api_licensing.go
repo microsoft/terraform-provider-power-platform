@@ -1,4 +1,4 @@
-package billing_policy
+package licensing
 
 import (
 	"context"
@@ -6,25 +6,29 @@ import (
 	"net/http"
 	"net/url"
 
-	powerplatformapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/ppapi"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 )
 
-type BillingPolicyClientInterface interface {
+type LicensingClientInterface interface {
 	GetBillingPolicies(ctx context.Context) ([]BillingPolicyDto, error)
 	GetBillingPolicy(ctx context.Context, id string) (*BillingPolicyDto, error)
 	CreateBillingPolicy(ctx context.Context, policyToCreate BillingPolicyDto) (*BillingPolicyDto, error)
 }
 
-type BillingPolicyClient struct {
-	ppapi powerplatformapi.PowerPlatformClientApiInterface
+type LicensingClient struct {
+	ppapi api.ApiClientInterface
+	token string
 }
 
 const (
 	API_VERSION = "2022-03-01-preview"
 )
 
-func NewBillingPolicyClient(ctx context.Context) BillingPolicyClientInterface {
-	return &BillingPolicyClient{}
+func NewLicensingClient(ppapi *clients.PowerPlatoformApiClient) LicensingClientInterface {
+	return &LicensingClient{
+		ppapi: ppapi,
+	}
 }
 
 func (client *BillingPolicyClient) GetBillingPolicy(ctx context.Context, id string) (*BillingPolicyDto, error) {
@@ -35,7 +39,7 @@ func (client *BillingPolicyClient) GetBillingPolicy(ctx context.Context, id stri
 	}
 
 	policy := BillingPolicyDto{}
-	_, err := client.ppapi.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
+	_, err := client.ppapi.ExecuteBase(ctx, client.token, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
 
 	return &policy, err
 }
@@ -48,7 +52,7 @@ func (client *BillingPolicyClient) GetBillingPolicies(ctx context.Context) ([]Bi
 	}
 
 	policies := []BillingPolicyDto{}
-	_, err := client.ppapi.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policies)
+	_, err := client.ppapi.ExecuteBase(ctx, client.token, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policies)
 
 	return policies, err
 }

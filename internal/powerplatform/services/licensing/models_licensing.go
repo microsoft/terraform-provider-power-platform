@@ -1,4 +1,4 @@
-package billing_policy
+package licensing
 
 type BillingPolicyDto struct {
 	Id                string               `json:"id"`

@@ -1,4 +1,4 @@
-package billing_policy
+package licensing
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 
 	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform"
 	powerplatform_ppapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api/ppapi"
+	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 )
 
 var _ resource.Resource = &BillingPolicyResource{}
