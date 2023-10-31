@@ -1,0 +1,71 @@
+{
+    "walkMeOptOut": true,
+    "disableNPSCommentsReachout": true,
+    "disableNewsletterSendout": true,
+    "disableEnvironmentCreationByNonAdminUsers": true,
+    "disablePortalsCreationByNonAdminUsers": true,
+    "disableSurveyFeedback": true,
+    "disableTrialEnvironmentCreationByNonAdminUsers": true,
+    "disableCapacityAllocationByEnvironmentAdmins": true,
+    "disableSupportTicketsVisibleByAllUsers": true,
+    "powerPlatform": {
+        "search": {
+            "disableDocsSearch": true,
+            "disableCommunitySearch": true,
+            "disableBingVideoSearch": true
+        },
+        "teamsIntegration": {
+            "shareWithColleaguesUserLimit": 999
+        },
+        "powerApps": {
+            "disableShareWithEveryone": true,
+            "enableGuestsToMake": true,
+            "disableMembersIndicator": true,
+            "disableMakerMatch": true,
+            "disableUnusedLicenseAssignment": true,
+            "disableCreateFromImage": true,
+            "disableCreateFromFigma": true,
+            "disableConnectionSharingWithEveryone": true
+        },
+        "powerAutomate": {
+            "disableCopilot": true
+        },
+        "environments": {
+            "disablePreferredDataLocationForTeamsEnvironment": true
+        },
+        "governance": {
+            "disableAdminDigest": true,
+            "disableDeveloperEnvironmentCreationByNonAdminUsers": false,
+            "enableDefaultEnvironmentRouting": true,
+            "policy": {
+                "enableDesktopFlowDataPolicyManagement": true
+            }
+        },
+        "licensing": {
+            "disableBillingPolicyCreationByNonAdminUsers": true,
+            "enableTenantCapacityReportForEnvironmentAdmins": true,
+            "storageCapacityConsumptionWarningThreshold": 95,
+            "enableTenantLicensingReportForEnvironmentAdmins": true,
+            "disableUseOfUnassignedAIBuilderCredits": true
+        },
+        "powerPages": {},
+        "champions": {
+            "disableChampionsInvitationReachout": true,
+            "disableSkillsMatchInvitationReachout": true
+        },
+        "intelligence": {
+            "disableCopilot": true,
+            "enableOpenAiBotPublishing": true
+        },
+        "modelExperimentation": {
+            "enableModelDataSharing": true,
+            "disableDataLogging": true
+        },
+        "catalogSettings": {
+            "powerCatalogAudienceSetting": "All"
+        },
+        "userManagementSettings": {
+            "enableDeleteDisabledUserinAllEnvironments": true
+        }
+    }
+}

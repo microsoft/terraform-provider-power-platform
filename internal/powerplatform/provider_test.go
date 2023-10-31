@@ -13,14 +13,15 @@ import (
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
+	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
 	"github.com/stretchr/testify/require"
 )
 
 const (
-	// ProviderConfig is a shared configuration to combine with the actual
+	// AcceptanceTestsProviderConfig is a shared configuration to combine with the actual
 	// test configuration so the Power Platform client is properly configured.
 	// It is also possible to use the POWER_PLATFORM_ environment variables instead.
-	ProviderConfig = `
+	AcceptanceTestsProviderConfig = `
 provider "powerplatform" {
 }
 `
@@ -48,6 +49,7 @@ func TestUnitPowerPlatformProvider_HasChildDataSources(t *testing.T) {
 		connectors.NewConnectorsDataSource(),
 		solution.NewSolutionsDataSource(),
 		dlp_policy.NewDataLossPreventionPolicyDataSource(),
+		tenant_settings.NewTenantSettingsDataSource(),
 	}
 	datasources := NewPowerPlatformProvider()().(*PowerPlatformProvider).DataSources(context.Background())
 
@@ -62,6 +64,7 @@ func TestUnitPowerPlatformProvider_HasChildResources(t *testing.T) {
 		environment.NewEnvironmentResource(),
 		dlp_policy.NewDataLossPreventionPolicyResource(),
 		solution.NewSolutionResource(),
+		tenant_settings.NewTenantSettingsResource(),
 	}
 	resources := NewPowerPlatformProvider()().(*PowerPlatformProvider).Resources(context.Background())
 

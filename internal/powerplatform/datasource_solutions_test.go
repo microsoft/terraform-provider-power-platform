@@ -67,7 +67,7 @@ func TestAccSolutionsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: ProviderConfig + `
+				Config: AcceptanceTestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "testaccsolutionsdatasource"
 					location         = "europe"

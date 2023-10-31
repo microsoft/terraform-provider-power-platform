@@ -8,4 +8,5 @@ const (
 	StringRegex           = "^.*$"
 	VersionRegex          = "^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$"
 	TimeRegex             = "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)$"
+	BooleanRegex          = "^(true|false)$"
 )
