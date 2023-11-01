@@ -88,8 +88,8 @@ variable "sapnco_install_link" {
   type        = string
 }
 
-variable "shir_setup_link" {
-  description = "The Blob link to the SHIR setup script"
+variable "runtime_setup_link" {
+  description = "The Blob link to the runtime setup script"
   type        = string
 }
 

@@ -164,7 +164,7 @@ resource "random_string" "key_vault_suffix" {
 resource "azurecaf_name" "key_vault" {
   name          = var.prefix
   resource_type = "azurerm_key_vault"
-  random_length = 3
+  random_length = 9
   clean_input   = true
 }
 
@@ -226,14 +226,14 @@ module "gateway_vm" {
   nic_id              = azurerm_network_interface.nic.id
   keyVaultUri         = azurerm_key_vault.key_vault.vault_uri
   secretPPName        = azurerm_key_vault_secret.key_vault_secret_pp.name
-  secretIRKeyName     = azurerm_key_vault_secret.key_vault_secret_irkey.name
+  secretNameIRKey     = azurerm_key_vault_secret.key_vault_secret_irkey.name
   userIdAdmin_pp      = var.userIdAdmin_pp
   ps7_setup_link      = var.ps7_setup_link
   java_setup_link     = var.java_setup_link
   opdgw_install_link  = var.opdgw_install_link
   opdgw_setup_link    = var.opdgw_setup_link
   sapnco_install_link = var.sapnco_install_link
-  shir_setup_link     = var.shir_setup_link
+  runtime_setup_link  = var.runtime_setup_link
 }
 
 resource "azurerm_key_vault_access_policy" "key_vault_access_policy" {

@@ -12,8 +12,11 @@ $Psversion = (Get-Host).Version
 if($Psversion.Major -ge 7)
 {
 
+    Write-Output "Installing DataGateway Module"
+    Install-Module -Name DataGateway -Force
+
     #Retrieve the secret from Key Vault
-    Write-Host "Retrieve the secrete from Key Vault"
+    Write-Output "Retrieve the secrete from Key Vault"
     $Response = Invoke-RestMethod -Uri 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net' -Method GET -Headers @{Metadata="true"}
     $KeyVaultToken = $Response.access_token
 
@@ -29,12 +32,12 @@ if($Psversion.Major -ge 7)
 
 
     #Gateway Login
-    Write-Host "Gateway Login"
+    Write-Output "Gateway Login"
     Connect-DataGatewayServiceAccount -ApplicationId $ApplicationId -ClientSecret $securePassword -Tenant $Tenant
 
 
     #Installing Gateway
-    Write-Host "Installing Gateway"
+    Write-Output "Installing Gateway"
     Install-DataGateway -AcceptConditions 
 
 
@@ -42,21 +45,21 @@ if($Psversion.Major -ge 7)
     $GatewayObjectId = (Get-DataGatewayCluster | Where-Object {$_.Name -eq "OPDGW-SAPAzureIntegration"}).Id
 
     if (![string]::IsNullOrEmpty($GatewayObjectId)) {
-        Write-Host "Remove Cluster"
+        Write-Output "Remove Cluster"
         Remove-DataGatewayCluster -GatewayClusterId $GatewayObjectId
     }
     
-    Write-Host "Add Cluster"
+    Write-Output "Add Cluster"
     $GatewayDetails = Add-DataGatewayCluster -Name $GatewayName -RecoveryKey  $RecoverKey -RegionKey westus3 -OverwriteExistingGateway
     $GatewayObjectId = $GatewayDetails.GatewayObjectId
 
-    Write-Host "$GatewayName ID: $GatewayObjectId"
+    Write-Output "$GatewayName ID: $GatewayObjectId"
     #Add User as Admin
-    Write-Host "Add User as Admin"
+    Write-Output "Add User as Admin"
     Add-DataGatewayClusterUser -GatewayClusterId $GatewayObjectId -PrincipalObjectId $userIDToAddasAdmin -AllowedDataSourceTypes $null -Role Admin -RegionKey westus3
 
 }
 else{
-    Write-Host "PowerShell version 7 or higher is required to run this script."
+    Write-Output "PowerShell version 7 or higher is required to run this script."
     exit 1
 }

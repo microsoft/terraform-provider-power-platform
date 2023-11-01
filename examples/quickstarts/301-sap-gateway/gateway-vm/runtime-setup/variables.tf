@@ -25,18 +25,7 @@ variable "sig_id" {
   type        = string
 }
 
-variable "keyVaultUri" {
-  description = "The URI of the Key Vault"
+variable "runtime_setup_link" {
+  description = "The Blob link to the runtime-setup.ps1 script"
   type        = string
 }
-
-variable "shir_setup_link" {
-  description = "The Blob link to the opdgw-setup.ps1 script"
-  type        = string
-}
-
-variable "secretIRKeyName" {
-  description = "Value of the secret name for Integration Runtime Key"
-  type        = string
-}
-

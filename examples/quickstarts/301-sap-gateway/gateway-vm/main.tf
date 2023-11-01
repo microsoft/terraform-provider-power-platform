@@ -48,7 +48,7 @@ module "java-runtime-setup" {
 
   depends_on = [module.ps7-setup]
 }
-
+/*
 # Create On-Premise Gateway Installation version in Shared Image Gallery
 module "opdgw-install" {
   source              = "./opdgw-install"
@@ -61,7 +61,6 @@ module "opdgw-install" {
 
   depends_on = [module.ps7-setup, module.java-runtime-setup]
 }
-
 # Create On-Premise Gateway version in Shared Image Gallery
 module "opdgw-setup" {
   source              = "./opdgw-setup"
@@ -75,8 +74,9 @@ module "opdgw-setup" {
   secretPPName        = var.secretPPName
   userIdAdmin_pp      = var.userIdAdmin_pp
 
-  depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install]
+  depends_on = [module.ps7-setup, module.java-runtime-setup]
 }
+*/
 
 # Create SAP NCo version in Shared Image Gallery
 module "sapnco_install" {
@@ -88,23 +88,20 @@ module "sapnco_install" {
   sig_id              = azurerm_shared_image_gallery.sig.id
   sapnco_install_link = var.sapnco_install_link
 
-  #depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install, module.opdgw-setup]
+  depends_on = [module.ps7-setup, module.java-runtime-setup]
 }
 
-# Install Script for SHIR configuration
-module "shir-setup" {
-  source              = "./shir-setup"
+# Install Script for Runtime configuration
+module "runtime-setup" {
+  source              = "./runtime-setup"
   prefix              = var.prefix
   base_name           = var.base_name
   resource_group_name = var.resource_group_name
   region              = var.region
   sig_id              = azurerm_shared_image_gallery.sig.id
-  shir_setup_link     = var.shir_setup_link
-  keyVaultUri         = var.keyVaultUri
-  secretIRKeyName     = var.secretIRKeyName
+  runtime_setup_link  = var.runtime_setup_link
 
-  #depends_on = [module.ps7-setup, module.java-runtime-setup, module.opdgw-install, module.opdgw-setup, module.sapnco_install]
-  depends_on = [module.sapnco_install]
+  depends_on = [module.ps7-setup, module.java-runtime-setup, module.sapnco_install]
 }
 
 resource "azurecaf_name" "vm-opgw" {
@@ -134,7 +131,6 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
   bypass_platform_safety_checks_on_user_schedule_enabled = false
   patch_assessment_mode                                  = "ImageDefault"
   patch_mode                                             = "AutomaticByOS"
-  #custom_data                                            = base64encode(file("startup.ps1"))
 
   os_disk {
     caching              = "ReadWrite"
@@ -161,35 +157,37 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
     version_id = module.java-runtime-setup.java_runtime_version_id
     order      = 2
   }
-
+  /*
   # Install On-Premise Gateway
   gallery_application {
     version_id = module.opdgw-install.opdgw_install_version_id
     order      = 3
   }
-
   # Setup On-Premise Gateway setup  
   gallery_application {
     version_id = module.opdgw-setup.opdgw_version_id
     order      = 4
   }
+*/
 
   # Install SAP NCo
   gallery_application {
     version_id = module.sapnco_install.sapnco_install_version_id
-    order      = 5
+    order      = 3
   }
 
-  # Setup SHIR
+  # Setup Runtime configuration
   gallery_application {
-    version_id = module.shir-setup.shir_version_id
-    order      = 6
+    version_id = module.runtime-setup.runtime_version_id
+    order      = 4
   }
 }
 
-
-resource "azurerm_virtual_machine_extension" "vm-opgw-ps" {
-  name                 = "vm-opgw-ps"
+# Create a virtual machine extension to run the runtime-setup.ps1 script
+# This script uses the VM Principal ID to access the Key Vault and retrieve the secrets
+# VM Principal ID is only available after the VM is created
+resource "azurerm_virtual_machine_extension" "runtime-setup" {
+  name                 = "runtime-setup"
   virtual_machine_id   = azurerm_windows_virtual_machine.vm-opgw.id
   publisher            = "Microsoft.Compute"
   type                 = "CustomScriptExtension"
@@ -197,7 +195,7 @@ resource "azurerm_virtual_machine_extension" "vm-opgw-ps" {
 
   settings = <<SETTINGS
     {
-        "commandToExecute": "powershell -ExecutionPolicy Unrestricted -command \"& {C:\\shir\\shir-setup.ps1 -keyVaultUri ${var.keyVaultUri} -irKey ${var.secretIRKeyName} | Out-File -FilePath C:\\shir\\output.txt}\""
+        "commandToExecute": "C:\\powershell7\\7\\pwsh.exe -ExecutionPolicy Unrestricted -command \"& {C:\\sapint\\runtime-setup.ps1 -keyVaultUri ${var.keyVaultUri} -secretNamePP ${var.secretPPName} -userAdmin ${var.userIdAdmin_pp} -secretNameIRKey ${var.secretNameIRKey}| Out-File -FilePath C:\\sapint\\runtime-out.txt}\""
     }
 SETTINGS
 
@@ -205,6 +203,4 @@ SETTINGS
     create = "60m"
     delete = "60m"
   }
-
 }
-

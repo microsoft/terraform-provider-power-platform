@@ -20,7 +20,8 @@ resource "azurerm_gallery_application_version" "opdgw-igl-app-version" {
   location               = var.region
 
   manage_action {
-    install = "C:\\powershell7\\7\\pwsh.exe -ExecutionPolicy Unrestricted -File .\\opdgw-setup.ps1 -keyVaultUri ${var.keyVaultUri} -secretPPName ${var.secretPPName} -userAdmin ${var.userIdAdmin_pp}"
+    #install = "C:\\powershell7\\7\\pwsh.exe -ExecutionPolicy Unrestricted -File .\\opdgw-setup.ps1 -keyVaultUri ${var.keyVaultUri} -secretPPName ${var.secretPPName} -userAdmin ${var.userIdAdmin_pp}"
+    install = "mkdir C:\\sapint & copy opdgw-setup.ps1 C:\\sapint"
     remove  = "echo" # Uninstall script is not applicable.
   }
 

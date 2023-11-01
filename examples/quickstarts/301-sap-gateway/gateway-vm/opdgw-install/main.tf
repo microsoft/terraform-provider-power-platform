@@ -21,6 +21,7 @@ resource "azurerm_gallery_application_version" "opdgw-install-igl-app-version" {
 
   manage_action {
     install = "C:\\powershell7\\7\\pwsh.exe -ExecutionPolicy Unrestricted -File .\\opdgw-install.ps1"
+        install = "C:\\powershell7\\7\\pwsh.exe -ExecutionPolicy Unrestricted -File .\\opdgw-install.ps1"
     remove  = "echo" # Uninstall script is not applicable.
   }
 
