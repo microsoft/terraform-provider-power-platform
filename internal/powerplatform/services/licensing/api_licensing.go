@@ -1,4 +1,4 @@
-package licensing
+package powerplatform
 
 import (
 	"context"
@@ -7,102 +7,61 @@ import (
 	"net/url"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 )
-
-type LicensingClientInterface interface {
-	GetBillingPolicies(ctx context.Context) ([]BillingPolicyDto, error)
-	GetBillingPolicy(ctx context.Context, id string) (*BillingPolicyDto, error)
-	CreateBillingPolicy(ctx context.Context, policyToCreate BillingPolicyDto) (*BillingPolicyDto, error)
-}
 
 type LicensingClient struct {
-	ppapi api.ApiClientInterface
-	token string
+	ppApi *api.PowerPlatformClientApi
 }
 
-const (
-	API_VERSION = "2022-03-01-preview"
-)
-
-func NewLicensingClient(ppapi *clients.PowerPlatoformApiClient) LicensingClientInterface {
-	return &LicensingClient{
-		ppapi: ppapi,
+func NewLicensingClient(ppApi *api.PowerPlatformClientApi) LicensingClient {
+	return LicensingClient{
+		ppLicesingApi: ppLicensingApi,
 	}
 }
 
-func (client *BillingPolicyClient) GetBillingPolicy(ctx context.Context, id string) (*BillingPolicyDto, error) {
+func (client *LicensingClient) GetBillingPolicy(ctx context.Context, billingId string) (*BillingPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   "api.powerplatform.com",
-		Path:   fmt.Sprintf("/licensing/billingPolicies/%s", id),
+		Host:   client.ppLicesingApi.GetConfig().Urls.PowerPlatformLicensingUrl,
+		Path:   fmt.Sprintf("/licensing/billingPolicies/%s", billingId),
 	}
 
 	policy := BillingPolicyDto{}
-	_, err := client.ppapi.ExecuteBase(ctx, client.token, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
+	_, err := client.ppLicesingApi.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
 
 	return &policy, err
 }
 
-func (client *BillingPolicyClient) GetBillingPolicies(ctx context.Context) ([]BillingPolicyDto, error) {
+func (client *LicensingClient) GetBillingPolicies(ctx context.Context) ([]BillingPolicyDto, error) {
+	return nil, nil
+}
+
+func (client *LicensingClient) CreateBillingPolicy(ctx context.Context, policyToCreate BillingPolicyCreateDto) (*BillingPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   "api.powerplatform.com",
-		Path:   "/licensing/billingPolicies",
+		Host:   client.ppLicesingApi.GetConfig().Urls.PowerPlatformLicensingUrl,
+		Path:   fmt.Sprintf("/v1.0/tenants/%s/BillingPolicies", client.ppLicesingApi.GetConfig().Credentials.TenantId),
 	}
 
-	policies := []BillingPolicyDto{}
-	_, err := client.ppapi.ExecuteBase(ctx, client.token, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policies)
+	policy := BillingPolicyDto{}
+	_, err := client.ppLicesingApi.Execute(ctx, "POST", apiUrl.String(), policyToCreate, []int{http.StatusOK}, nil)
 
-	return policies, err
+	return &policy, err
 }
 
-func (client *BillingPolicyClient) CreateBillingPolicy(ctx context.Context, policyToCreate BillingPolicyDto) (*BillingPolicyDto, error) {
-	return nil, nil
+func (client *LicensingClient) UpdateBillingPolicy(ctx context.Context, policyToUpdate BillingPolicyDto) (*BillingPolicyDto, error) {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.ppLicesingApi.GetConfig().Urls.PowerPlatformLicensingUrl,
+		Path:   fmt.Sprintf("/v1.0/tenants/%s/BillingPolicies", client.ppLicesingApi.GetConfig().Credentials.TenantId),
+	}
+
+	policy := BillingPolicyDto{}
+	_, err := client.ppLicesingApi.Execute(ctx, "PUT", apiUrl.String(), policyToUpdate, []int{http.StatusOK}, &policy)
+
+	return &policy, err
 }
 
-func (client *BillingPolicyClient) UpdateBillingPolicy(ctx context.Context, policyToUpdate BillingPolicyDto) (*BillingPolicyDto, error) {
-	return nil, nil
-}
-
-func (client *BillingPolicyClient) DeleteBillingPolicy(ctx context.Context, id string) error {
+func (client *LicensingClient) DeleteBillingPolicy(ctx context.Context, id string) error {
 	return nil
 }
-
-// func (client *PowerPlatformClientApi) GetBillingPolicies(ctx context.Context) ([]models.BillingPolicyDto, error) {
-// 	apiUrl := &url.URL{
-// 		Scheme: "https",
-// 		Host:   client.BaseApi.GetConfig().Urls.PowerPlatformUrl,
-// 		Path:   "/licensing/billingPolicies",
-// 	}
-// 	values := url.Values{}
-// 	values.Add("api-version", "2022-03-01-preview")
-// 	apiUrl.RawQuery = values.Encode()
-
-// 	billingPolicies := models.BillingPolicyDtoArray{}
-// 	_, err := client.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &billingPolicies)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return billingPolicies.Value, nil
-// }
-
-// func (client *PowerPlatformClientApi) GetBillingPolicy(ctx context.Context, id string) (*models.BillingPolicyDto, error) {
-// 	apiUrl := &url.URL{
-// 		Scheme:   "https",
-// 		Host:     "api.powerplatform.com",
-// 		Path:     fmt.Sprintf("/licensing/billingPolicies/%s", id),
-// 		RawQuery: url.Values{"api-version": {"2022-03-01-preview"}}.Encode(),
-// 	}
-
-// 	policy := models.BillingPolicyDto{}
-
-// 	_, err := client.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
-// 	return &policy, err
-
-// }
-
-// func (client *PowerPlatformClientApi) CreateBillingPolicy(ctx context.Context, policyToCreate BillingPolicyDto) (*BillingPolicyDto, error) {
-// 	return nil, nil
-// }
