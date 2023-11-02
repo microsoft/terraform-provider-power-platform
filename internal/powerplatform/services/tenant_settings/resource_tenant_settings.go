@@ -4,9 +4,16 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
@@ -40,156 +47,264 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 			"id": schema.StringAttribute{
 				Description: "Id",
 				Computed:    true,
+				// PlanModifiers: []planmodifier.String{
+				// 	stringplanmodifier.UseStateForUnknown(),
+				// },
 			},
 			"walk_me_opt_out": schema.BoolAttribute{
 				Description: "Walk Me Opt Out",
 				Optional:    true, Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"disable_nps_comments_reachout": schema.BoolAttribute{
 				Description: "Disable NPS Comments Reachout",
 				Optional:    true, Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"disable_newsletter_sendout": schema.BoolAttribute{
 				Description: "Disable Newsletter Sendout",
 				Optional:    true, Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"disable_environment_creation_by_non_admin_users": schema.BoolAttribute{
 				Description: "Disable Environment Creation By Non Admin Users",
 				Optional:    true, Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"disable_portals_creation_by_non_admin_users": schema.BoolAttribute{
 				Description: "Disable Portals Creation By Non Admin Users",
 				Optional:    true, Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"disable_survey_feedback": schema.BoolAttribute{
 				Description: "Disable Survey Feedback",
 				Optional:    true, Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"disable_trial_environment_creation_by_non_admin_users": schema.BoolAttribute{
 				Description: "Disable Trial Environment Creation By Non Admin Users",
 				Optional:    true, Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"disable_capacity_allocation_by_environment_admins": schema.BoolAttribute{
 				Description: "Disable Capacity Allocation By Environment Admins",
 				Optional:    true, Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"disable_support_tickets_visible_by_all_users": schema.BoolAttribute{
 				Description: "Disable Support Tickets Visible By All Users",
 				Optional:    true, Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"power_platform": schema.SingleNestedAttribute{
 				Description: "Power Platform",
 				Optional:    true, Computed: true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
+				},
 				Attributes: map[string]schema.Attribute{
 					"search": schema.SingleNestedAttribute{
 						Description: "Search",
 						Optional:    true, Computed: true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"disable_docs_search": schema.BoolAttribute{
 								Description: "Disable Docs Search",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"disable_community_search": schema.BoolAttribute{
 								Description: "Disable Community Search",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"disable_bing_video_search": schema.BoolAttribute{
 								Description: "Disable Bing Video Search",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 						},
 					},
 					"teams_integration": schema.SingleNestedAttribute{
 						Description: "Teams Integration",
 						Optional:    true, Computed: true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"share_with_colleagues_user_limit": schema.Int64Attribute{
 								Description: "Share With Colleagues User Limit",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Int64{
+									int64planmodifier.UseStateForUnknown(),
+								},
 							},
 						},
 					},
 					"power_apps": schema.SingleNestedAttribute{
 						Description: "Power Apps",
 						Optional:    true, Computed: true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"disable_share_with_everyone": schema.BoolAttribute{
 								Description: "Disable Share With Everyone",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"enable_guests_to_make": schema.BoolAttribute{
 								Description: "Enable Guests To Make",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"disable_members_indicator": schema.BoolAttribute{
 								Description: "Disable Members Indicator",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"disable_maker_match": schema.BoolAttribute{
 								Description: "Disable Maker Match",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"disable_unused_license_assignment": schema.BoolAttribute{
 								Description: "Disable Unused License Assignment",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"disable_create_from_image": schema.BoolAttribute{
 								Description: "Disable Create From Image",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"disable_create_from_figma": schema.BoolAttribute{
 								Description: "Disable Create From Figma",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"disable_connection_sharing_with_everyone": schema.BoolAttribute{
 								Description: "Disable Connection Sharing With Everyone",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 						},
 					},
 					"power_automate": schema.SingleNestedAttribute{
 						Description: "Power Automate",
 						Optional:    true, Computed: true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"disable_copilot": schema.BoolAttribute{
 								Description: "Disable Copilot",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 						},
 					},
 					"environments": schema.SingleNestedAttribute{
 						Description: "Environments",
 						Optional:    true, Computed: true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"disable_preferred_data_location_for_teams_environment": schema.BoolAttribute{
 								Description: "Disable Preferred Data Location For Teams Environment",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 						},
 					},
 					"governance": schema.SingleNestedAttribute{
 						Description: "Governance",
 						Optional:    true, Computed: true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"disable_admin_digest": schema.BoolAttribute{
 								Description: "Disable Admin Digest",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"disable_developer_environment_creation_by_non_admin_users": schema.BoolAttribute{
 								Description: "Disable Developer Environment Creation By Non Admin Users",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"enable_default_environment_routing": schema.BoolAttribute{
 								Description: "Enable Default Environment Routing",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"policy": schema.SingleNestedAttribute{
 								Description: "Policy",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Object{
+									objectplanmodifier.UseStateForUnknown(),
+								},
 								Attributes: map[string]schema.Attribute{
 									"enable_desktop_flow_data_policy_management": schema.BoolAttribute{
 										Description: "Enable Desktop Flow Data Policy Management",
 										Optional:    true, Computed: true,
+										PlanModifiers: []planmodifier.Bool{
+											boolplanmodifier.UseStateForUnknown(),
+										},
 									},
 								},
 							},
@@ -198,93 +313,156 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 					"licensing": schema.SingleNestedAttribute{
 						Description: "Licensing",
 						Optional:    true, Computed: true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"disable_billing_policy_creation_by_non_admin_users": schema.BoolAttribute{
 								Description: "Disable Billing Policy Creation By Non Admin Users",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"enable_tenant_capacity_report_for_environment_admins": schema.BoolAttribute{
 								Description: "Enable Tenant Capacity Report For Environment Admins",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"storage_capacity_consumption_warning_threshold": schema.Int64Attribute{
 								Description: "Storage Capacity Consumption Warning Threshold",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Int64{
+									int64planmodifier.UseStateForUnknown(),
+								},
 							},
 							"enable_tenant_licensing_report_for_environment_admins": schema.BoolAttribute{
 								Description: "Enable Tenant Licensing Report For Environment Admins",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"disable_use_of_unassigned_ai_builder_credits": schema.BoolAttribute{
 								Description: "Disable Use Of Unassigned AI Builder Credits",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 						},
 					},
 					"power_pages": schema.SingleNestedAttribute{
 						Description: "Power Pages",
 						Optional:    true, Computed: true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{},
 					},
 					"champions": schema.SingleNestedAttribute{
 						Description: "Champions",
 						Optional:    true, Computed: true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"disable_champions_invitation_reachout": schema.BoolAttribute{
 								Description: "Disable Champions Invitation Reachout",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"disable_skills_match_invitation_reachout": schema.BoolAttribute{
 								Description: "Disable Skills Match Invitation Reachout",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 						},
 					},
 					"intelligence": schema.SingleNestedAttribute{
 						Description: "Intelligence",
 						Optional:    true, Computed: true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"disable_copilot": schema.BoolAttribute{
 								Description: "Disable Copilot",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"enable_open_ai_bot_publishing": schema.BoolAttribute{
 								Description: "Enable Open AI Bot Publishing",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 						},
 					},
 					"model_experimentation": schema.SingleNestedAttribute{
 						Description: "Model Experimentation",
 						Optional:    true, Computed: true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"enable_model_data_sharing": schema.BoolAttribute{
 								Description: "Enable Model Data Sharing",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"disable_data_logging": schema.BoolAttribute{
 								Description: "Disable Data Logging",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 						},
 					},
 					"catalog_settings": schema.SingleNestedAttribute{
 						Description: "Catalog Settings",
 						Optional:    true, Computed: true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"power_catalog_audience_setting": schema.StringAttribute{
 								Description: "Power Catalog Audience Setting",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+								Validators: []validator.String{
+									stringvalidator.OneOf("SpecificAdmin", "All"),
+								},
 							},
 						},
 					},
 					"user_management_settings": schema.SingleNestedAttribute{
 						Description: "User Management Settings",
 						Optional:    true, Computed: true,
+						PlanModifiers: []planmodifier.Object{
+							objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"enable_delete_disabled_user_in_all_environments": schema.BoolAttribute{
 								Description: "Enable Delete Disabled User In All Environments",
 								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 						},
 					},

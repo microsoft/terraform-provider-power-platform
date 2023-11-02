@@ -164,9 +164,6 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "The selected instance provisioning template (if any)",
 				Optional:            true,
 				ElementType:         types.StringType,
-				// Validators: []validator.String{
-				// 	stringvalidator.OneOf(EnvironmentCurrencyCodes...),
-				// },
 			},
 			"template_metadata": schema.StringAttribute{
 				Description:         "JSON representation of the environment deployment metadata",
