@@ -1,0 +1,64 @@
+{
+    "id": "053742fc-749e-457f-876b-e4a4aa4e6070",
+    "links": {
+        "self": {
+            "path": "/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/053742fc-749e-457f-876b-e4a4aa4e6070"
+        },
+        "environment": {
+            "path": "/providers/Microsoft.BusinessAppPlatform/environments/ae6407ff-270b-e60c-b82b-e4e7e4b36154"
+        }
+    },
+    "type": {
+        "id": "EnableGovernanceConfiguration"
+    },
+    "typeDisplayName": "Enable Managed Environment",
+    "state": {
+        "id": "Succeeded"
+    },
+    "createdDateTime": "2023-11-01T20:13:15.5437614Z",
+    "lastActionDateTime": "2023-11-01T20:13:19.953131Z",
+    "requestedBy": {
+        "id": "8784d9fb-deb0-4811-96ce-fbf21cf3a1fc",
+        "displayName": "ServicePrincipal",
+        "type": "ServicePrincipal",
+        "tenantId": "123"
+    },
+    "stages": [
+        {
+            "id": "Validate",
+            "name": "Validate",
+            "state": {
+                "id": "Succeeded"
+            },
+            "firstActionDateTime": "2023-11-01T20:13:16.1405442Z",
+            "lastActionDateTime": "2023-11-01T20:13:16.1405442Z"
+        },
+        {
+            "id": "Prepare",
+            "name": "Prepare",
+            "state": {
+                "id": "Succeeded"
+            },
+            "firstActionDateTime": "2023-11-01T20:13:16.1561719Z",
+            "lastActionDateTime": "2023-11-01T20:13:16.1561719Z"
+        },
+        {
+            "id": "Run",
+            "name": "Run",
+            "state": {
+                "id": "Succeeded"
+            },
+            "firstActionDateTime": "2023-11-01T20:13:16.1718Z",
+            "lastActionDateTime": "2023-11-01T20:13:19.5781245Z"
+        },
+        {
+            "id": "Finalize",
+            "name": "Finalize",
+            "state": {
+                "id": "Succeeded"
+            },
+            "firstActionDateTime": "2023-11-01T20:13:19.6718785Z",
+            "lastActionDateTime": "2023-11-01T20:13:19.953131Z"
+        }
+    ]
+}
