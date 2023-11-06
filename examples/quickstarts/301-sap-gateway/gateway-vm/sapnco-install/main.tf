@@ -20,7 +20,7 @@ resource "azurerm_gallery_application_version" "sapnco-install-igl-app-version" 
   location               = var.region
 
   manage_action {
-    install = "msiexec /i NCo3025_Net40_x64.msi /qn /norestart /log install.log"
+    install = "msiexec /i NCo3025_Net40_x64.msi /qn /norestart FolderForm_AllUsers=ALL GAC_WMI=2 /log install.log"
     remove  = "echo" # Uninstall script is not applicable.
   }
 

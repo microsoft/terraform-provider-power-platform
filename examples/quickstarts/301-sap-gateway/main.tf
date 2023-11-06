@@ -68,7 +68,7 @@ resource "azurecaf_name" "subnet" {
 resource "azurerm_subnet" "subnet" {
   name                 = azurecaf_name.subnet.result
   resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
+  virtual_network_name = azurerm_virtual_network.vnet.name #
   address_prefixes     = ["10.0.1.0/24"]
 }
 
@@ -140,7 +140,7 @@ resource "azurerm_network_interface" "nic" {
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = azurerm_subnet.subnet.id
+    subnet_id                     = "/subscriptions/bfddb66b-32e6-4e66-82e2-aa0be9fd84da/resourceGroups/sapcal-network-westeurope/providers/Microsoft.Network/virtualNetworks/SAPCALDefault-westeurope/subnets/default" #azurerm_subnet.subnet.id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.publicip.id
   }
