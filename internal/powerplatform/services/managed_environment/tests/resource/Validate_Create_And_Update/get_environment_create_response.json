@@ -1,5 +1,5 @@
 {
-    "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/ae6407ff-270b-e60c-b82b-e4e7e4b36154",
+    "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
     "type": "Microsoft.BusinessAppPlatform/scopes/environments",
     "location": "europe",
     "name": "00000000-0000-0000-0000-000000000001",
