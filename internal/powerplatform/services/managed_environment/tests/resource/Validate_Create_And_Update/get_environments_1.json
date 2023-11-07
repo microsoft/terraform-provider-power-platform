@@ -63,7 +63,7 @@
                 "addons": [],
                 "clientUris": {
                     "admin": "https://admin.powerplatform.microsoft.com/environments/environment/00000000-0000-0000-0000-000000000001/hub",
-                    "maker": "https://make.powerapps.com/environments/456/home"
+                    "maker": "https://make.powerapps.com/environments/00000000-0000-0000-0000-000000000001/home"
                 },
                 "runtimeEndpoints": {
                     "microsoft.BusinessAppPlatform": "https://europe.api.bap.microsoft.com",
