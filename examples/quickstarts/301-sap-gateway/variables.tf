@@ -21,12 +21,11 @@ variable "secret_pp" {
   type        = string
 }
 
-/*
 variable "tenant_id_pp" {
   description = "The AAD tenant id of service principal or user at Power Platform"
   type        = string
 }
-*/
+
 variable "client_id_gw" {
   description = "The client id / app id of the service principal where the on-premise data gateway admin permissions"
   type        = string
@@ -68,17 +67,7 @@ variable "java_setup_link" {
   type        = string
 }
 
-variable "opdgw_install_link" {
-  description = "The Blob link to the GatewayInstall.exe file"
-  type        = string
-}
-
-variable "opdgw_setup_link" {
-  description = "The Blob link to the opdgw-setup.ps1 script"
-  type        = string
-}
-
-variable "userIdAdmin_pp" {
+variable "user_id_admin_pp" {
   description = "The user id to be assigned as Admin role of the Power Platform"
   type        = string
 }
@@ -95,5 +84,15 @@ variable "runtime_setup_link" {
 
 variable "shir_key" {
   description = "Value of the secret name for the IR key"
+  type        = string
+}
+
+variable "gateway_name" {
+  description = "The name of the gateway"
+  type        = string
+}
+
+variable "recover_key_gw" {
+  description = "The recovery key of the gateway"
   type        = string
 }

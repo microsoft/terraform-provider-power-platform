@@ -6,7 +6,15 @@ param (
     [Parameter(Mandatory=$true)]
     [string]$userAdmin,
     [Parameter(Mandatory=$true)]
-    [string]$secretNameIRKey
+    [string]$secretNameIRKey,
+    [Parameter(Mandatory=$true)]
+    [string]$ApplicationId,
+    [Parameter(Mandatory=$true)]
+    [string]$TenantId,
+    [Parameter(Mandatory=$true)]
+    [string]$GatewayName,
+    [Parameter(Mandatory=$true)]
+    [string]$SecretNameRecoverKey
 )
 
 $Psversion = (Get-Host).Version
@@ -21,20 +29,16 @@ if($Psversion.Major -ge 7)
 
     $Uri = "$keyVaultUri" + "secrets/" + $secretNamePP + "?api-version=2016-10-01"
     $SecretPP = Invoke-RestMethod -Uri $Uri -Method GET -Headers @{Authorization="Bearer $KeyVaultToken"}
-
     $securePassword = $SecretPP.value | ConvertTo-SecureString -AsPlainText -Force;
-    $ApplicationId ="2d0b62aa-765d-4e0f-b7f2-61debc6611d7";
-    $Tenant = "0d7fbacd-d6d8-4652-9f58-ae0f94edde5c";
-    $GatewayName = "OPDGW-SAPAzureIntegration";
-    $RecoverKey = "recover01" | ConvertTo-SecureString -AsPlainText -Force;
-    $userIDToAddasAdmin = $userAdmin
 
-    #Write-Output "Installing DataGateway Module"
-    #Install-Module -Name DataGateway -Force
+    $Uri = "$keyVaultUri" + "secrets/" + $SecretNameRecoverKey + "?api-version=2016-10-01"
+    $RecoverKey = Invoke-RestMethod -Uri $Uri -Method GET -Headers @{Authorization="Bearer $KeyVaultToken"}
+    $RecoverKey = $RecoverKey.value | ConvertTo-SecureString -AsPlainText -Force;
+    $userIDToAddasAdmin = $userAdmin
 
     #Gateway Login
     Write-Output "Gateway Login"
-    Connect-DataGatewayServiceAccount -ApplicationId $ApplicationId -ClientSecret $securePassword -Tenant $Tenant
+    Connect-DataGatewayServiceAccount -ApplicationId $ApplicationId -ClientSecret $securePassword -Tenant $TenantId
 
     #Installing Gateway
     Write-Output "Installing Gateway"

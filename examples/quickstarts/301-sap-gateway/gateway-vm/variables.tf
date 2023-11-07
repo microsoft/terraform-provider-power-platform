@@ -26,22 +26,32 @@ variable "vm_pwd" {
   type        = string
 }
 
-variable "keyVaultUri" {
+variable "client_id_pp" {
+  description = "The client id of the service principal for Power Platform"
+  type        = string
+}
+
+variable "tenant_id_pp" {
+  description = "The tenant id of the service principal for Power Platform"
+  type        = string
+}
+
+variable "key_vault_uri" {
   description = "The URI of the Key Vault"
   type        = string
 }
 
-variable "secretPPName" {
+variable "secret_pp_name" {
   description = "Value of the secret name for Power Platform"
   type        = string
 }
 
-variable "secretNameIRKey" {
+variable "secret_name_irkey" {
   description = "Value of the secret name for Integration Runtime Key"
   type        = string
 }
 
-variable "userIdAdmin_pp" {
+variable "user_id_admin_pp" {
   description = "The user id to be assigned as Admin role of the Power Platform"
   type        = string
 }
@@ -61,16 +71,6 @@ variable "java_setup_link" {
   type        = string
 }
 
-variable "opdgw_install_link" {
-  description = "The Blob link to the GatewayInstall.exe file"
-  type        = string
-}
-
-variable "opdgw_setup_link" {
-  description = "The Blob link to the opdgw-setup.ps1 script"
-  type        = string
-}
-
 variable "sapnco_install_link" {
   description = "The Blob link to the SAP NCo installation file"
   type        = string
@@ -78,5 +78,15 @@ variable "sapnco_install_link" {
 
 variable "runtime_setup_link" {
   description = "The Blob link to the runtime setup script"
+  type        = string
+}
+
+variable "gateway_name" {
+  description = "The name of the gateway"
+  type        = string
+}
+
+variable "secret_name_recover_key_gw" {
+  description = "Value of the secret name for the recovery key of the gateway"
   type        = string
 }

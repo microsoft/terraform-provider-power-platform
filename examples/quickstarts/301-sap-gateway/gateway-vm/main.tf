@@ -48,35 +48,6 @@ module "java-runtime-setup" {
 
   depends_on = [module.ps7-setup]
 }
-/*
-# Create On-Premise Gateway Installation version in Shared Image Gallery
-module "opdgw-install" {
-  source              = "./opdgw-install"
-  prefix              = var.prefix
-  base_name           = var.base_name
-  resource_group_name = var.resource_group_name
-  region              = var.region
-  sig_id              = azurerm_shared_image_gallery.sig.id
-  opdgw_install_link  = var.opdgw_install_link
-
-  depends_on = [module.ps7-setup, module.java-runtime-setup]
-}
-# Create On-Premise Gateway version in Shared Image Gallery
-module "opdgw-setup" {
-  source              = "./opdgw-setup"
-  prefix              = var.prefix
-  base_name           = var.base_name
-  resource_group_name = var.resource_group_name
-  region              = var.region
-  sig_id              = azurerm_shared_image_gallery.sig.id
-  opdgw_setup_link    = var.opdgw_setup_link
-  keyVaultUri         = var.keyVaultUri
-  secretPPName        = var.secretPPName
-  userIdAdmin_pp      = var.userIdAdmin_pp
-
-  depends_on = [module.ps7-setup, module.java-runtime-setup]
-}
-*/
 
 # Create SAP NCo version in Shared Image Gallery
 module "sapnco_install" {
@@ -157,18 +128,6 @@ resource "azurerm_windows_virtual_machine" "vm-opgw" {
     version_id = module.java-runtime-setup.java_runtime_version_id
     order      = 2
   }
-  /*
-  # Install On-Premise Gateway
-  gallery_application {
-    version_id = module.opdgw-install.opdgw_install_version_id
-    order      = 3
-  }
-  # Setup On-Premise Gateway setup  
-  gallery_application {
-    version_id = module.opdgw-setup.opdgw_version_id
-    order      = 4
-  }
-*/
 
   # Install SAP NCo
   gallery_application {
@@ -195,7 +154,7 @@ resource "azurerm_virtual_machine_extension" "runtime-setup" {
 
   settings = <<SETTINGS
     {
-        "commandToExecute": "C:\\powershell7\\7\\pwsh.exe -ExecutionPolicy Unrestricted -command \"& {C:\\sapint\\runtime-setup.ps1 -keyVaultUri ${var.keyVaultUri} -secretNamePP ${var.secretPPName} -userAdmin ${var.userIdAdmin_pp} -secretNameIRKey ${var.secretNameIRKey}| Out-File -FilePath C:\\sapint\\runtime-out.txt}\""
+        "commandToExecute": "C:\\powershell7\\7\\pwsh.exe -ExecutionPolicy Unrestricted -command \"& {C:\\sapint\\runtime-setup.ps1 -keyVaultUri ${var.key_vault_uri} -secretNamePP ${var.secret_pp_name} -userAdmin ${var.user_id_admin_pp} -secretNameIRKey ${var.secret_name_irkey} -ApplicationId ${var.client_id_pp} -TenantId ${var.tenant_id_pp} -GatewayName ${var.gateway_name} -SecretNameRecoverKey ${var.secret_name_recover_key_gw} | Out-File -FilePath C:\\sapint\\runtime-out.txt}\""
     }
 SETTINGS
 

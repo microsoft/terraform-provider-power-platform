@@ -20,8 +20,7 @@ resource "azurerm_gallery_application_version" "runtime-igl-app-version" {
   location               = var.region
 
   manage_action {
-    #install = "powershell -ExecutionPolicy Unrestricted -File .\\runtime-setup.ps1 -keyVaultUri ${var.keyVaultUri} -irKey ${var.secretIRKeyName}"
-    install = "mkdir C:\\sapint & copy runtime-setup.ps1 C:\\sapint & C:\\powershell7\\7\\pwsh.exe -command \"&{Install-Module -Name DataGateway -Force}\""
+    install = "mkdir C:\\sapint & copy runtime-setup.ps1 C:\\sapint & C:\\powershell7\\7\\pwsh.exe -ExecutionPolicy Unrestricted -command \"&{Install-Module -Name DataGateway -Force}\""
     remove  = "echo" # Uninstall script is not applicable.
   }
 
