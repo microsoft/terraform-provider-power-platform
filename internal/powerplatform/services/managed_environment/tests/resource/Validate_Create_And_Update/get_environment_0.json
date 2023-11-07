@@ -60,7 +60,7 @@
         ],
         "addons": [],
         "clientUris": {
-            "admin": "https://admin.powerplatform.microsoft.com/environments/environment/456/hub",
+            "admin": "https://admin.powerplatform.microsoft.com/environments/environment/00000000-0000-0000-0000-000000000001/hub",
             "maker": "https://make.powerapps.com/environments/456/home"
         },
         "runtimeEndpoints": {
