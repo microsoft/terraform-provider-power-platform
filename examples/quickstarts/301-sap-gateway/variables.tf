@@ -22,7 +22,7 @@ variable "secret_pp" {
 }
 
 variable "tenant_id_pp" {
-  description = "The AAD tenant id of service principal or user at Power Platform"
+  description = "The tenant id of service principal or user at Power Platform"
   type        = string
 }
 
@@ -37,7 +37,7 @@ variable "secret_gw" {
   type        = string
 }
 variable "tenant_id_gw" {
-  description = "The AAD tenant id of service principal or user"
+  description = "The tenant id of service principal or user"
   type        = string
 }
 
@@ -48,6 +48,11 @@ variable "subscription_id_gw" {
 
 variable "region_gw" {
   description = "The Azure region where the resources in this example should be created"
+  type        = string
+}
+
+variable "sap_subnet_id" {
+  description = "The SAP system subnet ID"
   type        = string
 }
 
@@ -88,7 +93,7 @@ variable "shir_key" {
 }
 
 variable "gateway_name" {
-  description = "The name of the gateway"
+  description = "The name of the gateway to be created on Power Platform"
   type        = string
 }
 

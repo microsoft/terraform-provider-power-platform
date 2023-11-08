@@ -140,7 +140,7 @@ resource "azurerm_network_interface" "nic" {
 
   ip_configuration {
     name                          = "internal"
-    subnet_id                     = "/subscriptions/bfddb66b-32e6-4e66-82e2-aa0be9fd84da/resourceGroups/sapcal-network-westeurope/providers/Microsoft.Network/virtualNetworks/SAPCALDefault-westeurope/subnets/default" #azurerm_subnet.subnet.id
+    subnet_id                     = var.sap_subnet_id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.publicip.id
   }
