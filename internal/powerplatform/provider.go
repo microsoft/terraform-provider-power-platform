@@ -14,6 +14,7 @@ import (
 
 	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
@@ -246,6 +247,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		func() resource.Resource { return environment.NewEnvironmentResource() },
+		func() resource.Resource { return application.NewApplicationResource() },
 		func() resource.Resource { return dlp_policy.NewDataLossPreventionPolicyResource() },
 		func() resource.Resource { return solution.NewSolutionResource() },
 		func() resource.Resource { return tenant_settings.NewTenantSettingsResource() },
@@ -255,6 +257,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		func() datasource.DataSource { return connectors.NewConnectorsDataSource() },
+		func() datasource.DataSource { return application.NewApplicationsDataSource() },
 		func() datasource.DataSource { return powerapps.NewPowerAppsDataSource() },
 		func() datasource.DataSource { return environment.NewEnvironmentsDataSource() },
 		func() datasource.DataSource { return solution.NewSolutionsDataSource() },
