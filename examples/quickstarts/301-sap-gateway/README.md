@@ -1,4 +1,5 @@
-# SAP Connectivity Runtime Setup
+<!-- This document is auto-generated. Do not edit directly. Make changes to README.md.tmpl instead. -->
+# SAP Connectivity Runtime Setup (301 level)
 
 This Terraform module aims to provide a fully managed infrastructure that integrates Microsoft's Power Platform and Azure services with SAP Systems. Utilizing  `azurerm` and `azurecaf` Terraform providers, this module encapsulates best practices and serves as a reference architecture for scalable, reliable, and manageable cloud infrastructure.
 
@@ -15,6 +16,73 @@ You can follow [this guide](https://learn.microsoft.com/en-us/azure/storage/comm
 
 > Tip: Make sure the blob accept anonymous access.
 
+## Example Files
+
+The example files can be found in `examples/quickstarts/301-sap-gateway`
+
+## Provider Requirements:
+* **azurecaf (`aztfmod/azurecaf`):** `>=1.2.26`
+* **azurerm (`hashicorp/azurerm`):** `>=3.74.0`
+* **random:** (any version)
+
+## Input Variables
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| `base_name` | The base name which should be used for all resources name | string | `"AzureSAPIntegration"` | false |
+| `client_id_gw` | The client id / app id of the service principal where the on-premise data gateway admin permissions | string | `null` | true |
+| `client_id_pp` | The client id / app id of the service principal with Power Platform admin permissions | string | `null` | true |
+| `gateway_name` | The name of the gateway to be created on Power Platform | string | `null` | true |
+| `java_setup_link` | The Blob link to the Java Runtime installation file | string | `null` | true |
+| `prefix` | The prefix which should be used for all resources name | string | `"opdgw"` | false |
+| `ps7_setup_link` | The Blob link to the PowerShell 7 installation file | string | `null` | true |
+| `recover_key_gw` | The recovery key of the gateway | string | `null` | true |
+| `region_gw` | The Azure region where the resources in this example should be created | string | `null` | true |
+| `runtime_setup_link` | The Blob link to the runtime setup script | string | `null` | true |
+| `sap_subnet_id` | The SAP system subnet ID | string | `null` | true |
+| `sapnco_install_link` | The Blob link to the SAP NCo installation file | string | `null` | true |
+| `secret_gw` | The secret of the service principal with on-premise data gateway admin permissions | string | `null` | true |
+| `secret_pp` | The secret of the service principal with Power Platform admin permissions | string | `null` | true |
+| `shir_key` | Value of the secret name for the IR key | string | `null` | true |
+| `subscription_id_gw` | The subscription id of the service principal with on-premise data gateway admin permissions | string | `null` | true |
+| `tenant_id_gw` | The tenant id of service principal or user | string | `null` | true |
+| `tenant_id_pp` | The tenant id of service principal or user at Power Platform | string | `null` | true |
+| `user_id_admin_pp` | The user id to be assigned as Admin role of the Power Platform | string | `null` | true |
+| `vm_pwd_gw` | The password for the VM of the on-premise data gateway | string | `null` | true |
+
+
+## Resources
+* `azurecaf_name.key_vault` from `azurecaf`
+* `azurecaf_name.key_vault_secret_irkey` from `azurecaf`
+* `azurecaf_name.key_vault_secret_pp` from `azurecaf`
+* `azurecaf_name.key_vault_secret_recover_key` from `azurecaf`
+* `azurecaf_name.nic` from `azurecaf`
+* `azurecaf_name.nsg` from `azurecaf`
+* `azurecaf_name.publicip` from `azurecaf`
+* `azurecaf_name.rg` from `azurecaf`
+* `azurecaf_name.subnet` from `azurecaf`
+* `azurecaf_name.vnet` from `azurecaf`
+* `azurerm_key_vault.key_vault` from `azurerm`
+* `azurerm_key_vault_access_policy.key_vault_access_policy` from `azurerm`
+* `azurerm_key_vault_secret.key_vault_secret_irkey` from `azurerm`
+* `azurerm_key_vault_secret.key_vault_secret_pp` from `azurerm`
+* `azurerm_key_vault_secret.key_vault_secret_recover_key` from `azurerm`
+* `azurerm_network_interface.nic` from `azurerm`
+* `azurerm_network_interface_security_group_association.rgassociation` from `azurerm`
+* `azurerm_network_security_group.nsg` from `azurerm`
+* `azurerm_public_ip.publicip` from `azurerm`
+* `azurerm_resource_group.rg` from `azurerm`
+* `azurerm_subnet.subnet` from `azurerm`
+* `azurerm_virtual_network.vnet` from `azurerm`
+* `random_string.key_vault_suffix` from `random`
+
+## Data Sources
+* `data.azurerm_client_config.current` from `azurerm`
+
+## Child Modules
+* `gateway_vm` from `./gateway-vm`
+
+
 ## Usage
 
 The entire script is required for the proper installation, unless you decide to create any one of the resources separatelly.
@@ -30,35 +98,6 @@ You have to execute the normal Terraform commands:
 
 - azurerm `>=3.74.0`
 - azurecaf `>=1.2.26`
-
-## Input Variables
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| `client_id_gw` | The client id / app id of the service principal where the on-premise data gateway admin permissions | string | `null` | true |
-| `secret_gw` | The secret of the service principal with on-premise data gateway admin permissions | string | `null` | true |
-| `tenant_id_gw` | The tenant id of service principal or user | string | `null` | true |
-| `subscription_id_gw` | The subscription id of the service principal with on-premise data gateway admin permissions | string | `null` | true |
-| `region_gw` | The Azure region where the resources in this example should be created | string | `null` | true |
-| `sap_subnet_id` | The SAP system subnet ID | string | `null` | true |
-| `vm_pwd_gw` | The password for the VM of the on-premise data gateway | string | `null` | true |
-| `client_id_pp` | The client id / app id of the service principal with Power Platform admin permissions | string | `null` | true |
-| `secret_pp` | The secret of the service principal with Power Platform admin permissions | string | `null` | true |
-| `tenant_id_pp` | The tenant id of service principal or user at Power Platform | string | `null` | true |
-| `ps7_setup_link` | The Blob link to the PowerShell 7 installation file | string | `null` | true |
-| `java_setup_link` | The Blob link to the Java Runtime installation file | string | `null` | true |
-| `user_id_admin_pp` | The user id to be assigned as Admin role of the Power Platform | string | `null` | true |
-| `sapnco_install_link` | The Blob link to the SAP NCo installation file | string | `null` | true |
-| `runtime_setup_link` | The Blob link to the runtime setup script | string | `null` | true |
-| `shir_key` | Value of the secret name for the IR key | string | `null` | true |
-| `gateway_name` | The name of the gateway to be created on Power Platform | string | `null` | true |
-| `recover_key_gw` | The recovery key of the gateway | string | `null` | true |
-| `prefix` | The prefix which should be used for all resources name | string | `opdgw` | false |
-| `base_name` | The base name which should be used for all resources name | string | `AzureSAPIntegration` | false |
-
-## Output Values
-
-No output.
 
 ## Detailed Behavior
 
