@@ -50,7 +50,7 @@ func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environment
 	apiUrl.RawQuery = values.Encode()
 
 	env := EnvironmentDto{}
-	_, err := client.bapiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &env)
+	_, err := client.bapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 		Message: "Deleted using Terraform Provider for Power Platform",
 	}
 
-	_, err := client.bapiClient.Execute(ctx, "DELETE", apiUrl.String(), environmentDelete, []int{http.StatusAccepted}, nil)
+	_, err := client.bapiClient.Execute(ctx, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 	values := url.Values{}
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
-	apiResponse, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), environment, []int{http.StatusAccepted, http.StatusCreated}, nil)
+	apiResponse, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), nil, environment, []int{http.StatusAccepted, http.StatusCreated}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +125,7 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 		for {
 
 			lifecycleResponse := EnvironmentLifecycleDto{}
-			apiResponse, err = client.bapiClient.Execute(ctx, "GET", locationHeader, nil, []int{http.StatusOK}, &lifecycleResponse)
+			apiResponse, err = client.bapiClient.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
 			if err != nil {
 				return nil, err
 			}
@@ -171,7 +171,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 	values := url.Values{}
 	values.Add("api-version", "2022-05-01")
 	apiUrl.RawQuery = values.Encode()
-	_, err := client.bapiClient.Execute(ctx, "PATCH", apiUrl.String(), environment, []int{http.StatusAccepted}, nil)
+	_, err := client.bapiClient.Execute(ctx, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +216,7 @@ func (client *EnvironmentClient) GetEnvironments(ctx context.Context) ([]Environ
 	apiUrl.RawQuery = values.Encode()
 
 	envArray := EnvironmentDtoArray{}
-	_, err := client.bapiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &envArray)
+	_, err := client.bapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &envArray)
 	if err != nil {
 		return nil, err
 	}

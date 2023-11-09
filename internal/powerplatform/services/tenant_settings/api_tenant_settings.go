@@ -30,7 +30,7 @@ func (client *TenantSettingsClient) GetTenantSettings(ctx context.Context) (*Ten
 	apiUrl.RawQuery = values.Encode()
 
 	tenantSettings := TenantSettingsDto{}
-	_, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), nil, []int{http.StatusOK}, &tenantSettings)
+	_, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), nil, nil, []int{http.StatusOK}, &tenantSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, te
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), tenantSettings, []int{http.StatusOK}, &tenantSettings)
+	_, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), nil, tenantSettings, []int{http.StatusOK}, &tenantSettings)
 	if err != nil {
 		return nil, err
 	}
