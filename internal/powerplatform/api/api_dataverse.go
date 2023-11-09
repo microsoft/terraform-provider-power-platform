@@ -39,14 +39,14 @@ func (client *DataverseClientApi) Initialize(ctx context.Context, environmentUrl
 		tflog.Debug(ctx, "Token expired. authenticating...")
 
 		if client.baseApi.GetConfig().Credentials.IsClientSecretCredentialsProvided() {
-			token, err := client.auth.AuthenticateClientSecret(ctx, environmentUrl, client.baseApi.GetConfig().Credentials.TenantId, client.baseApi.GetConfig().Credentials.ClientId, client.baseApi.GetConfig().Credentials.Secret)
+			token, err := client.auth.AuthenticateClientSecret(ctx, environmentUrl, client.baseApi.GetConfig().Credentials)
 			if err != nil {
 				return "", err
 			}
 			tflog.Info(ctx, fmt.Sprintln("Dataverse token aquired: ", "********"))
 			return token, nil
 		} else if client.baseApi.GetConfig().Credentials.IsUserPassCredentialsProvided() {
-			token, err := client.auth.AuthenticateUserPass(ctx, environmentUrl, client.baseApi.GetConfig().Credentials.TenantId, client.baseApi.GetConfig().Credentials.Username, client.baseApi.GetConfig().Credentials.Password)
+			token, err := client.auth.AuthenticateUserPass(ctx, environmentUrl, client.baseApi.GetConfig().Credentials)
 			if err != nil {
 				return "", err
 			}

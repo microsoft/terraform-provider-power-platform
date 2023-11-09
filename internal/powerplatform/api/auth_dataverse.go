@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 	"time"
+
+	powerplatform_common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
 
 type DataverseAuth struct {
@@ -56,16 +58,16 @@ func (client *DataverseAuth) isTokenExpiredOrEmpty(environmentUrl string) bool {
 	return auth == nil || (auth != nil && auth.Token == "") || (auth != nil && time.Now().After(auth.TokenExpiry))
 }
 
-func (client *DataverseAuth) AuthenticateUserPass(ctx context.Context, environmentUrl, tenantId, username, password string) (string, error) {
+func (client *DataverseAuth) AuthenticateUserPass(ctx context.Context, environmentUrl string, credentials *powerplatform_common.ProviderCredentials) (string, error) {
 	//todo implement when needed
 	panic("[AuthenticateUserPass] not implemented")
 }
 
-func (client *DataverseAuth) AuthenticateClientSecret(ctx context.Context, environmentUrl, tenantId, applicationid, secret string) (string, error) {
+func (client *DataverseAuth) AuthenticateClientSecret(ctx context.Context, environmentUrl string, credentials *powerplatform_common.ProviderCredentials) (string, error) {
 	environmentUrl = strings.TrimSuffix(environmentUrl, "/")
 
 	scopes := []string{environmentUrl + "//.default"}
-	token, expiry, err := client.baseAuth.AuthClientSecret(ctx, scopes, tenantId, applicationid, secret)
+	token, expiry, err := client.baseAuth.AuthClientSecret(ctx, scopes, credentials)
 	if err != nil {
 		return "", err
 	}
