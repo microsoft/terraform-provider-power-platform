@@ -5,7 +5,6 @@ This Terraform module aims to provide a fully managed infrastructure that integr
 ## Prerequisites
 
 - Service Principal or User Account with permissions configured as referenced in [the provider's user documentation](https://microsoft.github.io/terraform-provider-power-platform#authentication).
-- [SAP S/4HANA system](https://cal.sap.com/)
 
 ### Storage Account
 
@@ -24,8 +23,11 @@ The entire script is required for the proper installation, unless you decide to 
 You have to execute the normal Terraform commands:
 
 ``terraform init -upgrade
+
 ``terraform plan -var-file=local.tfvars
+
 ``terraform apply -var-file=local.tfvars
+
 ``terraform destroy -var-file=local.tfvars
 
 ## Terraform Version Constraints
@@ -63,13 +65,6 @@ It is the runtime used to connect to the Power Platform connectors (e.g. SAP ERP
 
 - [Learn how to install On-premises data gateway for Azure Analysis Services | Microsoft Learn](https://learn.microsoft.com/en-us/azure/analysis-services/analysis-services-gateway-install?tabs=azure-powershell)
 - [Data Gateway Documentation](https://learn.microsoft.com/en-us/powershell/module/datagateway/?view=datagateway-ps)
-
-### Gateway Principal (future releases)
-
-A service principal is created to allow the on-premise data gateway to connect the gateway back to Power Platform.  The service principal is granted the following permissions:
-
-- `Application.Read.All`
-- `Application.ReadWrite.All`
 
 ### Power Platform Resources
 

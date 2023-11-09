@@ -231,12 +231,31 @@ resource "azurerm_key_vault_secret" "key_vault_secret_recover_key" {
   key_vault_id = azurerm_key_vault.key_vault.id
 }
 
+resource "random_string" "vm_pwd" {
+  length  = 32
+  special = true
+}
+
+resource "azurecaf_name" "key_vault_secret_vm_pwd" {
+  name          = "vm-pwd"
+  resource_type = "azurerm_key_vault_secret"
+  prefixes      = [var.prefix]
+  random_length = 3
+  clean_input   = true
+}
+
+resource "azurerm_key_vault_secret" "key_vault_secret_vm_pwd" {
+  name         = azurecaf_name.key_vault_secret_vm_pwd.result
+  value        = random_string.vm_pwd.result
+  key_vault_id = azurerm_key_vault.key_vault.id
+}
+
 module "gateway_vm" {
   source                     = "./gateway-vm"
   resource_group_name        = azurerm_resource_group.rg.name
   base_name                  = var.base_name
   region                     = var.region_gw
-  vm_pwd                     = var.vm_pwd_gw
+  vm_pwd                     = random_string.vm_pwd.result
   nic_id                     = azurerm_network_interface.nic.id
   client_id_pp               = var.client_id_pp
   tenant_id_pp               = var.tenant_id_pp
@@ -261,12 +280,4 @@ resource "azurerm_key_vault_access_policy" "key_vault_access_policy" {
     "List",
   ]
 }
-
-# It will be included in futures releases.
-#module "gateway_principal" {
-#  source    = "./gateway-principal"
-#  client_id = var.client_id_pp
-#  secret    = var.secret_pp
-#  tenant_id = var.tenant_id_pp
-#}
 

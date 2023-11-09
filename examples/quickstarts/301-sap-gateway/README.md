@@ -6,7 +6,6 @@ This Terraform module aims to provide a fully managed infrastructure that integr
 ## Prerequisites
 
 - Service Principal or User Account with permissions configured as referenced in [the provider's user documentation](https://microsoft.github.io/terraform-provider-power-platform#authentication).
-- [SAP S/4HANA system](https://cal.sap.com/)
 
 ### Storage Account
 
@@ -30,8 +29,8 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | `base_name` | The base name which should be used for all resources name | string | `"AzureSAPIntegration"` | false |
-| `client_id_gw` | The client id / app id of the service principal where the on-premise data gateway admin permissions | string | `null` | true |
-| `client_id_pp` | The client id / app id of the service principal with Power Platform admin permissions | string | `null` | true |
+| `client_id_gw` | The client ID / app ID of the service principal where the on-premise data gateway admin permissions | string | `null` | true |
+| `client_id_pp` | The client ID / app ID of the service principal with Power Platform admin permissions | string | `null` | true |
 | `gateway_name` | The name of the gateway to be created on Power Platform | string | `null` | true |
 | `java_setup_link` | The Blob link to the Java Runtime installation file | string | `null` | true |
 | `prefix` | The prefix which should be used for all resources name | string | `"opdgw"` | false |
@@ -44,11 +43,10 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 | `secret_gw` | The secret of the service principal with on-premise data gateway admin permissions | string | `null` | true |
 | `secret_pp` | The secret of the service principal with Power Platform admin permissions | string | `null` | true |
 | `shir_key` | Value of the secret name for the IR key | string | `null` | true |
-| `subscription_id_gw` | The subscription id of the service principal with on-premise data gateway admin permissions | string | `null` | true |
-| `tenant_id_gw` | The tenant id of service principal or user | string | `null` | true |
-| `tenant_id_pp` | The tenant id of service principal or user at Power Platform | string | `null` | true |
-| `user_id_admin_pp` | The user id to be assigned as Admin role of the Power Platform | string | `null` | true |
-| `vm_pwd_gw` | The password for the VM of the on-premise data gateway | string | `null` | true |
+| `subscription_id_gw` | The subscription ID of the service principal with on-premise data gateway admin permissions | string | `null` | true |
+| `tenant_id_gw` | The tenant ID of service principal or user | string | `null` | true |
+| `tenant_id_pp` | The tenant ID of service principal or user at Power Platform | string | `null` | true |
+| `user_id_admin_pp` | The user ID to be assigned as Admin role of the Power Platform | string | `null` | true |
 
 
 ## Resources
@@ -56,6 +54,7 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 * `azurecaf_name.key_vault_secret_irkey` from `azurecaf`
 * `azurecaf_name.key_vault_secret_pp` from `azurecaf`
 * `azurecaf_name.key_vault_secret_recover_key` from `azurecaf`
+* `azurecaf_name.key_vault_secret_vm_pwd` from `azurecaf`
 * `azurecaf_name.nic` from `azurecaf`
 * `azurecaf_name.nsg` from `azurecaf`
 * `azurecaf_name.publicip` from `azurecaf`
@@ -67,6 +66,7 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 * `azurerm_key_vault_secret.key_vault_secret_irkey` from `azurerm`
 * `azurerm_key_vault_secret.key_vault_secret_pp` from `azurerm`
 * `azurerm_key_vault_secret.key_vault_secret_recover_key` from `azurerm`
+* `azurerm_key_vault_secret.key_vault_secret_vm_pwd` from `azurerm`
 * `azurerm_network_interface.nic` from `azurerm`
 * `azurerm_network_interface_security_group_association.rgassociation` from `azurerm`
 * `azurerm_network_security_group.nsg` from `azurerm`
@@ -75,6 +75,7 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 * `azurerm_subnet.subnet` from `azurerm`
 * `azurerm_virtual_network.vnet` from `azurerm`
 * `random_string.key_vault_suffix` from `random`
+* `random_string.vm_pwd` from `random`
 
 ## Data Sources
 * `data.azurerm_client_config.current` from `azurerm`
@@ -90,8 +91,11 @@ The entire script is required for the proper installation, unless you decide to 
 You have to execute the normal Terraform commands:
 
 ``terraform init -upgrade
+
 ``terraform plan -var-file=local.tfvars
+
 ``terraform apply -var-file=local.tfvars
+
 ``terraform destroy -var-file=local.tfvars
 
 ## Terraform Version Constraints
@@ -129,13 +133,6 @@ It is the runtime used to connect to the Power Platform connectors (e.g. SAP ERP
 
 - [Learn how to install On-premises data gateway for Azure Analysis Services | Microsoft Learn](https://learn.microsoft.com/en-us/azure/analysis-services/analysis-services-gateway-install?tabs=azure-powershell)
 - [Data Gateway Documentation](https://learn.microsoft.com/en-us/powershell/module/datagateway/?view=datagateway-ps)
-
-### Gateway Principal (future releases)
-
-A service principal is created to allow the on-premise data gateway to connect the gateway back to Power Platform.  The service principal is granted the following permissions:
-
-- `Application.Read.All`
-- `Application.ReadWrite.All`
 
 ### Power Platform Resources
 

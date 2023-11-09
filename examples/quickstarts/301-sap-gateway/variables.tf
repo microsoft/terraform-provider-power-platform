@@ -11,7 +11,7 @@ variable "base_name" {
 }
 
 variable "client_id_pp" {
-  description = "The client id / app id of the service principal with Power Platform admin permissions"
+  description = "The client ID / app ID of the service principal with Power Platform admin permissions"
   type        = string
 }
 
@@ -22,12 +22,12 @@ variable "secret_pp" {
 }
 
 variable "tenant_id_pp" {
-  description = "The tenant id of service principal or user at Power Platform"
+  description = "The tenant ID of service principal or user at Power Platform"
   type        = string
 }
 
 variable "client_id_gw" {
-  description = "The client id / app id of the service principal where the on-premise data gateway admin permissions"
+  description = "The client ID / app ID of the service principal where the on-premise data gateway admin permissions"
   type        = string
 }
 
@@ -37,12 +37,12 @@ variable "secret_gw" {
   type        = string
 }
 variable "tenant_id_gw" {
-  description = "The tenant id of service principal or user"
+  description = "The tenant ID of service principal or user"
   type        = string
 }
 
 variable "subscription_id_gw" {
-  description = "The subscription id of the service principal with on-premise data gateway admin permissions"
+  description = "The subscription ID of the service principal with on-premise data gateway admin permissions"
   type        = string
 }
 
@@ -53,12 +53,6 @@ variable "region_gw" {
 
 variable "sap_subnet_id" {
   description = "The SAP system subnet ID"
-  type        = string
-}
-
-variable "vm_pwd_gw" {
-  description = "The password for the VM of the on-premise data gateway"
-  sensitive   = true
   type        = string
 }
 
@@ -73,7 +67,7 @@ variable "java_setup_link" {
 }
 
 variable "user_id_admin_pp" {
-  description = "The user id to be assigned as Admin role of the Power Platform"
+  description = "The user ID to be assigned as Admin role of the Power Platform"
   type        = string
 }
 
