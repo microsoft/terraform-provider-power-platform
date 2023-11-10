@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	powerplatform_common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
 
 type TokeExpiredError struct {
@@ -17,31 +17,31 @@ func (e *TokeExpiredError) Error() string {
 }
 
 type AuthBase struct {
-	config      *common.ProviderConfig
+	config      *powerplatform_common.ProviderConfig
 	token       string
 	tokenExpiry time.Time
 }
 
-func NewAuthBase(config *common.ProviderConfig) *AuthBase {
+func NewAuthBase(config *powerplatform_common.ProviderConfig) *AuthBase {
 	return &AuthBase{
 		config: config,
 	}
 }
 
 type AuthBaseOperationInterface interface {
-	AuthenticateUserPass(ctx context.Context, tenantId, username, password string) (string, error)
-	AuthenticateClientSecret(ctx context.Context, tenantId, applicationid, secret string) (string, error)
+	AuthenticateUserPass(ctx context.Context, credentials *powerplatform_common.ProviderCredentials) (string, error)
+	AuthenticateClientSecret(ctx context.Context, credentials *powerplatform_common.ProviderCredentials) (string, error)
 }
 
-func (client *AuthBase) AuthClientSecret(ctx context.Context, scopes []string, tenantId, applicationId, clientSecret string) (string, time.Time, error) {
-	authority := "https://login.microsoftonline.com/" + tenantId
+func (client *AuthBase) AuthClientSecret(ctx context.Context, scopes []string, credentials *powerplatform_common.ProviderCredentials) (string, time.Time, error) {
+	authority := "https://login.microsoftonline.com/" + credentials.TenantId
 
-	cred, err := confidential.NewCredFromSecret(clientSecret)
+	cred, err := confidential.NewCredFromSecret(credentials.Secret)
 	if err != nil {
 		return "", time.Time{}, err
 	}
 
-	confidentialClientApp, err := confidential.New(authority, applicationId, cred)
+	confidentialClientApp, err := confidential.New(authority, credentials.ClientId, cred)
 	if err != nil {
 		return "", time.Time{}, err
 	}

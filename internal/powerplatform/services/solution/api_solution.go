@@ -43,7 +43,7 @@ func (client *SolutionClient) GetSolutions(ctx context.Context, environmentId st
 	apiUrl.RawQuery = values.Encode()
 
 	solutionArray := SolutionDtoArray{}
-	_, err = client.dataverseClient.Execute(ctx, environmentUrl, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &solutionArray)
+	_, err = client.dataverseClient.Execute(ctx, environmentUrl, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutionArray)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	stageSolutionResponse := StageSolutionImportResponseDto{}
-	_, err = client.dataverseClient.Execute(ctx, environmentUrl, "POST", apiUrl.String(), stageSolutionRequestBody, []int{http.StatusOK}, &stageSolutionResponse)
+	_, err = client.dataverseClient.Execute(ctx, environmentUrl, "POST", apiUrl.String(), nil, stageSolutionRequestBody, []int{http.StatusOK}, &stageSolutionResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 		Path:   "/api/data/v9.2/ImportSolutionAsync",
 	}
 	importSolutionResponse := ImportSolutionResponseDto{}
-	_, err = client.dataverseClient.Execute(ctx, environmentUrl, "POST", apiUrl.String(), importSolutionRequestBody, []int{http.StatusOK}, &importSolutionResponse)
+	_, err = client.dataverseClient.Execute(ctx, environmentUrl, "POST", apiUrl.String(), nil, importSolutionRequestBody, []int{http.StatusOK}, &importSolutionResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +130,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 	for {
 		asyncSolutionPullResponse := AsyncSolutionPullResponseDto{}
-		_, err = client.dataverseClient.Execute(ctx, environmentUrl, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &asyncSolutionPullResponse)
+		_, err = client.dataverseClient.Execute(ctx, environmentUrl, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &asyncSolutionPullResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -206,7 +206,7 @@ func (client *SolutionClient) validateSolutionImportResult(ctx context.Context, 
 	}
 
 	validateSolutionImportResponseDto := ValidateSolutionImportResponseDto{}
-	_, err := client.dataverseClient.Execute(ctx, environmentUrl, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &validateSolutionImportResponseDto)
+	_, err := client.dataverseClient.Execute(ctx, environmentUrl, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &validateSolutionImportResponseDto)
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func (client *SolutionClient) DeleteSolution(ctx context.Context, environmentId 
 		Host:   strings.TrimPrefix(environmentUrl, "https://"),
 		Path:   fmt.Sprintf("/api/data/v9.2/solutions(%s)", solution.Id),
 	}
-	_, err = client.dataverseClient.Execute(ctx, environmentUrl, "DELETE", apiUrl.String(), nil, []int{http.StatusNoContent}, nil)
+	_, err = client.dataverseClient.Execute(ctx, environmentUrl, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 	if err != nil {
 		return err
 	}
@@ -252,7 +252,7 @@ func (client *SolutionClient) GetTableData(ctx context.Context, environmentId, t
 	if odataQuery != "" {
 		apiUrl.RawQuery = odataQuery
 	}
-	_, err = client.dataverseClient.Execute(ctx, environmentUrl, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &responseObj)
+	_, err = client.dataverseClient.Execute(ctx, environmentUrl, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &responseObj)
 	if err != nil {
 		return err
 	}
@@ -281,7 +281,7 @@ func (client *SolutionClient) getEnvironment(ctx context.Context, environmentId 
 	apiUrl.RawQuery = values.Encode()
 
 	env := EnvironmentIdDto{}
-	_, err := client.bapiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &env)
+	_, err := client.bapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		return nil, err
 	}
