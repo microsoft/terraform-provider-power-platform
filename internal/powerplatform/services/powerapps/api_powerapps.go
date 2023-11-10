@@ -41,7 +41,7 @@ func (client *PowerAppssClient) GetPowerApps(ctx context.Context, environmentId 
 		apiUrl.RawQuery = values.Encode()
 
 		appsArray := PowerAppDtoArray{}
-		_, err := client.bapiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &appsArray)
+		_, err := client.bapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &appsArray)
 		if err != nil {
 			return nil, err
 		}

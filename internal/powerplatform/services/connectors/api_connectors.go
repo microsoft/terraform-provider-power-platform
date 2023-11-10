@@ -34,7 +34,7 @@ func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorD
 	apiUrl.RawQuery = values.Encode()
 
 	connectorArray := ConnectorDtoArray{}
-	_, err := client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &connectorArray)
+	_, err := client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connectorArray)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +45,7 @@ func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorD
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/unblockable",
 	}
 	unblockableConnectorArray := []UnblockableConnectorDto{}
-	_, err = client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &unblockableConnectorArray)
+	_, err = client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &unblockableConnectorArray)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorD
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/virtual",
 	}
 	virtualConnectorArray := []VirtualConnectorDto{}
-	_, err = client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &virtualConnectorArray)
+	_, err = client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &virtualConnectorArray)
 	if err != nil {
 		return nil, err
 	}

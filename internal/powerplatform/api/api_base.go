@@ -29,7 +29,7 @@ func NewApiClientBase(config *common.ProviderConfig, baseAuth *AuthBase) *ApiCli
 	}
 }
 
-func (client *ApiClientBase) ExecuteBase(ctx context.Context, token, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+func (client *ApiClientBase) ExecuteBase(ctx context.Context, token, method string, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
 	var bodyBuffer io.Reader = nil
 	if body != nil {
 		bodyBytes, err := json.Marshal(body)
@@ -43,7 +43,7 @@ func (client *ApiClientBase) ExecuteBase(ctx context.Context, token, method stri
 	if err != nil {
 		return nil, err
 	}
-	apiResponse, err := client.doRequest(token, request)
+	apiResponse, err := client.doRequest(token, request, headers)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +68,12 @@ func (client *ApiClientBase) ExecuteBase(ctx context.Context, token, method stri
 	return apiResponse, nil
 }
 
-func (client *ApiClientBase) doRequest(token string, request *http.Request) (*ApiHttpResponse, error) {
+func (client *ApiClientBase) doRequest(token string, request *http.Request, headers http.Header) (*ApiHttpResponse, error) {
 	apiHttpResponse := &ApiHttpResponse{}
+
+	if headers != nil {
+		request.Header = headers
+	}
 
 	if request.Header.Get("Content-Type") == "" {
 		request.Header.Set("Content-Type", "application/json")
