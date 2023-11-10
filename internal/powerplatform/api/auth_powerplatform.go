@@ -5,7 +5,6 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	powerplatform_common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
@@ -23,6 +22,8 @@ func NewPowerPlatformAuth(baseAuth *AuthBase) *PowerPlatformAuth {
 }
 
 func (client *PowerPlatformAuth) AuthenticateUserPass(ctx context.Context, credentials *powerplatform_common.ProviderCredentials) (string, error) {
+	//todo implement
+	panic("[AuthenticateUserPass] not implemented")
 }
 
 func (client *PowerPlatformAuth) AuthenticateClientSecret(ctx context.Context, credentials *powerplatform_common.ProviderCredentials) (string, error) {
