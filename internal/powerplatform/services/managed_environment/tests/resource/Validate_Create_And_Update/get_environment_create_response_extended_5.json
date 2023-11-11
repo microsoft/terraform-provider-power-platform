@@ -303,10 +303,10 @@
             "settings": {
                 "extendedSettings": {
                     "excludeEnvironmentFromAnalysis": "true",
-                    "isGroupSharingDisabled": "true",
-                    "maxLimitUserSharing": "10",
+                    "isGroupSharingDisabled": "false",
+                    "maxLimitUserSharing": "-1",
                     "includeOnHomepageInsights": "false",
-                    "limitSharingMode": "excludeSharingToSecurityGroups",
+                    "limitSharingMode": "NoLimit",
                     "solutionCheckerMode": "none",
                     "suppressValidationEmails": "true",
                     "solutionCheckerRuleOverrides": "",

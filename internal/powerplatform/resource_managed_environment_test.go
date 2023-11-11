@@ -420,6 +420,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/managed_environment/tests/resource/Validate_Create_And_Update/get_lifecycle.json").String()), nil
 		})
+
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
 			patchResponseInx++
@@ -443,54 +444,235 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 					maker_onboarding_markdown  = "this is test markdown"
 					maker_onboarding_url       = "http://www.example.com"
 				}`,
-
+				// testing "is_usage_insights_disabled" and "protection_level" togeter as they are not extended settings on the Managed Environment "governanceConfiguration"
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "is_usage_insights_disabled", "true"),
-				),
-			},
-			{
-				Config: UnitTestsProviderConfig + `
-				resource "powerplatform_managed_environment" "managed_development" {
-					environment_id             = "00000000-0000-0000-0000-000000000001"
-					is_usage_insights_disabled = true
-					is_group_sharing_disabled  = true
-					limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
-					max_limit_user_sharing     = 10
-					solution_checker_mode      = "None"
-					suppress_validation_emails = true
-					maker_onboarding_markdown  = "this is test markdown"
-					maker_onboarding_url       = "http://www.example.com"
-				}`,
-
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "protection_level", "Standard"),
 				),
 			},
+			/*
+				{
+					Config: UnitTestsProviderConfig + `
+						resource "powerplatform_managed_environment" "managed_development" {
+							environment_id             = "00000000-0000-0000-0000-000000000001"
+							is_usage_insights_disabled = true
+							is_group_sharing_disabled  = true
+							limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
+							max_limit_user_sharing     = 10
+							solution_checker_mode      = "None"
+							suppress_validation_emails = true
+							maker_onboarding_markdown  = "this is test markdown"
+							maker_onboarding_url       = "http://www.example.com"
+						}`,
 
+					Check: resource.ComposeAggregateTestCheckFunc(
+						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "protection_level", "Standard"),
+					),
+				},
+				/*
+					{
+						Config: UnitTestsProviderConfig + `
+							resource "powerplatform_managed_environment" "managed_development" {
+							environment_id             = "00000000-0000-0000-0000-000000000001"
+							is_usage_insights_disabled = true
+							is_group_sharing_disabled  = false
+							limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
+							max_limit_user_sharing     = 10
+							solution_checker_mode      = "None"
+							suppress_validation_emails = true
+							maker_onboarding_markdown  = "this is test markdown"
+							maker_onboarding_url       = "http://www.example.com"
+						}`,
+
+						Check: resource.ComposeAggregateTestCheckFunc(
+							resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+							resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "is_group_sharing_disabled", "false"),
+						),
+					},
+					/*
+						{
+							Config: UnitTestsProviderConfig + `
+							resource "powerplatform_managed_environment" "managed_development" {
+								environment_id             = "00000000-0000-0000-0000-000000000001"
+								is_usage_insights_disabled = true
+								is_group_sharing_disabled  = false
+								limit_sharing_mode         = "NoLimit"
+								max_limit_user_sharing     = 10
+								solution_checker_mode      = "None"
+								suppress_validation_emails = true
+								maker_onboarding_markdown  = "this is test markdown"
+								maker_onboarding_url       = "http://www.example.com"
+							}`,
+
+							Check: resource.ComposeAggregateTestCheckFunc(
+								resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+								resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "limit_sharing_mode", "NoLimit"),
+							),
+						},
+						/*
+						{
+							Config: UnitTestsProviderConfig + `
+							resource "powerplatform_managed_environment" "managed_development" {
+								environment_id             = "00000000-0000-0000-0000-000000000001"
+								is_usage_insights_disabled = true
+								is_group_sharing_disabled  = false
+								limit_sharing_mode         = "NoLimit"
+								max_limit_user_sharing     = -1
+								solution_checker_mode      = "None"
+								suppress_validation_emails = true
+								maker_onboarding_markdown  = "this is test markdown"
+								maker_onboarding_url       = "http://www.example.com"
+							}`,
+
+							Check: resource.ComposeAggregateTestCheckFunc(
+								resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+								resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "max_limit_user_sharing", "-1"),
+							),
+						},
+						/*
+						{
+							Config: UnitTestsProviderConfig + `
+							resource "powerplatform_managed_environment" "managed_development" {
+								environment_id             = "00000000-0000-0000-0000-000000000001"
+								is_usage_insights_disabled = true
+								is_group_sharing_disabled  = false
+								limit_sharing_mode         = "NoLimit"
+								max_limit_user_sharing     = -1
+								solution_checker_mode      = "Warn"
+								suppress_validation_emails = true
+								maker_onboarding_markdown  = "this is test markdown"
+								maker_onboarding_url       = "http://www.example.com"
+							}`,
+
+							Check: resource.ComposeAggregateTestCheckFunc(
+								resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+								resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "solution_checker_mode", "Warn"),
+							),
+						},
+						/*
+						{
+							Config: UnitTestsProviderConfig + `
+							resource "powerplatform_managed_environment" "managed_development" {
+								environment_id             = "00000000-0000-0000-0000-000000000001"
+								is_usage_insights_disabled = true
+								is_group_sharing_disabled  = false
+								limit_sharing_mode         = "NoLimit"
+								max_limit_user_sharing     = -1
+								solution_checker_mode      = "Warn"
+								suppress_validation_emails = false
+								maker_onboarding_markdown  = "this is test markdown"
+								maker_onboarding_url       = "http://www.example.com"
+							}`,
+
+							Check: resource.ComposeAggregateTestCheckFunc(
+								resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+								resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "suppress_validation_emails", "false"),
+							),
+						},
+						/*
+						{
+							Config: UnitTestsProviderConfig + `
+							resource "powerplatform_managed_environment" "managed_development" {
+								environment_id             = "00000000-0000-0000-0000-000000000001"
+								is_usage_insights_disabled = true
+								is_group_sharing_disabled  = false
+								limit_sharing_mode         = "NoLimit"
+								max_limit_user_sharing     = -1
+								solution_checker_mode      = "Warn"
+								suppress_validation_emails = false
+								maker_onboarding_markdown  = "this is test markdown 2"
+								maker_onboarding_url       = "http://www.example.com"
+							}`,
+
+							Check: resource.ComposeAggregateTestCheckFunc(
+								resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+								resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "maker_onboarding_markdown", "this is test markdown 2"),
+							),
+						},
+						/*
+						{
+							Config: UnitTestsProviderConfig + `
+							resource "powerplatform_managed_environment" "managed_development" {
+								environment_id             = "00000000-0000-0000-0000-000000000001"
+								is_usage_insights_disabled = true
+								is_group_sharing_disabled  = false
+								limit_sharing_mode         = "NoLimit"
+								max_limit_user_sharing     = -1
+								solution_checker_mode      = "Warn"
+								suppress_validation_emails = false
+								maker_onboarding_markdown  = "this is test markdown 2"
+								maker_onboarding_url       = "http://www.example2.com"
+							}`,
+
+							Check: resource.ComposeAggregateTestCheckFunc(
+								resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+								resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "maker_onboarding_url", "http://www.example2.com"),
+							),
+						},
+			*/
+
+		},
+	})
+}
+
+func TestUnitManagedEnvironmentsResource_ExtendedGovernanceConfiguration(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mock_helpers.ActivateOAuthHttpMocks()
+	mock_helpers.ActivateEnvironmentHttpMocks()
+
+	patchResponseInx := -1
+
+	// Http Mock for managed environment
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001/governanceConfiguration?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Update/get_environments_0.json").String()), nil
+		})
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001/governanceConfiguration?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/managed_environment/tests/resource/Validate_Create_And_Update/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			patchResponseInx++
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/managed_environment/tests/resource/Validate_Create_And_Update/get_environment_create_response_extended_%d.json", patchResponseInx)).String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
 			{
 				Config: UnitTestsProviderConfig + `
-					resource "powerplatform_managed_environment" "managed_development" {
-					environment_id             = "00000000-0000-0000-0000-000000000001"
-					is_usage_insights_disabled = true
-					is_group_sharing_disabled  = false
-					limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
-					max_limit_user_sharing     = 10
-					solution_checker_mode      = "None"
-					suppress_validation_emails = true
-					maker_onboarding_markdown  = "this is test markdown"
-					maker_onboarding_url       = "http://www.example.com"
-				}`,
+						resource "powerplatform_managed_environment" "managed_development" {
+						environment_id             = "00000000-0000-0000-0000-000000000001"
+						is_usage_insights_disabled = true
+						is_group_sharing_disabled  = false
+						limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
+						max_limit_user_sharing     = 10
+						solution_checker_mode      = "None"
+						suppress_validation_emails = true
+						maker_onboarding_markdown  = "this is test markdown"
+						maker_onboarding_url       = "http://www.example.com"
+					}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "is_group_sharing_disabled", "false"),
 				),
 			},
-			/*
-				{
-					Config: UnitTestsProviderConfig + `
+			{
+				Config: UnitTestsProviderConfig + `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -503,14 +685,13 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						maker_onboarding_url       = "http://www.example.com"
 					}`,
 
-					Check: resource.ComposeAggregateTestCheckFunc(
-						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
-						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "limit_sharing_mode", "NoLimit"),
-					),
-				},
-				/*
-				{
-					Config: UnitTestsProviderConfig + `
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "limit_sharing_mode", "NoLimit"),
+				),
+			},
+			{
+				Config: UnitTestsProviderConfig + `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -523,14 +704,13 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						maker_onboarding_url       = "http://www.example.com"
 					}`,
 
-					Check: resource.ComposeAggregateTestCheckFunc(
-						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
-						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "max_limit_user_sharing", "-1"),
-					),
-				},
-				/*
-				{
-					Config: UnitTestsProviderConfig + `
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "max_limit_user_sharing", "-1"),
+				),
+			},
+			{
+				Config: UnitTestsProviderConfig + `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -543,14 +723,13 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						maker_onboarding_url       = "http://www.example.com"
 					}`,
 
-					Check: resource.ComposeAggregateTestCheckFunc(
-						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
-						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "solution_checker_mode", "Warn"),
-					),
-				},
-				/*
-				{
-					Config: UnitTestsProviderConfig + `
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "solution_checker_mode", "Warn"),
+				),
+			},
+			{
+				Config: UnitTestsProviderConfig + `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -563,14 +742,13 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						maker_onboarding_url       = "http://www.example.com"
 					}`,
 
-					Check: resource.ComposeAggregateTestCheckFunc(
-						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
-						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "suppress_validation_emails", "false"),
-					),
-				},
-				/*
-				{
-					Config: UnitTestsProviderConfig + `
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "suppress_validation_emails", "false"),
+				),
+			},
+			{
+				Config: UnitTestsProviderConfig + `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -583,14 +761,13 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						maker_onboarding_url       = "http://www.example.com"
 					}`,
 
-					Check: resource.ComposeAggregateTestCheckFunc(
-						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
-						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "maker_onboarding_markdown", "this is test markdown 2"),
-					),
-				},
-				/*
-				{
-					Config: UnitTestsProviderConfig + `
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "maker_onboarding_markdown", "this is test markdown 2"),
+				),
+			},
+			{
+				Config: UnitTestsProviderConfig + `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -603,12 +780,11 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						maker_onboarding_url       = "http://www.example2.com"
 					}`,
 
-					Check: resource.ComposeAggregateTestCheckFunc(
-						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
-						resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "maker_onboarding_url", "http://www.example2.com"),
-					),
-				},
-			*/
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "maker_onboarding_url", "http://www.example2.com"),
+				),
+			},
 		},
 	})
 }

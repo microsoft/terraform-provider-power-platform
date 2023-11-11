@@ -303,11 +303,11 @@
             "settings": {
                 "extendedSettings": {
                     "excludeEnvironmentFromAnalysis": "true",
-                    "isGroupSharingDisabled": "true",
-                    "maxLimitUserSharing": "10",
+                    "isGroupSharingDisabled": "false",
+                    "maxLimitUserSharing": "-1",
                     "includeOnHomepageInsights": "false",
-                    "limitSharingMode": "excludeSharingToSecurityGroups",
-                    "solutionCheckerMode": "none",
+                    "limitSharingMode": "NoLimit",
+                    "solutionCheckerMode": "Warn",
                     "suppressValidationEmails": "true",
                     "solutionCheckerRuleOverrides": "",
                     "makerOnboardingUrl": "http://www.example.com",

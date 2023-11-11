@@ -303,7 +303,7 @@
             "settings": {
                 "extendedSettings": {
                     "excludeEnvironmentFromAnalysis": "true",
-                    "isGroupSharingDisabled": "false",
+                    "isGroupSharingDisabled": "true",
                     "maxLimitUserSharing": "10",
                     "includeOnHomepageInsights": "false",
                     "limitSharingMode": "excludeSharingToSecurityGroups",
