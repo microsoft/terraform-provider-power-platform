@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
@@ -38,14 +39,14 @@ func (client *DataverseClientApi) Initialize(ctx context.Context, environmentUrl
 		tflog.Debug(ctx, "Token expired. authenticating...")
 
 		if client.baseApi.GetConfig().Credentials.IsClientSecretCredentialsProvided() {
-			token, err := client.auth.AuthenticateClientSecret(ctx, environmentUrl, client.baseApi.GetConfig().Credentials.TenantId, client.baseApi.GetConfig().Credentials.ClientId, client.baseApi.GetConfig().Credentials.Secret)
+			token, err := client.auth.AuthenticateClientSecret(ctx, environmentUrl, client.baseApi.GetConfig().Credentials)
 			if err != nil {
 				return "", err
 			}
 			tflog.Info(ctx, fmt.Sprintln("Dataverse token aquired: ", "********"))
 			return token, nil
 		} else if client.baseApi.GetConfig().Credentials.IsUserPassCredentialsProvided() {
-			token, err := client.auth.AuthenticateUserPass(ctx, environmentUrl, client.baseApi.GetConfig().Credentials.TenantId, client.baseApi.GetConfig().Credentials.Username, client.baseApi.GetConfig().Credentials.Password)
+			token, err := client.auth.AuthenticateUserPass(ctx, environmentUrl, client.baseApi.GetConfig().Credentials)
 			if err != nil {
 				return "", err
 			}
@@ -63,10 +64,10 @@ func (client *DataverseClientApi) Initialize(ctx context.Context, environmentUrl
 	}
 }
 
-func (client *DataverseClientApi) Execute(ctx context.Context, environmentUrl, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+func (client *DataverseClientApi) Execute(ctx context.Context, environmentUrl, method string, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
 	token, err := client.Initialize(ctx, environmentUrl)
 	if err != nil {
 		return nil, err
 	}
-	return client.baseApi.ExecuteBase(ctx, token, method, url, body, acceptableStatusCodes, responseObj)
+	return client.baseApi.ExecuteBase(ctx, token, method, url, headers, body, acceptableStatusCodes, responseObj)
 }

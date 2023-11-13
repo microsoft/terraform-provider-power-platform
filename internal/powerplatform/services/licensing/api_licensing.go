@@ -35,7 +35,7 @@ func (client *LicensingClient) GetBillingPolicy(ctx context.Context, billingId s
 	apiUrl.RawQuery = values.Encode()
 
 	policy := BillingPolicyDto{}
-	_, err := client.ppApi.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
+	_, err := client.ppApi.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 
 	return &policy, err
 }
@@ -52,7 +52,7 @@ func (client *LicensingClient) CreateBillingPolicy(ctx context.Context, policyTo
 	apiUrl.RawQuery = values.Encode()
 
 	policy := BillingPolicyDto{}
-	_, err := client.ppApi.Execute(ctx, "POST", apiUrl.String(), policyToCreate, []int{http.StatusCreated}, nil)
+	_, err := client.ppApi.Execute(ctx, "POST", apiUrl.String(), nil, policyToCreate, []int{http.StatusCreated}, nil)
 
 	return &policy, err
 }
@@ -69,7 +69,7 @@ func (client *LicensingClient) UpdateBillingPolicy(ctx context.Context, policyTo
 	apiUrl.RawQuery = values.Encode()
 
 	policy := BillingPolicyDto{}
-	_, err := client.ppApi.Execute(ctx, "PUT", apiUrl.String(), policyToUpdate, []int{http.StatusOK}, &policy)
+	_, err := client.ppApi.Execute(ctx, "PUT", apiUrl.String(), nil, policyToUpdate, []int{http.StatusOK}, &policy)
 
 	return &policy, err
 }
@@ -85,7 +85,7 @@ func (client *LicensingClient) DeleteBillingPolicy(ctx context.Context, billingI
 	values.Add("api-version", API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.ppApi.Execute(ctx, "DELETE", apiUrl.String(), nil, []int{http.StatusOK}, nil)
+	_, err := client.ppApi.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 
 	return err
 }
