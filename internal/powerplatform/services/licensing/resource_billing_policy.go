@@ -4,11 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
@@ -72,11 +70,8 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 			},
 			"status": schema.StringAttribute{
 				Description:         "The status of the billing policy",
-				MarkdownDescription: "The status of the billing policy",
-				Validators: []validator.String{
-					stringvalidator.OneOf([]string{"Enabled", "Disabled"}...),
-				},
-				Required: true,
+				MarkdownDescription: "The status of the billing policy (Enabled, Disabled)",
+				Computed:            true,
 			},
 			"billing_instrument": schema.SingleNestedAttribute{
 				Description:         "The billing instrument of the billing policy",
@@ -109,7 +104,7 @@ func (r *BillingPolicyResource) Configure(ctx context.Context, req resource.Conf
 		return
 	}
 
-	clientBapi := req.ProviderData.(*clients.ProviderClient).LicensingApi.Client
+	clientBapi := req.ProviderData.(*clients.ProviderClient).PowerPlatformApi.Client
 
 	if clientBapi == nil {
 		resp.Diagnostics.AddError(
@@ -132,56 +127,75 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	bill := BillingPolicyCreateDto{
+	billingPolicyToCreate := BillingPolicyCreateDto{
 		BillingInstrument: BillingInstrumentDto{
-			Id:               "",
-			Location:         "europe",
-			ResourceGroup:    "tmp",
-			SubscriptionId:   "2bc1f261-7e26-490c-9fd5-b7ca72032ad3",
-			SubscriptionName: "Visual Studio Enterprise",
-			//Tags:             []string{},
+			ResourceGroup:  plan.BillingInstrument.ResourceGroup.ValueString(),
+			SubscriptionId: plan.BillingInstrument.SubscriptionId.ValueString(),
 		},
-		Location: "europe",
-		Name:     "afssadadsadad",
-		PowerAppsPolicy: PolicyDto{
-			PayAsYouGoState: "Enabled",
-		},
-		PowerAutomatePolicy: PowerAutomatePolicyCreateDto{
-			PayAsYouGoState: "Enabled",
-		},
-		StoragePolicy: PolicyDto{
-			PayAsYouGoState: "Enabled",
-		},
-		TenantType: "TenantOwned",
+		Location: plan.Location.ValueString(),
+		Name:     plan.Name.ValueString(),
+		Status:   "Enabled",
 	}
 
-	_, err := r.LicensingClient.CreateBillingPolicy(ctx, bill)
+	policy, err := r.LicensingClient.CreateBillingPolicy(ctx, billingPolicyToCreate)
 	if err != nil {
-		resp.Diagnostics.AddError("Error creating billing policy", err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
 
-	//tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", return1.createdBy.id))
+	plan.Id = types.StringValue(policy.Id)
+	plan.Name = types.StringValue(policy.Name)
+	plan.Location = types.StringValue(policy.Location)
+	plan.Status = types.StringValue(policy.Status)
+	plan.BillingInstrument.Id = types.StringValue(policy.BillingInstrument.Id)
+	plan.BillingInstrument.ResourceGroup = types.StringValue(policy.BillingInstrument.ResourceGroup)
+	plan.BillingInstrument.SubscriptionId = types.StringValue(policy.BillingInstrument.SubscriptionId)
 
-	// dto := powerplatform_bapi.BillingPolicyDto{
-	// 	Id:       plan.Id.ValueString(),
-	// 	Name:     plan.Name.ValueString(),
-	// 	Location: plan.Location.ValueString(),
-	// 	Status:   plan.Status.ValueString(),
-	// 	BillingInstrument: powerplatform_bapi.BillingInstrumentDto{
-	// 		Id:             plan.BillingInstrument.Id.ValueString(),
-	// 		ResourceGroup:  plan.BillingInstrument.ResourceGroup.ValueString(),
-	// 		SubscriptionId: plan.BillingInstrument.SubscriptionId.ValueString(),
-	// 	},
-	// }
+	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
-	//r.ApiClient.Execute().(ctx, dto)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
+	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-// Read
 func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state *BillingPolicyResourceModel
 
+	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.ProviderTypeName))
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	billing, err := r.LicensingClient.GetBillingPolicy(ctx, state.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
+
+	state.Id = types.StringValue(billing.Id)
+	state.Name = types.StringValue(billing.Name)
+	state.Location = types.StringValue(billing.Location)
+	state.Status = types.StringValue(billing.Status)
+	state.BillingInstrument.Id = types.StringValue(billing.BillingInstrument.Id)
+	state.BillingInstrument.ResourceGroup = types.StringValue(billing.BillingInstrument.ResourceGroup)
+	state.BillingInstrument.SubscriptionId = types.StringValue(billing.BillingInstrument.SubscriptionId)
+
+	//TODO move to separate function
+	ctx = tflog.SetField(ctx, "id", state.Id.ValueString())
+	ctx = tflog.SetField(ctx, "name", state.Name.ValueString())
+	ctx = tflog.SetField(ctx, "location", state.Location.ValueString())
+	ctx = tflog.SetField(ctx, "status", state.Status.ValueString())
+	ctx = tflog.SetField(ctx, "billing_instrument_id", state.BillingInstrument.Id.ValueString())
+	ctx = tflog.SetField(ctx, "billing_instrument_resource_group", state.BillingInstrument.ResourceGroup.ValueString())
+	ctx = tflog.SetField(ctx, "billing_instrument_subscription_id", state.BillingInstrument.SubscriptionId.ValueString())
+
+	resp.Diagnostics.AddError(fmt.Sprintf("READ %s_%s with Id: %s", r.ProviderTypeName, r.TypeName, state.Id.ValueString()), err.Error())
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
 // Update
