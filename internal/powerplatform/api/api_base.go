@@ -29,7 +29,7 @@ func NewApiClientBase(config *common.ProviderConfig, baseAuth *AuthBase) *ApiCli
 	}
 }
 
-func (client *ApiClientBase) ExecuteBase(ctx context.Context, token, method string, url string, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+func (client *ApiClientBase) ExecuteBase(ctx context.Context, token, method string, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
 	var bodyBuffer io.Reader = nil
 	if body != nil {
 		bodyBytes, err := json.Marshal(body)
@@ -43,7 +43,7 @@ func (client *ApiClientBase) ExecuteBase(ctx context.Context, token, method stri
 	if err != nil {
 		return nil, err
 	}
-	apiResponse, err := client.doRequest(token, request)
+	apiResponse, err := client.doRequest(token, request, headers)
 	if err != nil {
 		return nil, err
 	}
@@ -68,8 +68,12 @@ func (client *ApiClientBase) ExecuteBase(ctx context.Context, token, method stri
 	return apiResponse, nil
 }
 
-func (client *ApiClientBase) doRequest(token string, request *http.Request) (*ApiHttpResponse, error) {
+func (client *ApiClientBase) doRequest(token string, request *http.Request, headers http.Header) (*ApiHttpResponse, error) {
 	apiHttpResponse := &ApiHttpResponse{}
+
+	if headers != nil {
+		request.Header = headers
+	}
 
 	if request.Header.Get("Content-Type") == "" {
 		request.Header.Set("Content-Type", "application/json")
@@ -111,25 +115,23 @@ func (client *ApiClientBase) doRequest(token string, request *http.Request) (*Ap
 		}
 	}
 	return apiHttpResponse, nil
-
 }
 
 func (client *ApiClientBase) InitializeBase(ctx context.Context, auth AuthBaseOperationInterface) (string, error) {
-
 	token, err := client.BaseAuth.GetToken()
 
 	if _, ok := err.(*TokeExpiredError); ok {
 		tflog.Debug(ctx, "Token expired. authenticating...")
 
 		if client.Config.Credentials.IsClientSecretCredentialsProvided() {
-			token, err := auth.AuthenticateClientSecret(ctx, client.Config.Credentials.TenantId, client.Config.Credentials.ClientId, client.Config.Credentials.Secret)
+			token, err := auth.AuthenticateClientSecret(ctx, client.Config.Credentials)
 			if err != nil {
 				return "", err
 			}
 			tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
 			return token, nil
 		} else if client.Config.Credentials.IsUserPassCredentialsProvided() {
-			token, err := auth.AuthenticateUserPass(ctx, client.Config.Credentials.TenantId, client.Config.Credentials.Username, client.Config.Credentials.Password)
+			token, err := auth.AuthenticateUserPass(ctx, client.Config.Credentials)
 			if err != nil {
 				return "", err
 			}
@@ -138,6 +140,27 @@ func (client *ApiClientBase) InitializeBase(ctx context.Context, auth AuthBaseOp
 		} else {
 			return "", errors.New("no credentials provided")
 		}
+
+	} else if err != nil {
+		return "", err
+	} else {
+		tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
+		return token, nil
+	}
+}
+
+func (client *ApiClientBase) InitializeBaseWithUserNamePassword(ctx context.Context, auth AuthBaseOperationInterface) (string, error) {
+	token, err := client.BaseAuth.GetToken()
+
+	if _, ok := err.(*TokeExpiredError); ok {
+		tflog.Debug(ctx, "Token expired. authenticating...")
+
+		token, err := auth.AuthenticateUserPass(ctx, client.Config.Credentials)
+		if err != nil {
+			return "", err
+		}
+		tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
+		return token, nil
 
 	} else if err != nil {
 		return "", err
