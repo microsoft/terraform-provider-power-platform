@@ -115,25 +115,23 @@ func (client *ApiClientBase) doRequest(token string, request *http.Request, head
 		}
 	}
 	return apiHttpResponse, nil
-
 }
 
 func (client *ApiClientBase) InitializeBase(ctx context.Context, auth AuthBaseOperationInterface) (string, error) {
-
 	token, err := client.BaseAuth.GetToken()
 
 	if _, ok := err.(*TokeExpiredError); ok {
 		tflog.Debug(ctx, "Token expired. authenticating...")
 
 		if client.Config.Credentials.IsClientSecretCredentialsProvided() {
-			token, err := auth.AuthenticateClientSecret(ctx, client.Config.Credentials.TenantId, client.Config.Credentials.ClientId, client.Config.Credentials.Secret)
+			token, err := auth.AuthenticateClientSecret(ctx, client.Config.Credentials)
 			if err != nil {
 				return "", err
 			}
 			tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
 			return token, nil
 		} else if client.Config.Credentials.IsUserPassCredentialsProvided() {
-			token, err := auth.AuthenticateUserPass(ctx, client.Config.Credentials.TenantId, client.Config.Credentials.Username, client.Config.Credentials.Password)
+			token, err := auth.AuthenticateUserPass(ctx, client.Config.Credentials)
 			if err != nil {
 				return "", err
 			}
@@ -142,6 +140,27 @@ func (client *ApiClientBase) InitializeBase(ctx context.Context, auth AuthBaseOp
 		} else {
 			return "", errors.New("no credentials provided")
 		}
+
+	} else if err != nil {
+		return "", err
+	} else {
+		tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
+		return token, nil
+	}
+}
+
+func (client *ApiClientBase) InitializeBaseWithUserNamePassword(ctx context.Context, auth AuthBaseOperationInterface) (string, error) {
+	token, err := client.BaseAuth.GetToken()
+
+	if _, ok := err.(*TokeExpiredError); ok {
+		tflog.Debug(ctx, "Token expired. authenticating...")
+
+		token, err := auth.AuthenticateUserPass(ctx, client.Config.Credentials)
+		if err != nil {
+			return "", err
+		}
+		tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
+		return token, nil
 
 	} else if err != nil {
 		return "", err
