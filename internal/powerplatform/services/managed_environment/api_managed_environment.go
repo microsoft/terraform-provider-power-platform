@@ -45,7 +45,7 @@ func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Con
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	apiResponse, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), managedEnvSettings, []int{http.StatusNoContent, http.StatusAccepted}, nil)
+	apiResponse, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), nil, managedEnvSettings, []int{http.StatusNoContent, http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Con
 		for {
 
 			lifecycleResponse := OperationLifecycleDto{}
-			apiResponse, err = client.bapiClient.Execute(ctx, "GET", locationHeader, nil, []int{http.StatusOK}, &lifecycleResponse)
+			apiResponse, err = client.bapiClient.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
 			if err != nil {
 				return err
 			}
@@ -107,7 +107,7 @@ func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Co
 		ProtectionLevel: "Basic",
 	}
 
-	apiResponse, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), managedEnv, []int{http.StatusAccepted}, nil)
+	apiResponse, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), nil, managedEnv, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Co
 		for {
 
 			lifecycleResponse := OperationLifecycleDto{}
-			apiResponse, err = client.bapiClient.Execute(ctx, "GET", locationHeader, nil, []int{http.StatusOK}, &lifecycleResponse)
+			apiResponse, err = client.bapiClient.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
 			if err != nil {
 				return err
 			}
