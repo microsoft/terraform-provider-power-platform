@@ -52,16 +52,16 @@ func (client *LicensingClient) CreateBillingPolicy(ctx context.Context, policyTo
 	apiUrl.RawQuery = values.Encode()
 
 	policy := BillingPolicyDto{}
-	_, err := client.ppApi.Execute(ctx, "POST", apiUrl.String(), nil, policyToCreate, []int{http.StatusCreated}, nil)
+	_, err := client.ppApi.Execute(ctx, "POST", apiUrl.String(), nil, policyToCreate, []int{http.StatusCreated}, &policy)
 
 	return &policy, err
 }
 
-func (client *LicensingClient) UpdateBillingPolicy(ctx context.Context, policyToUpdate BillingPolicyDto) (*BillingPolicyDto, error) {
+func (client *LicensingClient) UpdateBillingPolicy(ctx context.Context, billingId string, policyToUpdate BillingPolicyUpdateDto) (*BillingPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.ppApi.GetConfig().Urls.PowerPlatformUrl,
-		Path:   "/licensing/BillingPolicies",
+		Path:   fmt.Sprintf("/licensing/billingPolicies/%s", billingId),
 	}
 
 	values := url.Values{}
@@ -85,7 +85,7 @@ func (client *LicensingClient) DeleteBillingPolicy(ctx context.Context, billingI
 	values.Add("api-version", API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.ppApi.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	_, err := client.ppApi.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 
 	return err
 }

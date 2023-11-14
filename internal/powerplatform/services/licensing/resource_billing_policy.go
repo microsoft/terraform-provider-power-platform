@@ -4,9 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
@@ -57,6 +61,9 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 				Computed:            true,
 				Description:         "The id of the billing policy",
 				MarkdownDescription: "The id of the billing policy",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"name": schema.StringAttribute{
 				Description:         "The name of the billing policy",
@@ -67,11 +74,18 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 				Description:         "The location of the billing policy",
 				MarkdownDescription: "The location of the billing policy",
 				Required:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"status": schema.StringAttribute{
 				Description:         "The status of the billing policy",
 				MarkdownDescription: "The status of the billing policy (Enabled, Disabled)",
 				Computed:            true,
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("Enabled", "Disabled"),
+				},
 			},
 			"billing_instrument": schema.SingleNestedAttribute{
 				Description:         "The billing instrument of the billing policy",
@@ -82,16 +96,25 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 						Computed:            true,
 						Description:         "The id of the billing instrument",
 						MarkdownDescription: "The id of the billing instrument",
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
 					},
 					"resource_group": schema.StringAttribute{
 						Description:         "The resource group of the billing instrument",
 						MarkdownDescription: "The resource group of the billing instrument",
 						Required:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.RequiresReplace(),
+						},
 					},
 					"subscription_id": schema.StringAttribute{
 						Description:         "The subscription id of the billing instrument",
 						MarkdownDescription: "The subscription id of the billing instrument",
 						Required:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.RequiresReplace(),
+						},
 					},
 				},
 			},
@@ -134,7 +157,12 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 		},
 		Location: plan.Location.ValueString(),
 		Name:     plan.Name.ValueString(),
-		Status:   "Enabled",
+	}
+
+	if plan.Status.IsUnknown() {
+		billingPolicyToCreate.Status = "Enabled"
+	} else {
+		billingPolicyToCreate.Status = plan.Status.ValueString()
 	}
 
 	policy, err := r.LicensingClient.CreateBillingPolicy(ctx, billingPolicyToCreate)
@@ -183,29 +211,66 @@ func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadReque
 	state.BillingInstrument.ResourceGroup = types.StringValue(billing.BillingInstrument.ResourceGroup)
 	state.BillingInstrument.SubscriptionId = types.StringValue(billing.BillingInstrument.SubscriptionId)
 
-	//TODO move to separate function
-	ctx = tflog.SetField(ctx, "id", state.Id.ValueString())
-	ctx = tflog.SetField(ctx, "name", state.Name.ValueString())
-	ctx = tflog.SetField(ctx, "location", state.Location.ValueString())
-	ctx = tflog.SetField(ctx, "status", state.Status.ValueString())
-	ctx = tflog.SetField(ctx, "billing_instrument_id", state.BillingInstrument.Id.ValueString())
-	ctx = tflog.SetField(ctx, "billing_instrument_resource_group", state.BillingInstrument.ResourceGroup.ValueString())
-	ctx = tflog.SetField(ctx, "billing_instrument_subscription_id", state.BillingInstrument.SubscriptionId.ValueString())
-
-	resp.Diagnostics.AddError(fmt.Sprintf("READ %s_%s with Id: %s", r.ProviderTypeName, r.TypeName, state.Id.ValueString()), err.Error())
+	tflog.Debug(ctx, fmt.Sprintf("READ %s_%s with Id: %s", r.ProviderTypeName, r.TypeName, billing.Id))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
-// Update
 func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan *BillingPolicyResourceModel
 
+	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+
+	var state *BillingPolicyResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if plan.Name.ValueString() != state.Name.ValueString() ||
+		plan.Status.ValueString() != state.Status.ValueString() {
+
+		policyToUpdate := BillingPolicyUpdateDto{
+			Name:   plan.Name.ValueString(),
+			Status: plan.Status.ValueString(),
+		}
+
+		policy, err := r.LicensingClient.UpdateBillingPolicy(ctx, plan.Id.ValueString(), policyToUpdate)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
+			return
+		}
+
+		plan.Id = types.StringValue(policy.Id)
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+
+	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-// Delete
 func (r *BillingPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state *BillingPolicyResourceModel
 
+	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	err := r.LicensingClient.DeleteBillingPolicy(ctx, state.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *BillingPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
