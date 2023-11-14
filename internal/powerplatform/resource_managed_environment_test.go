@@ -392,7 +392,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 	})
 }
 
-func TestUnitManagedEnvironmentsResource_ExtendedGovernanceConfiguration(t *testing.T) {
+func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mock_helpers.ActivateOAuthHttpMocks()
