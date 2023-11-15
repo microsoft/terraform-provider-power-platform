@@ -24,9 +24,11 @@ func NewPowerPlatformAuth(baseAuth *AuthBase) *PowerPlatformAuth {
 
 func (client *PowerPlatformAuth) AuthenticateUserPass(ctx context.Context, credentials *powerplatform_common.ProviderCredentials) (string, error) {
 	scopes := []string{"https://api.powerplatform.com/.default"}
+	publicClientApplicationID := "1950a258-227b-4e31-a9cf-717495945fc2"
 	authority := "https://login.microsoftonline.com/" + credentials.TenantId
 
-	publicClientApp, err := public.New(credentials.ClientId, public.WithAuthority(authority))
+	publicClientApp, err := public.New(publicClientApplicationID, public.WithAuthority(authority))
+
 	if err != nil {
 		return "", err
 	}
