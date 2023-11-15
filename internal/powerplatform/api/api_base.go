@@ -103,13 +103,7 @@ func (client *ApiClientBase) doRequest(token string, request *http.Request, head
 
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
 		if len(body) != 0 {
-			errorResponse := make(map[string]interface{}, 0)
-			err = json.NewDecoder(bytes.NewBuffer(body)).Decode(&errorResponse)
-			if err != nil {
-				return nil, err
-			}
-
-			return apiHttpResponse, fmt.Errorf("status: %d, body: %s", response.StatusCode, errorResponse)
+			return apiHttpResponse, fmt.Errorf("status: %d, message: %s", response.StatusCode, string(body))
 		} else {
 			return nil, fmt.Errorf("status: %d", response.StatusCode)
 		}

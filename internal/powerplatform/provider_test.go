@@ -11,7 +11,7 @@ import (
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
-	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
+	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
@@ -51,6 +51,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources(t *testing.T) {
 		solution.NewSolutionsDataSource(),
 		dlp_policy.NewDataLossPreventionPolicyDataSource(),
 		tenant_settings.NewTenantSettingsDataSource(),
+		licensing.NewBillingPoliciesDataSource(),
 	}
 	datasources := NewPowerPlatformProvider()().(*PowerPlatformProvider).DataSources(context.Background())
 
@@ -66,7 +67,7 @@ func TestUnitPowerPlatformProviderHasChildResources(t *testing.T) {
 		dlp_policy.NewDataLossPreventionPolicyResource(),
 		solution.NewSolutionResource(),
 		tenant_settings.NewTenantSettingsResource(),
-		managed_environment.NewManagedEnvironmentResource(),
+		licensing.NewBillingPolicyResource(),
 	}
 	resources := NewPowerPlatformProvider()().(*PowerPlatformProvider).Resources(context.Background())
 
