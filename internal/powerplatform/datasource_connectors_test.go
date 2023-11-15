@@ -1,16 +1,14 @@
 package powerplatform
 
 import (
+	"net/http"
 	"regexp"
-	"strconv"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/jarcoal/httpmock"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
+	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccConnectorsDataSource_Validate_Read(t *testing.T) {
@@ -19,7 +17,7 @@ func TestAccConnectorsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: ProviderConfig + `
+				Config: AcceptanceTestsProviderConfig + `
 				data "powerplatform_connectors" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -41,41 +39,29 @@ func TestAccConnectorsDataSource_Validate_Read(t *testing.T) {
 }
 
 func TestUnitConnectorsDataSource_Validate_Read(t *testing.T) {
-	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
 
-	connectors := make([]models.ConnectorDto, 0)
-	connectors = append(connectors, models.ConnectorDto{
-		Properties: models.ConnectorPropertiesDto{
-			DisplayName: "Test Display Name 1",
-			Description: "Test Description 1",
-			Tier:        "Test Tier 1",
-			Publisher:   "Test Publisher 1",
-		},
-		Id:   "Test Id 1",
-		Name: "Test Name 1",
-		Type: "Test Type 1",
-	})
-	connectors = append(connectors, models.ConnectorDto{
-		Properties: models.ConnectorPropertiesDto{
-			DisplayName: "Test Display Name 2",
-			Description: "Test Description 2",
-			Tier:        "Test Tier 2",
-			Publisher:   "Test Publisher 2",
-		},
-		Id:   "Test Id 2",
-		Name: "Test Name 2",
-		Type: "Test Type 2",
-	})
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mock_helpers.ActivateOAuthHttpMocks()
 
-	conn := ConvertFromConnectorDto(connectors[0])
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/connectors/metadata/virtual`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/connectors/tests/Validate_Read/get_virtual.json").String()), nil
+		})
 
-	clientMock.EXPECT().GetConnectors(gomock.Any()).Return(connectors, nil).AnyTimes()
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/connectors/metadata/unblockable`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/connectors/tests/Validate_Read/get_unblockable.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.powerapps.com/providers/Microsoft.PowerApps/apis?%24filter=environment+eq+%27~Default%27&api-version=2023-06-01&hideDlpExemptApis=true&showAllDlpEnforceableApis=true&showApisWithToS=true`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/connectors/tests/Validate_Read/get_apis.json").String()), nil
+		})
 
 	resource.Test(t, resource.TestCase{
-		IsUnitTest: true,
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock, nil, nil),
-		},
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: UnitTestsProviderConfig + `
@@ -86,16 +72,16 @@ func TestUnitConnectorsDataSource_Validate_Read(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_connectors.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
 					//Verify returned count
-					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.#", strconv.Itoa(len(connectors))),
+					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.#", "4"),
 
-					// Verify the first power app to ensure all attributes are set
-					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.description", conn.Description.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.display_name", conn.DisplayName.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.id", conn.Id.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.name", conn.Name.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.publisher", conn.Publisher.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.tier", conn.Tier.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.type", conn.Type.ValueString()),
+					// // Verify the first power app to ensure all attributes are set
+					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.description", "SharePoint helps organizations share and collaborate with colleagues, partners, and customers. You can connect to SharePoint Online or to an on-premises SharePoint 2013 or 2016 farm using the On-Premises Data Gateway to manage documents and list items."),
+					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.display_name", "SharePoint"),
+					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"),
+					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.name", "shared_sharepointonline"),
+					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.publisher", "Microsoft"),
+					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.tier", "Standard"),
+					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.type", "Microsoft.PowerApps/apis"),
 				),
 			},
 		},

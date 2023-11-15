@@ -23,8 +23,8 @@ terraform {
 }
 
 provider "powerplatform" {
-  username  = var.username
-  password  = var.password
+  client_id = var.client_id
+  secret    = var.secret
   tenant_id = var.tenant_id
 }
 
@@ -46,5 +46,5 @@ Read-Only:
 
 - `created_time` (String) Created time
 - `display_name` (String) Display name
-- `environment_name` (String) Unique environment name (guid)
+- `id` (String) Unique environment id (guid)
 - `name` (String) Name

@@ -1,16 +1,14 @@
 package powerplatform
 
 import (
+	"net/http"
 	"regexp"
-	"strconv"
 	"testing"
 
-	"github.com/golang/mock/gomock"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/jarcoal/httpmock"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
-	models "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/models"
+	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccPowerAppsDataSource(t *testing.T) {
@@ -20,7 +18,7 @@ func TestAccPowerAppsDataSource(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: ProviderConfig + `
+				Config: AcceptanceTestsProviderConfig + `
 				data "powerplatform_powerapps" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -29,7 +27,7 @@ func TestAccPowerAppsDataSource(t *testing.T) {
 
 					// Verify the first power app to ensure all attributes are set
 					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.name", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.environment_name", regexp.MustCompile(powerplatform_helpers.UrlValidStringRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.id", regexp.MustCompile(powerplatform_helpers.UrlValidStringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.display_name", regexp.MustCompile(powerplatform_helpers.UrlValidStringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.created_time", regexp.MustCompile(`^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$`)),
 				),
@@ -39,39 +37,25 @@ func TestAccPowerAppsDataSource(t *testing.T) {
 }
 
 func TestUnitPowerAppsDataSource_Validate_Read(t *testing.T) {
-	clientMock := mocks.NewUnitTestsMockBapiClientInterface(t)
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mock_helpers.ActivateOAuthHttpMocks()
+	mock_helpers.ActivateEnvironmentHttpMocks()
 
-	apps := make([]models.PowerAppBapi, 0)
-	apps = append(apps, models.PowerAppBapi{
-		Name: "name1",
-		Properties: models.PowerAppPropertiesBapi{
-			DisplayName: "display_name1",
-			CreatedTime: "created_time1",
-			Environment: models.PowerAppEnvironmentDto{
-				Name: "environment",
-			},
-		},
-	})
-	apps = append(apps, models.PowerAppBapi{
-		Name: "name2",
-		Properties: models.PowerAppPropertiesBapi{
-			DisplayName: "display_name2",
-			CreatedTime: "created_time2",
-			Environment: models.PowerAppEnvironmentDto{
-				Name: "environment",
-			},
-		},
-	})
-	clientMock.EXPECT().GetPowerApps(gomock.Any(), gomock.Any()).Return(apps, nil).AnyTimes()
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/powerapps/tests/Validate_Read/get_environments.json").String()), nil
+		})
 
-	app1 := ConvertFromPowerAppDto(apps[0])
-	app2 := ConvertFromPowerAppDto(apps[1])
+	httpmock.RegisterResponder("GET", `=~^https://api\.powerapps\.com/providers/Microsoft\.PowerApps/scopes/admin/environments/([\d-]+)/apps`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/powerapps/tests/Validate_Read/get_apps_"+id+".json").String()), nil
+		})
 
 	resource.Test(t, resource.TestCase{
-		IsUnitTest: true,
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"powerplatform": powerPlatformProviderServerApiMock(clientMock, nil, nil),
-		},
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: UnitTestsProviderConfig + `
@@ -80,17 +64,17 @@ func TestUnitPowerAppsDataSource_Validate_Read(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.#", strconv.Itoa(len(apps))),
+					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.#", "4"),
 
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.name", app1.Name.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.environment_name", app1.EnvironmentName.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.display_name", app1.DisplayName.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.created_time", app1.CreatedTime.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.name", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.display_name", "Overview"),
+					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.created_time", "2023-09-27T07:08:47.1964785Z"),
 
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.1.name", app2.Name.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.1.environment_name", app2.EnvironmentName.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.1.display_name", app2.DisplayName.ValueString()),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.1.created_time", app2.CreatedTime.ValueString()),
+					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.2.name", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.2.id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.2.display_name", "Overview"),
+					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.2.created_time", "2023-09-27T07:08:47.1964785Z"),
 				),
 			},
 		},

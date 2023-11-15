@@ -1,0 +1,287 @@
+{
+    "value": [
+        {
+            "name": "shared_sharepointonline",
+            "id": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
+            "type": "Microsoft.PowerApps/apis",
+            "properties": {
+                "displayName": "SharePoint",
+                "iconUri": "https://connectoricons-prod.azureedge.net/u/henryorsborn/partial-builds/asev3migrations-with-resourceTemplate/1.0.1653.3414/sharepointonline/icon.png",
+                "iconBrandColor": "#036C70",
+                "apiEnvironment": "Shared",
+                "isCustomApi": false,
+                "connectionParameters": {
+                    "token": {
+                        "type": "oauthSetting",
+                        "oAuthSettings": {
+                            "identityProvider": "sharepointonlinecertificateV2",
+                            "clientId": "7ab7862c-4c57-491e-8a45-d52a7e023983",
+                            "scopes": [],
+                            "redirectMode": "GlobalPerConnector",
+                            "redirectUrl": "https://global.consent.azure-apim.net/redirect/sharepointonline",
+                            "properties": {
+                                "IsFirstParty": "True",
+                                "IsOnbehalfofLoginSupported": true
+                            },
+                            "customParameters": {
+                                "resourceUriAAD": {
+                                    "value": "https://graph.microsoft.com/"
+                                },
+                                "loginUri": {
+                                    "value": "https://login.windows.net"
+                                },
+                                "loginUriAAD": {
+                                    "value": "https://login.windows.net"
+                                },
+                                "resourceUri": {
+                                    "value": "https://graph.microsoft.com"
+                                }
+                            }
+                        },
+                        "uiDefinition": {
+                            "displayName": "Log in with SharePoint Credentials",
+                            "description": "Log in with SharePoint Credentials",
+                            "tooltip": "Provide SharePoint Credentials",
+                            "constraints": {
+                                "required": "true",
+                                "capability": [
+                                    "cloud"
+                                ]
+                            }
+                        }
+                    },
+                    "token:TenantId": {
+                        "type": "string",
+                        "metadata": {
+                            "sourceType": "AzureActiveDirectoryTenant"
+                        },
+                        "uiDefinition": {
+                            "displayName": "Tenant",
+                            "description": "The tenant ID of for the Azure Active Directory application",
+                            "constraints": {
+                                "required": "false",
+                                "hidden": "true"
+                            }
+                        }
+                    },
+                    "gateway": {
+                        "type": "gatewaySetting",
+                        "gatewaySettings": {
+                            "dataSourceType": "SharePoint",
+                            "connectionDetails": []
+                        },
+                        "uiDefinition": {
+                            "tabIndex": 1,
+                            "constraints": {
+                                "hidden": "false",
+                                "capability": [
+                                    "gateway"
+                                ]
+                            }
+                        }
+                    },
+                    "authType": {
+                        "type": "string",
+                        "allowedValues": [
+                            {
+                                "value": "windows"
+                            }
+                        ],
+                        "uiDefinition": {
+                            "displayName": "Authentication Type",
+                            "description": "Authentication type to connect to your database",
+                            "tooltip": "Authentication type to connect to your database",
+                            "constraints": {
+                                "tabIndex": 2,
+                                "required": "false",
+                                "allowedValues": [
+                                    {
+                                        "text": "Windows",
+                                        "value": "windows"
+                                    }
+                                ],
+                                "capability": [
+                                    "gateway"
+                                ]
+                            }
+                        }
+                    },
+                    "username": {
+                        "type": "securestring",
+                        "uiDefinition": {
+                            "displayName": "Username",
+                            "description": "Username credential",
+                            "tooltip": "Username credential",
+                            "constraints": {
+                                "tabIndex": 3,
+                                "clearText": true,
+                                "required": "true",
+                                "capability": [
+                                    "gateway"
+                                ]
+                            }
+                        }
+                    },
+                    "password": {
+                        "type": "securestring",
+                        "uiDefinition": {
+                            "displayName": "Password",
+                            "description": "Password credential",
+                            "tooltip": "Password credential",
+                            "constraints": {
+                                "tabIndex": 4,
+                                "required": "true",
+                                "capability": [
+                                    "gateway"
+                                ]
+                            }
+                        }
+                    }
+                },
+                "runtimeUrls": [
+                    "https://europe-001.azure-apim.net/apim/sharepointonline"
+                ],
+                "primaryRuntimeUrl": "https://europe-001.azure-apim.net/apim/sharepointonline",
+                "metadata": {
+                    "source": "marketplace",
+                    "brandColor": "#036C70",
+                    "useNewApimVersion": "true",
+                    "version": {
+                        "previous": "releases/v1.0.1656\\1.0.1656.3432",
+                        "current": "u/henryorsborn/partial-builds/asev3migrations-with-resourceTemplate\\1.0.1653.3414"
+                    }
+                },
+                "capabilities": [
+                    "tabular",
+                    "gateway",
+                    "cloud"
+                ],
+                "interfaces": {
+                    "CDPTabular1": {
+                        "revisions": {
+                            "1": {
+                                "baseUrl": "/",
+                                "status": "Production"
+                            }
+                        }
+                    }
+                },
+                "description": "SharePoint helps organizations share and collaborate with colleagues, partners, and customers. You can connect to SharePoint Online or to an on-premises SharePoint 2013 or 2016 farm using the On-Premises Data Gateway to manage documents and list items.",
+                "createdTime": "2016-10-07T18:40:04.372652Z",
+                "changedTime": "2023-09-26T00:11:38.2143635Z",
+                "releaseTag": "Production",
+                "tier": "Standard",
+                "publisher": "Microsoft",
+                "scopes": {
+                    "will": [
+                        "Read list and library names, as well as the names of the columns",
+                        "Create, read, update, copy and delete files and metadata",
+                        "Create, read, update, and delete list items"
+                    ],
+                    "wont": []
+                }
+            }
+        },
+        {
+            "name": "shared_onedriveforbusiness",
+            "id": "/providers/Microsoft.PowerApps/apis/shared_onedriveforbusiness",
+            "type": "Microsoft.PowerApps/apis",
+            "properties": {
+                "displayName": "OneDrive for Business",
+                "iconUri": "https://connectoricons-prod.azureedge.net/releases/v1.0.1656/1.0.1656.3432/onedriveforbusiness/icon.png",
+                "iconBrandColor": "#0078D4",
+                "apiEnvironment": "Shared",
+                "isCustomApi": false,
+                "connectionParameters": {
+                    "token": {
+                        "type": "oauthSetting",
+                        "oAuthSettings": {
+                            "identityProvider": "OneDriveForBusinessCertificate",
+                            "clientId": "7ab7862c-4c57-491e-8a45-d52a7e023983",
+                            "scopes": [],
+                            "redirectMode": "GlobalPerConnector",
+                            "redirectUrl": "https://global.consent.azure-apim.net/redirect/onedriveforbusiness",
+                            "properties": {
+                                "IsFirstParty": "True",
+                                "IsOnbehalfofLoginSupported": true
+                            },
+                            "customParameters": {
+                                "capability": {
+                                    "value": "MyFiles"
+                                },
+                                "grantType": {
+                                    "value": "code"
+                                },
+                                "resourceUri": {
+                                    "value": "https://graph.microsoft.com"
+                                },
+                                "resourceUriAAD": {
+                                    "value": "https://graph.microsoft.com"
+                                },
+                                "loginUriAAD": {
+                                    "value": "https://login.windows.net"
+                                }
+                            }
+                        },
+                        "uiDefinition": {
+                            "displayName": "Log in with OneDrive for Business Credentials",
+                            "description": "Log in with OneDrive for Business Credentials",
+                            "tooltip": "Provide OneDrive for Business Credentials",
+                            "constraints": {
+                                "required": "true"
+                            }
+                        }
+                    }
+                },
+                "runtimeUrls": [
+                    "https://europe-001.azure-apim.net/apim/onedriveforbusiness"
+                ],
+                "primaryRuntimeUrl": "https://europe-001.azure-apim.net/apim/onedriveforbusiness",
+                "metadata": {
+                    "source": "marketplace",
+                    "brandColor": "#0078D4",
+                    "useNewApimVersion": "true",
+                    "version": {
+                        "previous": "releases/v1.0.1647\\1.0.1647.3361",
+                        "current": "releases/v1.0.1656\\1.0.1656.3432"
+                    }
+                },
+                "capabilities": [
+                    "blob"
+                ],
+                "interfaces": {
+                    "CDPBlob0": {
+                        "revisions": {
+                            "1": {
+                                "baseUrl": "/",
+                                "status": "Production",
+                                "deprecated": true
+                            }
+                        }
+                    },
+                    "CDPBlob1": {
+                        "revisions": {
+                            "1": {
+                                "baseUrl": "/",
+                                "status": "Production"
+                            }
+                        }
+                    }
+                },
+                "description": "OneDrive for Business is a cloud storage, file hosting service that allows users to sync files and later access them from a web browser or mobile device. Connect to OneDrive for Business to manage your files. You can perform various actions such as upload, update, get, and delete files.",
+                "createdTime": "2016-09-30T04:12:48.5709476Z",
+                "changedTime": "2023-09-21T23:21:20.0282274Z",
+                "releaseTag": "Production",
+                "tier": "Standard",
+                "publisher": "Microsoft",
+                "scopes": {
+                    "will": [
+                        "Read your user profile",
+                        "Create, read, update, and delete files"
+                    ],
+                    "wont": []
+                }
+            }
+        }
+    ]
+}
