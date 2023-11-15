@@ -13,18 +13,16 @@ Before you execute the script, you need to upload the SAP .NET Connector MSI fil
 
 ### SHIR Nodes Preparation
 
-Make sure there is any node assigned to the self-hosted integration runtime at Synapse or ADF.
+Make sure there is not any node assigned to the self-hosted integration runtime at Synapse or ADF.
 
 ## Example Files
 
 The example files can be found in `examples/quickstarts/301-sap-gateway`
 
-## Provider Requirements
-
-- **azurecaf (`aztfmod/azurecaf`):** `>=1.2.26`
-
-- **azurerm (`hashicorp/azurerm`):** `>=3.74.0`
-- **random:** (any version)
+## Provider Requirements:
+* **azurecaf (`aztfmod/azurecaf`):** `>=1.2.26`
+* **azurerm (`hashicorp/azurerm`):** `>=3.74.0`
+* **random:** (any version)
 
 ## Input Variables
 
@@ -34,14 +32,10 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 | `client_id_gw` | The client ID / app ID of the service principal where the on-premise data gateway admin permissions | string | `null` | true |
 | `client_id_pp` | The client ID / app ID of the service principal with Power Platform admin permissions | string | `null` | true |
 | `gateway_name` | The name of the gateway to be created on Power Platform | string | `null` | true |
-| `java_setup_link` | The Blob link to the Java Runtime installation file | string | `null` | true |
 | `prefix` | The prefix which should be used for all resources name | string | `"opdgw"` | false |
-| `ps7_setup_link` | The Blob link to the PowerShell 7 installation file | string | `null` | true |
 | `recover_key_gw` | The recovery key of the gateway | string | `null` | true |
 | `region_gw` | The Azure region where the resources in this example should be created | string | `null` | true |
-| `runtime_setup_link` | The Blob link to the runtime setup script | string | `null` | true |
 | `sap_subnet_id` | The SAP system subnet ID | string | `null` | true |
-| `sapnco_install_link` | The Blob link to the SAP NCo installation file | string | `null` | true |
 | `secret_gw` | The secret of the service principal with on-premise data gateway admin permissions | string | `null` | true |
 | `secret_pp` | The secret of the service principal with Power Platform admin permissions | string | `null` | true |
 | `shir_key` | Value of the secret name for the IR key | string | `null` | true |
@@ -50,43 +44,42 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 | `tenant_id_pp` | The tenant ID of service principal or user at Power Platform | string | `null` | true |
 | `user_id_admin_pp` | The user ID to be assigned as Admin role of the Power Platform | string | `null` | true |
 
+
 ## Resources
-
-- `azurecaf_name.key_vault` from `azurecaf`
-
-- `azurecaf_name.key_vault_secret_irkey` from `azurecaf`
-- `azurecaf_name.key_vault_secret_pp` from `azurecaf`
-- `azurecaf_name.key_vault_secret_recover_key` from `azurecaf`
-- `azurecaf_name.key_vault_secret_vm_pwd` from `azurecaf`
-- `azurecaf_name.nic` from `azurecaf`
-- `azurecaf_name.nsg` from `azurecaf`
-- `azurecaf_name.publicip` from `azurecaf`
-- `azurecaf_name.rg` from `azurecaf`
-- `azurecaf_name.subnet` from `azurecaf`
-- `azurecaf_name.vnet` from `azurecaf`
-- `azurerm_key_vault.key_vault` from `azurerm`
-- `azurerm_key_vault_access_policy.key_vault_access_policy` from `azurerm`
-- `azurerm_key_vault_secret.key_vault_secret_irkey` from `azurerm`
-- `azurerm_key_vault_secret.key_vault_secret_pp` from `azurerm`
-- `azurerm_key_vault_secret.key_vault_secret_recover_key` from `azurerm`
-- `azurerm_key_vault_secret.key_vault_secret_vm_pwd` from `azurerm`
-- `azurerm_network_interface.nic` from `azurerm`
-- `azurerm_network_interface_security_group_association.rgassociation` from `azurerm`
-- `azurerm_network_security_group.nsg` from `azurerm`
-- `azurerm_public_ip.publicip` from `azurerm`
-- `azurerm_resource_group.rg` from `azurerm`
-- `azurerm_subnet.subnet` from `azurerm`
-- `azurerm_virtual_network.vnet` from `azurerm`
-- `random_string.key_vault_suffix` from `random`
-- `random_string.vm_pwd` from `random`
+* `azurecaf_name.key_vault` from `azurecaf`
+* `azurecaf_name.key_vault_secret_irkey` from `azurecaf`
+* `azurecaf_name.key_vault_secret_pp` from `azurecaf`
+* `azurecaf_name.key_vault_secret_recover_key` from `azurecaf`
+* `azurecaf_name.key_vault_secret_vm_pwd` from `azurecaf`
+* `azurecaf_name.nic` from `azurecaf`
+* `azurecaf_name.nsg` from `azurecaf`
+* `azurecaf_name.publicip` from `azurecaf`
+* `azurecaf_name.rg` from `azurecaf`
+* `azurecaf_name.subnet` from `azurecaf`
+* `azurecaf_name.vnet` from `azurecaf`
+* `azurerm_key_vault.key_vault` from `azurerm`
+* `azurerm_key_vault_access_policy.key_vault_access_policy` from `azurerm`
+* `azurerm_key_vault_secret.key_vault_secret_irkey` from `azurerm`
+* `azurerm_key_vault_secret.key_vault_secret_pp` from `azurerm`
+* `azurerm_key_vault_secret.key_vault_secret_recover_key` from `azurerm`
+* `azurerm_key_vault_secret.key_vault_secret_vm_pwd` from `azurerm`
+* `azurerm_network_interface.nic` from `azurerm`
+* `azurerm_network_interface_security_group_association.rgassociation` from `azurerm`
+* `azurerm_network_security_group.nsg` from `azurerm`
+* `azurerm_public_ip.publicip` from `azurerm`
+* `azurerm_resource_group.rg` from `azurerm`
+* `azurerm_subnet.subnet` from `azurerm`
+* `azurerm_virtual_network.vnet` from `azurerm`
+* `random_string.key_vault_suffix` from `random`
+* `random_string.vm_pwd` from `random`
 
 ## Data Sources
-
-- `data.azurerm_client_config.current` from `azurerm`
+* `data.azurerm_client_config.current` from `azurerm`
 
 ## Child Modules
+* `gateway_vm` from `./gateway-vm`
+* `storage_account` from `./storage-account`
 
-- `gateway_vm` from `./gateway-vm`
 
 ## Usage
 
