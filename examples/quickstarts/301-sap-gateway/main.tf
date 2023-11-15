@@ -251,6 +251,14 @@ resource "azurerm_key_vault_secret" "key_vault_secret_vm_pwd" {
   key_vault_id = azurerm_key_vault.key_vault.id
 }
 
+module "storage_account" {
+  source              = "./storage-account"
+  prefix              = var.prefix
+  base_name           = var.base_name
+  resource_group_name = azurerm_resource_group.rg.name
+  region              = var.region_gw
+}
+
 module "gateway_vm" {
   source                     = "./gateway-vm"
   resource_group_name        = azurerm_resource_group.rg.name
@@ -264,10 +272,10 @@ module "gateway_vm" {
   secret_pp_name             = azurerm_key_vault_secret.key_vault_secret_pp.name
   secret_name_irkey          = azurerm_key_vault_secret.key_vault_secret_irkey.name
   user_id_admin_pp           = var.user_id_admin_pp
-  ps7_setup_link             = var.ps7_setup_link
-  java_setup_link            = var.java_setup_link
-  sapnco_install_link        = var.sapnco_install_link
-  runtime_setup_link         = var.runtime_setup_link
+  ps7_setup_link             = module.storage_account.storage_blob_ps7_setup_link
+  java_setup_link            = module.storage_account.storage_blob_java_runtime_link
+  sapnco_install_link        = module.storage_account.storage_blob_sapnco_install_link
+  runtime_setup_link         = module.storage_account.storage_blob_runtime_setup_link
   gateway_name               = var.gateway_name
   secret_name_recover_key_gw = azurerm_key_vault_secret.key_vault_secret_recover_key.name
 }

@@ -78,3 +78,5 @@ test_solution*.json
 # makefile
 makefile
 
+# MSI files
+*.msi
