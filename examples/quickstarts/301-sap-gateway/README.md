@@ -7,22 +7,24 @@ This Terraform module aims to provide a fully managed infrastructure that integr
 
 - Service Principal or User Account with permissions configured as referenced in [the provider's user documentation](https://microsoft.github.io/terraform-provider-power-platform#authentication).
 
-### Storage Account
+### Storage Account Preparation
 
-Before you execute the script, you need to create a Storage Account, upload all scripts listed in the folder `./gateway-vm/scripts` and the SAP .NET Connector MSI file (check below for more information).
+Before you execute the script, you need to upload the SAP .NET Connector MSI file the folder `./storage-account/sapnco-msi` and rename to `sapnco.msi` (check below for more information).
 
-You can follow [this guide](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-create?tabs=azure-portal) to create the storage account.
+### SHIR Nodes Preparation
 
-> Tip: Make sure the blob accept anonymous access.
+Make sure there is any node assigned to the self-hosted integration runtime at Synapse or ADF.
 
 ## Example Files
 
 The example files can be found in `examples/quickstarts/301-sap-gateway`
 
-## Provider Requirements:
-* **azurecaf (`aztfmod/azurecaf`):** `>=1.2.26`
-* **azurerm (`hashicorp/azurerm`):** `>=3.74.0`
-* **random:** (any version)
+## Provider Requirements
+
+- **azurecaf (`aztfmod/azurecaf`):** `>=1.2.26`
+
+- **azurerm (`hashicorp/azurerm`):** `>=3.74.0`
+- **random:** (any version)
 
 ## Input Variables
 
@@ -48,41 +50,43 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 | `tenant_id_pp` | The tenant ID of service principal or user at Power Platform | string | `null` | true |
 | `user_id_admin_pp` | The user ID to be assigned as Admin role of the Power Platform | string | `null` | true |
 
-
 ## Resources
-* `azurecaf_name.key_vault` from `azurecaf`
-* `azurecaf_name.key_vault_secret_irkey` from `azurecaf`
-* `azurecaf_name.key_vault_secret_pp` from `azurecaf`
-* `azurecaf_name.key_vault_secret_recover_key` from `azurecaf`
-* `azurecaf_name.key_vault_secret_vm_pwd` from `azurecaf`
-* `azurecaf_name.nic` from `azurecaf`
-* `azurecaf_name.nsg` from `azurecaf`
-* `azurecaf_name.publicip` from `azurecaf`
-* `azurecaf_name.rg` from `azurecaf`
-* `azurecaf_name.subnet` from `azurecaf`
-* `azurecaf_name.vnet` from `azurecaf`
-* `azurerm_key_vault.key_vault` from `azurerm`
-* `azurerm_key_vault_access_policy.key_vault_access_policy` from `azurerm`
-* `azurerm_key_vault_secret.key_vault_secret_irkey` from `azurerm`
-* `azurerm_key_vault_secret.key_vault_secret_pp` from `azurerm`
-* `azurerm_key_vault_secret.key_vault_secret_recover_key` from `azurerm`
-* `azurerm_key_vault_secret.key_vault_secret_vm_pwd` from `azurerm`
-* `azurerm_network_interface.nic` from `azurerm`
-* `azurerm_network_interface_security_group_association.rgassociation` from `azurerm`
-* `azurerm_network_security_group.nsg` from `azurerm`
-* `azurerm_public_ip.publicip` from `azurerm`
-* `azurerm_resource_group.rg` from `azurerm`
-* `azurerm_subnet.subnet` from `azurerm`
-* `azurerm_virtual_network.vnet` from `azurerm`
-* `random_string.key_vault_suffix` from `random`
-* `random_string.vm_pwd` from `random`
+
+- `azurecaf_name.key_vault` from `azurecaf`
+
+- `azurecaf_name.key_vault_secret_irkey` from `azurecaf`
+- `azurecaf_name.key_vault_secret_pp` from `azurecaf`
+- `azurecaf_name.key_vault_secret_recover_key` from `azurecaf`
+- `azurecaf_name.key_vault_secret_vm_pwd` from `azurecaf`
+- `azurecaf_name.nic` from `azurecaf`
+- `azurecaf_name.nsg` from `azurecaf`
+- `azurecaf_name.publicip` from `azurecaf`
+- `azurecaf_name.rg` from `azurecaf`
+- `azurecaf_name.subnet` from `azurecaf`
+- `azurecaf_name.vnet` from `azurecaf`
+- `azurerm_key_vault.key_vault` from `azurerm`
+- `azurerm_key_vault_access_policy.key_vault_access_policy` from `azurerm`
+- `azurerm_key_vault_secret.key_vault_secret_irkey` from `azurerm`
+- `azurerm_key_vault_secret.key_vault_secret_pp` from `azurerm`
+- `azurerm_key_vault_secret.key_vault_secret_recover_key` from `azurerm`
+- `azurerm_key_vault_secret.key_vault_secret_vm_pwd` from `azurerm`
+- `azurerm_network_interface.nic` from `azurerm`
+- `azurerm_network_interface_security_group_association.rgassociation` from `azurerm`
+- `azurerm_network_security_group.nsg` from `azurerm`
+- `azurerm_public_ip.publicip` from `azurerm`
+- `azurerm_resource_group.rg` from `azurerm`
+- `azurerm_subnet.subnet` from `azurerm`
+- `azurerm_virtual_network.vnet` from `azurerm`
+- `random_string.key_vault_suffix` from `random`
+- `random_string.vm_pwd` from `random`
 
 ## Data Sources
-* `data.azurerm_client_config.current` from `azurerm`
+
+- `data.azurerm_client_config.current` from `azurerm`
 
 ## Child Modules
-* `gateway_vm` from `./gateway-vm`
 
+- `gateway_vm` from `./gateway-vm`
 
 ## Usage
 
@@ -125,7 +129,7 @@ It is the runtime used to connect the VM to SHIR in Synapse/ADF/Fabric. Check th
 
 #### SAP Connector for .Net
 
-It is the runtime used to connect the VM to SAP system. You need to [download the MSI file](https://support.sap.com/en/product/connectors/msnet.html) and upload to the Storage Account mentioned above. The installation provided in this guide, follows this [documentation](https://learn.microsoft.com/en-us/azure/data-factory/sap-change-data-capture-shir-preparation).
+It is the runtime used to connect the VM to SAP system. You need to [download the MSI file](https://support.sap.com/en/product/connectors/msnet.html) and upload to the folder mentioned above. The installation provided in this guide, follows this [documentation](https://learn.microsoft.com/en-us/azure/data-factory/sap-change-data-capture-shir-preparation).
 
 #### On-Premises Data Gateway
 

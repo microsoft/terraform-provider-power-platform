@@ -50,11 +50,11 @@ resource "azurerm_storage_blob" "storage_blob_java_runtime" {
 }
 
 resource "azurerm_storage_blob" "storage_blob_sapnco_install" {
-  name                   = "NCo3025_Net40_x64___1.msi"
+  name                   = "sapnco.msi"
   storage_account_name   = azurerm_storage_account.storage_account.name
   storage_container_name = azurerm_storage_container.storage_container_installs.name
   type                   = "Block"
-  source                 = "/workspaces/terraform-provider-power-platform/examples/quickstarts/301-sap-gateway/storage-account/sapnco-msi/NCo3025_Net40_x64.msi"
+  source                 = "/workspaces/terraform-provider-power-platform/examples/quickstarts/301-sap-gateway/storage-account/sapnco-msi/sapnco.msi"
 }
 
 resource "azurerm_storage_blob" "storage_blob_runtime_setup" {

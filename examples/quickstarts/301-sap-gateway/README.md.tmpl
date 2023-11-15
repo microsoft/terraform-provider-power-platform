@@ -6,13 +6,13 @@ This Terraform module aims to provide a fully managed infrastructure that integr
 
 - Service Principal or User Account with permissions configured as referenced in [the provider's user documentation](https://microsoft.github.io/terraform-provider-power-platform#authentication).
 
-### Storage Account
+### Storage Account Preparation
 
-Before you execute the script, you need to create a Storage Account, upload all scripts listed in the folder `./gateway-vm/scripts` and the SAP .NET Connector MSI file (check below for more information).
+Before you execute the script, you need to upload the SAP .NET Connector MSI file the folder `./storage-account/sapnco-msi` and rename to `sapnco.msi` (check below for more information).
 
-You can follow [this guide](https://learn.microsoft.com/en-us/azure/storage/common/storage-account-create?tabs=azure-portal) to create the storage account.
+### SHIR Nodes Preparation
 
-> Tip: Make sure the blob accept anonymous access.
+Make sure there is not any node assigned to the self-hosted integration runtime at Synapse or ADF.
 
 {{ .ModuleDetails }}
 
@@ -57,7 +57,7 @@ It is the runtime used to connect the VM to SHIR in Synapse/ADF/Fabric. Check th
 
 #### SAP Connector for .Net
 
-It is the runtime used to connect the VM to SAP system. You need to [download the MSI file](https://support.sap.com/en/product/connectors/msnet.html) and upload to the Storage Account mentioned above. The installation provided in this guide, follows this [documentation](https://learn.microsoft.com/en-us/azure/data-factory/sap-change-data-capture-shir-preparation).
+It is the runtime used to connect the VM to SAP system. You need to [download the MSI file](https://support.sap.com/en/product/connectors/msnet.html) and upload to the folder mentioned above. The installation provided in this guide, follows this [documentation](https://learn.microsoft.com/en-us/azure/data-factory/sap-change-data-capture-shir-preparation).
 
 #### On-Premises Data Gateway
 
