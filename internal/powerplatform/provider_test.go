@@ -15,6 +15,7 @@ import (
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
+	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	"github.com/stretchr/testify/require"
 )
 
@@ -68,6 +69,7 @@ func TestUnitPowerPlatformProviderHasChildResources(t *testing.T) {
 		solution.NewSolutionResource(),
 		tenant_settings.NewTenantSettingsResource(),
 		licensing.NewBillingPolicyResource(),
+		managed_environment.NewManagedEnvironmentResource(),
 	}
 	resources := NewPowerPlatformProvider()().(*PowerPlatformProvider).Resources(context.Background())
 
