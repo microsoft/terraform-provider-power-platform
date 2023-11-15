@@ -23,6 +23,23 @@ const (
 	API_VERSION = "2022-03-01-preview"
 )
 
+func (client *LicensingClient) GetBillingPolicies(ctx context.Context) ([]BillingPolicyDto, error) {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.ppApi.GetConfig().Urls.PowerPlatformUrl,
+		Path:   "licensing/billingPolicies",
+	}
+
+	values := url.Values{}
+	values.Add("api-version", API_VERSION)
+	apiUrl.RawQuery = values.Encode()
+
+	policies := BillingPolicyArrayDto{}
+	_, err := client.ppApi.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policies)
+
+	return policies.Value, err
+}
+
 func (client *LicensingClient) GetBillingPolicy(ctx context.Context, billingId string) (*BillingPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",

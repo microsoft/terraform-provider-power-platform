@@ -51,6 +51,7 @@ func TestUnitPowerPlatformProvider_HasChildDataSources(t *testing.T) {
 		solution.NewSolutionsDataSource(),
 		dlp_policy.NewDataLossPreventionPolicyDataSource(),
 		tenant_settings.NewTenantSettingsDataSource(),
+		licensing.NewBillingPoliciesDataSource(),
 	}
 	datasources := NewPowerPlatformProvider()().(*PowerPlatformProvider).DataSources(context.Background())
 

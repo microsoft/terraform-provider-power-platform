@@ -261,5 +261,6 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return solution.NewSolutionsDataSource() },
 		func() datasource.DataSource { return dlp_policy.NewDataLossPreventionPolicyDataSource() },
 		func() datasource.DataSource { return tenant_settings.NewTenantSettingsDataSource() },
+		func() datasource.DataSource { return licensing.NewBillingPoliciesDataSource() },
 	}
 }

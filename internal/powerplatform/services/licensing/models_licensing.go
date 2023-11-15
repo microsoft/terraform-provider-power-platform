@@ -26,6 +26,10 @@ type BillingPolicyDto struct {
 	LastModifiedBy    PrincipalDto         `json:"lastModifiedBy"`
 }
 
+type BillingPolicyArrayDto struct {
+	Value []BillingPolicyDto `json:"value"`
+}
+
 type BillingPolicyUpdateDto struct {
 	Name   string `json:"name"`
 	Status string `json:"status"`
