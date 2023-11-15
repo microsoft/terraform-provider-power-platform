@@ -28,6 +28,7 @@ func (client *PowerPlatformAuth) AuthenticateUserPass(ctx context.Context, crede
 	authority := "https://login.microsoftonline.com/" + credentials.TenantId
 
 	publicClientApp, err := public.New(publicClientApplicationID, public.WithAuthority(authority))
+
 	if err != nil {
 		return "", err
 	}
