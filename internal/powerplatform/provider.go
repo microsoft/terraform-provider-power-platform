@@ -180,40 +180,23 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	ctx = tflog.SetField(ctx, "power_platform_secret", secret)
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_secret")
 
-	p.Config.Credentials.TenantId = tenantId
-	p.Config.Credentials.ClientId = clientId
-	p.Config.Credentials.Secret = secret
-	p.Config.Credentials.Username = username
-	p.Config.Credentials.Password = password
-
-	if tenantId == "" {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("tenant_id"),
-			"Unknown API tenant id",
-			"The provider cannot create the API client as there is an unknown configuration value for the tenant id. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_TENANT_ID environment variable.",
-		)
-	}
-	if clientId == "" || secret == "" && (clientId != "" || secret != "") {
-		if clientId == "" {
+	if clientId != "" && secret != "" && tenantId != "" {
+		p.Config.Credentials.TenantId = tenantId
+		p.Config.Credentials.ClientId = clientId
+		p.Config.Credentials.Secret = secret
+	} else if username != "" && password != "" && tenantId != "" {
+		p.Config.Credentials.TenantId = tenantId
+		p.Config.Credentials.Username = username
+		p.Config.Credentials.Password = password
+	} else {
+		if tenantId == "" {
 			resp.Diagnostics.AddAttributeError(
-				path.Root("client_id"),
-				"Unknown client id",
-				"The provider cannot create the API client as there is an unknown configuration value for the client id. "+
-					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_CLIENT_ID environment variable.",
+				path.Root("tenant_id"),
+				"Unknown API tenant id",
+				"The provider cannot create the API client as there is an unknown configuration value for the tenant id. "+
+					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_TENANT_ID environment variable.",
 			)
 		}
-		if secret == "" {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("secret"),
-				"Unknown secret",
-				"The provider cannot create the API client as there is an unknown configuration value for the secret. "+
-					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_SECRET environment variable.",
-			)
-		}
-	}
-
-	if username == "" || password == "" && (username != "" || password != "") {
 		if username == "" {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("username"),
@@ -228,6 +211,22 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 				"Unknown password",
 				"The provider cannot create the API client as there is an unknown configuration value for the password. "+
 					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_PASSWORD environment variable.",
+			)
+		}
+		if clientId == "" {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("client_id"),
+				"Unknown client id",
+				"The provider cannot create the API client as there is an unknown configuration value for the client id. "+
+					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_CLIENT_ID environment variable.",
+			)
+		}
+		if secret == "" {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("secret"),
+				"Unknown secret",
+				"The provider cannot create the API client as there is an unknown configuration value for the secret. "+
+					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_SECRET environment variable.",
 			)
 		}
 	}
