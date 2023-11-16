@@ -48,6 +48,32 @@ type EnvironmentPropertiesDto struct {
 	LinkedEnvironmentMetadata LinkedEnvironmentMetadataDto `json:"linkedEnvironmentMetadata"`
 	States                    StatesEnvironmentDto         `json:"states"`
 	TenantID                  string                       `json:"tenantId"`
+	GovernanceConfiguration   GovernanceConfigurationDto   `json:"governanceConfiguration"`
+}
+
+type GovernanceConfigurationDto struct {
+	ProtectionLevel string       `json:"protectionLevel"`
+	Settings        *SettingsDto `json:"settings,omitempty"`
+}
+
+type SettingsDto struct {
+	ExtendedSettings ExtendedSettingsDto `json:"extendedSettings"`
+}
+
+// Following is the properties for Managed Environments
+type ExtendedSettingsDto struct {
+	ExcludeEnvironmentFromAnalysis string `json:"excludeEnvironmentFromAnalysis"`
+	IsGroupSharingDisabled         string `json:"isGroupSharingDisabled"`
+	MaxLimitUserSharing            string `json:"maxLimitUserSharing"`
+	DisableAiGeneratedDescriptions string `json:"disableAiGeneratedDescriptions"`
+	IncludeOnHomepageInsights      string `json:"includeOnHomepageInsights"`
+	LimitSharingMode               string `json:"limitSharingMode"`
+	SolutionCheckerMode            string `json:"solutionCheckerMode"`
+	SuppressValidationEmails       string `json:"suppressValidationEmails"`
+	SolutionCheckerRuleOverrides   string `json:"solutionCheckerRuleOverrides"`
+	MakerOnboardingUrl             string `json:"makerOnboardingUrl"`
+	//MakerOnboardingTimestamp       time.Time `json:"makerOnboardingTimestamp"`
+	MakerOnboardingMarkdown string `json:"makerOnboardingMarkdown"`
 }
 
 type LinkedEnvironmentMetadataDto struct {

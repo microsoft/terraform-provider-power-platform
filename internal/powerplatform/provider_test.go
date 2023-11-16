@@ -15,6 +15,7 @@ import (
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
+	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	"github.com/stretchr/testify/require"
 )
 
@@ -43,7 +44,7 @@ var (
 	}
 )
 
-func TestUnitPowerPlatformProvider_HasChildDataSources(t *testing.T) {
+func TestUnitPowerPlatformProviderHasChildDataSources(t *testing.T) {
 	expectedDataSources := []datasource.DataSource{
 		powerapps.NewPowerAppsDataSource(),
 		environment.NewEnvironmentsDataSource(),
@@ -61,13 +62,14 @@ func TestUnitPowerPlatformProvider_HasChildDataSources(t *testing.T) {
 	}
 }
 
-func TestUnitPowerPlatformProvider_HasChildResources(t *testing.T) {
+func TestUnitPowerPlatformProviderHasChildResources(t *testing.T) {
 	expectedResources := []resource.Resource{
 		environment.NewEnvironmentResource(),
 		dlp_policy.NewDataLossPreventionPolicyResource(),
 		solution.NewSolutionResource(),
 		tenant_settings.NewTenantSettingsResource(),
 		licensing.NewBillingPolicyResource(),
+		managed_environment.NewManagedEnvironmentResource(),
 	}
 	resources := NewPowerPlatformProvider()().(*PowerPlatformProvider).Resources(context.Background())
 
