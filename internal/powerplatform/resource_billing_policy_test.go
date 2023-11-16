@@ -52,12 +52,12 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 
 	httpmock.RegisterResponder("POST", "https://api.powerplatform.com/licensing/BillingPolicies?api-version=2022-03-01-preview",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("services/licensing/test/resource/Validate_Create/post_billing_policy.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("services/licensing/test/resource/policies/Validate_Create/post_billing_policy.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000001?api-version=2022-03-01-preview",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/licensing/test/resource/Validate_Create/post_billing_policy.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/licensing/test/resource/policies/Validate_Create/post_billing_policy.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", "https://api.powerplatform.com/licensing/BillingPolicies/00000000-0000-0000-0000-000000000001?api-version=2022-03-01-preview",
@@ -167,13 +167,13 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 
 	httpmock.RegisterResponder("POST", "https://api.powerplatform.com/licensing/BillingPolicies?api-version=2022-03-01-preview",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("services/licensing/test/resource/Validate_Update/post_billing_policy_1.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("services/licensing/test/resource/policies/Validate_Update/post_billing_policy_1.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000001?api-version=2022-03-01-preview",
 		func(req *http.Request) (*http.Response, error) {
 			getResponseInx++
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/licensing/test/resource/Validate_Update/get_billing_policy_%d.json", getResponseInx)).String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/licensing/test/resource/policies/Validate_Update/get_billing_policy_%d.json", getResponseInx)).String()), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", "https://api.powerplatform.com/licensing/BillingPolicies/00000000-0000-0000-0000-000000000001?api-version=2022-03-01-preview",
@@ -183,7 +183,7 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 
 	httpmock.RegisterResponder("PUT", "https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000001?api-version=2022-03-01-preview",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/licensing/test/resource/Validate_Update/put_billing_policy_1.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/licensing/test/resource/policies/Validate_Update/put_billing_policy_1.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -332,13 +332,13 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 	httpmock.RegisterResponder("POST", "https://api.powerplatform.com/licensing/BillingPolicies?api-version=2022-03-01-preview",
 		func(req *http.Request) (*http.Response, error) {
 			postResponseInx++
-			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File(fmt.Sprintf("services/licensing/test/resource/Validate_Update_ForceRecreate/post_billing_policy_%d.json", postResponseInx)).String()), nil
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File(fmt.Sprintf("services/licensing/test/resource/policies/Validate_Update_ForceRecreate/post_billing_policy_%d.json", postResponseInx)).String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `=~^https://api\.powerplatform\.com/licensing/billingPolicies/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
 			getResponseInx++
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/licensing/test/resource/Validate_Update_ForceRecreate/get_billing_policy_%d.json", getResponseInx)).String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/licensing/test/resource/policies/Validate_Update_ForceRecreate/get_billing_policy_%d.json", getResponseInx)).String()), nil
 		})
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.powerplatform\.com/licensing/BillingPolicies/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {

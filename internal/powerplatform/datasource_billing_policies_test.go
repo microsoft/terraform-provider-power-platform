@@ -42,7 +42,7 @@ func TestUnitTestBillingPoliciesDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", `https://api.powerplatform.com/licensing/billingPolicies?api-version=2022-03-01-preview`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/licensing/test/datasource/get_billing_policies.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/licensing/test/datasource/policies/get_billing_policies.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
