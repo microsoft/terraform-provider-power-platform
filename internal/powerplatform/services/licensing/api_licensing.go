@@ -107,6 +107,30 @@ func (client *LicensingClient) DeleteBillingPolicy(ctx context.Context, billingI
 	return err
 }
 
+func (client *LicensingClient) GetEnvironmentsForBillingPolicy(ctx context.Context, billingId string) ([]string, error) {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.ppApi.GetConfig().Urls.PowerPlatformUrl,
+		Path:   "licensing/billingPolicies/6fd11841-2478-4cb5-a06d-04c5cbb70c0f/environments",
+	}
+
+	values := url.Values{}
+	values.Add("api-version", API_VERSION)
+	apiUrl.RawQuery = values.Encode()
+
+	billingPolicyEnvironments := BillingPolicyEnvironmentsArrayResponseDto{}
+	_, err := client.ppApi.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &billingPolicyEnvironments)
+	if err != nil {
+		return nil, err
+	}
+
+	environments := []string{}
+	for _, billingPolicyEnvironment := range billingPolicyEnvironments.Value {
+		environments = append(environments, billingPolicyEnvironment.EnvironmentId)
+	}
+	return environments, err
+}
+
 func (client *LicensingClient) AddEnvironmentsToBillingPolicy(ctx context.Context, billingId string, environmentIds []string) error {
 	apiUrl := &url.URL{
 		Scheme: "https",
@@ -130,7 +154,7 @@ func (client *LicensingClient) RemoveEnvironmentsToBillingPolicy(ctx context.Con
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.ppApi.GetConfig().Urls.PowerPlatformUrl,
-		Path:   fmt.Sprintf("licensing/billingPolicies/%s/environments/add", billingId),
+		Path:   fmt.Sprintf("licensing/billingPolicies/%s/environments/remove", billingId),
 	}
 
 	values := url.Values{}
