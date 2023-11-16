@@ -14,32 +14,32 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 )
 
-var _ resource.Resource = &BillingPolicyEnvironmentsResource{}
-var _ resource.ResourceWithImportState = &BillingPolicyEnvironmentsResource{}
+var _ resource.Resource = &BillingPolicyEnvironmentResource{}
+var _ resource.ResourceWithImportState = &BillingPolicyEnvironmentResource{}
 
-func NewBillingPolicyEnvironmentsResource() resource.Resource {
-	return &BillingPolicyEnvironmentsResource{
+func NewBillingPolicyEnvironmentResource() resource.Resource {
+	return &BillingPolicyEnvironmentResource{
 		ProviderTypeName: "powerplatform",
-		TypeName:         "_billing_policy_environments",
+		TypeName:         "_billing_policy_environment",
 	}
 }
 
-type BillingPolicyEnvironmentsResource struct {
+type BillingPolicyEnvironmentResource struct {
 	LicensingClient  LicensingClient
 	ProviderTypeName string
 	TypeName         string
 }
 
-type BillingPolicyEnvironmentsResourceModel struct {
+type BillingPolicyEnvironmentResourceModel struct {
 	BillingPolicyId string   `tfsdk:"billing_policy_id"`
 	Environments    []string `tfsdk:"environments"`
 }
 
-func (r *BillingPolicyEnvironmentsResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *BillingPolicyEnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-func (r *BillingPolicyEnvironmentsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *BillingPolicyEnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Power Platform Billing Policy Environments",
 		MarkdownDescription: "Power Platform Billing Policy Environments",
@@ -62,7 +62,7 @@ func (r *BillingPolicyEnvironmentsResource) Schema(ctx context.Context, req reso
 	}
 }
 
-func (r *BillingPolicyEnvironmentsResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *BillingPolicyEnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -80,8 +80,8 @@ func (r *BillingPolicyEnvironmentsResource) Configure(ctx context.Context, req r
 	r.LicensingClient = NewLicensingClient(clientBapi)
 }
 
-func (r *BillingPolicyEnvironmentsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *BillingPolicyEnvironmentsResourceModel
+func (r *BillingPolicyEnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan *BillingPolicyEnvironmentResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
@@ -111,8 +111,8 @@ func (r *BillingPolicyEnvironmentsResource) Create(ctx context.Context, req reso
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *BillingPolicyEnvironmentsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *BillingPolicyEnvironmentsResourceModel
+func (r *BillingPolicyEnvironmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state *BillingPolicyEnvironmentResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.ProviderTypeName))
 
@@ -139,14 +139,14 @@ func (r *BillingPolicyEnvironmentsResource) Read(ctx context.Context, req resour
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *BillingPolicyEnvironmentsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan *BillingPolicyEnvironmentsResourceModel
+func (r *BillingPolicyEnvironmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan *BillingPolicyEnvironmentResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
-	var state *BillingPolicyEnvironmentsResourceModel
+	var state *BillingPolicyEnvironmentResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -184,8 +184,8 @@ func (r *BillingPolicyEnvironmentsResource) Update(ctx context.Context, req reso
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *BillingPolicyEnvironmentsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *BillingPolicyEnvironmentsResourceModel
+func (r *BillingPolicyEnvironmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state *BillingPolicyEnvironmentResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
 
@@ -204,6 +204,6 @@ func (r *BillingPolicyEnvironmentsResource) Delete(ctx context.Context, req reso
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *BillingPolicyEnvironmentsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *BillingPolicyEnvironmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

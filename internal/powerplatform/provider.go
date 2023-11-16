@@ -251,7 +251,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return solution.NewSolutionResource() },
 		func() resource.Resource { return tenant_settings.NewTenantSettingsResource() },
 		func() resource.Resource { return managed_environment.NewManagedEnvironmentResource() },
-		func() resource.Resource { return licensing.NewBillingPolicyEnvironmentsResource() },
+		func() resource.Resource { return licensing.NewBillingPolicyEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
 	}
 }
@@ -265,5 +265,6 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return dlp_policy.NewDataLossPreventionPolicyDataSource() },
 		func() datasource.DataSource { return tenant_settings.NewTenantSettingsDataSource() },
 		func() datasource.DataSource { return licensing.NewBillingPoliciesDataSource() },
+		func() datasource.DataSource { return licensing.NewBillingPoliciesEnvironmetsDataSource() },
 	}
 }

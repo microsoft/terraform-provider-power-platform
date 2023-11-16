@@ -53,6 +53,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources(t *testing.T) {
 		dlp_policy.NewDataLossPreventionPolicyDataSource(),
 		tenant_settings.NewTenantSettingsDataSource(),
 		licensing.NewBillingPoliciesDataSource(),
+		licensing.NewBillingPoliciesEnvironmetsDataSource(),
 	}
 	datasources := NewPowerPlatformProvider()().(*PowerPlatformProvider).DataSources(context.Background())
 
@@ -68,9 +69,9 @@ func TestUnitPowerPlatformProviderHasChildResources(t *testing.T) {
 		dlp_policy.NewDataLossPreventionPolicyResource(),
 		solution.NewSolutionResource(),
 		tenant_settings.NewTenantSettingsResource(),
-		licensing.NewBillingPolicyResource(),
 		managed_environment.NewManagedEnvironmentResource(),
-		licensing.NewBillingPolicyEnvironmentsResource(),
+		licensing.NewBillingPolicyResource(),
+		licensing.NewBillingPolicyEnvironmentResource(),
 	}
 	resources := NewPowerPlatformProvider()().(*PowerPlatformProvider).Resources(context.Background())
 

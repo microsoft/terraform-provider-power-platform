@@ -111,7 +111,7 @@ func (client *LicensingClient) GetEnvironmentsForBillingPolicy(ctx context.Conte
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.ppApi.GetConfig().Urls.PowerPlatformUrl,
-		Path:   "licensing/billingPolicies/6fd11841-2478-4cb5-a06d-04c5cbb70c0f/environments",
+		Path:   fmt.Sprintf("licensing/billingPolicies/%s/environments", billingId),
 	}
 
 	values := url.Values{}
