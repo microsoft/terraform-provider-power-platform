@@ -50,10 +50,10 @@ func (r *BillingPolicyEnvironmentsResource) Schema(ctx context.Context, req reso
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"environments": schema.ListAttribute{
-				Description:         "The environments associated with the billing policy",
-				MarkdownDescription: "The environments associated with the billing policy",
-			},
+			// "environments": schema.ListAttribute{
+			// 	Description:         "The environments associated with the billing policy",
+			// 	MarkdownDescription: "The environments associated with the billing policy",
+			// },
 		},
 	}
 }

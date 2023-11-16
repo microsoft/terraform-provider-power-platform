@@ -111,17 +111,17 @@ func (client *LicensingClient) AddEnvironmentsToBillingPolicy(ctx context.Contex
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.ppApi.GetConfig().Urls.PowerPlatformUrl,
-		Path:   fmt.Sprintf("licensing/billingPolicies/{billingPolicyId}/environments/add", billingId),
+		Path:   fmt.Sprintf("licensing/billingPolicies/%s/environments/add", billingId),
 	}
 
 	values := url.Values{}
 	values.Add("api-version", API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
-	environemnts := BillingPolicyEnvironmentsArrayDto{
+	environments := BillingPolicyEnvironmentsArrayDto{
 		EnvironmentIds: environmentIds,
 	}
-	_, err := client.ppApi.Execute(ctx, "POST", apiUrl.String(), nil, environemnts, []int{http.StatusOK}, nil)
+	_, err := client.ppApi.Execute(ctx, "POST", apiUrl.String(), nil, environments, []int{http.StatusOK}, nil)
 
 	return err
 }
@@ -130,17 +130,17 @@ func (client *LicensingClient) RemoveEnvironmentsToBillingPolicy(ctx context.Con
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.ppApi.GetConfig().Urls.PowerPlatformUrl,
-		Path:   fmt.Sprintf("licensing/billingPolicies/{billingPolicyId}/environments/add", billingId),
+		Path:   fmt.Sprintf("licensing/billingPolicies/%s/environments/add", billingId),
 	}
 
 	values := url.Values{}
 	values.Add("api-version", API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
-	environemnts := BillingPolicyEnvironmentsArrayDto{
+	environments := BillingPolicyEnvironmentsArrayDto{
 		EnvironmentIds: environmentIds,
 	}
-	_, err := client.ppApi.Execute(ctx, "POST", apiUrl.String(), nil, environemnts, []int{http.StatusOK}, nil)
+	_, err := client.ppApi.Execute(ctx, "POST", apiUrl.String(), nil, environments, []int{http.StatusOK}, nil)
 
 	return err
 }

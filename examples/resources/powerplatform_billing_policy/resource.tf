@@ -22,3 +22,5 @@ resource "powerplatform_billing_policy" "pay_as_you_go" {
     subscription_id = "00000000-0000-0000-0000-000000000000"
   }
 }
+
+
