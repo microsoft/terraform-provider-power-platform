@@ -49,12 +49,23 @@ type EnvironmentResourceModel struct {
 	LanguageName    types.Int64  `tfsdk:"language_code"`
 	CurrencyCode    types.String `tfsdk:"currency_code"`
 	//IsCustomControlInCanvasAppsEnabled types.Bool   `tfsdk:"is_custom_control_in_canvas_apps_enabled"`
-	Version          types.String `tfsdk:"version"`
-	Templates        []string     `tfsdk:"templates"`
-	TemplateMetadata types.String `tfsdk:"template_metadata"`
-	LinkedAppType    types.String `tfsdk:"linked_app_type"`
-	LinkedAppId      types.String `tfsdk:"linked_app_id"`
-	LinkedAppUrl     types.String `tfsdk:"linked_app_url"`
+	Version               types.String             `tfsdk:"version"`
+	Templates             []string                 `tfsdk:"templates"`
+	TemplateMetadata      PostProvisioningPackages `tfsdk:"template_metadata"`
+	LinkedAppType         types.String             `tfsdk:"linked_app_type"`
+	LinkedAppId           types.String             `tfsdk:"linked_app_id"`
+	LinkedAppUrl          types.String             `tfsdk:"linked_app_url"`
+	ApplicationUniqueName types.String             `tfsdk:"application_unique_name"`
+	Parameters            types.String             `tfsdk:"parameters"`
+}
+
+type ProvisionPackage struct {
+	ApplicationUniqueName types.String `tfsdk:"application_unique_name"`
+	Parameters            types.String `tfsdk:"parameters"`
+}
+
+type PostProvisioningPackages struct {
+	PostProvisioningPackages []string `tfsdk:"post_provisioning_packages"`
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -164,17 +175,25 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "The selected instance provisioning template (if any)",
 				Optional:            true,
 				ElementType:         types.StringType,
-				// Validators: []validator.String{
-				// 	stringvalidator.OneOf(EnvironmentCurrencyCodes...),
-				// },
 			},
-			"template_metadata": schema.StringAttribute{
-				Description:         "JSON representation of the environment deployment metadata",
-				MarkdownDescription: "JSON representation of the environment deployment metadata",
-				Optional:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+			"template_metadata": schema.ListNestedAttribute{
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"application_unique_name": schema.StringAttribute{
+							Description:         "The target application name",
+							MarkdownDescription: "The target application name",
+							Optional:            true,
+						},
+						"parameters": schema.StringAttribute{
+							Description:         "Extra parameters for the template",
+							MarkdownDescription: "Extra parameters for the template",
+							Optional:            true,
+						},
+					},
 				},
+				Description:         "Additional template metadata (if any)",
+				MarkdownDescription: "Additional template metadata (if any)",
+				Optional:            true,
 			},
 			"linked_app_type": schema.StringAttribute{
 				Description:         "The type of the linked D365 application",
@@ -239,8 +258,8 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 				Currency: EnvironmentCreateCurrency{
 					Code: plan.CurrencyCode.ValueString(),
 				},
-				//Templates:        plan.Templates,
-				//TemplateMetadata: EnvironmentCreateTemplateMetadata{},
+				Templates:        plan.Templates,
+				TemplateMetadata: EnvironmentCreateTemplateMetadata{},
 			},
 		},
 	}
