@@ -1,0 +1,48 @@
+{
+    "value": [
+        {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "name": "billingpolicy1",
+            "type": "TenantOwned",
+            "status": "Enabled",
+            "location": "europe",
+            "billingInstrument": {
+                "id": "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/rg-group/providers/Microsoft.PowerPlatform/accounts/billingpolicy1",
+                "subscriptionId": "00000000-0000-0000-0000-000000000001",
+                "resourceGroup": "rg-group1"
+            },
+            "createdOn": "2023-11-14T09:59:23Z",
+            "createdBy": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "type": "User"
+            },
+            "lastModifiedOn": "2023-11-14T09:59:23Z",
+            "lastModifiedBy": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "type": "User"
+            }
+        },
+        {
+            "id": "00000000-0000-0000-0000-000000000002",
+            "name": "billingpolicy2",
+            "type": "TenantOwned",
+            "status": "Enabled",
+            "location": "europe",
+            "billingInstrument": {
+                "id": "/subscriptions/00000000-0000-0000-0000-000000000002/resourceGroups/rg-group/providers/Microsoft.PowerPlatform/accounts/billingpolicy1",
+                "subscriptionId": "00000000-0000-0000-0000-000000000002",
+                "resourceGroup": "rg-group2"
+            },
+            "createdOn": "2023-11-14T09:59:23Z",
+            "createdBy": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "type": "User"
+            },
+            "lastModifiedOn": "2023-11-14T09:59:23Z",
+            "lastModifiedBy": {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "type": "User"
+            }
+        }
+    ]
+}

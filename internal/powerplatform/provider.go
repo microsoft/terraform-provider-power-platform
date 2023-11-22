@@ -18,6 +18,8 @@ import (
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
+	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
+	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
@@ -251,6 +253,8 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return dlp_policy.NewDataLossPreventionPolicyResource() },
 		func() resource.Resource { return solution.NewSolutionResource() },
 		func() resource.Resource { return tenant_settings.NewTenantSettingsResource() },
+		func() resource.Resource { return licensing.NewBillingPolicyResource() },
+		func() resource.Resource { return managed_environment.NewManagedEnvironmentResource() },
 	}
 }
 
@@ -263,5 +267,6 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return solution.NewSolutionsDataSource() },
 		func() datasource.DataSource { return dlp_policy.NewDataLossPreventionPolicyDataSource() },
 		func() datasource.DataSource { return tenant_settings.NewTenantSettingsDataSource() },
+		func() datasource.DataSource { return licensing.NewBillingPoliciesDataSource() },
 	}
 }

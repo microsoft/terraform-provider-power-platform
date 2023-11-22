@@ -34,9 +34,9 @@ type ProviderCredentialsModel struct {
 }
 
 func (model *ProviderCredentials) IsUserPassCredentialsProvided() bool {
-	return model.Username != "" || model.Password != "" || model.TenantId != ""
+	return model.Username != "" && model.Password != "" && model.TenantId != ""
 }
 
 func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {
-	return model.ClientId != "" || model.Secret != "" || model.TenantId != ""
+	return model.ClientId != "" && model.Secret != "" && model.TenantId != ""
 }
