@@ -30,18 +30,12 @@ func (client *ApplicationClient) GetApplicationsByEnvironmentId(ctx context.Cont
 	}
 	apiUrl.RawQuery = values.Encode()
 
-	header := http.Header{
-		"$expand": []string{"permissions,properties.capacity"},
-	}
+	application := ApplicationArrayDto{}
 
-	method := "GET"
-
-	application := []ApplicationDto{}
-
-	_, err := client.baseApi.Execute(ctx, method, apiUrl.String(), header, nil, []int{http.StatusOK}, &application)
+	_, err := client.baseApi.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &application)
 	if err != nil {
 		return nil, err
 	}
 
-	return application, nil
+	return application.Value, nil
 }

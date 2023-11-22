@@ -32,14 +32,15 @@ type ApplicationsDataSource struct {
 }
 
 type ApplicationsListDataSourceModel struct {
-	EnvironmentId types.String `tfsdk:"environment_id"`
-	Id            types.String `tfsdk:"id"`
+	EnvironmentId types.String                 `tfsdk:"environment_id"`
+	Id            types.String                 `tfsdk:"id"`
+	Applications  []ApplicationDataSourceModel `tfsdk:"applications"`
 }
 
 type ApplicationDataSourceModel struct {
-	ApplicationName types.String `tfsdk:"application_name"`
-	DisplayName     types.String `tfsdk:"display_name"`
-	Url             types.String `tfsdk:"url"`
+	ApplicationId types.String `tfsdk:"application_id"`
+	Name          types.String `tfsdk:"application_name"`
+	UniqueName    types.String `tfsdk:"unique_name"`
 }
 
 func (d *ApplicationsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -58,6 +59,30 @@ func (d *ApplicationsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 			"environment_id": schema.StringAttribute{
 				Description: "Id of the Dynamics 365 environment",
 				Optional:    true,
+			},
+			"applications": schema.ListNestedAttribute{
+				Description:         "List of Connectors",
+				MarkdownDescription: "List of Connectors",
+				Computed:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"application_id": schema.StringAttribute{
+							MarkdownDescription: "ApplicaitonId",
+							Description:         "ApplicaitonId",
+							Computed:            true,
+						},
+						"application_name": schema.StringAttribute{
+							MarkdownDescription: "Name",
+							Description:         "Name",
+							Computed:            true,
+						},
+						"unique_name": schema.StringAttribute{
+							MarkdownDescription: "Unique Name",
+							Description:         "Unique Name",
+							Computed:            true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -88,21 +113,19 @@ func (d *ApplicationsDataSource) Read(ctx context.Context, req datasource.ReadRe
 	plan.Id = types.StringValue(strconv.FormatInt(time.Now().Unix(), 10))
 	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
 
-	_, err := d.ApplicationClient.GetApplicationsByEnvironmentId(ctx, plan.EnvironmentId.ValueString())
+	applications, err := d.ApplicationClient.GetApplicationsByEnvironmentId(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
 
-	/*
-		for _, application := range applications {
-			plan.Applications = append(plan.Applications, ApplicationDataSourceModel{
-				ApplicationName: types.StringValue(application.Name),
-				DisplayName:     types.StringValue(application.Properties.DisplayName),
-				Url:             types.StringValue(application.Id),
-			})
-		}
-	*/
+	for _, application := range applications {
+		plan.Applications = append(plan.Applications, ApplicationDataSourceModel{
+			ApplicationId: types.StringValue(application.ApplicationId),
+			Name:          types.StringValue(application.Name),
+			UniqueName:    types.StringValue(application.UniqueName),
+		})
+	}
 
 	diags := resp.State.Set(ctx, &plan)
 

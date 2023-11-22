@@ -1,19 +1,13 @@
 package powerplatform
 
-type ApplicationDto struct {
-	Id         string                   `json:"id"`
-	Type       string                   `json:"type"`
-	Location   string                   `json:"location"`
-	Name       string                   `json:"name"`
-	Properties ApplicationPropertiesDto `json:"properties"`
+type ApplicationArrayDto struct {
+	Value []ApplicationDto `json:"value"`
 }
 
-type ApplicationPropertiesDto struct {
-	DatabaseType   string `json:"databaseType"`
-	DisplayName    string `json:"displayName"`
-	EnvironmentSku string `json:"environmentSku"`
-	States         string `json:"states"`
-	TenantID       string `json:"tenantId"`
+type ApplicationDto struct {
+	ApplicationId string `json:"applicationId"`
+	Name          string `json:"applicationName"`
+	UniqueName    string `json:"uniqueName"`
 }
 
 type ApplicationDeleteDto struct {
