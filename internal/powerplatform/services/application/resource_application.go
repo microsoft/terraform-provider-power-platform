@@ -26,8 +26,9 @@ type ApplicationResource struct {
 }
 
 type ApplicationResourceModel struct {
-	Id              types.String `tfsdk:"id"`
-	ApplicationName types.String `tfsdk:"application_name"`
+	Id            types.String `tfsdk:"id"`
+	UniqueName    types.String `tfsdk:"unique_name"`
+	EnvironmentId types.String `tfsdk:"environment_id"`
 }
 
 func (r *ApplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -43,6 +44,12 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
+			},
+			"environment_id": schema.StringAttribute{
+				Required: true,
+			},
+			"unique_name": schema.StringAttribute{
+				Required: true,
 			},
 		},
 	}
@@ -77,7 +84,16 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.ApplicationName.ValueString()))
+	err := r.ApplicationClient.InstallApplicationInEnvironment(ctx, plan.EnvironmentId.ValueString(), plan.UniqueName.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
+		return
+	}
+
+	plan.Id = types.StringValue("00000000-0000-0000-0000-000000000000") // todo use id from response
+	//todo check application install status
+
+	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.UniqueName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
@@ -101,7 +117,7 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	// 	return
 	// }
 
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with environment_name %s", r.ProviderTypeName, state.ApplicationName.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with environment_name %s", r.ProviderTypeName, state.UniqueName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 

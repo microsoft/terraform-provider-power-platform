@@ -39,3 +39,22 @@ func (client *ApplicationClient) GetApplicationsByEnvironmentId(ctx context.Cont
 
 	return application.Value, nil
 }
+
+func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Context, environmentId string, uniqueName string) error {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.baseApi.GetConfig().Urls.PowerPlatformUrl,
+		Path:   fmt.Sprintf("/appmanagement/environments/%s/applicationPackages/%s/install", environmentId, uniqueName),
+	}
+	values := url.Values{
+		"api-version": []string{"2022-03-01-preview"},
+	}
+	apiUrl.RawQuery = values.Encode()
+
+	_, err := client.baseApi.Execute(ctx, "POST", apiUrl.String(), nil, nil, []int{http.StatusAccepted}, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
