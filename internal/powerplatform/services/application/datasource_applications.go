@@ -41,6 +41,12 @@ type ApplicationDataSourceModel struct {
 	ApplicationId types.String `tfsdk:"application_id"`
 	Name          types.String `tfsdk:"application_name"`
 	UniqueName    types.String `tfsdk:"unique_name"`
+	Version       types.String `tfsdk:"version"`
+	Description   types.String `tfsdk:"description"`
+	PublisherId   types.String `tfsdk:"publisher_id"`
+	PublisherName types.String `tfsdk:"publisher_name"`
+	LearnMoreUrl  types.String `tfsdk:"learn_more_url"`
+	State         types.String `tfsdk:"state"`
 }
 
 func (d *ApplicationsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -79,6 +85,36 @@ func (d *ApplicationsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 						"unique_name": schema.StringAttribute{
 							MarkdownDescription: "Unique Name",
 							Description:         "Unique Name",
+							Computed:            true,
+						},
+						"version": schema.StringAttribute{
+							MarkdownDescription: "Version",
+							Description:         "Version",
+							Computed:            true,
+						},
+						"description": schema.StringAttribute{
+							MarkdownDescription: "Localized Description",
+							Description:         "Localized Description",
+							Computed:            true,
+						},
+						"publisher_id": schema.StringAttribute{
+							MarkdownDescription: "Publisher Id",
+							Description:         "Publisher Id",
+							Computed:            true,
+						},
+						"publisher_name": schema.StringAttribute{
+							MarkdownDescription: "Publisher Name",
+							Description:         "Publisher Name",
+							Computed:            true,
+						},
+						"learn_more_url": schema.StringAttribute{
+							MarkdownDescription: "Learn More Url",
+							Description:         "Learn More Url",
+							Computed:            true,
+						},
+						"state": schema.StringAttribute{
+							MarkdownDescription: "State",
+							Description:         "State",
 							Computed:            true,
 						},
 					},
@@ -124,6 +160,12 @@ func (d *ApplicationsDataSource) Read(ctx context.Context, req datasource.ReadRe
 			ApplicationId: types.StringValue(application.ApplicationId),
 			Name:          types.StringValue(application.Name),
 			UniqueName:    types.StringValue(application.UniqueName),
+			Version:       types.StringValue(application.Version),
+			Description:   types.StringValue(application.Description),
+			PublisherId:   types.StringValue(application.PublisherId),
+			PublisherName: types.StringValue(application.PublisherName),
+			LearnMoreUrl:  types.StringValue(application.LearnMoreUrl),
+			State:         types.StringValue(application.State),
 		})
 	}
 
