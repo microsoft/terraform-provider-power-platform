@@ -8,6 +8,12 @@ type ApplicationDto struct {
 	ApplicationId string `json:"applicationId"`
 	Name          string `json:"applicationName"`
 	UniqueName    string `json:"uniqueName"`
+	Version       string `json:"version"`
+	Description   string `json:"localizedDescription"`
+	PublisherId   string `json:"publisherId"`
+	PublisherName string `json:"publisherName"`
+	LearnMoreUrl  string `json:"learnMoreUrl"`
+	State         string `json:"state"`
 }
 
 type ApplicationDeleteDto struct {
