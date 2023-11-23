@@ -59,7 +59,7 @@ func (d *ApplicationsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 		MarkdownDescription: "Fetches the list of Dynamics 365 applications in a tenant",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description: "Id of the Dynamics 365 application",
+				Description: "Id of the read operation",
 				Optional:    true,
 			},
 			"environment_id": schema.StringAttribute{
@@ -67,8 +67,8 @@ func (d *ApplicationsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				Optional:    true,
 			},
 			"applications": schema.ListNestedAttribute{
-				Description:         "List of Connectors",
-				MarkdownDescription: "List of Connectors",
+				Description:         "List of Applications",
+				MarkdownDescription: "List of Applications",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
