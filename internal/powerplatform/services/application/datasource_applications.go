@@ -38,15 +38,16 @@ type ApplicationsListDataSourceModel struct {
 }
 
 type ApplicationDataSourceModel struct {
-	ApplicationId types.String `tfsdk:"application_id"`
-	Name          types.String `tfsdk:"application_name"`
-	UniqueName    types.String `tfsdk:"unique_name"`
-	Version       types.String `tfsdk:"version"`
-	Description   types.String `tfsdk:"description"`
-	PublisherId   types.String `tfsdk:"publisher_id"`
-	PublisherName types.String `tfsdk:"publisher_name"`
-	LearnMoreUrl  types.String `tfsdk:"learn_more_url"`
-	State         types.String `tfsdk:"state"`
+	ApplicationId         types.String `tfsdk:"application_id"`
+	Name                  types.String `tfsdk:"application_name"`
+	UniqueName            types.String `tfsdk:"unique_name"`
+	Version               types.String `tfsdk:"version"`
+	Description           types.String `tfsdk:"description"`
+	PublisherId           types.String `tfsdk:"publisher_id"`
+	PublisherName         types.String `tfsdk:"publisher_name"`
+	LearnMoreUrl          types.String `tfsdk:"learn_more_url"`
+	State                 types.String `tfsdk:"state"`
+	ApplicationVisibility types.String `tfsdk:"application_visibility"`
 }
 
 func (d *ApplicationsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -117,6 +118,11 @@ func (d *ApplicationsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 							Description:         "State",
 							Computed:            true,
 						},
+						"application_visibility": schema.StringAttribute{
+							MarkdownDescription: "Application Visibility",
+							Description:         "Application Visibility",
+							Computed:            true,
+						},
 					},
 				},
 			},
@@ -157,15 +163,16 @@ func (d *ApplicationsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	for _, application := range applications {
 		plan.Applications = append(plan.Applications, ApplicationDataSourceModel{
-			ApplicationId: types.StringValue(application.ApplicationId),
-			Name:          types.StringValue(application.Name),
-			UniqueName:    types.StringValue(application.UniqueName),
-			Version:       types.StringValue(application.Version),
-			Description:   types.StringValue(application.Description),
-			PublisherId:   types.StringValue(application.PublisherId),
-			PublisherName: types.StringValue(application.PublisherName),
-			LearnMoreUrl:  types.StringValue(application.LearnMoreUrl),
-			State:         types.StringValue(application.State),
+			ApplicationId:         types.StringValue(application.ApplicationId),
+			Name:                  types.StringValue(application.Name),
+			UniqueName:            types.StringValue(application.UniqueName),
+			Version:               types.StringValue(application.Version),
+			Description:           types.StringValue(application.Description),
+			PublisherId:           types.StringValue(application.PublisherId),
+			PublisherName:         types.StringValue(application.PublisherName),
+			LearnMoreUrl:          types.StringValue(application.LearnMoreUrl),
+			State:                 types.StringValue(application.State),
+			ApplicationVisibility: types.StringValue(application.ApplicationVisibility),
 		})
 	}
 

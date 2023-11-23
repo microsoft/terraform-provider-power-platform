@@ -5,15 +5,16 @@ type ApplicationArrayDto struct {
 }
 
 type ApplicationDto struct {
-	ApplicationId string `json:"applicationId"`
-	Name          string `json:"applicationName"`
-	UniqueName    string `json:"uniqueName"`
-	Version       string `json:"version"`
-	Description   string `json:"localizedDescription"`
-	PublisherId   string `json:"publisherId"`
-	PublisherName string `json:"publisherName"`
-	LearnMoreUrl  string `json:"learnMoreUrl"`
-	State         string `json:"state"`
+	ApplicationId         string `json:"applicationId"`
+	Name                  string `json:"applicationName"`
+	UniqueName            string `json:"uniqueName"`
+	Version               string `json:"version"`
+	Description           string `json:"localizedDescription"`
+	PublisherId           string `json:"publisherId"`
+	PublisherName         string `json:"publisherName"`
+	LearnMoreUrl          string `json:"learnMoreUrl"`
+	State                 string `json:"state"`
+	ApplicationVisibility string `json:"applicationVisibility"`
 }
 
 type ApplicationDeleteDto struct {
