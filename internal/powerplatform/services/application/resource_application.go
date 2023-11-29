@@ -3,10 +3,14 @@ package powerplatform
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
@@ -36,20 +40,25 @@ func (r *ApplicationResource) Metadata(ctx context.Context, req resource.Metadat
 }
 
 func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "PowerPlatform application",
 		Description:         "PowerPlatform application",
-
+		MarkdownDescription: "PowerPlatform application",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				MarkdownDescription: "Unique id (guid)",
+				Description:         "Unique id (guid)",
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"environment_id": schema.StringAttribute{
-				Required: true,
+				Description: "Id of the Dynamics 365 environment",
+				Required:    true,
 			},
 			"unique_name": schema.StringAttribute{
-				Required: true,
+				Description: "Unique name of the application",
+				Required:    true,
 			},
 		},
 	}
@@ -61,7 +70,6 @@ func (r *ApplicationResource) Configure(ctx context.Context, req resource.Config
 	}
 
 	clientBapi := req.ProviderData.(*clients.ProviderClient).PowerPlatformApi.Client
-
 	if clientBapi == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
@@ -74,7 +82,8 @@ func (r *ApplicationResource) Configure(ctx context.Context, req resource.Config
 }
 
 func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *ApplicationResourceModel
+	var plan ApplicationResourceModel
+	resp.State.Get(ctx, &plan)
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
@@ -83,6 +92,10 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	plan.Id = types.StringValue(strconv.FormatInt(time.Now().Unix(), 10))
+	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
+	plan.UniqueName = types.StringValue(plan.UniqueName.ValueString())
 
 	err := r.ApplicationClient.InstallApplicationInEnvironment(ctx, plan.EnvironmentId.ValueString(), plan.UniqueName.ValueString())
 	if err != nil {

@@ -1,16 +1,3 @@
-/*
-output "name" {
-  description = "Display name of the environment"
-  value       = powerplatform_application.development.display_name
+output "powerplatform_applications_microsoft_flow_extension" {
+  value = data.powerplatform_applications.microsoft_flow_extension
 }
-
-output "id" {
-  description = "Unique identifier of the environment"
-  value       = powerplatform_application.development.environment_name
-}
-
-output "url" {
-  description = "URL of the environment"
-  value       = powerplatform_application.development.url
-}
-*/

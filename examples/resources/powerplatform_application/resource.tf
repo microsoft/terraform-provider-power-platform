@@ -13,13 +13,15 @@ provider "powerplatform" {
   tenant_id = var.tenant_id
 }
 
-data "powerplatform_applications" "all_applications" {}
+data "powerplatform_environments" "all_environments" {}
 
 data "powerplatform_applications" "microsoft_flow_extension" {
-  name           = "Microsoft Flow Extensions"
-  publisher_name = "Microsoft Dynamic 365"
+  environment_id = data.powerplatform_environments.all_environments.environments[0].id
+  name           = "Onboarding essentials"
+  publisher_name = "Microsoft"
 }
 
-resource "powerplatform_application" "development" {
-  id = data.powerplatform_applications.microsoft_flow_extension.id
+resource "powerplatform_application" "install_microsoft_flow_extension" {
+  environment_id = data.powerplatform_environments.all_environments.environments[0].id
+  unique_name = data.powerplatform_applications.microsoft_flow_extension.applications[0].unique_name
 }

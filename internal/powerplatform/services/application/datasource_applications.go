@@ -67,14 +67,14 @@ func (d *ApplicationsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 			},
 			"environment_id": schema.StringAttribute{
 				Description: "Id of the Dynamics 365 environment",
-				Optional:    true,
+				Required:    true,
 			},
 			"name": schema.StringAttribute{
 				Description: "Name of the Dynamics 365 application",
 				Optional:    true,
 			},
 			"publisher_name": schema.StringAttribute{
-				Description: "Name of the Dynamics 365 application",
+				Description: "Publisher Name of the Dynamics 365 application",
 				Optional:    true,
 			},
 			"applications": schema.ListNestedAttribute{
