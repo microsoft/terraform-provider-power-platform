@@ -33,6 +33,8 @@ type ApplicationsDataSource struct {
 
 type ApplicationsListDataSourceModel struct {
 	EnvironmentId types.String                 `tfsdk:"environment_id"`
+	Name          types.String                 `tfsdk:"name"`
+	PublisherName types.String                 `tfsdk:"publisher_name"`
 	Id            types.String                 `tfsdk:"id"`
 	Applications  []ApplicationDataSourceModel `tfsdk:"applications"`
 }
@@ -65,6 +67,14 @@ func (d *ApplicationsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 			},
 			"environment_id": schema.StringAttribute{
 				Description: "Id of the Dynamics 365 environment",
+				Optional:    true,
+			},
+			"name": schema.StringAttribute{
+				Description: "Name of the Dynamics 365 application",
+				Optional:    true,
+			},
+			"publisher_name": schema.StringAttribute{
+				Description: "Name of the Dynamics 365 application",
 				Optional:    true,
 			},
 			"applications": schema.ListNestedAttribute{
@@ -154,6 +164,8 @@ func (d *ApplicationsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	plan.Id = types.StringValue(strconv.FormatInt(time.Now().Unix(), 10))
 	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
+	plan.Name = types.StringValue(plan.Name.ValueString())
+	plan.PublisherName = types.StringValue(plan.PublisherName.ValueString())
 
 	applications, err := d.ApplicationClient.GetApplicationsByEnvironmentId(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
@@ -162,6 +174,10 @@ func (d *ApplicationsDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 
 	for _, application := range applications {
+		if (plan.Name.ValueString() != "" && plan.Name.ValueString() != application.Name) ||
+			(plan.PublisherName.ValueString() != "" && plan.PublisherName.ValueString() != application.PublisherName) {
+			continue
+		}
 		plan.Applications = append(plan.Applications, ApplicationDataSourceModel{
 			ApplicationId:         types.StringValue(application.ApplicationId),
 			Name:                  types.StringValue(application.Name),

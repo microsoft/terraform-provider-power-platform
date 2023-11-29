@@ -19,9 +19,13 @@ data "powerplatform_applications" "all_applications" {
   environment_id = data.powerplatform_environments.all_environments.environments[0].id
 }
 
-/*
-data "powerplatform_applications" "microsoft_flow_extension" {
-  name           = "Microsoft Flow Extensions"
-  publisher_name = "Microsoft Dynamic 365"
+data "powerplatform_applications" "all_applications_from_publisher" {
+  environment_id = data.powerplatform_environments.all_environments.environments[0].id
+  publisher_name = "Power Platform Host Service"
 }
-*/
+
+data "powerplatform_applications" "specific_application" {
+  environment_id = data.powerplatform_environments.all_environments.environments[0].id
+  publisher_name = "Microsoft Dynamics 365"
+  name           = "Virtual connectors in Dataverse"
+}
