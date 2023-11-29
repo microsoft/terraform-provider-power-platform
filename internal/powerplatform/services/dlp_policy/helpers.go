@@ -40,15 +40,21 @@ func covertDlpPolicyToPolicyModelDto(policy DlpPolicyDto) (*DlpPolicyModelDto, e
 				Name: nameSplit[len(nameSplit)-1],
 				Type: connector.Type,
 			}
-			for _, connectorActionConfigurations := range policy.ConnectorConfigurationsDefinition.ConnectorActionConfigurations {
-				if connectorActionConfigurations.ConnectorId == connector.Id {
-					m.DefaultActionRuleBehavior = connectorActionConfigurations.DefaultConnectorActionRuleBehavior
-					m.ActionRules = connectorActionConfigurations.ActionRules
+			if policy.ConnectorConfigurationsDefinition != nil {
+				if policy.ConnectorConfigurationsDefinition.ConnectorActionConfigurations != nil {
+					for _, connectorActionConfigurations := range policy.ConnectorConfigurationsDefinition.ConnectorActionConfigurations {
+						if connectorActionConfigurations.ConnectorId == connector.Id {
+							m.DefaultActionRuleBehavior = connectorActionConfigurations.DefaultConnectorActionRuleBehavior
+							m.ActionRules = connectorActionConfigurations.ActionRules
+						}
+					}
 				}
-			}
-			for _, endpointConfigurations := range policy.ConnectorConfigurationsDefinition.EndpointConfigurations {
-				if endpointConfigurations.ConnectorId == connector.Id {
-					m.EndpointRules = endpointConfigurations.EndpointRules
+				if policy.ConnectorConfigurationsDefinition.EndpointConfigurations != nil {
+					for _, endpointConfigurations := range policy.ConnectorConfigurationsDefinition.EndpointConfigurations {
+						if endpointConfigurations.ConnectorId == connector.Id {
+							m.EndpointRules = endpointConfigurations.EndpointRules
+						}
+					}
 				}
 			}
 			connGroupModel.Connectors = append(connGroupModel.Connectors, m)
