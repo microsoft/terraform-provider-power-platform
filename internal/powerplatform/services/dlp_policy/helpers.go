@@ -121,23 +121,33 @@ func convertToAttrValueCustomConnectorUrlPatternsDefinition(urlPatterns []DlpCon
 	}
 }
 
-func convertToAttrValueEnvironments(environments []DlpEnvironmentDto) basetypes.SetValue {
-	var env []attr.Value
-	for _, environment := range environments {
-		env = append(env, types.ObjectValueMust(
-			map[string]attr.Type{
-				"name": types.StringType,
-			},
-			map[string]attr.Value{
-				"name": types.StringValue(environment.Name),
-			},
-		))
-	}
+func convertToAttrValueEnvironments(environments []DlpEnvironmentDto) []string {
+	// var env []attr.Value
+	// for _, environment := range environments {
+	// 	env = append(env, types.ObjectValueMust(
+	// 		map[string]attr.Type{
+	// 			"name": types.StringType,
+	// 		},
+	// 		map[string]attr.Value{
+	// 			"name": types.StringValue(environment.Name),
+	// 		},
+	// 	))
+	// }
+
+	// if len(environments) == 0 {
+	// 	return types.SetValueMust(environmentSetObjectType, []attr.Value{})
+	// } else {
+	// 	return types.SetValueMust(environmentSetObjectType, env)
+	// }
 
 	if len(environments) == 0 {
-		return types.SetValueMust(environmentSetObjectType, []attr.Value{})
+		return []string{}
 	} else {
-		return types.SetValueMust(environmentSetObjectType, env)
+		var env []string
+		for _, environment := range environments {
+			env = append(env, environment.Name)
+		}
+		return env
 	}
 }
 
@@ -207,18 +217,18 @@ func convertToDlpConnectorGroup(ctx context.Context, diag diag.Diagnostics, clas
 	return connectorGroup
 }
 
-func convertToDlpEnvironment(ctx context.Context, diag diag.Diagnostics, environmentsAttr basetypes.SetValue) []DlpEnvironmentDto {
-	var envs []DataLossPreventionPolicyResourceEnvironmentsModel
-	err := environmentsAttr.ElementsAs(ctx, &envs, true)
-	if err != nil {
-		diag.AddError("Client error when converting DlpEnvironment", "")
-	}
+func convertToDlpEnvironment(ctx context.Context, diag diag.Diagnostics, environmentsInPolicy []string) []DlpEnvironmentDto {
+	//var envs []DataLossPreventionPolicyResourceEnvironmentsModel
+	// err := environmentsAttr.ElementsAs(ctx, &envs, true)
+	// if err != nil {
+	// 	diag.AddError("Client error when converting DlpEnvironment", "")
+	// }
 
 	environments := make([]DlpEnvironmentDto, 0)
-	for _, environment := range envs {
+	for _, environment := range environmentsInPolicy {
 		environments = append(environments, DlpEnvironmentDto{
-			Name: environment.Name.ValueString(),
-			Id:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/" + environment.Name.ValueString(),
+			Name: environment,
+			Id:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/" + environment,
 			Type: "Microsoft.BusinessAppPlatform/scopes/environments",
 		})
 	}
