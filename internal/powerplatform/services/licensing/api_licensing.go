@@ -106,3 +106,65 @@ func (client *LicensingClient) DeleteBillingPolicy(ctx context.Context, billingI
 
 	return err
 }
+
+func (client *LicensingClient) GetEnvironmentsForBillingPolicy(ctx context.Context, billingId string) ([]string, error) {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.ppApi.GetConfig().Urls.PowerPlatformUrl,
+		Path:   fmt.Sprintf("licensing/billingPolicies/%s/environments", billingId),
+	}
+
+	values := url.Values{}
+	values.Add("api-version", API_VERSION)
+	apiUrl.RawQuery = values.Encode()
+
+	billingPolicyEnvironments := BillingPolicyEnvironmentsArrayResponseDto{}
+	_, err := client.ppApi.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &billingPolicyEnvironments)
+	if err != nil {
+		return nil, err
+	}
+
+	environments := []string{}
+	for _, billingPolicyEnvironment := range billingPolicyEnvironments.Value {
+		environments = append(environments, billingPolicyEnvironment.EnvironmentId)
+	}
+	return environments, err
+}
+
+func (client *LicensingClient) AddEnvironmentsToBillingPolicy(ctx context.Context, billingId string, environmentIds []string) error {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.ppApi.GetConfig().Urls.PowerPlatformUrl,
+		Path:   fmt.Sprintf("licensing/billingPolicies/%s/environments/add", billingId),
+	}
+
+	values := url.Values{}
+	values.Add("api-version", API_VERSION)
+	apiUrl.RawQuery = values.Encode()
+
+	environments := BillingPolicyEnvironmentsArrayDto{
+		EnvironmentIds: environmentIds,
+	}
+	_, err := client.ppApi.Execute(ctx, "POST", apiUrl.String(), nil, environments, []int{http.StatusOK}, nil)
+
+	return err
+}
+
+func (client *LicensingClient) RemoveEnvironmentsToBillingPolicy(ctx context.Context, billingId string, environmentIds []string) error {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.ppApi.GetConfig().Urls.PowerPlatformUrl,
+		Path:   fmt.Sprintf("licensing/billingPolicies/%s/environments/remove", billingId),
+	}
+
+	values := url.Values{}
+	values.Add("api-version", API_VERSION)
+	apiUrl.RawQuery = values.Encode()
+
+	environments := BillingPolicyEnvironmentsArrayDto{
+		EnvironmentIds: environmentIds,
+	}
+	_, err := client.ppApi.Execute(ctx, "POST", apiUrl.String(), nil, environments, []int{http.StatusOK}, nil)
+
+	return err
+}
