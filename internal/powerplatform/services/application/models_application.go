@@ -75,39 +75,19 @@ type ApplicationCreateLinkApplicationMetadataBapi struct {
 }
 
 type ApplicationLifecycleDto struct {
-	Id                 string                             `json:"id"`
-	Links              ApplicationLifecycleLinksDto       `json:"links"`
-	State              ApplicationLifecycleStateDto       `json:"state"`
-	Type               ApplicationLifecycleStateDto       `json:"type"`
-	CreatedDateTime    string                             `json:"createdDateTime"`
-	LastActionDateTime string                             `json:"lastActionDateTime"`
-	RequestedBy        ApplicationLifecycleRequestedByDto `json:"requestedBy"`
-	Stages             []ApplicationLifecycleStageDto     `json:"stages"`
+	OperationId        string                       `json:"operationId"`
+	CreatedDateTime    string                       `json:"createdDateTime"`
+	LastActionDateTime string                       `json:"lastActionDateTime"`
+	Status             string                       `json:"status"`
+	StatusMessage      string                       `json:"statusMessage"`
+	Error              ApplicationLifecycleErrorDto `json:"error"`
 }
 
-type ApplicationLifecycleStageDto struct {
-	Id                  string                       `json:"id"`
-	Name                string                       `json:"name"`
-	State               ApplicationLifecycleStateDto `json:"state"`
-	FirstActionDateTime string                       `json:"firstActionDateTime"`
-	LastActionDateTime  string                       `json:"lastActionDateTime"`
-}
-
-type ApplicationLifecycleLinksDto struct {
-	Self        ApplicationLifecycleLinkDto `json:"self"`
-	Environment ApplicationLifecycleLinkDto `json:"environment"`
-}
-
-type ApplicationLifecycleLinkDto struct {
-	Path string `json:"path"`
-}
-
-type ApplicationLifecycleStateDto struct {
-	Id string `json:"id"`
-}
-
-type ApplicationLifecycleRequestedByDto struct {
-	Id          string `json:"id"`
-	DisplayName string `json:"displayName"`
-	Type        string `json:"type"`
+type ApplicationLifecycleErrorDto struct {
+	ErrorName  string `json:"errorName"`
+	ErrorCode  int    `json:"errorCode"`
+	Message    string `json:"message"`
+	Type       string `json:"type"`
+	StatusCode int    `json:"statusCode"`
+	Source     string `json:"source"`
 }

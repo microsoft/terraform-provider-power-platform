@@ -1,3 +1,3 @@
-output "powerplatform_applications_onboarding_essentials_extension" {
-  value = data.powerplatform_applications.onboarding_essentials_extension
+output "powerplatform_applications_sample_application" {
+  value = powerplatform_application.install_sample_application
 }

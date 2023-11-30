@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
@@ -62,22 +61,12 @@ func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Con
 
 	applicationId := ""
 	if response.Response.StatusCode == http.StatusAccepted {
-		locationHeader := response.GetHeader("Location")
+		locationHeader := response.GetHeader("Operation-Location")
 		tflog.Debug(ctx, "Location Header: "+locationHeader)
 
 		_, err = url.Parse(locationHeader)
 		if err != nil {
 			tflog.Error(ctx, "Error parsing location header: "+err.Error())
-		}
-
-		retryHeader := response.GetHeader("Retry-After")
-		tflog.Debug(ctx, "Retry Header: "+retryHeader)
-
-		retryAfter, err := time.ParseDuration(retryHeader)
-		if err != nil {
-			retryAfter = time.Duration(5) * time.Second
-		} else {
-			retryAfter = retryAfter * time.Second
 		}
 
 		for {
@@ -87,26 +76,26 @@ func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Con
 				return "", err
 			}
 
-			time.Sleep(retryAfter)
-
-			if lifecycleResponse.State.Id == "Succeeded" {
-				parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
+			if lifecycleResponse.Status == "Succeeded" {
+				parts := strings.Split(lifecycleResponse.CreatedDateTime, "/")
 				if len(parts) > 0 {
 					applicationId = parts[len(parts)-1]
 				} else {
-					return "", errors.New("can't parse environment id from response " + lifecycleResponse.Links.Environment.Path)
+					return "", errors.New("can't parse application id from response " + lifecycleResponse.CreatedDateTime)
 				}
-				tflog.Debug(ctx, "Created Environment Id: "+applicationId)
+				tflog.Debug(ctx, "Created Application Id: "+applicationId)
 				break
+			} else if lifecycleResponse.Status == "Failed" {
+				return "", errors.New("application installation failed. status message: " + lifecycleResponse.Error.Message)
 			}
 		}
 	} else if response.Response.StatusCode == http.StatusCreated {
-		envCreatedResponse := ApplicationLifecycleCreatedDto{}
-		response.MarshallTo(&envCreatedResponse)
-		if envCreatedResponse.Properties.ProvisioningState != "Succeeded" {
-			return "", errors.New("environment creation failed. provisioning state: " + envCreatedResponse.Properties.ProvisioningState)
+		appCreatedResponse := ApplicationLifecycleCreatedDto{}
+		response.MarshallTo(&appCreatedResponse)
+		if appCreatedResponse.Properties.ProvisioningState != "Succeeded" {
+			return "", errors.New("application installation failed. provisioning state: " + appCreatedResponse.Properties.ProvisioningState)
 		}
-		applicationId = envCreatedResponse.Name
+		applicationId = appCreatedResponse.Name
 	}
 
 	return applicationId, nil

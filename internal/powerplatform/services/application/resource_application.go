@@ -123,13 +123,7 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	// _, err := r.ApplicationClient.GetApplications(ctx, state.ApplicationName.ValueString())
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
-	// 	return
-	// }
-
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with environment_name %s", r.ProviderTypeName, state.UniqueName.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s_application with application_name %s", r.ProviderTypeName, state.UniqueName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
