@@ -2,10 +2,14 @@ package powerplatform
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -40,7 +44,7 @@ func (client *ApplicationClient) GetApplicationsByEnvironmentId(ctx context.Cont
 	return application.Value, nil
 }
 
-func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Context, environmentId string, uniqueName string) error {
+func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Context, environmentId string, uniqueName string) (string, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.baseApi.GetConfig().Urls.PowerPlatformUrl,
@@ -51,10 +55,59 @@ func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Con
 	}
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.baseApi.Execute(ctx, "POST", apiUrl.String(), nil, nil, []int{http.StatusAccepted}, nil)
+	response, err := client.baseApi.Execute(ctx, "POST", apiUrl.String(), nil, nil, []int{http.StatusAccepted}, nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	applicationId := ""
+	if response.Response.StatusCode == http.StatusAccepted {
+		locationHeader := response.GetHeader("Location")
+		tflog.Debug(ctx, "Location Header: "+locationHeader)
+
+		_, err = url.Parse(locationHeader)
+		if err != nil {
+			tflog.Error(ctx, "Error parsing location header: "+err.Error())
+		}
+
+		retryHeader := response.GetHeader("Retry-After")
+		tflog.Debug(ctx, "Retry Header: "+retryHeader)
+
+		retryAfter, err := time.ParseDuration(retryHeader)
+		if err != nil {
+			retryAfter = time.Duration(5) * time.Second
+		} else {
+			retryAfter = retryAfter * time.Second
+		}
+
+		for {
+			lifecycleResponse := ApplicationLifecycleDto{}
+			_, err = client.baseApi.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
+			if err != nil {
+				return "", err
+			}
+
+			time.Sleep(retryAfter)
+
+			if lifecycleResponse.State.Id == "Succeeded" {
+				parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
+				if len(parts) > 0 {
+					applicationId = parts[len(parts)-1]
+				} else {
+					return "", errors.New("can't parse environment id from response " + lifecycleResponse.Links.Environment.Path)
+				}
+				tflog.Debug(ctx, "Created Environment Id: "+applicationId)
+				break
+			}
+		}
+	} else if response.Response.StatusCode == http.StatusCreated {
+		envCreatedResponse := ApplicationLifecycleCreatedDto{}
+		response.MarshallTo(&envCreatedResponse)
+		if envCreatedResponse.Properties.ProvisioningState != "Succeeded" {
+			return "", errors.New("environment creation failed. provisioning state: " + envCreatedResponse.Properties.ProvisioningState)
+		}
+		applicationId = envCreatedResponse.Name
+	}
+
+	return applicationId, nil
 }
