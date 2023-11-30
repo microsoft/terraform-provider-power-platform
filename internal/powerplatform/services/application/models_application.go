@@ -73,3 +73,41 @@ type ApplicationCreatePropertiesBapi struct {
 
 type ApplicationCreateLinkApplicationMetadataBapi struct {
 }
+
+type ApplicationLifecycleDto struct {
+	Id                 string                             `json:"id"`
+	Links              ApplicationLifecycleLinksDto       `json:"links"`
+	State              ApplicationLifecycleStateDto       `json:"state"`
+	Type               ApplicationLifecycleStateDto       `json:"type"`
+	CreatedDateTime    string                             `json:"createdDateTime"`
+	LastActionDateTime string                             `json:"lastActionDateTime"`
+	RequestedBy        ApplicationLifecycleRequestedByDto `json:"requestedBy"`
+	Stages             []ApplicationLifecycleStageDto     `json:"stages"`
+}
+
+type ApplicationLifecycleStageDto struct {
+	Id                  string                       `json:"id"`
+	Name                string                       `json:"name"`
+	State               ApplicationLifecycleStateDto `json:"state"`
+	FirstActionDateTime string                       `json:"firstActionDateTime"`
+	LastActionDateTime  string                       `json:"lastActionDateTime"`
+}
+
+type ApplicationLifecycleLinksDto struct {
+	Self        ApplicationLifecycleLinkDto `json:"self"`
+	Environment ApplicationLifecycleLinkDto `json:"environment"`
+}
+
+type ApplicationLifecycleLinkDto struct {
+	Path string `json:"path"`
+}
+
+type ApplicationLifecycleStateDto struct {
+	Id string `json:"id"`
+}
+
+type ApplicationLifecycleRequestedByDto struct {
+	Id          string `json:"id"`
+	DisplayName string `json:"displayName"`
+	Type        string `json:"type"`
+}
