@@ -97,14 +97,13 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
 	plan.UniqueName = types.StringValue(plan.UniqueName.ValueString())
 
-	err := r.ApplicationClient.InstallApplicationInEnvironment(ctx, plan.EnvironmentId.ValueString(), plan.UniqueName.ValueString())
+	applicationId, err := r.ApplicationClient.InstallApplicationInEnvironment(ctx, plan.EnvironmentId.ValueString(), plan.UniqueName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
 		return
 	}
 
-	plan.Id = types.StringValue("00000000-0000-0000-0000-000000000000") // todo use id from response
-	//todo check application install status
+	plan.Id = types.StringValue(applicationId)
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.UniqueName.ValueString()))
 
