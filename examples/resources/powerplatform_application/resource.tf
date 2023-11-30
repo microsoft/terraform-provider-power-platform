@@ -15,13 +15,19 @@ provider "powerplatform" {
 
 data "powerplatform_environments" "all_environments" {}
 
-data "powerplatform_applications" "microsoft_flow_extension" {
+data "powerplatform_applications" "onboarding_essentials_extension" {
+  environment_id = data.powerplatform_environments.all_environments.environments[0].id
+  name           = "mscc-supplierportal"
+  publisher_name = "Microsoft Dynamics 365"
+}
+
+data "powerplatform_applications" "all_applications" {
   environment_id = data.powerplatform_environments.all_environments.environments[0].id
   name           = "Onboarding essentials"
   publisher_name = "Microsoft"
 }
 
-resource "powerplatform_application" "install_microsoft_flow_extension" {
+resource "powerplatform_application" "install_onboarding_essentials_extension" {
   environment_id = data.powerplatform_environments.all_environments.environments[0].id
-  unique_name = data.powerplatform_applications.microsoft_flow_extension.applications[0].unique_name
+  unique_name = data.powerplatform_applications.onboarding_essentials_extension.applications[0].unique_name
 }
