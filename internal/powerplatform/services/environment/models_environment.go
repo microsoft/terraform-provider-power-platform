@@ -49,6 +49,11 @@ type EnvironmentPropertiesDto struct {
 	States                    StatesEnvironmentDto         `json:"states"`
 	TenantID                  string                       `json:"tenantId"`
 	GovernanceConfiguration   GovernanceConfigurationDto   `json:"governanceConfiguration"`
+	BillingPolicy             BillingPolicyDto             `json:"billingPolicy,omitempty"`
+}
+
+type BillingPolicyDto struct {
+	Id string `json:"id"`
 }
 
 type GovernanceConfigurationDto struct {
