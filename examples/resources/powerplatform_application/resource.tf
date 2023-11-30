@@ -23,8 +23,10 @@ data "powerplatform_applications" "onboarding_essentials_extension" {
 
 data "powerplatform_applications" "all_applications" {
   environment_id = data.powerplatform_environments.all_environments.environments[0].id
-  name           = "Onboarding essentials"
-  publisher_name = "Microsoft"
+}
+
+locals {
+  onboarding_essential_application = toset([for each in data.powerplatform_applications.all_applications.applications : each if each.application_name == "Onboarding essentials"])
 }
 
 resource "powerplatform_application" "install_onboarding_essentials_extension" {
