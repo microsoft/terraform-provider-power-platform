@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
@@ -48,6 +49,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources(t *testing.T) {
 	expectedDataSources := []datasource.DataSource{
 		powerapps.NewPowerAppsDataSource(),
 		environment.NewEnvironmentsDataSource(),
+		application.NewApplicationsDataSource(),
 		connectors.NewConnectorsDataSource(),
 		solution.NewSolutionsDataSource(),
 		dlp_policy.NewDataLossPreventionPolicyDataSource(),
@@ -66,6 +68,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources(t *testing.T) {
 func TestUnitPowerPlatformProviderHasChildResources(t *testing.T) {
 	expectedResources := []resource.Resource{
 		environment.NewEnvironmentResource(),
+		application.NewApplicationResource(),
 		dlp_policy.NewDataLossPreventionPolicyResource(),
 		solution.NewSolutionResource(),
 		tenant_settings.NewTenantSettingsResource(),
