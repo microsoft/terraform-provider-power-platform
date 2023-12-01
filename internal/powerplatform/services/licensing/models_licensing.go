@@ -39,3 +39,16 @@ type PrincipalDto struct {
 	Id            string `json:"id"`
 	PrincipalType string `json:"type"`
 }
+
+type BillingPolicyEnvironmentsArrayDto struct {
+	EnvironmentIds []string `json:"environmentIds"`
+}
+
+type BillingPolicyEnvironmentsDto struct {
+	BillingPolicyId string `json:"billingPolicyId"`
+	EnvironmentId   string `json:"environmentId"`
+}
+
+type BillingPolicyEnvironmentsArrayResponseDto struct {
+	Value []BillingPolicyEnvironmentsDto `json:"value"`
+}
