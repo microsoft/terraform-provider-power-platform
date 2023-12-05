@@ -45,9 +45,6 @@ resource "example_resource" {
 
 ## Contributions
 
-Do you plan to raise a PR to address this issue?
-
-- [ ] Yes
-- [ ] No
+Do you plan to raise a PR to address this issue? YES / NO?
 
 See the [contributing guide](/CONTRIBUTING.md?) for more information about what's expected for contributions.
