@@ -45,6 +45,4 @@ Add any other context about the problem here.
 ## Contribution
 
 ## Contribution
-Do you plan to raise a PR to address this issue?
-- [ ] Yes
-- [ ] No
+Do you plan to raise a PR to address this issue?  YES / NO?
