@@ -33,20 +33,19 @@ terraform {
 }
 
 provider "powerplatform" {
-  username  = "admin@mateuszwasilewskihotmail.onmicrosoft.com"
-  password  = "Dupadupa.8"
-  tenant_id = "1dbbeae5-8fa6-462e-a5a1-9932a520a1dc"
+  client_id = var.client_id
+  secret    = var.secret
+  tenant_id = var.tenant_id
 }
 
 resource "powerplatform_environment" "development" {
-  display_name      = "example_environment1"
-  location          = "switzerland"
+  display_name      = "example_environment"
+  location          = "europe"
   language_code     = "1033"
   currency_code     = "USD"
   environment_type  = "Sandbox"
-  domain            = "mydomain1"
+  domain            = "mydomain"
   security_group_id = "00000000-0000-0000-0000-000000000000"
-  billing_policy_id = "3b5d72be-708d-4a95-821d-690b138d9dc2"
 }
 ```
 
