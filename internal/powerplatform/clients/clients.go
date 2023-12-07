@@ -9,7 +9,7 @@ type ProviderClient struct {
 	Config           *common.ProviderConfig
 	BapiApi          *BapiClient
 	DataverseApi     *DataverseClient
-	PowerPlatformApi *PowerPlatoformApiClient
+	PowerPlatformApi *PowerPlatformApiClient
 }
 
 type BapiClient struct {
@@ -36,13 +36,13 @@ func NewDataverseClient(auth *powerplatform.DataverseAuth, client *powerplatform
 	}
 }
 
-type PowerPlatoformApiClient struct {
+type PowerPlatformApiClient struct {
 	Auth   *powerplatform.PowerPlatformAuth
 	Client *powerplatform.PowerPlatformClientApi
 }
 
-func NewPowerPlatformApiClient(auth *powerplatform.PowerPlatformAuth, client *powerplatform.PowerPlatformClientApi) *PowerPlatoformApiClient {
-	return &PowerPlatoformApiClient{
+func NewPowerPlatformApiClient(auth *powerplatform.PowerPlatformAuth, client *powerplatform.PowerPlatformClientApi) *PowerPlatformApiClient {
+	return &PowerPlatformApiClient{
 		Auth:   auth,
 		Client: client,
 	}
