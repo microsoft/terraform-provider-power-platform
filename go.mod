@@ -1,6 +1,6 @@
 module github.com/microsoft/terraform-provider-power-platform
 
-go 1.19
+go 1.21
 
 require (
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.0
