@@ -64,6 +64,7 @@ resource "powerplatform_environment" "development" {
 
 ### Optional
 
+- `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
 - `template_metadata` (String) JSON representation of the environment deployment metadata
 - `templates` (List of String) The selected instance provisioning template (if any)
 

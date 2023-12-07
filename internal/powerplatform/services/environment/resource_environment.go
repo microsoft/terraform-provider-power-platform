@@ -18,6 +18,7 @@ import (
 
 	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
+	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
 )
 
 var _ resource.Resource = &EnvironmentResource{}
@@ -32,6 +33,7 @@ func NewEnvironmentResource() resource.Resource {
 
 type EnvironmentResource struct {
 	EnvironmentClient EnvironmentClient
+	LicensingClient   licensing.LicensingClient
 	ProviderTypeName  string
 	TypeName          string
 }
@@ -55,6 +57,7 @@ type EnvironmentResourceModel struct {
 	LinkedAppType    types.String `tfsdk:"linked_app_type"`
 	LinkedAppId      types.String `tfsdk:"linked_app_id"`
 	LinkedAppUrl     types.String `tfsdk:"linked_app_url"`
+	BillingPolicyId  types.String `tfsdk:"billing_policy_id"`
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -188,6 +191,12 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				MarkdownDescription: "The URL of the linked D365 application",
 				Computed:            true,
 			},
+			"billing_policy_id": &schema.StringAttribute{
+				Description:         "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
+				MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
+				Optional:            true,
+				Computed:            true,
+			},
 		},
 	}
 }
@@ -199,6 +208,7 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 
 	clientBapi := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
 	clientDv := req.ProviderData.(*clients.ProviderClient).DataverseApi.Client
+	ppApi := req.ProviderData.(*clients.ProviderClient).PowerPlatformApi.Client
 
 	if clientBapi == nil || clientDv == nil {
 		resp.Diagnostics.AddError(
@@ -209,6 +219,7 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 		return
 	}
 	r.EnvironmentClient = NewEnvironmentClient(clientBapi, clientDv)
+	r.LicensingClient = licensing.NewLicensingClient(ppApi)
 }
 
 func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -227,7 +238,6 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		Properties: EnvironmentCreatePropertiesDto{
 			DisplayName:    plan.DisplayName.ValueString(),
 			DataBaseType:   "CommonDataService",
-			BillingPolicy:  "",
 			EnvironmentSku: plan.EnvironmentType.ValueString(),
 			LinkedEnvironmentMetadata: EnvironmentCreateLinkEnvironmentMetadataDto{
 				BaseLanguage:    int(plan.LanguageName.ValueInt64()),
@@ -240,6 +250,12 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 				//TemplateMetadata: EnvironmentCreateTemplateMetadata{},
 			},
 		},
+	}
+
+	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
+		envToCreate.Properties.BillingPolicy = BillingPolicyDto{
+			Id: plan.BillingPolicyId.ValueString(),
+		}
 	}
 
 	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, envToCreate)
@@ -263,6 +279,9 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	plan.LinkedAppType = env.LinkedAppType
 	plan.LinkedAppId = env.LinkedAppId
 	plan.LinkedAppUrl = env.LinkedAppURL
+	//if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
+	plan.BillingPolicyId = env.BillingPolicyId
+	//}
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
@@ -312,6 +331,9 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.LinkedAppId = env.LinkedAppId
 	state.LinkedAppType = env.LinkedAppType
 	state.LinkedAppUrl = env.LinkedAppURL
+	//if !state.BillingPolicyId.IsNull() && state.BillingPolicyId.ValueString() != "" {
+	state.BillingPolicyId = env.BillingPolicyId
+	//}
 
 	//TODO move to separate function
 	ctx = tflog.SetField(ctx, "id", state.Id.ValueString())
@@ -326,6 +348,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	ctx = tflog.SetField(ctx, "currency_code", state.CurrencyCode.ValueString())
 	ctx = tflog.SetField(ctx, "version", state.Version.ValueString())
 	ctx = tflog.SetField(ctx, "template", strings.Join(state.Templates, " "))
+	ctx = tflog.SetField(ctx, "billing_policy_id", state.BillingPolicyId.ValueString())
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
 
@@ -348,58 +371,85 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	if plan.DisplayName.ValueString() != state.DisplayName.ValueString() ||
-		plan.SecurityGroupId.ValueString() != state.SecurityGroupId.ValueString() ||
-		plan.Domain.ValueString() != state.Domain.ValueString() {
-
-		envToUpdate := EnvironmentDto{
-			Id:       plan.Id.ValueString(),
-			Name:     plan.DisplayName.ValueString(),
-			Type:     plan.EnvironmentType.ValueString(),
-			Location: plan.Location.ValueString(),
-			Properties: EnvironmentPropertiesDto{
-				DisplayName:    plan.DisplayName.ValueString(),
-				EnvironmentSku: plan.EnvironmentType.ValueString(),
-				LinkedEnvironmentMetadata: LinkedEnvironmentMetadataDto{
-					SecurityGroupId: plan.SecurityGroupId.ValueString(),
-					DomainName:      plan.Domain.ValueString(),
-				},
+	envToUpdate := EnvironmentDto{
+		Id:       plan.Id.ValueString(),
+		Name:     plan.DisplayName.ValueString(),
+		Type:     plan.EnvironmentType.ValueString(),
+		Location: plan.Location.ValueString(),
+		Properties: EnvironmentPropertiesDto{
+			DisplayName:    plan.DisplayName.ValueString(),
+			EnvironmentSku: plan.EnvironmentType.ValueString(),
+			LinkedEnvironmentMetadata: LinkedEnvironmentMetadataDto{
+				SecurityGroupId: plan.SecurityGroupId.ValueString(),
+				DomainName:      plan.Domain.ValueString(),
 			},
+		},
+	}
+	if !plan.LinkedAppId.IsNull() && plan.LinkedAppId.ValueString() != "" {
+		envToUpdate.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
+			Type: plan.LinkedAppType.ValueString(),
+			Id:   plan.LinkedAppId.ValueString(),
+			Url:  plan.LinkedAppUrl.ValueString(),
 		}
-		if !plan.LinkedAppId.IsNull() && plan.LinkedAppId.ValueString() != "" {
-			envToUpdate.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
-				Type: plan.LinkedAppType.ValueString(),
-				Id:   plan.LinkedAppId.ValueString(),
-				Url:  plan.LinkedAppUrl.ValueString(),
-			}
-		} else {
-			envToUpdate.Properties.LinkedAppMetadata = nil
+	} else {
+		envToUpdate.Properties.LinkedAppMetadata = nil
+	}
+	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
+		envToUpdate.Properties.BillingPolicy = BillingPolicyDto{
+			Id: plan.BillingPolicyId.ValueString(),
 		}
+	}
 
-		envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), envToUpdate)
+	if !state.BillingPolicyId.IsNull() &&
+		!state.BillingPolicyId.IsUnknown() &&
+		state.BillingPolicyId.ValueString() != "" {
+
+		tflog.Debug(ctx, fmt.Sprintf("Removing environment %s from billing policy %s", state.Id.ValueString(), state.BillingPolicyId.ValueString()))
+		err := r.LicensingClient.RemoveEnvironmentsToBillingPolicy(ctx, state.BillingPolicyId.ValueString(), []string{state.Id.ValueString()})
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Error when removing environment %s from billing policy %s", state.Id.ValueString(), state.BillingPolicyId.ValueString()), err.Error())
 			return
 		}
-
-		env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
-
-		plan.Id = env.EnvironmentId
-		plan.DisplayName = env.DisplayName
-		plan.OrganizationId = env.OrganizationId
-		plan.SecurityGroupId = env.SecurityGroupId
-		plan.LanguageName = env.LanguageName
-		plan.Domain = env.Domain
-		plan.Url = env.Url
-		plan.CurrencyCode = env.CurrencyCode
-		plan.EnvironmentType = env.EnvironmentType
-		plan.Version = env.Version
-		plan.LanguageName = env.LanguageName
-		plan.Location = env.Location
-		plan.LinkedAppType = env.LinkedAppType
-		plan.LinkedAppId = env.LinkedAppId
-		plan.LinkedAppUrl = env.LinkedAppURL
 	}
+
+	if !plan.BillingPolicyId.IsNull() &&
+		!plan.BillingPolicyId.IsUnknown() &&
+		plan.BillingPolicyId.ValueString() != "" {
+
+		tflog.Debug(ctx, fmt.Sprintf("Adding environment %s to billing policy %s", plan.Id.ValueString(), plan.BillingPolicyId.ValueString()))
+		err := r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId.ValueString(), []string{plan.Id.ValueString()})
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error when adding environment %s to billing policy %s", plan.Id.ValueString(), plan.BillingPolicyId.ValueString()), err.Error())
+			return
+		}
+	}
+
+	envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), envToUpdate)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
+		return
+	}
+
+	env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
+
+	plan.Id = env.EnvironmentId
+	plan.DisplayName = env.DisplayName
+	plan.OrganizationId = env.OrganizationId
+	plan.SecurityGroupId = env.SecurityGroupId
+	plan.LanguageName = env.LanguageName
+	plan.Domain = env.Domain
+	plan.Url = env.Url
+	plan.CurrencyCode = env.CurrencyCode
+	plan.EnvironmentType = env.EnvironmentType
+	plan.Version = env.Version
+	plan.LanguageName = env.LanguageName
+	plan.Location = env.Location
+	plan.LinkedAppType = env.LinkedAppType
+	plan.LinkedAppId = env.LinkedAppId
+	plan.LinkedAppUrl = env.LinkedAppURL
+	//if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
+	plan.BillingPolicyId = env.BillingPolicyId
+	//}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 

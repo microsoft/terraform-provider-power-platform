@@ -116,7 +116,7 @@ type EnvironmentCreateDto struct {
 }
 
 type EnvironmentCreatePropertiesDto struct {
-	BillingPolicy             string                                      `json:"billingPolicy,omitempty"`
+	BillingPolicy             BillingPolicyDto                            `json:"billingPolicy,omitempty"`
 	DataBaseType              string                                      `json:"databaseType,omitempty"`
 	DisplayName               string                                      `json:"displayName"`
 	EnvironmentSku            string                                      `json:"environmentSku"`

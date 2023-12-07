@@ -36,6 +36,7 @@ func TestAccEnvironmentsDataSource(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.location", regexp.MustCompile(`^(unitedstates|europe)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.version", regexp.MustCompile(powerplatform_helpers.VersionRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.currency_code", regexp.MustCompile(powerplatform_helpers.StringRegex)),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.billing_policy_id", ""),
 				),
 			},
 		},
@@ -49,7 +50,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 	mock_helpers.ActivateOAuthHttpMocks()
 	mock_helpers.ActivateEnvironmentHttpMocks()
 
-	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?api-version=2023-06-01`,
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/datasource/Validate_Read/get_environments.json").String()), nil
 		})
@@ -91,6 +92,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					//resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.linked_app_id", ""),
 					//resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.linked_app_url", ""),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.currency_code", "PLN"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.billing_policy_id", "00000000-0000-0000-0000-000000000001"),
 				),
 			},
 		},
