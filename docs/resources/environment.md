@@ -33,19 +33,20 @@ terraform {
 }
 
 provider "powerplatform" {
-  client_id = var.client_id
-  secret    = var.secret
-  tenant_id = var.tenant_id
+  username  = "admin@mateuszwasilewskihotmail.onmicrosoft.com"
+  password  = "Dupadupa.8"
+  tenant_id = "1dbbeae5-8fa6-462e-a5a1-9932a520a1dc"
 }
 
 resource "powerplatform_environment" "development" {
-  display_name      = "example_environment"
-  location          = "europe"
+  display_name      = "example_environment1"
+  location          = "switzerland"
   language_code     = "1033"
   currency_code     = "USD"
   environment_type  = "Sandbox"
-  domain            = "mydomain"
+  domain            = "mydomain1"
   security_group_id = "00000000-0000-0000-0000-000000000000"
+  billing_policy_id = "3b5d72be-708d-4a95-821d-690b138d9dc2"
 }
 ```
 
@@ -64,6 +65,7 @@ resource "powerplatform_environment" "development" {
 
 ### Optional
 
+- `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
 - `template_metadata` (String) JSON representation of the environment deployment metadata
 - `templates` (List of String) The selected instance provisioning template (if any)
 
