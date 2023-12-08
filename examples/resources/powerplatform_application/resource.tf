@@ -15,12 +15,6 @@ provider "powerplatform" {
 
 data "powerplatform_environments" "all_environments" {}
 
-data "powerplatform_applications" "application_to_install_backup" {
-  environment_id = data.powerplatform_environments.all_environments.environments[0].id
-  name           = "mscc-supplierportal"
-  publisher_name = "Microsoft Dynamics 365"
-}
-
 data "powerplatform_applications" "application_to_install" {
   environment_id = data.powerplatform_environments.all_environments.environments[0].id
   name           = "Power Automate Process Mining"
