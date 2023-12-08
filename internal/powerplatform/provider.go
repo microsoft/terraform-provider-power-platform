@@ -31,7 +31,7 @@ type PowerPlatformProvider struct {
 	Config           *common.ProviderConfig
 	BapiApi          *clients.BapiClient
 	DataverseApi     *clients.DataverseClient
-	PowerPlatformApi *clients.PowerPlatoformApiClient
+	PowerPlatformApi *clients.PowerPlatformApiClient
 }
 
 func NewPowerPlatformProvider() func() provider.Provider {
