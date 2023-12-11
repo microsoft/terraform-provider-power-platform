@@ -24,7 +24,7 @@ func TestAccApplicationsDataSource_Validate_Read(t *testing.T) {
 					language_code     = "1033"
 					currency_code     = "USD"
 					environment_type  = "Sandbox"
-					domain            = "applicationacceptancetest"
+					domain            = "testaccapplicationsdatasourcevalidateread"
 					security_group_id = "00000000-0000-0000-0000-000000000000"
 				}
 
