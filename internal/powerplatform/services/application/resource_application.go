@@ -55,10 +55,16 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 			"environment_id": schema.StringAttribute{
 				Description: "Id of the Dynamics 365 environment",
 				Required:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"unique_name": schema.StringAttribute{
 				Description: "Unique name of the application",
 				Required:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 	}
