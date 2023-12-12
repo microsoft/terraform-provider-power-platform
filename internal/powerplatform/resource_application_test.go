@@ -33,7 +33,7 @@ func TestAccApplicationResource_Validate_Install(t *testing.T) {
 				}
 				data "powerplatform_applications" "application_to_install" {
 					environment_id = data.powerplatform_environments.all_environments.environments[0].id
-					name           = "Power Automate Process Mining"
+					name           = "Power Platform Pipelines"
 					publisher_name = "Microsoft Dynamics 365"
 				}
 				resource "powerplatform_application" "development" {
