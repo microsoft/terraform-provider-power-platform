@@ -167,6 +167,7 @@ func (r *ApplicationResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
+	tflog.Debug(ctx, "No application have been uninstalled, as this is the expected behavior")
 }
 
 func (r *ApplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
