@@ -74,7 +74,7 @@ func (client *DlpPolicyClient) DeletePolicy(ctx context.Context, name string) er
 		Host:   client.BapiClient.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v1/policies/%s", name),
 	}
-	_, err := client.BapiClient.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+	_, err := client.BapiClient.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (client *DlpPolicyClient) UpdatePolicy(ctx context.Context, name string, po
 	}
 	createdPolicy := DlpPolicyDto{}
 
-	_, err := client.BapiClient.Execute(ctx, "PATCH", apiUrl.String(), nil, policyToCreate, []int{http.StatusAccepted}, &createdPolicy)
+	_, err := client.BapiClient.Execute(ctx, "PATCH", apiUrl.String(), nil, policyToCreate, []int{http.StatusOK}, &createdPolicy)
 	if err != nil {
 		return nil, err
 	}
