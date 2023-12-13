@@ -165,19 +165,11 @@ func (d *DataLossPreventionPolicyDataSource) Schema(_ context.Context, _ datasou
 								stringvalidator.OneOf("General", "Confidential", "Blocked"),
 							},
 						},
-						"environments": schema.SetNestedAttribute{
-							MarkdownDescription: "Environment to which the policy is applied",
+						"environments": schema.SetAttribute{
 							Description:         "Environment to which the policy is applied",
+							MarkdownDescription: "Environment to which the policy is applied",
+							ElementType:         types.StringType,
 							Computed:            true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"name": schema.StringAttribute{
-										MarkdownDescription: "Unique Identifier of the environment",
-										Description:         "Unique Identifier of the environment",
-										Computed:            true,
-									},
-								},
-							},
 						},
 						"business_connectors": schema.SetNestedAttribute{
 							MarkdownDescription: "Connectors for sensitive data",

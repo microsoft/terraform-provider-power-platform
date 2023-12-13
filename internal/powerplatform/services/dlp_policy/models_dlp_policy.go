@@ -134,7 +134,7 @@ type DataLossPreventionPolicyResourceModel struct {
 	CreatedTime                       types.String `tfsdk:"created_time"`
 	LastModifiedBy                    types.String `tfsdk:"last_modified_by"`
 	LastModifiedTime                  types.String `tfsdk:"last_modified_time"`
-	Environments                      types.Set    `tfsdk:"environments"`
+	Environments                      []string     `tfsdk:"environments"`
 	NonBusinessConfidentialConnectors types.Set    `tfsdk:"non_business_connectors"`
 	BusinessGeneralConnectors         types.Set    `tfsdk:"business_connectors"`
 	BlockedConnectors                 types.Set    `tfsdk:"blocked_connectors"`
