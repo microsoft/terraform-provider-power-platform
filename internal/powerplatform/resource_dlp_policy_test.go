@@ -453,7 +453,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 	httpmock.RegisterResponder("PATCH", fmt.Sprintf(`https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/%s`, policyId),
 		func(req *http.Request) (*http.Response, error) {
 			patchResponsesInx++
-			return httpmock.NewStringResponse(http.StatusAccepted, patchResponsesArray[patchResponsesInx]), nil
+			return httpmock.NewStringResponse(http.StatusOK, patchResponsesArray[patchResponsesInx]), nil
 		})
 
 	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies`,
@@ -469,7 +469,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 
 	httpmock.RegisterResponder("DELETE", fmt.Sprintf(`https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/policies/%s`, policyId),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -533,11 +533,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
 					environment_type                  = "OnlyEnvironments"
-					environments = [
-						{
-							name = "00000000-0000-0000-0000-000000000000"
-						}
-					]
+					environments = [ "00000000-0000-0000-0000-000000000000" ]
 
 					business_connectors = []
 					non_business_connectors = []
@@ -555,7 +551,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "default_connectors_classification", "General"),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environment_type", "OnlyEnvironments"),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environments.#", "1"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environments.0.name", "00000000-0000-0000-0000-000000000000"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environments.0", "00000000-0000-0000-0000-000000000000"),
 				),
 			},
 			{
@@ -564,11 +560,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
 					environment_type                  = "OnlyEnvironments"
-					environments = [
-						{
-							name = "00000000-0000-0000-0000-000000000000"
-						}
-					]
+					environments = [ "00000000-0000-0000-0000-000000000000" ]
 	
 					business_connectors = toset([
 							{
@@ -631,11 +623,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
 					environment_type                  = "OnlyEnvironments"
-					environments = [
-						{
-							name = "00000000-0000-0000-0000-000000000000"
-						}
-					]
+					environments = [ "00000000-0000-0000-0000-000000000000" ]
 
 					business_connectors = toset([
 					{
@@ -714,11 +702,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
 					environment_type                  = "OnlyEnvironments"
-					environments = [
-						{
-							name = "00000000-0000-0000-0000-000000000000"
-						}
-					]
+					environments = [ "00000000-0000-0000-0000-000000000000" ]
 
 					business_connectors = toset([
 							{
@@ -809,7 +793,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 
 	httpmock.RegisterResponder("DELETE", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/policies/00000000-0000-0000-0000-000000000001`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -822,11 +806,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 					display_name                      = "Block All Policy"
 					default_connectors_classification = "Blocked"
 					environment_type                  = "OnlyEnvironments"
-					environments = [
-						{
-							name = "00000000-0000-0000-0000-000000000000"
-						}
-					]
+					environments = [ "00000000-0000-0000-0000-000000000000" ]
 
 					business_connectors = toset([
 						{
@@ -893,7 +873,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environment_type", "OnlyEnvironments"),
 
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environments.#", "1"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environments.0.name", "00000000-0000-0000-0000-000000000000"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environments.0", "00000000-0000-0000-0000-000000000000"),
 
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.#", "1"),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
