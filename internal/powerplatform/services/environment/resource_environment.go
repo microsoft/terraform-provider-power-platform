@@ -106,10 +106,8 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 			"domain": schema.StringAttribute{
 				Description:         "Domain name of the environment",
 				MarkdownDescription: "Domain name of the environment",
-				Required:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				Optional:            true,
+				Computed:            true,
 			},
 			"location": schema.StringAttribute{
 				Description:         "Location of the environment (europe, unitedstates etc.)",
@@ -241,7 +239,6 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 			EnvironmentSku: plan.EnvironmentType.ValueString(),
 			LinkedEnvironmentMetadata: EnvironmentCreateLinkEnvironmentMetadataDto{
 				BaseLanguage:    int(plan.LanguageName.ValueInt64()),
-				DomainName:      plan.Domain.ValueString(),
 				SecurityGroupId: plan.SecurityGroupId.ValueString(),
 				Currency: EnvironmentCreateCurrency{
 					Code: plan.CurrencyCode.ValueString(),
@@ -256,6 +253,10 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		envToCreate.Properties.BillingPolicy = BillingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
 		}
+    
+	if plan.Domain.ValueString() != "" && !plan.Domain.IsNull() {
+		envToCreate.Properties.LinkedEnvironmentMetadata.DomainName = plan.Domain.ValueString()
+
 	}
 
 	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, envToCreate)
@@ -385,15 +386,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 			},
 		},
 	}
-	if !plan.LinkedAppId.IsNull() && plan.LinkedAppId.ValueString() != "" {
-		envToUpdate.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
-			Type: plan.LinkedAppType.ValueString(),
-			Id:   plan.LinkedAppId.ValueString(),
-			Url:  plan.LinkedAppUrl.ValueString(),
-		}
-	} else {
-		envToUpdate.Properties.LinkedAppMetadata = nil
-	}
+  
 	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
 		envToUpdate.Properties.BillingPolicy = BillingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
@@ -424,6 +417,20 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		}
 	}
 
+	if state.Domain.ValueString() != plan.Domain.ValueString() && !plan.Domain.IsNull() && plan.Domain.ValueString() != "" {
+		envToUpdate.Properties.LinkedEnvironmentMetadata.DomainName = plan.Domain.ValueString()
+	}
+
+	if !plan.LinkedAppId.IsNull() && plan.LinkedAppId.ValueString() != "" {
+		envToUpdate.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
+			Type: plan.LinkedAppType.ValueString(),
+			Id:   plan.LinkedAppId.ValueString(),
+			Url:  plan.LinkedAppUrl.ValueString(),
+		}
+	} else {
+		envToUpdate.Properties.LinkedAppMetadata = nil
+	}
+  
 	envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), envToUpdate)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
@@ -447,9 +454,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	plan.LinkedAppType = env.LinkedAppType
 	plan.LinkedAppId = env.LinkedAppId
 	plan.LinkedAppUrl = env.LinkedAppURL
-	//if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
 	plan.BillingPolicyId = env.BillingPolicyId
-	//}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
