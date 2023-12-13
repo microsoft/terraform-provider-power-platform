@@ -103,10 +103,8 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 			"domain": schema.StringAttribute{
 				Description:         "Domain name of the environment",
 				MarkdownDescription: "Domain name of the environment",
-				Required:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				Optional:            true,
+				Computed:            true,
 			},
 			"location": schema.StringAttribute{
 				Description:         "Location of the environment (europe, unitedstates etc.)",
@@ -231,7 +229,6 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 			EnvironmentSku: plan.EnvironmentType.ValueString(),
 			LinkedEnvironmentMetadata: EnvironmentCreateLinkEnvironmentMetadataDto{
 				BaseLanguage:    int(plan.LanguageName.ValueInt64()),
-				DomainName:      plan.Domain.ValueString(),
 				SecurityGroupId: plan.SecurityGroupId.ValueString(),
 				Currency: EnvironmentCreateCurrency{
 					Code: plan.CurrencyCode.ValueString(),
@@ -240,6 +237,10 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 				//TemplateMetadata: EnvironmentCreateTemplateMetadata{},
 			},
 		},
+	}
+
+	if plan.Domain.ValueString() != "" && !plan.Domain.IsNull() {
+		envToCreate.Properties.LinkedEnvironmentMetadata.DomainName = plan.Domain.ValueString()
 	}
 
 	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, envToCreate)
@@ -348,58 +349,58 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	if plan.DisplayName.ValueString() != state.DisplayName.ValueString() ||
-		plan.SecurityGroupId.ValueString() != state.SecurityGroupId.ValueString() ||
-		plan.Domain.ValueString() != state.Domain.ValueString() {
-
-		envToUpdate := EnvironmentDto{
-			Id:       plan.Id.ValueString(),
-			Name:     plan.DisplayName.ValueString(),
-			Type:     plan.EnvironmentType.ValueString(),
-			Location: plan.Location.ValueString(),
-			Properties: EnvironmentPropertiesDto{
-				DisplayName:    plan.DisplayName.ValueString(),
-				EnvironmentSku: plan.EnvironmentType.ValueString(),
-				LinkedEnvironmentMetadata: LinkedEnvironmentMetadataDto{
-					SecurityGroupId: plan.SecurityGroupId.ValueString(),
-					DomainName:      plan.Domain.ValueString(),
-				},
+	envToUpdate := EnvironmentDto{
+		Id:       plan.Id.ValueString(),
+		Name:     plan.DisplayName.ValueString(),
+		Type:     plan.EnvironmentType.ValueString(),
+		Location: plan.Location.ValueString(),
+		Properties: EnvironmentPropertiesDto{
+			DisplayName:    plan.DisplayName.ValueString(),
+			EnvironmentSku: plan.EnvironmentType.ValueString(),
+			LinkedEnvironmentMetadata: LinkedEnvironmentMetadataDto{
+				SecurityGroupId: plan.SecurityGroupId.ValueString(),
+				DomainName:      plan.Domain.ValueString(),
 			},
-		}
-		if !plan.LinkedAppId.IsNull() && plan.LinkedAppId.ValueString() != "" {
-			envToUpdate.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
-				Type: plan.LinkedAppType.ValueString(),
-				Id:   plan.LinkedAppId.ValueString(),
-				Url:  plan.LinkedAppUrl.ValueString(),
-			}
-		} else {
-			envToUpdate.Properties.LinkedAppMetadata = nil
-		}
-
-		envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), envToUpdate)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
-			return
-		}
-
-		env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
-
-		plan.Id = env.EnvironmentId
-		plan.DisplayName = env.DisplayName
-		plan.OrganizationId = env.OrganizationId
-		plan.SecurityGroupId = env.SecurityGroupId
-		plan.LanguageName = env.LanguageName
-		plan.Domain = env.Domain
-		plan.Url = env.Url
-		plan.CurrencyCode = env.CurrencyCode
-		plan.EnvironmentType = env.EnvironmentType
-		plan.Version = env.Version
-		plan.LanguageName = env.LanguageName
-		plan.Location = env.Location
-		plan.LinkedAppType = env.LinkedAppType
-		plan.LinkedAppId = env.LinkedAppId
-		plan.LinkedAppUrl = env.LinkedAppURL
+		},
 	}
+
+	if state.Domain.ValueString() != plan.Domain.ValueString() && !plan.Domain.IsNull() && plan.Domain.ValueString() != "" {
+		envToUpdate.Properties.LinkedEnvironmentMetadata.DomainName = plan.Domain.ValueString()
+	}
+
+	if !plan.LinkedAppId.IsNull() && plan.LinkedAppId.ValueString() != "" {
+		envToUpdate.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
+			Type: plan.LinkedAppType.ValueString(),
+			Id:   plan.LinkedAppId.ValueString(),
+			Url:  plan.LinkedAppUrl.ValueString(),
+		}
+	} else {
+		envToUpdate.Properties.LinkedAppMetadata = nil
+	}
+
+	envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), envToUpdate)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
+		return
+	}
+
+	env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
+
+	plan.Id = env.EnvironmentId
+	plan.DisplayName = env.DisplayName
+	plan.OrganizationId = env.OrganizationId
+	plan.SecurityGroupId = env.SecurityGroupId
+	plan.LanguageName = env.LanguageName
+	plan.Domain = env.Domain
+	plan.Url = env.Url
+	plan.CurrencyCode = env.CurrencyCode
+	plan.EnvironmentType = env.EnvironmentType
+	plan.Version = env.Version
+	plan.LanguageName = env.LanguageName
+	plan.Location = env.Location
+	plan.LinkedAppType = env.LinkedAppType
+	plan.LinkedAppId = env.LinkedAppId
+	plan.LinkedAppUrl = env.LinkedAppURL
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
