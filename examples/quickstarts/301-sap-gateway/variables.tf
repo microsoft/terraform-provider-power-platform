@@ -61,27 +61,6 @@ variable "user_id_admin_pp" {
   type        = string
 }
 
-/*
-variable "ps7_setup_link" {
-  description = "The Blob link to the PowerShell 7 installation file"
-  type        = string
-}
-
-variable "java_setup_link" {
-  description = "The Blob link to the Java Runtime installation file"
-  type        = string
-}
-variable "sapnco_install_link" {
-  description = "The Blob link to the SAP NCo installation file"
-  type        = string
-}
-
-variable "runtime_setup_link" {
-  description = "The Blob link to the runtime setup script"
-  type        = string
-}
-*/
-
 variable "shir_key" {
   description = "Value of the secret name for the IR key"
   type        = string
