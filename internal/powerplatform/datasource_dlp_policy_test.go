@@ -90,7 +90,7 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.last_modified_time", "2023-10-02T07:56:43.9700369Z"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environment_type", "ExceptEnvironments"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environments.#", "1"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environments.0.name", "be0eb809-e58a-ec1b-8fce-ea40b0e53442"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environments.0", "be0eb809-e58a-ec1b-8fce-ea40b0e53442"),
 
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.#", "2"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.1.data_group", "NonBusiness"),

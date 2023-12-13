@@ -14,9 +14,12 @@ import (
 
 	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
+	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
+	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
@@ -28,7 +31,7 @@ type PowerPlatformProvider struct {
 	Config           *common.ProviderConfig
 	BapiApi          *clients.BapiClient
 	DataverseApi     *clients.DataverseClient
-	PowerPlatformApi *clients.PowerPlatoformApiClient
+	PowerPlatformApi *clients.PowerPlatformApiClient
 }
 
 func NewPowerPlatformProvider() func() provider.Provider {
@@ -80,7 +83,6 @@ func (p *PowerPlatformProvider) Metadata(ctx context.Context, req provider.Metad
 }
 
 func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
-
 	tflog.Debug(ctx, "Schema request received")
 
 	resp.Schema = schema.Schema{
@@ -179,40 +181,23 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	ctx = tflog.SetField(ctx, "power_platform_secret", secret)
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_secret")
 
-	p.Config.Credentials.TenantId = tenantId
-	p.Config.Credentials.ClientId = clientId
-	p.Config.Credentials.Secret = secret
-	p.Config.Credentials.Username = username
-	p.Config.Credentials.Password = password
-
-	if tenantId == "" {
-		resp.Diagnostics.AddAttributeError(
-			path.Root("tenant_id"),
-			"Unknown API tenant id",
-			"The provider cannot create the API client as there is an unknown configuration value for the tenant id. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_TENANT_ID environment variable.",
-		)
-	}
-	if clientId == "" || secret == "" && (clientId != "" || secret != "") {
-		if clientId == "" {
+	if clientId != "" && secret != "" && tenantId != "" {
+		p.Config.Credentials.TenantId = tenantId
+		p.Config.Credentials.ClientId = clientId
+		p.Config.Credentials.Secret = secret
+	} else if username != "" && password != "" && tenantId != "" {
+		p.Config.Credentials.TenantId = tenantId
+		p.Config.Credentials.Username = username
+		p.Config.Credentials.Password = password
+	} else {
+		if tenantId == "" {
 			resp.Diagnostics.AddAttributeError(
-				path.Root("client_id"),
-				"Unknown client id",
-				"The provider cannot create the API client as there is an unknown configuration value for the client id. "+
-					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_CLIENT_ID environment variable.",
+				path.Root("tenant_id"),
+				"Unknown API tenant id",
+				"The provider cannot create the API client as there is an unknown configuration value for the tenant id. "+
+					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_TENANT_ID environment variable.",
 			)
 		}
-		if secret == "" {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("secret"),
-				"Unknown secret",
-				"The provider cannot create the API client as there is an unknown configuration value for the secret. "+
-					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_SECRET environment variable.",
-			)
-		}
-	}
-
-	if username == "" || password == "" && (username != "" || password != "") {
 		if username == "" {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("username"),
@@ -227,6 +212,22 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 				"Unknown password",
 				"The provider cannot create the API client as there is an unknown configuration value for the password. "+
 					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_PASSWORD environment variable.",
+			)
+		}
+		if clientId == "" {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("client_id"),
+				"Unknown client id",
+				"The provider cannot create the API client as there is an unknown configuration value for the client id. "+
+					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_CLIENT_ID environment variable.",
+			)
+		}
+		if secret == "" {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("secret"),
+				"Unknown secret",
+				"The provider cannot create the API client as there is an unknown configuration value for the secret. "+
+					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_SECRET environment variable.",
 			)
 		}
 	}
@@ -246,19 +247,26 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		func() resource.Resource { return environment.NewEnvironmentResource() },
+		func() resource.Resource { return application.NewApplicationResource() },
 		func() resource.Resource { return dlp_policy.NewDataLossPreventionPolicyResource() },
 		func() resource.Resource { return solution.NewSolutionResource() },
 		func() resource.Resource { return tenant_settings.NewTenantSettingsResource() },
+		func() resource.Resource { return managed_environment.NewManagedEnvironmentResource() },
+		func() resource.Resource { return licensing.NewBillingPolicyEnvironmentResource() },
+		func() resource.Resource { return licensing.NewBillingPolicyResource() },
 	}
 }
 
 func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		func() datasource.DataSource { return connectors.NewConnectorsDataSource() },
+		func() datasource.DataSource { return application.NewApplicationsDataSource() },
 		func() datasource.DataSource { return powerapps.NewPowerAppsDataSource() },
 		func() datasource.DataSource { return environment.NewEnvironmentsDataSource() },
 		func() datasource.DataSource { return solution.NewSolutionsDataSource() },
 		func() datasource.DataSource { return dlp_policy.NewDataLossPreventionPolicyDataSource() },
 		func() datasource.DataSource { return tenant_settings.NewTenantSettingsDataSource() },
+		func() datasource.DataSource { return licensing.NewBillingPoliciesDataSource() },
+		func() datasource.DataSource { return licensing.NewBillingPoliciesEnvironmetsDataSource() },
 	}
 }

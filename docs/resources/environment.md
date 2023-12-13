@@ -39,12 +39,13 @@ provider "powerplatform" {
 }
 
 resource "powerplatform_environment" "development" {
-  display_name     = "example_environment"
-  location         = "europe"
-  language_code    = "1033"
-  currency_code    = "USD"
-  environment_type = "Sandbox"
-  domain           = "mydomain"
+  display_name      = "example_environment"
+  location          = "europe"
+  language_code     = "1033"
+  currency_code     = "USD"
+  environment_type  = "Sandbox"
+  domain            = "mydomain"
+  security_group_id = "00000000-0000-0000-0000-000000000000"
 }
 ```
 
@@ -55,7 +56,6 @@ resource "powerplatform_environment" "development" {
 
 - `currency_code` (String) Unique currency name
 - `display_name` (String) Display name
-- `domain` (String) Domain name of the environment
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
 - `language_code` (Number) Unique language LCID (integer)
 - `location` (String) Location of the environment (europe, unitedstates etc.)
@@ -63,12 +63,13 @@ resource "powerplatform_environment" "development" {
 
 ### Optional
 
+- `domain` (String) Domain name of the environment
 - `template_metadata` (String) JSON representation of the environment deployment metadata
 - `templates` (List of String) The selected instance provisioning template (if any)
 
 ### Read-Only
 
-- `id` (String) Unique environment id 	(guid)
+- `id` (String) Unique environment id (guid)
 - `linked_app_id` (String) The GUID of the linked D365 application
 - `linked_app_type` (String) The type of the linked D365 application
 - `linked_app_url` (String) The URL of the linked D365 application

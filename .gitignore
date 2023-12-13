@@ -80,3 +80,6 @@ makefile
 
 # MSI files
 *.msi
+
+# test zip files like TerraformTestSolution_Complex_1_1_0_0.zip
+*.zip
