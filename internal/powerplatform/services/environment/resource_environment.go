@@ -253,7 +253,8 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		envToCreate.Properties.BillingPolicy = BillingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
 		}
-    
+	}
+
 	if plan.Domain.ValueString() != "" && !plan.Domain.IsNull() {
 		envToCreate.Properties.LinkedEnvironmentMetadata.DomainName = plan.Domain.ValueString()
 
@@ -280,9 +281,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	plan.LinkedAppType = env.LinkedAppType
 	plan.LinkedAppId = env.LinkedAppId
 	plan.LinkedAppUrl = env.LinkedAppURL
-	//if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
 	plan.BillingPolicyId = env.BillingPolicyId
-	//}
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
@@ -332,11 +331,8 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	state.LinkedAppId = env.LinkedAppId
 	state.LinkedAppType = env.LinkedAppType
 	state.LinkedAppUrl = env.LinkedAppURL
-	//if !state.BillingPolicyId.IsNull() && state.BillingPolicyId.ValueString() != "" {
 	state.BillingPolicyId = env.BillingPolicyId
-	//}
 
-	//TODO move to separate function
 	ctx = tflog.SetField(ctx, "id", state.Id.ValueString())
 	ctx = tflog.SetField(ctx, "display_name", state.DisplayName.ValueString())
 	ctx = tflog.SetField(ctx, "url", state.Url.ValueString())
@@ -386,7 +382,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 			},
 		},
 	}
-  
+
 	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
 		envToUpdate.Properties.BillingPolicy = BillingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
@@ -430,7 +426,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	} else {
 		envToUpdate.Properties.LinkedAppMetadata = nil
 	}
-  
+
 	envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), envToUpdate)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
