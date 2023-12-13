@@ -218,12 +218,6 @@ func convertToDlpConnectorGroup(ctx context.Context, diag diag.Diagnostics, clas
 }
 
 func convertToDlpEnvironment(ctx context.Context, diag diag.Diagnostics, environmentsInPolicy []string) []DlpEnvironmentDto {
-	//var envs []DataLossPreventionPolicyResourceEnvironmentsModel
-	// err := environmentsAttr.ElementsAs(ctx, &envs, true)
-	// if err != nil {
-	// 	diag.AddError("Client error when converting DlpEnvironment", "")
-	// }
-
 	environments := make([]DlpEnvironmentDto, 0)
 	for _, environment := range environmentsInPolicy {
 		environments = append(environments, DlpEnvironmentDto{
