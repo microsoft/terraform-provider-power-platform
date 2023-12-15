@@ -31,7 +31,9 @@ The SAP Connector for .NET is the runtime used to connect the VM to SAP system. 
 Make sure there is not any node assigned to the self-hosted integration runtime at Synapse or ADF. Please check more information at [Create a self-hosted integration runtime - Azure Data Factory & Azure Synapse | Microsoft Learn](https://learn.microsoft.com/en-us/azure/data-factory/create-self-hosted-integration-runtime?tabs=data-factory).
 
 {{ .ModuleDetails }}
+### Networking Requirements
 
+The Terraform code on this repo will deploy the VM on an existing Azure Vnet so you need to provide the Azure "sap_subnet_id" value, check more details in the section about networking below.
 ## Usage
 
 The entire script is required for the proper installation, unless you decide to create any one of the resources separately.
