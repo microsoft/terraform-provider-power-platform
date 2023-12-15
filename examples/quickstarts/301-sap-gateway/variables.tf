@@ -61,7 +61,7 @@ variable "user_id_admin_pp" {
   type        = string
 }
 
-variable "shir_key" {
+variable "ir_key" {
   description = "Value of the secret name for the IR key"
   type        = string
 }

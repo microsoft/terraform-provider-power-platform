@@ -213,7 +213,7 @@ resource "azurecaf_name" "key_vault_secret_irkey" {
 
 resource "azurerm_key_vault_secret" "key_vault_secret_irkey" {
   name         = azurecaf_name.key_vault_secret_irkey.result
-  value        = var.shir_key
+  value        = var.ir_key
   key_vault_id = azurerm_key_vault.key_vault.id
 }
 
