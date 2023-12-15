@@ -48,13 +48,13 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 | `client_id_gw` | The client ID / app ID of the service principal where the on-premise data gateway admin permissions | string | `null` | true |
 | `client_id_pp` | The client ID / app ID of the service principal with Power Platform admin permissions | string | `null` | true |
 | `gateway_name` | The name of the gateway to be created on Power Platform | string | `null` | true |
+| `ir_key` | Value of the secret name for the IR key | string | `null` | true |
 | `prefix` | The prefix which should be used for all resources name | string | `"opdgw"` | false |
 | `recover_key_gw` | The recovery key of the gateway | string | `null` | true |
 | `region_gw` | The Azure region where the resources in this example should be created | string | `null` | true |
 | `sap_subnet_id` | The SAP system subnet ID | string | `null` | true |
 | `secret_gw` | The secret of the service principal with on-premise data gateway admin permissions | string | `null` | true |
 | `secret_pp` | The secret of the service principal with Power Platform admin permissions | string | `null` | true |
-| `ir_key` | Value of the secret name for the IR key | string | `null` | true |
 | `subscription_id_gw` | The subscription ID of the service principal with on-premise data gateway admin permissions | string | `null` | true |
 | `tenant_id_gw` | The tenant ID of service principal or user | string | `null` | true |
 | `tenant_id_pp` | The tenant ID of service principal or user at Power Platform | string | `null` | true |
@@ -96,6 +96,10 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 * `gateway_vm` from `./gateway-vm`
 * `storage_account` from `./storage-account`
 
+
+### Networking Requirements
+
+The Terraform code on this repo will deploy the VM on an existing Azure Vnet so you need to provide the Azure "sap_subnet_id" value, check more details in the section about networking below.
 
 ## Usage
 
@@ -150,6 +154,7 @@ sap_subnet_id      = "/subscriptions/abababab-12ab-ab00-82e2-aa00babab102/resour
 prefix             = "opdgw"
 base_name          = "AzureSAPIntegration"
 ```
+> Note: You need to provide all the "local.tfvars" values to run the command "terraform apply".
 
 ## Terraform Version Constraints
 
