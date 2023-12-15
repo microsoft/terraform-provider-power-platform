@@ -2,6 +2,7 @@ package powerplatform
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -49,23 +50,12 @@ type EnvironmentResourceModel struct {
 	LanguageName    types.Int64  `tfsdk:"language_code"`
 	CurrencyCode    types.String `tfsdk:"currency_code"`
 	//IsCustomControlInCanvasAppsEnabled types.Bool   `tfsdk:"is_custom_control_in_canvas_apps_enabled"`
-	Version               types.String             `tfsdk:"version"`
-	Templates             []string                 `tfsdk:"templates"`
-	TemplateMetadata      PostProvisioningPackages `tfsdk:"template_metadata"`
-	LinkedAppType         types.String             `tfsdk:"linked_app_type"`
-	LinkedAppId           types.String             `tfsdk:"linked_app_id"`
-	LinkedAppUrl          types.String             `tfsdk:"linked_app_url"`
-	ApplicationUniqueName types.String             `tfsdk:"application_unique_name"`
-	Parameters            types.String             `tfsdk:"parameters"`
-}
-
-type ProvisionPackage struct {
-	ApplicationUniqueName types.String `tfsdk:"application_unique_name"`
-	Parameters            types.String `tfsdk:"parameters"`
-}
-
-type PostProvisioningPackages struct {
-	PostProvisioningPackages []string `tfsdk:"post_provisioning_packages"`
+	Version          types.String `tfsdk:"version"`
+	Templates        []string     `tfsdk:"templates"`
+	TemplateMetadata types.String `tfsdk:"template_metadata"`
+	LinkedAppType    types.String `tfsdk:"linked_app_type"`
+	LinkedAppId      types.String `tfsdk:"linked_app_id"`
+	LinkedAppUrl     types.String `tfsdk:"linked_app_url"`
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -176,23 +166,9 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional:            true,
 				ElementType:         types.StringType,
 			},
-			"template_metadata": schema.ListNestedAttribute{
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"application_unique_name": schema.StringAttribute{
-							Description:         "The target application name",
-							MarkdownDescription: "The target application name",
-							Optional:            true,
-						},
-						"parameters": schema.StringAttribute{
-							Description:         "Extra parameters for the template",
-							MarkdownDescription: "Extra parameters for the template",
-							Optional:            true,
-						},
-					},
-				},
-				Description:         "Additional template metadata (if any)",
-				MarkdownDescription: "Additional template metadata (if any)",
+			"template_metadata": schema.StringAttribute{
+				Description:         "Additional D365 environment template metadata (if any)",
+				MarkdownDescription: "Additional D365 environment template metadata (if any)",
 				Optional:            true,
 			},
 			"linked_app_type": schema.StringAttribute{
@@ -244,6 +220,17 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	//Unmarshal JSON string input for the D365 template metadata into an object.
+	var templateMetadataObject EnvironmentCreateTemplateMetadata
+
+	if plan.TemplateMetadata.ValueString() != "" {
+		err := json.Unmarshal([]byte(plan.TemplateMetadata.ValueString()), &templateMetadataObject)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error when unmarshalling template metadata %s", plan.TemplateMetadata.ValueString()), err.Error())
+			return
+		}
+	}
+
 	envToCreate := EnvironmentCreateDto{
 		Location: plan.Location.ValueString(),
 		Properties: EnvironmentCreatePropertiesDto{
@@ -259,7 +246,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 					Code: plan.CurrencyCode.ValueString(),
 				},
 				Templates:        plan.Templates,
-				TemplateMetadata: EnvironmentCreateTemplateMetadata{},
+				TemplateMetadata: templateMetadataObject,
 			},
 		},
 	}
