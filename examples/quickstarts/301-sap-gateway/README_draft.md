@@ -85,7 +85,7 @@ sap_subnet_id      = "/subscriptions/abababab-12ab-ab00-82e2-aa00babab102/resour
 prefix             = "opdgw"
 base_name          = "AzureSAPIntegration"
 ```
-
+> Note: You need to provide all the "local.tfvars" values to run the command "terraform apply".
 ## Terraform Version Constraints
 
 - azurerm `>=3.74.0`
