@@ -54,7 +54,7 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 | `sap_subnet_id` | The SAP system subnet ID | string | `null` | true |
 | `secret_gw` | The secret of the service principal with on-premise data gateway admin permissions | string | `null` | true |
 | `secret_pp` | The secret of the service principal with Power Platform admin permissions | string | `null` | true |
-| `shir_key` | Value of the secret name for the IR key | string | `null` | true |
+| `ir_key` | Value of the secret name for the IR key | string | `null` | true |
 | `subscription_id_gw` | The subscription ID of the service principal with on-premise data gateway admin permissions | string | `null` | true |
 | `tenant_id_gw` | The tenant ID of service principal or user | string | `null` | true |
 | `tenant_id_pp` | The tenant ID of service principal or user at Power Platform | string | `null` | true |
