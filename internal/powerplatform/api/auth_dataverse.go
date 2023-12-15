@@ -2,8 +2,13 @@ package powerplatform
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
+
+	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	powerplatform_common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
 
 type DataverseAuth struct {
@@ -56,16 +61,41 @@ func (client *DataverseAuth) isTokenExpiredOrEmpty(environmentUrl string) bool {
 	return auth == nil || (auth != nil && auth.Token == "") || (auth != nil && time.Now().After(auth.TokenExpiry))
 }
 
-func (client *DataverseAuth) AuthenticateUserPass(ctx context.Context, environmentUrl, tenantId, username, password string) (string, error) {
-	//todo implement when needed
-	panic("[AuthenticateUserPass] not implemented")
-}
-
-func (client *DataverseAuth) AuthenticateClientSecret(ctx context.Context, environmentUrl, tenantId, applicationid, secret string) (string, error) {
+func (client *DataverseAuth) AuthenticateUserPass(ctx context.Context, environmentUrl string, credentials *powerplatform_common.ProviderCredentials) (string, error) {
 	environmentUrl = strings.TrimSuffix(environmentUrl, "/")
 
 	scopes := []string{environmentUrl + "//.default"}
-	token, expiry, err := client.baseAuth.AuthClientSecret(ctx, scopes, tenantId, applicationid, secret)
+	publicClientApplicationID := "1950a258-227b-4e31-a9cf-717495945fc2"
+	authority := "https://login.microsoftonline.com/" + credentials.TenantId
+
+	publicClientApp, err := public.New(publicClientApplicationID, public.WithAuthority(authority))
+
+	if err != nil {
+		return "", err
+	}
+
+	authResult, err := publicClientApp.AcquireTokenByUsernamePassword(ctx, scopes, credentials.Username, credentials.Password)
+
+	if err != nil {
+		if strings.Contains(err.Error(), "unable to resolve an endpoint: json decode error") {
+			tflog.Debug(ctx, err.Error())
+			return "", errors.New("there was an issue authenticating with the provided credentials. Please check the your username/password and try again")
+		}
+		return "", err
+	}
+
+	client.setAuthDataInCache(environmentUrl, &DataverseAuthDetails{
+		Token:       authResult.AccessToken,
+		TokenExpiry: authResult.ExpiresOn,
+	})
+	return authResult.AccessToken, nil
+}
+
+func (client *DataverseAuth) AuthenticateClientSecret(ctx context.Context, environmentUrl string, credentials *powerplatform_common.ProviderCredentials) (string, error) {
+	environmentUrl = strings.TrimSuffix(environmentUrl, "/")
+
+	scopes := []string{environmentUrl + "//.default"}
+	token, expiry, err := client.baseAuth.AuthClientSecret(ctx, scopes, credentials)
 	if err != nil {
 		return "", err
 	}

@@ -27,7 +27,7 @@ func (client *DlpPolicyClient) GetPolicies(ctx context.Context) ([]DlpPolicyMode
 		Path:   "providers/PowerPlatform.Governance/v2/policies",
 	}
 	policiesArray := DlpPolicyDefinitionDtoArray{}
-	_, err := client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policiesArray)
+	_, err := client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policiesArray)
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (client *DlpPolicyClient) GetPolicies(ctx context.Context) ([]DlpPolicyMode
 			Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", policy.PolicyDefinition.Name),
 		}
 		policy := DlpPolicyDto{}
-		_, err := client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
+		_, err := client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 		if err != nil {
 			return nil, err
 		}
@@ -61,7 +61,7 @@ func (client *DlpPolicyClient) GetPolicy(ctx context.Context, name string) (*Dlp
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", name),
 	}
 	policy := DlpPolicyDto{}
-	_, err := client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, []int{http.StatusOK}, &policy)
+	_, err := client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (client *DlpPolicyClient) DeletePolicy(ctx context.Context, name string) er
 		Host:   client.BapiClient.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v1/policies/%s", name),
 	}
-	_, err := client.BapiClient.Execute(ctx, "DELETE", apiUrl.String(), nil, []int{http.StatusNoContent}, nil)
+	_, err := client.BapiClient.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return err
 	}
@@ -91,7 +91,7 @@ func (client *DlpPolicyClient) UpdatePolicy(ctx context.Context, name string, po
 	}
 	createdPolicy := DlpPolicyDto{}
 
-	_, err := client.BapiClient.Execute(ctx, "PATCH", apiUrl.String(), policyToCreate, []int{http.StatusAccepted}, &createdPolicy)
+	_, err := client.BapiClient.Execute(ctx, "PATCH", apiUrl.String(), nil, policyToCreate, []int{http.StatusOK}, &createdPolicy)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +244,7 @@ func (client *DlpPolicyClient) CreatePolicy(ctx context.Context, policy DlpPolic
 	}
 
 	createdPolicy := DlpPolicyDto{}
-	_, err := client.BapiClient.Execute(ctx, "POST", apiUrl.String(), policyToCreate, []int{http.StatusCreated}, &createdPolicy)
+	_, err := client.BapiClient.Execute(ctx, "POST", apiUrl.String(), nil, policyToCreate, []int{http.StatusCreated}, &createdPolicy)
 	if err != nil {
 		return nil, err
 	}

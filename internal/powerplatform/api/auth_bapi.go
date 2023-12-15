@@ -7,6 +7,7 @@ import (
 
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	powerplatform_common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
 )
 
 var _ AuthBaseOperationInterface = &BapiAuth{}
@@ -25,17 +26,17 @@ func (client *BapiAuth) GetBase() *AuthBase {
 	return client.baseAuth
 }
 
-func (client *BapiAuth) AuthenticateUserPass(ctx context.Context, tenantId, username, password string) (string, error) {
+func (client *BapiAuth) AuthenticateUserPass(ctx context.Context, credentials *powerplatform_common.ProviderCredentials) (string, error) {
 	scopes := []string{"https://service.powerapps.com//.default"}
 	publicClientApplicationID := "1950a258-227b-4e31-a9cf-717495945fc2"
-	authority := "https://login.microsoftonline.com/" + tenantId
+	authority := "https://login.microsoftonline.com/" + credentials.TenantId
 
 	publicClientApp, err := public.New(publicClientApplicationID, public.WithAuthority(authority))
 	if err != nil {
 		return "", err
 	}
 
-	authResult, err := publicClientApp.AcquireTokenByUsernamePassword(ctx, scopes, username, password)
+	authResult, err := publicClientApp.AcquireTokenByUsernamePassword(ctx, scopes, credentials.Username, credentials.Password)
 
 	if err != nil {
 		if strings.Contains(err.Error(), "unable to resolve an endpoint: json decode error") {
@@ -51,9 +52,9 @@ func (client *BapiAuth) AuthenticateUserPass(ctx context.Context, tenantId, user
 	return client.baseAuth.GetToken()
 }
 
-func (client *BapiAuth) AuthenticateClientSecret(ctx context.Context, tenantId, applicationId, secret string) (string, error) {
+func (client *BapiAuth) AuthenticateClientSecret(ctx context.Context, credentials *powerplatform_common.ProviderCredentials) (string, error) {
 	scopes := []string{"https://service.powerapps.com//.default"}
-	token, expiry, err := client.baseAuth.AuthClientSecret(ctx, scopes, tenantId, applicationId, secret)
+	token, expiry, err := client.baseAuth.AuthClientSecret(ctx, scopes, credentials)
 	if err != nil {
 		if strings.Contains(err.Error(), "unable to resolve an endpoint: json decode error") {
 			tflog.Debug(ctx, err.Error())
