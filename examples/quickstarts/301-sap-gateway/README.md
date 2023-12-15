@@ -31,6 +31,15 @@ The SAP Connector for .NET is the runtime used to connect the VM to SAP system. 
 
 Make sure there is not any node assigned to the self-hosted integration runtime at Synapse or ADF. Please check more information at [Create a self-hosted integration runtime - Azure Data Factory & Azure Synapse | Microsoft Learn](https://learn.microsoft.com/en-us/azure/data-factory/create-self-hosted-integration-runtime?tabs=data-factory).
 
+### Networking Requirements
+
+The Terraform code on this repo will deploy the VM on an existing Azure Vnet so you need to provide the Azure "sap_subnet_id" value, check more details in the section about networking below.
+
+## Terraform Version Constraints
+
+- azurerm `>=3.74.0`
+- azurecaf `>=1.2.26`
+
 ## Example Files
 
 The example files can be found in `examples/quickstarts/301-sap-gateway`
@@ -97,70 +106,6 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 * `storage_account` from `./storage-account`
 
 
-### Networking Requirements
-
-The Terraform code on this repo will deploy the VM on an existing Azure Vnet so you need to provide the Azure "sap_subnet_id" value, check more details in the section about networking below.
-
-## Usage
-
-The entire script is required for the proper installation, unless you decide to create any one of the resources separately.
-
-You have to execute the normal Terraform commands:
-
-```bash
-terraform init -upgrade
-```
-
-The command `terraform init` is used to initialize a working directory that contains Terraform configuration files. It performs several tasks, such as configuring the backend for storing the state, installing the required providers and modules, and creating a lock file to track the versions of the providers and modules. This command is the first step in the Terraform workflow and should be run whenever the configuration changes or a new workspace is created. It is safe to run this command multiple times, as it will not delete or overwrite any existing configuration or state.
-
-```bash
-terraform plan -var-file=local.tfvars
-```
-
-This command tells Terraform to create an execution plan that shows the changes that Terraform will make to the infrastructure based on the configuration files in the current working directory and the variable values in the file `local.tfvars`. The -var-file option allows the user to specify a file that contains variable definitions for the root module of the configuration. You can find an example of this file in the next section below.
-
-The execution plan consists of a set of actions that will create, update, or destroy resources. The plan allows the user to review the changes before applying them, or to save the plan to a file for later use. The plan also helps to ensure that the configuration and the state are in sync, and that the changes match the user’s expectations
-
-```bash
-terraform apply -var-file=local.tfvars
-```
-
-The `terraform apply` command creates or updates infrastructure depending on the configuration files. By default, a plan will be generated first and will need interactive approval before applying. The plan shows the actions that Terraform will take to create, modify, or destroy resources.
-
-```bash
-terraform destroy -var-file=local.tfvars
-```
-
-The terraform destroy command is a convenient way to destroy all remote objects managed by a particular Terraform configuration. It is the opposite of the terraform apply command. The terraform destroy command is useful when Terraform is used to manage ephemeral infrastructure for development purposes, and the user wants to clean up all of the temporary objects once the work is finished.
-
-### Example of local.tfvars file
-
-Here is an example of the `local.tfvars` file.
-
-```bash
-client_id_gw       = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-secret_gw          = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-tenant_id_gw       = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-subscription_id_gw = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-region_gw          = "West Europe"
-client_id_pp       = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-secret_pp          = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-tenant_id_pp       = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-user_id_admin_pp   = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-ir_key             = "IR@XXXXXX-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-gateway_name       = "OPDGW-SAPAzureIntegration"
-recover_key_gw     = "XXXXXXXXXXX"
-sap_subnet_id      = "/subscriptions/abababab-12ab-ab00-82e2-aa00babab102/resourceGroups/resource-group-name/providers/Microsoft.Network/virtualNetworks/VNet-name/subnets/default"
-prefix             = "opdgw"
-base_name          = "AzureSAPIntegration"
-```
-> Note: You need to provide all the "local.tfvars" values to run the command "terraform apply".
-
-## Terraform Version Constraints
-
-- azurerm `>=3.74.0`
-- azurecaf `>=1.2.26`
-
 ## Resources to Be Created
 
 Here is a diagram of all resources to be created:
@@ -187,10 +132,10 @@ The Key Vault contains the credentials required to connect all the components.
 
 | Secret Name               | Description                                                                      |
 | ------------------------- | -------------------------------------------------------------------------------- |
-| fabsap-kvs-pp-xxx         | Service Principal secrete for Power Platforms where the Gateway will be created. |
-| fabsap-kvs-irkey-xxx      | IR Key                                                                           |
-| fabsap-kvs-recoverkey-xxx | Recovery key used during SHIR configuration                                      |
-| fabsap-kvs-vm-pwd-xxx     | VM password (randomly generated)                                                 |
+| \<prefix>-kvs-pp-xxx         | Service Principal secrete for Power Platforms where the Gateway will be created. |
+| \<prefix>-kvs-irkey-xxx      | IR Key                                                                           |
+| \<prefix>-kvs-recoverkey-xxx | Recovery key used during SHIR configuration                                      |
+| \<prefix>-kvs-vm-pwd-xxx     | VM password (randomly generated)                                                 |
 
 > Notes: "xxx" corresponding to the random generated part of the name.
 > You need to add an access policy with proper key permissions for your user to access the values created by the script.
@@ -251,6 +196,62 @@ The majority of the resources names are following a name convention for clear id
 - Due to Power Platform limitations, certain resources may not fully support Terraform's state management.
 - Make sure to set appropriate RBAC for Azure and Power Platform resources.
 - This module is provided as a sample only and is not intended for production use without further customization.
+
+## Usage
+
+The entire script is required for the proper installation, unless you decide to create any one of the resources separately.
+
+You have to execute the normal Terraform commands:
+
+```bash
+terraform init -upgrade
+```
+
+The command `terraform init` is used to initialize a working directory that contains Terraform configuration files. It performs several tasks, such as configuring the backend for storing the state, installing the required providers and modules, and creating a lock file to track the versions of the providers and modules. This command is the first step in the Terraform workflow and should be run whenever the configuration changes or a new workspace is created. It is safe to run this command multiple times, as it will not delete or overwrite any existing configuration or state.
+
+```bash
+terraform plan -var-file=local.tfvars
+```
+
+This command tells Terraform to create an execution plan that shows the changes that Terraform will make to the infrastructure based on the configuration files in the current working directory and the variable values in the file `local.tfvars`. The -var-file option allows the user to specify a file that contains variable definitions for the root module of the configuration. You can find an example of this file in the next section below.
+
+The execution plan consists of a set of actions that will create, update, or destroy resources. The plan allows the user to review the changes before applying them, or to save the plan to a file for later use. The plan also helps to ensure that the configuration and the state are in sync, and that the changes match the user’s expectations
+
+```bash
+terraform apply -var-file=local.tfvars
+```
+
+The `terraform apply` command creates or updates infrastructure depending on the configuration files. By default, a plan will be generated first and will need interactive approval before applying. The plan shows the actions that Terraform will take to create, modify, or destroy resources.
+
+```bash
+terraform destroy -var-file=local.tfvars
+```
+
+The terraform destroy command is a convenient way to destroy all remote objects managed by a particular Terraform configuration. It is the opposite of the terraform apply command. The terraform destroy command is useful when Terraform is used to manage ephemeral infrastructure for development purposes, and the user wants to clean up all of the temporary objects once the work is finished.
+
+### Example of local.tfvars file
+
+Here is an example of the `local.tfvars` file.
+
+```bash
+client_id_gw       = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+secret_gw          = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+tenant_id_gw       = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+subscription_id_gw = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+region_gw          = "West Europe"
+client_id_pp       = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+secret_pp          = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+tenant_id_pp       = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+user_id_admin_pp   = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+ir_key             = "IR@XXXXXX-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+gateway_name       = "OPDGW-SAPAzureIntegration"
+recover_key_gw     = "XXXXXXXXXXX"
+sap_subnet_id      = "/subscriptions/abababab-12ab-ab00-82e2-aa00babab102/resourceGroups/resource-group-name/providers/Microsoft.Network/virtualNetworks/VNet-name/subnets/default"
+prefix             = "opdgw"
+base_name          = "AzureSAPIntegration"
+```
+
+> Note: You need to provide all the "local.tfvars" values to run the command "terraform apply".
 
 ## Additional Resources
 
