@@ -44,6 +44,7 @@ data "powerplatform_environments" "all_environments" {}
 
 Read-Only:
 
+- `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
 - `currency_code` (String) Unique currency name (EUR, USE, GBP etc.)
 - `display_name` (String) Display name
 - `domain` (String) Domain name of the environment

@@ -6,7 +6,7 @@
     "properties": {
         "tenantId": "123",
         "azureRegion": "westeurope",
-        "displayName": "Example123",
+        "displayName": "displayname",
         "createdTime": "2023-09-27T07:08:27.6057592Z",
         "createdBy": {
             "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
@@ -17,7 +17,7 @@
             "userPrincipalName": "admin"
         },
         "billingPolicy": {
-            "id": ""
+            "id": "00000000-0000-0000-0000-000000000001"
         },
         "lastModifiedTime": "2023-09-27T07:08:34.9205145Z",
         "provisioningState": "Succeeded",
