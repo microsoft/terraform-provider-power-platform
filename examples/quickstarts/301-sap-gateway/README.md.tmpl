@@ -32,6 +32,10 @@ Make sure there is not any node assigned to the self-hosted integration runtime 
 
 {{ .ModuleDetails }}
 
+### Networking Requirements
+
+The Terraform code on this repo will deploy the VM on an existing Azure Vnet so you need to provide the Azure "sap_subnet_id" value, check more details in the section about networking below.
+
 ## Usage
 
 The entire script is required for the proper installation, unless you decide to create any one of the resources separately.
@@ -85,6 +89,7 @@ sap_subnet_id      = "/subscriptions/abababab-12ab-ab00-82e2-aa00babab102/resour
 prefix             = "opdgw"
 base_name          = "AzureSAPIntegration"
 ```
+> Note: You need to provide all the "local.tfvars" values to run the command "terraform apply".
 
 ## Terraform Version Constraints
 
