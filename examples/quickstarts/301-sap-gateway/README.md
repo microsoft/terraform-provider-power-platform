@@ -110,7 +110,7 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 
 Here is a diagram of all resources to be created:
 
-![Components to be installed](./.img/components.png)
+![Components to be installed](./.img/components.svg)
 
 ### Resource Group
 
