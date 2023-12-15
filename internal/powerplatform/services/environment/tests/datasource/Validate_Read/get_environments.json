@@ -22,7 +22,48 @@
                     "userPrincipalName": "admin"
                 },
                 "billingPolicy": {
-                    "id": "00000000-0000-0000-0000-000000000001"
+                    "id": "00000000-0000-0000-0000-000000000001",
+                    "name": "name",
+                    "type": "TenantOwned",
+                    "status": "Enabled",
+                    "location": "switzerland",
+                    "powerAutomatePolicy": {
+                        "cloudFlowRunsPayAsYouGoState": "Enabled",
+                        "desktopFlowUnattendedRunsPayAsYouGoState": "Enabled",
+                        "desktopFlowAttendedRunsPayAsYouGoState": "Enabled"
+                    },
+                    "powerAppsPolicy": {
+                        "payAsYouGoState": "Enabled"
+                    },
+                    "storagePolicy": {
+                        "payAsYouGoState": "Enabled"
+                    },
+                    "powerPlatformRequestsPolicy": {
+                        "payAsYouGoState": "Enabled"
+                    },
+                    "powerPagesPolicy": {
+                        "payAsYouGoState": "Enabled"
+                    },
+                    "powerVirtualAgentPolicy": {
+                        "payAsYouGoState": "Enabled"
+                    },
+                    "billingInstrument": {
+                        "subscriptionId": "00000000-0000-0000-0000-000000000000",
+                        "resourceGroup": "rg-terraform",
+                        "location": "switzerland",
+                        "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-terraform/providers/Microsoft.PowerPlatform/accounts/name",
+                        "provisioningStatus": "Succeeded"
+                    },
+                    "createdOn": "2023-12-07T13:08:24Z",
+                    "createdBy": {
+                        "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+                        "type": "User"
+                    },
+                    "lastModifiedOn": "2023-12-07T13:08:24Z",
+                    "lastModifiedBy": {
+                        "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+                        "type": "User"
+                    }
                 },
                 "provisioningState": "Succeeded",
                 "creationType": "Developer",
