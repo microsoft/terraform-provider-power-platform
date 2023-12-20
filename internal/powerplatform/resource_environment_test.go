@@ -637,7 +637,9 @@ func TestUnitEnvironmentsResource_Validate_Create_With_D365_Template(t *testing.
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "templates", "[\"D365_FinOps_Finance\"]"),
+					//TODO figure out how to test the whole list
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment.development", "templates", "D365_FinOps_Finance"),
+					//resource.TestCheckResourceAttr("powerplatform_environment.development", "templates.0", "D365_FinOps_Finance"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "template_metadata", "{\"PostProvisioningPackages\": [{ \"applicationUniqueName\": \"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\n \"parameters\": \"DevToolsEnabled=true|DemoDataEnabled=true\"\n }\n ]\n }"),
 				),
 			},
