@@ -27,6 +27,9 @@ bin
 *.tfstate
 *.tfstate.*
 
+.terraform.lock.hcl
+.terraform
+
 # Crash log files
 crash.log
 
@@ -74,6 +77,9 @@ test_solution*.json
 
 # makefile
 makefile
+
+# MSI files
+*.msi
 
 # test zip files like TerraformTestSolution_Complex_1_1_0_0.zip
 *.zip

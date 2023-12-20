@@ -24,9 +24,9 @@ The example files can be found in `examples/quickstarts/000-blank-sample`
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| `password` | The password of the Power Platform API user | string | `null` | false |
+| `client_id` | The username of the Power Platform API in user@domain format | string | `null` | true |
+| `secret` | The password of the Power Platform API user | string | `null` | false |
 | `tenant_id` | The AAD tenant id of service principal or user | string | `null` | true |
-| `username` | The username of the Power Platform API in user@domain format | string | `null` | false |
 
 
 ## Output Values
@@ -43,7 +43,6 @@ The example files can be found in `examples/quickstarts/000-blank-sample`
 * `powerplatform_environment.development` from `powerplatform`
 
 ## Data Sources
-* `data.azurerm_resource_group.example` from `azurerm`
 * `data.powerplatform_connectors.all_connectors` from `powerplatform`
 
 
