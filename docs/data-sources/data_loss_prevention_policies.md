@@ -36,7 +36,7 @@ Read-Only:
 - `custom_connectors_patterns` (Attributes Set) Custom connectors patterns (see [below for nested schema](#nestedatt--policies--custom_connectors_patterns))
 - `default_connectors_classification` (String) Default classification for connectors ("General", "Confidential", "Blocked")
 - `display_name` (String) Display name of the policy
-- `environments` (Attributes Set) Environment to which the policy is applied (see [below for nested schema](#nestedatt--policies--environments))
+- `environments` (Set of String) Environment to which the policy is applied
 - `id` (String) Unique name of the policy
 - `last_modified_by` (String) User who last modified the policy
 - `last_modified_time` (String) Time when the policy was last modified
@@ -110,14 +110,6 @@ Read-Only:
 - `data_group` (String) Data group of the connector ("Business", "NonBusiness", "Blocked", "Ignore")
 - `host_url_pattern` (String) Pattern of the connector
 - `order` (Number) Order of the connector
-
-
-<a id="nestedatt--policies--environments"></a>
-### Nested Schema for `policies.environments`
-
-Read-Only:
-
-- `name` (String) Unique Identifier of the environment
 
 
 <a id="nestedatt--policies--non_business_connectors"></a>

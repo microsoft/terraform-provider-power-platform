@@ -276,7 +276,7 @@ func (client *SolutionClient) getEnvironment(ctx context.Context, environmentId 
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	values.Add("$expand", "permissions,properties.capacity")
+	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 

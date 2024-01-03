@@ -130,8 +130,11 @@ resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 - `default_connectors_classification` (String) Default classification for connectors ("General", "Confidential", "Blocked")
 - `display_name` (String) Display name of the policy
 - `environment_type` (String) Default environment handling for the policy ("AllEnvironments", "ExceptEnvironments", "OnlyEnvironments")
-- `environments` (Attributes Set) Environment to which the policy is applied (see [below for nested schema](#nestedatt--environments))
 - `non_business_connectors` (Attributes Set) Connectors for non-sensitive data (see [below for nested schema](#nestedatt--non_business_connectors))
+
+### Optional
+
+- `environments` (Set of String) Environment to which the policy is applied
 
 ### Read-Only
 
@@ -209,14 +212,6 @@ Required:
 - `data_group` (String) Data group of the connector ("Business", "NonBusiness", "Blocked", "Ignore")
 - `host_url_pattern` (String) Pattern of the connector
 - `order` (Number) Order of the connector
-
-
-<a id="nestedatt--environments"></a>
-### Nested Schema for `environments`
-
-Required:
-
-- `name` (String) Unique Identifier of the environment
 
 
 <a id="nestedatt--non_business_connectors"></a>

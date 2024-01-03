@@ -56,7 +56,6 @@ resource "powerplatform_environment" "development" {
 
 - `currency_code` (String) Unique currency name
 - `display_name` (String) Display name
-- `domain` (String) Domain name of the environment
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
 - `language_code` (Number) Unique language LCID (integer)
 - `location` (String) Location of the environment (europe, unitedstates etc.)
@@ -64,6 +63,8 @@ resource "powerplatform_environment" "development" {
 
 ### Optional
 
+- `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
+- `domain` (String) Domain name of the environment
 - `template_metadata` (String) JSON representation of the environment deployment metadata
 - `templates` (List of String) The selected instance provisioning template (if any)
 

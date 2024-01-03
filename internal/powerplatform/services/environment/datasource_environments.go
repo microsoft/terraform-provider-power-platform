@@ -50,6 +50,7 @@ type EnvironmentDataSourceModel struct {
 	LinkedAppId     types.String `tfsdk:"linked_app_id"`
 	LinkedAppURL    types.String `tfsdk:"linked_app_url"`
 	CurrencyCode    types.String `tfsdk:"currency_code"`
+	BillingPolicyId types.String `tfsdk:"billing_policy_id"`
 }
 
 func ConvertFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode string) EnvironmentDataSourceModel {
@@ -65,6 +66,7 @@ func ConvertFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode strin
 		Domain:          types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.DomainName),
 		Version:         types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.Version),
 		CurrencyCode:    types.StringValue(currencyCode),
+		BillingPolicyId: types.StringValue(environmentDto.Properties.BillingPolicy.Id),
 	}
 	if environmentDto.Properties.LinkedAppMetadata != nil {
 		model.LinkedAppType = types.StringValue(environmentDto.Properties.LinkedAppMetadata.Type)
@@ -167,6 +169,11 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 						"currency_code": &schema.StringAttribute{
 							Description:         "Unique currency name (EUR, USE, GBP etc.)",
 							MarkdownDescription: "Unique currency name (EUR, USE, GBP etc.)",
+							Computed:            true,
+						},
+						"billing_policy_id": &schema.StringAttribute{
+							Description:         "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
+							MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 							Computed:            true,
 						},
 					},

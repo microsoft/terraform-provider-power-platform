@@ -45,7 +45,7 @@ func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environment
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	values.Add("$expand", "permissions,properties.capacity")
+	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
@@ -163,12 +163,14 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 }
 
 func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environmentId string, environment EnvironmentDto) (*EnvironmentDto, error) {
+
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.bapiClient.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
+	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
 	values.Add("api-version", "2022-05-01")
 	apiUrl.RawQuery = values.Encode()
 	_, err := client.bapiClient.Execute(ctx, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
@@ -212,6 +214,7 @@ func (client *EnvironmentClient) GetEnvironments(ctx context.Context) ([]Environ
 		Path:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments",
 	}
 	values := url.Values{}
+	values.Add("$expand", "properties/billingPolicy")
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 

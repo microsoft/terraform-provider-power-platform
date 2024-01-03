@@ -18,7 +18,6 @@ const (
 )
 
 func ActivateOAuthHttpMocks() {
-
 	httpmock.RegisterNoResponder(func(req *http.Request) (*http.Response, error) {
 		println("No HttpMock responder for: " + req.Method + " " + req.URL.String())
 		if req.Body != nil {
