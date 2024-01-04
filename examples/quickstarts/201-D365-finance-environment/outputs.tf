@@ -1,4 +1,8 @@
-output "names" {
+output "id" {
+  description = "Unique identifier of the environment"
+  value       = powerplatform_environment.xpp-dev1.id
+}
+output "name" {
   description = "Display name of the environment"
   value       = powerplatform_environment.xpp-dev1.display_name
 }
