@@ -131,6 +131,10 @@ func (client *ApiClientBase) InitializeBase(ctx context.Context, auth AuthBaseOp
 			}
 			tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
 			return token, nil
+		} else if client.Config.Credentials.UseCli {
+
+			return "", errors.New("no cli credentials provided")
+
 		} else {
 			return "", errors.New("no credentials provided")
 		}

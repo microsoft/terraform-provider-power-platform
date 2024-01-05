@@ -16,6 +16,8 @@ type ProviderConfigUrls struct {
 }
 
 type ProviderCredentials struct {
+	UseCli bool
+
 	TenantId string
 	ClientId string
 	Secret   string
@@ -25,6 +27,8 @@ type ProviderCredentials struct {
 }
 
 type ProviderCredentialsModel struct {
+	UseCli types.Bool `tfsdk:"use_cli"`
+
 	TenantId types.String `tfsdk:"tenant_id"`
 	ClientId types.String `tfsdk:"client_id"`
 	Secret   types.String `tfsdk:"secret"`
