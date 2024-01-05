@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
@@ -50,45 +49,12 @@ func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Con
 		return err
 	}
 
-	if apiResponse.Response.StatusCode == http.StatusAccepted {
+	tflog.Debug(ctx, "Managed Environment Enablement Operation HTTP Status: '"+apiResponse.Response.Status+"'")
 
-		locationHeader := apiResponse.GetHeader("Location")
-		tflog.Debug(ctx, "Location Header: "+locationHeader)
-
-		_, err = url.Parse(locationHeader)
-		if err != nil {
-			tflog.Error(ctx, "Error parsing location header: "+err.Error())
-		}
-
-		retryHeader := apiResponse.GetHeader("Retry-After")
-		tflog.Debug(ctx, "Retry Header: "+retryHeader)
-		retryAfter, err := time.ParseDuration(retryHeader)
-		if err != nil {
-			retryAfter = time.Duration(5) * time.Second
-		} else {
-			retryAfter = retryAfter * time.Second
-		}
-
-		for {
-
-			lifecycleResponse := OperationLifecycleDto{}
-			apiResponse, err = client.bapiClient.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
-			if err != nil {
-				return err
-			}
-
-			time.Sleep(retryAfter)
-
-			tflog.Debug(ctx, "Managed Environment Enablement Operation State: '"+lifecycleResponse.State.Id+"'")
-			tflog.Debug(ctx, "anaged Environment Enablement Operation HTTP Status: '"+apiResponse.Response.Status+"'")
-
-			if lifecycleResponse.State.Id == "Succeeded" {
-				return nil
-			} else {
-				tflog.Debug(ctx, "Managed Environment Enablement Operation State: '"+lifecycleResponse.State.Id+"'")
-			}
-		}
-
+	tflog.Debug(ctx, "Waiting for Managed Environment Enablement Operation to complete")
+	_, err = client.bapiClient.DoWaitFOrLifecycleOperationStatus(ctx, apiResponse)
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -111,44 +77,13 @@ func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Co
 	if err != nil {
 		return err
 	}
-	if apiResponse.Response.StatusCode == http.StatusAccepted {
 
-		locationHeader := apiResponse.GetHeader("Location")
-		tflog.Debug(ctx, "Location Header: "+locationHeader)
+	tflog.Debug(ctx, "Managed Environment Disablement Operation HTTP Status: '"+apiResponse.Response.Status+"'")
+	tflog.Debug(ctx, "Waiting for Managed Environment Disablement Operation to complete")
 
-		_, err = url.Parse(locationHeader)
-		if err != nil {
-			tflog.Error(ctx, "Error parsing location header: "+err.Error())
-		}
-
-		retryHeader := apiResponse.GetHeader("Retry-After")
-		tflog.Debug(ctx, "Retry Header: "+retryHeader)
-		retryAfter, err := time.ParseDuration(retryHeader)
-		if err != nil {
-			retryAfter = time.Duration(5) * time.Second
-		} else {
-			retryAfter = retryAfter * time.Second
-		}
-
-		for {
-
-			lifecycleResponse := OperationLifecycleDto{}
-			apiResponse, err = client.bapiClient.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
-			if err != nil {
-				return err
-			}
-
-			time.Sleep(retryAfter)
-
-			tflog.Debug(ctx, "Managed Environment Disablement Operation State: '"+lifecycleResponse.State.Id+"'")
-			tflog.Debug(ctx, "anaged Environment Disablement Operation HTTP Status: '"+apiResponse.Response.Status+"'")
-
-			if lifecycleResponse.State.Id == "Succeeded" {
-				return nil
-			} else {
-				tflog.Debug(ctx, "Managed Environment Disablement Operation State: '"+lifecycleResponse.State.Id+"'")
-			}
-		}
+	_, err = client.bapiClient.DoWaitFOrLifecycleOperationStatus(ctx, apiResponse)
+	if err != nil {
+		return err
 	}
 	return nil
 

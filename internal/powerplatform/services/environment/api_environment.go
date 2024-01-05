@@ -81,15 +81,12 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 	if err != nil {
 		return err
 	}
-
 	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.Response.Status+"'")
 
-	if response.Response.StatusCode == http.StatusAccepted {
-		tflog.Debug(ctx, "Waiting for environment deletion operation to complete")
-		_, err := client.bapiClient.DoWaitFOrLifecycleOperationStatus(ctx, response)
-		if err != nil {
-			return err
-		}
+	tflog.Debug(ctx, "Waiting for environment deletion operation to complete")
+	_, err = client.bapiClient.DoWaitFOrLifecycleOperationStatus(ctx, response)
+	if err != nil {
+		return err
 	}
 	return nil
 }
