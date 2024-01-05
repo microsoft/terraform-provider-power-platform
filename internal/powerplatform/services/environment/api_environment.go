@@ -77,11 +77,20 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 		Message: "Deleted using Terraform Provider for Power Platform",
 	}
 
-	_, err := client.bapiClient.Execute(ctx, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
+	response, err := client.bapiClient.Execute(ctx, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
 
+	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.Response.Status+"'")
+
+	if response.Response.StatusCode == http.StatusAccepted {
+		tflog.Debug(ctx, "Waiting for environment deletion operation to complete")
+		_, err := client.bapiClient.DoWaitFOrLifecycleOperationStatus(ctx, response)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -105,46 +114,19 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 	createdEnvironmentId := ""
 	if apiResponse.Response.StatusCode == http.StatusAccepted {
 
-		locationHeader := apiResponse.GetHeader("Location")
-		tflog.Debug(ctx, "Location Header: "+locationHeader)
-
-		_, err = url.Parse(locationHeader)
+		lifecycleResponse, err := client.bapiClient.DoWaitFOrLifecycleOperationStatus(ctx, apiResponse)
 		if err != nil {
-			tflog.Error(ctx, "Error parsing location header: "+err.Error())
+			return nil, err
 		}
 
-		retryHeader := apiResponse.GetHeader("Retry-After")
-		tflog.Debug(ctx, "Retry Header: "+retryHeader)
-		retryAfter, err := time.ParseDuration(retryHeader)
-		if err != nil {
-			retryAfter = time.Duration(5) * time.Second
-		} else {
-			retryAfter = retryAfter * time.Second
-		}
-
-		for {
-
-			lifecycleResponse := EnvironmentLifecycleDto{}
-			apiResponse, err = client.bapiClient.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
-			if err != nil {
-				return nil, err
+		if lifecycleResponse.State.Id == "Succeeded" {
+			parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
+			if len(parts) > 0 {
+				createdEnvironmentId = parts[len(parts)-1]
+			} else {
+				return nil, errors.New("can't parse environment id from response " + lifecycleResponse.Links.Environment.Path)
 			}
-
-			time.Sleep(retryAfter)
-
-			tflog.Debug(ctx, "Environment Creation Operation State: '"+lifecycleResponse.State.Id+"'")
-			tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.Response.Status+"'")
-
-			if lifecycleResponse.State.Id == "Succeeded" {
-				parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
-				if len(parts) > 0 {
-					createdEnvironmentId = parts[len(parts)-1]
-				} else {
-					return nil, errors.New("can't parse environment id from response " + lifecycleResponse.Links.Environment.Path)
-				}
-				tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
-				break
-			}
+			tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
 		}
 	} else if apiResponse.Response.StatusCode == http.StatusCreated {
 		envCreatedResponse := EnvironmentLifecycleCreatedDto{}
