@@ -14,7 +14,7 @@ provider "powerplatform" {
 }
 
 
-resource "powerplatform_environment" "development" {
+resource "powerplatform_environment" "xpp-dev1" {
   display_name     = var.d365_finance_environment_name
   location         = var.location
   language_code    = var.language_code
