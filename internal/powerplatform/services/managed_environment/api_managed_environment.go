@@ -81,7 +81,7 @@ func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Co
 	tflog.Debug(ctx, "Managed Environment Disablement Operation HTTP Status: '"+apiResponse.Response.Status+"'")
 	tflog.Debug(ctx, "Waiting for Managed Environment Disablement Operation to complete")
 
-	_, err = client.bapiClient.DoWaitFOrLifecycleOperationStatus(ctx, apiResponse)
+	_, err = client.bapiClient.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return err
 	}
