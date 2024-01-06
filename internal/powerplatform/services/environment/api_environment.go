@@ -111,7 +111,7 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 	createdEnvironmentId := ""
 	if apiResponse.Response.StatusCode == http.StatusAccepted {
 
-		lifecycleResponse, err := client.bapiClient.DoWaitFOrLifecycleOperationStatus(ctx, apiResponse)
+		lifecycleResponse, err := client.bapiClient.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 		if err != nil {
 			return nil, err
 		}
