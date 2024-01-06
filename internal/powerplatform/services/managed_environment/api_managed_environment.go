@@ -52,7 +52,7 @@ func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Con
 	tflog.Debug(ctx, "Managed Environment Enablement Operation HTTP Status: '"+apiResponse.Response.Status+"'")
 
 	tflog.Debug(ctx, "Waiting for Managed Environment Enablement Operation to complete")
-	_, err = client.bapiClient.DoWaitFOrLifecycleOperationStatus(ctx, apiResponse)
+	_, err = client.bapiClient.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return err
 	}
