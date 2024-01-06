@@ -79,7 +79,7 @@ func (client *BapiClientApi) Execute(ctx context.Context, method string, url str
 	return client.baseApi.ExecuteBase(ctx, token, method, url, headers, body, acceptableStatusCodes, responseObj)
 }
 
-func (client *BapiClientApi) DoWaitFOrLifecycleOperationStatus(ctx context.Context, response *ApiHttpResponse) (*LifecycleDto, error) {
+func (client *BapiClientApi) DoWaitForLifecycleOperationStatus(ctx context.Context, response *ApiHttpResponse) (*LifecycleDto, error) {
 
 	locationHeader := response.GetHeader("Location")
 	tflog.Debug(ctx, "Location Header: "+locationHeader)
