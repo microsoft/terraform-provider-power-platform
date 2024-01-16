@@ -44,10 +44,11 @@ The Terraform code on this repo will deploy the VM on an existing Azure Vnet so 
 
 The example files can be found in `examples/quickstarts/301-sap-gateway`
 
-## Provider Requirements:
-* **azurecaf (`aztfmod/azurecaf`):** `>=1.2.26`
-* **azurerm (`hashicorp/azurerm`):** `>=3.74.0`
-* **random:** (any version)
+## Provider Requirements
+
+- **azurecaf (`aztfmod/azurecaf`):** `>=1.2.26`
+- **azurerm (`hashicorp/azurerm`):** `>=3.74.0`
+- **random:** (any version)
 
 ## Input Variables
 
@@ -69,42 +70,43 @@ The example files can be found in `examples/quickstarts/301-sap-gateway`
 | `tenant_id_pp` | The tenant ID of service principal or user at Power Platform | string | `null` | true |
 | `user_id_admin_pp` | The user ID to be assigned as Admin role of the Power Platform | string | `null` | true |
 
-
 ## Resources
-* `azurecaf_name.key_vault` from `azurecaf`
-* `azurecaf_name.key_vault_secret_irkey` from `azurecaf`
-* `azurecaf_name.key_vault_secret_pp` from `azurecaf`
-* `azurecaf_name.key_vault_secret_recover_key` from `azurecaf`
-* `azurecaf_name.key_vault_secret_vm_pwd` from `azurecaf`
-* `azurecaf_name.nic` from `azurecaf`
-* `azurecaf_name.nsg` from `azurecaf`
-* `azurecaf_name.publicip` from `azurecaf`
-* `azurecaf_name.rg` from `azurecaf`
-* `azurecaf_name.subnet` from `azurecaf`
-* `azurecaf_name.vnet` from `azurecaf`
-* `azurerm_key_vault.key_vault` from `azurerm`
-* `azurerm_key_vault_access_policy.key_vault_access_policy` from `azurerm`
-* `azurerm_key_vault_secret.key_vault_secret_irkey` from `azurerm`
-* `azurerm_key_vault_secret.key_vault_secret_pp` from `azurerm`
-* `azurerm_key_vault_secret.key_vault_secret_recover_key` from `azurerm`
-* `azurerm_key_vault_secret.key_vault_secret_vm_pwd` from `azurerm`
-* `azurerm_network_interface.nic` from `azurerm`
-* `azurerm_network_interface_security_group_association.rgassociation` from `azurerm`
-* `azurerm_network_security_group.nsg` from `azurerm`
-* `azurerm_public_ip.publicip` from `azurerm`
-* `azurerm_resource_group.rg` from `azurerm`
-* `azurerm_subnet.subnet` from `azurerm`
-* `azurerm_virtual_network.vnet` from `azurerm`
-* `random_string.key_vault_suffix` from `random`
-* `random_string.vm_pwd` from `random`
+
+- `azurecaf_name.key_vault` from `azurecaf`
+- `azurecaf_name.key_vault_secret_irkey` from `azurecaf`
+- `azurecaf_name.key_vault_secret_pp` from `azurecaf`
+- `azurecaf_name.key_vault_secret_recover_key` from `azurecaf`
+- `azurecaf_name.key_vault_secret_vm_pwd` from `azurecaf`
+- `azurecaf_name.nic` from `azurecaf`
+- `azurecaf_name.nsg` from `azurecaf`
+- `azurecaf_name.publicip` from `azurecaf`
+- `azurecaf_name.rg` from `azurecaf`
+- `azurecaf_name.subnet` from `azurecaf`
+- `azurecaf_name.vnet` from `azurecaf`
+- `azurerm_key_vault.key_vault` from `azurerm`
+- `azurerm_key_vault_access_policy.key_vault_access_policy` from `azurerm`
+- `azurerm_key_vault_secret.key_vault_secret_irkey` from `azurerm`
+- `azurerm_key_vault_secret.key_vault_secret_pp` from `azurerm`
+- `azurerm_key_vault_secret.key_vault_secret_recover_key` from `azurerm`
+- `azurerm_key_vault_secret.key_vault_secret_vm_pwd` from `azurerm`
+- `azurerm_network_interface.nic` from `azurerm`
+- `azurerm_network_interface_security_group_association.rgassociation` from `azurerm`
+- `azurerm_network_security_group.nsg` from `azurerm`
+- `azurerm_public_ip.publicip` from `azurerm`
+- `azurerm_resource_group.rg` from `azurerm`
+- `azurerm_subnet.subnet` from `azurerm`
+- `azurerm_virtual_network.vnet` from `azurerm`
+- `random_string.key_vault_suffix` from `random`
+- `random_string.vm_pwd` from `random`
 
 ## Data Sources
-* `data.azurerm_client_config.current` from `azurerm`
+
+- `data.azurerm_client_config.current` from `azurerm`
 
 ## Child Modules
-* `gateway_vm` from `./gateway-vm`
-* `storage_account` from `./storage-account`
 
+- `gateway_vm` from `./gateway-vm`
+- `storage_account` from `./storage-account`
 
 ## Resources to Be Created
 
