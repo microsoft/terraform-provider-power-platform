@@ -2,6 +2,7 @@ package powerplatform
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -167,12 +168,9 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				ElementType:         types.StringType,
 			},
 			"template_metadata": schema.StringAttribute{
-				Description:         "JSON representation of the environment deployment metadata",
-				MarkdownDescription: "JSON representation of the environment deployment metadata",
+				Description:         "Additional D365 environment template metadata (if any)",
+				MarkdownDescription: "Additional D365 environment template metadata (if any)",
 				Optional:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"linked_app_type": schema.StringAttribute{
 				Description:         "The type of the linked D365 application",
@@ -231,6 +229,17 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	//Unmarshal JSON string input for the D365 template metadata into an object.
+	var templateMetadataObject EnvironmentCreateTemplateMetadata
+
+	if plan.TemplateMetadata.ValueString() != "" {
+		err := json.Unmarshal([]byte(plan.TemplateMetadata.ValueString()), &templateMetadataObject)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error when unmarshalling template metadata %s", plan.TemplateMetadata.ValueString()), err.Error())
+			return
+		}
+	}
+
 	envToCreate := EnvironmentCreateDto{
 		Location: plan.Location.ValueString(),
 		Properties: EnvironmentCreatePropertiesDto{
@@ -243,8 +252,8 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 				Currency: EnvironmentCreateCurrency{
 					Code: plan.CurrencyCode.ValueString(),
 				},
-				//Templates:        plan.Templates,
-				//TemplateMetadata: EnvironmentCreateTemplateMetadata{},
+				Templates:        plan.Templates,
+				TemplateMetadata: templateMetadataObject,
 			},
 		},
 	}
