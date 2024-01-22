@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 )
 
@@ -24,7 +25,7 @@ func (client *PowerPlatformClientApi) GetConfig() *config.ProviderConfig {
 }
 
 func (client *PowerPlatformClientApi) Execute(ctx context.Context, method string, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
-	token, err := client.baseApi.InitializeBase(ctx, []string{"https://api.powerplatform.com/.default"}, client.Auth)
+	token, err := client.baseApi.InitializeBase(ctx, []string{constants.POWER_PLATFORM_API_SCOPE}, client.Auth)
 	if err != nil {
 		return nil, err
 	}

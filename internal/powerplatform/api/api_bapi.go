@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 )
 
@@ -72,7 +73,7 @@ func (client *BapiClientApi) GetConfig() *config.ProviderConfig {
 }
 
 func (client *BapiClientApi) Execute(ctx context.Context, method string, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
-	token, err := client.baseApi.InitializeBase(ctx, []string{"https://service.powerapps.com/.default"}, client.auth)
+	token, err := client.baseApi.InitializeBase(ctx, []string{constants.SERVICE_POWERAPPS_SCOPE}, client.auth)
 	if err != nil {
 		return nil, err
 	}

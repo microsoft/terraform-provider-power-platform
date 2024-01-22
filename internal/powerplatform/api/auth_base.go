@@ -7,6 +7,7 @@ import (
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
 	common "github.com/microsoft/terraform-provider-power-platform/common"
+	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 )
 
@@ -43,11 +44,8 @@ func (client *AuthBase) GetAuthority(tenantid string) string {
 }
 
 func (client *AuthBase) AuthUsingCli(ctx context.Context, scopes []string, credentials *config.ProviderCredentials) (string, time.Time, error) {
-	publicClientApplicationID := "1950a258-227b-4e31-a9cf-717495945fc2"
-
 	//TODO if use used different clientid in cli this will not work!?
-	//publicClient, err := public.New(publicClientApplicationID, public.WithAuthority(client.GetAuthority(credentials.TenantId)), public.WithCache(client.authCache))
-	publicClient, err := public.New(publicClientApplicationID, public.WithCache(client.authCache))
+	publicClient, err := public.New(constants.CLIENT_ID, public.WithCache(client.authCache))
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -71,9 +69,7 @@ func (client *AuthBase) AuthUsingCli(ctx context.Context, scopes []string, crede
 }
 
 func (client *AuthBase) AuthenticateUserPass(ctx context.Context, scopes []string, credentials *config.ProviderCredentials) (string, time.Time, error) {
-	publicClientApplicationID := "1950a258-227b-4e31-a9cf-717495945fc2"
-
-	publicClientApp, err := public.New(publicClientApplicationID, public.WithAuthority(client.GetAuthority(credentials.TenantId)))
+	publicClientApp, err := public.New(constants.CLIENT_ID, public.WithAuthority(client.GetAuthority(credentials.TenantId)))
 	if err != nil {
 		return "", time.Time{}, err
 	}
