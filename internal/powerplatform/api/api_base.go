@@ -10,19 +10,19 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 )
 
-func (client *ApiClientBase) GetConfig() *common.ProviderConfig {
+func (client *ApiClientBase) GetConfig() *config.ProviderConfig {
 	return client.Config
 }
 
 type ApiClientBase struct {
-	Config   *common.ProviderConfig
+	Config   *config.ProviderConfig
 	BaseAuth *AuthBase
 }
 
-func NewApiClientBase(config *common.ProviderConfig, baseAuth *AuthBase) *ApiClientBase {
+func NewApiClientBase(config *config.ProviderConfig, baseAuth *AuthBase) *ApiClientBase {
 	return &ApiClientBase{
 		Config:   config,
 		BaseAuth: baseAuth,
@@ -111,30 +111,30 @@ func (client *ApiClientBase) doRequest(token string, request *http.Request, head
 	return apiHttpResponse, nil
 }
 
-func (client *ApiClientBase) InitializeBase(ctx context.Context, auth AuthBaseOperationInterface) (string, error) {
+func (client *ApiClientBase) InitializeBase(ctx context.Context, scopes []string, auth AuthBaseOperationInterface) (string, error) {
 	token, err := client.BaseAuth.GetToken()
 
 	if _, ok := err.(*TokeExpiredError); ok {
 		tflog.Debug(ctx, "Token expired. authenticating...")
 
 		if client.Config.Credentials.IsClientSecretCredentialsProvided() {
-			token, err := auth.AuthenticateClientSecret(ctx, client.Config.Credentials)
+			token, err := auth.AuthenticateClientSecret(ctx, scopes, client.Config.Credentials)
 			if err != nil {
 				return "", err
 			}
 			tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
 			return token, nil
 		} else if client.Config.Credentials.IsUserPassCredentialsProvided() {
-			token, err := auth.AuthenticateUserPass(ctx, client.Config.Credentials)
+			token, err := auth.AuthenticateUserPass(ctx, scopes, client.Config.Credentials)
 			if err != nil {
 				return "", err
 			}
 			tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
 			return token, nil
 		} else if client.Config.Credentials.UseCli {
-
-			return "", errors.New("no cli credentials provided")
-
+			token, err := auth.AuthUsingCli(ctx, scopes, client.Config.Credentials)
+			tflog.Debug(ctx, fmt.Sprintln("Token aquired: ", "********"))
+			return token, err
 		} else {
 			return "", errors.New("no credentials provided")
 		}
@@ -147,13 +147,13 @@ func (client *ApiClientBase) InitializeBase(ctx context.Context, auth AuthBaseOp
 	}
 }
 
-func (client *ApiClientBase) InitializeBaseWithUserNamePassword(ctx context.Context, auth AuthBaseOperationInterface) (string, error) {
+func (client *ApiClientBase) InitializeBaseWithUserNamePassword(ctx context.Context, scopes []string, auth AuthBaseOperationInterface) (string, error) {
 	token, err := client.BaseAuth.GetToken()
 
 	if _, ok := err.(*TokeExpiredError); ok {
 		tflog.Debug(ctx, "Token expired. authenticating...")
 
-		token, err := auth.AuthenticateUserPass(ctx, client.Config.Credentials)
+		token, err := auth.AuthenticateUserPass(ctx, scopes, client.Config.Credentials)
 		if err != nil {
 			return "", err
 		}

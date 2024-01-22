@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 )
 
 type BapiClientApi struct {
@@ -67,12 +67,12 @@ func (client *BapiClientApi) SetDataverseClient(dataverseClient *DataverseClient
 	client.dataverseClient = dataverseClient
 }
 
-func (client *BapiClientApi) GetConfig() *common.ProviderConfig {
+func (client *BapiClientApi) GetConfig() *config.ProviderConfig {
 	return client.baseApi.Config
 }
 
 func (client *BapiClientApi) Execute(ctx context.Context, method string, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
-	token, err := client.baseApi.InitializeBase(ctx, client.auth)
+	token, err := client.baseApi.InitializeBase(ctx, []string{"https://service.powerapps.com/.default"}, client.auth)
 	if err != nil {
 		return nil, err
 	}

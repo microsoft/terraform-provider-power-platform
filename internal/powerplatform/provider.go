@@ -13,7 +13,7 @@ import (
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 
 	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
@@ -28,19 +28,19 @@ import (
 var _ provider.Provider = &PowerPlatformProvider{}
 
 type PowerPlatformProvider struct {
-	Config           *common.ProviderConfig
+	Config           *config.ProviderConfig
 	BapiApi          *clients.BapiClient
 	DataverseApi     *clients.DataverseClient
 	PowerPlatformApi *clients.PowerPlatformApiClient
+	version          string
 }
 
 func NewPowerPlatformProvider() func() provider.Provider {
 	return func() provider.Provider {
-
-		cred := common.ProviderCredentials{}
-		config := common.ProviderConfig{
+		cred := config.ProviderCredentials{}
+		config := config.ProviderConfig{
 			Credentials: &cred,
-			Urls: common.ProviderConfigUrls{
+			Urls: config.ProviderConfigUrls{
 				BapiUrl:          "api.bap.microsoft.com",
 				PowerAppsUrl:     "api.powerapps.com",
 				PowerPlatformUrl: "api.powerplatform.com",
@@ -73,6 +73,7 @@ func NewPowerPlatformProvider() func() provider.Provider {
 			BapiApi:          bapiClient,
 			DataverseApi:     dataverseClient,
 			PowerPlatformApi: powerplatformClient,
+			version:          "0.1",
 		}
 		return p
 	}
@@ -128,7 +129,7 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 }
 
 func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	var config common.ProviderCredentialsModel
+	var config config.ProviderCredentialsModel
 
 	tflog.Debug(ctx, "Configure request received")
 

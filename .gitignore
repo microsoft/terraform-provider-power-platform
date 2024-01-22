@@ -59,6 +59,7 @@ override.tf.json
 #terraform
 
 terraform-provider-power-platform
+*/terraform-power-platform-cli
 
 site
 *.cache
@@ -83,3 +84,4 @@ makefile
 
 # test zip files like TerraformTestSolution_Complex_1_1_0_0.zip
 *.zip
+

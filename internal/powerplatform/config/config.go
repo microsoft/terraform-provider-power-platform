@@ -1,4 +1,4 @@
-package powerplatform_common
+package powerplatform_config
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"

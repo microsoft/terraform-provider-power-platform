@@ -2,11 +2,11 @@ package clients
 
 import (
 	powerplatform "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 )
 
 type ProviderClient struct {
-	Config           *common.ProviderConfig
+	Config           *config.ProviderConfig
 	BapiApi          *BapiClient
 	DataverseApi     *DataverseClient
 	PowerPlatformApi *PowerPlatformApiClient

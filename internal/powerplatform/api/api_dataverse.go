@@ -5,9 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 )
 
 type DataverseClientApi struct {
@@ -23,7 +24,7 @@ func NewDataverseClientApi(baseApi *ApiClientBase, auth *DataverseAuth) *Dataver
 	}
 }
 
-func (client *DataverseClientApi) GetConfig() *common.ProviderConfig {
+func (client *DataverseClientApi) GetConfig() *config.ProviderConfig {
 	return client.baseApi.Config
 }
 
@@ -32,26 +33,36 @@ func (client *DataverseClientApi) SetBapiClient(bapiClient *BapiClientApi) {
 }
 
 func (client *DataverseClientApi) Initialize(ctx context.Context, environmentUrl string) (string, error) {
+	environmentUrl = strings.TrimSuffix(environmentUrl, "/")
+	scopes := []string{environmentUrl + "//.default"}
 
-	token, err := client.auth.GetToken(environmentUrl)
+	token, err := client.auth.GetToken(scopes)
 
 	if _, ok := err.(*TokeExpiredError); ok {
 		tflog.Debug(ctx, "Token expired. authenticating...")
 
 		if client.baseApi.GetConfig().Credentials.IsClientSecretCredentialsProvided() {
-			token, err := client.auth.AuthenticateClientSecret(ctx, environmentUrl, client.baseApi.GetConfig().Credentials)
+			token, err := client.auth.AuthenticateClientSecret(ctx, scopes, client.baseApi.GetConfig().Credentials)
 			if err != nil {
 				return "", err
 			}
 			tflog.Info(ctx, fmt.Sprintln("Dataverse token aquired: ", "********"))
 			return token, nil
 		} else if client.baseApi.GetConfig().Credentials.IsUserPassCredentialsProvided() {
-			token, err := client.auth.AuthenticateUserPass(ctx, environmentUrl, client.baseApi.GetConfig().Credentials)
+			token, err := client.auth.AuthenticateUserPass(ctx, scopes, client.baseApi.GetConfig().Credentials)
 			if err != nil {
 				return "", err
 			}
 			tflog.Info(ctx, fmt.Sprintln("Dataverse token aquired: ", "********"))
 			return token, nil
+		} else if client.baseApi.GetConfig().Credentials.UseCli {
+			token, err := client.auth.AuthUsingCli(ctx, scopes, client.baseApi.GetConfig().Credentials)
+			if err != nil {
+				return "", err
+			}
+			tflog.Info(ctx, fmt.Sprintln("Dataverse token aquired: ", "********"))
+			return token, nil
+
 		} else {
 			return "", errors.New("no credentials provided")
 		}
