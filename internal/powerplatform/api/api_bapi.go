@@ -8,12 +8,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-<<<<<<< HEAD
 	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
-=======
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
->>>>>>> origin/main
 )
 
 type BapiClientApi struct {

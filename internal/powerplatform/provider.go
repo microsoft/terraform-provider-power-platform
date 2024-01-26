@@ -11,13 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-
 	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
-<<<<<<< HEAD
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
-=======
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
->>>>>>> origin/main
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
@@ -36,7 +31,6 @@ type PowerPlatformProvider struct {
 	BapiApi          *clients.BapiClient
 	DataverseApi     *clients.DataverseClient
 	PowerPlatformApi *clients.PowerPlatformApiClient
-	version          string
 }
 
 func NewPowerPlatformProvider() func() provider.Provider {
@@ -77,7 +71,6 @@ func NewPowerPlatformProvider() func() provider.Provider {
 			BapiApi:          bapiClient,
 			DataverseApi:     dataverseClient,
 			PowerPlatformApi: powerplatformClient,
-			version:          "0.1",
 		}
 		return p
 	}
