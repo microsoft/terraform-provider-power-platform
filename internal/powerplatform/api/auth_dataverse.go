@@ -3,121 +3,82 @@ package powerplatform
 import (
 	"context"
 	"errors"
+	"fmt"
+	"net/http"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 )
 
-var _ AuthBaseOperationInterface = &DataverseAuth{}
-
-type DataverseAuth struct {
-	baseAuth               *AuthBase
-	tokensByEnvironmentUrl map[string]*DataverseAuthDetails
+type DataverseClientApi struct {
+	baseApi    *ApiClientBase
+	auth       *DataverseAuth
+	bapiClient *BapiClientApi
 }
 
-func NewDataverseAuth(baseAuth *AuthBase) *DataverseAuth {
-	return &DataverseAuth{
-		baseAuth: baseAuth,
+func NewDataverseClientApi(baseApi *ApiClientBase, auth *DataverseAuth) *DataverseClientApi {
+	return &DataverseClientApi{
+		baseApi: baseApi,
+		auth:    auth,
 	}
 }
 
-type DataverseAuthDetails struct {
-	Token          string
-	TokenExpiry    time.Time
-	EnvironmentUrl string
+func (client *DataverseClientApi) GetConfig() *config.ProviderConfig {
+	return client.baseApi.Config
 }
 
-func (client *DataverseAuth) setAuthDataInCache(environmentUrl string, authData *DataverseAuthDetails) {
-	if client.tokensByEnvironmentUrl == nil {
-		client.tokensByEnvironmentUrl = make(map[string]*DataverseAuthDetails)
-	}
-	client.tokensByEnvironmentUrl[environmentUrl] = authData
+func (client *DataverseClientApi) SetBapiClient(bapiClient *BapiClientApi) {
+	client.bapiClient = bapiClient
 }
 
-func (client *DataverseAuth) getAuthDataFromCache(environmentUrl string) *DataverseAuthDetails {
-	if client.tokensByEnvironmentUrl == nil {
-		client.tokensByEnvironmentUrl = make(map[string]*DataverseAuthDetails)
-		return nil
-	} else {
-		auth, exist := client.tokensByEnvironmentUrl[environmentUrl]
-		if exist {
-			return auth
+func (client *DataverseClientApi) Initialize(ctx context.Context, environmentUrl string) (string, error) {
+	environmentUrl = strings.TrimSuffix(environmentUrl, "/")
+	scopes := []string{environmentUrl + "//.default"}
+
+	token, err := client.auth.GetToken(scopes)
+
+	if _, ok := err.(*TokeExpiredError); ok {
+		tflog.Debug(ctx, "Token expired. authenticating...")
+
+		if client.baseApi.GetConfig().Credentials.IsClientSecretCredentialsProvided() {
+			token, err := client.auth.AuthenticateClientSecret(ctx, scopes, client.baseApi.GetConfig().Credentials)
+			if err != nil {
+				return "", err
+			}
+			tflog.Info(ctx, fmt.Sprintln("Dataverse token aquired: ", "********"))
+			return token, nil
+		} else if client.baseApi.GetConfig().Credentials.IsUserPassCredentialsProvided() {
+			token, err := client.auth.AuthenticateUserPass(ctx, scopes, client.baseApi.GetConfig().Credentials)
+			if err != nil {
+				return "", err
+			}
+			tflog.Info(ctx, fmt.Sprintln("Dataverse token aquired: ", "********"))
+			return token, nil
+		} else if client.baseApi.GetConfig().Credentials.UseCli {
+			token, err := client.auth.AuthUsingCli(ctx, scopes, client.baseApi.GetConfig().Credentials)
+			if err != nil {
+				return "", err
+			}
+			tflog.Info(ctx, fmt.Sprintln("Dataverse token aquired: ", "********"))
+			return token, nil
+
 		} else {
-			return nil
+			return "", errors.New("no credentials provided")
 		}
-	}
-}
 
-func (client *DataverseAuth) GetToken(scopes []string) (string, error) {
-	isExpired, token := client.isTokenExpiredOrEmpty(strings.Join(scopes, "_"))
-	if isExpired {
-		return "", &TokeExpiredError{Message: "token is expired or empty"}
+	} else if err != nil {
+		return "", err
 	} else {
+		tflog.Info(ctx, fmt.Sprintln("Dataverse token aquired: ", "********"))
 		return token, nil
 	}
 }
 
-func (client *DataverseAuth) isTokenExpiredOrEmpty(environmentUrl string) (bool, string) {
-	auth := client.getAuthDataFromCache(environmentUrl)
-	isExpired := auth == nil || (auth != nil && auth.Token == "") || (auth != nil && time.Now().After(auth.TokenExpiry))
-	if isExpired {
-		return true, ""
-	} else {
-		return false, auth.Token
-	}
-}
-
-func (client *DataverseAuth) AuthUsingCli(ctx context.Context, scopes []string, credentials *config.ProviderCredentials) (string, error) {
-	token, expiry, err := client.baseAuth.AuthUsingCli(ctx, scopes, credentials)
-
+func (client *DataverseClientApi) Execute(ctx context.Context, environmentUrl, method string, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+	token, err := client.Initialize(ctx, environmentUrl)
 	if err != nil {
-		if strings.Contains(err.Error(), "unable to resolve an endpoint: json decode error") {
-			tflog.Debug(ctx, err.Error())
-			return "", errors.New("there was an issue authenticating with the provided credentials. Please check the your client/secret and try again")
-		}
-		return "", err
+		return nil, err
 	}
-	client.setAuthDataInCache(strings.Join(scopes, "_"), &DataverseAuthDetails{
-		Token:       token,
-		TokenExpiry: expiry,
-	})
-	return token, nil
-
-}
-
-func (client *DataverseAuth) AuthenticateUserPass(ctx context.Context, scopes []string, credentials *config.ProviderCredentials) (string, error) {
-	token, expiry, err := client.baseAuth.AuthenticateUserPass(ctx, scopes, credentials)
-
-	if err != nil {
-		if strings.Contains(err.Error(), "unable to resolve an endpoint: json decode error") {
-			tflog.Debug(ctx, err.Error())
-			return "", errors.New("there was an issue authenticating with the provided credentials. Please check the your username/password and try again")
-		}
-		return "", err
-	}
-
-	client.setAuthDataInCache(strings.Join(scopes, "_"), &DataverseAuthDetails{
-		Token:       token,
-		TokenExpiry: expiry,
-	})
-	return token, nil
-}
-
-func (client *DataverseAuth) AuthenticateClientSecret(ctx context.Context, scopes []string, credentials *config.ProviderCredentials) (string, error) {
-	token, expiry, err := client.baseAuth.AuthClientSecret(ctx, scopes, credentials)
-	if err != nil {
-		if strings.Contains(err.Error(), "unable to resolve an endpoint: json decode error") {
-			tflog.Debug(ctx, err.Error())
-			return "", errors.New("there was an issue authenticating with the provided credentials. Please check the your username/password and try again")
-		}
-		return "", err
-	}
-
-	client.setAuthDataInCache(strings.Join(scopes, "_"), &DataverseAuthDetails{
-		Token:       token,
-		TokenExpiry: expiry,
-	})
-	return token, nil
+	return client.baseApi.ExecuteBase(ctx, token, method, url, headers, body, acceptableStatusCodes, responseObj)
 }
