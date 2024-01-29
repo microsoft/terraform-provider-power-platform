@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 )
