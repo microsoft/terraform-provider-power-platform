@@ -9,6 +9,10 @@ import (
 	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 )
 
+func Login(ctx context.Context, tenantId, username, password *string, useDeviceCode *bool, cache *common.AuthenticationCache) {
+
+}
+
 func TokenMode(ctx context.Context, tenantId, username, password, scope *string, cache *common.AuthenticationCache, isListAccountsMode *bool) {
 	if *tenantId == "" {
 		fmt.Println("Error: '--tenantid' parameter is required.")
