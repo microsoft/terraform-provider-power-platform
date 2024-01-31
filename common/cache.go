@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,12 +14,19 @@ import (
 
 type AuthenticationCache struct {
 	FileProtectData *FileProtectData
+	CacheContent    *CacheContent
 }
 
 func NewAuthenticationCache() *AuthenticationCache {
 	return &AuthenticationCache{
 		FileProtectData: &FileProtectData{},
+		CacheContent:    &CacheContent{},
 	}
+}
+
+type CacheContent struct {
+	DefaultAccount   string `json:"default_account"`
+	MsalCacheContent string `json:"msal_cache_content"`
 }
 
 func (c *AuthenticationCache) GetCacheFilePath() (string, error) {
@@ -29,8 +37,8 @@ func (c *AuthenticationCache) GetCacheFilePath() (string, error) {
 	return filepath.Join(dir, constants.MSAL_CACHE_FILE_NAME), nil
 }
 
-func (c *AuthenticationCache) GetAccounts(ctx context.Context, tenantId string) ([]public.Account, error) {
-	publicClient, err := public.New(constants.CLIENT_ID, public.WithAuthority("https://login.microsoftonline.com/"+tenantId+"/"), public.WithCache(c))
+func (c *AuthenticationCache) GetAccounts(ctx context.Context) ([]public.Account, error) {
+	publicClient, err := public.New(constants.CLIENT_ID, public.WithCache(c))
 	if err != nil {
 		return nil, err
 	}
@@ -44,47 +52,32 @@ func (c *AuthenticationCache) GetAccounts(ctx context.Context, tenantId string) 
 	return accounts, nil
 }
 
-func (c *AuthenticationCache) Replace(ctx context.Context, cache cache.Unmarshaler, hints cache.ReplaceHints) error {
-	cacheFilePath, err := c.GetCacheFilePath()
+func (c *AuthenticationCache) GetDefaultAccount(ctx context.Context) (*public.Account, error) {
+	accounts, err := c.GetAccounts(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if _, err := os.Stat(cacheFilePath); os.IsNotExist(err) {
-		encryptedData, err := c.FileProtectData.Encrypt([]byte("{}"))
-		if err != nil {
-			return err
+	for _, account := range accounts {
+		if account.PreferredUsername == c.CacheContent.DefaultAccount {
+			return &account, nil
 		}
-		os.WriteFile(cacheFilePath, encryptedData, 0600)
 	}
-	contentBytes, err := os.ReadFile(cacheFilePath)
-	if err != nil {
-		return err
-	}
-
-	decryptedData, err := c.FileProtectData.Decrypt(contentBytes)
-	if err != nil {
-		return err
-	}
-
-	if err != nil {
-		return err
-	}
-
-	err = cache.Unmarshal(decryptedData)
-	if err != nil {
-		return err
-	}
-	return nil
+	return nil, nil
 }
 
-func (c *AuthenticationCache) Export(ctx context.Context, cache cache.Marshaler, hints cache.ExportHints) error {
-	cacheFilePath, err := c.GetCacheFilePath()
+func (c *AuthenticationCache) SetDefaultAccount(ctx context.Context, account public.Account) error {
+	c.CacheContent.DefaultAccount = account.PreferredUsername
+	contentBytes, err := json.Marshal(c.CacheContent)
 	if err != nil {
 		return err
 	}
+	return c.writeProtectedFile(ctx, contentBytes)
+}
 
-	contentBytes, err := cache.Marshal()
+func (c *AuthenticationCache) writeProtectedFile(ctx context.Context, contentBytes []byte) error {
+
+	cacheFilePath, err := c.GetCacheFilePath()
 	if err != nil {
 		return err
 	}
@@ -94,7 +87,101 @@ func (c *AuthenticationCache) Export(ctx context.Context, cache cache.Marshaler,
 		return err
 	}
 
-	os.WriteFile(cacheFilePath, encryptedData, 0600)
+	err = os.WriteFile(cacheFilePath, encryptedData, 0600)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
+func (c *AuthenticationCache) readProtectedFile(ctx context.Context) ([]byte, error) {
+
+	cacheFilePath, err := c.GetCacheFilePath()
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := os.Stat(cacheFilePath); os.IsNotExist(err) {
+		return nil, nil
+	}
+
+	contentBytes, err := os.ReadFile(cacheFilePath)
+	if err != nil {
+		return nil, err
+	}
+
+	decryptedData, err := c.FileProtectData.Decrypt(contentBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(decryptedData, c.CacheContent)
+	if err != nil {
+		return nil, err
+	}
+	return decryptedData, nil
+}
+
+func (c *AuthenticationCache) DeleteFile(ctx context.Context) error {
+	cacheFilePath, err := c.GetCacheFilePath()
+	if err != nil {
+		return err
+	}
+
+	if _, err := os.Stat(cacheFilePath); os.IsNotExist(err) {
+		return nil
+	}
+	return os.Remove(cacheFilePath)
+}
+
+func (c *AuthenticationCache) Replace(ctx context.Context, cache cache.Unmarshaler, hints cache.ReplaceHints) error {
+
+	contentByes, err := c.readProtectedFile(ctx)
+	if err != nil {
+		return err
+	}
+
+	if contentByes == nil {
+		emptyContent := []byte("{}")
+		contentByes, err = c.FileProtectData.Encrypt(emptyContent)
+		if err != nil {
+			return err
+		}
+		err = c.writeProtectedFile(ctx, contentByes)
+		if err != nil {
+			return err
+		}
+		json.Unmarshal(emptyContent, c.CacheContent)
+	}
+
+	err = json.Unmarshal(contentByes, c.CacheContent)
+	if err != nil {
+		return err
+	}
+
+	err = cache.Unmarshal([]byte(c.CacheContent.MsalCacheContent))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c *AuthenticationCache) Export(ctx context.Context, cache cache.Marshaler, hints cache.ExportHints) error {
+
+	msalContentBytes, err := cache.Marshal()
+	if err != nil {
+		return err
+	}
+	c.CacheContent.MsalCacheContent = string(msalContentBytes)
+
+	contentBytes, err := json.Marshal(c.CacheContent)
+	if err != nil {
+		return err
+	}
+
+	err = c.writeProtectedFile(ctx, contentBytes)
+	if err != nil {
+		return err
+	}
 	return nil
 }

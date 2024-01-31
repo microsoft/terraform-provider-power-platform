@@ -2,7 +2,6 @@ package cli
 
 import (
 	"context"
-	"log"
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
@@ -22,7 +21,11 @@ var rootCmd = &cobra.Command{
 			debug = true
 		}
 
-		log.Default().Println("Working in provider mode")
+		cmd.Println("Working in provider mode")
+		cmd.PrintErrln("To use CLI mode, run `terraform-provider-power-platform --help`")
+		cmd.Println()
+		cmd.Println()
+
 		serveOpts := providerserver.ServeOpts{
 			Debug:   debug,
 			Address: "registry.terraform.io/microsoft/power-platform",
@@ -32,7 +35,7 @@ var rootCmd = &cobra.Command{
 		err := providerserver.Serve(ctx, powerplatform.NewPowerPlatformProvider(), serveOpts)
 
 		if err != nil {
-			log.Fatalf("Error serving provider: %s", err)
+			cmd.PrintErrf("Error serving provider: %s\n", err)
 		}
 	},
 }
