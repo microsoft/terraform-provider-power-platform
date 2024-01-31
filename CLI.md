@@ -28,7 +28,7 @@ terraform-provider-power-platform --tenantid <tenant_id> --username <username> -
 
 ### Listing accounts saved in cache
 
-After you have logged in, you can list the accounts saved in the cache by running the following command. When using Terraform Power Platform Provider with `user_cli="true"` provider configuration option, it is important to note that **first account from the list will be used in the provider**.
+After you have logged in, you can list the accounts saved in the cache by running the following command. When using Terraform Power Platform Provider with `use_cli="true"` provider configuration option, it is important to note that **first account from the list will be used in the provider**.
 
 ```bash
 terraform-provider-power-platform --list-accounts
@@ -40,4 +40,4 @@ terraform-provider-power-platform --list-accounts
 
 - For non-windows platforms, CLI will store the cache in `/home/<user>/.local/share/Microsoft/TerraformPowerPlatformProvider/terraform_power_platform_cache.dat` and **will not be** encrypted. Only `chmod 600` will be applied to the file.
 
-- When using Terraform Power Platform Provider with `user_cli="true"` provider configuration option, it is important to note that if you login with CLI using different accounts/tenants only **first account from the list will be used in the provider**. If you want to use different account/tenant, you need to remove the cache file and login again.
+- When using Terraform Power Platform Provider with `use_cli="true"` provider configuration option, it is important to note that if you login with CLI using different accounts/tenants only **first account from the list will be used in the provider**. If you want to use different account/tenant, you need to remove the cache file and login again.
