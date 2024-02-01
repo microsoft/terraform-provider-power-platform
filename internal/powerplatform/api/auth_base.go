@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/confidential"
 	"github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
 	common "github.com/microsoft/terraform-provider-power-platform/common"
 	constants "github.com/microsoft/terraform-provider-power-platform/constants"
@@ -20,16 +19,18 @@ func (e *TokeExpiredError) Error() string {
 }
 
 type AuthBase struct {
-	config      *config.ProviderConfig
-	token       string
-	tokenExpiry time.Time
-	authCache   *common.AuthenticationCache
+	config *config.ProviderConfig
+	//token       string
+	//tokenExpiry time.Time
+	memCache  *common.MemoryCache
+	authCache *common.AuthenticationCache
 }
 
 func NewAuthBase(config *config.ProviderConfig) *AuthBase {
 	return &AuthBase{
 		config:    config,
 		authCache: common.NewAuthenticationCache(),
+		memCache:  common.NewMemoryCache(),
 	}
 }
 
@@ -69,58 +70,92 @@ func (client *AuthBase) AuthUsingCli(ctx context.Context, scopes []string, crede
 }
 
 func (client *AuthBase) AuthenticateUserPass(ctx context.Context, scopes []string, credentials *config.ProviderCredentials) (string, time.Time, error) {
-	publicClientApp, err := public.New(constants.CLIENT_ID, public.WithAuthority(client.GetAuthority(credentials.TenantId)))
+
+	publicClient, err := public.New(constants.CLIENT_ID, public.WithAuthority(client.GetAuthority(credentials.TenantId)), public.WithCache(client.memCache))
 	if err != nil {
 		return "", time.Time{}, err
 	}
 
-	authResult, err := publicClientApp.AcquireTokenByUsernamePassword(ctx, scopes, credentials.Username, credentials.Password)
+	accounts, err := publicClient.Accounts(ctx)
 	if err != nil {
 		return "", time.Time{}, err
 	}
 
-	return authResult.AccessToken, authResult.ExpiresOn, nil
+	savedAccount := public.Account{}
+	for _, account := range accounts {
+		if account.PreferredUsername == credentials.Username {
+			savedAccount = account
+			break
+		}
+	}
+
+	if savedAccount.PreferredUsername != "" {
+		authResult, err := publicClient.AcquireTokenSilent(ctx, scopes, public.WithTenantID(credentials.TenantId), public.WithSilentAccount(savedAccount))
+		if err != nil {
+			return "", time.Time{}, err
+		}
+		return authResult.AccessToken, authResult.ExpiresOn, nil
+	} else {
+		authResult, err := publicClient.AcquireTokenByUsernamePassword(ctx, scopes, credentials.Username, credentials.Password)
+		if err != nil {
+			return "", time.Time{}, err
+		}
+		return authResult.AccessToken, authResult.ExpiresOn, nil
+	}
+
+	// publicClientApp, err := public.New(constants.CLIENT_ID, public.WithAuthority(client.GetAuthority(credentials.TenantId)))
+	// if err != nil {
+	// 	return "", time.Time{}, err
+	// }
+
+	// authResult, err := publicClientApp.AcquireTokenByUsernamePassword(ctx, scopes, credentials.Username, credentials.Password)
+	// if err != nil {
+	// 	return "", time.Time{}, err
+	// }
+
+	// return authResult.AccessToken, authResult.ExpiresOn, nil
 }
 
 func (client *AuthBase) AuthClientSecret(ctx context.Context, scopes []string, credentials *config.ProviderCredentials) (string, time.Time, error) {
+	panic("to remove")
 
-	cred, err := confidential.NewCredFromSecret(credentials.Secret)
-	if err != nil {
-		return "", time.Time{}, err
-	}
+	// cred, err := confidential.NewCredFromSecret(credentials.Secret)
+	// if err != nil {
+	// 	return "", time.Time{}, err
+	// }
 
-	confidentialClientApp, err := confidential.New(client.GetAuthority(credentials.TenantId), credentials.ClientId, cred)
-	if err != nil {
-		return "", time.Time{}, err
-	}
+	// confidentialClientApp, err := confidential.New(client.GetAuthority(credentials.TenantId), credentials.ClientId, cred)
+	// if err != nil {
+	// 	return "", time.Time{}, err
+	// }
 
-	authResult, err := confidentialClientApp.AcquireTokenByCredential(ctx, scopes)
-	if err != nil {
-		return "", time.Time{}, err
-	}
+	// authResult, err := confidentialClientApp.AcquireTokenByCredential(ctx, scopes)
+	// if err != nil {
+	// 	return "", time.Time{}, err
+	// }
 
-	return authResult.AccessToken, authResult.ExpiresOn, nil
+	// return authResult.AccessToken, authResult.ExpiresOn, nil
 }
 
-func (client *AuthBase) SetToken(token string) {
-	client.token = token
-}
+// func (client *AuthBase) SetToken(token string) {
+// 	client.token = token
+// }
 
-func (client *AuthBase) SetTokenExpiry(tokenExpiry time.Time) {
-	client.tokenExpiry = tokenExpiry
-}
+// func (client *AuthBase) SetTokenExpiry(tokenExpiry time.Time) {
+// 	client.tokenExpiry = tokenExpiry
+// }
 
-func (client *AuthBase) GetTokenExpiry() time.Time {
-	return client.tokenExpiry
-}
+// func (client *AuthBase) GetTokenExpiry() time.Time {
+// 	return client.tokenExpiry
+// }
 
-func (client *AuthBase) GetToken() (string, error) {
-	if client.IsTokenExpiredOrEmpty() {
-		return "", &TokeExpiredError{"token is expired or empty"}
-	}
-	return client.token, nil
-}
+// func (client *AuthBase) GetToken() (string, error) {
+// 	if client.IsTokenExpiredOrEmpty() {
+// 		return "", &TokeExpiredError{"token is expired or empty"}
+// 	}
+// 	return client.token, nil
+// }
 
-func (client *AuthBase) IsTokenExpiredOrEmpty() bool {
-	return client.token == "" || time.Now().After(client.tokenExpiry)
-}
+// func (client *AuthBase) IsTokenExpiredOrEmpty() bool {
+// 	return client.token == "" || time.Now().After(client.tokenExpiry)
+// }
