@@ -44,24 +44,18 @@ func (client *AuthBase) GetAuthority(tenantid string) string {
 }
 
 func (client *AuthBase) AuthUsingCli(ctx context.Context, scopes []string, credentials *config.ProviderCredentials) (string, time.Time, error) {
-	//TODO if use used different clientid in cli this will not work!?
 	publicClient, err := public.New(constants.CLIENT_ID, public.WithCache(client.authCache))
 	if err != nil {
 		return "", time.Time{}, err
 	}
 
-	accounts, err := publicClient.Accounts(ctx)
+	defaultAccount, err := client.authCache.GetDefaultAccount(ctx)
 	if err != nil {
 		return "", time.Time{}, err
 	}
 
-	if len(accounts) == 0 {
-		return "", time.Time{}, &TokeExpiredError{"No cached tokens found. Please login using 'CLI' first and try again."}
-	}
-
-	//TODO cache file may have many accounts maybe we shoudn't use the first one but the one that matches the tenantid or username from credentials given in provider by the user?
-	credentials.TenantId = accounts[0].Realm
-	authResult, err := publicClient.AcquireTokenSilent(ctx, scopes, public.WithTenantID(credentials.TenantId), public.WithSilentAccount(accounts[0]))
+	credentials.TenantId = defaultAccount.Realm
+	authResult, err := publicClient.AcquireTokenSilent(ctx, scopes, public.WithTenantID(credentials.TenantId), public.WithSilentAccount(*defaultAccount))
 	if err != nil {
 		return "", time.Time{}, err
 	}
