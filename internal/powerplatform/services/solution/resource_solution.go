@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 )
@@ -139,10 +139,9 @@ func (r *SolutionResource) Configure(ctx context.Context, req resource.Configure
 		return
 	}
 
-	clientBapi := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
-	clientDv := req.ProviderData.(*clients.ProviderClient).DataverseApi.Client
+	clientApi := req.ProviderData.(*api.ProviderClient).Api
 
-	if clientBapi == nil || clientDv == nil {
+	if clientApi == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
@@ -151,7 +150,7 @@ func (r *SolutionResource) Configure(ctx context.Context, req resource.Configure
 		return
 	}
 
-	r.SolutionClient = NewSolutionClient(clientBapi, clientDv)
+	r.SolutionClient = NewSolutionClient(clientApi)
 }
 
 func (r *SolutionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

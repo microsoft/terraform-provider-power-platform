@@ -12,20 +12,20 @@ import (
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
-func NewApplicationClient(powerPlatformClientApi *api.PowerPlatformClientApi) ApplicationClient {
+func NewApplicationClient(api *api.ApiClient) ApplicationClient {
 	return ApplicationClient{
-		baseApi: powerPlatformClientApi,
+		Api: api,
 	}
 }
 
 type ApplicationClient struct {
-	baseApi *api.PowerPlatformClientApi
+	Api *api.ApiClient
 }
 
 func (client *ApplicationClient) GetApplicationsByEnvironmentId(ctx context.Context, environmentId string) ([]ApplicationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.baseApi.GetConfig().Urls.PowerPlatformUrl,
+		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   fmt.Sprintf("/appmanagement/environments/%s/applicationPackages", environmentId),
 	}
 	values := url.Values{
@@ -35,7 +35,7 @@ func (client *ApplicationClient) GetApplicationsByEnvironmentId(ctx context.Cont
 
 	application := ApplicationArrayDto{}
 
-	_, err := client.baseApi.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &application)
+	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &application)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (client *ApplicationClient) GetApplicationsByEnvironmentId(ctx context.Cont
 func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Context, environmentId string, uniqueName string) (string, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.baseApi.GetConfig().Urls.PowerPlatformUrl,
+		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   fmt.Sprintf("/appmanagement/environments/%s/applicationPackages/%s/install", environmentId, uniqueName),
 	}
 	values := url.Values{
@@ -54,7 +54,7 @@ func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Con
 	}
 	apiUrl.RawQuery = values.Encode()
 
-	response, err := client.baseApi.Execute(ctx, "POST", apiUrl.String(), nil, nil, []int{http.StatusAccepted}, nil)
+	response, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, nil, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return "", err
 	}
@@ -71,7 +71,7 @@ func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Con
 
 		for {
 			lifecycleResponse := ApplicationLifecycleDto{}
-			_, err = client.baseApi.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
+			_, err = client.Api.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
 			if err != nil {
 				return "", err
 			}

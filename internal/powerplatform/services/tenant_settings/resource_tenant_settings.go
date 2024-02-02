@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 var _ resource.Resource = &TenantSettingsResource{}
@@ -477,7 +477,7 @@ func (r *TenantSettingsResource) Configure(ctx context.Context, req resource.Con
 		return
 	}
 
-	client := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
+	client := req.ProviderData.(*api.ProviderClient).Api
 
 	if client == nil {
 		resp.Diagnostics.AddError(
@@ -513,7 +513,7 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 	}
 
 	plan = ConvertFromTenantSettingsDto(*tenantSettings)
-	plan.Id = types.StringValue(r.TenantSettingClient.bapiClient.GetConfig().Credentials.TenantId)
+	plan.Id = types.StringValue(r.TenantSettingClient.Api.GetConfig().Credentials.TenantId)
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -540,7 +540,7 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	state = ConvertFromTenantSettingsDto(*tenantSettings)
-	state.Id = types.StringValue(r.TenantSettingClient.bapiClient.GetConfig().Credentials.TenantId)
+	state.Id = types.StringValue(r.TenantSettingClient.Api.GetConfig().Credentials.TenantId)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
 

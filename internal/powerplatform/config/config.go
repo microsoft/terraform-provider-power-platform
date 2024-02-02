@@ -44,3 +44,7 @@ func (model *ProviderCredentials) IsUserPassCredentialsProvided() bool {
 func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {
 	return model.ClientId != "" && model.Secret != "" && model.TenantId != ""
 }
+
+func (model *ProviderCredentials) IsCliProvided() bool {
+	return model.UseCli
+}

@@ -8,15 +8,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	constants "github.com/microsoft/terraform-provider-power-platform/constants"
-	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 )
-
-type BapiClientApi struct {
-	baseApi         *ApiClientBase
-	auth            *BapiAuth
-	dataverseClient *DataverseClientApi
-}
 
 type LifecycleDto struct {
 	Id                 string                  `json:"id"`
@@ -56,31 +48,7 @@ type LifecycleRequestedByDto struct {
 	Type        string `json:"type"`
 }
 
-func NewBapiClientApi(baseApi *ApiClientBase, auth *BapiAuth, dataverseClient *DataverseClientApi) *BapiClientApi {
-	return &BapiClientApi{
-		baseApi:         baseApi,
-		auth:            auth,
-		dataverseClient: dataverseClient,
-	}
-}
-
-func (client *BapiClientApi) SetDataverseClient(dataverseClient *DataverseClientApi) {
-	client.dataverseClient = dataverseClient
-}
-
-func (client *BapiClientApi) GetConfig() *config.ProviderConfig {
-	return client.baseApi.Config
-}
-
-func (client *BapiClientApi) Execute(ctx context.Context, method string, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
-	token, err := client.baseApi.InitializeBase(ctx, []string{constants.SERVICE_POWERAPPS_SCOPE}, client.auth)
-	if err != nil {
-		return nil, err
-	}
-	return client.baseApi.ExecuteBase(ctx, token, method, url, headers, body, acceptableStatusCodes, responseObj)
-}
-
-func (client *BapiClientApi) DoWaitForLifecycleOperationStatus(ctx context.Context, response *ApiHttpResponse) (*LifecycleDto, error) {
+func (client *ApiClient) DoWaitForLifecycleOperationStatus(ctx context.Context, response *ApiHttpResponse) (*LifecycleDto, error) {
 
 	locationHeader := response.GetHeader("Location")
 	tflog.Debug(ctx, "Location Header: "+locationHeader)

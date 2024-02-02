@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 var (
@@ -144,8 +144,8 @@ func (d *ApplicationsDataSource) Configure(ctx context.Context, req datasource.C
 	if req.ProviderData == nil {
 		return
 	}
-	clientBapi := req.ProviderData.(*clients.ProviderClient).PowerPlatformApi.Client
-	if clientBapi == nil {
+	clientApi := req.ProviderData.(*api.ProviderClient).Api
+	if clientApi == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
@@ -153,7 +153,7 @@ func (d *ApplicationsDataSource) Configure(ctx context.Context, req datasource.C
 
 		return
 	}
-	d.ApplicationClient = NewApplicationClient(clientBapi)
+	d.ApplicationClient = NewApplicationClient(clientApi)
 }
 
 func (d *ApplicationsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

@@ -12,13 +12,19 @@ import (
 	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 )
 
-type AuthenticationCache struct {
+type FileCache struct {
 	FileProtectData *FileProtectData
 	CacheContent    *CacheContent
 }
 
-func NewAuthenticationCache() *AuthenticationCache {
-	return &AuthenticationCache{
+type ExportReplaceCacheExtension interface {
+	GetAccounts(ctx context.Context) ([]public.Account, error)
+}
+
+var _ ExportReplaceCacheExtension = &FileCache{}
+
+func NewAuthenticationCache() *FileCache {
+	return &FileCache{
 		FileProtectData: &FileProtectData{},
 		CacheContent:    &CacheContent{},
 	}
@@ -29,7 +35,7 @@ type CacheContent struct {
 	MsalCacheContent string `json:"msal_cache_content"`
 }
 
-func (c *AuthenticationCache) GetCacheFilePath() (string, error) {
+func (c *FileCache) GetCacheFilePath() (string, error) {
 	dir, err := c.FileProtectData.GetOrCreateCacheFileDir()
 	if err != nil {
 		return "", err
@@ -37,7 +43,7 @@ func (c *AuthenticationCache) GetCacheFilePath() (string, error) {
 	return filepath.Join(dir, constants.MSAL_CACHE_FILE_NAME), nil
 }
 
-func (c *AuthenticationCache) GetAccounts(ctx context.Context) ([]public.Account, error) {
+func (c *FileCache) GetAccounts(ctx context.Context) ([]public.Account, error) {
 	publicClient, err := public.New(constants.CLIENT_ID, public.WithCache(c))
 	if err != nil {
 		return nil, err
@@ -52,7 +58,7 @@ func (c *AuthenticationCache) GetAccounts(ctx context.Context) ([]public.Account
 	return accounts, nil
 }
 
-func (c *AuthenticationCache) GetDefaultAccount(ctx context.Context) (*public.Account, error) {
+func (c *FileCache) GetDefaultAccount(ctx context.Context) (*public.Account, error) {
 	accounts, err := c.GetAccounts(ctx)
 	if err != nil {
 		return nil, err
@@ -66,7 +72,7 @@ func (c *AuthenticationCache) GetDefaultAccount(ctx context.Context) (*public.Ac
 	return nil, nil
 }
 
-func (c *AuthenticationCache) SetDefaultAccount(ctx context.Context, account public.Account) error {
+func (c *FileCache) SetDefaultAccount(ctx context.Context, account public.Account) error {
 	c.CacheContent.DefaultAccount = account.PreferredUsername
 	contentBytes, err := json.Marshal(c.CacheContent)
 	if err != nil {
@@ -75,7 +81,7 @@ func (c *AuthenticationCache) SetDefaultAccount(ctx context.Context, account pub
 	return c.writeProtectedFile(ctx, contentBytes)
 }
 
-func (c *AuthenticationCache) writeProtectedFile(ctx context.Context, contentBytes []byte) error {
+func (c *FileCache) writeProtectedFile(ctx context.Context, contentBytes []byte) error {
 
 	cacheFilePath, err := c.GetCacheFilePath()
 	if err != nil {
@@ -94,7 +100,7 @@ func (c *AuthenticationCache) writeProtectedFile(ctx context.Context, contentByt
 	return nil
 }
 
-func (c *AuthenticationCache) readProtectedFile(ctx context.Context) ([]byte, error) {
+func (c *FileCache) readProtectedFile(ctx context.Context) ([]byte, error) {
 
 	cacheFilePath, err := c.GetCacheFilePath()
 	if err != nil {
@@ -122,7 +128,7 @@ func (c *AuthenticationCache) readProtectedFile(ctx context.Context) ([]byte, er
 	return decryptedData, nil
 }
 
-func (c *AuthenticationCache) DeleteFile(ctx context.Context) error {
+func (c *FileCache) DeleteFile(ctx context.Context) error {
 	cacheFilePath, err := c.GetCacheFilePath()
 	if err != nil {
 		return err
@@ -134,7 +140,7 @@ func (c *AuthenticationCache) DeleteFile(ctx context.Context) error {
 	return os.Remove(cacheFilePath)
 }
 
-func (c *AuthenticationCache) Replace(ctx context.Context, cache cache.Unmarshaler, hints cache.ReplaceHints) error {
+func (c *FileCache) Replace(ctx context.Context, cache cache.Unmarshaler, hints cache.ReplaceHints) error {
 
 	contentByes, err := c.readProtectedFile(ctx)
 	if err != nil {
@@ -166,7 +172,7 @@ func (c *AuthenticationCache) Replace(ctx context.Context, cache cache.Unmarshal
 	return nil
 }
 
-func (c *AuthenticationCache) Export(ctx context.Context, cache cache.Marshaler, hints cache.ExportHints) error {
+func (c *FileCache) Export(ctx context.Context, cache cache.Marshaler, hints cache.ExportHints) error {
 
 	msalContentBytes, err := cache.Marshal()
 	if err != nil {

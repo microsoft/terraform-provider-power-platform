@@ -70,7 +70,7 @@ Command: terraform-provider-power-platform login
 	},
 }
 
-func setDefaultAccountIfNoneSet(ctx context.Context, account public.Account, fileCache *common.AuthenticationCache) error {
+func setDefaultAccountIfNoneSet(ctx context.Context, account public.Account, fileCache *common.FileCache) error {
 	defaultAccount, err := fileCache.GetDefaultAccount(ctx)
 	if err != nil {
 		return err

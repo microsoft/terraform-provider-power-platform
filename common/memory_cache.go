@@ -2,36 +2,43 @@ package common
 
 import (
 	"context"
+	"fmt"
 
 	cache "github.com/AzureAD/microsoft-authentication-library-for-go/apps/cache"
+	public "github.com/AzureAD/microsoft-authentication-library-for-go/apps/public"
+	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 )
 
 type MemoryCache struct {
-	cache string
+	content string
 }
 
 func NewMemoryCache() *MemoryCache {
-	return &MemoryCache{}
+	return &MemoryCache{
+		content: "{}",
+	}
 }
 
-// func (c *MemoryCache) GetAccounts(ctx context.Context, tenantId string) ([]public.Account, error) {
-// 	publicClient, err := public.New(constants.CLIENT_ID, public.WithAuthority("https://login.microsoftonline.com/"+tenantId+"/"), public.WithCache(c))
-// 	if err != nil {
-// 		return nil, err
-// 	}
+var _ ExportReplaceCacheExtension = &MemoryCache{}
 
-// 	accounts, err := publicClient.Accounts(ctx)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 		return nil, err
-// 	}
+func (c *MemoryCache) GetAccounts(ctx context.Context) ([]public.Account, error) {
+	publicClient, err := public.New(constants.CLIENT_ID, public.WithCache(c))
+	if err != nil {
+		return nil, err
+	}
 
-// 	return accounts, nil
-// }
+	accounts, err := publicClient.Accounts(ctx)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	return accounts, nil
+}
 
 func (c *MemoryCache) Replace(ctx context.Context, cache cache.Unmarshaler, hints cache.ReplaceHints) error {
-	if len(c.cache) != 0 {
-		err := cache.Unmarshal([]byte(c.cache))
+	if len(c.content) != 0 {
+		err := cache.Unmarshal([]byte(c.content))
 		if err != nil {
 			return err
 		}
@@ -44,6 +51,6 @@ func (c *MemoryCache) Export(ctx context.Context, cache cache.Marshaler, hints c
 	if err != nil {
 		return err
 	}
-	c.cache = string(contentBytes)
+	c.content = string(contentBytes)
 	return nil
 }

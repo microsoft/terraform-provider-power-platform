@@ -10,8 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
@@ -27,13 +27,11 @@ import (
 var _ provider.Provider = &PowerPlatformProvider{}
 
 type PowerPlatformProvider struct {
-	Config           *config.ProviderConfig
-	BapiApi          *clients.BapiClient
-	DataverseApi     *clients.DataverseClient
-	PowerPlatformApi *clients.PowerPlatformApiClient
+	Config *config.ProviderConfig
+	Api    *api.ApiClient
 }
 
-func NewPowerPlatformProvider() func() provider.Provider {
+func NewPowerPlatformProvider(ctx context.Context) func() provider.Provider {
 	return func() provider.Provider {
 		cred := config.ProviderCredentials{}
 		config := config.ProviderConfig{
@@ -45,33 +43,12 @@ func NewPowerPlatformProvider() func() provider.Provider {
 			},
 		}
 
-		baseAuthBapi := api.NewAuthBase(&config)
-		bapiAuth := api.NewBapiAuth(baseAuthBapi)
-		baseApiForBapi := api.NewApiClientBase(&config, baseAuthBapi)
-		bapiClientApi := api.NewBapiClientApi(baseApiForBapi, bapiAuth, nil)
-		bapiClient := clients.NewBapiClient(bapiAuth, bapiClientApi)
-
-		baseAuthPowerPlatform := api.NewAuthBase(&config)
-		powerplatformAuth := api.NewPowerPlatformAuth(baseAuthPowerPlatform)
-		baseApiForPpApi := api.NewApiClientBase(&config, baseAuthPowerPlatform)
-		powerplatformClientApi := api.NewPowerPlatformClientApi(baseApiForPpApi, powerplatformAuth)
-		powerplatformClient := clients.NewPowerPlatformApiClient(powerplatformAuth, powerplatformClientApi)
-
-		baseAuthDataverse := api.NewAuthBase(&config)
-		dataverseAuth := api.NewDataverseAuth(baseAuthDataverse)
-		baseApiForDataverse := api.NewApiClientBase(&config, baseAuthDataverse)
-		dataverseClientApi := api.NewDataverseClientApi(baseApiForDataverse, dataverseAuth)
-		dataverseClient := clients.NewDataverseClient(dataverseAuth, dataverseClientApi)
-
-		bapiClient.Client.SetDataverseClient(dataverseClient.Client)
-		dataverseClient.Client.SetBapiClient(bapiClient.Client)
-
 		p := &PowerPlatformProvider{
-			Config:           &config,
-			BapiApi:          bapiClient,
-			DataverseApi:     dataverseClient,
-			PowerPlatformApi: powerplatformClient,
+			Config: &config,
+			Api:    api.NewApiClientBase(&config, api.NewAuthBase(&config)),
 		}
+		p.Api.BaseAuth.InitializeRequiredScopes(ctx, constants.REQUIRED_SCOPES)
+
 		return p
 	}
 }
@@ -243,11 +220,9 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		}
 	}
 
-	providerClient := clients.ProviderClient{
-		Config:           p.Config,
-		BapiApi:          p.BapiApi,
-		DataverseApi:     p.DataverseApi,
-		PowerPlatformApi: p.PowerPlatformApi,
+	providerClient := api.ProviderClient{
+		Config: p.Config,
+		Api:    p.Api,
 	}
 	resp.DataSourceData = &providerClient
 	resp.ResourceData = &providerClient

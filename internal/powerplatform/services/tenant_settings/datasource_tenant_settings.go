@@ -8,7 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 var (
@@ -138,7 +138,7 @@ func (d *TenantSettingsDataSource) Configure(ctx context.Context, req datasource
 		return
 	}
 
-	client := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
+	client := req.ProviderData.(*api.ProviderClient).Api
 
 	if client == nil {
 		resp.Diagnostics.AddError(
@@ -165,7 +165,7 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 
 	state = ConvertFromTenantSettingsDto(*tenantSettings)
-	state.Id = types.StringValue(d.TenantSettingsClient.bapiClient.GetConfig().Credentials.TenantId)
+	state.Id = types.StringValue(d.TenantSettingsClient.Api.GetConfig().Credentials.TenantId)
 
 	diags := resp.State.Set(ctx, &state)
 

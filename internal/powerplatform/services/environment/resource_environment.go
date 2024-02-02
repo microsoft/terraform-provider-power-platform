@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
 )
@@ -202,11 +202,9 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 		return
 	}
 
-	clientBapi := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
-	clientDv := req.ProviderData.(*clients.ProviderClient).DataverseApi.Client
-	ppApi := req.ProviderData.(*clients.ProviderClient).PowerPlatformApi.Client
+	clientApi := req.ProviderData.(*api.ProviderClient).Api
 
-	if clientBapi == nil || clientDv == nil {
+	if clientApi == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
@@ -214,8 +212,8 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 
 		return
 	}
-	r.EnvironmentClient = NewEnvironmentClient(clientBapi, clientDv)
-	r.LicensingClient = licensing.NewLicensingClient(ppApi)
+	r.EnvironmentClient = NewEnvironmentClient(clientApi)
+	r.LicensingClient = licensing.NewLicensingClient(clientApi)
 }
 
 func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

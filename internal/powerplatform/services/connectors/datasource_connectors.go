@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 var (
@@ -128,7 +128,7 @@ func (d *ConnectorsDataSource) Configure(_ context.Context, req datasource.Confi
 	if req.ProviderData == nil {
 		return
 	}
-	client := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
+	client := req.ProviderData.(*api.ProviderClient).Api
 
 	if client == nil {
 		resp.Diagnostics.AddError(
