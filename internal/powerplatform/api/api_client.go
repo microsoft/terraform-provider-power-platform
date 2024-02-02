@@ -45,7 +45,7 @@ func TryGetScopeFromURL(url string) (string, error) {
 		scope = scope + ".default"
 		return scope, nil
 	} else {
-		return "", errors.New(fmt.Sprintln("Unable to determine scope from url: '%s'. Please provide your own scope.", url))
+		return "", errors.New("Unable to determine scope from url: '" + url + "'. Please provide your own scope.")
 	}
 }
 
