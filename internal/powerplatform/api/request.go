@@ -23,7 +23,6 @@ func (client *ApiClient) doRequest(token *string, request *http.Request, headers
 		request.Header.Set("Content-Type", "application/json")
 	}
 
-	//todo validate that initializing the http client everytime is ok from performance perspective
 	httpClient := http.DefaultClient
 
 	if request.Header["Authorization"] == nil {

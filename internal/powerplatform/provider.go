@@ -164,8 +164,6 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 
 	if config.UseCli.ValueBool() {
 		p.Config.Credentials.UseCli = true
-		//TODO: Add support for CLI
-
 	} else {
 
 		if clientId != "" && secret != "" && tenantId != "" {

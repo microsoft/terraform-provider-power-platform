@@ -42,7 +42,7 @@ func (client *Auth) GetAuthority(tenantid string) string {
 	return constants.OAUTH_AUTHORITY_URL + tenantid
 }
 
-func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string, credentials *config.ProviderCredentials) (string, time.Time, error) {
+func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string) (string, time.Time, error) {
 	publicClient, err := public.New(constants.CLIENT_ID, public.WithCache(client.fileCache))
 	if err != nil {
 		return "", time.Time{}, err
@@ -56,8 +56,8 @@ func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string, c
 		return "", time.Time{}, errors.New("no default account found. Please login CLI using 'terraform-provider-power-platform login' command")
 	}
 
-	credentials.TenantId = defaultAccount.Realm
-	authResult, err := publicClient.AcquireTokenSilent(ctx, scopes, public.WithTenantID(credentials.TenantId), public.WithSilentAccount(*defaultAccount))
+	client.config.Credentials.TenantId = defaultAccount.Realm
+	authResult, err := publicClient.AcquireTokenSilent(ctx, scopes, public.WithTenantID(client.config.Credentials.TenantId), public.WithSilentAccount(*defaultAccount))
 	if err != nil {
 		if strings.Contains(err.Error(), "unable to resolve an endpoint: json decode error") {
 			tflog.Debug(ctx, err.Error())
@@ -68,8 +68,8 @@ func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string, c
 	return authResult.AccessToken, authResult.ExpiresOn, nil
 }
 
-func (client *Auth) AuthenticateUserPass(ctx context.Context, scopes []string, credentials *config.ProviderCredentials) (string, time.Time, error) {
-	publicClient, err := public.New(constants.CLIENT_ID, public.WithAuthority(client.GetAuthority(credentials.TenantId)), public.WithCache(client.memoryCache))
+func (client *Auth) AuthenticateUserPass(ctx context.Context, scopes []string) (string, time.Time, error) {
+	publicClient, err := public.New(constants.CLIENT_ID, public.WithAuthority(client.GetAuthority(client.config.Credentials.TenantId)), public.WithCache(client.memoryCache))
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -83,7 +83,7 @@ func (client *Auth) AuthenticateUserPass(ctx context.Context, scopes []string, c
 		authResult, err = publicClient.AcquireTokenSilent(ctx, scopes, public.WithSilentAccount((accounts[len(accounts)-1])))
 
 	} else {
-		authResult, err = publicClient.AcquireTokenByUsernamePassword(ctx, scopes, credentials.Username, credentials.Password)
+		authResult, err = publicClient.AcquireTokenByUsernamePassword(ctx, scopes, client.config.Credentials.Username, client.config.Credentials.Password)
 	}
 
 	if err != nil {
@@ -96,13 +96,13 @@ func (client *Auth) AuthenticateUserPass(ctx context.Context, scopes []string, c
 	return authResult.AccessToken, authResult.ExpiresOn, nil
 }
 
-func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []string, credentials *config.ProviderCredentials) (string, time.Time, error) {
+func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []string) (string, time.Time, error) {
 
-	cred, err := confidential.NewCredFromSecret(credentials.Secret)
+	cred, err := confidential.NewCredFromSecret(client.config.Credentials.Secret)
 	if err != nil {
 		return "", time.Time{}, err
 	}
-	confidentialClient, err := confidential.New(client.GetAuthority(credentials.TenantId), credentials.ClientId, cred, confidential.WithCache(client.memoryCache))
+	confidentialClient, err := confidential.New(client.GetAuthority(client.config.Credentials.TenantId), client.config.Credentials.ClientId, cred, confidential.WithCache(client.memoryCache))
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -126,7 +126,7 @@ func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []strin
 		return "", time.Time{}, err
 	}
 	//todo this doesn't work always correctly
-	client.homeAccountID = fmt.Sprintf("-login.microsoftonline.com-accesstoken-%s-%s-%s", credentials.ClientId, credentials.TenantId, authResult.GrantedScopes[0])
+	client.homeAccountID = fmt.Sprintf("-login.microsoftonline.com-accesstoken-%s-%s-%s", client.config.Credentials.ClientId, client.config.Credentials.TenantId, authResult.GrantedScopes[0])
 	return authResult.AccessToken, authResult.ExpiresOn, nil
 }
 
@@ -137,12 +137,11 @@ func (client *Auth) InitializeRequiredScopes(ctx context.Context, scopes []strin
 
 	switch {
 	case client.config.Credentials.IsClientSecretCredentialsProvided():
-		//todo use local credentials instead dependency injection
-		token, tokenExpiry, err = client.AuthenticateClientSecret(ctx, scopes, client.config.Credentials)
+		token, tokenExpiry, err = client.AuthenticateClientSecret(ctx, scopes)
 	case client.config.Credentials.IsUserPassCredentialsProvided():
-		token, tokenExpiry, err = client.AuthenticateUserPass(ctx, scopes, client.config.Credentials)
+		token, tokenExpiry, err = client.AuthenticateUserPass(ctx, scopes)
 	case client.config.Credentials.IsCliProvided():
-		token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes, client.config.Credentials)
+		token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes)
 	default:
 		return "", errors.New("no credentials provided")
 	}
