@@ -20,7 +20,6 @@
         "powerApps": {
             "disableShareWithEveryone": false,
             "enableGuestsToMake": false,
-            "disableMembersIndicator": false,
             "disableMakerMatch": false,
             "disableUnusedLicenseAssignment": false,
             "disableCreateFromImage": false,

@@ -72,7 +72,6 @@ type TeamsIntegrationSettings struct {
 type PowerAppsSettings struct {
 	DisableShareWithEveryone             types.Bool `tfsdk:"disable_share_with_everyone"`
 	EnableGuestsToMake                   types.Bool `tfsdk:"enable_guests_to_make"`
-	DisableMembersIndicator              types.Bool `tfsdk:"disable_members_indicator"`
 	DisableMakerMatch                    types.Bool `tfsdk:"disable_maker_match"`
 	DisableUnusedLicenseAssignment       types.Bool `tfsdk:"disable_unused_license_assignment"`
 	DisableCreateFromImage               types.Bool `tfsdk:"disable_create_from_image"`
@@ -264,10 +263,6 @@ func (d *TenantSettingsDataSource) Schema(_ context.Context, _ datasource.Schema
 							},
 							"enable_guests_to_make": schema.BoolAttribute{
 								Description: "Enable Guests To Make",
-								Computed:    true,
-							},
-							"disable_members_indicator": schema.BoolAttribute{
-								Description: "Disable Members Indicator",
 								Computed:    true,
 							},
 							"disable_maker_match": schema.BoolAttribute{

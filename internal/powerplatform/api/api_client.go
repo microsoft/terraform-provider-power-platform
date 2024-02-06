@@ -35,16 +35,20 @@ func NewApiClientBase(config *config.ProviderConfig, baseAuth *Auth) *ApiClient 
 }
 
 func TryGetScopeFromURL(url string) (string, error) {
+	switch {
+	case strings.LastIndex(url, "api.bap.microsoft.com") != -1,
+		strings.LastIndex(url, "api.powerapps.com") != -1:
 
-	if inx := strings.LastIndex(url, "api.bap.microsoft.com") != -1; inx {
 		return "https://service.powerapps.com/.default", nil
-	} else if inx := strings.LastIndex(url, "api.powerplatform.com") != -1; inx {
+	case strings.LastIndex(url, "api.powerplatform.com") != -1:
+
 		return "https://api.powerplatform.com/.default", nil
-	} else if inx := strings.LastIndex(url, ".com/") != -1; inx {
+	case strings.LastIndex(url, ".com/") != -1:
+
 		scope := strings.SplitAfterN(url, ".com/", 2)[0]
 		scope = scope + ".default"
 		return scope, nil
-	} else {
+	default:
 		return "", errors.New("Unable to determine scope from url: '" + url + "'. Please provide your own scope.")
 	}
 }
@@ -88,6 +92,15 @@ func (client *ApiClient) Execute(ctx context.Context, method string, url string,
 	if !isStatusCodeValid {
 		return nil, fmt.Errorf("expected status code: %d, recieved: %d", acceptableStatusCodes, apiResponse.Response.StatusCode)
 	}
+
+	// filename := method + "|" + "|" + url + "|response"
+	// filename = strings.ReplaceAll(filename, "/", "_")
+	// filename = strings.ReplaceAll(filename, ":", "_")
+	// filename = strings.ReplaceAll(filename, "?", "_")
+	// filename = strings.ReplaceAll(filename, "&", "_")
+	// filename = strings.ReplaceAll(filename, "=", "_")
+	// filename = strings.ReplaceAll(filename, " ", "_")
+	// err = ioutil.WriteFile(filename+".json", apiResponse.BodyAsBytes, 0644)
 
 	if responseObj != nil {
 		err = apiResponse.MarshallTo(responseObj)

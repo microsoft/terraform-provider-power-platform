@@ -41,7 +41,6 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					  power_apps = {
 						disable_share_with_everyone              = false
 						enable_guests_to_make                    = false
-						disable_members_indicator                = false
 						disable_maker_match                      = false
 						disable_unused_license_assignment        = false
 						disable_create_from_image                = false
@@ -125,7 +124,6 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
@@ -186,7 +184,6 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					  power_apps = {
 						disable_share_with_everyone              = false
 						enable_guests_to_make                    = false
-						disable_members_indicator                = false
 						disable_maker_match                      = false
 						disable_unused_license_assignment        = false
 						disable_create_from_image                = false
@@ -270,7 +267,6 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
@@ -318,7 +314,6 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					  power_apps = {
 						disable_share_with_everyone              = true
 						enable_guests_to_make                    = true
-						disable_members_indicator                = true
 						disable_maker_match                      = true
 						disable_unused_license_assignment        = true
 						disable_create_from_image                = true
@@ -402,7 +397,6 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", "true"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "true"),
@@ -440,7 +434,6 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					  power_apps = {
 						disable_share_with_everyone              = false
 						enable_guests_to_make                    = false
-						disable_members_indicator                = false
 						disable_maker_match                      = false
 						disable_unused_license_assignment        = false
 						disable_create_from_image                = false
@@ -524,7 +517,6 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
@@ -590,7 +582,6 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					  power_apps = {
 						disable_share_with_everyone              = true
 						enable_guests_to_make                    = true
-						disable_members_indicator                = true
 						disable_maker_match                      = true
 						disable_unused_license_assignment        = true
 						disable_create_from_image                = true
@@ -674,7 +665,6 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", "true"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "true"),
@@ -712,7 +702,6 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					  power_apps = {
 						disable_share_with_everyone              = false
 						enable_guests_to_make                    = false
-						disable_members_indicator                = false
 						disable_maker_match                      = false
 						disable_unused_license_assignment        = false
 						disable_create_from_image                = false
@@ -796,7 +785,6 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),

@@ -188,13 +188,6 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 									boolplanmodifier.UseStateForUnknown(),
 								},
 							},
-							"disable_members_indicator": schema.BoolAttribute{
-								Description: "Disable Members Indicator",
-								Optional:    true, Computed: true,
-								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
-								},
-							},
 							"disable_maker_match": schema.BoolAttribute{
 								Description: "Disable Maker Match",
 								Optional:    true, Computed: true,

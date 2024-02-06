@@ -65,7 +65,7 @@ resource "powerplatform_environment" "development" {
 
 - `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
 - `domain` (String) Domain name of the environment
-- `template_metadata` (String) JSON representation of the environment deployment metadata
+- `template_metadata` (String) Additional D365 environment template metadata (if any)
 - `templates` (List of String) The selected instance provisioning template (if any)
 
 ### Read-Only
