@@ -41,7 +41,7 @@ provider "powerplatform" {
 
 var (
 	TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-		"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider()()),
+		"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider(context.Background())()),
 	}
 )
 
@@ -57,7 +57,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources(t *testing.T) {
 		licensing.NewBillingPoliciesDataSource(),
 		licensing.NewBillingPoliciesEnvironmetsDataSource(),
 	}
-	datasources := NewPowerPlatformProvider()().(*PowerPlatformProvider).DataSources(context.Background())
+	datasources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).DataSources(context.Background())
 
 	require.Equal(t, len(expectedDataSources), len(datasources), "There are an unexpected number of registered data sources")
 	for _, d := range datasources {
@@ -76,7 +76,7 @@ func TestUnitPowerPlatformProviderHasChildResources(t *testing.T) {
 		licensing.NewBillingPolicyResource(),
 		licensing.NewBillingPolicyEnvironmentResource(),
 	}
-	resources := NewPowerPlatformProvider()().(*PowerPlatformProvider).Resources(context.Background())
+	resources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).Resources(context.Background())
 
 	require.Equal(t, len(expectedResources), len(resources), "There are an unexpected number of registered resources")
 	for _, r := range resources {

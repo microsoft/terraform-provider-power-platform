@@ -53,5 +53,6 @@
         "transactioncurrencies",
         "uniquename",
         "unitedstates"
-    ]
+    ],
+    "window.autoDetectColorScheme": true
 }

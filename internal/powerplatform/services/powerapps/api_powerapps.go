@@ -10,17 +10,15 @@ import (
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 )
 
-func NewPowerAppssClient(bapi *api.BapiClientApi, dv *api.DataverseClientApi) PowerAppssClient {
+func NewPowerAppssClient(api *api.ApiClient) PowerAppssClient {
 	return PowerAppssClient{
-		bapiClient:        bapi,
-		dataverseClient:   dv,
-		environmentClient: environment.NewEnvironmentClient(bapi, dv),
+		Api:               api,
+		environmentClient: environment.NewEnvironmentClient(api),
 	}
 }
 
 type PowerAppssClient struct {
-	bapiClient        *api.BapiClientApi
-	dataverseClient   *api.DataverseClientApi
+	Api               *api.ApiClient
 	environmentClient environment.EnvironmentClient
 }
 
@@ -33,7 +31,7 @@ func (client *PowerAppssClient) GetPowerApps(ctx context.Context, environmentId 
 	for _, env := range envs {
 		apiUrl := &url.URL{
 			Scheme: "https",
-			Host:   client.bapiClient.GetConfig().Urls.PowerAppsUrl,
+			Host:   client.Api.GetConfig().Urls.PowerAppsUrl,
 			Path:   fmt.Sprintf("/providers/Microsoft.PowerApps/scopes/admin/environments/%s/apps", env.Name),
 		}
 		values := url.Values{}
@@ -41,7 +39,7 @@ func (client *PowerAppssClient) GetPowerApps(ctx context.Context, environmentId 
 		apiUrl.RawQuery = values.Encode()
 
 		appsArray := PowerAppDtoArray{}
-		_, err := client.bapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &appsArray)
+		_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &appsArray)
 		if err != nil {
 			return nil, err
 		}

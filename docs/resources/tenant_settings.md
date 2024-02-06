@@ -227,7 +227,6 @@ Optional:
 - `disable_create_from_figma` (Boolean) Disable Create From Figma
 - `disable_create_from_image` (Boolean) Disable Create From Image
 - `disable_maker_match` (Boolean) Disable Maker Match
-- `disable_members_indicator` (Boolean) Disable Members Indicator
 - `disable_share_with_everyone` (Boolean) Disable Share With Everyone
 - `disable_unused_license_assignment` (Boolean) Disable Unused License Assignment
 - `enable_guests_to_make` (Boolean) Enable Guests To Make

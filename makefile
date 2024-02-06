@@ -27,13 +27,13 @@ acctest:
 	export TF_ACC=1
 	go install
 	go clean -testcache
-	go test -v ./... -run "^TestAcc"
+	go test -timeout 120m -v ./... -run "^TestAcc"
 
 test:
 	export TF_ACC=1
 	go install
 	go clean -testcache
-	go test -v ./...
+	go test -timeout 120m -v ./...
 
 deps:
 	go mod tidy

@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 var (
@@ -228,7 +228,7 @@ func (d *DataLossPreventionPolicyDataSource) Configure(_ context.Context, req da
 		return
 	}
 
-	client := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
+	client := req.ProviderData.(*api.ProviderClient).Api
 
 	if client == nil {
 		resp.Diagnostics.AddError(

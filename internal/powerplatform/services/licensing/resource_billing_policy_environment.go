@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 var _ resource.Resource = &BillingPolicyEnvironmentResource{}
@@ -67,9 +67,9 @@ func (r *BillingPolicyEnvironmentResource) Configure(ctx context.Context, req re
 		return
 	}
 
-	clientBapi := req.ProviderData.(*clients.ProviderClient).PowerPlatformApi.Client
+	clientApi := req.ProviderData.(*api.ProviderClient).Api
 
-	if clientBapi == nil {
+	if clientApi == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
@@ -77,7 +77,7 @@ func (r *BillingPolicyEnvironmentResource) Configure(ctx context.Context, req re
 
 		return
 	}
-	r.LicensingClient = NewLicensingClient(clientBapi)
+	r.LicensingClient = NewLicensingClient(clientApi)
 }
 
 func (r *BillingPolicyEnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

@@ -49,7 +49,6 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 					language_code                             = "1033"
 					currency_code                           = "USD"
 					environment_type                          = "Sandbox"
-					domain = "` + envDomain + `"
 					security_group_id = "00000000-0000-0000-0000-000000000000"
 				}
 
@@ -204,12 +203,11 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 				Config: AcceptanceTestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
-					display_name                              = "TestAccSolutionResource_Settings_File"
+					display_name                              = "` + envDomain + `"
 					location                                  = "europe"
 					language_code                             = "1033"
 					currency_code                         = "USD"
 					environment_type                          = "Sandbox"
-					domain 									  = "` + envDomain + `"
 					security_group_id = "00000000-0000-0000-0000-000000000000"
 				}
 

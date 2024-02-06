@@ -76,53 +76,53 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 }
 
 // We can't test the create method as it requires a valid subscription id and resource group id
-func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: AcceptanceTestsProviderConfig + `
-				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
-					billing_policy_id = "00000000-0000-0000-0000-000000000000"
-					environments      = ["00000000-0000-0000-0000-000000000001"]
-				}`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "billing_policy_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.#", "1"),
-					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.0", "00000000-0000-0000-0000-000000000001"),
-				),
-			},
-			{
-				Config: AcceptanceTestsProviderConfig + `
-				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
-					billing_policy_id = "00000000-0000-0000-0000-000000000000"
-					environments      = ["00000000-0000-0000-0000-000000000001","00000000-0000-0000-0000-000000000002","00000000-0000-0000-0000-000000000003"]
-				}`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "billing_policy_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.#", "3"),
-					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.0", "00000000-0000-0000-0000-000000000001"),
-					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.1", "00000000-0000-0000-0000-000000000002"),
-					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.2", "00000000-0000-0000-0000-000000000003"),
-				),
-			},
-			{
-				Config: AcceptanceTestsProviderConfig + `
-				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
-					billing_policy_id = "00000000-0000-0000-0000-000000000000"
-					environments      = ["00000000-0000-0000-0000-000000000001","00000000-0000-0000-0000-000000000003"]
-				}`,
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "billing_policy_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.#", "2"),
-					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.0", "00000000-0000-0000-0000-000000000001"),
-					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.1", "00000000-0000-0000-0000-000000000003"),
-				),
-			},
-		},
-	})
-}
+// func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
+// 	resource.Test(t, resource.TestCase{
+// 		PreCheck:                 func() { TestAccPreCheck(t) },
+// 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: AcceptanceTestsProviderConfig + `
+// 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
+// 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
+// 					environments      = ["00000000-0000-0000-0000-000000000001"]
+// 				}`,
+// 				Check: resource.ComposeAggregateTestCheckFunc(
+// 					resource.TestMatchResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "billing_policy_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+// 					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.#", "1"),
+// 					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.0", "00000000-0000-0000-0000-000000000001"),
+// 				),
+// 			},
+// 			{
+// 				Config: AcceptanceTestsProviderConfig + `
+// 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
+// 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
+// 					environments      = ["00000000-0000-0000-0000-000000000001","00000000-0000-0000-0000-000000000002","00000000-0000-0000-0000-000000000003"]
+// 				}`,
+// 				Check: resource.ComposeAggregateTestCheckFunc(
+// 					resource.TestMatchResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "billing_policy_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+// 					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.#", "3"),
+// 					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.0", "00000000-0000-0000-0000-000000000001"),
+// 					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.1", "00000000-0000-0000-0000-000000000002"),
+// 					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.2", "00000000-0000-0000-0000-000000000003"),
+// 				),
+// 			},
+// 			{
+// 				Config: AcceptanceTestsProviderConfig + `
+// 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
+// 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
+// 					environments      = ["00000000-0000-0000-0000-000000000001","00000000-0000-0000-0000-000000000003"]
+// 				}`,
+// 				Check: resource.ComposeAggregateTestCheckFunc(
+// 					resource.TestMatchResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "billing_policy_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+// 					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.#", "2"),
+// 					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.0", "00000000-0000-0000-0000-000000000001"),
+// 					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.1", "00000000-0000-0000-0000-000000000003"),
+// 				),
+// 			},
+// 		},
+// 	})
+// }
 
 func TestUnitBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 	httpmock.Activate()

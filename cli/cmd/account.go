@@ -53,7 +53,7 @@ func handleAccountCommand(cmd *cobra.Command, args []string) {
 	}
 }
 
-func getAccessToken(ctx context.Context, cmd *cobra.Command, fileCache *common.AuthenticationCache) {
+func getAccessToken(ctx context.Context, cmd *cobra.Command, fileCache *common.FileCache) {
 	scope, err := cmd.Flags().GetString("scope")
 	if err != nil {
 		cmd.PrintErrf("Error: %s\n", err)
@@ -72,7 +72,7 @@ func getAccessToken(ctx context.Context, cmd *cobra.Command, fileCache *common.A
 	cmd.Println(authResult[0].AccessToken)
 }
 
-func setAuthenticatedAccount(ctx context.Context, cmd *cobra.Command, fileCache *common.AuthenticationCache) {
+func setAuthenticatedAccount(ctx context.Context, cmd *cobra.Command, fileCache *common.FileCache) {
 	setFlagValue, err := cmd.Flags().GetInt32("set")
 	if err != nil {
 		cmd.PrintErrf("Error: %s\n", err)
@@ -100,12 +100,12 @@ func setAuthenticatedAccount(ctx context.Context, cmd *cobra.Command, fileCache 
 	listAuthenticatedAccounts(ctx, cmd, fileCache)
 }
 
-func clearAuthenticatedAccounts(ctx context.Context, cmd *cobra.Command, fileCache *common.AuthenticationCache) {
+func clearAuthenticatedAccounts(ctx context.Context, cmd *cobra.Command, fileCache *common.FileCache) {
 	fileCache.DeleteFile(ctx)
 	cmd.Println("Authenticated accounts cleared.")
 }
 
-func listAuthenticatedAccounts(ctx context.Context, cmd *cobra.Command, fileCache *common.AuthenticationCache) {
+func listAuthenticatedAccounts(ctx context.Context, cmd *cobra.Command, fileCache *common.FileCache) {
 	accounts, err := fileCache.GetAccounts(ctx)
 	if err != nil {
 		cmd.PrintErrf("Error: %s\n", err)
