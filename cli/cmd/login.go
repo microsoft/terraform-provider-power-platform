@@ -26,7 +26,7 @@ Command: terraform-provider-power-platform login
   
   Log in with a user name and password. This does not work with accounts that have 
   multi-factor authentication (MFA) enabled"
-  terraform-provider-power-platform login --username johndoe@contoso.com --password p@ssw0rd
+  terraform-provider-power-platform login --user johndoe@contoso.com --password p@ssw0rd
  
   Login using device code. This is useful if you are not able to use the default 
   browser flow:
