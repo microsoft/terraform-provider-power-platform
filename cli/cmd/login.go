@@ -50,7 +50,7 @@ Command: terraform-provider-power-platform login
 			authResults, err = cli.DeviceCodeLogin(ctx, &tenantId, constants.REQUIRED_SCOPES, fileCache)
 
 		} else if cmd.Flag("user").Changed && cmd.Flag("password").Changed {
-			username := cmd.Flag("username").Value.String()
+			username := cmd.Flag("user").Value.String()
 			pass := cmd.Flag("password").Value.String()
 			authResults, err = cli.UserPassLogin(ctx, &tenantId, &username, &pass, constants.REQUIRED_SCOPES, fileCache)
 
