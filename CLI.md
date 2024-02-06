@@ -21,7 +21,7 @@ This is a CLI for the Terraform Power Platform Provider. It is used to authentic
 1. Logging with device code
 
     ```bash
-    terraform-provider-power-platform --tenant <tenantid> --use-device-code
+    terraform-provider-power-platform login --tenant <tenantid> --use-device-code
     ```
 
 ### Listing accounts saved in cache
