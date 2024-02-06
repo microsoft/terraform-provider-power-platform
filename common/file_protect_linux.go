@@ -6,6 +6,8 @@ package common
 import (
 	"os"
 	"path/filepath"
+
+	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 )
 
 // On non Windows platforms, we don't encrypt the cache file
@@ -17,7 +19,7 @@ func (pd *FileProtectData) GetOrCreateCacheFileDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	dir := filepath.Join(homedir, ".local/share/Microsoft/TerraformPowerPlatformProvider")
+	dir := filepath.Join(homedir, constants.CACHE_SAVE_FOLDER_PATH_LINUX)
 
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		os.MkdirAll(dir, 0700)

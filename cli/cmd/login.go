@@ -12,7 +12,7 @@ import (
 
 var loginCmd = &cobra.Command{
 	Use:       "login",
-	ValidArgs: []string{"tenant", "use-device-code", "username", "password"},
+	ValidArgs: []string{"tenant", "use-device-code", "user", "password"},
 	Short:     "Log in command for Microsoft Entra",
 	Long: `
 Command: terraform-provider-power-platform login
@@ -26,7 +26,7 @@ Command: terraform-provider-power-platform login
   
   Log in with a user name and password. This does not work with accounts that have 
   multi-factor authentication (MFA) enabled"
-  terraform-provider-power-platform login --username johndoe@contoso.com --password p@ssw0rd
+  terraform-provider-power-platform login --user johndoe@contoso.com --password p@ssw0rd
  
   Login using device code. This is useful if you are not able to use the default 
   browser flow:
@@ -35,7 +35,7 @@ Command: terraform-provider-power-platform login
   For all login options you can also specify the tenant ID.
   terraform-provider-power-platform login --tenant 00000000-0000-0000-0000-000000000000
   terraform-provider-power-platform login --tenant 00000000-0000-0000-0000-000000000000 
-  --username johndoe@contoso.com --password p@ssw0rd
+  --user johndoe@contoso.com --password p@ssw0rd
   terraform-provider-power-platform login --tenant 000000000-0000-0000-0000-000000000000 
   --use-device-code`,
 
@@ -49,8 +49,8 @@ Command: terraform-provider-power-platform login
 		if cmd.Flag("use-device-code").Changed {
 			authResults, err = cli.DeviceCodeLogin(ctx, &tenantId, constants.REQUIRED_SCOPES, fileCache)
 
-		} else if cmd.Flag("username").Changed && cmd.Flag("password").Changed {
-			username := cmd.Flag("username").Value.String()
+		} else if cmd.Flag("user").Changed && cmd.Flag("password").Changed {
+			username := cmd.Flag("user").Value.String()
 			pass := cmd.Flag("password").Value.String()
 			authResults, err = cli.UserPassLogin(ctx, &tenantId, &username, &pass, constants.REQUIRED_SCOPES, fileCache)
 
@@ -86,14 +86,14 @@ func setDefaultAccountIfNoneSet(ctx context.Context, account public.Account, fil
 func init() {
 	rootCmd.AddCommand(loginCmd)
 
-	loginCmd.Flags().StringP("password", "p", "", `Password to login. Flag 'username' is required 
+	loginCmd.Flags().StringP("password", "p", "", `Password to login. Flag 'user' is required 
 if you use this option.`)
 	loginCmd.Flags().StringP("tenant", "t", "", "The Microsoft Entra ID.")
 	loginCmd.Flags().BoolP("use-device-code", "d", false, `Flow based on device code. Use this if you are not able to use 
 the default browser flow.`)
-	loginCmd.Flags().StringP("username", "u", "", `User name to login. Use if format: 
-'username@domain.onmicrosoft.com' or 'username@domain'. 
+	loginCmd.Flags().StringP("user", "u", "", `User name to login. Use if format: 
+'user@domain.onmicrosoft.com' or 'username@domain'. 
 Flag 'password' is required if you use this option.`)
 
-	loginCmd.MarkFlagsRequiredTogether("username", "password")
+	loginCmd.MarkFlagsRequiredTogether("user", "password")
 }

@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"syscall"
 	"unsafe"
+
+	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 )
 
 const (
@@ -43,7 +45,7 @@ func (pd *FileProtectData) GetOrCreateCacheFileDir() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	dir := filepath.Join(appDataLocal, "Microsoft\\Terraform Power Platform Provider")
+	dir := filepath.Join(appDataLocal, constants.CACHE_SAVE_FOLDER_PATH_WINDOWS)
 
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		os.MkdirAll(dir, 0700)
