@@ -15,13 +15,13 @@ This is a CLI for the Terraform Power Platform Provider. It is used to authentic
 1. Logging using username/password
 
     ```bash
-    terraform-provider-power-platform --tenant <tenantid>  --user <username> --password <password>
+    terraform-provider-power-platform login --tenant <tenantid>  --user <username> --password <password>
     ```
 
 1. Logging with device code
 
     ```bash
-    terraform-provider-power-platform --tenant <tenantid> --use-device-code
+    terraform-provider-power-platform login --tenant <tenantid> --use-device-code
     ```
 
 ### Listing accounts saved in cache
