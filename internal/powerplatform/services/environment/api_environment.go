@@ -14,18 +14,16 @@ import (
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 )
 
-func NewEnvironmentClient(bapi *api.BapiClientApi, dv *api.DataverseClientApi) EnvironmentClient {
+func NewEnvironmentClient(api *api.ApiClient) EnvironmentClient {
 	return EnvironmentClient{
-		bapiClient:      bapi,
-		dataverseClient: dv,
-		solutionClient:  solution.NewSolutionClient(bapi, dv),
+		solutionClient: solution.NewSolutionClient(api),
+		Api:            api,
 	}
 }
 
 type EnvironmentClient struct {
-	bapiClient      *api.BapiClientApi
-	dataverseClient *api.DataverseClientApi
-	solutionClient  solution.SolutionClient
+	solutionClient solution.SolutionClient
+	Api            *api.ApiClient
 }
 
 func (client *EnvironmentClient) GetEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {
@@ -41,7 +39,7 @@ func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environment
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.bapiClient.GetConfig().Urls.BapiUrl,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
@@ -50,7 +48,7 @@ func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environment
 	apiUrl.RawQuery = values.Encode()
 
 	env := EnvironmentDto{}
-	_, err := client.bapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +63,7 @@ func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environment
 func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environmentId string) error {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.bapiClient.GetConfig().Urls.BapiUrl,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
@@ -77,14 +75,14 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 		Message: "Deleted using Terraform Provider for Power Platform",
 	}
 
-	response, err := client.bapiClient.Execute(ctx, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
+	response, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
 	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.Response.Status+"'")
 
 	tflog.Debug(ctx, "Waiting for environment deletion operation to complete")
-	_, err = client.bapiClient.DoWaitForLifecycleOperationStatus(ctx, response)
+	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, response)
 	if err != nil {
 		return err
 	}
@@ -95,13 +93,13 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.bapiClient.GetConfig().Urls.BapiUrl,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/environments",
 	}
 	values := url.Values{}
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
-	apiResponse, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), nil, environment, []int{http.StatusAccepted, http.StatusCreated}, nil)
+	apiResponse, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environment, []int{http.StatusAccepted, http.StatusCreated}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +109,7 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 	createdEnvironmentId := ""
 	if apiResponse.Response.StatusCode == http.StatusAccepted {
 
-		lifecycleResponse, err := client.bapiClient.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+		lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -145,14 +143,14 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.bapiClient.GetConfig().Urls.BapiUrl,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
 	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
 	values.Add("api-version", "2022-05-01")
 	apiUrl.RawQuery = values.Encode()
-	_, err := client.bapiClient.Execute(ctx, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
+	_, err := client.Api.Execute(ctx, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -189,7 +187,7 @@ func (client *EnvironmentClient) GetEnvironments(ctx context.Context) ([]Environ
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.bapiClient.GetConfig().Urls.BapiUrl,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments",
 	}
 	values := url.Values{}
@@ -198,7 +196,7 @@ func (client *EnvironmentClient) GetEnvironments(ctx context.Context) ([]Environ
 	apiUrl.RawQuery = values.Encode()
 
 	envArray := EnvironmentDtoArray{}
-	_, err := client.bapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &envArray)
+	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &envArray)
 	if err != nil {
 		return nil, err
 	}

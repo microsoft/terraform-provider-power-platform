@@ -8,20 +8,20 @@ import (
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
-func NewTenantSettingsClient(bapi *api.BapiClientApi) TenantSettingsClient {
+func NewTenantSettingsClient(api *api.ApiClient) TenantSettingsClient {
 	return TenantSettingsClient{
-		bapiClient: bapi,
+		Api: api,
 	}
 }
 
 type TenantSettingsClient struct {
-	bapiClient *api.BapiClientApi
+	Api *api.ApiClient
 }
 
 func (client *TenantSettingsClient) GetTenantSettings(ctx context.Context) (*TenantSettingsDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.bapiClient.GetConfig().Urls.BapiUrl,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/listTenantSettings",
 	}
 
@@ -30,7 +30,7 @@ func (client *TenantSettingsClient) GetTenantSettings(ctx context.Context) (*Ten
 	apiUrl.RawQuery = values.Encode()
 
 	tenantSettings := TenantSettingsDto{}
-	_, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), nil, nil, []int{http.StatusOK}, &tenantSettings)
+	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, nil, []int{http.StatusOK}, &tenantSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (client *TenantSettingsClient) GetTenantSettings(ctx context.Context) (*Ten
 func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, tenantSettings TenantSettingsDto) (*TenantSettingsDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.bapiClient.GetConfig().Urls.BapiUrl,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/updateTenantSettings",
 	}
 
@@ -48,7 +48,7 @@ func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, te
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), nil, tenantSettings, []int{http.StatusOK}, &tenantSettings)
+	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, tenantSettings, []int{http.StatusOK}, &tenantSettings)
 	if err != nil {
 		return nil, err
 	}

@@ -35,7 +35,6 @@ type PowerAutomateSettingsDto struct {
 type PowerAppsSettingsDto struct {
 	DisableShareWithEveryone             *bool `json:"disableShareWithEveryone,omitempty"`
 	EnableGuestsToMake                   *bool `json:"enableGuestsToMake,omitempty"`
-	DisableMembersIndicator              *bool `json:"disableMembersIndicator,omitempty"`
 	DisableMakerMatch                    *bool `json:"disableMakerMatch,omitempty"`
 	DisableUnusedLicenseAssignment       *bool `json:"disableUnusedLicenseAssignment,omitempty"`
 	DisableCreateFromImage               *bool `json:"disableCreateFromImage,omitempty"`
@@ -189,9 +188,6 @@ func ConvertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 		}
 		if !powerAppsSettings.EnableGuestsToMake.IsNull() && !powerAppsSettings.EnableGuestsToMake.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.PowerApps.EnableGuestsToMake = powerAppsSettings.EnableGuestsToMake.ValueBoolPointer()
-		}
-		if !powerAppsSettings.DisableMembersIndicator.IsNull() && !powerAppsSettings.DisableMembersIndicator.IsUnknown() {
-			tenantSettingsDto.PowerPlatform.PowerApps.DisableMembersIndicator = powerAppsSettings.DisableMembersIndicator.ValueBoolPointer()
 		}
 		if !powerAppsSettings.DisableMakerMatch.IsNull() && !powerAppsSettings.DisableMakerMatch.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.PowerApps.DisableMakerMatch = powerAppsSettings.DisableMakerMatch.ValueBoolPointer()
@@ -380,6 +376,7 @@ func ConvertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 }
 
 func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) TenantSettingsSourceModel {
+
 	tenantSettings := TenantSettingsSourceModel{
 		Id:                         types.StringValue(""),
 		WalkMeOptOut:               types.BoolValue(*tenantSettingsDto.WalkMeOptOut),
@@ -416,7 +413,6 @@ func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) TenantSet
 	attrTypesPowerAppsProperties := map[string]attr.Type{
 		"disable_share_with_everyone":              types.BoolType,
 		"enable_guests_to_make":                    types.BoolType,
-		"disable_members_indicator":                types.BoolType,
 		"disable_maker_match":                      types.BoolType,
 		"disable_unused_license_assignment":        types.BoolType,
 		"disable_create_from_image":                types.BoolType,
@@ -427,7 +423,6 @@ func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) TenantSet
 	attrValuesPowerAppsProperties := map[string]attr.Value{
 		"disable_share_with_everyone":              types.BoolValue(*tenantSettingsDto.PowerPlatform.PowerApps.DisableShareWithEveryone),
 		"enable_guests_to_make":                    types.BoolValue(*tenantSettingsDto.PowerPlatform.PowerApps.EnableGuestsToMake),
-		"disable_members_indicator":                types.BoolValue(*tenantSettingsDto.PowerPlatform.PowerApps.DisableMembersIndicator),
 		"disable_maker_match":                      types.BoolValue(*tenantSettingsDto.PowerPlatform.PowerApps.DisableMakerMatch),
 		"disable_unused_license_assignment":        types.BoolValue(*tenantSettingsDto.PowerPlatform.PowerApps.DisableUnusedLicenseAssignment),
 		"disable_create_from_image":                types.BoolValue(*tenantSettingsDto.PowerPlatform.PowerApps.DisableCreateFromImage),

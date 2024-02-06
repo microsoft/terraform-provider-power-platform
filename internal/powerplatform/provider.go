@@ -10,10 +10,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-
-	clients "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
-	common "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/common"
+	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
@@ -28,52 +27,28 @@ import (
 var _ provider.Provider = &PowerPlatformProvider{}
 
 type PowerPlatformProvider struct {
-	Config           *common.ProviderConfig
-	BapiApi          *clients.BapiClient
-	DataverseApi     *clients.DataverseClient
-	PowerPlatformApi *clients.PowerPlatformApiClient
+	Config *config.ProviderConfig
+	Api    *api.ApiClient
 }
 
-func NewPowerPlatformProvider() func() provider.Provider {
+func NewPowerPlatformProvider(ctx context.Context) func() provider.Provider {
 	return func() provider.Provider {
-
-		cred := common.ProviderCredentials{}
-		config := common.ProviderConfig{
+		cred := config.ProviderCredentials{}
+		config := config.ProviderConfig{
 			Credentials: &cred,
-			Urls: common.ProviderConfigUrls{
+			Urls: config.ProviderConfigUrls{
 				BapiUrl:          "api.bap.microsoft.com",
 				PowerAppsUrl:     "api.powerapps.com",
 				PowerPlatformUrl: "api.powerplatform.com",
 			},
 		}
 
-		baseAuthBapi := api.NewAuthBase(&config)
-		bapiAuth := api.NewBapiAuth(baseAuthBapi)
-		baseApiForBapi := api.NewApiClientBase(&config, baseAuthBapi)
-		bapiClientApi := api.NewBapiClientApi(baseApiForBapi, bapiAuth, nil)
-		bapiClient := clients.NewBapiClient(bapiAuth, bapiClientApi)
-
-		baseAuthPowerPlatform := api.NewAuthBase(&config)
-		powerplatformAuth := api.NewPowerPlatformAuth(baseAuthPowerPlatform)
-		baseApiForPpApi := api.NewApiClientBase(&config, baseAuthPowerPlatform)
-		powerplatformClientApi := api.NewPowerPlatformClientApi(baseApiForPpApi, powerplatformAuth)
-		powerplatformClient := clients.NewPowerPlatformApiClient(powerplatformAuth, powerplatformClientApi)
-
-		baseAuthDataverse := api.NewAuthBase(&config)
-		dataverseAuth := api.NewDataverseAuth(baseAuthDataverse)
-		baseApiForDataverse := api.NewApiClientBase(&config, baseAuthDataverse)
-		dataverseClientApi := api.NewDataverseClientApi(baseApiForDataverse, dataverseAuth)
-		dataverseClient := clients.NewDataverseClient(dataverseAuth, dataverseClientApi)
-
-		bapiClient.Client.SetDataverseClient(dataverseClient.Client)
-		dataverseClient.Client.SetBapiClient(bapiClient.Client)
-
 		p := &PowerPlatformProvider{
-			Config:           &config,
-			BapiApi:          bapiClient,
-			DataverseApi:     dataverseClient,
-			PowerPlatformApi: powerplatformClient,
+			Config: &config,
+			Api:    api.NewApiClientBase(&config, api.NewAuthBase(&config)),
 		}
+		p.Api.BaseAuth.InitializeRequiredScopes(ctx, constants.REQUIRED_SCOPES)
+
 		return p
 	}
 }
@@ -90,6 +65,11 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 		Description:         "The Power Platform Terraform Provider allows managing environments and other resources within Power Platform",
 		MarkdownDescription: "The Power Platform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/)",
 		Attributes: map[string]schema.Attribute{
+			"use_cli": schema.BoolAttribute{
+				Description:         "Flag to indicate whether to use the CLI for authentication",
+				MarkdownDescription: "Flag to indicate whether to use the CLI for authentication. ",
+				Optional:            true,
+			},
 			"tenant_id": schema.StringAttribute{
 				Description:         "The id of the AAD tenant that Power Platform API uses to authenticate with",
 				MarkdownDescription: "The id of the AAD tenant that Power Platform API uses to authenticate with",
@@ -123,7 +103,7 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 }
 
 func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	var config common.ProviderCredentialsModel
+	var config config.ProviderCredentialsModel
 
 	tflog.Debug(ctx, "Configure request received")
 
@@ -173,6 +153,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		secret = config.Secret.ValueString()
 	}
 
+	ctx = tflog.SetField(ctx, "use_cli", config.UseCli.ValueBool())
 	ctx = tflog.SetField(ctx, "power_platform_tenant_id", tenantId)
 	ctx = tflog.SetField(ctx, "power_platform_username", username)
 	ctx = tflog.SetField(ctx, "power_platform_password", password)
@@ -181,62 +162,65 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	ctx = tflog.SetField(ctx, "power_platform_secret", secret)
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_secret")
 
-	if clientId != "" && secret != "" && tenantId != "" {
-		p.Config.Credentials.TenantId = tenantId
-		p.Config.Credentials.ClientId = clientId
-		p.Config.Credentials.Secret = secret
-	} else if username != "" && password != "" && tenantId != "" {
-		p.Config.Credentials.TenantId = tenantId
-		p.Config.Credentials.Username = username
-		p.Config.Credentials.Password = password
+	if config.UseCli.ValueBool() {
+		p.Config.Credentials.UseCli = true
 	} else {
-		if tenantId == "" {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("tenant_id"),
-				"Unknown API tenant id",
-				"The provider cannot create the API client as there is an unknown configuration value for the tenant id. "+
-					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_TENANT_ID environment variable.",
-			)
-		}
-		if username == "" {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("username"),
-				"Unknown username",
-				"The provider cannot create the API client as there is an unknown configuration value for the username. "+
-					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_USERNAME environment variable.",
-			)
-		}
-		if password == "" {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("password"),
-				"Unknown password",
-				"The provider cannot create the API client as there is an unknown configuration value for the password. "+
-					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_PASSWORD environment variable.",
-			)
-		}
-		if clientId == "" {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("client_id"),
-				"Unknown client id",
-				"The provider cannot create the API client as there is an unknown configuration value for the client id. "+
-					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_CLIENT_ID environment variable.",
-			)
-		}
-		if secret == "" {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("secret"),
-				"Unknown secret",
-				"The provider cannot create the API client as there is an unknown configuration value for the secret. "+
-					"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_SECRET environment variable.",
-			)
+
+		if clientId != "" && secret != "" && tenantId != "" {
+			p.Config.Credentials.TenantId = tenantId
+			p.Config.Credentials.ClientId = clientId
+			p.Config.Credentials.Secret = secret
+		} else if username != "" && password != "" && tenantId != "" {
+			p.Config.Credentials.TenantId = tenantId
+			p.Config.Credentials.Username = username
+			p.Config.Credentials.Password = password
+		} else {
+			if tenantId == "" {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("tenant_id"),
+					"Unknown API tenant id",
+					"The provider cannot create the API client as there is an unknown configuration value for the tenant id. "+
+						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_TENANT_ID environment variable.",
+				)
+			}
+			if username == "" {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("username"),
+					"Unknown username",
+					"The provider cannot create the API client as there is an unknown configuration value for the username. "+
+						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_USERNAME environment variable.",
+				)
+			}
+			if password == "" {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("password"),
+					"Unknown password",
+					"The provider cannot create the API client as there is an unknown configuration value for the password. "+
+						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_PASSWORD environment variable.",
+				)
+			}
+			if clientId == "" {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("client_id"),
+					"Unknown client id",
+					"The provider cannot create the API client as there is an unknown configuration value for the client id. "+
+						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_CLIENT_ID environment variable.",
+				)
+			}
+			if secret == "" {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("secret"),
+					"Unknown secret",
+					"The provider cannot create the API client as there is an unknown configuration value for the secret. "+
+						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_SECRET environment variable.",
+				)
+			}
 		}
 	}
 
-	providerClient := clients.ProviderClient{
-		Config:           p.Config,
-		BapiApi:          p.BapiApi,
-		DataverseApi:     p.DataverseApi,
-		PowerPlatformApi: p.PowerPlatformApi,
+	providerClient := api.ProviderClient{
+		Config: p.Config,
+		Api:    p.Api,
 	}
 	resp.DataSourceData = &providerClient
 	resp.ResourceData = &providerClient

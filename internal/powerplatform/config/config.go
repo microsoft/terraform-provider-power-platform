@@ -1,4 +1,4 @@
-package powerplatform_common
+package powerplatform_config
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -16,6 +16,8 @@ type ProviderConfigUrls struct {
 }
 
 type ProviderCredentials struct {
+	UseCli bool
+
 	TenantId string
 	ClientId string
 	Secret   string
@@ -25,6 +27,8 @@ type ProviderCredentials struct {
 }
 
 type ProviderCredentialsModel struct {
+	UseCli types.Bool `tfsdk:"use_cli"`
+
 	TenantId types.String `tfsdk:"tenant_id"`
 	ClientId types.String `tfsdk:"client_id"`
 	Secret   types.String `tfsdk:"secret"`
@@ -39,4 +43,8 @@ func (model *ProviderCredentials) IsUserPassCredentialsProvided() bool {
 
 func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {
 	return model.ClientId != "" && model.Secret != "" && model.TenantId != ""
+}
+
+func (model *ProviderCredentials) IsCliProvided() bool {
+	return model.UseCli
 }
