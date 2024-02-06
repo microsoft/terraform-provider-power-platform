@@ -12,7 +12,7 @@ import (
 
 var loginCmd = &cobra.Command{
 	Use:       "login",
-	ValidArgs: []string{"tenant", "use-device-code", "username", "password"},
+	ValidArgs: []string{"tenant", "use-device-code", "user", "password"},
 	Short:     "Log in command for Microsoft Entra",
 	Long: `
 Command: terraform-provider-power-platform login
