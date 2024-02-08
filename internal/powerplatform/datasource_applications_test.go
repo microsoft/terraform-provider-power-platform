@@ -17,7 +17,7 @@ func TestAccApplicationsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: AcceptanceTestsProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name      = "env_application_acceptance_test"
 					location          = "europe"
@@ -66,7 +66,7 @@ func TestUnitApplicationsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				data "powerplatform_applications" "all_applications" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 				}`,

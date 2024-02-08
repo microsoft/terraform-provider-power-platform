@@ -60,7 +60,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
 					environments      = ["00000000-0000-0000-0000-000000000001"]
@@ -153,7 +153,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
 					environments      = ["00000000-0000-0000-0000-000000000001"]
@@ -165,7 +165,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
 					environments      = ["00000000-0000-0000-0000-000000000001","00000000-0000-0000-0000-000000000002","00000000-0000-0000-0000-000000000003"]
@@ -179,7 +179,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: UnitTestsProviderConfig + `
 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
 					environments      = ["00000000-0000-0000-0000-000000000001","00000000-0000-0000-0000-000000000003"]
