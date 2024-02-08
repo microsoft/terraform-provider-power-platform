@@ -80,7 +80,7 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				MarkdownDescription: "The client id of the Power Platform API app registration",
 				Optional:            true,
 			},
-			"secret": schema.StringAttribute{
+			"client_secret": schema.StringAttribute{
 				Description:         "The secret of the Power Platform API app registration",
 				MarkdownDescription: "The secret of the Power Platform API app registration",
 				Optional:            true,
@@ -117,29 +117,29 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		clientId = config.ClientId.ValueString()
 	}
 
-	secret := ""
-	envSecret := os.Getenv("POWER_PLATFORM_SECRET")
-	if config.Secret.IsNull() {
-		secret = envSecret
+	clientSecret := ""
+	envSecret := os.Getenv("POWER_PLATFORM_CLIENT_SECRET")
+	if config.ClientSecret.IsNull() {
+		clientSecret = envSecret
 	} else {
-		secret = config.Secret.ValueString()
+		clientSecret = config.ClientSecret.ValueString()
 	}
 
 	ctx = tflog.SetField(ctx, "use_cli", config.UseCli.ValueBool())
 	ctx = tflog.SetField(ctx, "power_platform_tenant_id", tenantId)
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_password")
 	ctx = tflog.SetField(ctx, "power_platform_client_id", clientId)
-	ctx = tflog.SetField(ctx, "power_platform_secret", secret)
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_secret")
+	ctx = tflog.SetField(ctx, "power_platform_client_secret", clientSecret)
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_client_secret")
 
 	if config.UseCli.ValueBool() {
 		p.Config.Credentials.UseCli = true
 	} else {
 
-		if clientId != "" && secret != "" && tenantId != "" {
+		if clientId != "" && clientSecret != "" && tenantId != "" {
 			p.Config.Credentials.TenantId = tenantId
 			p.Config.Credentials.ClientId = clientId
-			p.Config.Credentials.Secret = secret
+			p.Config.Credentials.ClientSecret = clientSecret
 		} else {
 			if tenantId == "" {
 				resp.Diagnostics.AddAttributeError(
@@ -157,12 +157,12 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_CLIENT_ID environment variable.",
 				)
 			}
-			if secret == "" {
+			if clientSecret == "" {
 				resp.Diagnostics.AddAttributeError(
-					path.Root("secret"),
-					"Unknown secret",
-					"The provider cannot create the API client as there is an unknown configuration value for the secret. "+
-						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_SECRET environment variable.",
+					path.Root("client_secret"),
+					"Unknown client secret",
+					"The provider cannot create the API client as there is an unknown configuration value for the client secret. "+
+						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_CLIENT_SECRET environment variable.",
 				)
 			}
 		}

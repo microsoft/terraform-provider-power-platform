@@ -3,7 +3,7 @@ variable "client_id" {
   type        = string
 }
 
-variable "secret" {
+variable "client_secret" {
   description = "The secret of the service principal with Power Platform admin permissions"
   sensitive   = true
   type        = string

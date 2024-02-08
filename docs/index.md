@@ -21,9 +21,9 @@ This provider requires **Terraform >= 0.12**.  For more information on provider 
 To use the provider you can download the binaries from [Releases](https://github.com/microsoft/terraform-provider-power-platform/releases) to your local file system and configure Terraform to use your local mirror.  See the [Explicit Installation Method Configuration](https://developer.hashicorp.com/terraform/cli/config/config-file#explicit-installation-method-configuration) for more information about using local binaries.
 
 ```terraform
-provider_installation  {
+provider_installation {
   filesystem_mirror {
-    path = "/usr/share/terraform/providers"
+    path    = "/usr/share/terraform/providers"
     include = ["registry.terraform.io/microsoft/power-platform"]
   }
 }
@@ -46,9 +46,9 @@ You can find more information on how to do this in the following articles:
 ```terraform
 # Configure the Power Platform Provider using a service principal
 provider "powerplatform" {
-  client_id = var.client_id
-  secret    = var.secret
-  tenant_id = var.tenant_id
+  client_id     = var.client_id
+  client_secret = var.client_secret
+  tenant_id     = var.tenant_id
 }
 ```
 

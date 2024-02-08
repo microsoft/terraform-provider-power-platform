@@ -23,9 +23,9 @@ terraform {
 }
 
 provider "powerplatform" {
-  client_id = var.client_id
-  secret    = var.secret
-  tenant_id = var.tenant_id
+  client_id     = var.client_id
+  client_secret = var.client_secret
+  tenant_id     = var.tenant_id
 }
 
 data "powerplatform_environments" "all_environments" {}
@@ -46,7 +46,7 @@ locals {
 
 resource "powerplatform_application" "install_sample_application" {
   environment_id = data.powerplatform_environments.all_environments.environments[0].id
-  unique_name = data.powerplatform_applications.application_to_install.applications[0].unique_name
+  unique_name    = data.powerplatform_applications.application_to_install.applications[0].unique_name
 }
 ```
 

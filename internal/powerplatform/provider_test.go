@@ -31,10 +31,8 @@ provider "powerplatform" {
 	UnitTestsProviderConfig = `
 provider "powerplatform" {
 	tenant_id = "_"
-	username = "_"
-	password = "_"
 	client_id = "_"
-	secret = "_"
+	client_secret = "_"
 }
 `
 )

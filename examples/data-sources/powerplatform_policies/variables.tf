@@ -8,7 +8,7 @@ variable "client_id" {
   description = "The client id of the AAD application"
   type        = string
 }
-variable "secret" {
+variable "client_secret" {
   default     = "<my_secret>"
   description = "The secret of the AAD application"
   type        = string

@@ -18,24 +18,21 @@ type ProviderConfigUrls struct {
 type ProviderCredentials struct {
 	UseCli bool
 
-	TenantId string
-	ClientId string
-	Secret   string
-
-	Username string
-	Password string
+	TenantId     string
+	ClientId     string
+	ClientSecret string
 }
 
 type ProviderCredentialsModel struct {
 	UseCli types.Bool `tfsdk:"use_cli"`
 
-	TenantId types.String `tfsdk:"tenant_id"`
-	ClientId types.String `tfsdk:"client_id"`
-	Secret   types.String `tfsdk:"secret"`
+	TenantId     types.String `tfsdk:"tenant_id"`
+	ClientId     types.String `tfsdk:"client_id"`
+	ClientSecret types.String `tfsdk:"client_secret"`
 }
 
 func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {
-	return model.ClientId != "" && model.Secret != "" && model.TenantId != ""
+	return model.ClientId != "" && model.ClientSecret != "" && model.TenantId != ""
 }
 
 func (model *ProviderCredentials) IsCliProvided() bool {

@@ -3,7 +3,7 @@ variable "client_id" {
   type        = string
 
 }
-variable "secret" {
+variable "client_secret" {
   description = "The password of the Power Platform API user"
   sensitive   = true
   type        = string
