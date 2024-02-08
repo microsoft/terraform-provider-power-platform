@@ -8,6 +8,10 @@ import (
 )
 
 func CalculateMd5(filePath string) (string, error) {
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		//we return empty Md5 value if the file does not exist yet
+		return "", nil
+	}
 
 	file, err := os.Open(filePath)
 	if err != nil {

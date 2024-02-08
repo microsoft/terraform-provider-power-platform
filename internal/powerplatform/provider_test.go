@@ -26,13 +26,12 @@ const (
 	// It is also possible to use the POWER_PLATFORM_ environment variables instead.
 	AcceptanceTestsProviderConfig = `
 provider "powerplatform" {
+	use_cli = true
 }
 `
 	UnitTestsProviderConfig = `
 provider "powerplatform" {
-	tenant_id = "_"
-	client_id = "_"
-	client_secret = "_"
+	use_cli = true
 }
 `
 )
