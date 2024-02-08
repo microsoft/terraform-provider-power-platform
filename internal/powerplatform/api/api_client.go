@@ -92,16 +92,6 @@ func (client *ApiClient) Execute(ctx context.Context, method string, url string,
 	if !isStatusCodeValid {
 		return nil, fmt.Errorf("expected status code: %d, recieved: %d", acceptableStatusCodes, apiResponse.Response.StatusCode)
 	}
-
-	// filename := method + "|" + "|" + url + "|response"
-	// filename = strings.ReplaceAll(filename, "/", "_")
-	// filename = strings.ReplaceAll(filename, ":", "_")
-	// filename = strings.ReplaceAll(filename, "?", "_")
-	// filename = strings.ReplaceAll(filename, "&", "_")
-	// filename = strings.ReplaceAll(filename, "=", "_")
-	// filename = strings.ReplaceAll(filename, " ", "_")
-	// err = ioutil.WriteFile(filename+".json", apiResponse.BodyAsBytes, 0644)
-
 	if responseObj != nil {
 		err = apiResponse.MarshallTo(responseObj)
 		if err != nil {
