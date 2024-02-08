@@ -37,9 +37,9 @@ func NewPowerPlatformProvider(ctx context.Context) func() provider.Provider {
 		config := config.ProviderConfig{
 			Credentials: &cred,
 			Urls: config.ProviderConfigUrls{
-				BapiUrl:          "api.bap.microsoft.com",
-				PowerAppsUrl:     "api.powerapps.com",
-				PowerPlatformUrl: "api.powerplatform.com",
+				BapiUrl:          constants.BAPI_DOMAIN,
+				PowerAppsUrl:     constants.POWERAPPS_API_DOMAIN,
+				PowerPlatformUrl: constants.POWERPLATFORM_API_DOMAIN,
 			},
 		}
 
@@ -47,8 +47,6 @@ func NewPowerPlatformProvider(ctx context.Context) func() provider.Provider {
 			Config: &config,
 			Api:    api.NewApiClientBase(&config, api.NewAuthBase(&config)),
 		}
-		p.Api.BaseAuth.InitializeRequiredScopes(ctx, constants.REQUIRED_SCOPES)
-
 		return p
 	}
 }

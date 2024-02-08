@@ -59,7 +59,7 @@ func (client *ApiClient) Execute(ctx context.Context, method string, url string,
 		return nil, err
 	}
 
-	token, err := client.BaseAuth.GetTokenForScope(ctx, scope)
+	token, err := client.BaseAuth.GetTokenForScopes(ctx, []string{scope})
 	if err != nil {
 		return nil, err
 	}
