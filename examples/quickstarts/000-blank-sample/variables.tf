@@ -1,18 +1,14 @@
 variable "client_id" {
-  description = "The username of the Power Platform API in user@domain format"
+  description = "The client ID of the of the service principal"
   type        = string
-
 
 }
 variable "client_secret" {
-  description = "The password of the Power Platform API user"
+  description = "The client secret of the service principal"
   sensitive   = true
   type        = string
-  default     = null
-
 }
 variable "tenant_id" {
-  description = "The AAD tenant id of service principal or user"
+  description = "The tenant id of the AAD tenant"
   type        = string
-
 }

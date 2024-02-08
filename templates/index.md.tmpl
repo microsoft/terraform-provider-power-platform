@@ -44,15 +44,6 @@ export TF_VAR_secret=<secret>
 export TF_VAR_tenant_id=<tenant_id>
 ```
 
-### Using Username and Password
-
-{{ tffile "examples/provider/provider_user.tf" }}
-
-```bash
-export TF_VAR_username=<username>
-export TF_VAR_password=<password>
-export TF_VAR_tenant_id=<tenant_id>
-```
 ###  Creating a "secret.tfvars" file to store your credentials
 
 Alternatively you can create a "secret.tfvars" file and execute the "terraform plan" command specifying a local variables file:
@@ -79,12 +70,9 @@ In addition to the variables that are passed into the provider, there are a few 
 
 | Name | Description | Default Value |
 |------|-------------|---------------|
-| `POWER_PLATFORM_USERNAME` | The username to use for authentication. | |
-| `POWER_PLATFORM_PASSWORD` | The password to use for authentication. | |
 | `POWER_PLATFORM_CLIENT_ID` | The service principal client id | |
-| `POWER_PLATFORM_SECRET` | The service principal secret | |
+| `POWER_PLATFORM_CLIENT_SECRET` | The service principal secret | |
 | `POWER_PLATFORM_TENANT_ID` | The guid of the tenant | |
-| `POWER_PLATFORM_HOST` | The API endpoint used for managing Power Platform resources | |
 
 Variables passed into the provider will override the environment variables.
 

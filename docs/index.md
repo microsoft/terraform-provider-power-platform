@@ -54,27 +54,11 @@ provider "powerplatform" {
 
 ```bash
 export TF_VAR_client_id=<client_id>
-export TF_VAR_secret=<secret>
+export TF_VAR_client_secret=<client_secret>
 export TF_VAR_tenant_id=<tenant_id>
 ```
 
-### Using Username and Password
-
-```terraform
-# Configure the Power Platform Provider using username/password
-provider "powerplatform" {
-  username  = var.username
-  password  = var.password
-  tenant_id = var.tenant_id
-}
-```
-
-```bash
-export TF_VAR_username=<username>
-export TF_VAR_password=<password>
-export TF_VAR_tenant_id=<tenant_id>
-```
-###  Creating a "secret.tfvars" file to store your credentials
+### Creating a "secret.tfvars" file to store your credentials
 
 Alternatively you can create a "secret.tfvars" file and execute the "terraform plan" command specifying a local variables file:
 
@@ -82,13 +66,14 @@ Alternatively you can create a "secret.tfvars" file and execute the "terraform p
 # terraform plan command pointing to a secret.tfvars
 terraform plan -var-file="secret.tfvars"
 ```
+
 Below you will find an example of how to create your "secret.tfvars" file, remember to specify the correct path of it when executing.
 We include "*.tfvars" in .gitignore to avoid save the secrets in it repository.
 
 ```bash
 # sample "secret.tfvars" values
 client_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-secret    = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+client_secret    = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 tenant_id = "XXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 ```
 
@@ -100,12 +85,9 @@ In addition to the variables that are passed into the provider, there are a few 
 
 | Name | Description | Default Value |
 |------|-------------|---------------|
-| `POWER_PLATFORM_USERNAME` | The username to use for authentication. | |
-| `POWER_PLATFORM_PASSWORD` | The password to use for authentication. | |
 | `POWER_PLATFORM_CLIENT_ID` | The service principal client id | |
-| `POWER_PLATFORM_SECRET` | The service principal secret | |
+| `POWER_PLATFORM_CLIENT_SECRET` | The service principal secret | |
 | `POWER_PLATFORM_TENANT_ID` | The guid of the tenant | |
-| `POWER_PLATFORM_HOST` | The API endpoint used for managing Power Platform resources | |
 
 Variables passed into the provider will override the environment variables.
 

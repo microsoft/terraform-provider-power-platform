@@ -7,9 +7,9 @@ terraform {
   }
 }
 provider "powerplatform" {
-  username  = var.username
-  password  = var.password
-  tenant_id = var.tenant_id
+  client_id     = var.client_id
+  client_secret = var.client_secret
+  tenant_id     = var.tenant_id
 }
 data "powerplatform_connectors" "all_connectors" {}
 

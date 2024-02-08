@@ -12,9 +12,9 @@ terraform {
 }
 
 provider "powerplatform" {
-  username  = var.username
-  password  = var.password
-  tenant_id = var.tenant_id
+  client_id     = var.client_id
+  client_secret = var.client_secret
+  tenant_id     = var.tenant_id
 }
 
 provider "local" {}
@@ -60,8 +60,8 @@ resource "powerplatform_environment" "environment" {
 
 resource "powerplatform_solution" "solution" {
   environment_id = powerplatform_environment.environment.id
-  solution_file    = "${path.module}/${var.solution_name}_Complex_1_1_0_0.zip"
-  solution_name    = var.solution_name
-  settings_file    = local_file.solution_settings_file.filename
+  solution_file  = "${path.module}/${var.solution_name}_Complex_1_1_0_0.zip"
+  solution_name  = var.solution_name
+  settings_file  = local_file.solution_settings_file.filename
   //settings_file  = "${path.module}/solution_settings_static.json"
 }

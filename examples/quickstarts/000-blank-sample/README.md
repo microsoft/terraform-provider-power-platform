@@ -13,21 +13,22 @@ This Terraform module aims to provide a fully managed infrastructure that integr
 
 The example files can be found in `examples/quickstarts/000-blank-sample`
 
-## Terraform Version Constraints:
+## Terraform Version Constraints
+
 * `>= 1.5`
 
-## Provider Requirements:
+## Provider Requirements
+
 * **azurerm (`hashicorp/azurerm`):** (any version)
-* **powerplatform (`microsoft/power-platform`):** (any version)
+- **powerplatform (`microsoft/power-platform`):** (any version)
 
 ## Input Variables
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | `client_id` | The username of the Power Platform API in user@domain format | string | `null` | true |
-| `secret` | The password of the Power Platform API user | string | `null` | false |
+| `client_secret` | The client secret of the Power Platform API user | string | `null` | false |
 | `tenant_id` | The AAD tenant id of service principal or user | string | `null` | true |
-
 
 ## Output Values
 
@@ -37,14 +38,13 @@ The example files can be found in `examples/quickstarts/000-blank-sample`
 | `name` | Display name of the environment |
 | `url` | URL of the environment |
 
-
-
 ## Resources
+
 * `powerplatform_environment.development` from `powerplatform`
 
 ## Data Sources
-* `data.powerplatform_connectors.all_connectors` from `powerplatform`
 
+* `data.powerplatform_connectors.all_connectors` from `powerplatform`
 
 ## Usage
 
