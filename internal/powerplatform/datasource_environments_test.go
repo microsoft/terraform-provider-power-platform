@@ -17,7 +17,7 @@ func TestAccEnvironmentsDataSource(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_environments" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -70,7 +70,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_environments" "all" {}`,
 
 				Check: resource.ComposeTestCheckFunc(

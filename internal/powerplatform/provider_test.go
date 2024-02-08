@@ -21,15 +21,10 @@ import (
 )
 
 const (
-	// AcceptanceTestsProviderConfig is a shared configuration to combine with the actual
+	// TestsProviderConfig is a shared configuration to combine with the actual
 	// test configuration so the Power Platform client is properly configured.
 	// It is also possible to use the POWER_PLATFORM_ environment variables instead.
-	AcceptanceTestsProviderConfig = `
-provider "powerplatform" {
-	use_cli = true
-}
-`
-	UnitTestsProviderConfig = `
+	TestsProviderConfig = `
 provider "powerplatform" {
 	use_cli = true
 }

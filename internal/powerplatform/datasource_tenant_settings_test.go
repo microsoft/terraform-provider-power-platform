@@ -17,7 +17,7 @@ func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_tenant_settings" "settings" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -85,7 +85,7 @@ func TestUnitTestTenantSettingsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_tenant_settings" "settings" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

@@ -21,7 +21,7 @@ func TestAccApplicationResource_Validate_Install(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + envDisplayName + `"
 					location                                  = "europe"
@@ -90,7 +90,7 @@ func TestUnitApplicationResource_Validate_Install(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_application" "development" {
 					environment_id   = "00000000-0000-0000-0000-000000000000"
 					unique_name      = "ProcessMiningAnchor"
@@ -103,7 +103,7 @@ func TestUnitApplicationResource_Validate_Install(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_application" "development" {
 					environment_id   = "00000000-0000-0000-0000-000000000000"
 					unique_name      = "MicrosoftFormsPro"

@@ -41,7 +41,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + envDomain + `"
@@ -123,7 +123,7 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -200,7 +200,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + envDomain + `"
@@ -282,7 +282,7 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -360,7 +360,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 		
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -375,7 +375,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -391,7 +391,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -407,7 +407,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
