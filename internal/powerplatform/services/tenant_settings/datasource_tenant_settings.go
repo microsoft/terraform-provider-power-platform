@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -164,7 +165,7 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 
 	state = ConvertFromTenantSettingsDto(*tenantSettings)
-	state.Id = types.StringValue(d.TenantSettingsClient.Api.GetConfig().Credentials.TenantId)
+	state.Id = types.StringValue(uuid.New().String())
 
 	diags := resp.State.Set(ctx, &state)
 

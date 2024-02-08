@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -506,7 +507,7 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 	}
 
 	plan = ConvertFromTenantSettingsDto(*tenantSettings)
-	plan.Id = types.StringValue(r.TenantSettingClient.Api.GetConfig().Credentials.TenantId)
+	plan.Id = types.StringValue(uuid.New().String())
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -533,7 +534,7 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	state = ConvertFromTenantSettingsDto(*tenantSettings)
-	state.Id = types.StringValue(r.TenantSettingClient.Api.GetConfig().Credentials.TenantId)
+	state.Id = types.StringValue(uuid.New().String())
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
 
