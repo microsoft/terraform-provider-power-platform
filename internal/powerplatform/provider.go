@@ -86,18 +86,6 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				Optional:            true,
 				Sensitive:           true,
 			},
-
-			"username": schema.StringAttribute{
-				Description:         "The username of the Power Platform API in user@domain format",
-				MarkdownDescription: "The username of the Power Platform API in user@domain format",
-				Optional:            true,
-			},
-			"password": schema.StringAttribute{
-				Description:         "The password of the Power Platform API use",
-				MarkdownDescription: "The password of the Power Platform API use",
-				Optional:            true,
-				Sensitive:           true,
-			},
 		},
 	}
 }
@@ -121,22 +109,6 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		tenantId = config.TenantId.ValueString()
 	}
 
-	username := ""
-	envUsername := os.Getenv("POWER_PLATFORM_USERNAME")
-	if config.Username.IsNull() {
-		username = envUsername
-	} else {
-		username = config.Username.ValueString()
-	}
-
-	password := ""
-	envPassword := os.Getenv("POWER_PLATFORM_PASSWORD")
-	if config.Password.IsNull() {
-		password = envPassword
-	} else {
-		password = config.Password.ValueString()
-	}
-
 	clientId := ""
 	envClientId := os.Getenv("POWER_PLATFORM_CLIENT_ID")
 	if config.ClientId.IsNull() {
@@ -155,8 +127,6 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 
 	ctx = tflog.SetField(ctx, "use_cli", config.UseCli.ValueBool())
 	ctx = tflog.SetField(ctx, "power_platform_tenant_id", tenantId)
-	ctx = tflog.SetField(ctx, "power_platform_username", username)
-	ctx = tflog.SetField(ctx, "power_platform_password", password)
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_password")
 	ctx = tflog.SetField(ctx, "power_platform_client_id", clientId)
 	ctx = tflog.SetField(ctx, "power_platform_secret", secret)
@@ -170,10 +140,6 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 			p.Config.Credentials.TenantId = tenantId
 			p.Config.Credentials.ClientId = clientId
 			p.Config.Credentials.Secret = secret
-		} else if username != "" && password != "" && tenantId != "" {
-			p.Config.Credentials.TenantId = tenantId
-			p.Config.Credentials.Username = username
-			p.Config.Credentials.Password = password
 		} else {
 			if tenantId == "" {
 				resp.Diagnostics.AddAttributeError(
@@ -181,22 +147,6 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 					"Unknown API tenant id",
 					"The provider cannot create the API client as there is an unknown configuration value for the tenant id. "+
 						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_TENANT_ID environment variable.",
-				)
-			}
-			if username == "" {
-				resp.Diagnostics.AddAttributeError(
-					path.Root("username"),
-					"Unknown username",
-					"The provider cannot create the API client as there is an unknown configuration value for the username. "+
-						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_USERNAME environment variable.",
-				)
-			}
-			if password == "" {
-				resp.Diagnostics.AddAttributeError(
-					path.Root("password"),
-					"Unknown password",
-					"The provider cannot create the API client as there is an unknown configuration value for the password. "+
-						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_PASSWORD environment variable.",
 				)
 			}
 			if clientId == "" {

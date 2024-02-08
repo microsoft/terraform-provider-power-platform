@@ -60,35 +60,6 @@ func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string) (
 	panic("not implemented")
 }
 
-func (client *Auth) AuthenticateUserPass(ctx context.Context, scopes []string) (string, time.Time, error) {
-	// publicClient, err := public.New(constants.CLIENT_ID, public.WithAuthority(client.GetAuthority(client.config.Credentials.TenantId)), public.WithCache(client.memoryCache))
-	// if err != nil {
-	// 	return "", time.Time{}, err
-	// }
-
-	// authResult := public.AuthResult{}
-	// accounts, err := client.memoryCache.GetAccounts(ctx)
-	// if err != nil {
-	// 	return "", time.Time{}, err
-	// }
-	// if len(accounts) > 0 {
-	// 	authResult, err = publicClient.AcquireTokenSilent(ctx, scopes, public.WithSilentAccount((accounts[len(accounts)-1])))
-
-	// } else {
-	// 	authResult, err = publicClient.AcquireTokenByUsernamePassword(ctx, scopes, client.config.Credentials.Username, client.config.Credentials.Password)
-	// }
-
-	// if err != nil {
-	// 	if strings.Contains(err.Error(), "unable to resolve an endpoint: json decode error") {
-	// 		tflog.Debug(ctx, err.Error())
-	// 		return "", time.Time{}, errors.New("there was an issue authenticating with the provided credentials. Please check the your credentials and try again")
-	// 	}
-	// 	return "", time.Time{}, err
-	// }
-	// return authResult.AccessToken, authResult.ExpiresOn, nil
-	panic("not implemented")
-}
-
 func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []string) (string, time.Time, error) {
 
 	// cred, err := confidential.NewCredFromSecret(client.config.Credentials.Secret)
@@ -132,8 +103,6 @@ func (client *Auth) InitializeRequiredScopes(ctx context.Context, scopes []strin
 	switch {
 	case client.config.Credentials.IsClientSecretCredentialsProvided():
 		token, tokenExpiry, err = client.AuthenticateClientSecret(ctx, scopes)
-	case client.config.Credentials.IsUserPassCredentialsProvided():
-		token, tokenExpiry, err = client.AuthenticateUserPass(ctx, scopes)
 	case client.config.Credentials.IsCliProvided():
 		token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes)
 	default:
