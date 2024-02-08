@@ -14,6 +14,10 @@ This is a CLI for the Terraform Power Platform Provider. It is used to authentic
 
 1. Logging using username/password
 
+Provide your user credentials on the command line. Only use this authentication method for learning and evaluation. Production-level applications should use a service principal or OIDC.
+
+This approach doesn't work with Microsoft accounts or accounts that have two-factor authentication enabled. You receive an interactive authentication is needed message.
+
     ```bash
     terraform-provider-power-platform login --tenant <tenantid>  --user <username> --password <password>
     ```
