@@ -90,7 +90,7 @@ Or you can add them directly into your App Registration manifest:
 
 ## Expose API
 
-In "Expose API" menu of your App Registration, upi need to defile you application ID URI:
+In "Expose API" menu of your App Registration, you need to define your application ID URI:
 
 - Application ID URI: `api://<client_id>`, for example:
 
