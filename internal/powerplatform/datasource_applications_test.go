@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccApplicationsDataSource_Validate_Read(t *testing.T) {
@@ -17,7 +16,7 @@ func TestAccApplicationsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name      = "env_application_acceptance_test"
 					location          = "europe"
@@ -54,7 +53,6 @@ func TestAccApplicationsDataSource_Validate_Read(t *testing.T) {
 func TestUnitApplicationsDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
 
 	httpmock.RegisterResponder("GET", `https://api.powerplatform.com/appmanagement/environments/00000000-0000-0000-0000-000000000001/applicationPackages?api-version=2022-03-01-preview`,
 		func(req *http.Request) (*http.Response, error) {
@@ -66,7 +64,7 @@ func TestUnitApplicationsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_applications" "all_applications" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 				}`,

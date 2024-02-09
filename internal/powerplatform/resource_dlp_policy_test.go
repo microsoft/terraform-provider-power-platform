@@ -7,13 +7,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
 
 	policyId := "00000000-0000-0000-0000-000000000000"
 	policyResponse1 := fmt.Sprintf(`{
@@ -477,7 +475,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy"
 					default_connectors_classification = "Blocked"
@@ -504,7 +502,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "Blocked"
@@ -528,7 +526,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
@@ -555,7 +553,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
@@ -618,7 +616,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
@@ -697,7 +695,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
@@ -779,7 +777,6 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
 
 	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies`,
 		func(req *http.Request) (*http.Response, error) {
@@ -801,7 +798,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy"
 					default_connectors_classification = "Blocked"

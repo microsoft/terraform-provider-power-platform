@@ -31,17 +31,23 @@ type PowerPlatformProvider struct {
 	Api    *api.ApiClient
 }
 
-func NewPowerPlatformProvider(ctx context.Context) func() provider.Provider {
+func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func() provider.Provider {
+	cred := config.ProviderCredentials{}
+	config := config.ProviderConfig{
+		Credentials: &cred,
+		Urls: config.ProviderConfigUrls{
+			BapiUrl:          constants.BAPI_DOMAIN,
+			PowerAppsUrl:     constants.POWERAPPS_API_DOMAIN,
+			PowerPlatformUrl: constants.POWERPLATFORM_API_DOMAIN,
+		},
+	}
+
+	if len(testModeEnabled) > 0 && testModeEnabled[0] {
+		tflog.Warn(ctx, "Test mode enabled. Authentication requests will not be sent to the backend APIs.")
+		config.Credentials.TestMode = true
+	}
+
 	return func() provider.Provider {
-		cred := config.ProviderCredentials{}
-		config := config.ProviderConfig{
-			Credentials: &cred,
-			Urls: config.ProviderConfigUrls{
-				BapiUrl:          constants.BAPI_DOMAIN,
-				PowerAppsUrl:     constants.POWERAPPS_API_DOMAIN,
-				PowerPlatformUrl: constants.POWERPLATFORM_API_DOMAIN,
-			},
-		}
 
 		p := &PowerPlatformProvider{
 			Config: &config,

@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 //We can't test this until we don't have tenant with billing policies
@@ -34,7 +33,6 @@ import (
 func TestUnitTestBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
 
 	httpmock.RegisterResponder("GET", `https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000000/environments?api-version=2022-03-01-preview`,
 		func(req *http.Request) (*http.Response, error) {
@@ -46,7 +44,7 @@ func TestUnitTestBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_billing_policies_environments" "all_pay_as_you_go_policy_envs" {
 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
 				}`,

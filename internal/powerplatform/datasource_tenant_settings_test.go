@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
@@ -17,7 +16,7 @@ func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_tenant_settings" "settings" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -73,7 +72,6 @@ func TestUnitTestTenantSettingsDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
 
 	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/listTenantSettings?api-version=2023-06-01`,
 		func(req *http.Request) (*http.Response, error) {
@@ -85,7 +83,7 @@ func TestUnitTestTenantSettingsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_tenant_settings" "settings" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

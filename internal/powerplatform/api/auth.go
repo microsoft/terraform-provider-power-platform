@@ -15,7 +15,7 @@ import (
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 )
 
-type TokeExpiredError struct {
+type TokenExpiredError struct {
 	Message string
 }
 
@@ -77,6 +77,11 @@ func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []strin
 
 func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*string, error) {
 	tflog.Debug(ctx, fmt.Sprintf("[GetTokenForScope] Getting token for scope: '%s'", strings.Join(scopes, ",")))
+
+	if client.config.Credentials.TestMode {
+		token := "test_mode_mock_token_value"
+		return &token, nil
+	}
 
 	token := ""
 	tokenExpiry := time.Time{}

@@ -21,15 +21,10 @@ import (
 )
 
 const (
-	// AcceptanceTestsProviderConfig is a shared configuration to combine with the actual
+	// TestsProviderConfig is a shared configuration to combine with the actual
 	// test configuration so the Power Platform client is properly configured.
 	// It is also possible to use the POWER_PLATFORM_ environment variables instead.
-	AcceptanceTestsProviderConfig = `
-provider "powerplatform" {
-	use_cli = true
-}
-`
-	UnitTestsProviderConfig = `
+	TestsProviderConfig = `
 provider "powerplatform" {
 	use_cli = true
 }
@@ -38,7 +33,7 @@ provider "powerplatform" {
 
 var (
 	TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-		"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider(context.Background())()),
+		"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider(context.Background(), true)()),
 	}
 )
 

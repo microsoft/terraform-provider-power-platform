@@ -37,7 +37,7 @@ import (
 func TestUnitBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
+
 	mock_helpers.ActivateEnvironmentHttpMocks()
 
 	httpmock.RegisterResponder("GET", `https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000000/environments?api-version=2022-03-01-preview`,
@@ -60,7 +60,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
 					environments      = ["00000000-0000-0000-0000-000000000001"]
@@ -127,7 +127,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 func TestUnitBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
+
 	mock_helpers.ActivateEnvironmentHttpMocks()
 
 	getResponseInx := 0
@@ -153,7 +153,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
 					environments      = ["00000000-0000-0000-0000-000000000001"]
@@ -165,7 +165,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
 					environments      = ["00000000-0000-0000-0000-000000000001","00000000-0000-0000-0000-000000000002","00000000-0000-0000-0000-000000000003"]
@@ -179,7 +179,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
 					environments      = ["00000000-0000-0000-0000-000000000001","00000000-0000-0000-0000-000000000003"]

@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccConnectorsDataSource_Validate_Read(t *testing.T) {
@@ -17,7 +16,7 @@ func TestAccConnectorsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_connectors" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -42,7 +41,6 @@ func TestUnitConnectorsDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/connectors/metadata/virtual`,
 		func(req *http.Request) (*http.Response, error) {
@@ -64,7 +62,7 @@ func TestUnitConnectorsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_connectors" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

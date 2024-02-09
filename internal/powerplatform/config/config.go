@@ -16,7 +16,8 @@ type ProviderConfigUrls struct {
 }
 
 type ProviderCredentials struct {
-	UseCli bool
+	TestMode bool
+	UseCli   bool
 
 	TenantId     string
 	ClientId     string

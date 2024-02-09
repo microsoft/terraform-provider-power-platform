@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 // We can't test the create method as it requires a valid subscription id and resource group id
@@ -50,7 +49,6 @@ import (
 func TestUnitTestBillingPoliciesDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
 
 	httpmock.RegisterResponder("GET", `https://api.powerplatform.com/licensing/billingPolicies?api-version=2022-03-01-preview`,
 		func(req *http.Request) (*http.Response, error) {
@@ -62,7 +60,7 @@ func TestUnitTestBillingPoliciesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_billing_policies" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

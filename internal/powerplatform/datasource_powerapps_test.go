@@ -18,7 +18,7 @@ func TestAccPowerAppsDataSource(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_powerapps" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -39,7 +39,7 @@ func TestAccPowerAppsDataSource(t *testing.T) {
 func TestUnitPowerAppsDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
+
 	mock_helpers.ActivateEnvironmentHttpMocks()
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01`,
@@ -58,7 +58,7 @@ func TestUnitPowerAppsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_powerapps" "all" {}`,
 
 				Check: resource.ComposeTestCheckFunc(
