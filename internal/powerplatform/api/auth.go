@@ -19,7 +19,7 @@ type TokeExpiredError struct {
 	Message string
 }
 
-func (e *TokeExpiredError) Error() string {
+func (e *TokenExpiredError) Error() string {
 	return e.Message
 }
 
