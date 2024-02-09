@@ -4,7 +4,7 @@ The Power Platform provider can use the Azure CLI to authenticate. If you have t
 
 ## Creating Service Principal
 
-You can follow this [guide](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app#register-an-application) to create a service principal a
+You can follow this [guide](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app#register-an-application) to create a service principal.
 
 ## API Permissions
 
