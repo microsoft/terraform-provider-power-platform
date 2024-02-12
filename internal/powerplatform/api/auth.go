@@ -258,6 +258,8 @@ func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*st
 		token, tokenExpiry, err = client.AuthenticateClientSecret(ctx, scopes)
 	case client.config.Credentials.IsCliProvided():
 		token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes)
+	case client.config.Credentials.IsOidcProvided():
+		token, tokenExpiry, err = client.AuthenticateOIDC(ctx, scopes)
 	default:
 		return nil, errors.New("no credentials provided")
 	}
