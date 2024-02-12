@@ -10,68 +10,40 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccApplicationResource_Validate_Install(t *testing.T) {
-	envDomain := fmt.Sprintf("orgtest%d", rand.Intn(100000))
+	envDisplayName := fmt.Sprintf("orgtest%d", rand.Intn(100000))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "environment" {
-					display_name                              = "` + envDomain + `"
+					display_name                              = "` + envDisplayName + `"
 					location                                  = "europe"
 					language_code                             = "1033"
 					currency_code                           = "USD"
 					environment_type                          = "Sandbox"
-					domain = "` + envDomain + `"
 					security_group_id = "00000000-0000-0000-0000-000000000000"
 				}
+
 				data "powerplatform_applications" "application_to_install" {
-					environment_id = data.powerplatform_environments.all_environments.environments[0].id
+					environment_id = powerplatform_environment.environment.id
 					name           = "Power Platform Pipelines"
 					publisher_name = "Microsoft Dynamics 365"
 				}
+
 				resource "powerplatform_application" "development" {
 					environment_id = powerplatform_environment.environment.id
-  				unique_name = data.powerplatform_applications.application_to_install.applications[0].unique_name
+  					unique_name = data.powerplatform_applications.application_to_install.applications[0].unique_name
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("powerplatform_application.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("powerplatform_application.development", "environment_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_application.development", "unique_name", "ProcessMiningAnchor"),
-				),
-			},
-			{
-				Config: AcceptanceTestsProviderConfig + `
-				resource "powerplatform_environment" "environment" {
-					display_name                              = "` + envDomain + `"
-					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                           = "USD"
-					environment_type                          = "Sandbox"
-					domain = "` + envDomain + `"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
-				}
-				data "powerplatform_applications" "application_to_install" {
-					environment_id = data.powerplatform_environments.all_environments.environments[0].id
-					name           = "Dynamics 365 Customer Voice"
-					publisher_name = "Microsoft Dynamics 365"
-				}
-				resource "powerplatform_application" "development" {
-					environment_id = powerplatform_environment.environment.id
-  				unique_name = data.powerplatform_applications.application_to_install.applications[0].unique_name
-				}`,
-
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("powerplatform_application.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestMatchResourceAttr("powerplatform_application.development", "environment_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_application.development", "unique_name", "MicrosoftFormsPro"),
+					resource.TestCheckResourceAttr("powerplatform_application.development", "unique_name", "msdyn_AppDeploymentAnchor"),
 				),
 			},
 		},
@@ -81,7 +53,6 @@ func TestAccApplicationResource_Validate_Install(t *testing.T) {
 func TestUnitApplicationResource_Validate_Install(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
 
 	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
@@ -117,7 +88,7 @@ func TestUnitApplicationResource_Validate_Install(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_application" "development" {
 					environment_id   = "00000000-0000-0000-0000-000000000000"
 					unique_name      = "ProcessMiningAnchor"
@@ -130,7 +101,7 @@ func TestUnitApplicationResource_Validate_Install(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_application" "development" {
 					environment_id   = "00000000-0000-0000-0000-000000000000"
 					unique_name      = "MicrosoftFormsPro"

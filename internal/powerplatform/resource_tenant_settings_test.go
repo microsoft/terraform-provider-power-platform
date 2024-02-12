@@ -7,7 +7,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
@@ -17,7 +16,7 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = false
 					disable_support_tickets_visible_by_all_users          = false
@@ -41,7 +40,6 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					  power_apps = {
 						disable_share_with_everyone              = false
 						enable_guests_to_make                    = false
-						disable_members_indicator                = false
 						disable_maker_match                      = false
 						disable_unused_license_assignment        = false
 						disable_create_from_image                = false
@@ -125,7 +123,6 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
@@ -145,7 +142,6 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
 
 	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/updateTenantSettings?api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
@@ -162,7 +158,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = false
 					disable_support_tickets_visible_by_all_users          = false
@@ -186,7 +182,6 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					  power_apps = {
 						disable_share_with_everyone              = false
 						enable_guests_to_make                    = false
-						disable_members_indicator                = false
 						disable_maker_match                      = false
 						disable_unused_license_assignment        = false
 						disable_create_from_image                = false
@@ -270,7 +265,6 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
@@ -294,7 +288,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = true
 					disable_support_tickets_visible_by_all_users          = true
@@ -318,7 +312,6 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					  power_apps = {
 						disable_share_with_everyone              = true
 						enable_guests_to_make                    = true
-						disable_members_indicator                = true
 						disable_maker_match                      = true
 						disable_unused_license_assignment        = true
 						disable_create_from_image                = true
@@ -402,7 +395,6 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", "true"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "true"),
@@ -416,7 +408,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = false
 					disable_support_tickets_visible_by_all_users          = false
@@ -440,7 +432,6 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					  power_apps = {
 						disable_share_with_everyone              = false
 						enable_guests_to_make                    = false
-						disable_members_indicator                = false
 						disable_maker_match                      = false
 						disable_unused_license_assignment        = false
 						disable_create_from_image                = false
@@ -524,7 +515,6 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
@@ -544,7 +534,6 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
 
 	updateSettingsResponseCount := 0
 	listSettingsResponseCount := 0
@@ -566,7 +555,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = true
 					disable_support_tickets_visible_by_all_users          = true
@@ -590,7 +579,6 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					  power_apps = {
 						disable_share_with_everyone              = true
 						enable_guests_to_make                    = true
-						disable_members_indicator                = true
 						disable_maker_match                      = true
 						disable_unused_license_assignment        = true
 						disable_create_from_image                = true
@@ -674,7 +662,6 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", "true"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "true"),
@@ -688,7 +675,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = false
 					disable_support_tickets_visible_by_all_users          = false
@@ -712,7 +699,6 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					  power_apps = {
 						disable_share_with_everyone              = false
 						enable_guests_to_make                    = false
-						disable_members_indicator                = false
 						disable_maker_match                      = false
 						disable_unused_license_assignment        = false
 						disable_create_from_image                = false
@@ -796,7 +782,6 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),

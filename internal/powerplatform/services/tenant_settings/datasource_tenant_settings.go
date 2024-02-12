@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/clients"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 var (
@@ -72,7 +73,6 @@ type TeamsIntegrationSettings struct {
 type PowerAppsSettings struct {
 	DisableShareWithEveryone             types.Bool `tfsdk:"disable_share_with_everyone"`
 	EnableGuestsToMake                   types.Bool `tfsdk:"enable_guests_to_make"`
-	DisableMembersIndicator              types.Bool `tfsdk:"disable_members_indicator"`
 	DisableMakerMatch                    types.Bool `tfsdk:"disable_maker_match"`
 	DisableUnusedLicenseAssignment       types.Bool `tfsdk:"disable_unused_license_assignment"`
 	DisableCreateFromImage               types.Bool `tfsdk:"disable_create_from_image"`
@@ -138,7 +138,7 @@ func (d *TenantSettingsDataSource) Configure(ctx context.Context, req datasource
 		return
 	}
 
-	client := req.ProviderData.(*clients.ProviderClient).BapiApi.Client
+	client := req.ProviderData.(*api.ProviderClient).Api
 
 	if client == nil {
 		resp.Diagnostics.AddError(
@@ -165,7 +165,7 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 
 	state = ConvertFromTenantSettingsDto(*tenantSettings)
-	state.Id = types.StringValue(d.TenantSettingsClient.bapiClient.GetConfig().Credentials.TenantId)
+	state.Id = types.StringValue(uuid.New().String())
 
 	diags := resp.State.Set(ctx, &state)
 
@@ -264,10 +264,6 @@ func (d *TenantSettingsDataSource) Schema(_ context.Context, _ datasource.Schema
 							},
 							"enable_guests_to_make": schema.BoolAttribute{
 								Description: "Enable Guests To Make",
-								Computed:    true,
-							},
-							"disable_members_indicator": schema.BoolAttribute{
-								Description: "Disable Members Indicator",
 								Computed:    true,
 							},
 							"disable_maker_match": schema.BoolAttribute{

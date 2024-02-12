@@ -23,9 +23,9 @@ terraform {
 }
 
 provider "powerplatform" {
-  client_id = var.client_id
-  secret    = var.secret
-  tenant_id = var.tenant_id
+  client_id     = var.client_id
+  client_secret = var.client_secret
+  tenant_id     = var.tenant_id
 }
 
 data "powerplatform_billing_policies_environments" "all_pay_as_you_go_policy_envs" {

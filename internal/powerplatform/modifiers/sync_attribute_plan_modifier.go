@@ -49,7 +49,7 @@ func (d *syncAttributePlanModifier) PlanModifyString(ctx context.Context, req pl
 		}
 
 		if value == "" {
-			resp.PlanValue = types.StringNull()
+			resp.PlanValue = types.StringUnknown()
 		}
 	}
 }

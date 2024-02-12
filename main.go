@@ -17,16 +17,17 @@ func main() {
 
 	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
-
 	ctx := context.Background()
+
 	serveOpts := providerserver.ServeOpts{
 		Debug:   debug,
 		Address: "registry.terraform.io/microsoft/power-platform",
 	}
 
-	err := providerserver.Serve(ctx, powerplatform.NewPowerPlatformProvider(), serveOpts)
+	err := providerserver.Serve(ctx, powerplatform.NewPowerPlatformProvider(ctx), serveOpts)
 
 	if err != nil {
 		log.Fatalf("Error serving provider: %s", err)
 	}
+
 }

@@ -2,7 +2,7 @@ variable "client_id" {
   description = "The client ID of the service principal (app registration)"
   type        = string
 }
-variable "secret" {
+variable "client_secret" {
   description = "The client secret of the service principal (app registration)"
   sensitive   = true
   type        = string

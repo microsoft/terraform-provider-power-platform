@@ -9,20 +9,20 @@ import (
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
-func NewConnectorsClient(bapi *api.BapiClientApi) ConnectorsClient {
+func NewConnectorsClient(api *api.ApiClient) ConnectorsClient {
 	return ConnectorsClient{
-		BapiClient: bapi,
+		Api: api,
 	}
 }
 
 type ConnectorsClient struct {
-	BapiClient *api.BapiClientApi
+	Api *api.ApiClient
 }
 
 func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.BapiClient.GetConfig().Urls.PowerAppsUrl,
+		Host:   client.Api.GetConfig().Urls.PowerAppsUrl,
 		Path:   "/providers/Microsoft.PowerApps/apis",
 	}
 	values := url.Values{}
@@ -34,18 +34,18 @@ func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorD
 	apiUrl.RawQuery = values.Encode()
 
 	connectorArray := ConnectorDtoArray{}
-	_, err := client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connectorArray)
+	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connectorArray)
 	if err != nil {
 		return nil, err
 	}
 
 	apiUrl = &url.URL{
 		Scheme: "https",
-		Host:   client.BapiClient.GetConfig().Urls.BapiUrl,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/unblockable",
 	}
 	unblockableConnectorArray := []UnblockableConnectorDto{}
-	_, err = client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &unblockableConnectorArray)
+	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &unblockableConnectorArray)
 	if err != nil {
 		return nil, err
 	}
@@ -60,11 +60,11 @@ func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorD
 
 	apiUrl = &url.URL{
 		Scheme: "https",
-		Host:   client.BapiClient.GetConfig().Urls.BapiUrl,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/virtual",
 	}
 	virtualConnectorArray := []VirtualConnectorDto{}
-	_, err = client.BapiClient.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &virtualConnectorArray)
+	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &virtualConnectorArray)
 	if err != nil {
 		return nil, err
 	}

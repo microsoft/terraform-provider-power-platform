@@ -2,6 +2,7 @@ package powerplatform
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
 	"regexp"
 	"testing"
@@ -13,20 +14,23 @@ import (
 )
 
 func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
+	envName := fmt.Sprintf("orgtest%d", rand.Intn(100000))
+	envNameNew := fmt.Sprintf("orgtest%d", rand.Intn(100000))
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name                              = "Example2"
+					display_name                              = "` + envName + `"
 					location                                  = "europe"
 					language_code                             = "1033"
 					currency_code                             = "USD"
 					environment_type                          = "Sandbox"
 					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-					domain									  = "terraformtest2"
+					domain									  =  "` + envName + `"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -34,23 +38,23 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 
 					// Verify the first power app to ensure all attributes are set
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example2"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "terraformtest2"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", envName),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", envName),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1033"),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "00000000-0000-0000-0000-000000000000"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", "https://terraformtest2.crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", "https://"+envName+".crm4.dynamics.com/"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
 				),
 			},
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name                              = "Example3"
-					domain									  = "terraformtest3"
+					display_name                              = "` + envName + `"
+					domain									  =  "` + envNameNew + `"
 					location                                  = "europe"
 					language_code                             = "1033"
 					currency_code                             = "USD"
@@ -59,9 +63,9 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example3"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "terraformtest3"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", "https://terraformtest3.crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", envName),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", envNameNew),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", "https://"+envNameNew+".crm4.dynamics.com/"),
 				),
 			},
 		},
@@ -69,37 +73,36 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 }
 
 func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
+	envName := fmt.Sprintf("orgtest%d", rand.Intn(100000))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name                              = "Example1"
+					display_name                              = "` + envName + `"
 					location                                  = "europe"
 					language_code                             = "1033"
 					currency_code                             = "USD"
 					environment_type                          = "Sandbox"
 					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-					domain									  = "terraformtest1"
+					domain									  =  "` + envName + `"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					//Verify placeholder id attribute
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 
-					// Verify the first power app to ensure all attributes are set
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "terraformtest1"),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_type", regexp.MustCompile(`^(Default|Sandbox|Developer)$`)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1033"),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "security_group_id", regexp.MustCompile(powerplatform_helpers.GuidOrEmptyValueRegex)),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", "https://terraformtest1.crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", envName),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", "https://"+envName+".crm4.dynamics.com/"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example1"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", envName),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "version", regexp.MustCompile(powerplatform_helpers.VersionRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
 					// resource.TestMatchResourceAttr("powerplatform_environment.development", "templates", regexp.MustCompile(`D365_FinOps_Finance$`)),
@@ -114,7 +117,6 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
 
 	envIdResponseInx := -1
 	envIdResponseArray := []string{"00000000-0000-0000-0000-000000000001",
@@ -174,7 +176,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -193,7 +195,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "unitedstates"
@@ -210,7 +212,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "unitedstates"
@@ -226,7 +228,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "unitedstates"
@@ -243,7 +245,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "unitedstates"
@@ -267,7 +269,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
+
 	mock_helpers.ActivateEnvironmentHttpMocks()
 
 	getLifecycleResponseInx := 0
@@ -319,7 +321,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "europe"
@@ -338,7 +340,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example123"
 					location                                  = "europe"
@@ -363,7 +365,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
+
 	mock_helpers.ActivateEnvironmentHttpMocks()
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
@@ -401,7 +403,7 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -434,7 +436,7 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 func TestUnitEnvironmentsResource_Validate_Create_With_Billing_Policy(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
+
 	mock_helpers.ActivateEnvironmentHttpMocks()
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
@@ -472,7 +474,7 @@ func TestUnitEnvironmentsResource_Validate_Create_With_Billing_Policy(t *testing
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -496,7 +498,7 @@ func TestUnitEnvironmentsResource_Validate_Create_With_Billing_Policy(t *testing
 func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
+
 	mock_helpers.ActivateEnvironmentHttpMocks()
 
 	getResponseInx := 0
@@ -575,7 +577,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -592,7 +594,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -610,7 +612,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -628,7 +630,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				),
 			},
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -651,7 +653,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 func TestUnitEnvironmentsResource_Validate_Create_With_D365_Template(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
+
 	mock_helpers.ActivateEnvironmentHttpMocks()
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
@@ -689,7 +691,7 @@ func TestUnitEnvironmentsResource_Validate_Create_With_D365_Template(t *testing.
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"

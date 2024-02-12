@@ -11,17 +11,15 @@ import (
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 )
 
-func NewManagedEnvironmentClient(bapi *api.BapiClientApi, dv *api.DataverseClientApi) ManagedEnvironmentClient {
+func NewManagedEnvironmentClient(api *api.ApiClient) ManagedEnvironmentClient {
 	return ManagedEnvironmentClient{
-		bapiClient:        bapi,
-		dataverseClient:   dv,
-		environmentClient: environment.NewEnvironmentClient(bapi, dv),
+		Api:               api,
+		environmentClient: environment.NewEnvironmentClient(api),
 	}
 }
 
 type ManagedEnvironmentClient struct {
-	bapiClient        *api.BapiClientApi
-	dataverseClient   *api.DataverseClientApi
+	Api               *api.ApiClient
 	environmentClient environment.EnvironmentClient
 }
 
@@ -37,14 +35,14 @@ func (client *ManagedEnvironmentClient) GetManagedEnvironmentSettings(ctx contex
 func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Context, managedEnvSettings environment.GovernanceConfigurationDto, environmentId string) error {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.bapiClient.GetConfig().Urls.BapiUrl,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/governanceConfiguration", environmentId),
 	}
 	values := url.Values{}
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	apiResponse, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), nil, managedEnvSettings, []int{http.StatusNoContent, http.StatusAccepted}, nil)
+	apiResponse, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, managedEnvSettings, []int{http.StatusNoContent, http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
@@ -52,7 +50,7 @@ func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Con
 	tflog.Debug(ctx, "Managed Environment Enablement Operation HTTP Status: '"+apiResponse.Response.Status+"'")
 
 	tflog.Debug(ctx, "Waiting for Managed Environment Enablement Operation to complete")
-	_, err = client.bapiClient.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return err
 	}
@@ -62,7 +60,7 @@ func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Con
 func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Context, environmentId string) error {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.bapiClient.GetConfig().Urls.BapiUrl,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/governanceConfiguration", environmentId),
 	}
 	values := url.Values{}
@@ -73,7 +71,7 @@ func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Co
 		ProtectionLevel: "Basic",
 	}
 
-	apiResponse, err := client.bapiClient.Execute(ctx, "POST", apiUrl.String(), nil, managedEnv, []int{http.StatusAccepted}, nil)
+	apiResponse, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, managedEnv, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
@@ -81,7 +79,7 @@ func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Co
 	tflog.Debug(ctx, "Managed Environment Disablement Operation HTTP Status: '"+apiResponse.Response.Status+"'")
 	tflog.Debug(ctx, "Waiting for Managed Environment Disablement Operation to complete")
 
-	_, err = client.bapiClient.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return err
 	}

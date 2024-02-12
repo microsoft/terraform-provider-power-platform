@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
@@ -17,7 +16,7 @@ func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: AcceptanceTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_tenant_settings" "settings" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -53,7 +52,6 @@ func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", regexp.MustCompile(powerplatform_helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", regexp.MustCompile(powerplatform_helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", regexp.MustCompile(powerplatform_helpers.BooleanRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", regexp.MustCompile(powerplatform_helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", regexp.MustCompile(powerplatform_helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", regexp.MustCompile(powerplatform_helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", regexp.MustCompile(powerplatform_helpers.BooleanRegex)),
@@ -74,7 +72,6 @@ func TestUnitTestTenantSettingsDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-	mock_helpers.ActivateOAuthHttpMocks()
 
 	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/listTenantSettings?api-version=2023-06-01`,
 		func(req *http.Request) (*http.Response, error) {
@@ -86,7 +83,7 @@ func TestUnitTestTenantSettingsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: UnitTestsProviderConfig + `
+				Config: TestsProviderConfig + `
 				data "powerplatform_tenant_settings" "settings" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -119,7 +116,6 @@ func TestUnitTestTenantSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_figma", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_create_from_image", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_maker_match", "false"),
-					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_members_indicator", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_share_with_everyone", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
