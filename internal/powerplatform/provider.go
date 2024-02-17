@@ -202,6 +202,8 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Credentials.UseCli = true
 	} else if config.UseOidc.ValueBool() {
 		p.Config.Credentials.UseOidc = true
+		p.Config.Credentials.TenantId = tenantId
+		p.Config.Credentials.ClientId = clientId
 	} else {
 
 		if clientId != "" && clientSecret != "" && tenantId != "" {
