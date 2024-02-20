@@ -16,12 +16,8 @@ Following API permissions are required to use the Terraform Power Platform provi
 - Power Platform API
   - AppManagement.ApplicationPackages.Install
   - AppManagement.ApplicationPackages.Read
-  - Licensing.Allocations.Read
-  - Licensing.Allocations.ReadWrite
   - Licensing.BillingPolicies.Read
   - Licensing.BillingPolicies.ReadWrite
-  - Licensing.IsvContracts.Read
-  - Licensing.IsvContracts.ReadWrite
 
 - PowerApps Service
   - User
@@ -100,7 +96,7 @@ api://powerplatform_provider_terraform
 
 - Add required scope:
 
-1. Scope Name: `access`
+1. Scope Name: `user_impersonation`
 1. Who can consent: `Admins and users`
 1. Admin consent display name: `Work with Power Platform Terraform Provider`
 1. Admin consent description: `Allows connection to backend services of Power Platform Terraform Provider`
@@ -122,7 +118,7 @@ Or you can add them directly into your App Registration manifest:
    "type": "User",
    "userConsentDescription": "Allows connection to backend services of Power Platform Terraform Provider",
    "userConsentDisplayName": "Work with Power Platform Terraform Provider",
-   "value": "access"
+   "value": "user_impersonation"
   }
  ],
 ```
@@ -146,5 +142,5 @@ Or you can add them directly into your App Registration manifest:
 After above steps you should be able to authenticate using Azure CLI:
 
 ```bash
-az login --scope api://powerplatform_provider_terraform/access
+az login  --allow-no-subscriptions --scope api://powerplatform_provider_terraform/.default
 ```
