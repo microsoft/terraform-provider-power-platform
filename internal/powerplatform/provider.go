@@ -90,7 +90,6 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				Optional:            true,
 				Sensitive:           true,
 			},
-			//OIDC fields
 			"use_oidc": schema.BoolAttribute{
 				Description:         "Allow OpenID Connect to be used for authentication",
 				MarkdownDescription: "Allow OpenID Connect to be used for authentication",
@@ -112,6 +111,7 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				Description: "The path to a file containing an OIDC ID token for use when authenticating as a Service Principal using OpenID Connect.",
 				Optional:    true,
 			},
+
 		},
 	}
 }
@@ -156,6 +156,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	envOidcRequestUrl := MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"})
 	if config.OidcRequestUrl.IsNull() {
 		oidcRequestUrl = envOidcRequestUrl
+
 	} else {
 		oidcRequestUrl = config.OidcRequestUrl.ValueString()
 	}
@@ -204,6 +205,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Credentials.UseOidc = true
 		p.Config.Credentials.TenantId = tenantId
 		p.Config.Credentials.ClientId = clientId
+
 	} else {
 
 		if clientId != "" && clientSecret != "" && tenantId != "" {

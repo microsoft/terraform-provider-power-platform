@@ -20,6 +20,7 @@ type ProviderCredentials struct {
 	UseCli   bool
 	UseOidc  bool
 
+
 	TenantId     string
 	ClientId     string
 	ClientSecret string
@@ -34,6 +35,7 @@ type ProviderCredentialsModel struct {
 	UseCli  types.Bool `tfsdk:"use_cli"`
 	UseOidc types.Bool `tfsdk:"use_oidc"`
 
+
 	TenantId     types.String `tfsdk:"tenant_id"`
 	ClientId     types.String `tfsdk:"client_id"`
 	ClientSecret types.String `tfsdk:"client_secret"`
@@ -42,6 +44,7 @@ type ProviderCredentialsModel struct {
 	OidcRequestUrl    types.String `tfsdk:"oidc_request_url"`
 	OidcToken         types.String `tfsdk:"oidc_token"`
 	OidcTokenFilePath types.String `tfsdk:"oidc_token_file_path"`
+
 }
 
 func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {
@@ -55,3 +58,4 @@ func (model *ProviderCredentials) IsCliProvided() bool {
 func (model *ProviderCredentials) IsOidcProvided() bool {
 	return model.UseOidc
 }
+

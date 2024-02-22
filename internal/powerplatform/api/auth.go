@@ -51,6 +51,7 @@ type OidcCredentialOptions struct {
 	TokenFilePath string
 }
 
+
 func NewAuthBase(config *config.ProviderConfig) *Auth {
 	return &Auth{
 		config: config,
@@ -240,6 +241,7 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 	return *tokenRes.Value, nil
 }
 
+
 func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*string, error) {
 	tflog.Debug(ctx, fmt.Sprintf("[GetTokenForScope] Getting token for scope: '%s'", strings.Join(scopes, ",")))
 
@@ -259,6 +261,7 @@ func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*st
 		token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes)
 	case client.config.Credentials.IsOidcProvided():
 		token, tokenExpiry, err = client.AuthenticateOIDC(ctx, scopes)
+
 	default:
 		return nil, errors.New("no credentials provided")
 	}
