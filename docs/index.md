@@ -33,7 +33,26 @@ provider_installation {
 
 The provider allows authentication via service principal or user credentials. All sensitive information should be passed into Terraform using environment variables (don't put secrets in your tf files).
 
-### Using a Service Principal (Preferred)
+### Using Azure CLI (Preferred)
+
+The Power Platform provider can use the Azure CLI to authenticate. If you have the Azure CLI installed, you can use it to log in to your Azure account and the Power Platform provider will use the credentials from the Azure CLI.
+
+#### Prerequisites
+
+1. [Install the Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+1. Create a service principal and expose the required permissions using "expose API" in the Azure portal. You can find more information on how to do this in the following [CLI.md](./cli.md) file.
+
+```bash
+az login --scope https://your_exposed_api_url//access
+```
+
+```terraform
+provider "powerplatform" {
+  use_cli = true
+}
+```
+
+### Using a Service Principal
 
 To access Power Platform APIs using a service principal, you need to register a new service principal application in your own Azure Active Directory (Azure AD) tenant and then register that same application with Power Platform.
 
@@ -54,11 +73,11 @@ provider "powerplatform" {
 
 ```bash
 export TF_VAR_client_id=<client_id>
-export TF_VAR_secret=<secret>
+export TF_VAR_client_secret=<client_secret>
 export TF_VAR_tenant_id=<tenant_id>
 ```
 
-###  Creating a "secret.tfvars" file to store your credentials
+### Creating a "secret.tfvars" file to store your credentials
 
 Alternatively you can create a "secret.tfvars" file and execute the "terraform plan" command specifying a local variables file:
 
@@ -66,13 +85,14 @@ Alternatively you can create a "secret.tfvars" file and execute the "terraform p
 # terraform plan command pointing to a secret.tfvars
 terraform plan -var-file="secret.tfvars"
 ```
+
 Below you will find an example of how to create your "secret.tfvars" file, remember to specify the correct path of it when executing.
 We include "*.tfvars" in .gitignore to avoid save the secrets in it repository.
 
 ```bash
 # sample "secret.tfvars" values
 client_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-secret    = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+client_secret    = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 tenant_id = "XXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 ```
 

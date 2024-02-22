@@ -16,7 +16,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
-	_ "github.com/Azure/azure-sdk-for-go/sdk/azidentity/cache"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
