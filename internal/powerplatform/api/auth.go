@@ -51,7 +51,6 @@ type OidcCredentialOptions struct {
 	TokenFilePath string
 }
 
-
 func NewAuthBase(config *config.ProviderConfig) *Auth {
 	return &Auth{
 		config: config,
@@ -108,6 +107,19 @@ func NewOidcCredential(options *OidcCredentialOptions) (*OidcCredential, error) 
 		tokenFilePath: options.TokenFilePath,
 	}
 
+	if c.requestToken == "" {
+		return nil, fmt.Errorf("request Token is required for OIDC credential")
+	}
+	if c.requestUrl == "" {
+		return nil, fmt.Errorf("request URL is required for OIDC credential")
+	}
+	if options.TenantID == "" {
+		return nil, fmt.Errorf("tenant is required for OIDC credential")
+	}
+	if options.ClientID == "" {
+		return nil, fmt.Errorf("client is required for OIDC credential")
+	}
+
 	cred, err := azidentity.NewClientAssertionCredential(options.TenantID, options.ClientID, c.getAssertion,
 		&azidentity.ClientAssertionCredentialOptions{
 			ClientOptions: options.ClientOptions,
@@ -138,7 +150,7 @@ func (client *Auth) AuthenticateOIDC(ctx context.Context, scopes []string) (stri
 		ClientID:      client.config.Credentials.ClientId,
 		RequestToken:  client.config.Credentials.OidcRequestToken,
 		RequestUrl:    client.config.Credentials.OidcRequestUrl,
-		Token:         client.config.Credentials.OidcRequestToken,
+		Token:         client.config.Credentials.OidcToken,
 		TokenFilePath: client.config.Credentials.OidcTokenFilePath,
 	})
 
@@ -147,22 +159,6 @@ func (client *Auth) AuthenticateOIDC(ctx context.Context, scopes []string) (stri
 	} else {
 		log.Printf("newDefaultAzureCredential failed to initialize oidc credential:\n\t%s", err.Error())
 	}
-
-	envCred, err := azidentity.NewEnvironmentCredential(&azidentity.EnvironmentCredentialOptions{
-		ClientOptions:            options.ClientOptions,
-		DisableInstanceDiscovery: options.DisableInstanceDiscovery,
-	})
-	if err == nil {
-		creds = append(creds, envCred)
-	} else {
-		log.Printf("newDefaultAzureCredential failed to initialize environment credential:\n\t%s", err.Error())
-	}
-
-	if len(creds) == 0 {
-		return "", time.Time{}, fmt.Errorf("no credentials were successfully initialized")
-	}
-
-	//Given the growing auth combos now supported by the provider, we may want to consider using chained token creds everywhere.
 	chain, err := azidentity.NewChainedTokenCredential(creds, nil)
 	if err != nil {
 		return "", time.Time{}, err
@@ -240,7 +236,6 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 
 	return *tokenRes.Value, nil
 }
-
 
 func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*string, error) {
 	tflog.Debug(ctx, fmt.Sprintf("[GetTokenForScope] Getting token for scope: '%s'", strings.Join(scopes, ",")))

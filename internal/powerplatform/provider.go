@@ -111,7 +111,6 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				Description: "The path to a file containing an OIDC ID token for use when authenticating as a Service Principal using OpenID Connect.",
 				Optional:    true,
 			},
-
 		},
 	}
 }
@@ -155,8 +154,8 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	oidcRequestUrl := ""
 	envOidcRequestUrl := MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"})
 	if config.OidcRequestUrl.IsNull() {
+		tflog.Debug(ctx, "OIDC request URL environment variable is null")
 		oidcRequestUrl = envOidcRequestUrl
-
 	} else {
 		oidcRequestUrl = config.OidcRequestUrl.ValueString()
 	}
@@ -164,6 +163,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	oidcRequestToken := ""
 	envOidcRequestToken := MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN"})
 	if config.OidcRequestToken.IsNull() {
+		tflog.Debug(ctx, "OIDC request token environment variable is null")
 		oidcRequestToken = envOidcRequestToken
 	} else {
 		oidcRequestToken = config.OidcRequestToken.ValueString()
@@ -172,6 +172,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	oidcToken := ""
 	envOidcToken := EnvDefaultFunc("ARM_OIDC_TOKEN", "")
 	if config.OidcToken.IsNull() {
+		tflog.Debug(ctx, "OIDC token environment variable is null")
 		oidcToken = envOidcToken
 	} else {
 		oidcToken = config.OidcToken.ValueString()
@@ -205,6 +206,10 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Credentials.UseOidc = true
 		p.Config.Credentials.TenantId = tenantId
 		p.Config.Credentials.ClientId = clientId
+		p.Config.Credentials.OidcRequestToken = oidcRequestToken
+		p.Config.Credentials.OidcRequestUrl = oidcRequestUrl
+		p.Config.Credentials.OidcToken = oidcToken
+		p.Config.Credentials.OidcTokenFilePath = oidcTokenFilePath
 
 	} else {
 
@@ -290,7 +295,6 @@ func MultiEnvDefaultFunc(ks []string) string {
 			return v
 		}
 	}
-
 	return ""
 }
 
@@ -302,6 +306,5 @@ func EnvDefaultFunc(k string, dv interface{}) string {
 	if v := os.Getenv(k); v != "" {
 		return v
 	}
-
 	return ""
 }
