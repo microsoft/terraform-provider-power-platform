@@ -6,7 +6,7 @@ The Power Platform Terraform Provider allows managing environments and other res
 
 ## Using the Provider
 
-The [user documentation](https://microsoft.github.io/terraform-provider-power-platform) contains information about how to install, configure, and use the provider to manage Power Platform resources and data sources.  Examples, schemas, and other detailed information about the provided resources and data sources make it easy to get started using the provider.
+The [user documentation](https://microsoft.github.io/terraform-provider-power-platform) contains information about how to install, configure, and use the provider to manage Power Platform resources and data sources. More advances examples together with bootstrap script can be found in the [Quick Starts Repository](https://github.com/microsoft/power-platform-terraform-quickstarts).
 
 ## Contributing
 

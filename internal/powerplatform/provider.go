@@ -90,6 +90,27 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				Optional:            true,
 				Sensitive:           true,
 			},
+			"use_oidc": schema.BoolAttribute{
+				Description:         "Allow OpenID Connect to be used for authentication",
+				MarkdownDescription: "Allow OpenID Connect to be used for authentication",
+				Optional:            true,
+			},
+			"oidc_request_token": schema.StringAttribute{
+				Description: "The bearer token for the request to the OIDC provider. For use When authenticating as a Service Principal using OpenID Connect.",
+				Optional:    true,
+			},
+			"oidc_request_url": schema.StringAttribute{
+				Description: "The URL for the OIDC provider from which to request an ID token. For use When authenticating as a Service Principal using OpenID Connect.",
+				Optional:    true,
+			},
+			"oidc_token": schema.StringAttribute{
+				Description: "The OIDC ID token for use when authenticating as a Service Principal using OpenID Connect.",
+				Optional:    true,
+			},
+			"oidc_token_file_path": schema.StringAttribute{
+				Description: "The path to a file containing an OIDC ID token for use when authenticating as a Service Principal using OpenID Connect.",
+				Optional:    true,
+			},
 		},
 	}
 }
@@ -129,15 +150,67 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		clientSecret = config.ClientSecret.ValueString()
 	}
 
+	//Check for AzDO and GitHub environment variables
+	oidcRequestUrl := ""
+	envOidcRequestUrl := MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"})
+	if config.OidcRequestUrl.IsNull() {
+		tflog.Debug(ctx, "OIDC request URL environment variable is null")
+		oidcRequestUrl = envOidcRequestUrl
+	} else {
+		oidcRequestUrl = config.OidcRequestUrl.ValueString()
+	}
+
+	oidcRequestToken := ""
+	envOidcRequestToken := MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN"})
+	if config.OidcRequestToken.IsNull() {
+		tflog.Debug(ctx, "OIDC request token environment variable is null")
+		oidcRequestToken = envOidcRequestToken
+	} else {
+		oidcRequestToken = config.OidcRequestToken.ValueString()
+	}
+
+	oidcToken := ""
+	envOidcToken := EnvDefaultFunc("ARM_OIDC_TOKEN", "")
+	if config.OidcToken.IsNull() {
+		tflog.Debug(ctx, "OIDC token environment variable is null")
+		oidcToken = envOidcToken
+	} else {
+		oidcToken = config.OidcToken.ValueString()
+	}
+
+	oidcTokenFilePath := ""
+	envOidcTokenFilePath := EnvDefaultFunc("ARM_OIDC_TOKEN_FILE_PATH", "")
+	if config.OidcTokenFilePath.IsNull() {
+		oidcTokenFilePath = envOidcTokenFilePath
+	} else {
+		oidcTokenFilePath = config.OidcTokenFilePath.ValueString()
+	}
+
 	ctx = tflog.SetField(ctx, "use_cli", config.UseCli.ValueBool())
+	ctx = tflog.SetField(ctx, "use_oidc", config.UseOidc.ValueBool())
 	ctx = tflog.SetField(ctx, "power_platform_tenant_id", tenantId)
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_password")
 	ctx = tflog.SetField(ctx, "power_platform_client_id", clientId)
 	ctx = tflog.SetField(ctx, "power_platform_client_secret", clientSecret)
+	ctx = tflog.SetField(ctx, "oidc_request_url", oidcRequestUrl)
+	ctx = tflog.SetField(ctx, "oidc_request_token", oidcRequestToken)
+	ctx = tflog.SetField(ctx, "oidc_token", oidcToken)
+	ctx = tflog.SetField(ctx, "oidc_token_file_path", oidcTokenFilePath)
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_client_secret")
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_request_token")
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token")
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token_file_path")
 
 	if config.UseCli.ValueBool() {
 		p.Config.Credentials.UseCli = true
+	} else if config.UseOidc.ValueBool() {
+		p.Config.Credentials.UseOidc = true
+		p.Config.Credentials.TenantId = tenantId
+		p.Config.Credentials.ClientId = clientId
+		p.Config.Credentials.OidcRequestToken = oidcRequestToken
+		p.Config.Credentials.OidcRequestUrl = oidcRequestUrl
+		p.Config.Credentials.OidcToken = oidcToken
+		p.Config.Credentials.OidcTokenFilePath = oidcTokenFilePath
+
 	} else {
 
 		if clientId != "" && clientSecret != "" && tenantId != "" {
@@ -207,4 +280,31 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return licensing.NewBillingPoliciesDataSource() },
 		func() datasource.DataSource { return licensing.NewBillingPoliciesEnvironmetsDataSource() },
 	}
+}
+
+//TODO figure out how to return these defaultfuncs to their former interface-based glory
+
+// MultiEnvDefaultFunc is a helper function that returns the value of the first
+// environment variable in the given list that returns a non-empty value. If
+// none of the environment variables return a value, the default value is
+// returned.
+func MultiEnvDefaultFunc(ks []string) string {
+
+	for _, k := range ks {
+		if v := os.Getenv(k); v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+// EnvDefaultFunc is a helper function that returns the value of the
+// given environment variable, if one exists, or the default value
+// otherwise.
+func EnvDefaultFunc(k string, dv interface{}) string {
+
+	if v := os.Getenv(k); v != "" {
+		return v
+	}
+	return ""
 }
