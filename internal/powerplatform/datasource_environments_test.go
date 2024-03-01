@@ -11,9 +11,9 @@ import (
 	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
-func TestAccEnvironmentsDataSource(t *testing.T) {
+func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
+		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

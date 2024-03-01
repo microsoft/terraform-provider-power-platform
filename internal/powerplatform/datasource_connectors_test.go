@@ -12,7 +12,7 @@ import (
 
 func TestAccConnectorsDataSource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
+		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

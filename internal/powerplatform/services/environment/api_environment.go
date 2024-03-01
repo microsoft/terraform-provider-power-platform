@@ -155,6 +155,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 		return nil, err
 	}
 
+	//lintignore:R018
 	time.Sleep(10 * time.Second)
 
 	environments, err := client.GetEnvironments(ctx)

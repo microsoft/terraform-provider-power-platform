@@ -16,7 +16,7 @@ func TestAccApplicationResource_Validate_Install(t *testing.T) {
 	envDisplayName := fmt.Sprintf("orgtest%d", rand.Intn(100000))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
+		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
