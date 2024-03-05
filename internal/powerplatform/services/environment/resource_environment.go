@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"os"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -61,12 +62,193 @@ type EnvironmentResourceModel struct {
 	BillingPolicyId  types.String `tfsdk:"billing_policy_id"`
 }
 
+type LocationResponse struct {
+	Value []struct {
+		ID         string `json:"id"`
+		Type       string `json:"type"`
+		Name       string `json:"name"`
+		Properties struct {
+			DisplayName                            string   `json:"displayName"`
+			Code                                   string   `json:"code"`
+			IsDefault                              bool     `json:"isDefault"`
+			IsDisabled                             bool     `json:"isDisabled"`
+			CanProvisionDatabase                   bool     `json:"canProvisionDatabase"`
+			CanProvisionCustomerEngagementDatabase bool     `json:"canProvisionCustomerEngagementDatabase"`
+			AzureRegions                           []string `json:"azureRegions"`
+		} `json:"properties"`
+	} `json:"value"`
+}
+
+var locationCache = make(map[string]LocationResponse)
+
+func locationValidator(client *api.ApiClient, location string) error {
+	var parsed LocationResponse
+
+	if val, ok := locationCache[location]; ok {
+		parsed = val
+	} else {
+		response, err := client.Execute(context.Background(), "GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01", nil, nil, []int{http.StatusOK}, nil)
+
+		if err != nil {
+			return err
+		}
+
+		defer response.Response.Body.Close()
+
+		err = json.Unmarshal(response.BodyAsBytes, &parsed)
+
+		if err != nil {
+			return err
+		}
+
+		locationCache[location] = parsed
+	}
+
+	names := make([]string, len(parsed.Value))
+	for i, loc := range parsed.Value {
+		names[i] = loc.Name
+	}
+
+	found := func(items []string, check string) bool {
+		for _, item := range items {
+			if item == check {
+				return true
+			}
+		}
+		return false
+	}(names, location)
+
+	if !found {
+		return fmt.Errorf("location %s is not valid. valid locations are: %s", location, strings.Join(names, ", "))
+	}
+
+	return nil
+}
+
+type CurrencyCodeResponse struct {
+	Value []struct {
+		Name       string `json:"name"`
+		ID         string `json:"id"`
+		Type       string `json:"type"`
+		Properties struct {
+			Code            string `json:"code"`
+			Symbol          string `json:"symbol"`
+			IsTenantDefault bool   `json:"isTenantDefault"`
+		} `json:"properties"`
+	} `json:"value"`
+}
+
+var currencyCodeCache = make(map[string]CurrencyCodeResponse)
+
+func currencyCodeValidator(client *api.ApiClient, location string, currencyCode string) error {
+	var parsed CurrencyCodeResponse
+
+	if val, ok := currencyCodeCache[fmt.Sprintf("%s_%s", location, currencyCode)]; ok {
+		parsed = val
+	} else {
+		response, err := client.Execute(context.Background(), "GET", fmt.Sprintf("https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentCurrencies?api-version=2023-06-01", location), nil, nil, []int{http.StatusOK}, nil)
+
+		if err != nil {
+			return err
+		}
+
+		defer response.Response.Body.Close()
+
+		err = json.Unmarshal(response.BodyAsBytes, &parsed)
+
+		if err != nil {
+			return err
+		}
+
+		currencyCodeCache[fmt.Sprintf("%s_%s", location, currencyCode)] = parsed
+	}
+
+	codes := make([]string, len(parsed.Value))
+	for i, item := range parsed.Value {
+		codes[i] = item.Name
+	}
+
+	found := func(items []string, check string) bool {
+		for _, item := range items {
+			if item == check {
+				return true
+			}
+		}
+		return false
+	}(codes, currencyCode)
+
+	if !found {
+		return fmt.Errorf("currency Code %s is not valid. valid currency codes are: %s", currencyCode, strings.Join(codes, ", "))
+	}
+
+	return nil
+}
+
+type LanguageCodeResponse struct {
+	Value []struct {
+		Name       string `json:"name"`
+		ID         string `json:"id"`
+		Type       string `json:"type"`
+		Properties struct {
+			LocaleID        int    `json:"localeId"`
+			LocalizedName   string `json:"localizedName"`
+			DisplayName     string `json:"displayName"`
+			IsTenantDefault bool   `json:"isTenantDefault"`
+		} `json:"properties"`
+	} `json:"value"`
+}
+
+var languageCodeCache = make(map[string]LanguageCodeResponse)
+
+func languageCodeValidator(client *api.ApiClient, location string, languageCode string) error {
+	var parsed LanguageCodeResponse
+
+	if val, ok := languageCodeCache[fmt.Sprintf("%s_%s", location, languageCode)]; ok {
+		parsed = val
+	} else {
+		response, err := client.Execute(context.Background(), "GET", fmt.Sprintf("https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentLanguages?api-version=2023-06-01", location), nil, nil, []int{http.StatusOK}, nil)
+
+		if err != nil {
+			return err
+		}
+
+		defer response.Response.Body.Close()
+
+		err = json.Unmarshal(response.BodyAsBytes, &parsed)
+
+		if err != nil {
+			return err
+		}
+
+		languageCodeCache[fmt.Sprintf("%s_%s", location, languageCode)] = parsed
+	}
+
+	codes := make([]string, len(parsed.Value))
+	for i, item := range parsed.Value {
+		codes[i] = item.Name
+	}
+
+	found := func(items []string, check string) bool {
+		for _, item := range items {
+			if item == check {
+				return true
+			}
+		}
+		return false
+	}(codes, languageCode)
+
+	if !found {
+		return fmt.Errorf("language Code %s is not valid. valid language codes are: %s", languageCode, strings.Join(codes, ", "))
+	}
+
+	return nil
+}
+
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
 func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "PowerPlatform environment",
 		Description:         "PowerPlatform environment",
@@ -81,9 +263,6 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.OneOf(EnvironmentCurrencyCodes...),
 				},
 			},
 			"id": schema.StringAttribute{
@@ -117,9 +296,6 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{
-					stringvalidator.OneOf(EnvironmentLocations...),
-				},
 			},
 			"environment_type": schema.StringAttribute{
 				Description:         "Type of the environment (Sandbox, Production etc.)",
@@ -151,9 +327,6 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				Required:            true,
 				PlanModifiers: []planmodifier.Int64{
 					powerplatform_modifiers.RequireReplaceIntAttributePlanModifier(),
-				},
-				Validators: []validator.Int64{
-					int64validator.OneOf(EnvironmentLanguages...),
 				},
 			},
 			"version": schema.StringAttribute{
@@ -227,7 +400,6 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	//Unmarshal JSON string input for the D365 template metadata into an object.
 	var templateMetadataObject EnvironmentCreateTemplateMetadata
 
 	if plan.TemplateMetadata.ValueString() != "" {
@@ -264,7 +436,30 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 
 	if plan.Domain.ValueString() != "" && !plan.Domain.IsNull() {
 		envToCreate.Properties.LinkedEnvironmentMetadata.DomainName = plan.Domain.ValueString()
+	}
 
+	_, ok := os.LookupEnv("PP_PROVIDER_ENHANCED_VALIDATION")
+
+	if ok {
+		var err error
+
+		err = locationValidator(r.EnvironmentClient.Api, envToCreate.Location)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
+
+		err = languageCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Language code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
+
+		err = currencyCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Currency code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
 	}
 
 	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, envToCreate)
