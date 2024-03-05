@@ -114,6 +114,10 @@ Variables passed into the provider will override the environment variables.
 
 Use the navigation to the left to read about the available resources and data sources.
 
+## Examples 
+
+More advances examples together with bootstrap script can be found in the [Quick Starts Repository](https://github.com/microsoft/power-platform-terraform-quickstarts).
+
 ## Contributing
 
 Contributions to this provider are always welcome! Please see the [Contribution Guidelines](https://github.com/microsoft/terraform-provider-power-platform/)
