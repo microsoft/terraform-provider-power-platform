@@ -155,6 +155,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 		return nil, err
 	}
 
+	//lintignore:R018
 	time.Sleep(10 * time.Second)
 
 	environments, err := client.GetEnvironments(ctx)
@@ -170,6 +171,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 					return nil, err
 				}
 				tflog.Info(ctx, "Environment State: '"+createdEnv.Properties.States.Management.Id+"'")
+				//lintignore:R018
 				time.Sleep(3 * time.Second)
 				if createdEnv.Properties.States.Management.Id == "Ready" {
 

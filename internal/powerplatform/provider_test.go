@@ -24,6 +24,7 @@ const (
 	// TestsProviderConfig is a shared configuration to combine with the actual
 	// test configuration so the Power Platform client is properly configured.
 	// It is also possible to use the POWER_PLATFORM_ environment variables instead.
+	//lintignore:AT004
 	TestsProviderConfig = `
 provider "powerplatform" {
 	use_cli = true
@@ -37,7 +38,7 @@ var (
 	}
 )
 
-func TestUnitPowerPlatformProviderHasChildDataSources(t *testing.T) {
+func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 	expectedDataSources := []datasource.DataSource{
 		powerapps.NewPowerAppsDataSource(),
 		environment.NewEnvironmentsDataSource(),
@@ -57,7 +58,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources(t *testing.T) {
 	}
 }
 
-func TestUnitPowerPlatformProviderHasChildResources(t *testing.T) {
+func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 	expectedResources := []resource.Resource{
 		environment.NewEnvironmentResource(),
 		application.NewApplicationResource(),
@@ -77,7 +78,7 @@ func TestUnitPowerPlatformProviderHasChildResources(t *testing.T) {
 
 }
 
-func TestAccPreCheck(t *testing.T) {
+func TestAccPreCheck_Basic(t *testing.T) {
 	// if v := os.Getenv("POWER_PLATFORM_TENANT_ID"); v == "" {
 	// 	t.Fatal("POWER_PLATFORM_TENANT_ID must be set for acceptance tests")
 	// }

@@ -59,9 +59,21 @@ jobs:
       run: |
         go build -v .
 
-  # run unit tests and linter
-  test_and_lint:
-    name: Unit Test and Lint
+  # run tfproviderlint
+  linter:
+    name: Run tfproviderlint
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+
+    - uses: actions/checkout@v2.0.0
+    - uses: bflad/tfproviderlint-github-action@master
+      with:
+        args: ./...
+
+  # run unit tests
+  unit_test:
+    name: Unit Test
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -76,13 +88,12 @@ jobs:
         go-version-file: 'go.mod'
       id: go
 
-
     - name: Get dependencies
       run: |
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
         go mod download
         
-    - name: Run unit tests and linter
+    - name: Run unit tests
       run: |
         go test -v ./... -run "^TestUnit" -coverprofile=coverage.out
         go tool cover -html=coverage.out -o coverage.cov.html

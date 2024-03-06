@@ -85,14 +85,13 @@ Alternatively you can create a "secret.tfvars" file and execute the "terraform p
 # terraform plan command pointing to a secret.tfvars
 terraform plan -var-file="secret.tfvars"
 ```
-
 Below you will find an example of how to create your "secret.tfvars" file, remember to specify the correct path of it when executing.
 We include "*.tfvars" in .gitignore to avoid save the secrets in it repository.
 
 ```bash
 # sample "secret.tfvars" values
 client_id = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-client_secret    = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+client_secret = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 tenant_id = "XXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
 ```
 

@@ -37,7 +37,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 	solutionFileChecksum, _ := powerplatform_helpers.CalculateMd5(solutionFileName)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
+		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -196,7 +196,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 	settingsFileChecksum, _ := powerplatform_helpers.CalculateMd5(solutionSettingsFileName)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
+		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
