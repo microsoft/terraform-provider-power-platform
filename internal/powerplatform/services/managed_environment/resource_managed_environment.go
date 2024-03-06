@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -82,7 +81,6 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				MarkdownDescription: "Protection level",
 				Description:         "Protection level",
 				Computed:            true,
-				Default:             stringdefault.StaticString("Standard"),
 			},
 			"is_usage_insights_disabled": schema.BoolAttribute{
 				MarkdownDescription: "Weekly inishgts digest for the environment",

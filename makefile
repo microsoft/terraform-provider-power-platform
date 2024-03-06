@@ -37,3 +37,7 @@ test:
 
 deps:
 	go mod tidy
+
+lint:
+	go install github.com/bflad/tfproviderlint/cmd/tfproviderlintx@latest
+	tfproviderlint ./...

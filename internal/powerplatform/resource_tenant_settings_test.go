@@ -12,7 +12,7 @@ import (
 func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
+		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -284,7 +284,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
+		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

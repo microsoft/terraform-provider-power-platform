@@ -18,7 +18,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 	envNameNew := fmt.Sprintf("orgtest%d", rand.Intn(100000))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
+		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -76,7 +76,7 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 	envName := fmt.Sprintf("orgtest%d", rand.Intn(100000))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck(t) },
+		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

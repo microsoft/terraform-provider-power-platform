@@ -119,6 +119,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	//pull for solution import completion
+	//lintignore:R018
 	time.Sleep(10 * time.Second)
 
 	apiUrl = &url.URL{
@@ -143,6 +144,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 			}
 			return solution, nil
 		}
+		//lintignore:R018
 		time.Sleep(10 * time.Second)
 	}
 }
