@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -62,46 +63,45 @@ type EnvironmentResourceModel struct {
 	BillingPolicyId  types.String `tfsdk:"billing_policy_id"`
 }
 
-type LocationResponse struct {
-	Value []struct {
-		ID         string `json:"id"`
-		Type       string `json:"type"`
-		Name       string `json:"name"`
-		Properties struct {
-			DisplayName                            string   `json:"displayName"`
-			Code                                   string   `json:"code"`
-			IsDefault                              bool     `json:"isDefault"`
-			IsDisabled                             bool     `json:"isDisabled"`
-			CanProvisionDatabase                   bool     `json:"canProvisionDatabase"`
-			CanProvisionCustomerEngagementDatabase bool     `json:"canProvisionCustomerEngagementDatabase"`
-			AzureRegions                           []string `json:"azureRegions"`
-		} `json:"properties"`
-	} `json:"value"`
-}
-
-var locationCache = make(map[string]LocationResponse)
-
 func locationValidator(client *api.ApiClient, location string) error {
-	var parsed LocationResponse
+	var parsed struct {
+		Value []struct {
+			ID         string `json:"id"`
+			Type       string `json:"type"`
+			Name       string `json:"name"`
+			Properties struct {
+				DisplayName                            string   `json:"displayName"`
+				Code                                   string   `json:"code"`
+				IsDefault                              bool     `json:"isDefault"`
+				IsDisabled                             bool     `json:"isDisabled"`
+				CanProvisionDatabase                   bool     `json:"canProvisionDatabase"`
+				CanProvisionCustomerEngagementDatabase bool     `json:"canProvisionCustomerEngagementDatabase"`
+				AzureRegions                           []string `json:"azureRegions"`
+			} `json:"properties"`
+		} `json:"value"`
+	}
 
-	if val, ok := locationCache[location]; ok {
-		parsed = val
-	} else {
-		response, err := client.Execute(context.Background(), "GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01", nil, nil, []int{http.StatusOK}, nil)
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.GetConfig().Urls.BapiUrl,
+		Path:   "/providers/Microsoft.BusinessAppPlatform/locations",
+	}
+	values := url.Values{}
+	values.Add("api-version", "2023-06-01")
+	apiUrl.RawQuery = values.Encode()
 
-		if err != nil {
-			return err
-		}
+	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 
-		defer response.Response.Body.Close()
+	if err != nil {
+		return err
+	}
 
-		err = json.Unmarshal(response.BodyAsBytes, &parsed)
+	defer response.Response.Body.Close()
 
-		if err != nil {
-			return err
-		}
+	err = json.Unmarshal(response.BodyAsBytes, &parsed)
 
-		locationCache[location] = parsed
+	if err != nil {
+		return err
 	}
 
 	names := make([]string, len(parsed.Value))
@@ -125,42 +125,41 @@ func locationValidator(client *api.ApiClient, location string) error {
 	return nil
 }
 
-type CurrencyCodeResponse struct {
-	Value []struct {
-		Name       string `json:"name"`
-		ID         string `json:"id"`
-		Type       string `json:"type"`
-		Properties struct {
-			Code            string `json:"code"`
-			Symbol          string `json:"symbol"`
-			IsTenantDefault bool   `json:"isTenantDefault"`
-		} `json:"properties"`
-	} `json:"value"`
-}
-
-var currencyCodeCache = make(map[string]CurrencyCodeResponse)
-
 func currencyCodeValidator(client *api.ApiClient, location string, currencyCode string) error {
-	var parsed CurrencyCodeResponse
+	var parsed struct {
+		Value []struct {
+			Name       string `json:"name"`
+			ID         string `json:"id"`
+			Type       string `json:"type"`
+			Properties struct {
+				Code            string `json:"code"`
+				Symbol          string `json:"symbol"`
+				IsTenantDefault bool   `json:"isTenantDefault"`
+			} `json:"properties"`
+		} `json:"value"`
+	}
 
-	if val, ok := currencyCodeCache[fmt.Sprintf("%s_%s", location, currencyCode)]; ok {
-		parsed = val
-	} else {
-		response, err := client.Execute(context.Background(), "GET", fmt.Sprintf("https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentCurrencies?api-version=2023-06-01", location), nil, nil, []int{http.StatusOK}, nil)
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.GetConfig().Urls.BapiUrl,
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentCurrencies", location),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2023-06-01")
+	apiUrl.RawQuery = values.Encode()
 
-		if err != nil {
-			return err
-		}
+	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 
-		defer response.Response.Body.Close()
+	if err != nil {
+		return err
+	}
 
-		err = json.Unmarshal(response.BodyAsBytes, &parsed)
+	defer response.Response.Body.Close()
 
-		if err != nil {
-			return err
-		}
+	err = json.Unmarshal(response.BodyAsBytes, &parsed)
 
-		currencyCodeCache[fmt.Sprintf("%s_%s", location, currencyCode)] = parsed
+	if err != nil {
+		return err
 	}
 
 	codes := make([]string, len(parsed.Value))
@@ -184,43 +183,42 @@ func currencyCodeValidator(client *api.ApiClient, location string, currencyCode 
 	return nil
 }
 
-type LanguageCodeResponse struct {
-	Value []struct {
-		Name       string `json:"name"`
-		ID         string `json:"id"`
-		Type       string `json:"type"`
-		Properties struct {
-			LocaleID        int    `json:"localeId"`
-			LocalizedName   string `json:"localizedName"`
-			DisplayName     string `json:"displayName"`
-			IsTenantDefault bool   `json:"isTenantDefault"`
-		} `json:"properties"`
-	} `json:"value"`
-}
-
-var languageCodeCache = make(map[string]LanguageCodeResponse)
-
 func languageCodeValidator(client *api.ApiClient, location string, languageCode string) error {
-	var parsed LanguageCodeResponse
+	var parsed struct {
+		Value []struct {
+			Name       string `json:"name"`
+			ID         string `json:"id"`
+			Type       string `json:"type"`
+			Properties struct {
+				LocaleID        int    `json:"localeId"`
+				LocalizedName   string `json:"localizedName"`
+				DisplayName     string `json:"displayName"`
+				IsTenantDefault bool   `json:"isTenantDefault"`
+			} `json:"properties"`
+		} `json:"value"`
+	}
 
-	if val, ok := languageCodeCache[fmt.Sprintf("%s_%s", location, languageCode)]; ok {
-		parsed = val
-	} else {
-		response, err := client.Execute(context.Background(), "GET", fmt.Sprintf("https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentLanguages?api-version=2023-06-01", location), nil, nil, []int{http.StatusOK}, nil)
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.GetConfig().Urls.BapiUrl,
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentLanguages", location),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2023-06-01")
+	apiUrl.RawQuery = values.Encode()
 
-		if err != nil {
-			return err
-		}
+	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 
-		defer response.Response.Body.Close()
+	if err != nil {
+		return err
+	}
 
-		err = json.Unmarshal(response.BodyAsBytes, &parsed)
+	defer response.Response.Body.Close()
 
-		if err != nil {
-			return err
-		}
+	err = json.Unmarshal(response.BodyAsBytes, &parsed)
 
-		languageCodeCache[fmt.Sprintf("%s_%s", location, languageCode)] = parsed
+	if err != nil {
+		return err
 	}
 
 	codes := make([]string, len(parsed.Value))
