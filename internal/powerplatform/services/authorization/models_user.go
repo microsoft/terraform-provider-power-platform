@@ -12,8 +12,14 @@ type UserDto struct {
 }
 
 type SecurityRoleDto struct {
-	RoleId string `json:"roleid"`
-	Name   string `json:"name"`
+	RoleId         string `json:"roleid"`
+	Name           string `json:"name"`
+	IsManaged      bool   `json:"ismanaged"`
+	BusinessUnitId string `json:"_businessunitid_value"`
+}
+
+type SecurityRoleDtoArray struct {
+	Value []SecurityRoleDto `json:"value"`
 }
 
 func (u *UserDto) SecurityRolesArray() []string {

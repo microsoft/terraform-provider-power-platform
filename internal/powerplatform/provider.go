@@ -14,6 +14,7 @@ import (
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
+	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
@@ -22,7 +23,6 @@ import (
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
-	user "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/user"
 )
 
 var _ provider.Provider = &PowerPlatformProvider{}
@@ -266,7 +266,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return managed_environment.NewManagedEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
-		func() resource.Resource { return user.NewUserResource() },
+		func() resource.Resource { return auth.NewUserResource() },
 	}
 }
 
@@ -281,6 +281,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return tenant_settings.NewTenantSettingsDataSource() },
 		func() datasource.DataSource { return licensing.NewBillingPoliciesDataSource() },
 		func() datasource.DataSource { return licensing.NewBillingPoliciesEnvironmetsDataSource() },
+		func() datasource.DataSource { return auth.NewSecurityRolesDataSource() },
 	}
 }
 

@@ -183,6 +183,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	state.Id = model.Id
 	state.AadId = model.AadId
 	resp.State.SetAttribute(ctx, path.Root("security_roles"), model.SecurityRoles)
+	state.EnvironmentId = state.EnvironmentId
 	state.UserPrincipalName = model.UserPrincipalName
 	state.FirstName = model.FirstName
 	state.LastName = model.LastName

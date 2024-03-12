@@ -219,3 +219,21 @@ func (client *UserClient) getEnvironment(ctx context.Context, environmentId stri
 
 	return &env, nil
 }
+
+func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId string) ([]SecurityRoleDto, error) {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Path:   "/api/data/v9.2/roles",
+	}
+	securityRoleArray := SecurityRoleDtoArray{}
+	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &securityRoleArray)
+	if err != nil {
+		return nil, err
+	}
+	return securityRoleArray.Value, nil
+}
