@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 var _ resource.Resource = &UserResource{}
@@ -138,7 +139,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	userDto, err = r.UserClient.AssignSecurityRoles(ctx, plan.EnvironmentId.ValueString(), userDto.Id, plan.SecurityRoles)
+	userDto, err = r.UserClient.AddSecurityRoles(ctx, plan.EnvironmentId.ValueString(), userDto.Id, plan.SecurityRoles)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
@@ -181,8 +182,6 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	state.Id = model.Id
 	state.AadId = model.AadId
-	//state.EnvironmentName = plan.EnvironmentName //model.EnvironmentName
-	//state.SecurityRoles = model.SecurityRoles
 	resp.State.SetAttribute(ctx, path.Root("security_roles"), model.SecurityRoles)
 	state.UserPrincipalName = model.UserPrincipalName
 	state.FirstName = model.FirstName
@@ -209,8 +208,37 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	//todo
-	panic("implement user update")
+	addedSecurityRoles, removedSecurityRoles := helpers.DiffArrays(plan.SecurityRoles, state.SecurityRoles)
+
+	user, err := r.UserClient.GetUserBySystemUserId(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
+
+	if len(addedSecurityRoles) > 0 {
+		userDto, err := r.UserClient.AddSecurityRoles(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString(), addedSecurityRoles)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when adding security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		}
+		user = userDto
+	}
+	if len(removedSecurityRoles) > 0 {
+		userDto, err := r.UserClient.RemoveSecurityRoles(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString(), removedSecurityRoles)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when removing security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		}
+		user = userDto
+	}
+
+	model := ConvertFromUserDto(user)
+
+	plan.Id = model.Id
+	plan.AadId = model.AadId
+	req.Plan.SetAttribute(ctx, path.Root("security_roles"), model.SecurityRoles)
+	plan.UserPrincipalName = model.UserPrincipalName
+	plan.FirstName = model.FirstName
+	plan.LastName = model.LastName
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 

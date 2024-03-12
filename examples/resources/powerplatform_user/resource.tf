@@ -11,7 +11,7 @@ provider "powerplatform" {
   use_cli = true
 }
 
-resource "powerplatform_environment" "user_example" {
+resource "powerplatform_environment" "dataverse_user_example" {
   display_name      = "user_example"
   location          = "europe"
   language_code     = "1033"
@@ -22,8 +22,8 @@ resource "powerplatform_environment" "user_example" {
 
 resource "powerplatform_user" "new_user" {
   environment_id = powerplatform_environment.user_example.id
-  security_roles = [] //["a1801436-efd6-e811-a96e-000d3a3ab886"]
-  aad_id         = "ad7b0121-6fca-440b-99ae-0d54d89a3ac7"
+  security_roles = [
+    "e0d2794e-82f3-e811-a951-000d3a1bcf17", // bot author
+  ]
+  aad_id = "00000000-0000-0000-0000-000000000001"
 }
-
-

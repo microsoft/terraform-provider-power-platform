@@ -76,8 +76,6 @@ func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentI
 	values.Add("$expand", "systemuserroles_association($select=roleid,name)")
 	apiUrl.RawQuery = values.Encode()
 
-	//https://org3bf4a377.crm17.dynamics.com/api/data/v9.2/systemusers?$select=firstname,lastname&$filter=azureactivedirectoryobjectid%20eq%20ad7b0121-6fca-440b-99ae-0d54d89a3ac7&$expand=systemuserroles_association($select=roleid,name)
-
 	user := UserDtoArray{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
@@ -136,8 +134,36 @@ func (client *UserClient) UpdateUser(ctx context.Context, environmentId, systemU
 	return user, nil
 }
 
-func (client *UserClient) AssignSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*UserDto, error) {
-	//https://org3bf4a377.crm17.dynamics.com//api/data/v9.0/systemusers(debdcfd6-8adf-ee11-904c-002248f3fcc4)%2Fsystemuserroles_association%2F%24ref
+func (client *UserClient) RemoveSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*UserDto, error) {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, roleId := range securityRolesIds {
+		apiUrl := &url.URL{
+			Scheme: "https",
+			Host:   strings.TrimPrefix(environmentUrl, "https://"),
+			Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")/systemuserroles_association/$ref",
+		}
+		values := url.Values{}
+		values.Add("$id", fmt.Sprintf("%s/api/data/v9.2/roles(%s)", environmentUrl, roleId))
+		apiUrl.RawQuery = values.Encode()
+
+		_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	user, err := client.GetUserBySystemUserId(ctx, environmentId, systemUserId)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (client *UserClient) AddSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*UserDto, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -151,18 +177,12 @@ func (client *UserClient) AssignSecurityRoles(ctx context.Context, environmentId
 	for _, roleId := range securityRolesIds {
 		roleToassociate := map[string]interface{}{
 			"@odata.id": fmt.Sprintf("%s/api/data/v9.2/roles(%s)", environmentUrl, roleId),
-			//"https://org3bf4a377.crm17.dynamics.com/api/data/v9.2/roles(a1801436-efd6-e811-a96e-000d3a3ab886)",
 		}
-		//user := UserDto{}
 		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, roleToassociate, []int{http.StatusNoContent}, nil)
 		if err != nil {
 			return nil, err
 		}
 	}
-
-	//https://org3bf4a377.crm17.dynamics.com/api/data/v9.2/systemusers(debdcfd6-8adf-ee11-904c-002248f3fcc4)?$select=systemuserid,fullname&$expand=systemuserroles_association($select=roleid,name)
-	//https://org3bf4a377.crm17.dynamics.com/api/data/v9.2/systemusers?$select=firstname,lastname&$filter=azureactivedirectoryobjectid%20eq%20ad7b0121-6fca-440b-99ae-0d54d89a3ac7&$expand=systemuserroles_association($select=roleid,name)
-
 	user, err := client.GetUserBySystemUserId(ctx, environmentId, systemUserId)
 	if err != nil {
 		return nil, err
