@@ -22,6 +22,7 @@ import (
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
+	user "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/user"
 )
 
 var _ provider.Provider = &PowerPlatformProvider{}
@@ -265,6 +266,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return managed_environment.NewManagedEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
+		func() resource.Resource { return user.NewUserResource() },
 	}
 }
 
