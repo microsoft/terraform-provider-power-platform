@@ -16,7 +16,8 @@ This provider requires **Terraform >= 0.12**.  For more information on provider 
 
 ## Installation
 
-**ℹ INFO:** This provider is not yet published to the Terraform registry, so it requires a local installation to use it at this time.
+> [!NOTE]
+> This provider is not yet published to the Terraform registry, so it requires a local installation to use it at this time.
 
 To use the provider you can download the binaries from [Releases](https://github.com/microsoft/terraform-provider-power-platform/releases) to your local file system and configure Terraform to use your local mirror.  See the [Explicit Installation Method Configuration](https://developer.hashicorp.com/terraform/cli/config/config-file#explicit-installation-method-configuration) for more information about using local binaries.
 
@@ -85,6 +86,7 @@ Alternatively you can create a "secret.tfvars" file and execute the "terraform p
 # terraform plan command pointing to a secret.tfvars
 terraform plan -var-file="secret.tfvars"
 ```
+
 Below you will find an example of how to create your "secret.tfvars" file, remember to specify the correct path of it when executing.
 We include "*.tfvars" in .gitignore to avoid save the secrets in it repository.
 
@@ -113,7 +115,10 @@ Variables passed into the provider will override the environment variables.
 
 Use the navigation to the left to read about the available resources and data sources.
 
-## Examples 
+> [!CAUTION]
+> By calling `terraform destroy` all the resources, that you've created, will be deleted permamently deleted. Please be careful with this command when working with production environments. You can use [prevent-destory](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) lifecycle argument in your resources to prevent accidental deletion.  
+
+## Examples
 
 More advances examples together with bootstrap script can be found in the [Quick Starts Repository](https://github.com/microsoft/power-platform-terraform-quickstarts).
 
