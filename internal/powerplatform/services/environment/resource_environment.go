@@ -436,28 +436,24 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		envToCreate.Properties.LinkedEnvironmentMetadata.DomainName = plan.Domain.ValueString()
 	}
 
-	_, ok := os.LookupEnv("PP_PROVIDER_ENHANCED_VALIDATION")
+	var err error
 
-	if ok {
-		var err error
+	err = locationValidator(r.EnvironmentClient.Api, envToCreate.Location)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
 
-		err = locationValidator(r.EnvironmentClient.Api, envToCreate.Location)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-			return
-		}
+	err = languageCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Language code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
 
-		err = languageCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Language code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-			return
-		}
-
-		err = currencyCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Currency code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-			return
-		}
+	err = currencyCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Currency code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
 	}
 
 	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, envToCreate)
