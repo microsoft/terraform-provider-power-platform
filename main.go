@@ -29,5 +29,4 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error serving provider: %s", err)
 	}
-
 }

@@ -36,7 +36,6 @@ func (client *EnvironmentClient) GetEnvironmentUrlById(ctx context.Context, envi
 }
 
 func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environmentId string) (*EnvironmentDto, error) {
-
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -90,7 +89,6 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 }
 
 func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environment EnvironmentCreateDto) (*EnvironmentDto, error) {
-
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -140,7 +138,6 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 }
 
 func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environmentId string, environment EnvironmentDto) (*EnvironmentDto, error) {
-
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -186,7 +183,6 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 }
 
 func (client *EnvironmentClient) GetEnvironments(ctx context.Context) ([]EnvironmentDto, error) {
-
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
