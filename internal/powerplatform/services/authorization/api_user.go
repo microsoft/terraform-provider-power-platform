@@ -230,6 +230,10 @@ func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId st
 		Host:   strings.TrimPrefix(environmentUrl, "https://"),
 		Path:   "/api/data/v9.2/roles",
 	}
+	//var values = url.Values{}
+	//values.Add("$filter", fmt.Sprintf("_businessunitid_value eq %s", "84b8a367-62de-ee11-904d-002248c9a0e9"))
+	//apiUrl.RawQuery = values.Encode()
+
 	securityRoleArray := SecurityRoleDtoArray{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &securityRoleArray)
 	if err != nil {
