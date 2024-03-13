@@ -8,7 +8,7 @@ type UserDto struct {
 	FirstName     string            `json:"firstname"`
 	LastName      string            `json:"lastname"`
 	AadObjectId   string            `json:"azureactivedirectoryobjectid"`
-	SecurityRoles []SecurityRoleDto "json:systemuserroles_association"
+	SecurityRoles []SecurityRoleDto `json:"systemuserroles_association"`
 }
 
 type SecurityRoleDto struct {

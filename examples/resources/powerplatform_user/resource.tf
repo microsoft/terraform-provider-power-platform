@@ -21,7 +21,7 @@ resource "powerplatform_environment" "dataverse_user_example" {
 }
 
 resource "powerplatform_user" "new_user" {
-  environment_id = powerplatform_environment.user_example.id
+  environment_id = powerplatform_environment.dataverse_user_example.id
   security_roles = [
     "e0d2794e-82f3-e811-a951-000d3a1bcf17", // bot author
   ]

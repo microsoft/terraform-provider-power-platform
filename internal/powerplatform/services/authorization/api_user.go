@@ -49,7 +49,7 @@ func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environment
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
 	}
 	values := url.Values{}
-	values.Add("$expand", "systemuserroles_association($select=roleid,name)")
+	values.Add("$expand", "systemuserroles_association($select=roleid,name,ismanaged,_businessunitid_value)")
 	apiUrl.RawQuery = values.Encode()
 
 	user := UserDto{}
@@ -73,7 +73,7 @@ func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentI
 	}
 	values := url.Values{}
 	values.Add("$filter", fmt.Sprintf("azureactivedirectoryobjectid eq %s", aadObjectId))
-	values.Add("$expand", "systemuserroles_association($select=roleid,name)")
+	values.Add("$expand", "systemuserroles_association($select=roleid,name,ismanaged,_businessunitid_value)")
 	apiUrl.RawQuery = values.Encode()
 
 	user := UserDtoArray{}
