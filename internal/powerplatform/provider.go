@@ -48,7 +48,6 @@ func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func
 	}
 
 	return func() provider.Provider {
-
 		p := &PowerPlatformProvider{
 			Config: &config,
 			Api:    api.NewApiClientBase(&config, api.NewAuthBase(&config)),

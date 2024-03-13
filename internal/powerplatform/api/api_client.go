@@ -55,6 +55,7 @@ func TryGetScopeFromURL(url string) (string, error) {
 
 func (client *ApiClient) Execute(ctx context.Context, method string, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
 	scope, err := TryGetScopeFromURL(url)
+
 	if err != nil {
 		return nil, err
 	}
