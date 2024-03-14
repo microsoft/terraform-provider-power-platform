@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -98,7 +100,18 @@ func (client *UserClient) CreateUser(ctx context.Context, environmentId, aadObje
 		"objectId": aadObjectId,
 	}
 
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, userToCreate, []int{http.StatusOK}, nil)
+	retryCount := 12 // 2 minutes of retries
+	err := fmt.Errorf("")
+	for retryCount > 0 {
+		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, userToCreate, []int{http.StatusOK}, nil)
+		//the license assigment in Entra is async, so we need to wait for that to happen if a user is created in the same terraform run
+		if err == nil || !strings.Contains(err.Error(), "userNotLicensed") {
+			break
+		}
+		tflog.Debug(ctx, fmt.Sprintf("Error creating user: %s", err.Error()))
+		time.Sleep(10 * time.Second)
+		retryCount--
+	}
 	if err != nil {
 		return nil, err
 	}
