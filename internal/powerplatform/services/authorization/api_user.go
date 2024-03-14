@@ -100,7 +100,7 @@ func (client *UserClient) CreateUser(ctx context.Context, environmentId, aadObje
 		"objectId": aadObjectId,
 	}
 
-	retryCount := 12 // 2 minutes of retries
+	retryCount := 6 * 9 // 9 minutes of retries
 	err := fmt.Errorf("")
 	for retryCount > 0 {
 		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, userToCreate, []int{http.StatusOK}, nil)
