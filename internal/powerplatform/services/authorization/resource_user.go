@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -41,6 +42,7 @@ type UserResourceModel struct {
 	UserPrincipalName types.String `tfsdk:"user_principal_name"`
 	FirstName         types.String `tfsdk:"first_name"`
 	LastName          types.String `tfsdk:"last_name"`
+	DisableDelete     types.Bool   `tfsdk:"disable_delete"`
 }
 
 func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -100,6 +102,14 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Description:         "User last name",
 				Computed:            true,
 			},
+			"disable_delete": schema.BoolAttribute{
+				MarkdownDescription: "Disable delete. When set to `True` is expects that (Disable Delte)[https://learn.microsoft.com/en-us/power-platform/admin/delete-users?WT.mc_id=ppac_inproduct_settings#soft-delete-users-in-power-platform] feature to be enabled." +
+					"Removing resource will try to delete the systemuser from Dataverse. This is the default behaviour. If you just want to remove the resource and not delete the user from Dataverse, set this propertyto `False`",
+				Description: "Disable delete. Deletes systemuser from Dataverse if it was aleardy removed from Entra.",
+				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(true),
+			},
 		},
 	}
 }
@@ -145,7 +155,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	model := ConvertFromUserDto(userDto)
+	model := ConvertFromUserDto(userDto, plan.DisableDelete.ValueBool())
 
 	plan.Id = model.Id
 	plan.AadId = model.AadId
@@ -153,6 +163,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.UserPrincipalName = model.UserPrincipalName
 	plan.FirstName = model.FirstName
 	plan.LastName = model.LastName
+	plan.DisableDelete = model.DisableDelete
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
@@ -178,7 +189,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	model := ConvertFromUserDto(userDto)
+	model := ConvertFromUserDto(userDto, state.DisableDelete.ValueBool())
 
 	state.Id = model.Id
 	state.AadId = model.AadId
@@ -186,6 +197,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	state.UserPrincipalName = model.UserPrincipalName
 	state.FirstName = model.FirstName
 	state.LastName = model.LastName
+	state.DisableDelete = model.DisableDelete
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
 
@@ -231,7 +243,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		user = userDto
 	}
 
-	model := ConvertFromUserDto(user)
+	model := ConvertFromUserDto(user, plan.DisableDelete.ValueBool())
 
 	plan.Id = model.Id
 	plan.AadId = model.AadId
@@ -239,6 +251,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	plan.UserPrincipalName = model.UserPrincipalName
 	plan.FirstName = model.FirstName
 	plan.LastName = model.LastName
+	plan.DisableDelete = model.DisableDelete
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
@@ -256,13 +269,16 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	//panic("implement user delete")
+	if state.DisableDelete.ValueBool() {
+		err := r.UserClient.DeleteUser(ctx, state.EnvironmentId.ValueString(), state.Id.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
 
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-	// 	return
-	// }
-
+	} else {
+		tflog.Debug(ctx, fmt.Sprintf("Disable delete is set to false. Skipping delete of systemuser with id %s", state.Id.ValueString()))
+	}
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 

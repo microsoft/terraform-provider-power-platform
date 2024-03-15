@@ -52,7 +52,7 @@ type LinkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }
 
-func ConvertFromUserDto(userDto *UserDto) UserResourceModel {
+func ConvertFromUserDto(userDto *UserDto, disableDelete bool) UserResourceModel {
 	model := UserResourceModel{
 		Id:                types.StringValue(userDto.Id),
 		AadId:             types.StringValue(userDto.AadObjectId),
@@ -61,5 +61,6 @@ func ConvertFromUserDto(userDto *UserDto) UserResourceModel {
 		FirstName:         types.StringValue(userDto.FirstName),
 		LastName:          types.StringValue(userDto.LastName),
 	}
+	model.DisableDelete = types.BoolValue(disableDelete)
 	return model
 }

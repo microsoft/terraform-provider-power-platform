@@ -147,6 +147,24 @@ func (client *UserClient) UpdateUser(ctx context.Context, environmentId, systemU
 	return user, nil
 }
 
+func (client *UserClient) DeleteUser(ctx context.Context, environmentId, systemUserId string) error {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return err
+	}
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
+	}
+
+	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (client *UserClient) RemoveSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*UserDto, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {

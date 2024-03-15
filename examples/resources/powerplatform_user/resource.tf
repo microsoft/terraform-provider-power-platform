@@ -25,5 +25,6 @@ resource "powerplatform_user" "new_user" {
   security_roles = [
     "e0d2794e-82f3-e811-a951-000d3a1bcf17", // bot author
   ]
-  aad_id = "00000000-0000-0000-0000-000000000001"
+  aad_id         = "00000000-0000-0000-0000-000000000001"
+  disable_delete = false
 }
