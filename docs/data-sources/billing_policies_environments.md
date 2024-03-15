@@ -19,16 +19,13 @@ This data source uses the [List Billing Policy Environments](https://learn.micro
 terraform {
   required_providers {
     powerplatform = {
-      version = "0.2"
-      source  = "microsoft/power-platform"
+      source = "microsoft/power-platform"
     }
   }
 }
 
 provider "powerplatform" {
-  client_id     = var.client_id
-  client_secret = var.client_secret
-  tenant_id     = var.tenant_id
+  use_cli = true
 }
 
 data "powerplatform_billing_policies_environments" "all_pay_as_you_go_policy_envs" {

@@ -22,16 +22,13 @@ Additional Resources:
 terraform {
   required_providers {
     powerplatform = {
-      version = "0.2"
-      source  = "microsoft/power-platform"
+      source = "microsoft/power-platform"
     }
   }
 }
 
 provider "powerplatform" {
-  client_id     = var.client_id
-  client_secret = var.client_secret
-  tenant_id     = var.tenant_id
+  use_cli = true
 }
 
 data "powerplatform_connectors" "all_connectors" {}
