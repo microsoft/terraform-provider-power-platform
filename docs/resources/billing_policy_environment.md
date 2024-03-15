@@ -3,12 +3,12 @@
 page_title: "powerplatform_billing_policy_environment Resource - powerplatform"
 subcategory: ""
 description: |-
-  Power Platform Billing Policy Environments
+  This resource allows you to manage the environments associated with a billing policy https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy. A billing policy is a set of rules that define how a tenant is billed for usage of Power Platform services. A billing policy is associated with a billing instrument, which is a subscription and resource group that is used to pay for usage of Power Platform services.
 ---
 
 # powerplatform_billing_policy_environment (Resource)
 
-Power Platform Billing Policy Environments
+This resource allows you to manage the environments associated with a [billing policy](https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy). A billing policy is a set of rules that define how a tenant is billed for usage of Power Platform services. A billing policy is associated with a billing instrument, which is a subscription and resource group that is used to pay for usage of Power Platform services.
 
 ## Example Usage
 
@@ -16,8 +16,7 @@ Power Platform Billing Policy Environments
 terraform {
   required_providers {
     powerplatform = {
-      version = "0.2"
-      source  = "microsoft/power-platform"
+      source = "microsoft/power-platform"
     }
   }
 }

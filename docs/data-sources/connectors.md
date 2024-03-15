@@ -3,12 +3,18 @@
 page_title: "powerplatform_connectors Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of available connectors in a Power Platform tenant
+  Fetches the list of available connectors within a specific Power Platform tenant. Each connector represents a service that can be used to enhance the capabilities of Power Apps, Power Automate, and Power Virtual Agents. The returned list includes both standard and custom connectors, providing a comprehensive view of the services that can be integrated into your Power Platform solutions. The list can be used to understand what services are readily available for use within your tenant, and can assist in planning and developing new applications or flows. It's important to note that the availability of connectors may vary based on the specific licenses and permissions assigned within your tenant.
+  Additional Resources:
+  Connectors Overview https://learn.microsoft.com/en-us/connectors/connectors
 ---
 
 # powerplatform_connectors (Data Source)
 
-Fetches the list of available connectors in a Power Platform tenant
+Fetches the list of available connectors within a specific Power Platform tenant. Each connector represents a service that can be used to enhance the capabilities of Power Apps, Power Automate, and Power Virtual Agents. The returned list includes both standard and custom connectors, providing a comprehensive view of the services that can be integrated into your Power Platform solutions. The list can be used to understand what services are readily available for use within your tenant, and can assist in planning and developing new applications or flows. It's important to note that the availability of connectors may vary based on the specific licenses and permissions assigned within your tenant.
+
+Additional Resources:
+
+* [Connectors Overview](https://learn.microsoft.com/en-us/connectors/connectors)
 
 ## Example Usage
 

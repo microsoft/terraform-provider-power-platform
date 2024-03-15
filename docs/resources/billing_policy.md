@@ -3,12 +3,22 @@
 page_title: "powerplatform_billing_policy Resource - powerplatform"
 subcategory: ""
 description: |-
-  Power Platform Billing Policy https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy/get-billing-policy#billingpolicyresponsemodel
+  Manages a Power Platform Billing Policy.
+  A Power Platform billing policy is a mechanism that allows you to manage the costs associated with your Power Platform usage. It's linked to an Azure subscription and is used to set up pay-as-you-go billing for an environment.
+  Additional Resources:
+  What is a billing policy https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policyPower Platform Billing Policy API https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy/get-billing-policy
 ---
 
 # powerplatform_billing_policy (Resource)
 
-[Power Platform Billing Policy](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy/get-billing-policy#billingpolicyresponsemodel)
+Manages a Power Platform Billing Policy. 
+
+A Power Platform billing policy is a mechanism that allows you to manage the costs associated with your Power Platform usage. It's linked to an Azure subscription and is used to set up pay-as-you-go billing for an environment.
+
+Additional Resources:
+
+* [What is a billing policy](https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy)
+* [Power Platform Billing Policy API](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy/get-billing-policy)
 
 ## Example Usage
 
@@ -16,8 +26,7 @@ description: |-
 terraform {
   required_providers {
     powerplatform = {
-      version = "0.2"
-      source  = "microsoft/power-platform"
+      source = "microsoft/power-platform"
     }
   }
 }

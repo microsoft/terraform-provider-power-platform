@@ -26,8 +26,7 @@ A Power Platform environment is a space in which you can store, manage, and shar
 terraform {
   required_providers {
     powerplatform = {
-      version = "0.2"
-      source  = "microsoft/power-platform"
+      source = "microsoft/power-platform"
     }
   }
 }

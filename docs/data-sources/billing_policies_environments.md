@@ -3,12 +3,15 @@
 page_title: "powerplatform_billing_policies_environments Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of billing policies in a tenant
+  Fetches the environments associated with a billing policy https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy.
+  This data source uses the List Billing Policy Environments https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy-environment/list-billing-policy-environments endpoint in the Power Platform API.
 ---
 
 # powerplatform_billing_policies_environments (Data Source)
 
-Fetches the list of billing policies in a tenant
+Fetches the environments associated with a [billing policy](https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy).
+
+This data source uses the [List Billing Policy Environments](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy-environment/list-billing-policy-environments) endpoint in the Power Platform API.
 
 ## Example Usage
 
