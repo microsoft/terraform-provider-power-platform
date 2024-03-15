@@ -40,9 +40,9 @@ var (
 
 func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 	expectedDataSources := []datasource.DataSource{
-		powerapps.NewPowerAppsDataSource(),
+		powerapps.NewEnvironmentPowerAppsDataSource(),
 		environment.NewEnvironmentsDataSource(),
-		application.NewApplicationsDataSource(),
+		application.NewEnvironmentApplicationPackagesDataSource(),
 		connectors.NewConnectorsDataSource(),
 		solution.NewSolutionsDataSource(),
 		dlp_policy.NewDataLossPreventionPolicyDataSource(),
@@ -61,7 +61,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 	expectedResources := []resource.Resource{
 		environment.NewEnvironmentResource(),
-		application.NewApplicationResource(),
+		application.NewEnvironmentApplicationPackageInstallResource(),
 		dlp_policy.NewDataLossPreventionPolicyResource(),
 		solution.NewSolutionResource(),
 		tenant_settings.NewTenantSettingsResource(),

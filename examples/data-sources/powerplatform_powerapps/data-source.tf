@@ -13,4 +13,4 @@ provider "powerplatform" {
   tenant_id     = var.tenant_id
 }
 
-data "powerplatform_powerapps" "all" {}
+data "powerplatform_environment_powerapps" "all" {}
