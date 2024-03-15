@@ -8,7 +8,8 @@ description: |-
 
 The Power Platform provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
-**⚠️ WARNING:** This code is experimental and provided solely for evaluation purposes. It is **NOT** intended for production use and may contain bugs, incomplete features, or other issues. Use at your own risk, as it may undergo significant changes without notice, and no guarantees or support are provided. By using this code, you acknowledge and agree to these conditions. Consult the documentation or contact the maintainer if you have questions or concerns.
+> [!WARNING]
+> This code is experimental and provided solely for evaluation purposes. It is **NOT** intended for production use and may contain bugs, incomplete features, or other issues. Use at your own risk, as it may undergo significant changes without notice, and no guarantees or support are provided. By using this code, you acknowledge and agree to these conditions. Consult the documentation or contact the maintainer if you have questions or concerns.
 
 ## Requirements
 
@@ -16,7 +17,8 @@ This provider requires **Terraform >= 0.12**.  For more information on provider 
 
 ## Installation
 
-**ℹ INFO:** This provider is not yet published to the Terraform registry, so it requires a local installation to use it at this time.
+> [!NOTE]
+> This provider is not yet published to the Terraform registry, so it requires a local installation to use it at this time.
 
 To use the provider you can download the binaries from [Releases](https://github.com/microsoft/terraform-provider-power-platform/releases) to your local file system and configure Terraform to use your local mirror.  See the [Explicit Installation Method Configuration](https://developer.hashicorp.com/terraform/cli/config/config-file#explicit-installation-method-configuration) for more information about using local binaries.
 
@@ -112,6 +114,13 @@ Variables passed into the provider will override the environment variables.
 ## Resources and Data Sources
 
 Use the navigation to the left to read about the available resources and data sources.
+
+> [!CAUTION]
+> By calling `terraform destroy` all the resources, that you've created, will be deleted permamently deleted. Please be careful with this command when working with production environments. You can use [prevent-destory](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) lifecycle argument in your resources to prevent accidental deletion.  
+
+## Examples
+
+More advances examples together with bootstrap script can be found in the [Quick Starts Repository](https://github.com/microsoft/power-platform-terraform-quickstarts).
 
 ## Contributing
 
