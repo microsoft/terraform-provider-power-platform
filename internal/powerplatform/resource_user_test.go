@@ -18,6 +18,7 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
+				//lintignore:AT004
 				Config: TestsProviderConfig + `
 
 				terraform {
