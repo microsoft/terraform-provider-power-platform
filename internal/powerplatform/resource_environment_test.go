@@ -171,6 +171,21 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_environment_%s.json", id)).String()), nil
 		})
 
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_locations.json").String()), nil
+		})
+
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/([a-z]+)/environmentLanguages\?api-version=2023-06-01$`),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_languages.json").String()), nil
+		})
+
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/([a-z]+)/environmentCurrencies\?api-version=2023-06-01$`),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_currencies.json").String()), nil
+		})
+
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
@@ -316,6 +331,21 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/environment/tests/resource/Validate_Create_And_Update/get_environments_%d.json", patchResponseInx)).String()), nil
 		})
 
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_locations.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentLanguages?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_languages.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentCurrencies?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_currencies.json").String()), nil
+		})
+
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
@@ -398,6 +428,21 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 			return resp, nil
 		})
 
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_locations.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentLanguages?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_languages.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentCurrencies?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_currencies.json").String()), nil
+		})
+
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
@@ -467,6 +512,21 @@ func TestUnitEnvironmentsResource_Validate_Create_With_Billing_Policy(t *testing
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_locations.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentLanguages?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_languages.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentCurrencies?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_currencies.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -570,6 +630,21 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_locations.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentLanguages?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_languages.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentCurrencies?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_currencies.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -684,6 +759,21 @@ func TestUnitEnvironmentsResource_Validate_Create_With_D365_Template(t *testing.
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_locations.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentLanguages?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_languages.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentCurrencies?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_currencies.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
