@@ -232,6 +232,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		userDto, err := r.UserClient.AddSecurityRoles(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString(), addedSecurityRoles)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when adding security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
 		}
 		user = userDto
 	}
@@ -239,6 +240,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		userDto, err := r.UserClient.RemoveSecurityRoles(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString(), removedSecurityRoles)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when removing security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
 		}
 		user = userDto
 	}

@@ -20,6 +20,6 @@ resource "powerplatform_environment" "environment" {
   security_group_id = "00000000-0000-0000-0000-000000000000"
 }
 
-data "powerplatform_securityroles" "all" {
+data "powerplatform_security_roles" "all" {
   environment_id = powerplatform_environment.environment.id
 }

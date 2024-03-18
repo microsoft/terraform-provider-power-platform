@@ -104,7 +104,7 @@ func (client *UserClient) CreateUser(ctx context.Context, environmentId, aadObje
 	err := fmt.Errorf("")
 	for retryCount > 0 {
 		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, userToCreate, []int{http.StatusOK}, nil)
-		//the license assigment in Entra is async, so we need to wait for that to happen if a user is created in the same terraform run
+		//the license assignment in Entra is async, so we need to wait for that to happen if a user is created in the same terraform run
 		if err == nil || !strings.Contains(err.Error(), "userNotLicensed") {
 			break
 		}

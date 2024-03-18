@@ -40,7 +40,7 @@ type SecurityRoleDataSourceModel struct {
 func NewSecurityRolesDataSource() datasource.DataSource {
 	return &SecurityRolesDataSource{
 		ProviderTypeName: "powerplatform",
-		TypeName:         "_securityroles",
+		TypeName:         "_security_roles",
 	}
 }
 
@@ -123,7 +123,7 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadR
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SECURITY ROLES START: %s", d.ProviderTypeName))
 
 	if state.EnvironmentId.ValueString() == "" {
-		resp.Diagnostics.AddError("environeent_id connot be an empty string", "environeent_id connot be an empty string")
+		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}
 
