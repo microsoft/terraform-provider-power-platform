@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
+	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
@@ -51,6 +52,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		tenant_settings.NewTenantSettingsDataSource(),
 		licensing.NewBillingPoliciesDataSource(),
 		licensing.NewBillingPoliciesEnvironmetsDataSource(),
+		auth.NewSecurityRolesDataSource(),
 	}
 	datasources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).DataSources(context.Background())
 
@@ -70,6 +72,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		managed_environment.NewManagedEnvironmentResource(),
 		licensing.NewBillingPolicyResource(),
 		licensing.NewBillingPolicyEnvironmentResource(),
+		auth.NewUserResource(),
 	}
 	resources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).Resources(context.Background())
 
