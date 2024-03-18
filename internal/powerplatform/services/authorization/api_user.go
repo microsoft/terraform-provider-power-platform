@@ -109,6 +109,7 @@ func (client *UserClient) CreateUser(ctx context.Context, environmentId, aadObje
 			break
 		}
 		tflog.Debug(ctx, fmt.Sprintf("Error creating user: %s", err.Error()))
+		//lintignore:R018
 		time.Sleep(10 * time.Second)
 		retryCount--
 	}
