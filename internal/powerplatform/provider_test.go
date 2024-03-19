@@ -13,6 +13,7 @@ import (
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
+	locations "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
 	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
@@ -49,6 +50,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		tenant_settings.NewTenantSettingsDataSource(),
 		licensing.NewBillingPoliciesDataSource(),
 		licensing.NewBillingPoliciesEnvironmetsDataSource(),
+		locations.NewLocationsDataSource(),
 	}
 	datasources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).DataSources(context.Background())
 
