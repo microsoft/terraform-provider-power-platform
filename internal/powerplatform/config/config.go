@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform_config
 
 import (
@@ -58,4 +61,3 @@ func (model *ProviderCredentials) IsCliProvided() bool {
 func (model *ProviderCredentials) IsOidcProvided() bool {
 	return model.UseOidc
 }
-
