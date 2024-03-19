@@ -3,12 +3,12 @@
 page_title: "powerplatform_powerapps Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of Power Apps in a tenant
+  Fetches the list of Power Apps in an environment.  See Manage Power Apps https://learn.microsoft.com/en-us/power-platform/admin/admin-manage-apps for more details about how this data is surfaced in Power Platform Admin Center.
 ---
 
 # powerplatform_powerapps (Data Source)
 
-Fetches the list of Power Apps in a tenant
+Fetches the list of Power Apps in an environment.  See [Manage Power Apps](https://learn.microsoft.com/en-us/power-platform/admin/admin-manage-apps) for more details about how this data is surfaced in Power Platform Admin Center.
 
 ## Example Usage
 

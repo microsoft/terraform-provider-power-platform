@@ -3,12 +3,12 @@
 page_title: "powerplatform_solution Resource - powerplatform"
 subcategory: ""
 description: |-
-  Resource for importing solutions in Power Platform environments
+  Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the pac solution import https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/solution#pac-solution-import command in the Power Platform CLI.
 ---
 
 # powerplatform_solution (Resource)
 
-Resource for importing solutions in Power Platform environments
+Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the [`pac solution import`](https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/solution#pac-solution-import) command in the Power Platform CLI.
 
 ## Example Usage
 

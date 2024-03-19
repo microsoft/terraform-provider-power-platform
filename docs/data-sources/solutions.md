@@ -3,12 +3,12 @@
 page_title: "powerplatform_solutions Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of Solutions in an environment
+  Fetches the list of Solutions in an environment.  This is the equivalent of the pac solution list https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/solution#pac-solution-list command in the Power Platform CLI.
 ---
 
 # powerplatform_solutions (Data Source)
 
-Fetches the list of Solutions in an environment
+Fetches the list of Solutions in an environment.  This is the equivalent of the [`pac solution list`](https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/solution#pac-solution-list) command in the Power Platform CLI.
 
 ## Example Usage
 

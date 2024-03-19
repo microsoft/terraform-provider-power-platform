@@ -54,8 +54,8 @@ func (r *SolutionResource) Metadata(ctx context.Context, req resource.MetadataRe
 
 func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Resource for importing solutions in Power Platform environments",
-		Description:         "Resource for importing exporting solutions in Power Platform environments",
+		Description:         "Resource for importing solutions in Power Platform environments",
+		MarkdownDescription: "Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the [`pac solution import`](https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/solution#pac-solution-import) command in the Power Platform CLI.",
 		Attributes: map[string]schema.Attribute{
 			"solution_file_checksum": schema.StringAttribute{
 				MarkdownDescription: "Checksum of the solution file",

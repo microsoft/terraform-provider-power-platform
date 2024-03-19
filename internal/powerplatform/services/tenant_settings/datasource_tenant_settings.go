@@ -180,7 +180,7 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 func (d *TenantSettingsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Power Platform Tenant Settings Data Source",
-		MarkdownDescription: "Power Platform Tenant Settings Data Source",
+		MarkdownDescription: "Fetches Power Platform Tenant Settings.  See [Tenant Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/tenant-settings) for more information.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Id",

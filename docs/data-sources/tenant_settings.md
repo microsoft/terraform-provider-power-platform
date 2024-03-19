@@ -3,12 +3,12 @@
 page_title: "powerplatform_tenant_settings Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Power Platform Tenant Settings Data Source
+  Fetches Power Platform Tenant Settings.  See Tenant Settings Overview https://learn.microsoft.com/en-us/power-platform/admin/tenant-settings for more information.
 ---
 
 # powerplatform_tenant_settings (Data Source)
 
-Power Platform Tenant Settings Data Source
+Fetches Power Platform Tenant Settings.  See [Tenant Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/tenant-settings) for more information.
 
 ## Example Usage
 
