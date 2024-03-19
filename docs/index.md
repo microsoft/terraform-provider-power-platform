@@ -16,18 +16,20 @@ This provider requires **Terraform >= 0.12**.  For more information on provider 
 
 ## Installation
 
-**ℹ INFO:** This provider is not yet published to the Terraform registry, so it requires a local installation to use it at this time.
-
-To use the provider you can download the binaries from [Releases](https://github.com/microsoft/terraform-provider-power-platform/releases) to your local file system and configure Terraform to use your local mirror.  See the [Explicit Installation Method Configuration](https://developer.hashicorp.com/terraform/cli/config/config-file#explicit-installation-method-configuration) for more information about using local binaries.
+To use this provider, add the following to your Terraform configuration:
 
 ```terraform
-provider_installation {
-  filesystem_mirror {
-    path    = "/usr/share/terraform/providers"
-    include = ["registry.terraform.io/microsoft/power-platform"]
+terraform {
+  required_providers {
+    powerplatform = {
+      source  = "microsoft/power-platform"
+      version = "~> 1.0" # Replace with the latest version
+    }
   }
 }
 ```
+
+See the official Terraform documentation for more information about [requiring providers](https://developer.hashicorp.com/terraform/language/providers/requirements).
 
 ## Authenticating to Power Platform
 
@@ -118,9 +120,21 @@ provider "powerplatform" {
 }
 ```
 
+## Additional configuration
+
+In addition to the authentication options, the following options are also supported in the provider block:
+
+| Name | Description | Default Value |
+|------|-------------|---------------|
+| `telemetry_optout` | Opting out of telemetry will remove the hostheader from the requests made to the Power Platform service.  There is no other telemetry data collected by the provider.  This may affect the ability to identify and troubleshoot issues with the provider. | `false` |
+
 ## Resources and Data Sources
 
 Use the navigation to the left to read about the available resources and data sources.
+
+## Examples
+
+More detailed examples can be found in the [Power Platform Terraform Quickstarts](https://github.com/microsoft/power-platform-terraform-quickstarts) repo.  This repo contains a number of examples for using the Power Platform provider to manage environments and other resources within Power Platform along with Azure and Entra.
 
 ## Contributing
 
