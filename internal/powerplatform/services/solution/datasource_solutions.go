@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -69,7 +72,7 @@ func (d *SolutionsDataSource) Metadata(_ context.Context, req datasource.Metadat
 func (d *SolutionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Solutions in an environment",
-		MarkdownDescription: "Fetches the list of Solutions in an environment",
+		MarkdownDescription: "Fetches the list of Solutions in an environment.  This is the equivalent of the [`pac solution list`](https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/solution#pac-solution-list) command in the Power Platform CLI.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,

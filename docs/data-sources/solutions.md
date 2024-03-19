@@ -3,12 +3,12 @@
 page_title: "powerplatform_solutions Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of Solutions in an environment
+  Fetches the list of Solutions in an environment.  This is the equivalent of the pac solution list https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/solution#pac-solution-list command in the Power Platform CLI.
 ---
 
 # powerplatform_solutions (Data Source)
 
-Fetches the list of Solutions in an environment
+Fetches the list of Solutions in an environment.  This is the equivalent of the [`pac solution list`](https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/solution#pac-solution-list) command in the Power Platform CLI.
 
 ## Example Usage
 
@@ -16,16 +16,13 @@ Fetches the list of Solutions in an environment
 terraform {
   required_providers {
     powerplatform = {
-      version = "0.2"
-      source  = "microsoft/power-platform"
+      source = "microsoft/power-platform"
     }
   }
 }
 
 provider "powerplatform" {
-  client_id     = var.client_id
-  client_secret = var.client_secret
-  tenant_id     = var.tenant_id
+  use_cli = true
 }
 
 data "powerplatform_solutions" "all" {

@@ -3,12 +3,15 @@
 page_title: "powerplatform_billing_policies_environments Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of billing policies in a tenant
+  Fetches the environments associated with a billing policy https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy.
+  This data source uses the List Billing Policy Environments https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy-environment/list-billing-policy-environments endpoint in the Power Platform API.
 ---
 
 # powerplatform_billing_policies_environments (Data Source)
 
-Fetches the list of billing policies in a tenant
+Fetches the environments associated with a [billing policy](https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy).
+
+This data source uses the [List Billing Policy Environments](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy-environment/list-billing-policy-environments) endpoint in the Power Platform API.
 
 ## Example Usage
 
@@ -16,16 +19,13 @@ Fetches the list of billing policies in a tenant
 terraform {
   required_providers {
     powerplatform = {
-      version = "0.2"
-      source  = "microsoft/power-platform"
+      source = "microsoft/power-platform"
     }
   }
 }
 
 provider "powerplatform" {
-  client_id     = var.client_id
-  client_secret = var.client_secret
-  tenant_id     = var.tenant_id
+  use_cli = true
 }
 
 data "powerplatform_billing_policies_environments" "all_pay_as_you_go_policy_envs" {
