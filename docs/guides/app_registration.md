@@ -1,5 +1,6 @@
 ---
 page_title: "Authentication: Creating an App Registration to use the Power Platform Provider"
+subcategory: "Authentication"
 description: |-
   <no value>
 ---
