@@ -6,12 +6,13 @@ package powerplatform
 import "github.com/hashicorp/terraform-plugin-framework/types"
 
 type UserDto struct {
-	Id            string            `json:"systemuserid"`
-	DomainName    string            `json:"domainname"`
-	FirstName     string            `json:"firstname"`
-	LastName      string            `json:"lastname"`
-	AadObjectId   string            `json:"azureactivedirectoryobjectid"`
-	SecurityRoles []SecurityRoleDto `json:"systemuserroles_association,omitempty"`
+	Id             string            `json:"systemuserid"`
+	DomainName     string            `json:"domainname"`
+	FirstName      string            `json:"firstname"`
+	LastName       string            `json:"lastname"`
+	AadObjectId    string            `json:"azureactivedirectoryobjectid"`
+	BusinessUnitId string            `json:"_businessunitid_value"`
+	SecurityRoles  []SecurityRoleDto `json:"systemuserroles_association,omitempty"`
 }
 
 type SecurityRoleDto struct {
@@ -63,6 +64,7 @@ func ConvertFromUserDto(userDto *UserDto, disableDelete bool) UserResourceModel 
 		UserPrincipalName: types.StringValue(userDto.DomainName),
 		FirstName:         types.StringValue(userDto.FirstName),
 		LastName:          types.StringValue(userDto.LastName),
+		BusinessUnitId:    types.StringValue(userDto.BusinessUnitId),
 	}
 	model.DisableDelete = types.BoolValue(disableDelete)
 	return model

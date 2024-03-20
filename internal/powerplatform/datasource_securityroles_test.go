@@ -90,3 +90,49 @@ func TestUnitSecurityDataSource_Validate_Read(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitSecurityDataSource_Validate_Read_Filter_BusinessUnit(t *testing.T) {
+
+	t.Setenv("TF_ACC", "1")
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mock_helpers.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/authorization/tests/datasource/security_roles/Validate_Read_Filter_BusinessUnit/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/roles?%24filter=_businessunitid_value+eq+00000000-0000-0000-0000-000000000002",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/authorization/tests/datasource/security_roles/Validate_Read_Filter_BusinessUnit/get_security_roles.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				data "powerplatform_security_roles" "all" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					business_unit_id = "00000000-0000-0000-0000-000000000002"
+				}`,
+
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr("data.powerplatform_security_roles.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
+
+					resource.TestCheckResourceAttr("data.powerplatform_security_roles.all", "security_roles.#", "1"),
+					resource.TestCheckResourceAttr("data.powerplatform_security_roles.all", "environment_id", "00000000-0000-0000-0000-000000000001"),
+
+					resource.TestCheckResourceAttr("data.powerplatform_security_roles.all", "security_roles.0.role_id", "4931681d-8163-e811-a965-000d3a11fe32"),
+					resource.TestCheckResourceAttr("data.powerplatform_security_roles.all", "security_roles.0.name", "Export Customizations (Solution Checker)"),
+					resource.TestCheckResourceAttr("data.powerplatform_security_roles.all", "security_roles.0.is_managed", "true"),
+					resource.TestCheckResourceAttr("data.powerplatform_security_roles.all", "security_roles.0.business_unit_id", "00000000-0000-0000-0000-000000000002"),
+				),
+			},
+		},
+	})
+}

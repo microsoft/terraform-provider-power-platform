@@ -92,9 +92,11 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 }
 
 func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environment EnvironmentCreateDto) (*EnvironmentDto, error) {
-	err := client.ValidateEnvironmentDetails(ctx, environment.Location, environment.Properties.LinkedEnvironmentMetadata.DomainName)
-	if err != nil {
-		return nil, err
+	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
+		err := client.ValidateEnvironmentDetails(ctx, environment.Location, environment.Properties.LinkedEnvironmentMetadata.DomainName)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	apiUrl := &url.URL{
@@ -146,10 +148,11 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 }
 
 func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environmentId string, environment EnvironmentDto) (*EnvironmentDto, error) {
-
-	err := client.ValidateEnvironmentDetails(ctx, environment.Location, environment.Properties.LinkedEnvironmentMetadata.DomainName)
-	if err != nil {
-		return nil, err
+	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
+		err := client.ValidateEnvironmentDetails(ctx, environment.Location, environment.Properties.LinkedEnvironmentMetadata.DomainName)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	apiUrl := &url.URL{
@@ -161,7 +164,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
 	values.Add("api-version", "2022-05-01")
 	apiUrl.RawQuery = values.Encode()
-	_, err = client.Api.Execute(ctx, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
+	_, err := client.Api.Execute(ctx, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return nil, err
 	}

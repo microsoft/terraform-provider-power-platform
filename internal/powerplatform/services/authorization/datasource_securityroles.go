@@ -28,9 +28,10 @@ type SecurityRolesDataSource struct {
 }
 
 type SecurityRolesListDataSourceModel struct {
-	Id            types.String                  `tfsdk:"id"`
-	EnvironmentId types.String                  `tfsdk:"environment_id"`
-	SecurityRoles []SecurityRoleDataSourceModel `tfsdk:"security_roles"`
+	Id             types.String                  `tfsdk:"id"`
+	EnvironmentId  types.String                  `tfsdk:"environment_id"`
+	BusinessUnitId types.String                  `tfsdk:"business_unit_id"`
+	SecurityRoles  []SecurityRoleDataSourceModel `tfsdk:"security_roles"`
 }
 
 type SecurityRoleDataSourceModel struct {
@@ -62,10 +63,10 @@ func (d *SecurityRolesDataSource) Schema(_ context.Context, _ datasource.SchemaR
 				MarkdownDescription: "Id of the Dynamics 365 environment",
 				Required:            true,
 			},
-			// "business_unit_id": schema.StringAttribute{
-			// 	Description: "Id of the business unit",
-			// 	Required:    true,
-			// },
+			"business_unit_id": schema.StringAttribute{
+				Description: "Id of the business unit to filter the security roles",
+				Optional:    true,
+			},
 			"security_roles": schema.ListNestedAttribute{
 				Description:         "List of security roles",
 				MarkdownDescription: "List of security roles",
@@ -130,7 +131,7 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	roles, err := d.UserClient.GetSecurityRoles(ctx, state.EnvironmentId.ValueString())
+	roles, err := d.UserClient.GetSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.BusinessUnitId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
