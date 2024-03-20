@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -57,8 +60,8 @@ func (d *PowerAppsDataSource) Metadata(_ context.Context, req datasource.Metadat
 
 func (d *PowerAppsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the list of Power Apps in a tenant",
-		MarkdownDescription: "Fetches the list of Power Apps in a tenant",
+		Description:         "Fetches the list of Power Apps in an environment",
+		MarkdownDescription: "Fetches the list of Power Apps in an environment.  See [Manage Power Apps](https://learn.microsoft.com/en-us/power-platform/admin/admin-manage-apps) for more details about how this data is surfaced in Power Platform Admin Center.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,

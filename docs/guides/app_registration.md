@@ -1,10 +1,12 @@
-### Using Azure CLI (Preferred)
+---
+page_title: "Authentication: Creating an App Registration to use the Power Platform Provider"
+description: |-
+  <no value>
+---
 
-The Power Platform provider can use the Azure CLI to authenticate. If you have the Azure CLI installed, you can use it to log in to your Azure account and the Power Platform provider will use the credentials from the Azure CLI.
+# Creating an App Registration to use the Power Platform Provider
 
-## Creating Service Principal
-
-You can follow this [guide](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app#register-an-application) to create a service principal.
+You can follow this [guide](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app#register-an-application) to create an app registration.
 
 ## API Permissions
 
@@ -131,7 +133,8 @@ Or you can add them directly into your App Registration manifest:
 
 Or you can add them directly into your App Registration manifest:
 
-```json "preAuthorizedApplications": [
+```json 
+"preAuthorizedApplications": [
   {
    "appId": "04b07795-8ddb-461a-bbee-02f9e1bf7b46",
    "permissionIds": [

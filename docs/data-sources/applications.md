@@ -3,12 +3,15 @@
 page_title: "powerplatform_applications Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of Dynamics 365 applications in a tenant
+  Fetches the list of Dynamics 365 applications in a tenant.  The data source can be filtered by name and publisher name.
+  This is functionally equivalent to the Environment-level view of apps https://learn.microsoft.com/en-us/power-platform/admin/manage-apps#environment-level-view-of-apps in the Power Platform Admin Center or the pac application list command from Power Platform CLI https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/application#pac-application-list.  This data source uses the Get Environment Application Package https://learn.microsoft.com/en-us/rest/api/power-platform/appmanagement/applications/get-environment-application-package endpoint in the Power Platform API.
 ---
 
 # powerplatform_applications (Data Source)
 
-Fetches the list of Dynamics 365 applications in a tenant
+Fetches the list of Dynamics 365 applications in a tenant.  The data source can be filtered by name and publisher name.
+
+This is functionally equivalent to the [Environment-level view of apps](https://learn.microsoft.com/en-us/power-platform/admin/manage-apps#environment-level-view-of-apps) in the Power Platform Admin Center or the [`pac application list` command from Power Platform CLI](https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/application#pac-application-list).  This data source uses the [Get Environment Application Package](https://learn.microsoft.com/en-us/rest/api/power-platform/appmanagement/applications/get-environment-application-package) endpoint in the Power Platform API.
 
 
 

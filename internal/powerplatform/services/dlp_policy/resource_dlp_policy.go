@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -107,8 +110,8 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 	}
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Data Loss Prevention Policy",
-		Description:         "Data Loss Prevention Policy",
+		MarkdownDescription: "This resource manages a Data Loss Prevention Policy. See [Data Loss Prevention](https://learn.microsoft.com/en-us/power-platform/admin/prevent-data-loss) for more information.",
+		Description:         "This resource manages a Data Loss Prevention Policy",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique name of the policy",

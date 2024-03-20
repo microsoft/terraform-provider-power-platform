@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -107,8 +110,8 @@ func (d *DataLossPreventionPolicyDataSource) Schema(_ context.Context, _ datasou
 	}
 
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the list of available connectors in a Power Platform tenant",
-		MarkdownDescription: "Fetches the list of available connectors in a Power Platform tenant",
+		Description:         "Fetches the list of Data Loss Prevention Policies in a Power Platform tenant",
+		MarkdownDescription: "Fetches the list of Data Loss Prevention Policies in a Power Platform tenant. See [Manage data loss prevention policies](https://learn.microsoft.com/en-us/power-platform/admin/prevent-data-loss) for more information.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed: true,
