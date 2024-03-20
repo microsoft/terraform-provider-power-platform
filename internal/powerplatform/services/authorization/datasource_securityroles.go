@@ -50,7 +50,7 @@ func NewSecurityRolesDataSource() datasource.DataSource {
 func (d *SecurityRolesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dataverse security roles for a given environment and business unit",
-		MarkdownDescription: "Fetches the list of Dataverse security roles for a given environment and business unit",
+		MarkdownDescription: "Fetches the list of Dataverse security roles for a given environment and business unit.  For more information see [About security roles and privileges](https://learn.microsoft.com/en-us/power-platform/admin/security-roles-privileges)",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",
