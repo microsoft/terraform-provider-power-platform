@@ -3,12 +3,12 @@
 page_title: "powerplatform_environments Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of environments in a tenant
+  Fetches the list of environments in a tenant.  See Environments overview https://learn.microsoft.com/en-us/power-platform/admin/environments-overview for more information.
 ---
 
 # powerplatform_environments (Data Source)
 
-Fetches the list of environments in a tenant
+Fetches the list of environments in a tenant.  See [Environments overview](https://learn.microsoft.com/en-us/power-platform/admin/environments-overview) for more information.
 
 ## Example Usage
 
@@ -16,16 +16,13 @@ Fetches the list of environments in a tenant
 terraform {
   required_providers {
     powerplatform = {
-      version = "0.2"
-      source  = "microsoft/power-platform"
+      source = "microsoft/power-platform"
     }
   }
 }
 
 provider "powerplatform" {
-  client_id = var.client_id
-  client_secret = var.client_secret
-  tenant_id = var.tenant_id
+  use_cli = true
 }
 
 data "powerplatform_environments" "all_environments" {}

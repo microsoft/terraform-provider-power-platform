@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -57,8 +60,8 @@ func (r *ManagedEnvironmentResource) Metadata(ctx context.Context, req resource.
 func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Managed environment settings",
-		Description:         "Managed environment settings",
+		Description:         "Manages a \"Managed Environment\" and associated settings",
+		MarkdownDescription: "Manages a [Managed Environment](https://learn.microsoft.com/en-us/power-platform/admin/managed-environment-overview) and associated settings. A Power Platform Managed Environment is a suite of premium capabilities that allows administrators to manage Power Platform at scale with more control, less effort, and more insights. Once an environment is managed, it unlocks additional features across the Power Platform",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -83,18 +86,18 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				Computed:            true,
 			},
 			"is_usage_insights_disabled": schema.BoolAttribute{
-				MarkdownDescription: "Weekly inishgts digest for the environment",
-				Description:         "Weekly inishgts digest for the environment",
+				MarkdownDescription: "[Weekly insights digest for the environment](https://learn.microsoft.com/en-us/power-platform/admin/managed-environment-usage-insights)",
+				Description:         "Weekly insights digest for the environment",
 				Required:            true,
 			},
 			"is_group_sharing_disabled": schema.BoolAttribute{
-				MarkdownDescription: "Limits how widely canvas apps can be shared",
+				MarkdownDescription: "Limits how widely canvas apps can be shared. See [Managed Environment sharing limits](https://learn.microsoft.com/en-us/power-platform/admin/managed-environment-sharing-limits) for more details.",
 				Description:         "Limits how widely canvas apps can be shared",
 				Required:            true,
 			},
 			"limit_sharing_mode": schema.StringAttribute{
-				MarkdownDescription: "Limits how widely canvas apps can be shared",
-				Description:         "Limits how widely canvas apps can be shared",
+				MarkdownDescription: "Limits how widely canvas apps can be shared.  See [Managed Environment sharing limits](https://learn.microsoft.com/en-us/power-platform/admin/managed-environment-sharing-limits) for more details",
+				Description:         "Limits how widely canvas apps can be shared.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("ExcludeSharingToSecurityGroups", "NoLimit"),
@@ -102,12 +105,12 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			},
 			"max_limit_user_sharing": schema.Int64Attribute{
 				MarkdownDescription: "Limits how many users can share canvas apps. if 'is_group_sharing_disabled' is 'False', then this values should be '-1'",
-				Description:         "Limits how many users can share canvas apps. if 'is_group_sharing_disabled' is 'False', then this values should be '-1'",
+				Description:         "Limits how many users can share canvas apps. if 'is_group_sharing_disabled' is 'False', then this values should be '-1'. See [Managed Environment sharing limits](https://learn.microsoft.com/en-us/power-platform/admin/managed-environment-sharing-limits) for more details",
 				Required:            true,
 			},
 			"solution_checker_mode": schema.StringAttribute{
-				MarkdownDescription: "Automatically verify solution checker results for security and reliability issues before solution import",
-				Description:         "Automatically verify solution checker results for security and reliability issues before solution import",
+				MarkdownDescription: "Automatically verify solution checker results for security and reliability issues before solution import.  See [Solution Checker enforcement](https://learn.microsoft.com/en-us/power-platform/admin/managed-environment-solution-checker) for more details.",
+				Description:         "Automatically verify solution checker results for security and reliability issues before solution import.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("None", "Warn", "Block"),
@@ -119,12 +122,12 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				Required:            true,
 			},
 			"maker_onboarding_markdown": schema.StringAttribute{
-				MarkdownDescription: "First-time Power Apps makers will see this content in the Studio",
+				MarkdownDescription: "First-time Power Apps makers will see this content in the Studio.  See [Maker welcome content](https://learn.microsoft.com/en-us/power-platform/admin/welcome-content) for more details.",
 				Description:         "First-time Power Apps makers will see this content in the Studio",
 				Required:            true,
 			},
 			"maker_onboarding_url": schema.StringAttribute{
-				MarkdownDescription: "Maker onboarding 'Learn more' URL",
+				MarkdownDescription: "Maker onboarding 'Learn more' URL. See [Maker welcome content](https://learn.microsoft.com/en-us/power-platform/admin/welcome-content) for more details.",
 				Description:         "Maker onboarding 'Learn more' URL",
 				Required:            true,
 			},

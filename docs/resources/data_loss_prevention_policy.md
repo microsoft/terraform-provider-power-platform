@@ -3,12 +3,12 @@
 page_title: "powerplatform_data_loss_prevention_policy Resource - powerplatform"
 subcategory: ""
 description: |-
-  Data Loss Prevention Policy
+  This resource manages a Data Loss Prevention Policy. See Data Loss Prevention https://learn.microsoft.com/en-us/power-platform/admin/prevent-data-loss for more information.
 ---
 
 # powerplatform_data_loss_prevention_policy (Resource)
 
-Data Loss Prevention Policy
+This resource manages a Data Loss Prevention Policy. See [Data Loss Prevention](https://learn.microsoft.com/en-us/power-platform/admin/prevent-data-loss) for more information.
 
 ## Example Usage
 
@@ -16,15 +16,12 @@ Data Loss Prevention Policy
 terraform {
   required_providers {
     powerplatform = {
-      version = "0.2"
-      source  = "microsoft/power-platform"
+      source = "microsoft/power-platform"
     }
   }
 }
 provider "powerplatform" {
-  client_id     = var.client_id
-  client_secret = var.client_secret
-  tenant_id     = var.tenant_id
+  use_cli = true
 }
 data "powerplatform_connectors" "all_connectors" {}
 
