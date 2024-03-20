@@ -174,6 +174,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.FirstName = model.FirstName
 	plan.LastName = model.LastName
 	plan.DisableDelete = model.DisableDelete
+	plan.BusinessUnitId = model.BusinessUnitId
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
@@ -208,6 +209,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	state.FirstName = model.FirstName
 	state.LastName = model.LastName
 	state.DisableDelete = model.DisableDelete
+	state.BusinessUnitId = model.BusinessUnitId
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
 
@@ -264,6 +266,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	plan.FirstName = model.FirstName
 	plan.LastName = model.LastName
 	plan.DisableDelete = model.DisableDelete
+	plan.BusinessUnitId = model.BusinessUnitId
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
