@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform_helpers
 
 func DiffArrays(newArr, oldArr []string) ([]string, []string) {
