@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 type EnvironmentSettingsValueDto struct {
@@ -5,7 +8,12 @@ type EnvironmentSettingsValueDto struct {
 }
 
 type EnvironmentSettingsDto struct {
-	MaxUploadFileSize int64 `json:"maxuploadfilesize"`
+	MaxUploadFileSize                 int64 `json:"maxuploadfilesize"`
+	PluginTraceLogSetting             int64 `json:"plugintracelogsetting"`
+	IsAuditEnabled                    bool  `json:"IsAuditEnabled"`
+	IsUserAccessAuditEnabled          bool  `json:"isuseraccessauditenabled"`
+	IsReadAuditEnabled                bool  `json:"isreadauditenabled"`
+	BoundDashboardDefaultCardExpanded bool  `json:"bounddashboarddefaultcardexpanded"`
 }
 
 type EnvironmentIdDto struct {
