@@ -1,4 +1,4 @@
-# Terraform Provider for Power Platform
+# Power Platform Terraform Provider
 
 The Power Platform Terraform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
