@@ -53,7 +53,7 @@ The Power Platform provider can use the [Azure CLI](https://learn.microsoft.com/
 #### Prerequisites
 
 1. [Install the Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
-1. [Create an app registration for the Terraform Provider for Power Platform](guides/app_registration.md)
+1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
 1. Login using the scope as the "expose API" you configured when creating the app registration
 
 ```bash
@@ -72,7 +72,7 @@ provider "powerplatform" {
 
 The Power Platform provider can use a Service Principal with OpenID Connect (OIDC) to authenticate to Power Platform services. By using [Microsoft Entra's workload identity federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation) your CI/CD pipelines in GitHub or Azure DevOps can access Power Platform resources without needing to manage secrets.
 
-1. [Create an app registration for the Terraform Provider for Power Platform](guides/app_registration.md)
+1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
 1. [Register your app registration with Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
 1. [Create a trust relationship between your CI/CD pipeline and the app registration](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust?pivots=identity-wif-apps-methods-azp)
 1. Configure the provider to use OIDC with the following code:
@@ -91,7 +91,7 @@ Additional Resources about OIDC:
 
 The Power Platform provider can use a Service Principal with Client Secret to authenticate to Power Platform services.
 
-1. [Create an app registration for the Terraform Provider for Power Platform](guides/app_registration.md)
+1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
 1. [Register your app registration with Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
 1. Configure the provider to use a Service Principal with a Client Secret with either environment variables or using Terraform variables
 
