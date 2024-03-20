@@ -74,7 +74,7 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 
 	environmentDelete := EnvironmentDeleteDto{
 		Code:    "7", //Application
-		Message: "Deleted using Terraform Provider for Power Platform",
+		Message: "Deleted using Power Platform Terraform Provider",
 	}
 
 	response, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
