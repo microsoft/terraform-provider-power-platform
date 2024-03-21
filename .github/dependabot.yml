@@ -9,10 +9,6 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
-  - package-ecosystem: "gomod" # See documentation for possible values
-    directory: "/tools/quickstartgen" # Location of package manifests
-    schedule:
-      interval: "daily"
   - package-ecosystem: "terraform" # See documentation for possible values
     directory: "/examples" # Location of package manifests
     schedule:
@@ -21,7 +17,3 @@ updates:
     directory: "/.github/workflows" # Location of package manifests
     schedule:
       interval: "daily"
-groups:
-  all:
-    patterns:
-      - "*"

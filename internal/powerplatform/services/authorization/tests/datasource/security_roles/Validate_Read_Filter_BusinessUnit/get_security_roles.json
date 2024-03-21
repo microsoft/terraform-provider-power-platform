@@ -1,0 +1,40 @@
+{
+    "@odata.context": "https://orgfceb6ae4.crm17.dynamics.com/api/data/v9.2/$metadata#roles",
+    "value": [
+        {
+            "@odata.etag": "W/\"1397640\"",
+            "overwritetime": "1900-01-01T00:00:00Z",
+            "organizationid": "97793ec4-ace2-ee11-9049-0022486f7458",
+            "isinherited": 0,
+            "solutionid": "5958fda1-da98-4b8e-9346-0b9d63a31897",
+            "roleidunique": "6946cb7e-8ab1-4860-bfc8-942d84b0cf2b",
+            "ismanaged": true,
+            "roleid": "4931681d-8163-e811-a965-000d3a11fe32",
+            "componentstate": 0,
+            "modifiedon": "2024-03-14T09:18:02Z",
+            "_modifiedby_value": "ebccd9a1-ec3d-4961-9374-17a72de9327d",
+            "_parentrootroleid_value": "4931681d-8163-e811-a965-000d3a11fe32",
+            "createdon": "2024-03-14T06:08:49Z",
+            "versionnumber": 1397640,
+            "_businessunitid_value": "00000000-0000-0000-0000-000000000002",
+            "name": "Export Customizations (Solution Checker)",
+            "_createdby_value": "ebccd9a1-ec3d-4961-9374-17a72de9327d",
+            "_parentroleid_value": null,
+            "overriddencreatedon": null,
+            "importsequencenumber": null,
+            "_modifiedonbehalfby_value": null,
+            "_roletemplateid_value": null,
+            "_createdonbehalfby_value": null,
+            "iscustomizable": {
+                "Value": true,
+                "CanBeChanged": true,
+                "ManagedPropertyLogicalName": "iscustomizableanddeletable"
+            },
+            "canbedeleted": {
+                "Value": true,
+                "CanBeChanged": true,
+                "ManagedPropertyLogicalName": "canbedeleted"
+            }
+        }
+    ]
+}
