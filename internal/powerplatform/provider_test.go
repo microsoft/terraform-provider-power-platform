@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
+	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
@@ -36,11 +37,13 @@ provider "powerplatform" {
 `
 )
 
-var (
-	TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-		"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider(context.Background(), true)()),
-	}
-)
+var TestUnitTestProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider(context.Background(), true)()),
+}
+
+var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider(context.Background(), false)()),
+}
 
 func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 	expectedDataSources := []datasource.DataSource{
@@ -54,6 +57,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		licensing.NewBillingPoliciesDataSource(),
 		licensing.NewBillingPoliciesEnvironmetsDataSource(),
 		locations.NewLocationsDataSource(),
+		auth.NewSecurityRolesDataSource(),
 	}
 	datasources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).DataSources(context.Background())
 
@@ -73,6 +77,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		managed_environment.NewManagedEnvironmentResource(),
 		licensing.NewBillingPolicyResource(),
 		licensing.NewBillingPolicyEnvironmentResource(),
+		auth.NewUserResource(),
 	}
 	resources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).Resources(context.Background())
 

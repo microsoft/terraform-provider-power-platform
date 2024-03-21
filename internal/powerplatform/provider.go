@@ -17,6 +17,7 @@ import (
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
+	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
@@ -268,6 +269,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return managed_environment.NewManagedEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
+		func() resource.Resource { return auth.NewUserResource() },
 	}
 }
 
@@ -283,6 +285,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return licensing.NewBillingPoliciesDataSource() },
 		func() datasource.DataSource { return licensing.NewBillingPoliciesEnvironmetsDataSource() },
 		func() datasource.DataSource { return locations.NewLocationsDataSource() },
+		func() datasource.DataSource { return auth.NewSecurityRolesDataSource() },
 	}
 }
 
