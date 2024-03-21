@@ -22,6 +22,7 @@ import (
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
+	locations "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
 	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
@@ -290,6 +291,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return tenant_settings.NewTenantSettingsDataSource() },
 		func() datasource.DataSource { return licensing.NewBillingPoliciesDataSource() },
 		func() datasource.DataSource { return licensing.NewBillingPoliciesEnvironmetsDataSource() },
+		func() datasource.DataSource { return locations.NewLocationsDataSource() },
 		func() datasource.DataSource { return auth.NewSecurityRolesDataSource() },
 	}
 }
