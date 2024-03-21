@@ -8,7 +8,7 @@ description: |-
 
 The Power Platform provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
-**⚠️ WARNING:** This code is experimental and provided solely for evaluation purposes. It is **NOT** intended for production use and may contain bugs, incomplete features, or other issues. Use at your own risk, as it may undergo significant changes without notice, and no guarantees or support are provided. By using this code, you acknowledge and agree to these conditions. Consult the documentation or contact the maintainer if you have questions or concerns.
+!> This code is experimental and provided solely for evaluation purposes. It is **NOT** intended for production use and may contain bugs, incomplete features, or other issues. Use at your own risk, as it may undergo significant changes without notice, and no guarantees or support are provided. By using this code, you acknowledge and agree to these conditions. Consult the documentation or contact the maintainer if you have questions or concerns.
 
 ## Requirements
 
@@ -53,7 +53,7 @@ The Power Platform provider can use the [Azure CLI](https://learn.microsoft.com/
 #### Prerequisites
 
 1. [Install the Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
-1. [Create an app registration for the Terraform Provider for Power Platform](guides/app_registration.md)
+1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
 1. Login using the scope as the "expose API" you configured when creating the app registration
 
 ```bash
@@ -72,7 +72,7 @@ provider "powerplatform" {
 
 The Power Platform provider can use a Service Principal with OpenID Connect (OIDC) to authenticate to Power Platform services. By using [Microsoft Entra's workload identity federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation) your CI/CD pipelines in GitHub or Azure DevOps can access Power Platform resources without needing to manage secrets.
 
-1. [Create an app registration for the Terraform Provider for Power Platform](guides/app_registration.md)
+1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
 1. [Register your app registration with Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
 1. [Create a trust relationship between your CI/CD pipeline and the app registration](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust?pivots=identity-wif-apps-methods-azp)
 1. Configure the provider to use OIDC with the following code:
@@ -91,7 +91,7 @@ Additional Resources about OIDC:
 
 The Power Platform provider can use a Service Principal with Client Secret to authenticate to Power Platform services.
 
-1. [Create an app registration for the Terraform Provider for Power Platform](guides/app_registration.md)
+1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
 1. [Register your app registration with Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
 1. Configure the provider to use a Service Principal with a Client Secret with either environment variables or using Terraform variables
 
@@ -105,7 +105,7 @@ We recomend using Environment Variables to pass the credentials to the provider.
 | `POWER_PLATFORM_CLIENT_SECRET` | The service principal secret | |
 | `POWER_PLATFORM_TENANT_ID` | The guid of the tenant | |
 
-NOTE: Variables passed into the provider will override the environment variables.
+-> Variables passed into the provider will override the environment variables.
 
 #### Using Terraform Variables
 
@@ -132,7 +132,7 @@ In addition to the authentication options, the following options are also suppor
 
 Use the navigation to the left to read about the available resources and data sources.
 
-**CAUTION:** By calling `terraform destroy` all the resources, that you've created, will be deleted permamently deleted. Please be careful with this command when working with production environments. You can use [prevent-destory](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) lifecycle argument in your resources to prevent accidental deletion.  
+!> By calling `terraform destroy` all the resources, that you've created, will be deleted permamently deleted. Please be careful with this command when working with production environments. You can use [prevent-destory](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) lifecycle argument in your resources to prevent accidental deletion.  
 
 ## Examples
 
