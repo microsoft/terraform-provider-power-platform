@@ -8,8 +8,9 @@ import (
 )
 
 type ProviderConfig struct {
-	Credentials *ProviderCredentials
-	Urls        ProviderConfigUrls
+	Credentials     *ProviderCredentials
+	Urls            ProviderConfigUrls
+	TelemetryOptout bool
 }
 
 type ProviderConfigUrls struct {
@@ -22,8 +23,6 @@ type ProviderCredentials struct {
 	TestMode bool
 	UseCli   bool
 	UseOidc  bool
-
-	TelemetryOptout bool
 
 	TenantId     string
 	ClientId     string
@@ -51,9 +50,9 @@ type ProviderCredentialsModel struct {
 	OidcTokenFilePath types.String `tfsdk:"oidc_token_file_path"`
 }
 
-func (model *ProviderCredentials) IsTelemetryOprout() bool {
-	return model.TelemetryOptout
-}
+// func (model *ProviderCredentials) IsTelemetryOprout() bool {
+// 	return model.TelemetryOptout
+// }
 
 func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {
 	return model.ClientId != "" && model.ClientSecret != "" && model.TenantId != ""

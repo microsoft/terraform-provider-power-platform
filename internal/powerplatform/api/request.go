@@ -32,7 +32,7 @@ func (client *ApiClient) doRequest(token *string, request *http.Request, headers
 		request.Header.Set("Authorization", "Bearer "+*token)
 	}
 
-	if !client.GetConfig().Credentials.TelemetryOptout {
+	if !client.GetConfig().TelemetryOptout {
 		request.Header.Set("User-Agent", "terraform-provider-power-platform")
 	}
 

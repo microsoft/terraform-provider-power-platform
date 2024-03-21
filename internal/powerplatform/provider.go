@@ -254,7 +254,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 			}
 		}
 	}
-	p.Config.Credentials.TelemetryOptout = config.TelemetryOptout.ValueBool()
+	p.Config.TelemetryOptout = config.TelemetryOptout.ValueBool()
 
 	providerClient := api.ProviderClient{
 		Config: p.Config,
