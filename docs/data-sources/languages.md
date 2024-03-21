@@ -44,7 +44,7 @@ data "powerplatform_languages" "all_languages_by_location" {
 
 ### Optional
 
-- `id` (String) Id of the read operation
+- `id` (Number) Id of the read operation
 
 ### Read-Only
 

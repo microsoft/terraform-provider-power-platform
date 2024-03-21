@@ -37,11 +37,11 @@ type LanguagesDataSourceModel struct {
 }
 
 type LanguageDataModel struct {
-	ID              string `tfsdk:"id"`
 	Name            string `tfsdk:"name"`
+	ID              string `tfsdk:"id"`
 	DisplayName     string `tfsdk:"display_name"`
 	LocalizedName   string `tfsdk:"localized_name"`
-	LocaleID        int    `tfsdk:"locale_id"`
+	LocaleID        int64  `tfsdk:"locale_id"`
 	IsTenantDefault bool   `tfsdk:"is_tenant_default"`
 }
 
@@ -54,7 +54,7 @@ func (d *LanguagesDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 		Description:         "Fetches the list of Dynamics 365 languages",
 		MarkdownDescription: "Fetches the list of Dynamics 365 languages. For more information see [Power Platform Geos](https://learn.microsoft.com/en-us/power-platform/admin/enable-languages)",
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
+			"id": schema.Int64Attribute{
 				Description: "Id of the read operation",
 				Optional:    true,
 			},
@@ -68,12 +68,12 @@ func (d *LanguagesDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Description: "Unique identifier of the location",
-							Computed:    true,
-						},
 						"name": schema.StringAttribute{
 							Description: "Name of the location",
+							Computed:    true,
+						},
+						"id": schema.StringAttribute{
+							Description: "Unique identifier of the location",
 							Computed:    true,
 						},
 						"display_name": schema.StringAttribute{
