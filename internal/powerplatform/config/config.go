@@ -23,6 +23,7 @@ type ProviderCredentials struct {
 	UseCli   bool
 	UseOidc  bool
 
+	TelemetryOptout bool
 
 	TenantId     string
 	ClientId     string
@@ -38,6 +39,7 @@ type ProviderCredentialsModel struct {
 	UseCli  types.Bool `tfsdk:"use_cli"`
 	UseOidc types.Bool `tfsdk:"use_oidc"`
 
+	TelemetryOptout types.Bool `tfsdk:"telemetry_optout"`
 
 	TenantId     types.String `tfsdk:"tenant_id"`
 	ClientId     types.String `tfsdk:"client_id"`
@@ -47,7 +49,10 @@ type ProviderCredentialsModel struct {
 	OidcRequestUrl    types.String `tfsdk:"oidc_request_url"`
 	OidcToken         types.String `tfsdk:"oidc_token"`
 	OidcTokenFilePath types.String `tfsdk:"oidc_token_file_path"`
+}
 
+func (model *ProviderCredentials) IsTelemetryOprout() bool {
+	return model.TelemetryOptout
 }
 
 func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {

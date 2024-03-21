@@ -5,12 +5,16 @@ package powerplatform
 
 import (
 	"context"
+	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
+	r "github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/jarcoal/httpmock"
+	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
@@ -84,6 +88,76 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		require.Contains(t, expectedResources, r(), "An unexpected resource was registered")
 	}
 
+}
+
+func TestUnitPowerPlatformProvider_Validate_Telementry_Optout_Is_False(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mock_helpers.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/datasource/Validate_Read/get_environments.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https:=//api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			if req.Header.Get("User-Agent") != "terraform-provider-power-platform" {
+				t.Errorf("User-Agent='terraform-provider-power-platform' is expected when telemetry_optout is set to True")
+			}
+
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/datasource/Validate_Read/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	r.Test(t, r.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []r.TestStep{
+			{
+				Config: `provider "powerplatform" {
+					use_cli = true
+					telemetry_optout = false
+				}	
+				data "powerplatform_environments" "all" {}`,
+			},
+		},
+	})
+}
+
+func TestUnitPowerPlatformProvider_Validate_Telementry_Optout_Is_True(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mock_helpers.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/datasource/Validate_Read/get_environments.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			if req.Header.Get("User-Agent") != "" {
+				t.Errorf("User-Agent not expected when telemetry_optout is set to True")
+			}
+
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/datasource/Validate_Read/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	r.Test(t, r.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []r.TestStep{
+			{
+				Config: `provider "powerplatform" {
+					use_cli = true
+					telemetry_optout = true
+				}	
+				data "powerplatform_environments" "all" {}`,
+			},
+		},
+	})
 }
 
 func TestAccPreCheck_Basic(t *testing.T) {
