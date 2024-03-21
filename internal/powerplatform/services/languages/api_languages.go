@@ -29,10 +29,9 @@ func (client *LanguagesClient) GetLanguagesByLocation(ctx context.Context, locat
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentLanguages", location),
 	}
-	values := url.Values{
+	apiUrl.RawQuery = url.Values{
 		"api-version": []string{"2023-06-01"},
-	}
-	apiUrl.RawQuery = values.Encode()
+	}.Encode()
 
 	languages := LanguagesDto{}
 

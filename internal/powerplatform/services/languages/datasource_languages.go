@@ -3,7 +3,6 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -26,30 +25,24 @@ func NewLanguagesDataSource() datasource.DataSource {
 }
 
 type LanguagesDataSource struct {
-	ApplicationClient LanguagesClient
-	ProviderTypeName  string
-	TypeName          string
+	LanguagesClient  LanguagesClient
+	ProviderTypeName string
+	TypeName         string
 }
 
-type LanguagesListDataSourceModel struct {
-	EnvironmentId types.String                 `tfsdk:"environment_id"`
-	Name          types.String                 `tfsdk:"name"`
-	PublisherName types.String                 `tfsdk:"publisher_name"`
-	Id            types.String                 `tfsdk:"id"`
-	Languages     []ApplicationDataSourceModel `tfsdk:"languages"`
+type LanguagesDataSourceModel struct {
+	Id       types.Int64         `tfsdk:"id"`
+	Location types.String        `tfsdk:"location"`
+	Value    []LanguageDataModel `tfsdk:"languages"`
 }
 
-type ApplicationDataSourceModel struct {
-	ApplicationId         types.String `tfsdk:"application_id"`
-	Name                  types.String `tfsdk:"application_name"`
-	UniqueName            types.String `tfsdk:"unique_name"`
-	Version               types.String `tfsdk:"version"`
-	Description           types.String `tfsdk:"description"`
-	PublisherId           types.String `tfsdk:"publisher_id"`
-	PublisherName         types.String `tfsdk:"publisher_name"`
-	LearnMoreUrl          types.String `tfsdk:"learn_more_url"`
-	State                 types.String `tfsdk:"state"`
-	ApplicationVisibility types.String `tfsdk:"application_visibility"`
+type LanguageDataModel struct {
+	ID              string `tfsdk:"id"`
+	Name            string `tfsdk:"name"`
+	DisplayName     string `tfsdk:"display_name"`
+	LocalizedName   string `tfsdk:"localized_name"`
+	LocaleID        int    `tfsdk:"locale_id"`
+	IsTenantDefault bool   `tfsdk:"is_tenant_default"`
 }
 
 func (d *LanguagesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -58,80 +51,46 @@ func (d *LanguagesDataSource) Metadata(_ context.Context, req datasource.Metadat
 
 func (d *LanguagesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the list of Dynamics 365 applications in a tenant",
-		MarkdownDescription: "Fetches the list of Dynamics 365 applications in a tenant",
+		Description:         "Fetches the list of Dynamics 365 languages",
+		MarkdownDescription: "Fetches the list of Dynamics 365 languages. For more information see [Power Platform Geos](https://learn.microsoft.com/en-us/power-platform/admin/enable-languages)",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Id of the read operation",
 				Optional:    true,
 			},
-			"environment_id": schema.StringAttribute{
-				Description: "Id of the Dynamics 365 environment",
+			"location": schema.StringAttribute{
+				Description: "Location of the languages",
 				Required:    true,
 			},
-			"name": schema.StringAttribute{
-				Description: "Name of the Dynamics 365 application",
-				Optional:    true,
-			},
-			"publisher_name": schema.StringAttribute{
-				Description: "Publisher Name of the Dynamics 365 application",
-				Optional:    true,
-			},
-			"applications": schema.ListNestedAttribute{
-				Description:         "List of Applications",
-				MarkdownDescription: "List of Applications",
+			"languages": schema.ListNestedAttribute{
+				Description:         "List of available languages",
+				MarkdownDescription: "List of available languages",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
-						"application_id": schema.StringAttribute{
-							MarkdownDescription: "ApplicaitonId",
-							Description:         "ApplicaitonId",
-							Computed:            true,
+						"id": schema.StringAttribute{
+							Description: "Unique identifier of the location",
+							Computed:    true,
 						},
-						"application_name": schema.StringAttribute{
-							MarkdownDescription: "Name",
-							Description:         "Name",
-							Computed:            true,
+						"name": schema.StringAttribute{
+							Description: "Name of the location",
+							Computed:    true,
 						},
-						"unique_name": schema.StringAttribute{
-							MarkdownDescription: "Unique Name",
-							Description:         "Unique Name",
-							Computed:            true,
+						"display_name": schema.StringAttribute{
+							Description: "Display name of the location",
+							Computed:    true,
 						},
-						"version": schema.StringAttribute{
-							MarkdownDescription: "Version",
-							Description:         "Version",
-							Computed:            true,
+						"localized_name": schema.StringAttribute{
+							Description: "Localized name of the location",
+							Computed:    true,
 						},
-						"description": schema.StringAttribute{
-							MarkdownDescription: "Localized Description",
-							Description:         "Localized Description",
-							Computed:            true,
+						"locale_id": schema.Int64Attribute{
+							Description: "Locale ID of the location",
+							Computed:    true,
 						},
-						"publisher_id": schema.StringAttribute{
-							MarkdownDescription: "Publisher Id",
-							Description:         "Publisher Id",
-							Computed:            true,
-						},
-						"publisher_name": schema.StringAttribute{
-							MarkdownDescription: "Publisher Name",
-							Description:         "Publisher Name",
-							Computed:            true,
-						},
-						"learn_more_url": schema.StringAttribute{
-							MarkdownDescription: "Learn More Url",
-							Description:         "Learn More Url",
-							Computed:            true,
-						},
-						"state": schema.StringAttribute{
-							MarkdownDescription: "State",
-							Description:         "State",
-							Computed:            true,
-						},
-						"application_visibility": schema.StringAttribute{
-							MarkdownDescription: "Application Visibility",
-							Description:         "Application Visibility",
-							Computed:            true,
+						"is_tenant_default": schema.BoolAttribute{
+							Description: "Is the location the default for the tenant",
+							Computed:    true,
 						},
 					},
 				},
@@ -153,48 +112,38 @@ func (d *LanguagesDataSource) Configure(ctx context.Context, req datasource.Conf
 
 		return
 	}
-	d.ApplicationClient = NewApplicationClient(clientApi)
+	d.LanguagesClient = NewLanguagesClient(clientApi)
 }
 
 func (d *LanguagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var plan ApplicationsListDataSourceModel
+	var plan LanguagesDataSourceModel
 	resp.State.Get(ctx, &plan)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE APPLICATIONS START: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LANGUAGES START: %s", d.ProviderTypeName))
 
-	plan.Id = types.StringValue(strconv.FormatInt(time.Now().Unix(), 10))
-	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
-	plan.Name = types.StringValue(plan.Name.ValueString())
-	plan.PublisherName = types.StringValue(plan.PublisherName.ValueString())
+	plan.Id = types.Int64Value(time.Now().Unix())
+	plan.Location = types.StringValue(plan.Location.ValueString())
 
-	applications, err := d.ApplicationClient.GetApplicationsByEnvironmentId(ctx, plan.EnvironmentId.ValueString())
+	languages, err := d.LanguagesClient.GetLanguagesByLocation(ctx, plan.Location.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
 
-	for _, application := range applications {
-		if (plan.Name.ValueString() != "" && plan.Name.ValueString() != application.Name) ||
-			(plan.PublisherName.ValueString() != "" && plan.PublisherName.ValueString() != application.PublisherName) {
-			continue
-		}
-		plan.Applications = append(plan.Applications, ApplicationDataSourceModel{
-			ApplicationId:         types.StringValue(application.ApplicationId),
-			Name:                  types.StringValue(application.Name),
-			UniqueName:            types.StringValue(application.UniqueName),
-			Version:               types.StringValue(application.Version),
-			Description:           types.StringValue(application.Description),
-			PublisherId:           types.StringValue(application.PublisherId),
-			PublisherName:         types.StringValue(application.PublisherName),
-			LearnMoreUrl:          types.StringValue(application.LearnMoreUrl),
-			State:                 types.StringValue(application.State),
-			ApplicationVisibility: types.StringValue(application.ApplicationVisibility),
+	for _, language := range languages.Value {
+		plan.Value = append(plan.Value, LanguageDataModel{
+			ID:              language.ID,
+			Name:            language.Name,
+			DisplayName:     language.Properties.DisplayName,
+			LocalizedName:   language.Properties.LocalizedName,
+			LocaleID:        language.Properties.LocaleID,
+			IsTenantDefault: language.Properties.IsTenantDefault,
 		})
 	}
 
 	diags := resp.State.Set(ctx, &plan)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE APPLICATIONS END: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LANGUAGES END: %s", d.ProviderTypeName))
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

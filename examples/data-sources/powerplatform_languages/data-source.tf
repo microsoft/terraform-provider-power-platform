@@ -14,5 +14,5 @@ provider "powerplatform" {
 data "powerplatform_locations" "all_locations" {}
 
 data "powerplatform_languages" "all_languages_by_location" {
-  location_id = data.powerplatform_locations.all_locations.locations[0].name
+  location = data.powerplatform_locations.all_locations.locations[0].name
 }
