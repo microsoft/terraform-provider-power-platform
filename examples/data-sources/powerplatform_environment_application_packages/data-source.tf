@@ -12,16 +12,16 @@ provider "powerplatform" {
 
 data "powerplatform_environments" "all_environments" {}
 
-data "powerplatform_applications" "all_applications" {
+data "powerplatform_environment_application_packages" "all_applications" {
   environment_id = data.powerplatform_environments.all_environments.environments[0].id
 }
 
-data "powerplatform_applications" "all_applications_from_publisher" {
+data "powerplatform_environment_application_packages" "all_applications_from_publisher" {
   environment_id = data.powerplatform_environments.all_environments.environments[0].id
   publisher_name = "Power Platform Host Service"
 }
 
-data "powerplatform_applications" "specific_application" {
+data "powerplatform_environment_application_packages" "specific_application" {
   environment_id = data.powerplatform_environments.all_environments.environments[0].id
   publisher_name = "Microsoft Dynamics 365"
   name           = "Virtual connectors in Dataverse"

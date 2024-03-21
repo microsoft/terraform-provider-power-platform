@@ -19,30 +19,30 @@ import (
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
-func NewApplicationResource() resource.Resource {
-	return &ApplicationResource{
+func NewEnvironmentApplicationPackageInstallResource() resource.Resource {
+	return &EnvironmentApplicationPackageInstallResource{
 		ProviderTypeName: "powerplatform",
-		TypeName:         "_application",
+		TypeName:         "_environment_application_package_install",
 	}
 }
 
-type ApplicationResource struct {
+type EnvironmentApplicationPackageInstallResource struct {
 	ApplicationClient ApplicationClient
 	ProviderTypeName  string
 	TypeName          string
 }
 
-type ApplicationResourceModel struct {
+type EnvironmentApplicationPackageInstallResourceModel struct {
 	Id            types.String `tfsdk:"id"`
 	UniqueName    types.String `tfsdk:"unique_name"`
 	EnvironmentId types.String `tfsdk:"environment_id"`
 }
 
-func (r *ApplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *EnvironmentApplicationPackageInstallResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *EnvironmentApplicationPackageInstallResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "PowerPlatform application",
 		MarkdownDescription: "This resource allows you to install a Dynamics 365 application in an environment.\n\nThis is functionally equivalent to the 'Install' button in the Power Platform admin center or [`pac application install` in the Power Platform CLI](https://docs.microsoft.com/en-us/powerapps/developer/data-platform/powerapps-cli#pac-application-install).  This resource uses the [Install Application Package](https://docs.microsoft.com/en-us/rest/api/power-platform/appmanagement/applications/installapplicationpackage) endpoint in the Power Platform API.\n\n~> This resource does not support updating or deleting applications.  The expected behavior is that the application is installed and remains installed until the environment is deleted.",
@@ -73,7 +73,7 @@ func (r *ApplicationResource) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *ApplicationResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *EnvironmentApplicationPackageInstallResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -90,8 +90,8 @@ func (r *ApplicationResource) Configure(ctx context.Context, req resource.Config
 	r.ApplicationClient = NewApplicationClient(clientApi)
 }
 
-func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan ApplicationResourceModel
+func (r *EnvironmentApplicationPackageInstallResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan EnvironmentApplicationPackageInstallResourceModel
 	resp.State.Get(ctx, &plan)
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
@@ -121,8 +121,8 @@ func (r *ApplicationResource) Create(ctx context.Context, req resource.CreateReq
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *ApplicationResourceModel
+func (r *EnvironmentApplicationPackageInstallResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state *EnvironmentApplicationPackageInstallResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.ProviderTypeName))
 
@@ -139,14 +139,14 @@ func (r *ApplicationResource) Read(ctx context.Context, req resource.ReadRequest
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan *ApplicationResourceModel
+func (r *EnvironmentApplicationPackageInstallResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan *EnvironmentApplicationPackageInstallResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
-	var state *ApplicationResourceModel
+	var state *EnvironmentApplicationPackageInstallResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -158,8 +158,8 @@ func (r *ApplicationResource) Update(ctx context.Context, req resource.UpdateReq
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *ApplicationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *ApplicationResourceModel
+func (r *EnvironmentApplicationPackageInstallResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state *EnvironmentApplicationPackageInstallResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
 
@@ -173,6 +173,6 @@ func (r *ApplicationResource) Delete(ctx context.Context, req resource.DeleteReq
 	tflog.Debug(ctx, "No application have been uninstalled, as this is the expected behavior")
 }
 
-func (r *ApplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *EnvironmentApplicationPackageInstallResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("application_name"), req, resp)
 }

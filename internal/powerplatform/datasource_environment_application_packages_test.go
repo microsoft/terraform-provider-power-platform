@@ -1,6 +1,3 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license.
-
 package powerplatform
 
 import (
@@ -13,7 +10,7 @@ import (
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
-func TestAccApplicationsDataSource_Validate_Read(t *testing.T) {
+func TestAccEnvironmentApplicationPackagesDataSource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
@@ -53,7 +50,7 @@ func TestAccApplicationsDataSource_Validate_Read(t *testing.T) {
 	})
 }
 
-func TestUnitApplicationsDataSource_Validate_Read(t *testing.T) {
+func TestUnitEnvironmentApplicationPackagesDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 

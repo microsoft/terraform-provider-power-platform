@@ -16,37 +16,37 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &PowerAppsDataSource{}
-	_ datasource.DataSourceWithConfigure = &PowerAppsDataSource{}
+	_ datasource.DataSource              = &EnvironmentPowerAppsDataSource{}
+	_ datasource.DataSourceWithConfigure = &EnvironmentPowerAppsDataSource{}
 )
 
-func NewPowerAppsDataSource() datasource.DataSource {
-	return &PowerAppsDataSource{
+func NewEnvironmentPowerAppsDataSource() datasource.DataSource {
+	return &EnvironmentPowerAppsDataSource{
 		ProviderTypeName: "powerplatform",
-		TypeName:         "_powerapps",
+		TypeName:         "_environment_powerapps",
 	}
 }
 
-type PowerAppsDataSource struct {
+type EnvironmentPowerAppsDataSource struct {
 	PowerAppssClient PowerAppssClient
 	ProviderTypeName string
 	TypeName         string
 }
 
-type PowerAppsListDataSourceModel struct {
-	Id        types.String               `tfsdk:"id"`
-	PowerApps []PowerAppsDataSourceModel `tfsdk:"powerapps"`
+type EnvironmentPowerAppsListDataSourceModel struct {
+	Id        types.String                          `tfsdk:"id"`
+	PowerApps []EnvironmentPowerAppsDataSourceModel `tfsdk:"powerapps"`
 }
 
-type PowerAppsDataSourceModel struct {
+type EnvironmentPowerAppsDataSourceModel struct {
 	EnvironmentId types.String `tfsdk:"id"`
 	DisplayName   types.String `tfsdk:"display_name"`
 	Name          types.String `tfsdk:"name"`
 	CreatedTime   types.String `tfsdk:"created_time"`
 }
 
-func ConvertFromPowerAppDto(powerAppDto PowerAppBapi) PowerAppsDataSourceModel {
-	return PowerAppsDataSourceModel{
+func ConvertFromPowerAppDto(powerAppDto PowerAppBapi) EnvironmentPowerAppsDataSourceModel {
+	return EnvironmentPowerAppsDataSourceModel{
 		EnvironmentId: types.StringValue(powerAppDto.Properties.Environment.Name),
 		DisplayName:   types.StringValue(powerAppDto.Properties.DisplayName),
 		Name:          types.StringValue(powerAppDto.Name),
@@ -54,11 +54,11 @@ func ConvertFromPowerAppDto(powerAppDto PowerAppBapi) PowerAppsDataSourceModel {
 	}
 }
 
-func (d *PowerAppsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *EnvironmentPowerAppsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *PowerAppsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentPowerAppsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Power Apps in an environment",
 		MarkdownDescription: "Fetches the list of Power Apps in an environment.  See [Manage Power Apps](https://learn.microsoft.com/en-us/power-platform/admin/admin-manage-apps) for more details about how this data is surfaced in Power Platform Admin Center.",
@@ -99,7 +99,7 @@ func (d *PowerAppsDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 	}
 }
 
-func (d *PowerAppsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *EnvironmentPowerAppsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -118,10 +118,10 @@ func (d *PowerAppsDataSource) Configure(_ context.Context, req datasource.Config
 	d.PowerAppssClient = NewPowerAppssClient(clientApi)
 }
 
-func (d *PowerAppsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state PowerAppsListDataSourceModel
+func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state EnvironmentPowerAppsListDataSourceModel
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POWERAPPS START: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT POWERAPPS START: %s", d.ProviderTypeName))
 
 	apps, err := d.PowerAppssClient.GetPowerApps(ctx, "")
 	if err != nil {
@@ -138,7 +138,7 @@ func (d *PowerAppsDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	diags := resp.State.Set(ctx, &state)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POWERAPPS END: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT POWERAPPS END: %s", d.ProviderTypeName))
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
