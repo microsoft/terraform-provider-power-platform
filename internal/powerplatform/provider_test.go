@@ -117,6 +117,7 @@ func TestUnitPowerPlatformProvider_Validate_Telementry_Optout_Is_False(t *testin
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []r.TestStep{
 			{
+				//lintignore:AT004
 				Config: `provider "powerplatform" {
 					use_cli = true
 					telemetry_optout = false
@@ -152,6 +153,7 @@ func TestUnitPowerPlatformProvider_Validate_Telementry_Optout_Is_True(t *testing
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []r.TestStep{
 			{
+				//lintignore:AT004
 				Config: `provider "powerplatform" {
 					use_cli = true
 					telemetry_optout = true
