@@ -10,4 +10,4 @@ provider "powerplatform" {
   use_cli = true
 }
 
-data "powerplatform_powerapps" "all" {}
+data "powerplatform_environment_powerapps" "all" {}

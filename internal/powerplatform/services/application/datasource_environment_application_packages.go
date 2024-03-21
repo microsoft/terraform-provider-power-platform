@@ -17,32 +17,32 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &ApplicationsDataSource{}
-	_ datasource.DataSourceWithConfigure = &ApplicationsDataSource{}
+	_ datasource.DataSource              = &EnvironmentApplicationPackagesDataSource{}
+	_ datasource.DataSourceWithConfigure = &EnvironmentApplicationPackagesDataSource{}
 )
 
-func NewApplicationsDataSource() datasource.DataSource {
-	return &ApplicationsDataSource{
+func NewEnvironmentApplicationPackagesDataSource() datasource.DataSource {
+	return &EnvironmentApplicationPackagesDataSource{
 		ProviderTypeName: "powerplatform",
-		TypeName:         "_applications",
+		TypeName:         "_environment_application_packages",
 	}
 }
 
-type ApplicationsDataSource struct {
+type EnvironmentApplicationPackagesDataSource struct {
 	ApplicationClient ApplicationClient
 	ProviderTypeName  string
 	TypeName          string
 }
 
-type ApplicationsListDataSourceModel struct {
-	EnvironmentId types.String                 `tfsdk:"environment_id"`
-	Name          types.String                 `tfsdk:"name"`
-	PublisherName types.String                 `tfsdk:"publisher_name"`
-	Id            types.String                 `tfsdk:"id"`
-	Applications  []ApplicationDataSourceModel `tfsdk:"applications"`
+type EnvironmentApplicationPackagesListDataSourceModel struct {
+	EnvironmentId types.String                                   `tfsdk:"environment_id"`
+	Name          types.String                                   `tfsdk:"name"`
+	PublisherName types.String                                   `tfsdk:"publisher_name"`
+	Id            types.String                                   `tfsdk:"id"`
+	Applications  []EnvironmentApplicationPackageDataSourceModel `tfsdk:"applications"`
 }
 
-type ApplicationDataSourceModel struct {
+type EnvironmentApplicationPackageDataSourceModel struct {
 	ApplicationId         types.String `tfsdk:"application_id"`
 	Name                  types.String `tfsdk:"application_name"`
 	UniqueName            types.String `tfsdk:"unique_name"`
@@ -55,11 +55,11 @@ type ApplicationDataSourceModel struct {
 	ApplicationVisibility types.String `tfsdk:"application_visibility"`
 }
 
-func (d *ApplicationsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *EnvironmentApplicationPackagesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *ApplicationsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentApplicationPackagesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dynamics 365 applications in a tenant",
 		MarkdownDescription: "Fetches the list of Dynamics 365 applications in a tenant.  The data source can be filtered by name and publisher name.\n\nThis is functionally equivalent to the [Environment-level view of apps](https://learn.microsoft.com/en-us/power-platform/admin/manage-apps#environment-level-view-of-apps) in the Power Platform Admin Center or the [`pac application list` command from Power Platform CLI](https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/application#pac-application-list).  This data source uses the [Get Environment Application Package](https://learn.microsoft.com/en-us/rest/api/power-platform/appmanagement/applications/get-environment-application-package) endpoint in the Power Platform API.",
@@ -143,7 +143,7 @@ func (d *ApplicationsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 	}
 }
 
-func (d *ApplicationsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *EnvironmentApplicationPackagesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -159,11 +159,11 @@ func (d *ApplicationsDataSource) Configure(ctx context.Context, req datasource.C
 	d.ApplicationClient = NewApplicationClient(clientApi)
 }
 
-func (d *ApplicationsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var plan ApplicationsListDataSourceModel
+func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var plan EnvironmentApplicationPackagesListDataSourceModel
 	resp.State.Get(ctx, &plan)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE APPLICATIONS START: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES START: %s", d.ProviderTypeName))
 
 	plan.Id = types.StringValue(strconv.FormatInt(time.Now().Unix(), 10))
 	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
@@ -181,7 +181,7 @@ func (d *ApplicationsDataSource) Read(ctx context.Context, req datasource.ReadRe
 			(plan.PublisherName.ValueString() != "" && plan.PublisherName.ValueString() != application.PublisherName) {
 			continue
 		}
-		plan.Applications = append(plan.Applications, ApplicationDataSourceModel{
+		plan.Applications = append(plan.Applications, EnvironmentApplicationPackageDataSourceModel{
 			ApplicationId:         types.StringValue(application.ApplicationId),
 			Name:                  types.StringValue(application.Name),
 			UniqueName:            types.StringValue(application.UniqueName),
@@ -197,7 +197,7 @@ func (d *ApplicationsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	diags := resp.State.Set(ctx, &plan)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE APPLICATIONS END: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES END: %s", d.ProviderTypeName))
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

@@ -1,0 +1,3 @@
+output "powerplatform_applications_sample_application" {
+  value = powerplatform_environment_application_package_install.install_sample_application
+}
