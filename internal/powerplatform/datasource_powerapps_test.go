@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -19,17 +22,17 @@ func TestAccPowerAppsDataSource_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: TestsProviderConfig + `
-				data "powerplatform_powerapps" "all" {}`,
+				data "powerplatform_environment_powerapps" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					//Verify placeholder id attribute
-					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
+					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
 					// Verify the first power app to ensure all attributes are set
-					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.name", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.id", regexp.MustCompile(powerplatform_helpers.UrlValidStringRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.display_name", regexp.MustCompile(powerplatform_helpers.UrlValidStringRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.created_time", regexp.MustCompile(`^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$`)),
+					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.name", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.id", regexp.MustCompile(powerplatform_helpers.UrlValidStringRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.display_name", regexp.MustCompile(powerplatform_helpers.UrlValidStringRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.created_time", regexp.MustCompile(`^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$`)),
 				),
 			},
 		},
@@ -55,26 +58,26 @@ func TestUnitPowerAppsDataSource_Validate_Read(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: TestsProviderConfig + `
-				data "powerplatform_powerapps" "all" {}`,
+				data "powerplatform_environment_powerapps" "all" {}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_powerapps.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
+					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.#", "4"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.#", "4"),
 
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.name", "00000000-0000-0000-0000-000000000001"),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.id", "00000000-0000-0000-0000-000000000001"),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.display_name", "Overview"),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.0.created_time", "2023-09-27T07:08:47.1964785Z"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.name", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.display_name", "Overview"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.created_time", "2023-09-27T07:08:47.1964785Z"),
 
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.2.name", "00000000-0000-0000-0000-000000000002"),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.2.id", "00000000-0000-0000-0000-000000000002"),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.2.display_name", "Overview"),
-					resource.TestCheckResourceAttr("data.powerplatform_powerapps.all", "powerapps.2.created_time", "2023-09-27T07:08:47.1964785Z"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.2.name", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.2.id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.2.display_name", "Overview"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.2.created_time", "2023-09-27T07:08:47.1964785Z"),
 				),
 			},
 		},

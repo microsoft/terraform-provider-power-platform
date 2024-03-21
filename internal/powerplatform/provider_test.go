@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -9,10 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
+	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
+	locations "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
 	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
@@ -32,23 +37,27 @@ provider "powerplatform" {
 `
 )
 
-var (
-	TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-		"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider(context.Background(), true)()),
-	}
-)
+var TestUnitTestProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider(context.Background(), true)()),
+}
+
+var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider(context.Background(), false)()),
+}
 
 func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 	expectedDataSources := []datasource.DataSource{
-		powerapps.NewPowerAppsDataSource(),
+		powerapps.NewEnvironmentPowerAppsDataSource(),
 		environment.NewEnvironmentsDataSource(),
-		application.NewApplicationsDataSource(),
+		application.NewEnvironmentApplicationPackagesDataSource(),
 		connectors.NewConnectorsDataSource(),
 		solution.NewSolutionsDataSource(),
 		dlp_policy.NewDataLossPreventionPolicyDataSource(),
 		tenant_settings.NewTenantSettingsDataSource(),
 		licensing.NewBillingPoliciesDataSource(),
 		licensing.NewBillingPoliciesEnvironmetsDataSource(),
+		locations.NewLocationsDataSource(),
+		auth.NewSecurityRolesDataSource(),
 	}
 	datasources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).DataSources(context.Background())
 
@@ -61,13 +70,14 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 	expectedResources := []resource.Resource{
 		environment.NewEnvironmentResource(),
-		application.NewApplicationResource(),
+		application.NewEnvironmentApplicationPackageInstallResource(),
 		dlp_policy.NewDataLossPreventionPolicyResource(),
 		solution.NewSolutionResource(),
 		tenant_settings.NewTenantSettingsResource(),
 		managed_environment.NewManagedEnvironmentResource(),
 		licensing.NewBillingPolicyResource(),
 		licensing.NewBillingPolicyEnvironmentResource(),
+		auth.NewUserResource(),
 	}
 	resources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).Resources(context.Background())
 

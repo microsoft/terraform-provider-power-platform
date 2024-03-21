@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -42,15 +45,12 @@ func (r *TenantSettingsResource) Metadata(ctx context.Context, req resource.Meta
 
 func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Power Platform Tenant Settings Resource",
-		MarkdownDescription: "Power Platform Tenant Settings Resource",
+		Description:         "Manages Power Platform Tenant Settings.",
+		MarkdownDescription: "Manages Power Platform Tenant Settings. Power Platform Tenant Settings are configuration options that apply to the entire tenant. They control various aspects of Power Platform features and behaviors, such as security, data protection, licensing, and more. These settings apply to all environments within your tenant. See [Tenant Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/tenant-settings) for more details.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Id",
 				Computed:    true,
-				// PlanModifiers: []planmodifier.String{
-				// 	stringplanmodifier.UseStateForUnknown(),
-				// },
 			},
 			"walk_me_opt_out": schema.BoolAttribute{
 				Description: "Walk Me Opt Out",
@@ -74,8 +74,9 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			"disable_environment_creation_by_non_admin_users": schema.BoolAttribute{
-				Description: "Disable Environment Creation By Non Admin Users",
-				Optional:    true, Computed: true,
+				Description:         "Disable Environment Creation By Non Admin Users",
+				MarkdownDescription: "Disable Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/en-us/power-platform/admin/control-environment-creation) for more details.",
+				Optional:            true, Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
@@ -95,15 +96,17 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			"disable_trial_environment_creation_by_non_admin_users": schema.BoolAttribute{
-				Description: "Disable Trial Environment Creation By Non Admin Users",
-				Optional:    true, Computed: true,
+				Description:         "Disable Trial Environment Creation By Non Admin Users",
+				MarkdownDescription: "Disable Trial Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/en-us/power-platform/admin/control-environment-creation) for more details.",
+				Optional:            true, Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"disable_capacity_allocation_by_environment_admins": schema.BoolAttribute{
-				Description: "Disable Capacity Allocation By Environment Admins",
-				Optional:    true, Computed: true,
+				Description:         "Disable Capacity Allocation By Environment Admins",
+				MarkdownDescription: "Disable Capacity Allocation By Environment Admins. See [Add-on capacity management](https://learn.microsoft.com/en-us/power-platform/admin/capacity-add-on#control-who-can-allocate-add-on-capacity) for more details.",
+				Optional:            true, Computed: true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},

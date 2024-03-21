@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -14,10 +17,12 @@ import (
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
+	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
+	locations "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
 	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
@@ -257,27 +262,30 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		func() resource.Resource { return environment.NewEnvironmentResource() },
-		func() resource.Resource { return application.NewApplicationResource() },
+		func() resource.Resource { return application.NewEnvironmentApplicationPackageInstallResource() },
 		func() resource.Resource { return dlp_policy.NewDataLossPreventionPolicyResource() },
 		func() resource.Resource { return solution.NewSolutionResource() },
 		func() resource.Resource { return tenant_settings.NewTenantSettingsResource() },
 		func() resource.Resource { return managed_environment.NewManagedEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
+		func() resource.Resource { return auth.NewUserResource() },
 	}
 }
 
 func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		func() datasource.DataSource { return connectors.NewConnectorsDataSource() },
-		func() datasource.DataSource { return application.NewApplicationsDataSource() },
-		func() datasource.DataSource { return powerapps.NewPowerAppsDataSource() },
+		func() datasource.DataSource { return application.NewEnvironmentApplicationPackagesDataSource() },
+		func() datasource.DataSource { return powerapps.NewEnvironmentPowerAppsDataSource() },
 		func() datasource.DataSource { return environment.NewEnvironmentsDataSource() },
 		func() datasource.DataSource { return solution.NewSolutionsDataSource() },
 		func() datasource.DataSource { return dlp_policy.NewDataLossPreventionPolicyDataSource() },
 		func() datasource.DataSource { return tenant_settings.NewTenantSettingsDataSource() },
 		func() datasource.DataSource { return licensing.NewBillingPoliciesDataSource() },
 		func() datasource.DataSource { return licensing.NewBillingPoliciesEnvironmetsDataSource() },
+		func() datasource.DataSource { return locations.NewLocationsDataSource() },
+		func() datasource.DataSource { return auth.NewSecurityRolesDataSource() },
 	}
 }
 

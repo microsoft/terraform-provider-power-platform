@@ -20,6 +20,7 @@
 		"ghcr.io/devcontainers/features/go:1": {
 			"version": "latest"
 		},
+		"./features/acceptance_test_dependencies": {},
 		"./features/local_provider_dev": {},
 		"./features/pac": {}
 	},

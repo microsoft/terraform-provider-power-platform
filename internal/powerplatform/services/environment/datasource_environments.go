@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -83,7 +86,7 @@ func (d *EnvironmentsDataSource) Metadata(_ context.Context, req datasource.Meta
 func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of environments in a tenant",
-		MarkdownDescription: "Fetches the list of environments in a tenant",
+		MarkdownDescription: "Fetches the list of environments in a tenant.  See [Environments overview](https://learn.microsoft.com/en-us/power-platform/admin/environments-overview) for more information.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
 				Description: "Placeholder identifier attribute",
