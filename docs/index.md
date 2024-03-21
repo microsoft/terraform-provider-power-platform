@@ -132,6 +132,8 @@ In addition to the authentication options, the following options are also suppor
 
 Use the navigation to the left to read about the available resources and data sources.
 
+**CAUTION:** By calling `terraform destroy` all the resources, that you've created, will be deleted permamently deleted. Please be careful with this command when working with production environments. You can use [prevent-destory](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) lifecycle argument in your resources to prevent accidental deletion.  
+
 ## Examples
 
 More detailed examples can be found in the [Power Platform Terraform Quickstarts](https://github.com/microsoft/power-platform-terraform-quickstarts) repo.  This repo contains a number of examples for using the Power Platform provider to manage environments and other resources within Power Platform along with Azure and Entra.
