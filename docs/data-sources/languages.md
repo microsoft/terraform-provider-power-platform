@@ -16,7 +16,6 @@ Fetches the list of Dynamics 365 languages. For more information see [Power Plat
 terraform {
   required_providers {
     powerplatform = {
-      version = "0.2"
       source  = "microsoft/power-platform"
     }
   }
