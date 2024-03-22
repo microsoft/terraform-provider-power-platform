@@ -3,12 +3,12 @@
 page_title: "powerplatform_languages Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of Dynamics 365 languages. For more information see Power Platform Geos https://learn.microsoft.com/en-us/power-platform/admin/enable-languages
+  Fetches the list of Dynamics 365 languages. For more information see Power Platform Enable Languages https://learn.microsoft.com/en-us/power-platform/admin/enable-languages
 ---
 
 # powerplatform_languages (Data Source)
 
-Fetches the list of Dynamics 365 languages. For more information see [Power Platform Geos](https://learn.microsoft.com/en-us/power-platform/admin/enable-languages)
+Fetches the list of Dynamics 365 languages. For more information see [Power Platform Enable Languages](https://learn.microsoft.com/en-us/power-platform/admin/enable-languages)
 
 ## Example Usage
 

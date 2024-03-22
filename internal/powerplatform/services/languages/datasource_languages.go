@@ -52,7 +52,7 @@ func (d *LanguagesDataSource) Metadata(_ context.Context, req datasource.Metadat
 func (d *LanguagesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dynamics 365 languages",
-		MarkdownDescription: "Fetches the list of Dynamics 365 languages. For more information see [Power Platform Geos](https://learn.microsoft.com/en-us/power-platform/admin/enable-languages)",
+		MarkdownDescription: "Fetches the list of Dynamics 365 languages. For more information see [Power Platform Enable Languages](https://learn.microsoft.com/en-us/power-platform/admin/enable-languages)",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
 				Description: "Id of the read operation",
