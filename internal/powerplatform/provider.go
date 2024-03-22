@@ -116,6 +116,11 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				Description: "The path to a file containing an OIDC ID token for use when authenticating as a Service Principal using OpenID Connect.",
 				Optional:    true,
 			},
+			"telemetry_optout": schema.BoolAttribute{
+				Description:         "Flag to indicate whether to opt out of telemetry. Default is `false`",
+				MarkdownDescription: "Flag to indicate whether to opt out of telemetry. Default is `false`",
+				Optional:            true,
+			},
 		},
 	}
 }
@@ -200,6 +205,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	ctx = tflog.SetField(ctx, "oidc_request_token", oidcRequestToken)
 	ctx = tflog.SetField(ctx, "oidc_token", oidcToken)
 	ctx = tflog.SetField(ctx, "oidc_token_file_path", oidcTokenFilePath)
+	ctx = tflog.SetField(ctx, "telemetry_optout", config.TelemetryOptout.ValueBool())
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_client_secret")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_request_token")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token")
@@ -249,6 +255,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 			}
 		}
 	}
+	p.Config.TelemetryOptout = config.TelemetryOptout.ValueBool()
 
 	providerClient := api.ProviderClient{
 		Config: p.Config,
