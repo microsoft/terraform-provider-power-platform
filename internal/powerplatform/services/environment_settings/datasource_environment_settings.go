@@ -7,12 +7,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
@@ -33,17 +31,6 @@ type EnvironmentSettingsDataSource struct {
 	EnvironmentSettingsClient EnvironmentSettingsClient
 	ProviderTypeName          string
 	TypeName                  string
-}
-
-type EnvironmentSettingsDataSourceModel struct {
-	Id                                types.String `tfsdk:"id"`
-	EnvironmentId                     types.String `tfsdk:"environment_id"`
-	MaxUploadFileSize                 types.Int64  `tfsdk:"max_upload_file_size"`
-	ShowDashboardCardsInExpandedState types.Bool   `tfsdk:"show_dashboard_cards_in_expanded_state"`
-	PluginTraceLogSetting             types.String `tfsdk:"plugin_trace_log_setting"`
-	IsAuditEnabled                    types.Bool   `tfsdk:"is_audit_enabled"`
-	IsUserAccessAuditEnabled          types.Bool   `tfsdk:"is_user_access_audit_enabled"`
-	IsReadAuditEnabled                types.Bool   `tfsdk:"is_read_audit_enabled"`
 }
 
 func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -67,7 +54,7 @@ func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datas
 }
 
 func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state EnvironmentSettingsDataSourceModel
+	var state EnvironmenttSettingsSourceModel
 	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS START: %s", d.ProviderTypeName))
@@ -83,14 +70,7 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	state.Id = types.StringValue(uuid.New().String())
-	state.MaxUploadFileSize = types.Int64Value(envSettings.MaxUploadFileSize)
-	state.ShowDashboardCardsInExpandedState = types.BoolValue(envSettings.BoundDashboardDefaultCardExpanded)
-
-	state.PluginTraceLogSetting = types.StringValue(d.getPluginTraceLogSetting(envSettings.PluginTraceLogSetting))
-	state.IsAuditEnabled = types.BoolValue(envSettings.IsAuditEnabled)
-	state.IsUserAccessAuditEnabled = types.BoolValue(envSettings.IsUserAccessAuditEnabled)
-	state.IsReadAuditEnabled = types.BoolValue(envSettings.IsReadAuditEnabled)
+	state = ConvertFromEnvironmentSettingsDto(envSettings)
 
 	diags := resp.State.Set(ctx, &state)
 
@@ -102,23 +82,10 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 	}
 }
 
-func (d *EnvironmentSettingsDataSource) getPluginTraceLogSetting(value int64) string {
-	switch value {
-	case 0:
-		return "Off"
-	case 1:
-		return "Exception"
-	case 2:
-		return "All"
-	default:
-		panic(fmt.Sprintf("Invalid value for pluginTraceLogSetting: %d", value))
-	}
-}
-
 func (d *EnvironmentSettingsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Power Platform Tenant Settings Data Source",
-		MarkdownDescription: "Power Platform Tenant Settings Data Source",
+		Description:         "Power Platform Environment Settings Data Source",
+		MarkdownDescription: "Power Platform Environment Settings Data Source. Power Platform Settings are configuration options that apply to a specific environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/admin-settings) for more details.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description: "Id",
@@ -129,7 +96,7 @@ func (d *EnvironmentSettingsDataSource) Schema(_ context.Context, _ datasource.S
 				MarkdownDescription: "Unique environment id (guid)",
 				Required:            true,
 			},
-			"max_upload_file_size": schema.Int64Attribute{
+			"max_upload_file_size_in_bytes": schema.Int64Attribute{
 				Description:         "Maximum file size that can be uploaded to the environment",
 				MarkdownDescription: "Maximum file size that can be uploaded to the environment",
 				Computed:            true,

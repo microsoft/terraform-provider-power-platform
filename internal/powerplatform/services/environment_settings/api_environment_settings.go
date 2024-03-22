@@ -35,16 +35,37 @@ func (client *EnvironmentSettingsClient) GetEnvironmentSettings(ctx context.Cont
 		Path:   "/api/data/v9.0/organizations",
 	}
 
-	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
-	apiUrl.RawQuery = values.Encode()
-
 	environmentSettings := EnvironmentSettingsValueDto{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &environmentSettings)
 	if err != nil {
 		return nil, err
 	}
 	return &environmentSettings.Value[0], nil
+}
+
+func (client *EnvironmentSettingsClient) UpdateEnvironmentSettings(ctx context.Context, environmentId string, environmentSettings EnvironmentSettingsDto) (*EnvironmentSettingsDto, error) {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	settings, err := client.GetEnvironmentSettings(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Path:   fmt.Sprintf("/api/data/v9.0/organizations(%s)", *settings.OrganizationId),
+	}
+
+	_, err = client.Api.Execute(ctx, "PATCH", apiUrl.String(), nil, environmentSettings, []int{http.StatusNoContent}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.GetEnvironmentSettings(ctx, environmentId)
 }
 
 func (client *EnvironmentSettingsClient) GetEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {

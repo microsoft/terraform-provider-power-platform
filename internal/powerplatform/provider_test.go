@@ -21,6 +21,7 @@ import (
 	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
+	env_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_settings"
 	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
 	locations "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
 	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
@@ -64,6 +65,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		locations.NewLocationsDataSource(),
 		currencies.NewCurrenciesDataSource(),
 		auth.NewSecurityRolesDataSource(),
+		env_settings.NewEnvironmentSettingsDataSource(),
 	}
 	datasources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).DataSources(context.Background())
 
@@ -84,6 +86,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		licensing.NewBillingPolicyResource(),
 		licensing.NewBillingPolicyEnvironmentResource(),
 		auth.NewUserResource(),
+		env_settings.NewEnvironmentSettingsResource(),
 	}
 	resources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).Resources(context.Background())
 
