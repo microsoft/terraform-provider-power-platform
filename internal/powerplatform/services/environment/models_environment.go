@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import "time"
@@ -161,4 +164,9 @@ type TransactionCurrencyDto struct {
 
 type TransactionCurrencyArrayDto struct {
 	Value []TransactionCurrencyDto `json:"value"`
+}
+
+type ValidateEnvironmentDetailsDto struct {
+	DomainName          string `json:"domainName"`
+	EnvironmentLocation string `json:"environmentLocation"`
 }

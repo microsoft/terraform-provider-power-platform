@@ -7,9 +7,7 @@ terraform {
 }
 
 provider "powerplatform" {
-  client_id     = var.client_id
-  client_secret = var.client_secret
-  tenant_id     = var.tenant_id
+  use_cli = true
 }
 
 resource "powerplatform_tenant_settings" "settings" {

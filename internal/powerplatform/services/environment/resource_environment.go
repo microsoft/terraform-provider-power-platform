@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -247,8 +250,8 @@ func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.Metadat
 
 func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "PowerPlatform environment",
-		Description:         "PowerPlatform environment",
+		MarkdownDescription: "This resource manages a PowerPlatform environment",
+		Description:         "This resource manages a PowerPlatform environment",
 
 		Attributes: map[string]schema.Attribute{
 			//"id": schema.StringAttribute{

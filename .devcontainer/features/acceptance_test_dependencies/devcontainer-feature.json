@@ -1,0 +1,14 @@
+{
+    "id": "acceptance_test_dependencies",
+    "version": "1.0.0",
+    "name": "Local Terraform Provider Acceptance Test Dependencies",
+    "documentationURL": "https://developer.hashicorp.com/terraform/tutorials/providers-plugin-framework/providers-plugin-framework-provider#prepare-terraform-for-local-provider-install",
+    "description": "Init all providers and install local provider configuration file for acceptance tests.",
+    "options": {},
+    "containerEnv": {},
+    "customizations": {},
+    "installsAfter": [
+        "ghcr.io/devcontainers/features/go",
+        "ghcr.io/devcontainers/features/terraform"
+    ]
+}

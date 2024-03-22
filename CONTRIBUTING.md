@@ -24,9 +24,9 @@ Creating a new [resource](https://developer.hashicorp.com/terraform/plugin/frame
 
 Creating a new [data source](https://developer.hashicorp.com/terraform/plugin/framework/data-sources) can allow terraform to reference data about Power Platform services and infrastrucutre.
 
-### Guides
+### Examples
 
-Guides provide documentation and example Terraform files showing how to use Terraform and the Power Platform Terraform Provider to implement more complex scenarios.
+Examples of real-world use cases are encouraged.  Please contribute those types of examples to the [Power Platform Terraform QuickStarts](https://github.com/microsoft/power-platform-terraform-quickstarts) repo.
 
 ## Pull Request Checklist
 

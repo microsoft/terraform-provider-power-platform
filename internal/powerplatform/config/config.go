@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform_config
 
 import (
@@ -5,8 +8,9 @@ import (
 )
 
 type ProviderConfig struct {
-	Credentials *ProviderCredentials
-	Urls        ProviderConfigUrls
+	Credentials     *ProviderCredentials
+	Urls            ProviderConfigUrls
+	TelemetryOptout bool
 }
 
 type ProviderConfigUrls struct {
@@ -19,7 +23,6 @@ type ProviderCredentials struct {
 	TestMode bool
 	UseCli   bool
 	UseOidc  bool
-
 
 	TenantId     string
 	ClientId     string
@@ -35,6 +38,7 @@ type ProviderCredentialsModel struct {
 	UseCli  types.Bool `tfsdk:"use_cli"`
 	UseOidc types.Bool `tfsdk:"use_oidc"`
 
+	TelemetryOptout types.Bool `tfsdk:"telemetry_optout"`
 
 	TenantId     types.String `tfsdk:"tenant_id"`
 	ClientId     types.String `tfsdk:"client_id"`
@@ -44,8 +48,11 @@ type ProviderCredentialsModel struct {
 	OidcRequestUrl    types.String `tfsdk:"oidc_request_url"`
 	OidcToken         types.String `tfsdk:"oidc_token"`
 	OidcTokenFilePath types.String `tfsdk:"oidc_token_file_path"`
-
 }
+
+// func (model *ProviderCredentials) IsTelemetryOprout() bool {
+// 	return model.TelemetryOptout
+// }
 
 func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {
 	return model.ClientId != "" && model.ClientSecret != "" && model.TenantId != ""
@@ -58,4 +65,3 @@ func (model *ProviderCredentials) IsCliProvided() bool {
 func (model *ProviderCredentials) IsOidcProvided() bool {
 	return model.UseOidc
 }
-

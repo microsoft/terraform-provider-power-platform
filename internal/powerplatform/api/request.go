@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -29,7 +32,9 @@ func (client *ApiClient) doRequest(token *string, request *http.Request, headers
 		request.Header.Set("Authorization", "Bearer "+*token)
 	}
 
-	request.Header.Set("User-Agent", "terraform-provider-power-platform")
+	if !client.GetConfig().TelemetryOptout {
+		request.Header.Set("User-Agent", "terraform-provider-power-platform")
+	}
 
 	response, err := httpClient.Do(request)
 	apiHttpResponse.Response = response

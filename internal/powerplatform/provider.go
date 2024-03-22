@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -14,11 +17,14 @@ import (
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
+	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
+	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 	env_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_settings"
 	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
+	locations "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
 	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
@@ -111,6 +117,11 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				Description: "The path to a file containing an OIDC ID token for use when authenticating as a Service Principal using OpenID Connect.",
 				Optional:    true,
 			},
+			"telemetry_optout": schema.BoolAttribute{
+				Description:         "Flag to indicate whether to opt out of telemetry. Default is `false`",
+				MarkdownDescription: "Flag to indicate whether to opt out of telemetry. Default is `false`",
+				Optional:            true,
+			},
 		},
 	}
 }
@@ -195,6 +206,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	ctx = tflog.SetField(ctx, "oidc_request_token", oidcRequestToken)
 	ctx = tflog.SetField(ctx, "oidc_token", oidcToken)
 	ctx = tflog.SetField(ctx, "oidc_token_file_path", oidcTokenFilePath)
+	ctx = tflog.SetField(ctx, "telemetry_optout", config.TelemetryOptout.ValueBool())
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_client_secret")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_request_token")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token")
@@ -244,6 +256,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 			}
 		}
 	}
+	p.Config.TelemetryOptout = config.TelemetryOptout.ValueBool()
 
 	providerClient := api.ProviderClient{
 		Config: p.Config,
@@ -258,21 +271,22 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		func() resource.Resource { return environment.NewEnvironmentResource() },
-		func() resource.Resource { return application.NewApplicationResource() },
+		func() resource.Resource { return application.NewEnvironmentApplicationPackageInstallResource() },
 		func() resource.Resource { return dlp_policy.NewDataLossPreventionPolicyResource() },
 		func() resource.Resource { return solution.NewSolutionResource() },
 		func() resource.Resource { return tenant_settings.NewTenantSettingsResource() },
 		func() resource.Resource { return managed_environment.NewManagedEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
+		func() resource.Resource { return auth.NewUserResource() },
 	}
 }
 
 func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		func() datasource.DataSource { return connectors.NewConnectorsDataSource() },
-		func() datasource.DataSource { return application.NewApplicationsDataSource() },
-		func() datasource.DataSource { return powerapps.NewPowerAppsDataSource() },
+		func() datasource.DataSource { return application.NewEnvironmentApplicationPackagesDataSource() },
+		func() datasource.DataSource { return powerapps.NewEnvironmentPowerAppsDataSource() },
 		func() datasource.DataSource { return environment.NewEnvironmentsDataSource() },
 		func() datasource.DataSource { return solution.NewSolutionsDataSource() },
 		func() datasource.DataSource { return dlp_policy.NewDataLossPreventionPolicyDataSource() },
@@ -280,6 +294,9 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return licensing.NewBillingPoliciesDataSource() },
 		func() datasource.DataSource { return licensing.NewBillingPoliciesEnvironmetsDataSource() },
 		func() datasource.DataSource { return env_settings.NewEnvironmentSettingsDataSource() },
+		func() datasource.DataSource { return locations.NewLocationsDataSource() },
+		func() datasource.DataSource { return currencies.NewCurrenciesDataSource() },
+		func() datasource.DataSource { return auth.NewSecurityRolesDataSource() },
 	}
 }
 

@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -57,7 +60,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: TestsProviderConfig + `
@@ -150,7 +153,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: TestsProviderConfig + `

@@ -1,0 +1,1124 @@
+{
+  "value": [
+    {
+      "name": "DJF",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/DJF",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "DJF",
+        "symbol": "Fdj",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "ZAR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/ZAR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "ZAR",
+        "symbol": "R",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "ETB",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/ETB",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "ETB",
+        "symbol": "ብር",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "AED",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/AED",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "AED",
+        "symbol": "د.إ.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "BHD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/BHD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "BHD",
+        "symbol": "د.ب.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "DZD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/DZD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "DZD",
+        "symbol": "د.ج.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "EGP",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/EGP",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "EGP",
+        "symbol": "ج.م.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "IQD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/IQD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "IQD",
+        "symbol": "د.ع.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "JOD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/JOD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "JOD",
+        "symbol": "د.ا.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "KWD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/KWD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "KWD",
+        "symbol": "د.ك.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "LBP",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/LBP",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "LBP",
+        "symbol": "ل.ل.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "LYD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/LYD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "LYD",
+        "symbol": "د.ل.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "MAD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/MAD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "MAD",
+        "symbol": "د.م.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "OMR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/OMR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "OMR",
+        "symbol": "ر.ع.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "QAR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/QAR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "QAR",
+        "symbol": "ر.ق.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "SAR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/SAR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "SAR",
+        "symbol": "ر.س.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "SYP",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/SYP",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "SYP",
+        "symbol": "ل.س.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "TND",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/TND",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "TND",
+        "symbol": "د.ت.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "YER",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/YER",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "YER",
+        "symbol": "ر.ي.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "CLP",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/CLP",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "CLP",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "INR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/INR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "INR",
+        "symbol": "₹",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "AZN",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/AZN",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "AZN",
+        "symbol": "₼",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "RUB",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/RUB",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "RUB",
+        "symbol": "₽",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "BYN",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/BYN",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "BYN",
+        "symbol": "Br",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "BGN",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/BGN",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "BGN",
+        "symbol": "лв.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "NGN",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/NGN",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "NGN",
+        "symbol": "₦",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "BDT",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/BDT",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "BDT",
+        "symbol": "৳",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "CNY",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/CNY",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "CNY",
+        "symbol": "¥",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "EUR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/EUR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "EUR",
+        "symbol": "€",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "BAM",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/BAM",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "BAM",
+        "symbol": "КМ",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "USD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/USD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "USD",
+        "symbol": "$",
+        "isTenantDefault": true
+      }
+    },
+    {
+      "name": "CZK",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/CZK",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "CZK",
+        "symbol": "Kč",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "GBP",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/GBP",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "GBP",
+        "symbol": "£",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "DKK",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/DKK",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "DKK",
+        "symbol": "kr.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "CHF",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/CHF",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "CHF",
+        "symbol": "CHF",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "MVR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/MVR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "MVR",
+        "symbol": "ރ.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "BTN",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/BTN",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "BTN",
+        "symbol": "Nu.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "XCD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/XCD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "XCD",
+        "symbol": "EC$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "AUD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/AUD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "AUD",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "BZD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/BZD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "BZD",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "CAD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/CAD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "CAD",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "HKD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/HKD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "HKD",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "IDR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/IDR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "IDR",
+        "symbol": "Rp",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "JMD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/JMD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "JMD",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "MYR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/MYR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "MYR",
+        "symbol": "RM",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "NZD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/NZD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "NZD",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "PHP",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/PHP",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "PHP",
+        "symbol": "₱",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "SGD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/SGD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "SGD",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "TTD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/TTD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "TTD",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "XDR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/XDR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "XDR",
+        "symbol": "XDR",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "ARS",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/ARS",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "ARS",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "BOB",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/BOB",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "BOB",
+        "symbol": "Bs",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "COP",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/COP",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "COP",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "CRC",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/CRC",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "CRC",
+        "symbol": "₡",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "CUP",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/CUP",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "CUP",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "DOP",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/DOP",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "DOP",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "GTQ",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/GTQ",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "GTQ",
+        "symbol": "Q",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "HNL",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/HNL",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "HNL",
+        "symbol": "L",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "MXN",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/MXN",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "MXN",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "NIO",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/NIO",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "NIO",
+        "symbol": "C$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "PAB",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/PAB",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "PAB",
+        "symbol": "B/.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "PEN",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/PEN",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "PEN",
+        "symbol": "S/",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "PYG",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/PYG",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "PYG",
+        "symbol": "₲",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "UYU",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/UYU",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "UYU",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "VES",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/VES",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "VES",
+        "symbol": "Bs.S",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "IRR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/IRR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "IRR",
+        "symbol": "ريال",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "XOF",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/XOF",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "XOF",
+        "symbol": "CFA",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "CDF",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/CDF",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "CDF",
+        "symbol": "FC",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "XAF",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/XAF",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "XAF",
+        "symbol": "FCFA",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "HTG",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/HTG",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "HTG",
+        "symbol": "G",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "ILS",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/ILS",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "ILS",
+        "symbol": "₪",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "HRK",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/HRK",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "HRK",
+        "symbol": "kn",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "HUF",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/HUF",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "HUF",
+        "symbol": "Ft",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "AMD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/AMD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "AMD",
+        "symbol": "֏",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "ISK",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/ISK",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "ISK",
+        "symbol": "kr",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "JPY",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/JPY",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "JPY",
+        "symbol": "¥",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "GEL",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/GEL",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "GEL",
+        "symbol": "₾",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "KZT",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/KZT",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "KZT",
+        "symbol": "₸",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "KHR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/KHR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "KHR",
+        "symbol": "៛",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "KRW",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/KRW",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "KRW",
+        "symbol": "₩",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "KGS",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/KGS",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "KGS",
+        "symbol": "сом",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "LAK",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/LAK",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "LAK",
+        "symbol": "₭",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "MKD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/MKD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "MKD",
+        "symbol": "ден",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "MNT",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/MNT",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "MNT",
+        "symbol": "₮",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "BND",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/BND",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "BND",
+        "symbol": "$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "MMK",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/MMK",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "MMK",
+        "symbol": "K",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "NOK",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/NOK",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "NOK",
+        "symbol": "kr",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "NPR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/NPR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "NPR",
+        "symbol": "रु",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "PKR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/PKR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "PKR",
+        "symbol": "Rs",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "PLN",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/PLN",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "PLN",
+        "symbol": "zł",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "AFN",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/AFN",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "AFN",
+        "symbol": "؋",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "BRL",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/BRL",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "BRL",
+        "symbol": "R$",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "MDL",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/MDL",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "MDL",
+        "symbol": "L",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "RON",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/RON",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "RON",
+        "symbol": "lei",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "RWF",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/RWF",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "RWF",
+        "symbol": "RF",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "SEK",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/SEK",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "SEK",
+        "symbol": "kr",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "LKR",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/LKR",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "LKR",
+        "symbol": "රු.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "SOS",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/SOS",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "SOS",
+        "symbol": "S",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "ALL",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/ALL",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "ALL",
+        "symbol": "Lekë",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "RSD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/RSD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "RSD",
+        "symbol": "дин.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "KES",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/KES",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "KES",
+        "symbol": "Ksh",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "TJS",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/TJS",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "TJS",
+        "symbol": "смн",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "THB",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/THB",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "THB",
+        "symbol": "฿",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "ERN",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/ERN",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "ERN",
+        "symbol": "Nfk",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "TMT",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/TMT",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "TMT",
+        "symbol": "m.",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "BWP",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/BWP",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "BWP",
+        "symbol": "P",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "TRY",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/TRY",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "TRY",
+        "symbol": "₺",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "UAH",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/UAH",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "UAH",
+        "symbol": "₴",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "UZS",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/UZS",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "UZS",
+        "symbol": "сўм",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "VND",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/VND",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "VND",
+        "symbol": "₫",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "MOP",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/MOP",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "MOP",
+        "symbol": "MOP",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "TWD",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentCurrencies/TWD",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentCurrencies",
+      "properties": {
+        "code": "TWD",
+        "symbol": "NT$",
+        "isTenantDefault": false
+      }
+    }
+  ]
+}

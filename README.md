@@ -1,9 +1,8 @@
-# Terraform Provider for Power Platform
+# Power Platform Terraform Provider
 
 The Power Platform Terraform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
-> [!WARNING]
-> This code is experimental and provided solely for evaluation purposes. It is **NOT** intended for production use and may contain bugs, incomplete features, or other issues. Use at your own risk, as it may undergo significant changes without notice, and no guarantees or support are provided. By using this code, you acknowledge and agree to these conditions. Consult the documentation or contact the maintainer if you have questions or concerns.
+**⚠️ WARNING:** This code is experimental and provided solely for evaluation purposes. It is **NOT** intended for production use and may contain bugs, incomplete features, or other issues. Use at your own risk, as it may undergo significant changes without notice, and no guarantees or support are provided. By using this code, you acknowledge and agree to these conditions. Consult the documentation or contact the maintainer if you have questions or concerns.
 
 ## Using the Provider
 
@@ -14,6 +13,14 @@ The [user documentation](https://microsoft.github.io/terraform-provider-power-pl
 Refer to the [Contributing Guide](/CONTRIBUTING.md) to learn about the different types of contributions you can make to the repo.
 
 The [developer documentation](DEVELOPER.md) outlines how to build and develop the provider.
+
+## Security
+
+For information about reporting security concerns see the [Security](SECURITY.md) documentation.
+
+## Data Collection
+
+The software may collect information about you and your use of the software and send it to Microsoft. Microsoft may use this information to provide services and improve our products and services. You may turn off the telemetry as described in the repository. There are also some features in the software that may enable you and Microsoft to collect data from users of your applications. If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with a copy of Microsoft’s privacy statement. Our privacy statement is located at <https://go.microsoft.com/fwlink/?LinkID=824704>. You can learn more about data collection and use in the help documentation and our privacy statement. Your use of the software operates as your consent to these practices.
 
 ## Trademarks
 

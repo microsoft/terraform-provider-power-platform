@@ -3,12 +3,12 @@
 page_title: "powerplatform_billing_policies Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of billing policies in a tenant
+  Fetches the list of billing policies https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy in a tenant. A billing policy is a set of rules that define how a tenant is billed for usage of Power Platform services. A billing policy is associated with a billing instrument, which is a subscription and resource group that is used to pay for usage of Power Platform services.
 ---
 
 # powerplatform_billing_policies (Data Source)
 
-Fetches the list of billing policies in a tenant
+Fetches the list of [billing policies](https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy) in a tenant. A billing policy is a set of rules that define how a tenant is billed for usage of Power Platform services. A billing policy is associated with a billing instrument, which is a subscription and resource group that is used to pay for usage of Power Platform services.
 
 ## Example Usage
 
@@ -16,16 +16,13 @@ Fetches the list of billing policies in a tenant
 terraform {
   required_providers {
     powerplatform = {
-      version = "0.2"
-      source  = "microsoft/power-platform"
+      source = "microsoft/power-platform"
     }
   }
 }
 
 provider "powerplatform" {
-  client_id     = var.client_id
-  client_secret = var.client_secret
-  tenant_id     = var.tenant_id
+  use_cli = true
 }
 
 data "powerplatform_billing_policies" "all_policies" {}

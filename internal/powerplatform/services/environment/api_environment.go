@@ -1,3 +1,6 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
 package powerplatform
 
 import (
@@ -71,7 +74,7 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 
 	environmentDelete := EnvironmentDeleteDto{
 		Code:    "7", //Application
-		Message: "Deleted using Terraform Provider for Power Platform",
+		Message: "Deleted using Power Platform Terraform Provider",
 	}
 
 	response, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
@@ -89,6 +92,13 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 }
 
 func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environment EnvironmentCreateDto) (*EnvironmentDto, error) {
+	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
+		err := client.ValidateEnvironmentDetails(ctx, environment.Location, environment.Properties.LinkedEnvironmentMetadata.DomainName)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -138,6 +148,13 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 }
 
 func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environmentId string, environment EnvironmentDto) (*EnvironmentDto, error) {
+	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
+		err := client.ValidateEnvironmentDetails(ctx, environment.Location, environment.Properties.LinkedEnvironmentMetadata.DomainName)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -223,4 +240,26 @@ func (client *EnvironmentClient) GetDefaultCurrencyForEnvironment(ctx context.Co
 			}
 		}
 	}
+}
+
+func (client *EnvironmentClient) ValidateEnvironmentDetails(ctx context.Context, location, domain string) error {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
+		Path:   "/providers/Microsoft.BusinessAppPlatform/validateEnvironmentDetails",
+	}
+	values := url.Values{}
+	values.Add("api-version", "2021-04-01")
+	apiUrl.RawQuery = values.Encode()
+
+	envDetails := ValidateEnvironmentDetailsDto{
+		DomainName:          domain,
+		EnvironmentLocation: location,
+	}
+
+	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, envDetails, []int{http.StatusOK}, nil)
+	if err != nil {
+		return err
+	}
+	return nil
 }

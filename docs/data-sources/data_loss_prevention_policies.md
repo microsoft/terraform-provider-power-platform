@@ -3,12 +3,12 @@
 page_title: "powerplatform_data_loss_prevention_policies Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of available connectors in a Power Platform tenant
+  Fetches the list of Data Loss Prevention Policies in a Power Platform tenant. See Manage data loss prevention policies https://learn.microsoft.com/en-us/power-platform/admin/prevent-data-loss for more information.
 ---
 
 # powerplatform_data_loss_prevention_policies (Data Source)
 
-Fetches the list of available connectors in a Power Platform tenant
+Fetches the list of Data Loss Prevention Policies in a Power Platform tenant. See [Manage data loss prevention policies](https://learn.microsoft.com/en-us/power-platform/admin/prevent-data-loss) for more information.
 
 
 
