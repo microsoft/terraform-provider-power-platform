@@ -16,7 +16,6 @@ Fetches the list of available Dynamics 365 currencies. For more information see 
 terraform {
   required_providers {
     powerplatform = {
-      version = "0.2"
       source  = "microsoft/power-platform"
     }
   }
