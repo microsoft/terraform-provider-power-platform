@@ -8,9 +8,7 @@ terraform {
 }
 
 provider "powerplatform" {
-  client_id     = var.client_id
-  client_secret = var.client_secret
-  tenant_id     = var.tenant_id
+  use_client = true
 }
 
 data "powerplatform_locations" "all_locations" {}
