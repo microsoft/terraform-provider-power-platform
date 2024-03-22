@@ -1,0 +1,499 @@
+{
+  "value": [
+    {
+      "name": "1033",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1033",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1033,
+        "localizedName": "English (United States)",
+        "displayName": "English (United States)",
+        "isTenantDefault": true
+      }
+    },
+    {
+      "name": "1025",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1025",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1025,
+        "localizedName": "العربية (المملكة العربية السعودية)",
+        "displayName": "العربية (المملكة العربية السعودية)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1069",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1069",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1069,
+        "localizedName": "euskara (euskara)",
+        "displayName": "euskara (euskara)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1026",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1026",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1026,
+        "localizedName": "български (България)",
+        "displayName": "български (България)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1027",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1027",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1027,
+        "localizedName": "català (català)",
+        "displayName": "català (català)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "3076",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/3076",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 3076,
+        "localizedName": "中文(香港特別行政區)",
+        "displayName": "中文(香港特別行政區)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "2052",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/2052",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 2052,
+        "localizedName": "中文(中国)",
+        "displayName": "中文(中国)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1028",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1028",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1028,
+        "localizedName": "中文(台灣)",
+        "displayName": "中文(台灣)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1050",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1050",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1050,
+        "localizedName": "hrvatski (Hrvatska)",
+        "displayName": "hrvatski (Hrvatska)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1029",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1029",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1029,
+        "localizedName": "čeština (Česko)",
+        "displayName": "čeština (Česko)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1030",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1030",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1030,
+        "localizedName": "dansk (Danmark)",
+        "displayName": "dansk (Danmark)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1043",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1043",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1043,
+        "localizedName": "Nederlands (Nederland)",
+        "displayName": "Nederlands (Nederland)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1061",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1061",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1061,
+        "localizedName": "eesti (Eesti)",
+        "displayName": "eesti (Eesti)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1035",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1035",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1035,
+        "localizedName": "suomi (Suomi)",
+        "displayName": "suomi (Suomi)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1036",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1036",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1036,
+        "localizedName": "français (France)",
+        "displayName": "français (France)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1110",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1110",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1110,
+        "localizedName": "galego (galego)",
+        "displayName": "galego (galego)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1031",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1031",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1031,
+        "localizedName": "Deutsch (Deutschland)",
+        "displayName": "Deutsch (Deutschland)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1032",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1032",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1032,
+        "localizedName": "Ελληνικά (Ελλάδα)",
+        "displayName": "Ελληνικά (Ελλάδα)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1037",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1037",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1037,
+        "localizedName": "עברית (ישראל)",
+        "displayName": "עברית (ישראל)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1081",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1081",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1081,
+        "localizedName": "हिन्दी (भारत)",
+        "displayName": "हिन्दी (भारत)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1038",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1038",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1038,
+        "localizedName": "magyar (Magyarország)",
+        "displayName": "magyar (Magyarország)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1040",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1040",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1040,
+        "localizedName": "italiano (Italia)",
+        "displayName": "italiano (Italia)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1041",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1041",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1041,
+        "localizedName": "日本語 (日本)",
+        "displayName": "日本語 (日本)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1087",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1087",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1087,
+        "localizedName": "қазақ тілі (Қазақстан)",
+        "displayName": "қазақ тілі (Қазақстан)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1042",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1042",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1042,
+        "localizedName": "한국어(대한민국)",
+        "displayName": "한국어(대한민국)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1062",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1062",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1062,
+        "localizedName": "latviešu (Latvija)",
+        "displayName": "latviešu (Latvija)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1063",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1063",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1063,
+        "localizedName": "lietuvių (Lietuva)",
+        "displayName": "lietuvių (Lietuva)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1044",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1044",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1044,
+        "localizedName": "norsk bokmål (Norge)",
+        "displayName": "norsk bokmål (Norge)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1045",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1045",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1045,
+        "localizedName": "polski (Polska)",
+        "displayName": "polski (Polska)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1046",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1046",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1046,
+        "localizedName": "português (Brasil)",
+        "displayName": "português (Brasil)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "2070",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/2070",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 2070,
+        "localizedName": "português (Portugal)",
+        "displayName": "português (Portugal)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1048",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1048",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1048,
+        "localizedName": "română (România)",
+        "displayName": "română (România)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1049",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1049",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1049,
+        "localizedName": "русский (Россия)",
+        "displayName": "русский (Россия)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "2074",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/2074",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 2074,
+        "localizedName": "srpski (Srbija i Crna Gora (Bivša))",
+        "displayName": "srpski (Srbija i Crna Gora (Bivša))",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1051",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1051",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1051,
+        "localizedName": "slovenčina (Slovensko)",
+        "displayName": "slovenčina (Slovensko)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1060",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1060",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1060,
+        "localizedName": "slovenščina (Slovenija)",
+        "displayName": "slovenščina (Slovenija)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "3082",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/3082",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 3082,
+        "localizedName": "español (España, alfabetización internacional)",
+        "displayName": "español (España, alfabetización internacional)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1053",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1053",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1053,
+        "localizedName": "svenska (Sverige)",
+        "displayName": "svenska (Sverige)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1054",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1054",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1054,
+        "localizedName": "ไทย (ไทย)",
+        "displayName": "ไทย (ไทย)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1055",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1055",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1055,
+        "localizedName": "Türkçe (Türkiye)",
+        "displayName": "Türkçe (Türkiye)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1058",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1058",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1058,
+        "localizedName": "українська (Україна)",
+        "displayName": "українська (Україна)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1066",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1066",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1066,
+        "localizedName": "Tiếng Việt (Việt Nam)",
+        "displayName": "Tiếng Việt (Việt Nam)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "3098",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/3098",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 3098,
+        "localizedName": "српски (Србија и Црна Гора (Бивша))",
+        "displayName": "српски (Србија и Црна Гора (Бивша))",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1086",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1086",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1086,
+        "localizedName": "Melayu (Malaysia)",
+        "displayName": "Melayu (Malaysia)",
+        "isTenantDefault": false
+      }
+    },
+    {
+      "name": "1057",
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1057",
+      "type": "Microsoft.BusinessAppPlatform/locations/environmentLanguages",
+      "properties": {
+        "localeId": 1057,
+        "localizedName": "Indonesia (Indonesia)",
+        "displayName": "Indonesia (Indonesia)",
+        "isTenantDefault": false
+      }
+    }
+  ]
+}
