@@ -35,7 +35,7 @@ func TestAccTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "is_audit_enabled", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "is_read_audit_enabled", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "is_user_access_audit_enabled", "false"),
-					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "max_upload_file_size", "5242880"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "max_upload_file_size_in_bytes", "5242880"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "plugin_trace_log_setting", "Off"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "show_dashboard_cards_in_expanded_state", "false"),
 				),
@@ -54,7 +54,7 @@ func TestUnitTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment_settings/tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations?api-version=2023-06-01`,
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment_settings/tests/datasource/organisations.json").String()), nil
 		})
@@ -73,7 +73,7 @@ func TestUnitTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "is_audit_enabled", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "is_read_audit_enabled", "true"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "is_user_access_audit_enabled", "true"),
-					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "max_upload_file_size", "5242880"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "max_upload_file_size_in_bytes", "5242880"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "plugin_trace_log_setting", "Off"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "show_dashboard_cards_in_expanded_state", "true"),
 				),
