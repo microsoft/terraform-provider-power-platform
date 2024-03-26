@@ -1,42 +1,43 @@
-build:
+deps:
 	go mod tidy
+
+build:
+	$(MAKE) deps
 	go build -o ./bin/
 
 install:
-	go mod tidy
+	$(MAKE) build
 	go install
+
+clean:
+	go clean -testcache
+	rm -rf ./bin
+	rm -rf /go/bin/terraform-provider-power-platform
 
 userdocs:
 	tfplugindocs generate --provider-name powerplatform --rendered-provider-name "Power Platform"
 
 servedocs:
-	tfplugindocs generate --provider-name powerplatform --rendered-provider-name "Power Platform"
+	$(MAKE) userdocs
 	mkdocs serve
-
-quickstarts: examples/quickstarts/**/*.tf examples/quickstarts/**/*.md.tmpl
-	(cd tools/quickstartgen && go mod tidy && go install)
-	quickstartgen
 
 unittest:
 	export TF_ACC=0
-	go install
-	go clean -testcache
+	$(MAKE) clean
+	$(MAKE) install
 	go test -v ./... -run "^TestUnit"
 
-acctest: 
+acctest:
 	export TF_ACC=1
-	go install
-	go clean -testcache
+	$(MAKE) clean
+	$(MAKE) install
 	go test -timeout 120m -v ./... -run "^TestAcc"
 
 test:
 	export TF_ACC=1
-	go install
-	go clean -testcache
+	$(MAKE) clean
+	$(MAKE) install
 	go test -timeout 120m -v ./...
-
-deps:
-	go mod tidy
 
 lint:
 	go install github.com/bflad/tfproviderlint/cmd/tfproviderlintx@latest
