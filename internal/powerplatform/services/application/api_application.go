@@ -25,7 +25,28 @@ type ApplicationClient struct {
 	Api *api.ApiClient
 }
 
-func (client *ApplicationClient) GetApplicationsByEnvironmentId(ctx context.Context, environmentId string) ([]ApplicationDto, error) {
+func (client *ApplicationClient) GetTenantApplications(ctx context.Context) ([]TenantApplicationDto, error) {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
+		Path:   "/appmanagement/applicationPackages",
+	}
+	values := url.Values{
+		"api-version": []string{"2022-03-01-preview"},
+	}
+	apiUrl.RawQuery = values.Encode()
+
+	application := TenantApplicationArrayDto{}
+
+	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &application)
+	if err != nil {
+		return nil, err
+	}
+
+	return application.Value, nil
+}
+
+func (client *ApplicationClient) GetApplicationsByEnvironmentId(ctx context.Context, environmentId string) ([]EnvironmentApplicationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -36,7 +57,7 @@ func (client *ApplicationClient) GetApplicationsByEnvironmentId(ctx context.Cont
 	}
 	apiUrl.RawQuery = values.Encode()
 
-	application := ApplicationArrayDto{}
+	application := EnvironmentApplicationArrayDto{}
 
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &application)
 	if err != nil {
@@ -73,7 +94,7 @@ func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Con
 		}
 
 		for {
-			lifecycleResponse := ApplicationLifecycleDto{}
+			lifecycleResponse := EnvironmentApplicationLifecycleDto{}
 			_, err = client.Api.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
 			if err != nil {
 				return "", err
@@ -93,7 +114,7 @@ func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Con
 			}
 		}
 	} else if response.Response.StatusCode == http.StatusCreated {
-		appCreatedResponse := ApplicationLifecycleCreatedDto{}
+		appCreatedResponse := EnvironmentApplicationLifecycleCreatedDto{}
 		response.MarshallTo(&appCreatedResponse)
 		if appCreatedResponse.Properties.ProvisioningState != "Succeeded" {
 			return "", errors.New("application installation failed. provisioning state: " + appCreatedResponse.Properties.ProvisioningState)
