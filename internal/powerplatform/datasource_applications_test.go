@@ -59,7 +59,7 @@ func TestUnitApplicationsDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", `https://api.powerplatform.com/appmanagement/environments/00000000-0000-0000-0000-000000000001/applicationPackages?api-version=2022-03-01-preview`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/datasource/Validate_Read/get_applications.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/datasource/environment_application_packages/Validate_Read/get_applications.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
