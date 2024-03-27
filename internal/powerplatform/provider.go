@@ -22,6 +22,7 @@ import (
 	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
+	environment_templates "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_templates"
 	languages "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/languages"
 	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
 	locations "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
@@ -288,6 +289,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return application.NewEnvironmentApplicationPackagesDataSource() },
 		func() datasource.DataSource { return powerapps.NewEnvironmentPowerAppsDataSource() },
 		func() datasource.DataSource { return environment.NewEnvironmentsDataSource() },
+		func() datasource.DataSource { return environment_templates.NewEnvironmentTemplatesDataSource() },
 		func() datasource.DataSource { return solution.NewSolutionsDataSource() },
 		func() datasource.DataSource { return dlp_policy.NewDataLossPreventionPolicyDataSource() },
 		func() datasource.DataSource { return tenant_settings.NewTenantSettingsDataSource() },

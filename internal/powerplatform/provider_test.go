@@ -21,6 +21,7 @@ import (
 	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
+	environment_templates "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_templates"
 	languages "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/languages"
 	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
 	locations "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
@@ -55,6 +56,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 	expectedDataSources := []datasource.DataSource{
 		powerapps.NewEnvironmentPowerAppsDataSource(),
 		environment.NewEnvironmentsDataSource(),
+		environment_templates.NewEnvironmentTemplatesDataSource(),
 		application.NewEnvironmentApplicationPackagesDataSource(),
 		connectors.NewConnectorsDataSource(),
 		solution.NewSolutionsDataSource(),
