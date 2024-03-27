@@ -2,7 +2,8 @@
 
 The Power Platform Terraform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
-**⚠️ WARNING:** This code is experimental and provided solely for evaluation purposes. It is **NOT** intended for production use and may contain bugs, incomplete features, or other issues. Use at your own risk, as it may undergo significant changes without notice, and no guarantees or support are provided. By using this code, you acknowledge and agree to these conditions. Consult the documentation or contact the maintainer if you have questions or concerns.
+> [!WARNING]
+> This code is experimental and provided solely for evaluation purposes. It is **NOT** intended for production use and may contain bugs, incomplete features, or other issues. Use at your own risk, as it may undergo significant changes without notice, and no guarantees or support are provided. By using this code, you acknowledge and agree to these conditions. Consult the documentation or contact the maintainer if you have questions or concerns.
 
 ## Using the Provider
 
@@ -17,6 +18,8 @@ The [developer documentation](DEVELOPER.md) outlines how to build and develop th
 ## Security
 
 For information about reporting security concerns see the [Security](SECURITY.md) documentation.
+
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/8714/badge)](https://www.bestpractices.dev/projects/8714)
 
 ## Data Collection
 
