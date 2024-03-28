@@ -1,13 +1,40 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-
 package powerplatform
 
-type ApplicationArrayDto struct {
-	Value []ApplicationDto `json:"value"`
+type TenantApplicationDto struct {
+	ApplicationDescription string                         `json:"applicationDescription"`
+	ApplicationId          string                         `json:"applicationId"`
+	ApplicationName        string                         `json:"applicationName"`
+	ApplicationVisibility  string                         `json:"applicationVisibility"`
+	CatalogVisibility      string                         `json:"catalogVisibility"`
+	LastError              *TenantApplicationErrorDetails `json:"errorDetails,omitempty"`
+	LearnMoreUrl           string                         `json:"learnMoreUrl"`
+	LocalizedDescription   string                         `json:"localizedDescription"`
+	LocalizedName          string                         `json:"localizedName"`
+	PublisherId            string                         `json:"publisherId"`
+	PublisherName          string                         `json:"publisherName"`
+	UniqueName             string                         `json:"uniqueName"`
 }
 
-type ApplicationDto struct {
+type TenantApplicationErrorDetails struct {
+	ErrorCode  string `json:"errorCode"`
+	ErrorName  string `json:"errorName"`
+	Message    string `json:"message"`
+	Source     string `json:"source"`
+	StatusCode int64  `json:"statusCode"`
+	Type       string `json:"type"`
+}
+
+type TenantApplicationArrayDto struct {
+	Value []TenantApplicationDto `json:"value"`
+}
+
+type EnvironmentApplicationArrayDto struct {
+	Value []EnvironmentApplicationDto `json:"value"`
+}
+
+type EnvironmentApplicationDto struct {
 	ApplicationId         string `json:"applicationId"`
 	Name                  string `json:"applicationName"`
 	UniqueName            string `json:"uniqueName"`
@@ -20,39 +47,39 @@ type ApplicationDto struct {
 	ApplicationVisibility string `json:"applicationVisibility"`
 }
 
-type ApplicationDeleteDto struct {
+type EnvironmentApplicationDeleteDto struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
-type ApplicationCreateDto struct {
+type EnvironmentApplicationCreateDto struct {
 	Location string `json:"location"`
 }
 
-type ApplicationLifecycleCreatedDto struct {
-	Name       string                                   `json:"name"`
-	Properties ApplicationLifecycleCreatedPropertiesDto `json:"properties"`
+type EnvironmentApplicationLifecycleCreatedDto struct {
+	Name       string                                              `json:"name"`
+	Properties EnvironmentApplicationLifecycleCreatedPropertiesDto `json:"properties"`
 }
 
-type ApplicationLifecycleCreatedPropertiesDto struct {
+type EnvironmentApplicationLifecycleCreatedPropertiesDto struct {
 	ProvisioningState string `json:"provisioningState"`
 }
 
-type ApplicationBapi struct {
+type EnvironmentApplicationBapi struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }
 
-type ApplicationPropertiesBapi struct {
+type EnvironmentApplicationPropertiesBapi struct {
 	TenantID    string `json:"tenantId"`
 	DisplayName string `json:"displayName"`
 }
 
-type LinkedApplicationMetadataBapi struct {
+type LinkedEnvironmentApplicationMetadataBapi struct {
 	Version string `json:"version"`
 }
 
-type StatesApplicationBapi struct {
+type StatesEnvironmentApplicationBapi struct {
 	Management StatesManagementApplicationBapi `json:"management"`
 }
 
@@ -60,33 +87,33 @@ type StatesManagementApplicationBapi struct {
 	Id string `json:"id"`
 }
 
-type ApplicationDtoArray struct {
-	Value []ApplicationDto `json:"value"`
+type EnvironmentApplicationDtoArray struct {
+	Value []EnvironmentApplicationDto `json:"value"`
 }
 
-type ApplicationCreateBapi struct {
+type EnvironmentApplicationCreateBapi struct {
 	Location string `json:"location"`
 
-	Properties ApplicationPropertiesBapi `json:"properties"`
+	Properties EnvironmentApplicationPropertiesBapi `json:"properties"`
 }
 
-type ApplicationCreatePropertiesBapi struct {
+type EnvironmentApplicationCreatePropertiesBapi struct {
 	DisplayName string `json:"displayName"`
 }
 
-type ApplicationCreateLinkApplicationMetadataBapi struct {
+type EnvironmentApplicationCreateLinkApplicationMetadataBapi struct {
 }
 
-type ApplicationLifecycleDto struct {
-	OperationId        string                       `json:"operationId"`
-	CreatedDateTime    string                       `json:"createdDateTime"`
-	LastActionDateTime string                       `json:"lastActionDateTime"`
-	Status             string                       `json:"status"`
-	StatusMessage      string                       `json:"statusMessage"`
-	Error              ApplicationLifecycleErrorDto `json:"error"`
+type EnvironmentApplicationLifecycleDto struct {
+	OperationId        string                                  `json:"operationId"`
+	CreatedDateTime    string                                  `json:"createdDateTime"`
+	LastActionDateTime string                                  `json:"lastActionDateTime"`
+	Status             string                                  `json:"status"`
+	StatusMessage      string                                  `json:"statusMessage"`
+	Error              EnvironmentApplicationLifecycleErrorDto `json:"error"`
 }
 
-type ApplicationLifecycleErrorDto struct {
+type EnvironmentApplicationLifecycleErrorDto struct {
 	ErrorName  string `json:"errorName"`
 	ErrorCode  int    `json:"errorCode"`
 	Message    string `json:"message"`
