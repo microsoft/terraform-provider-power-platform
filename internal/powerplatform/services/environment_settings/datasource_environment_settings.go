@@ -96,38 +96,80 @@ func (d *EnvironmentSettingsDataSource) Schema(_ context.Context, _ datasource.S
 				MarkdownDescription: "Unique environment id (guid)",
 				Required:            true,
 			},
-			"max_upload_file_size_in_bytes": schema.Int64Attribute{
-				Description:         "Maximum file size that can be uploaded to the environment",
-				MarkdownDescription: "Maximum file size that can be uploaded to the environment",
-				Computed:            true,
-			},
-			"show_dashboard_cards_in_expanded_state": schema.BoolAttribute{
-				Description:         "Show dashboard cards in expanded state",
-				MarkdownDescription: "Show dashboard cards in expanded state",
-				Computed:            true,
-			},
-			"plugin_trace_log_setting": schema.StringAttribute{
-				Description:         "Plugin trace log setting. Available options: Off, Exception, All",
-				MarkdownDescription: "Plugin trace log setting. Available options: Off, Exception, All",
-				Computed:            true,
-				Validators: []validator.String{
-					stringvalidator.OneOf("Off", "Exception", "All"),
+			"audit_and_logs": schema.SingleNestedAttribute{
+				Description:         "Audit and Logs",
+				MarkdownDescription: "Audit and Logs",
+				Optional:            true,
+				Attributes: map[string]schema.Attribute{
+					"plugin_trace_log_setting": schema.StringAttribute{
+						Description:         "Plugin trace log setting. Available options: Off, Exception, All",
+						MarkdownDescription: "Plugin trace log setting. Available options: Off, Exception, All. See [Plugin Trace Log Settings Overview](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/logging-tracing) for more details.",
+						Optional:            true,
+						Validators: []validator.String{
+							stringvalidator.OneOf("Off", "Exception", "All"),
+						},
+					},
+					"audit_settings": schema.SingleNestedAttribute{
+						Description:         "Audit Settings",
+						MarkdownDescription: "Audit Settings. See [Audit Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/system-settings-dialog-box-auditing-tab) for more details.",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"is_audit_enabled": schema.BoolAttribute{
+								Description:         "Is audit enabled",
+								MarkdownDescription: "Is audit enabled",
+								Optional:            true,
+							},
+							"is_user_access_audit_enabled": schema.BoolAttribute{
+								Description:         "Is user access audit enabled",
+								MarkdownDescription: "Is user access audit enabled",
+								Optional:            true,
+							},
+							"is_read_audit_enabled": schema.BoolAttribute{
+								Description:         "Is read audit enabled",
+								MarkdownDescription: "Is read audit enabled",
+								Optional:            true,
+							},
+						},
+					},
 				},
 			},
-			"is_audit_enabled": schema.BoolAttribute{
-				Description:         "Is audit enabled",
-				MarkdownDescription: "Is audit enabled",
-				Computed:            true,
+			"email": schema.SingleNestedAttribute{
+				Description:         "Email",
+				MarkdownDescription: "Email",
+				Optional:            true,
+				Attributes: map[string]schema.Attribute{
+					"email_settings": schema.SingleNestedAttribute{
+						Description:         "Email Settings",
+						MarkdownDescription: "Email Settings. See [Email Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-email) for more details.",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"max_upload_file_size_in_bytes": schema.Int64Attribute{
+								Description:         "Maximum file size that can be uploaded to the environment",
+								MarkdownDescription: "Maximum file size that can be uploaded to the environment",
+								Optional:            true,
+							},
+						},
+					},
+				},
 			},
-			"is_user_access_audit_enabled": schema.BoolAttribute{
-				Description:         "Is user access audit enabled",
-				MarkdownDescription: "Is user access audit enabled",
-				Computed:            true,
-			},
-			"is_read_audit_enabled": schema.BoolAttribute{
-				Description:         "Is read audit enabled",
-				MarkdownDescription: "Is read audit enabled",
-				Computed:            true,
+			"product": schema.SingleNestedAttribute{
+				Description:         "Product",
+				MarkdownDescription: "Product",
+				Optional:            true,
+				Attributes: map[string]schema.Attribute{
+					"behavior_settings": schema.SingleNestedAttribute{
+						Description:         "Behavior Settings",
+						MarkdownDescription: "Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-behavior) for more details.",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"show_dashboard_cards_in_expanded_state": schema.BoolAttribute{
+								Description:         "Show dashboard cards in expanded state",
+								MarkdownDescription: "Show dashboard cards in expanded state",
+								Optional:            true,
+							},
+						},
+					},
+				},
 			},
 		},
 	}
