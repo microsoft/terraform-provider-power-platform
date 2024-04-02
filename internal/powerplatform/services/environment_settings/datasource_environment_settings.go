@@ -169,6 +169,18 @@ func (d *EnvironmentSettingsDataSource) Schema(_ context.Context, _ datasource.S
 							},
 						},
 					},
+					"features": schema.SingleNestedAttribute{
+						Description:         "Features",
+						MarkdownDescription: "Features. See [Features Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-features) for more details.",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"power_apps_component_framework_for_canvas_apps": schema.BoolAttribute{
+								Description:         "Power Apps component framework for canvas apps",
+								MarkdownDescription: "Power Apps component framework for canvas apps",
+								Optional:            true,
+							},
+						},
+					},
 				},
 			},
 		},

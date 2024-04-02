@@ -41,37 +41,15 @@ type EmailSettingsSourceModel struct {
 
 type ProductSourceModel struct {
 	BehaviorSettings types.Object `tfsdk:"behavior_settings"`
+	Features         types.Object `tfsdk:"features"`
 }
 
 type BehaviorSettingsSourceModel struct {
 	ShowDashboardCardsInExpandedState types.Bool `tfsdk:"show_dashboard_cards_in_expanded_state"`
 }
 
-func SetDefaultValuesForEnvironmentSettings(environmentSettings *EnvironmentSettingsDto) {
-	if environmentSettings.MaxUploadFileSize == nil {
-		defaultValue := int64(5242880)
-		environmentSettings.MaxUploadFileSize = &defaultValue
-	}
-	if environmentSettings.PluginTraceLogSetting == nil {
-		environmentSettings.PluginTraceLogSetting = new(int64)
-		*environmentSettings.PluginTraceLogSetting = 0
-	}
-	if environmentSettings.IsAuditEnabled == nil {
-		environmentSettings.IsAuditEnabled = new(bool)
-		*environmentSettings.IsAuditEnabled = false
-	}
-	if environmentSettings.IsUserAccessAuditEnabled == nil {
-		environmentSettings.IsUserAccessAuditEnabled = new(bool)
-		*environmentSettings.IsUserAccessAuditEnabled = false
-	}
-	if environmentSettings.IsReadAuditEnabled == nil {
-		environmentSettings.IsReadAuditEnabled = new(bool)
-		*environmentSettings.IsReadAuditEnabled = false
-	}
-	if environmentSettings.BoundDashboardDefaultCardExpanded == nil {
-		environmentSettings.BoundDashboardDefaultCardExpanded = new(bool)
-		*environmentSettings.BoundDashboardDefaultCardExpanded = false
-	}
+type FeaturesSourceModel struct {
+	PowerAppsComponentFrameworkForCanvasApps types.Bool `tfsdk:"power_apps_component_framework_for_canvas_apps"`
 }
 
 func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmenttSettingsSourceModel) EnvironmentSettingsDto {
@@ -124,6 +102,15 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 
 		if !behaviorSettingsSourceModel.ShowDashboardCardsInExpandedState.IsNull() && !behaviorSettingsSourceModel.ShowDashboardCardsInExpandedState.IsUnknown() {
 			environmentSettingsDto.BoundDashboardDefaultCardExpanded = behaviorSettingsSourceModel.ShowDashboardCardsInExpandedState.ValueBoolPointer()
+		}
+	}
+	features := environmentSettings.Product.Attributes()["features"]
+	if features != nil && !features.IsNull() && !features.IsUnknown() {
+		var featuresSourceModel FeaturesSourceModel
+		features.(basetypes.ObjectValue).As(ctx, &featuresSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+
+		if !featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.IsNull() && !featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.IsUnknown() {
+			environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps = featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.ValueBoolPointer()
 		}
 	}
 
@@ -187,13 +174,21 @@ func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettin
 		"show_dashboard_cards_in_expanded_state": types.BoolType,
 	}
 
+	attrFeaturesObject := map[string]attr.Type{
+		"power_apps_component_framework_for_canvas_apps": types.BoolType,
+	}
+
 	attrTypesProductObject := map[string]attr.Type{
 		"behavior_settings": types.ObjectType{AttrTypes: attrBahaviorSettingsObject},
+		"features":          types.ObjectType{AttrTypes: attrFeaturesObject},
 	}
 
 	attrValuesProductProperties := map[string]attr.Value{
 		"behavior_settings": types.ObjectValueMust(attrBahaviorSettingsObject, map[string]attr.Value{
 			"show_dashboard_cards_in_expanded_state": types.BoolValue(*environmentSettingsDto.BoundDashboardDefaultCardExpanded),
+		}),
+		"features": types.ObjectValueMust(attrFeaturesObject, map[string]attr.Value{
+			"power_apps_component_framework_for_canvas_apps": types.BoolValue(*environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps),
 		}),
 	}
 
@@ -209,13 +204,14 @@ type EnvironmentSettingsValueDto struct {
 }
 
 type EnvironmentSettingsDto struct {
-	MaxUploadFileSize                 *int64  `json:"maxuploadfilesize,omitempty"`
-	PluginTraceLogSetting             *int64  `json:"plugintracelogsetting,omitempty"`
-	IsAuditEnabled                    *bool   `json:"isauditenabled,omitempty"`
-	IsUserAccessAuditEnabled          *bool   `json:"isuseraccessauditenabled,omitempty"`
-	IsReadAuditEnabled                *bool   `json:"isreadauditenabled,omitempty"`
-	BoundDashboardDefaultCardExpanded *bool   `json:"bounddashboarddefaultcardexpanded,omitempty"`
-	OrganizationId                    *string `json:"organizationid,omitempty"`
+	MaxUploadFileSize                        *int64  `json:"maxuploadfilesize,omitempty"`
+	PluginTraceLogSetting                    *int64  `json:"plugintracelogsetting,omitempty"`
+	IsAuditEnabled                           *bool   `json:"isauditenabled,omitempty"`
+	IsUserAccessAuditEnabled                 *bool   `json:"isuseraccessauditenabled,omitempty"`
+	IsReadAuditEnabled                       *bool   `json:"isreadauditenabled,omitempty"`
+	BoundDashboardDefaultCardExpanded        *bool   `json:"bounddashboarddefaultcardexpanded,omitempty"`
+	OrganizationId                           *string `json:"organizationid,omitempty"`
+	PowerAppsComponentFrameworkForCanvasApps *bool   `json:"iscustomcontrolsincanvasappsenabled,omitempty"`
 }
 
 type EnvironmentIdDto struct {

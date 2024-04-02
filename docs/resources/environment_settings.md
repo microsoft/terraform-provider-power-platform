@@ -35,13 +35,29 @@ resource "powerplatform_environment" "example_environment_settings" {
 }
 
 resource "powerplatform_environment_settings" "settings" {
-  environment_id                         = powerplatform_environment.example_environment_settings.id
-  max_upload_file_size_in_bytes          = 100
-  show_dashboard_cards_in_expanded_state = true
-  plugin_trace_log_setting               = "Off"
-  is_audit_enabled                       = true
-  is_user_access_audit_enabled           = true
-  is_read_audit_enabled                  = true
+  environment_id = powerplatform_environment.example_environment_settings.id
+
+  audit_and_logs = {
+    plugin_trace_log_setting = "Exception"
+    audit_settings = {
+      is_audit_enabled             = true
+      is_user_access_audit_enabled = true
+      is_read_audit_enabled        = true
+    }
+  }
+  email = {
+    email_settings = {
+      max_upload_file_size_in_bytes = 123456
+    }
+  }
+  product = {
+    behavior_settings = {
+      show_dashboard_cards_in_expanded_state = true
+    }
+    features = {
+      power_apps_component_framework_for_canvas_apps = false
+    }
+  }
 }
 ```
 
@@ -54,13 +70,68 @@ resource "powerplatform_environment_settings" "settings" {
 
 ### Optional
 
-- `is_audit_enabled` (Boolean) Is audit enabled
-- `is_read_audit_enabled` (Boolean) Is read audit enabled
-- `is_user_access_audit_enabled` (Boolean) Is user access audit enabled
-- `max_upload_file_size_in_bytes` (Number) Maximum file size that can be uploaded to the environment
-- `plugin_trace_log_setting` (String) Plugin trace log setting. Available options: Off, Exception, All
-- `show_dashboard_cards_in_expanded_state` (Boolean) Show dashboard cards in expanded state
+- `audit_and_logs` (Attributes) Audit and Logs (see [below for nested schema](#nestedatt--audit_and_logs))
+- `email` (Attributes) Email (see [below for nested schema](#nestedatt--email))
+- `product` (Attributes) Product (see [below for nested schema](#nestedatt--product))
 
 ### Read-Only
 
 - `id` (String) Id
+
+<a id="nestedatt--audit_and_logs"></a>
+### Nested Schema for `audit_and_logs`
+
+Optional:
+
+- `audit_settings` (Attributes) Audit Settings. See [Audit Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/system-settings-dialog-box-auditing-tab) for more details. (see [below for nested schema](#nestedatt--audit_and_logs--audit_settings))
+- `plugin_trace_log_setting` (String) Plugin trace log setting. Available options: Off, Exception, All. See [Plugin Trace Log Settings Overview](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/logging-tracing) for more details.
+
+<a id="nestedatt--audit_and_logs--audit_settings"></a>
+### Nested Schema for `audit_and_logs.audit_settings`
+
+Optional:
+
+- `is_audit_enabled` (Boolean) Is audit enabled
+- `is_read_audit_enabled` (Boolean) Is read audit enabled
+- `is_user_access_audit_enabled` (Boolean) Is user access audit enabled
+
+
+
+<a id="nestedatt--email"></a>
+### Nested Schema for `email`
+
+Optional:
+
+- `email_settings` (Attributes) Email Settings. See [Email Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-email) for more details. (see [below for nested schema](#nestedatt--email--email_settings))
+
+<a id="nestedatt--email--email_settings"></a>
+### Nested Schema for `email.email_settings`
+
+Optional:
+
+- `max_upload_file_size_in_bytes` (Number) Maximum file size that can be uploaded to the environment
+
+
+
+<a id="nestedatt--product"></a>
+### Nested Schema for `product`
+
+Optional:
+
+- `behavior_settings` (Attributes) Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-behavior) for more details. (see [below for nested schema](#nestedatt--product--behavior_settings))
+- `features` (Attributes) Features. See [Features Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-features) for more details. (see [below for nested schema](#nestedatt--product--features))
+
+<a id="nestedatt--product--behavior_settings"></a>
+### Nested Schema for `product.behavior_settings`
+
+Optional:
+
+- `show_dashboard_cards_in_expanded_state` (Boolean) Show dashboard cards in expanded state
+
+
+<a id="nestedatt--product--features"></a>
+### Nested Schema for `product.features`
+
+Optional:
+
+- `power_apps_component_framework_for_canvas_apps` (Boolean) Power Apps component framework for canvas apps

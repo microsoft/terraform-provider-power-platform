@@ -47,6 +47,9 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						behavior_settings = {
 						  show_dashboard_cards_in_expanded_state = true
 						}
+						features = {
+						  power_apps_component_framework_for_canvas_apps = true
+						}
 					  }
 				  }`,
 
@@ -57,6 +60,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "100"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.power_apps_component_framework_for_canvas_apps", "true"),
 				),
 			},
 		},
@@ -111,6 +115,9 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						behavior_settings = {
 						  show_dashboard_cards_in_expanded_state = true
 						}
+						features = {
+						  power_apps_component_framework_for_canvas_apps = false
+						}
 					  }
 				  }`,
 
@@ -121,6 +128,7 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "100"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.power_apps_component_framework_for_canvas_apps", "false"),
 				),
 			},
 		},

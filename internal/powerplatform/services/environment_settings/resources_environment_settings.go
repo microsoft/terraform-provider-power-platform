@@ -163,6 +163,21 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							},
 						},
 					},
+					"features": schema.SingleNestedAttribute{
+						Description:         "Features",
+						MarkdownDescription: "Features. See [Features Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-features) for more details.",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"power_apps_component_framework_for_canvas_apps": schema.BoolAttribute{
+								Description:         "Power Apps component framework for canvas apps",
+								MarkdownDescription: "Power Apps component framework for canvas apps",
+								Optional:            true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+						},
+					},
 				},
 			},
 		},
@@ -200,7 +215,6 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 	}
 
 	settingsToUpdate := ConvertFromEnvironmentSettingsModel(ctx, plan)
-	//SetDefaultValuesForEnvironmentSettings(&settingsToUpdate)
 
 	envSettings, err := r.EnvironmentSettingClient.UpdateEnvironmentSettings(ctx, plan.EnvironmentId.ValueString(), settingsToUpdate)
 	if err != nil {

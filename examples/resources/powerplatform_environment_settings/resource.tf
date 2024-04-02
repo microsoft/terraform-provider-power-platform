@@ -39,5 +39,8 @@ resource "powerplatform_environment_settings" "settings" {
     behavior_settings = {
       show_dashboard_cards_in_expanded_state = true
     }
+    features = {
+      power_apps_component_framework_for_canvas_apps = false
+    }
   }
 }
