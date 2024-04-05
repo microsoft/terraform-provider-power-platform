@@ -3,7 +3,12 @@
 
 package powerplatform
 
-import "time"
+import (
+	"time"
+
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
 
 var (
 	EnvironmentTypes = []string{"Sandbox", "Production", "Trial", "Developer"}
@@ -18,15 +23,15 @@ type EnvironmentDto struct {
 }
 
 type EnvironmentPropertiesDto struct {
-	DatabaseType              string                       `json:"databaseType"`
-	DisplayName               string                       `json:"displayName"`
-	EnvironmentSku            string                       `json:"environmentSku"`
-	LinkedAppMetadata         *LinkedAppMetadataDto        `json:"linkedAppMetadata,omitempty"`
-	LinkedEnvironmentMetadata LinkedEnvironmentMetadataDto `json:"linkedEnvironmentMetadata"`
-	States                    StatesEnvironmentDto         `json:"states"`
-	TenantID                  string                       `json:"tenantId"`
-	GovernanceConfiguration   GovernanceConfigurationDto   `json:"governanceConfiguration"`
-	BillingPolicy             BillingPolicyDto             `json:"billingPolicy,omitempty"`
+	DatabaseType              string                        `json:"databaseType"`
+	DisplayName               string                        `json:"displayName"`
+	EnvironmentSku            string                        `json:"environmentSku"`
+	LinkedAppMetadata         *LinkedAppMetadataDto         `json:"linkedAppMetadata,omitempty"`
+	LinkedEnvironmentMetadata *LinkedEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
+	States                    StatesEnvironmentDto          `json:"states"`
+	TenantID                  string                        `json:"tenantId"`
+	GovernanceConfiguration   GovernanceConfigurationDto    `json:"governanceConfiguration"`
+	BillingPolicy             *BillingPolicyDto             `json:"billingPolicy,omitempty"`
 }
 
 type BillingPolicyDto struct {
@@ -42,7 +47,6 @@ type SettingsDto struct {
 	ExtendedSettings ExtendedSettingsDto `json:"extendedSettings"`
 }
 
-// Following is the properties for Managed Environments
 type ExtendedSettingsDto struct {
 	ExcludeEnvironmentFromAnalysis string `json:"excludeEnvironmentFromAnalysis"`
 	IsGroupSharingDisabled         string `json:"isGroupSharingDisabled"`
@@ -93,11 +97,11 @@ type EnvironmentCreateDto struct {
 }
 
 type EnvironmentCreatePropertiesDto struct {
-	BillingPolicy             BillingPolicyDto                            `json:"billingPolicy,omitempty"`
-	DataBaseType              string                                      `json:"databaseType,omitempty"`
-	DisplayName               string                                      `json:"displayName"`
-	EnvironmentSku            string                                      `json:"environmentSku"`
-	LinkedEnvironmentMetadata EnvironmentCreateLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata"`
+	BillingPolicy             BillingPolicyDto                             `json:"billingPolicy,omitempty"`
+	DataBaseType              string                                       `json:"databaseType,omitempty"`
+	DisplayName               string                                       `json:"displayName"`
+	EnvironmentSku            string                                       `json:"environmentSku"`
+	LinkedEnvironmentMetadata *EnvironmentCreateLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
 }
 
 type EnvironmentCreateLinkEnvironmentMetadataDto struct {
@@ -169,4 +173,66 @@ type TransactionCurrencyArrayDto struct {
 type ValidateEnvironmentDetailsDto struct {
 	DomainName          string `json:"domainName"`
 	EnvironmentLocation string `json:"environmentLocation"`
+}
+
+func ConvertFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode string) EnvironmentDataSourceModel {
+	model := EnvironmentDataSourceModel{
+		EnvironmentId:   types.StringValue(environmentDto.Name),
+		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
+		Location:        types.StringValue(environmentDto.Location),
+		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),
+		//BillingPolicyId: types.StringValue(environmentDto.Properties.BillingPolicy.Id),
+	}
+
+	if environmentDto.Properties.BillingPolicy != nil {
+		model.BillingPolicyId = types.StringValue(environmentDto.Properties.BillingPolicy.Id)
+	} else {
+		model.BillingPolicyId = types.StringValue("")
+	}
+
+	attrTypesDataverseObject := map[string]attr.Type{
+		"url":               types.StringType,
+		"domain":            types.StringType,
+		"organization_id":   types.StringType,
+		"security_group_id": types.StringType,
+		"language_code":     types.Int64Type,
+		"version":           types.StringType,
+		"linked_app_type":   types.StringType,
+		"linked_app_id":     types.StringType,
+		"linked_app_url":    types.StringType,
+		"currency_code":     types.StringType,
+	}
+
+	attrValuesProductProperties := map[string]attr.Value{}
+
+	if environmentDto.Properties.LinkedAppMetadata != nil {
+		attrValuesProductProperties["linked_app_type"] = types.StringValue(environmentDto.Properties.LinkedAppMetadata.Type)
+		attrValuesProductProperties["linked_app_id"] = types.StringValue(environmentDto.Properties.LinkedAppMetadata.Id)
+		attrValuesProductProperties["linked_app_url"] = types.StringValue(environmentDto.Properties.LinkedAppMetadata.Url)
+	} else {
+		attrValuesProductProperties["linked_app_type"] = types.StringValue("")
+		attrValuesProductProperties["linked_app_id"] = types.StringValue("")
+		attrValuesProductProperties["linked_app_url"] = types.StringValue("")
+	}
+
+	if environmentDto.Properties.LinkedEnvironmentMetadata != nil {
+		attrValuesProductProperties["url"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.InstanceURL)
+		attrValuesProductProperties["domain"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.DomainName)
+		attrValuesProductProperties["organization_id"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.ResourceId)
+		attrValuesProductProperties["security_group_id"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.SecurityGroupId)
+		attrValuesProductProperties["language_code"] = types.Int64Value(int64(environmentDto.Properties.LinkedEnvironmentMetadata.BaseLanguage))
+		attrValuesProductProperties["version"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.Version)
+		attrValuesProductProperties["currency_code"] = types.StringValue(currencyCode)
+	} else {
+		attrValuesProductProperties["url"] = types.StringValue("")
+		attrValuesProductProperties["domain"] = types.StringValue("")
+		attrValuesProductProperties["organization_id"] = types.StringValue("")
+		attrValuesProductProperties["security_group_id"] = types.StringValue("")
+		attrValuesProductProperties["language_code"] = types.Int64Null()
+		attrValuesProductProperties["version"] = types.StringValue("")
+		attrValuesProductProperties["currency_code"] = types.StringValue("")
+	}
+	model.Dataverse = types.ObjectValueMust(attrTypesDataverseObject, attrValuesProductProperties)
+
+	return model
 }

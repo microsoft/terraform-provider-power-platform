@@ -7,8 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -63,185 +61,6 @@ type EnvironmentResourceModel struct {
 	LinkedAppId      types.String `tfsdk:"linked_app_id"`
 	LinkedAppUrl     types.String `tfsdk:"linked_app_url"`
 	BillingPolicyId  types.String `tfsdk:"billing_policy_id"`
-}
-
-func locationValidator(client *api.ApiClient, location string) error {
-	var parsed struct {
-		Value []struct {
-			ID         string `json:"id"`
-			Type       string `json:"type"`
-			Name       string `json:"name"`
-			Properties struct {
-				DisplayName                            string   `json:"displayName"`
-				Code                                   string   `json:"code"`
-				IsDefault                              bool     `json:"isDefault"`
-				IsDisabled                             bool     `json:"isDisabled"`
-				CanProvisionDatabase                   bool     `json:"canProvisionDatabase"`
-				CanProvisionCustomerEngagementDatabase bool     `json:"canProvisionCustomerEngagementDatabase"`
-				AzureRegions                           []string `json:"azureRegions"`
-			} `json:"properties"`
-		} `json:"value"`
-	}
-
-	apiUrl := &url.URL{
-		Scheme: "https",
-		Host:   client.GetConfig().Urls.BapiUrl,
-		Path:   "/providers/Microsoft.BusinessAppPlatform/locations",
-	}
-	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
-	apiUrl.RawQuery = values.Encode()
-
-	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
-
-	if err != nil {
-		return err
-	}
-
-	defer response.Response.Body.Close()
-
-	err = json.Unmarshal(response.BodyAsBytes, &parsed)
-
-	if err != nil {
-		return err
-	}
-
-	names := make([]string, len(parsed.Value))
-	for i, loc := range parsed.Value {
-		names[i] = loc.Name
-	}
-
-	found := func(items []string, check string) bool {
-		for _, item := range items {
-			if item == check {
-				return true
-			}
-		}
-		return false
-	}(names, location)
-
-	if !found {
-		return fmt.Errorf("location %s is not valid. valid locations are: %s", location, strings.Join(names, ", "))
-	}
-
-	return nil
-}
-
-func currencyCodeValidator(client *api.ApiClient, location string, currencyCode string) error {
-	var parsed struct {
-		Value []struct {
-			Name       string `json:"name"`
-			ID         string `json:"id"`
-			Type       string `json:"type"`
-			Properties struct {
-				Code            string `json:"code"`
-				Symbol          string `json:"symbol"`
-				IsTenantDefault bool   `json:"isTenantDefault"`
-			} `json:"properties"`
-		} `json:"value"`
-	}
-
-	apiUrl := &url.URL{
-		Scheme: "https",
-		Host:   client.GetConfig().Urls.BapiUrl,
-		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentCurrencies", location),
-	}
-	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
-	apiUrl.RawQuery = values.Encode()
-
-	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
-
-	if err != nil {
-		return err
-	}
-
-	defer response.Response.Body.Close()
-
-	err = json.Unmarshal(response.BodyAsBytes, &parsed)
-
-	if err != nil {
-		return err
-	}
-
-	codes := make([]string, len(parsed.Value))
-	for i, item := range parsed.Value {
-		codes[i] = item.Name
-	}
-
-	found := func(items []string, check string) bool {
-		for _, item := range items {
-			if item == check {
-				return true
-			}
-		}
-		return false
-	}(codes, currencyCode)
-
-	if !found {
-		return fmt.Errorf("currency Code %s is not valid. valid currency codes are: %s", currencyCode, strings.Join(codes, ", "))
-	}
-
-	return nil
-}
-
-func languageCodeValidator(client *api.ApiClient, location string, languageCode string) error {
-	var parsed struct {
-		Value []struct {
-			Name       string `json:"name"`
-			ID         string `json:"id"`
-			Type       string `json:"type"`
-			Properties struct {
-				LocaleID        int    `json:"localeId"`
-				LocalizedName   string `json:"localizedName"`
-				DisplayName     string `json:"displayName"`
-				IsTenantDefault bool   `json:"isTenantDefault"`
-			} `json:"properties"`
-		} `json:"value"`
-	}
-
-	apiUrl := &url.URL{
-		Scheme: "https",
-		Host:   client.GetConfig().Urls.BapiUrl,
-		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentLanguages", location),
-	}
-	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
-	apiUrl.RawQuery = values.Encode()
-
-	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
-
-	if err != nil {
-		return err
-	}
-
-	defer response.Response.Body.Close()
-
-	err = json.Unmarshal(response.BodyAsBytes, &parsed)
-
-	if err != nil {
-		return err
-	}
-
-	codes := make([]string, len(parsed.Value))
-	for i, item := range parsed.Value {
-		codes[i] = item.Name
-	}
-
-	found := func(items []string, check string) bool {
-		for _, item := range items {
-			if item == check {
-				return true
-			}
-		}
-		return false
-	}(codes, languageCode)
-
-	if !found {
-		return fmt.Errorf("language Code %s is not valid. valid language codes are: %s", languageCode, strings.Join(codes, ", "))
-	}
-
-	return nil
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -416,7 +235,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 			DisplayName:    plan.DisplayName.ValueString(),
 			DataBaseType:   "CommonDataService",
 			EnvironmentSku: plan.EnvironmentType.ValueString(),
-			LinkedEnvironmentMetadata: EnvironmentCreateLinkEnvironmentMetadataDto{
+			LinkedEnvironmentMetadata: &EnvironmentCreateLinkEnvironmentMetadataDto{
 				BaseLanguage:    int(plan.LanguageName.ValueInt64()),
 				SecurityGroupId: plan.SecurityGroupId.ValueString(),
 				Currency: EnvironmentCreateCurrency{
@@ -468,17 +287,17 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 
 	plan.Id = env.EnvironmentId
 	plan.DisplayName = env.DisplayName
-	plan.OrganizationId = env.OrganizationId
-	plan.SecurityGroupId = env.SecurityGroupId
-	plan.LanguageName = env.LanguageName
-	plan.CurrencyCode = types.StringValue(envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
-	plan.Domain = env.Domain
-	plan.Url = env.Url
+	// plan.OrganizationId = env.OrganizationId
+	// plan.SecurityGroupId = env.SecurityGroupId
+	// plan.LanguageName = env.LanguageName
+	// plan.CurrencyCode = types.StringValue(envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
+	// plan.Domain = env.Domain
+	// plan.Url = env.Url
 	plan.EnvironmentType = env.EnvironmentType
-	plan.Version = env.Version
-	plan.LinkedAppType = env.LinkedAppType
-	plan.LinkedAppId = env.LinkedAppId
-	plan.LinkedAppUrl = env.LinkedAppURL
+	// plan.Version = env.Version
+	// plan.LinkedAppType = env.LinkedAppType
+	// plan.LinkedAppId = env.LinkedAppId
+	// plan.LinkedAppUrl = env.LinkedAppURL
 	plan.BillingPolicyId = env.BillingPolicyId
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
@@ -516,19 +335,19 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 
 	state.Id = env.EnvironmentId
 	state.DisplayName = env.DisplayName
-	state.OrganizationId = env.OrganizationId
-	state.SecurityGroupId = env.SecurityGroupId
-	state.LanguageName = env.LanguageName
-	state.Domain = env.Domain
-	state.Url = env.Url
-	state.CurrencyCode = env.CurrencyCode
+	//state.OrganizationId = env.OrganizationId
+	//state.SecurityGroupId = env.SecurityGroupId
+	//state.LanguageName = env.LanguageName
+	//state.Domain = env.Domain
+	//state.Url = env.Url
+	//state.CurrencyCode = env.CurrencyCode
 	state.EnvironmentType = env.EnvironmentType
-	state.Version = env.Version
-	state.LanguageName = env.LanguageName
+	//state.Version = env.Version
+	//state.LanguageName = env.LanguageName
 	state.Location = env.Location
-	state.LinkedAppId = env.LinkedAppId
-	state.LinkedAppType = env.LinkedAppType
-	state.LinkedAppUrl = env.LinkedAppURL
+	//state.LinkedAppId = env.LinkedAppId
+	//state.LinkedAppType = env.LinkedAppType
+	//state.LinkedAppUrl = env.LinkedAppURL
 	state.BillingPolicyId = env.BillingPolicyId
 
 	ctx = tflog.SetField(ctx, "id", state.Id.ValueString())
@@ -574,7 +393,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		Properties: EnvironmentPropertiesDto{
 			DisplayName:    plan.DisplayName.ValueString(),
 			EnvironmentSku: plan.EnvironmentType.ValueString(),
-			LinkedEnvironmentMetadata: LinkedEnvironmentMetadataDto{
+			LinkedEnvironmentMetadata: &LinkedEnvironmentMetadataDto{
 				SecurityGroupId: plan.SecurityGroupId.ValueString(),
 				DomainName:      plan.Domain.ValueString(),
 			},
@@ -582,7 +401,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
-		envToUpdate.Properties.BillingPolicy = BillingPolicyDto{
+		envToUpdate.Properties.BillingPolicy = &BillingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
 		}
 	}
@@ -635,19 +454,19 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 
 	plan.Id = env.EnvironmentId
 	plan.DisplayName = env.DisplayName
-	plan.OrganizationId = env.OrganizationId
-	plan.SecurityGroupId = env.SecurityGroupId
-	plan.LanguageName = env.LanguageName
-	plan.Domain = env.Domain
-	plan.Url = env.Url
-	plan.CurrencyCode = env.CurrencyCode
+	//plan.OrganizationId = env.OrganizationId
+	//plan.SecurityGroupId = env.SecurityGroupId
+	//plan.LanguageName = env.LanguageName
+	//plan.Domain = env.Domain
+	//plan.Url = env.Url
+	//plan.CurrencyCode = env.CurrencyCode
 	plan.EnvironmentType = env.EnvironmentType
-	plan.Version = env.Version
-	plan.LanguageName = env.LanguageName
+	//plan.Version = env.Version
+	//plan.LanguageName = env.LanguageName
 	plan.Location = env.Location
-	plan.LinkedAppType = env.LinkedAppType
-	plan.LinkedAppId = env.LinkedAppId
-	plan.LinkedAppUrl = env.LinkedAppURL
+	//plan.LinkedAppType = env.LinkedAppType
+	//plan.LinkedAppId = env.LinkedAppId
+	//plan.LinkedAppUrl = env.LinkedAppURL
 	plan.BillingPolicyId = env.BillingPolicyId
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)

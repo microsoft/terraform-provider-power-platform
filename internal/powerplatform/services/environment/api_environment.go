@@ -5,6 +5,7 @@ package powerplatform
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -27,6 +28,185 @@ func NewEnvironmentClient(api *api.ApiClient) EnvironmentClient {
 type EnvironmentClient struct {
 	solutionClient solution.SolutionClient
 	Api            *api.ApiClient
+}
+
+func locationValidator(client *api.ApiClient, location string) error {
+	var parsed struct {
+		Value []struct {
+			ID         string `json:"id"`
+			Type       string `json:"type"`
+			Name       string `json:"name"`
+			Properties struct {
+				DisplayName                            string   `json:"displayName"`
+				Code                                   string   `json:"code"`
+				IsDefault                              bool     `json:"isDefault"`
+				IsDisabled                             bool     `json:"isDisabled"`
+				CanProvisionDatabase                   bool     `json:"canProvisionDatabase"`
+				CanProvisionCustomerEngagementDatabase bool     `json:"canProvisionCustomerEngagementDatabase"`
+				AzureRegions                           []string `json:"azureRegions"`
+			} `json:"properties"`
+		} `json:"value"`
+	}
+
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.GetConfig().Urls.BapiUrl,
+		Path:   "/providers/Microsoft.BusinessAppPlatform/locations",
+	}
+	values := url.Values{}
+	values.Add("api-version", "2023-06-01")
+	apiUrl.RawQuery = values.Encode()
+
+	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+
+	if err != nil {
+		return err
+	}
+
+	defer response.Response.Body.Close()
+
+	err = json.Unmarshal(response.BodyAsBytes, &parsed)
+
+	if err != nil {
+		return err
+	}
+
+	names := make([]string, len(parsed.Value))
+	for i, loc := range parsed.Value {
+		names[i] = loc.Name
+	}
+
+	found := func(items []string, check string) bool {
+		for _, item := range items {
+			if item == check {
+				return true
+			}
+		}
+		return false
+	}(names, location)
+
+	if !found {
+		return fmt.Errorf("location %s is not valid. valid locations are: %s", location, strings.Join(names, ", "))
+	}
+
+	return nil
+}
+
+func currencyCodeValidator(client *api.ApiClient, location string, currencyCode string) error {
+	var parsed struct {
+		Value []struct {
+			Name       string `json:"name"`
+			ID         string `json:"id"`
+			Type       string `json:"type"`
+			Properties struct {
+				Code            string `json:"code"`
+				Symbol          string `json:"symbol"`
+				IsTenantDefault bool   `json:"isTenantDefault"`
+			} `json:"properties"`
+		} `json:"value"`
+	}
+
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.GetConfig().Urls.BapiUrl,
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentCurrencies", location),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2023-06-01")
+	apiUrl.RawQuery = values.Encode()
+
+	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+
+	if err != nil {
+		return err
+	}
+
+	defer response.Response.Body.Close()
+
+	err = json.Unmarshal(response.BodyAsBytes, &parsed)
+
+	if err != nil {
+		return err
+	}
+
+	codes := make([]string, len(parsed.Value))
+	for i, item := range parsed.Value {
+		codes[i] = item.Name
+	}
+
+	found := func(items []string, check string) bool {
+		for _, item := range items {
+			if item == check {
+				return true
+			}
+		}
+		return false
+	}(codes, currencyCode)
+
+	if !found {
+		return fmt.Errorf("currency Code %s is not valid. valid currency codes are: %s", currencyCode, strings.Join(codes, ", "))
+	}
+
+	return nil
+}
+
+func languageCodeValidator(client *api.ApiClient, location string, languageCode string) error {
+	var parsed struct {
+		Value []struct {
+			Name       string `json:"name"`
+			ID         string `json:"id"`
+			Type       string `json:"type"`
+			Properties struct {
+				LocaleID        int    `json:"localeId"`
+				LocalizedName   string `json:"localizedName"`
+				DisplayName     string `json:"displayName"`
+				IsTenantDefault bool   `json:"isTenantDefault"`
+			} `json:"properties"`
+		} `json:"value"`
+	}
+
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.GetConfig().Urls.BapiUrl,
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentLanguages", location),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2023-06-01")
+	apiUrl.RawQuery = values.Encode()
+
+	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+
+	if err != nil {
+		return err
+	}
+
+	defer response.Response.Body.Close()
+
+	err = json.Unmarshal(response.BodyAsBytes, &parsed)
+
+	if err != nil {
+		return err
+	}
+
+	codes := make([]string, len(parsed.Value))
+	for i, item := range parsed.Value {
+		codes[i] = item.Name
+	}
+
+	found := func(items []string, check string) bool {
+		for _, item := range items {
+			if item == check {
+				return true
+			}
+		}
+		return false
+	}(codes, languageCode)
+
+	if !found {
+		return fmt.Errorf("language Code %s is not valid. valid language codes are: %s", languageCode, strings.Join(codes, ", "))
+	}
+
+	return nil
 }
 
 func (client *EnvironmentClient) GetEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {
@@ -92,7 +272,7 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 }
 
 func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environment EnvironmentCreateDto) (*EnvironmentDto, error) {
-	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
+	if environment.Properties.LinkedEnvironmentMetadata != nil && environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
 		err := client.ValidateEnvironmentDetails(ctx, environment.Location, environment.Properties.LinkedEnvironmentMetadata.DomainName)
 		if err != nil {
 			return nil, err
