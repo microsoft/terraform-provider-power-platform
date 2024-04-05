@@ -4,10 +4,14 @@
 package powerplatform
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 var (
@@ -175,13 +179,125 @@ type ValidateEnvironmentDetailsDto struct {
 	EnvironmentLocation string `json:"environmentLocation"`
 }
 
-func ConvertFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode string) EnvironmentDataSourceModel {
-	model := EnvironmentDataSourceModel{
-		EnvironmentId:   types.StringValue(environmentDto.Name),
+type EnvironmentsListDataSourceModel struct {
+	Environments []EnvironmentSourceModel `tfsdk:"environments"`
+	Id           types.Int64              `tfsdk:"id"`
+}
+
+type EnvironmentSourceModel struct {
+	Id              types.String `tfsdk:"id"`
+	Location        types.String `tfsdk:"location"`
+	DisplayName     types.String `tfsdk:"display_name"`
+	EnvironmentType types.String `tfsdk:"environment_type"`
+	BillingPolicyId types.String `tfsdk:"billing_policy_id"`
+
+	Dataverse types.Object `tfsdk:"dataverse"`
+}
+
+type DataverseSourceModel struct {
+	Url              types.String `tfsdk:"url"`
+	Domain           types.String `tfsdk:"domain"`
+	OrganizationId   types.String `tfsdk:"organization_id"`
+	SecurityGroupId  types.String `tfsdk:"security_group_id"`
+	LanguageName     types.Int64  `tfsdk:"language_code"`
+	Version          types.String `tfsdk:"version"`
+	LinkedAppType    types.String `tfsdk:"linked_app_type"`
+	LinkedAppId      types.String `tfsdk:"linked_app_id"`
+	LinkedAppURL     types.String `tfsdk:"linked_app_url"`
+	CurrencyCode     types.String `tfsdk:"currency_code"`
+	Templates        []string     `tfsdk:"templates"`
+	TemplateMetadata types.String `tfsdk:"template_metadata"`
+}
+
+func ConvertUpdateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource EnvironmentSourceModel) (*EnvironmentDto, error) {
+	environmentDto := EnvironmentDto{
+		Id:       environmentSource.Id.ValueString(),
+		Name:     environmentSource.DisplayName.ValueString(),
+		Type:     environmentSource.EnvironmentType.ValueString(),
+		Location: environmentSource.Location.ValueString(),
+		Properties: EnvironmentPropertiesDto{
+			DisplayName:    environmentSource.DisplayName.ValueString(),
+			EnvironmentSku: environmentSource.EnvironmentType.ValueString(),
+			// LinkedEnvironmentMetadata: &LinkedEnvironmentMetadataDto{
+			// 	//SecurityGroupId: plan.SecurityGroupId.ValueString(),
+			// 	//DomainName:      plan.Domain.ValueString(),
+			// },
+		},
+	}
+
+	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != "" {
+		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
+			Id: environmentSource.BillingPolicyId.ValueString(),
+		}
+	}
+
+	if !environmentSource.Dataverse.IsNull() && !environmentSource.Dataverse.IsUnknown() {
+
+		var dataverseSourceModel DataverseSourceModel
+		environmentSource.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+
+		environmentDto.Properties.LinkedEnvironmentMetadata = &LinkedEnvironmentMetadataDto{
+			SecurityGroupId: dataverseSourceModel.SecurityGroupId.ValueString(),
+			DomainName:      dataverseSourceModel.Domain.ValueString(),
+		}
+
+	}
+
+	return &environmentDto, nil
+}
+
+func ConvertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource EnvironmentSourceModel) (*EnvironmentCreateDto, error) {
+	environmentDto := &EnvironmentCreateDto{
+		Location: environmentSource.Location.ValueString(),
+		Properties: EnvironmentCreatePropertiesDto{
+			DisplayName:    environmentSource.DisplayName.ValueString(),
+			EnvironmentSku: environmentSource.EnvironmentType.ValueString(),
+		},
+	}
+
+	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != "" {
+		environmentDto.Properties.BillingPolicy = BillingPolicyDto{
+			Id: environmentSource.BillingPolicyId.ValueString(),
+		}
+	}
+
+	if !environmentSource.Dataverse.IsNull() && !environmentSource.Dataverse.IsUnknown() {
+		var dataverseSourceModel DataverseSourceModel
+		environmentSource.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+
+		var templateMetadataObject EnvironmentCreateTemplateMetadata
+		if dataverseSourceModel.TemplateMetadata.ValueString() != "" {
+			err := json.Unmarshal([]byte(dataverseSourceModel.TemplateMetadata.ValueString()), &templateMetadataObject)
+			if err != nil {
+				return nil, fmt.Errorf("error when unmarshalling template metadata %s; internal error: %v", dataverseSourceModel.TemplateMetadata.ValueString(), err)
+			}
+		}
+
+		environmentDto.Properties.DataBaseType = "CommonDataService"
+		environmentDto.Properties.LinkedEnvironmentMetadata = &EnvironmentCreateLinkEnvironmentMetadataDto{
+			BaseLanguage:    int(dataverseSourceModel.LanguageName.ValueInt64()),
+			SecurityGroupId: dataverseSourceModel.SecurityGroupId.ValueString(),
+			Currency: EnvironmentCreateCurrency{
+				Code: dataverseSourceModel.CurrencyCode.ValueString(),
+			},
+			Templates:        dataverseSourceModel.Templates,
+			TemplateMetadata: templateMetadataObject,
+		}
+
+		if !dataverseSourceModel.Domain.IsNull() && dataverseSourceModel.Domain.ValueString() != "" {
+			environmentDto.Properties.LinkedEnvironmentMetadata.DomainName = dataverseSourceModel.Domain.ValueString()
+		}
+
+	}
+	return environmentDto, nil
+}
+
+func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode *string) EnvironmentSourceModel {
+	model := EnvironmentSourceModel{
+		Id:              types.StringValue(environmentDto.Name),
 		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
 		Location:        types.StringValue(environmentDto.Location),
 		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),
-		//BillingPolicyId: types.StringValue(environmentDto.Properties.BillingPolicy.Id),
 	}
 
 	if environmentDto.Properties.BillingPolicy != nil {
@@ -201,18 +317,21 @@ func ConvertFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode strin
 		"linked_app_id":     types.StringType,
 		"linked_app_url":    types.StringType,
 		"currency_code":     types.StringType,
+		"templates":         types.ListType{ElemType: types.StringType},
+		"template_metadata": types.StringType,
 	}
 
 	attrValuesProductProperties := map[string]attr.Value{}
+	model.Dataverse = types.ObjectNull(attrTypesDataverseObject)
 
 	if environmentDto.Properties.LinkedAppMetadata != nil {
 		attrValuesProductProperties["linked_app_type"] = types.StringValue(environmentDto.Properties.LinkedAppMetadata.Type)
 		attrValuesProductProperties["linked_app_id"] = types.StringValue(environmentDto.Properties.LinkedAppMetadata.Id)
 		attrValuesProductProperties["linked_app_url"] = types.StringValue(environmentDto.Properties.LinkedAppMetadata.Url)
 	} else {
-		attrValuesProductProperties["linked_app_type"] = types.StringValue("")
-		attrValuesProductProperties["linked_app_id"] = types.StringValue("")
-		attrValuesProductProperties["linked_app_url"] = types.StringValue("")
+		attrValuesProductProperties["linked_app_type"] = types.StringNull()
+		attrValuesProductProperties["linked_app_id"] = types.StringNull()
+		attrValuesProductProperties["linked_app_url"] = types.StringNull()
 	}
 
 	if environmentDto.Properties.LinkedEnvironmentMetadata != nil {
@@ -222,17 +341,22 @@ func ConvertFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode strin
 		attrValuesProductProperties["security_group_id"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.SecurityGroupId)
 		attrValuesProductProperties["language_code"] = types.Int64Value(int64(environmentDto.Properties.LinkedEnvironmentMetadata.BaseLanguage))
 		attrValuesProductProperties["version"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.Version)
-		attrValuesProductProperties["currency_code"] = types.StringValue(currencyCode)
+		if currencyCode != nil && *currencyCode != "" {
+			attrValuesProductProperties["currency_code"] = types.StringValue(*currencyCode)
+		} else {
+			attrValuesProductProperties["currency_code"] = types.StringNull()
+		}
 	} else {
-		attrValuesProductProperties["url"] = types.StringValue("")
-		attrValuesProductProperties["domain"] = types.StringValue("")
-		attrValuesProductProperties["organization_id"] = types.StringValue("")
-		attrValuesProductProperties["security_group_id"] = types.StringValue("")
+		attrValuesProductProperties["url"] = types.StringNull()
+		attrValuesProductProperties["domain"] = types.StringNull()
+		attrValuesProductProperties["organization_id"] = types.StringNull()
+		attrValuesProductProperties["security_group_id"] = types.StringNull()
 		attrValuesProductProperties["language_code"] = types.Int64Null()
-		attrValuesProductProperties["version"] = types.StringValue("")
-		attrValuesProductProperties["currency_code"] = types.StringValue("")
+		attrValuesProductProperties["version"] = types.StringNull()
+		attrValuesProductProperties["currency_code"] = types.StringNull()
 	}
+	attrValuesProductProperties["templates"] = types.ListNull(types.StringType)
+	attrValuesProductProperties["template_metadata"] = types.StringNull()
 	model.Dataverse = types.ObjectValueMust(attrTypesDataverseObject, attrValuesProductProperties)
-
 	return model
 }

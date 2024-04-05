@@ -33,34 +33,6 @@ type EnvironmentsDataSource struct {
 	TypeName          string
 }
 
-type EnvironmentsListDataSourceModel struct {
-	Environments []EnvironmentDataSourceModel `tfsdk:"environments"`
-	Id           types.Int64                  `tfsdk:"id"`
-}
-
-type EnvironmentDataSourceModel struct {
-	EnvironmentId   types.String `tfsdk:"id"`
-	Location        types.String `tfsdk:"location"`
-	DisplayName     types.String `tfsdk:"display_name"`
-	EnvironmentType types.String `tfsdk:"environment_type"`
-	BillingPolicyId types.String `tfsdk:"billing_policy_id"`
-
-	Dataverse types.Object `tfsdk:"dataverse"`
-}
-
-type DataverseDataSourceModel struct {
-	Url             types.String `tfsdk:"url"`
-	Domain          types.String `tfsdk:"domain"`
-	OrganizationId  types.String `tfsdk:"organization_id"`
-	SecurityGroupId types.String `tfsdk:"security_group_id"`
-	LanguageName    types.Int64  `tfsdk:"language_code"`
-	Version         types.String `tfsdk:"version"`
-	LinkedAppType   types.String `tfsdk:"linked_app_type"`
-	LinkedAppId     types.String `tfsdk:"linked_app_id"`
-	LinkedAppURL    types.String `tfsdk:"linked_app_url"`
-	CurrencyCode    types.String `tfsdk:"currency_code"`
-}
-
 func (d *EnvironmentsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
@@ -213,7 +185,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 		} else {
 			currencyCode = defaultCurrency.IsoCurrencyCode
 		}
-		e := ConvertFromEnvironmentDto(env, currencyCode)
+		e := ConvertSourceModelFromEnvironmentDto(env, &currencyCode)
 		state.Environments = append(state.Environments, e)
 	}
 	state.Id = types.Int64Value(time.Now().Unix())

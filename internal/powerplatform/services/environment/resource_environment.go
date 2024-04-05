@@ -5,9 +5,7 @@ package powerplatform
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -17,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
@@ -41,27 +40,30 @@ type EnvironmentResource struct {
 	TypeName          string
 }
 
-type EnvironmentResourceModel struct {
-	Id              types.String `tfsdk:"id"`
-	DisplayName     types.String `tfsdk:"display_name"`
-	Url             types.String `tfsdk:"url"`
-	Domain          types.String `tfsdk:"domain"`
-	Location        types.String `tfsdk:"location"`
-	EnvironmentType types.String `tfsdk:"environment_type"`
-	//CommonDataServiceDatabaseType types.String `tfsdk:"common_data_service_database_type"`
-	OrganizationId  types.String `tfsdk:"organization_id"`
-	SecurityGroupId types.String `tfsdk:"security_group_id"`
-	LanguageName    types.Int64  `tfsdk:"language_code"`
-	CurrencyCode    types.String `tfsdk:"currency_code"`
-	//IsCustomControlInCanvasAppsEnabled types.Bool   `tfsdk:"is_custom_control_in_canvas_apps_enabled"`
-	Version          types.String `tfsdk:"version"`
-	Templates        []string     `tfsdk:"templates"`
-	TemplateMetadata types.String `tfsdk:"template_metadata"`
-	LinkedAppType    types.String `tfsdk:"linked_app_type"`
-	LinkedAppId      types.String `tfsdk:"linked_app_id"`
-	LinkedAppUrl     types.String `tfsdk:"linked_app_url"`
-	BillingPolicyId  types.String `tfsdk:"billing_policy_id"`
-}
+// type EnvironmentResourceModel struct {
+// 	Id              types.String `tfsdk:"id"`
+// 	DisplayName     types.String `tfsdk:"display_name"`
+// 	Location        types.String `tfsdk:"location"`
+// 	EnvironmentType types.String `tfsdk:"environment_type"`
+// 	//CommonDataServiceDatabaseType types.String `tfsdk:"common_data_service_database_type"`
+// 	BillingPolicyId types.String `tfsdk:"billing_policy_id"`
+// 	Dataverse       types.Object `tfsdk:"dataverse"`
+// }
+
+// type DataverseResourceModel struct {
+// 	Url              types.String `tfsdk:"url"`
+// 	Domain           types.String `tfsdk:"domain"`
+// 	OrganizationId   types.String `tfsdk:"organization_id"`
+// 	SecurityGroupId  types.String `tfsdk:"security_group_id"`
+// 	LanguageName     types.Int64  `tfsdk:"language_code"`
+// 	Version          types.String `tfsdk:"version"`
+// 	LinkedAppType    types.String `tfsdk:"linked_app_type"`
+// 	LinkedAppId      types.String `tfsdk:"linked_app_id"`
+// 	LinkedAppURL     types.String `tfsdk:"linked_app_url"`
+// 	CurrencyCode     types.String `tfsdk:"currency_code"`
+// 	Templates        []string     `tfsdk:"templates"`
+// 	TemplateMetadata types.String `tfsdk:"template_metadata"`
+// }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
@@ -73,17 +75,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 		Description:         "This resource manages a PowerPlatform environment",
 
 		Attributes: map[string]schema.Attribute{
-			//"id": schema.StringAttribute{
-			//	Computed: true,
-			//},
-			"currency_code": schema.StringAttribute{
-				Description:         "Unique currency code",
-				MarkdownDescription: "Unique currency name",
-				Required:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
+
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique environment id (guid)",
 				Description:         "Unique environment id (guid)",
@@ -91,22 +83,6 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
-			},
-			"display_name": schema.StringAttribute{
-				MarkdownDescription: "Display name",
-				Description:         "Display name",
-				Required:            true,
-			},
-			"url": schema.StringAttribute{
-				Description:         "Url of the environment",
-				MarkdownDescription: "Url of the environment",
-				Computed:            true,
-			},
-			"domain": schema.StringAttribute{
-				Description:         "Domain name of the environment",
-				MarkdownDescription: "Domain name of the environment",
-				Optional:            true,
-				Computed:            true,
 			},
 			"location": schema.StringAttribute{
 				Description:         "Location of the environment (europe, unitedstates etc.)",
@@ -127,63 +103,95 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringvalidator.OneOf(EnvironmentTypes...),
 				},
 			},
-			"organization_id": schema.StringAttribute{
-				Description:         "Unique organization id (guid)",
-				MarkdownDescription: "Unique organization id (guid)",
-				Computed:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"security_group_id": schema.StringAttribute{
-				Description:         "Unique security group id (guid).  For an empty security group, set this property to 0000000-0000-0000-0000-000000000000",
-				MarkdownDescription: "Unique security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
+			"display_name": schema.StringAttribute{
+				MarkdownDescription: "Display name",
+				Description:         "Display name",
 				Required:            true,
-			},
-			"language_code": schema.Int64Attribute{
-				Description:         "Unique language LCID (integer)",
-				MarkdownDescription: "Unique language LCID (integer)",
-				Required:            true,
-				PlanModifiers: []planmodifier.Int64{
-					powerplatform_modifiers.RequireReplaceIntAttributePlanModifier(),
-				},
-			},
-			"version": schema.StringAttribute{
-				Description:         "Version of the environment",
-				MarkdownDescription: "Version of the environment",
-				Computed:            true,
-			},
-			"templates": schema.ListAttribute{
-				Description:         "The selected instance provisioning template (if any)",
-				MarkdownDescription: "The selected instance provisioning template (if any)",
-				Optional:            true,
-				ElementType:         types.StringType,
-			},
-			"template_metadata": schema.StringAttribute{
-				Description:         "Additional D365 environment template metadata (if any)",
-				MarkdownDescription: "Additional D365 environment template metadata (if any)",
-				Optional:            true,
-			},
-			"linked_app_type": schema.StringAttribute{
-				Description:         "The type of the linked D365 application",
-				MarkdownDescription: "The type of the linked D365 application",
-				Computed:            true,
-			},
-			"linked_app_id": schema.StringAttribute{
-				Description:         "The GUID of the linked D365 application",
-				MarkdownDescription: "The GUID of the linked D365 application",
-				Computed:            true,
-			},
-			"linked_app_url": schema.StringAttribute{
-				Description:         "The URL of the linked D365 application",
-				MarkdownDescription: "The URL of the linked D365 application",
-				Computed:            true,
 			},
 			"billing_policy_id": &schema.StringAttribute{
 				Description:         "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 				MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 				Optional:            true,
 				Computed:            true,
+			},
+			"dataverse": schema.SingleNestedAttribute{
+				MarkdownDescription: "Dataverse environment details",
+				Description:         "Dataverse environment details",
+				Optional:            true,
+				Computed:            true,
+				Attributes: map[string]schema.Attribute{
+					"currency_code": schema.StringAttribute{
+						Description:         "Unique currency code",
+						MarkdownDescription: "Unique currency name",
+						Required:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.RequiresReplace(),
+						},
+					},
+					"url": schema.StringAttribute{
+						Description:         "Url of the environment",
+						MarkdownDescription: "Url of the environment",
+						Computed:            true,
+					},
+					"domain": schema.StringAttribute{
+						Description:         "Domain name of the environment",
+						MarkdownDescription: "Domain name of the environment",
+						Optional:            true,
+						Computed:            true,
+					},
+					"organization_id": schema.StringAttribute{
+						Description:         "Unique organization id (guid)",
+						MarkdownDescription: "Unique organization id (guid)",
+						Computed:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
+					},
+					"security_group_id": schema.StringAttribute{
+						Description:         "Unique security group id (guid).  For an empty security group, set this property to 0000000-0000-0000-0000-000000000000",
+						MarkdownDescription: "Unique security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
+						Required:            true,
+					},
+					"language_code": schema.Int64Attribute{
+						Description:         "Unique language LCID (integer)",
+						MarkdownDescription: "Unique language LCID (integer)",
+						Required:            true,
+						PlanModifiers: []planmodifier.Int64{
+							powerplatform_modifiers.RequireReplaceIntAttributePlanModifier(),
+						},
+					},
+					"version": schema.StringAttribute{
+						Description:         "Version of the environment",
+						MarkdownDescription: "Version of the environment",
+						Computed:            true,
+					},
+					"templates": schema.ListAttribute{
+						Description:         "The selected instance provisioning template (if any)",
+						MarkdownDescription: "The selected instance provisioning template (if any)",
+						Optional:            true,
+						ElementType:         types.StringType,
+					},
+					"template_metadata": schema.StringAttribute{
+						Description:         "Additional D365 environment template metadata (if any)",
+						MarkdownDescription: "Additional D365 environment template metadata (if any)",
+						Optional:            true,
+					},
+					"linked_app_type": schema.StringAttribute{
+						Description:         "The type of the linked D365 application",
+						MarkdownDescription: "The type of the linked D365 application",
+						Computed:            true,
+					},
+					"linked_app_id": schema.StringAttribute{
+						Description:         "The GUID of the linked D365 application",
+						MarkdownDescription: "The GUID of the linked D365 application",
+						Computed:            true,
+					},
+					"linked_app_url": schema.StringAttribute{
+						Description:         "The URL of the linked D365 application",
+						MarkdownDescription: "The URL of the linked D365 application",
+						Computed:            true,
+					},
+				},
 			},
 		},
 	}
@@ -209,7 +217,7 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 }
 
 func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *EnvironmentResourceModel
+	var plan *EnvironmentSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
@@ -219,45 +227,10 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	var templateMetadataObject EnvironmentCreateTemplateMetadata
-
-	if plan.TemplateMetadata.ValueString() != "" {
-		err := json.Unmarshal([]byte(plan.TemplateMetadata.ValueString()), &templateMetadataObject)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error when unmarshalling template metadata %s", plan.TemplateMetadata.ValueString()), err.Error())
-			return
-		}
+	envToCreate, err := ConvertCreateEnvironmentDtoFromSourceModel(ctx, *plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when converting source model to create environment dto", err.Error())
 	}
-
-	envToCreate := EnvironmentCreateDto{
-		Location: plan.Location.ValueString(),
-		Properties: EnvironmentCreatePropertiesDto{
-			DisplayName:    plan.DisplayName.ValueString(),
-			DataBaseType:   "CommonDataService",
-			EnvironmentSku: plan.EnvironmentType.ValueString(),
-			LinkedEnvironmentMetadata: &EnvironmentCreateLinkEnvironmentMetadataDto{
-				BaseLanguage:    int(plan.LanguageName.ValueInt64()),
-				SecurityGroupId: plan.SecurityGroupId.ValueString(),
-				Currency: EnvironmentCreateCurrency{
-					Code: plan.CurrencyCode.ValueString(),
-				},
-				Templates:        plan.Templates,
-				TemplateMetadata: templateMetadataObject,
-			},
-		},
-	}
-
-	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
-		envToCreate.Properties.BillingPolicy = BillingPolicyDto{
-			Id: plan.BillingPolicyId.ValueString(),
-		}
-	}
-
-	if plan.Domain.ValueString() != "" && !plan.Domain.IsNull() {
-		envToCreate.Properties.LinkedEnvironmentMetadata.DomainName = plan.Domain.ValueString()
-	}
-
-	var err error
 
 	err = locationValidator(r.EnvironmentClient.Api, envToCreate.Location)
 	if err != nil {
@@ -277,38 +250,28 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, envToCreate)
+	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, *envToCreate)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
 
-	env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
+	var currencyCode string
+	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
+		currencyCode = envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code
+	}
 
-	plan.Id = env.EnvironmentId
-	plan.DisplayName = env.DisplayName
-	// plan.OrganizationId = env.OrganizationId
-	// plan.SecurityGroupId = env.SecurityGroupId
-	// plan.LanguageName = env.LanguageName
-	// plan.CurrencyCode = types.StringValue(envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
-	// plan.Domain = env.Domain
-	// plan.Url = env.Url
-	plan.EnvironmentType = env.EnvironmentType
-	// plan.Version = env.Version
-	// plan.LinkedAppType = env.LinkedAppType
-	// plan.LinkedAppId = env.LinkedAppId
-	// plan.LinkedAppUrl = env.LinkedAppURL
-	plan.BillingPolicyId = env.BillingPolicyId
+	newPlan := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode)
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *EnvironmentResourceModel
+	var state *EnvironmentSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.ProviderTypeName))
 
@@ -324,68 +287,38 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
+	currencyCode := ""
 	defaultCurrency, err := r.EnvironmentClient.GetDefaultCurrencyForEnvironment(ctx, envDto.Name)
 	if err != nil {
 		resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", envDto.Name), err.Error())
 	} else {
-		state.CurrencyCode = types.StringValue(defaultCurrency.IsoCurrencyCode)
+		currencyCode = defaultCurrency.IsoCurrencyCode
 	}
 
-	env := ConvertFromEnvironmentDto(*envDto, state.CurrencyCode.ValueString())
-
-	state.Id = env.EnvironmentId
-	state.DisplayName = env.DisplayName
-	//state.OrganizationId = env.OrganizationId
-	//state.SecurityGroupId = env.SecurityGroupId
-	//state.LanguageName = env.LanguageName
-	//state.Domain = env.Domain
-	//state.Url = env.Url
-	//state.CurrencyCode = env.CurrencyCode
-	state.EnvironmentType = env.EnvironmentType
-	//state.Version = env.Version
-	//state.LanguageName = env.LanguageName
-	state.Location = env.Location
-	//state.LinkedAppId = env.LinkedAppId
-	//state.LinkedAppType = env.LinkedAppType
-	//state.LinkedAppUrl = env.LinkedAppURL
-	state.BillingPolicyId = env.BillingPolicyId
-
-	ctx = tflog.SetField(ctx, "id", state.Id.ValueString())
-	ctx = tflog.SetField(ctx, "display_name", state.DisplayName.ValueString())
-	ctx = tflog.SetField(ctx, "url", state.Url.ValueString())
-	ctx = tflog.SetField(ctx, "domain", state.Domain.ValueString())
-	ctx = tflog.SetField(ctx, "location", state.Location.ValueString())
-	ctx = tflog.SetField(ctx, "environment_type", state.EnvironmentType.ValueString())
-	ctx = tflog.SetField(ctx, "organization_id", state.OrganizationId.ValueString())
-	ctx = tflog.SetField(ctx, "security_group_id", state.SecurityGroupId.ValueString())
-	ctx = tflog.SetField(ctx, "language_code", state.LanguageName.ValueInt64())
-	ctx = tflog.SetField(ctx, "currency_code", state.CurrencyCode.ValueString())
-	ctx = tflog.SetField(ctx, "version", state.Version.ValueString())
-	ctx = tflog.SetField(ctx, "template", strings.Join(state.Templates, " "))
-	ctx = tflog.SetField(ctx, "billing_policy_id", state.BillingPolicyId.ValueString())
+	newState := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan *EnvironmentResourceModel
+	var plan *EnvironmentSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
-	var state *EnvironmentResourceModel
+	var state *EnvironmentSourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	envToUpdate := EnvironmentDto{
+	environmentDto := EnvironmentDto{
 		Id:       plan.Id.ValueString(),
 		Name:     plan.DisplayName.ValueString(),
 		Type:     plan.EnvironmentType.ValueString(),
@@ -393,18 +326,86 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		Properties: EnvironmentPropertiesDto{
 			DisplayName:    plan.DisplayName.ValueString(),
 			EnvironmentSku: plan.EnvironmentType.ValueString(),
-			LinkedEnvironmentMetadata: &LinkedEnvironmentMetadataDto{
-				SecurityGroupId: plan.SecurityGroupId.ValueString(),
-				DomainName:      plan.Domain.ValueString(),
-			},
 		},
 	}
 
 	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
-		envToUpdate.Properties.BillingPolicy = &BillingPolicyDto{
+		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
 		}
 	}
+
+	var currencyCode string
+	if !plan.Dataverse.IsNull() && !plan.Dataverse.IsUnknown() {
+
+		var dataverseSourcePlanModel DataverseSourceModel
+		plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+
+		currencyCode = dataverseSourcePlanModel.CurrencyCode.ValueString()
+
+		environmentDto.Properties.LinkedEnvironmentMetadata = &LinkedEnvironmentMetadataDto{
+			SecurityGroupId: dataverseSourcePlanModel.SecurityGroupId.ValueString(),
+			DomainName:      dataverseSourcePlanModel.Domain.ValueString(),
+		}
+
+		// if state.Domain.ValueString() != plan.Domain.ValueString() && !plan.Domain.IsNull() && plan.Domain.ValueString() != "" {
+		// 	envToUpdate.Properties.LinkedEnvironmentMetadata.DomainName = plan.Domain.ValueString()
+		// }
+
+		var dataverseSourceStateModel DataverseSourceModel
+		state.Dataverse.As(ctx, &dataverseSourceStateModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+
+		if dataverseSourceStateModel.Domain.ValueString() != dataverseSourcePlanModel.Domain.ValueString() && !dataverseSourcePlanModel.Domain.IsNull() && dataverseSourcePlanModel.Domain.ValueString() != "" {
+			environmentDto.Properties.LinkedEnvironmentMetadata.DomainName = dataverseSourcePlanModel.Domain.ValueString()
+		}
+
+		// if !plan.LinkedAppId.IsNull() && plan.LinkedAppId.ValueString() != "" {
+		// 	envToUpdate.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
+		// 		Type: plan.LinkedAppType.ValueString(),
+		// 		Id:   plan.LinkedAppId.ValueString(),
+		// 		Url:  plan.LinkedAppUrl.ValueString(),
+		// 	}
+		// } else {
+		// 	envToUpdate.Properties.LinkedAppMetadata = nil
+		// }
+
+		if !dataverseSourcePlanModel.LinkedAppId.IsNull() && dataverseSourcePlanModel.LinkedAppId.ValueString() != "" {
+			environmentDto.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
+				Type: dataverseSourcePlanModel.LinkedAppType.ValueString(),
+				Id:   dataverseSourcePlanModel.LinkedAppId.ValueString(),
+				Url:  dataverseSourcePlanModel.LinkedAppURL.ValueString(),
+			}
+		} else {
+			environmentDto.Properties.LinkedAppMetadata = nil
+		}
+
+	} else {
+		//todo check that someone is removing dv from environment and throw an exception
+		//when dv is added now
+		//todo send https: //api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/7d212cc2-bf25-e674-b320-756e6b090745/provisionInstance?api-version=2021-04-01
+		//{"baseLanguage":1033,"domainName":"orgfba586c5","currency":{"Code":"CHF"},"securityGroupId":"00000000-0000-0000-0000-000000000000","templates":null}
+	}
+
+	// envToUpdate := EnvironmentDto{
+	// 	Id:       plan.Id.ValueString(),
+	// 	Name:     plan.DisplayName.ValueString(),
+	// 	Type:     plan.EnvironmentType.ValueString(),
+	// 	Location: plan.Location.ValueString(),
+	// 	Properties: EnvironmentPropertiesDto{
+	// 		DisplayName:               plan.DisplayName.ValueString(),
+	// 		EnvironmentSku:            plan.EnvironmentType.ValueString(),
+	// 		LinkedEnvironmentMetadata: &LinkedEnvironmentMetadataDto{
+	// 			//SecurityGroupId: plan.SecurityGroupId.ValueString(),
+	// 			//DomainName:      plan.Domain.ValueString(),
+	// 		},
+	// 	},
+	// }
+
+	// if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
+	// 	envToUpdate.Properties.BillingPolicy = &BillingPolicyDto{
+	// 		Id: plan.BillingPolicyId.ValueString(),
+	// 	}
+	// }
 
 	if !state.BillingPolicyId.IsNull() &&
 		!state.BillingPolicyId.IsUnknown() &&
@@ -430,52 +431,21 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		}
 	}
 
-	if state.Domain.ValueString() != plan.Domain.ValueString() && !plan.Domain.IsNull() && plan.Domain.ValueString() != "" {
-		envToUpdate.Properties.LinkedEnvironmentMetadata.DomainName = plan.Domain.ValueString()
-	}
-
-	if !plan.LinkedAppId.IsNull() && plan.LinkedAppId.ValueString() != "" {
-		envToUpdate.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
-			Type: plan.LinkedAppType.ValueString(),
-			Id:   plan.LinkedAppId.ValueString(),
-			Url:  plan.LinkedAppUrl.ValueString(),
-		}
-	} else {
-		envToUpdate.Properties.LinkedAppMetadata = nil
-	}
-
-	envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), envToUpdate)
+	envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
 		return
 	}
 
-	env := ConvertFromEnvironmentDto(*envDto, plan.CurrencyCode.ValueString())
+	newPlan := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode)
 
-	plan.Id = env.EnvironmentId
-	plan.DisplayName = env.DisplayName
-	//plan.OrganizationId = env.OrganizationId
-	//plan.SecurityGroupId = env.SecurityGroupId
-	//plan.LanguageName = env.LanguageName
-	//plan.Domain = env.Domain
-	//plan.Url = env.Url
-	//plan.CurrencyCode = env.CurrencyCode
-	plan.EnvironmentType = env.EnvironmentType
-	//plan.Version = env.Version
-	//plan.LanguageName = env.LanguageName
-	plan.Location = env.Location
-	//plan.LinkedAppType = env.LinkedAppType
-	//plan.LinkedAppId = env.LinkedAppId
-	//plan.LinkedAppUrl = env.LinkedAppURL
-	plan.BillingPolicyId = env.BillingPolicyId
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *EnvironmentResourceModel
+	var state *EnvironmentSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
 
