@@ -55,11 +55,8 @@ func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataReques
 func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: `This resource associates a user to a Power Platform environment. 
-							  Additional Resources:\n\n 
-						\n\n * [Add users to an environment](https://learn.microsoft.com/en-us/power-platform/admin/add-users-to-environment)"
-						\n\n * [Overview of User Security](https://learn.microsoft.com/en-us/power-platform/admin/grant-users-access)`,
-		Description: "This resource associates a user to a Power Platform environment",
+		MarkdownDescription: "This resource associates a user to a Power Platform environment. Additional Resources:\n\n* [Add users to an environment](https://learn.microsoft.com/en-us/power-platform/admin/add-users-to-environment)\n\n* [Overview of User Security](https://learn.microsoft.com/en-us/power-platform/admin/grant-users-access)",
+		Description:         "This resource associates a user to a Power Platform environment",
 
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
