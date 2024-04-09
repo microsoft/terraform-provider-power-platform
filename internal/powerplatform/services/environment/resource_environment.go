@@ -40,31 +40,6 @@ type EnvironmentResource struct {
 	TypeName          string
 }
 
-// type EnvironmentResourceModel struct {
-// 	Id              types.String `tfsdk:"id"`
-// 	DisplayName     types.String `tfsdk:"display_name"`
-// 	Location        types.String `tfsdk:"location"`
-// 	EnvironmentType types.String `tfsdk:"environment_type"`
-// 	//CommonDataServiceDatabaseType types.String `tfsdk:"common_data_service_database_type"`
-// 	BillingPolicyId types.String `tfsdk:"billing_policy_id"`
-// 	Dataverse       types.Object `tfsdk:"dataverse"`
-// }
-
-// type DataverseResourceModel struct {
-// 	Url              types.String `tfsdk:"url"`
-// 	Domain           types.String `tfsdk:"domain"`
-// 	OrganizationId   types.String `tfsdk:"organization_id"`
-// 	SecurityGroupId  types.String `tfsdk:"security_group_id"`
-// 	LanguageName     types.Int64  `tfsdk:"language_code"`
-// 	Version          types.String `tfsdk:"version"`
-// 	LinkedAppType    types.String `tfsdk:"linked_app_type"`
-// 	LinkedAppId      types.String `tfsdk:"linked_app_id"`
-// 	LinkedAppURL     types.String `tfsdk:"linked_app_url"`
-// 	CurrencyCode     types.String `tfsdk:"currency_code"`
-// 	Templates        []string     `tfsdk:"templates"`
-// 	TemplateMetadata types.String `tfsdk:"template_metadata"`
-// }
-
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
@@ -119,13 +94,16 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				Description:         "Dataverse environment details",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers: []planmodifier.Object{
+					powerplatform_modifiers.RequireReplaceObjectToEmptyModifier(),
+				},
 				Attributes: map[string]schema.Attribute{
 					"currency_code": schema.StringAttribute{
 						Description:         "Unique currency code",
 						MarkdownDescription: "Unique currency name",
 						Required:            true,
 						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.RequiresReplace(),
+							powerplatform_modifiers.RequireReplaceStringFromNonEmptyPlanModifier(),
 						},
 					},
 					"url": schema.StringAttribute{
@@ -238,16 +216,18 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	err = languageCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Language code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-		return
-	}
+	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
+		err = languageCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Language code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
 
-	err = currencyCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Currency code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-		return
+		err = currencyCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Currency code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
 	}
 
 	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, *envToCreate)
@@ -336,7 +316,10 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	var currencyCode string
-	if !plan.Dataverse.IsNull() && !plan.Dataverse.IsUnknown() {
+	if !IsDataverseEnvironmentEmpty(ctx, state) && IsDataverseEnvironmentEmpty(ctx, plan) {
+		resp.Diagnostics.AddError("Cannot remove dataverse environment from environment", "Cannot remove dataverse environment from environment")
+		return
+	} else if !IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
 
 		var dataverseSourcePlanModel DataverseSourceModel
 		plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
@@ -348,26 +331,12 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 			DomainName:      dataverseSourcePlanModel.Domain.ValueString(),
 		}
 
-		// if state.Domain.ValueString() != plan.Domain.ValueString() && !plan.Domain.IsNull() && plan.Domain.ValueString() != "" {
-		// 	envToUpdate.Properties.LinkedEnvironmentMetadata.DomainName = plan.Domain.ValueString()
-		// }
-
 		var dataverseSourceStateModel DataverseSourceModel
 		state.Dataverse.As(ctx, &dataverseSourceStateModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if dataverseSourceStateModel.Domain.ValueString() != dataverseSourcePlanModel.Domain.ValueString() && !dataverseSourcePlanModel.Domain.IsNull() && dataverseSourcePlanModel.Domain.ValueString() != "" {
 			environmentDto.Properties.LinkedEnvironmentMetadata.DomainName = dataverseSourcePlanModel.Domain.ValueString()
 		}
-
-		// if !plan.LinkedAppId.IsNull() && plan.LinkedAppId.ValueString() != "" {
-		// 	envToUpdate.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
-		// 		Type: plan.LinkedAppType.ValueString(),
-		// 		Id:   plan.LinkedAppId.ValueString(),
-		// 		Url:  plan.LinkedAppUrl.ValueString(),
-		// 	}
-		// } else {
-		// 	envToUpdate.Properties.LinkedAppMetadata = nil
-		// }
 
 		if !dataverseSourcePlanModel.LinkedAppId.IsNull() && dataverseSourcePlanModel.LinkedAppId.ValueString() != "" {
 			environmentDto.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
@@ -378,34 +347,21 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		} else {
 			environmentDto.Properties.LinkedAppMetadata = nil
 		}
-
 	} else {
-		//todo check that someone is removing dv from environment and throw an exception
-		//when dv is added now
-		//todo send https: //api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/7d212cc2-bf25-e674-b320-756e6b090745/provisionInstance?api-version=2021-04-01
-		//{"baseLanguage":1033,"domainName":"orgfba586c5","currency":{"Code":"CHF"},"securityGroupId":"00000000-0000-0000-0000-000000000000","templates":null}
+
+		linkedMetadataDto, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, plan.Dataverse)
+		if err != nil {
+			resp.Diagnostics.AddError("Error when converting dataverse source model to create link environment metadata dto", err.Error())
+			return
+		}
+
+		_, err = r.EnvironmentClient.AddDataverseToEnvironment(ctx, plan.Id.ValueString(), *linkedMetadataDto)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error when adding dataverse to environment %s", plan.Id.ValueString()), err.Error())
+			return
+		}
+		currencyCode = linkedMetadataDto.Currency.Code
 	}
-
-	// envToUpdate := EnvironmentDto{
-	// 	Id:       plan.Id.ValueString(),
-	// 	Name:     plan.DisplayName.ValueString(),
-	// 	Type:     plan.EnvironmentType.ValueString(),
-	// 	Location: plan.Location.ValueString(),
-	// 	Properties: EnvironmentPropertiesDto{
-	// 		DisplayName:               plan.DisplayName.ValueString(),
-	// 		EnvironmentSku:            plan.EnvironmentType.ValueString(),
-	// 		LinkedEnvironmentMetadata: &LinkedEnvironmentMetadataDto{
-	// 			//SecurityGroupId: plan.SecurityGroupId.ValueString(),
-	// 			//DomainName:      plan.Domain.ValueString(),
-	// 		},
-	// 	},
-	// }
-
-	// if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
-	// 	envToUpdate.Properties.BillingPolicy = &BillingPolicyDto{
-	// 		Id: plan.BillingPolicyId.ValueString(),
-	// 	}
-	// }
 
 	if !state.BillingPolicyId.IsNull() &&
 		!state.BillingPolicyId.IsUnknown() &&

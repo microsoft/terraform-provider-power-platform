@@ -235,7 +235,7 @@ func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environment
 		return nil, err
 	}
 
-	if env.Properties.LinkedEnvironmentMetadata.SecurityGroupId == "" {
+	if env.Properties.LinkedEnvironmentMetadata != nil && env.Properties.LinkedEnvironmentMetadata.SecurityGroupId == "" {
 		env.Properties.LinkedEnvironmentMetadata.SecurityGroupId = "00000000-0000-0000-0000-000000000000"
 	}
 
@@ -269,6 +269,59 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 		return err
 	}
 	return nil
+}
+
+func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, environmentId string, environmentCreateLinkEnvironmentMetadata EnvironmentCreateLinkEnvironmentMetadataDto) (*EnvironmentDto, error) {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/provisionInstance", environmentId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2021-04-01")
+	apiUrl.RawQuery = values.Encode()
+
+	apiResponse, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environmentCreateLinkEnvironmentMetadata, []int{http.StatusAccepted}, nil)
+	if err != nil {
+		tflog.Error(ctx, "Error adding Dataverse to environment: "+err.Error())
+	}
+
+	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.Response.Status+"'")
+
+	locationHeader := apiResponse.GetHeader("Location")
+	tflog.Debug(ctx, "Location Header: "+locationHeader)
+
+	_, err = url.Parse(locationHeader)
+	if err != nil {
+		tflog.Error(ctx, "Error parsing location header: "+err.Error())
+	}
+
+	retryHeader := apiResponse.GetHeader("Retry-After")
+	tflog.Debug(ctx, "Retry Header: "+retryHeader)
+	retryAfter, err := time.ParseDuration(retryHeader)
+	if err != nil {
+		retryAfter = time.Duration(5) * time.Second
+	} else {
+		retryAfter = retryAfter * time.Second
+	}
+	for {
+		lifecycleEnv := EnvironmentDto{}
+		lifecycleResponse, err := client.Api.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted}, &lifecycleEnv)
+		if err != nil {
+			return nil, err
+		}
+		//lintignore:R018
+		time.Sleep(retryAfter)
+
+		tflog.Debug(ctx, "Dataverse Creation Operation State: '"+lifecycleEnv.Properties.ProvisioningState+"'")
+		tflog.Debug(ctx, "Dataverse Creation Operation HTTP Status: '"+lifecycleResponse.Response.Status+"'")
+
+		if lifecycleEnv.Properties.ProvisioningState == "Succeeded" {
+			return &lifecycleEnv, nil
+		} else if lifecycleEnv.Properties.ProvisioningState != "LinkedDatabaseProvisioning" && lifecycleEnv.Properties.ProvisioningState != "Succeeded" {
+			return &lifecycleEnv, errors.New("dataverse creation failed. provisioning state: " + lifecycleEnv.Properties.ProvisioningState)
+		}
+	}
 }
 
 func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environment EnvironmentCreateDto) (*EnvironmentDto, error) {
@@ -328,7 +381,7 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 }
 
 func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environmentId string, environment EnvironmentDto) (*EnvironmentDto, error) {
-	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
+	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata != nil && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
 		err := client.ValidateEnvironmentDetails(ctx, environment.Location, environment.Properties.LinkedEnvironmentMetadata.DomainName)
 		if err != nil {
 			return nil, err

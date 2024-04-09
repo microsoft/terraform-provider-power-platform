@@ -25,7 +25,7 @@ func (d *requireReplaceIntAttributePlanModifier) MarkdownDescription(ctx context
 }
 
 func (d *requireReplaceIntAttributePlanModifier) PlanModifyInt64(ctx context.Context, req planmodifier.Int64Request, resp *planmodifier.Int64Response) {
-	if req.PlanValue != req.StateValue {
+	if req.PlanValue != req.StateValue && (!req.StateValue.IsNull() && !req.StateValue.IsUnknown() && req.StateValue.ValueInt64() != 0) {
 		resp.RequiresReplace = true
 	}
 }

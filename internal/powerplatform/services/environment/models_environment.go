@@ -36,6 +36,7 @@ type EnvironmentPropertiesDto struct {
 	TenantID                  string                        `json:"tenantId"`
 	GovernanceConfiguration   GovernanceConfigurationDto    `json:"governanceConfiguration"`
 	BillingPolicy             *BillingPolicyDto             `json:"billingPolicy,omitempty"`
+	ProvisioningState         string                        `json:"provisioningState,omitempty"`
 }
 
 type BillingPolicyDto struct {
@@ -246,6 +247,13 @@ func ConvertUpdateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 	return &environmentDto, nil
 }
 
+func IsDataverseEnvironmentEmpty(ctx context.Context, environment *EnvironmentSourceModel) bool {
+	var dataverseSourceModel DataverseSourceModel
+	environment.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+
+	return dataverseSourceModel.CurrencyCode.IsNull() || dataverseSourceModel.CurrencyCode.ValueString() == ""
+}
+
 func ConvertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource EnvironmentSourceModel) (*EnvironmentCreateDto, error) {
 	environmentDto := &EnvironmentCreateDto{
 		Location: environmentSource.Location.ValueString(),
@@ -274,7 +282,31 @@ func ConvertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		}
 
 		environmentDto.Properties.DataBaseType = "CommonDataService"
-		environmentDto.Properties.LinkedEnvironmentMetadata = &EnvironmentCreateLinkEnvironmentMetadataDto{
+		linkedMetadata, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, environmentSource.Dataverse)
+		if err != nil {
+			return nil, err
+		}
+		environmentDto.Properties.LinkedEnvironmentMetadata = linkedMetadata
+
+	}
+	return environmentDto, nil
+}
+
+func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx context.Context, dataverse types.Object) (*EnvironmentCreateLinkEnvironmentMetadataDto, error) {
+	if !dataverse.IsNull() && !dataverse.IsUnknown() {
+		var dataverseSourceModel DataverseSourceModel
+		dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+
+		var templateMetadataObject EnvironmentCreateTemplateMetadata
+		if dataverseSourceModel.TemplateMetadata.ValueString() != "" {
+			err := json.Unmarshal([]byte(dataverseSourceModel.TemplateMetadata.ValueString()), &templateMetadataObject)
+			if err != nil {
+				return nil, fmt.Errorf("error when unmarshalling template metadata %s; internal error: %v", dataverseSourceModel.TemplateMetadata.ValueString(), err)
+			}
+		}
+
+		//environmentDto.Properties.DataBaseType = "CommonDataService"
+		linkedEnvironmentMetadata := &EnvironmentCreateLinkEnvironmentMetadataDto{
 			BaseLanguage:    int(dataverseSourceModel.LanguageName.ValueInt64()),
 			SecurityGroupId: dataverseSourceModel.SecurityGroupId.ValueString(),
 			Currency: EnvironmentCreateCurrency{
@@ -285,11 +317,13 @@ func ConvertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		}
 
 		if !dataverseSourceModel.Domain.IsNull() && dataverseSourceModel.Domain.ValueString() != "" {
-			environmentDto.Properties.LinkedEnvironmentMetadata.DomainName = dataverseSourceModel.Domain.ValueString()
+			linkedEnvironmentMetadata.DomainName = dataverseSourceModel.Domain.ValueString()
+		} else {
+			linkedEnvironmentMetadata.DomainName = ""
 		}
-
+		return linkedEnvironmentMetadata, nil
 	}
-	return environmentDto, nil
+	return nil, fmt.Errorf("dataverse object is null or unknown")
 }
 
 func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode *string) EnvironmentSourceModel {

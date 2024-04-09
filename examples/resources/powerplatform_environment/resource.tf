@@ -11,7 +11,7 @@ provider "powerplatform" {
 }
 
 resource "powerplatform_environment" "development" {
-  display_name     = "example_environment1"
+  display_name     = "example_environment10"
   location         = "europe"
   environment_type = "Sandbox"
   dataverse = {
@@ -21,5 +21,3 @@ resource "powerplatform_environment" "development" {
     security_group_id = "00000000-0000-0000-0000-000000000000"
   }
 }
-
-
