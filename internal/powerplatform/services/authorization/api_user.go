@@ -235,7 +235,6 @@ func (client *UserClient) GetEnvironmentUrlById(ctx context.Context, environment
 }
 
 func (client *UserClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
-
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
