@@ -16,9 +16,7 @@
             "tenantId": "123",
             "userPrincipalName": "admin"
         },
-        "billingPolicy": {
-            "id": "00000000-0000-0000-0000-000000000002"
-        },
+        "billingPolicy": null,
         "lastModifiedTime": "2023-09-27T07:08:34.9205145Z",
         "provisioningState": "Succeeded",
         "creationType": "User",

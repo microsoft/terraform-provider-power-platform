@@ -68,14 +68,14 @@ type ExtendedSettingsDto struct {
 }
 
 type LinkedEnvironmentMetadataDto struct {
-	DomainName       string                            `json:"domainName,omitempty"`
-	InstanceURL      string                            `json:"instanceUrl"`
-	BaseLanguage     int                               `json:"baseLanguage"`
-	SecurityGroupId  string                            `json:"securityGroupId"`
-	ResourceId       string                            `json:"resourceId"`
-	Version          string                            `json:"version"`
-	Templates        []string                          `json:"template,omitempty"`
-	TemplateMetadata EnvironmentCreateTemplateMetadata `json:"templateMetadata,omitempty"`
+	DomainName       string                             `json:"domainName,omitempty"`
+	InstanceURL      string                             `json:"instanceUrl"`
+	BaseLanguage     int                                `json:"baseLanguage"`
+	SecurityGroupId  string                             `json:"securityGroupId"`
+	ResourceId       string                             `json:"resourceId"`
+	Version          string                             `json:"version"`
+	Templates        []string                           `json:"template,omitempty"`
+	TemplateMetadata *EnvironmentCreateTemplateMetadata `json:"templateMetadata,omitempty"`
 }
 
 type LinkedAppMetadataDto struct {
@@ -273,13 +273,13 @@ func ConvertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		var dataverseSourceModel DataverseSourceModel
 		environmentSource.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
-		var templateMetadataObject EnvironmentCreateTemplateMetadata
-		if dataverseSourceModel.TemplateMetadata.ValueString() != "" {
-			err := json.Unmarshal([]byte(dataverseSourceModel.TemplateMetadata.ValueString()), &templateMetadataObject)
-			if err != nil {
-				return nil, fmt.Errorf("error when unmarshalling template metadata %s; internal error: %v", dataverseSourceModel.TemplateMetadata.ValueString(), err)
-			}
-		}
+		// var templateMetadataObject EnvironmentCreateTemplateMetadata
+		// if dataverseSourceModel.TemplateMetadata.ValueString() != "" {
+		// 	err := json.Unmarshal([]byte(dataverseSourceModel.TemplateMetadata.ValueString()), &templateMetadataObject)
+		// 	if err != nil {
+		// 		return nil, fmt.Errorf("error when unmarshalling template metadata %s; internal error: %v", dataverseSourceModel.TemplateMetadata.ValueString(), err)
+		// 	}
+		// }
 
 		environmentDto.Properties.DataBaseType = "CommonDataService"
 		linkedMetadata, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, environmentSource.Dataverse)
@@ -305,7 +305,6 @@ func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 			}
 		}
 
-		//environmentDto.Properties.DataBaseType = "CommonDataService"
 		linkedEnvironmentMetadata := &EnvironmentCreateLinkEnvironmentMetadataDto{
 			BaseLanguage:    int(dataverseSourceModel.LanguageName.ValueInt64()),
 			SecurityGroupId: dataverseSourceModel.SecurityGroupId.ValueString(),
@@ -326,8 +325,8 @@ func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 	return nil, fmt.Errorf("dataverse object is null or unknown")
 }
 
-func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode *string) EnvironmentSourceModel {
-	model := EnvironmentSourceModel{
+func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode *string, templateMetadata *EnvironmentCreateTemplateMetadata, templates []string) (*EnvironmentSourceModel, error) {
+	model := &EnvironmentSourceModel{
 		Id:              types.StringValue(environmentDto.Name),
 		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
 		Location:        types.StringValue(environmentDto.Location),
@@ -380,6 +379,40 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		} else {
 			attrValuesProductProperties["currency_code"] = types.StringNull()
 		}
+		if environmentDto.Properties.LinkedEnvironmentMetadata.Templates != nil {
+			var templ []attr.Value
+			for _, t := range environmentDto.Properties.LinkedEnvironmentMetadata.Templates {
+				templ = append(templ, types.StringValue(t))
+			}
+			v, _ := types.ListValue(types.StringType, templ)
+
+			attrValuesProductProperties["templates"] = v
+		} else if templates != nil {
+			var templ []attr.Value
+			for _, t := range templates {
+				templ = append(templ, types.StringValue(t))
+			}
+			v, _ := types.ListValue(types.StringType, templ)
+			attrValuesProductProperties["templates"] = v
+		} else {
+			attrValuesProductProperties["templates"] = types.ListNull(types.StringType)
+		}
+
+		if environmentDto.Properties.LinkedEnvironmentMetadata.TemplateMetadata != nil && environmentDto.Properties.LinkedEnvironmentMetadata.TemplateMetadata.PostProvisioningPackages != nil {
+			b, err := json.Marshal(environmentDto.Properties.LinkedEnvironmentMetadata.TemplateMetadata)
+			if err != nil {
+				return nil, err
+			}
+			attrValuesProductProperties["template_metadata"] = types.StringValue(string(b))
+		} else if templateMetadata != nil {
+			b, err := json.Marshal(templateMetadata)
+			if err != nil {
+				return nil, err
+			}
+			attrValuesProductProperties["template_metadata"] = types.StringValue(string(b))
+		} else {
+			attrValuesProductProperties["template_metadata"] = types.StringNull()
+		}
 	} else {
 		attrValuesProductProperties["url"] = types.StringNull()
 		attrValuesProductProperties["domain"] = types.StringNull()
@@ -389,8 +422,6 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["version"] = types.StringNull()
 		attrValuesProductProperties["currency_code"] = types.StringNull()
 	}
-	attrValuesProductProperties["templates"] = types.ListNull(types.StringType)
-	attrValuesProductProperties["template_metadata"] = types.StringNull()
 	model.Dataverse = types.ObjectValueMust(attrTypesDataverseObject, attrValuesProductProperties)
-	return model
+	return model, nil
 }

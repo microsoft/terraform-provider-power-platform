@@ -237,17 +237,28 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	var currencyCode string
+	var templateMetadata *EnvironmentCreateTemplateMetadata = nil
+	var templates []string = nil
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
 		currencyCode = envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code
+
+		//because BAPI does not retrieve template info after create, we have to rewrite it
+		templateMetadata = &envToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
+		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
 
-	newPlan := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode)
+	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
+		return
+	}
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
+
 }
 
 func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -275,7 +286,24 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		currencyCode = defaultCurrency.IsoCurrencyCode
 	}
 
-	newState := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode)
+	var templateMetadata *EnvironmentCreateTemplateMetadata = nil
+	var templates []string = nil
+	if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
+		dv, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
+		if err != nil {
+			resp.Diagnostics.AddError("Error when converting dataverse source model to create link environment metadata", err.Error())
+			return
+		}
+		if dv != nil {
+			templateMetadata = &dv.TemplateMetadata
+			templates = dv.Templates
+		}
+	}
+	newState, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
+		return
+	}
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
 
@@ -393,7 +421,25 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	newPlan := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode)
+	var templateMetadata *EnvironmentCreateTemplateMetadata = nil
+	var templates []string = nil
+	if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
+		dv, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
+		if err != nil {
+			resp.Diagnostics.AddError("Error when converting dataverse source model to create link environment metadata", err.Error())
+			return
+		}
+		if dv != nil {
+			templateMetadata = &dv.TemplateMetadata
+			templates = dv.Templates
+		}
+	}
+
+	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
 

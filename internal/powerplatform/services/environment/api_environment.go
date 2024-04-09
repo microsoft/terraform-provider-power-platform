@@ -324,9 +324,9 @@ func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, 
 	}
 }
 
-func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environment EnvironmentCreateDto) (*EnvironmentDto, error) {
-	if environment.Properties.LinkedEnvironmentMetadata != nil && environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
-		err := client.ValidateEnvironmentDetails(ctx, environment.Location, environment.Properties.LinkedEnvironmentMetadata.DomainName)
+func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environmentToCreate EnvironmentCreateDto) (*EnvironmentDto, error) {
+	if environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Location != "" && environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName != "" {
+		err := client.ValidateEnvironmentDetails(ctx, environmentToCreate.Location, environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName)
 		if err != nil {
 			return nil, err
 		}
@@ -340,7 +340,7 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 	values := url.Values{}
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
-	apiResponse, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environment, []int{http.StatusAccepted, http.StatusCreated}, nil)
+	apiResponse, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environmentToCreate, []int{http.StatusAccepted, http.StatusCreated}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -376,6 +376,10 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 	env, err := client.GetEnvironment(ctx, createdEnvironmentId)
 	if err != nil {
 		return &EnvironmentDto{}, fmt.Errorf("environment '%s' not found. '%s'", createdEnvironmentId, err)
+	}
+	if env.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates != nil {
+		env.Properties.LinkedEnvironmentMetadata.Templates = environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates
+		env.Properties.LinkedEnvironmentMetadata.TemplateMetadata = &environmentToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
 	}
 	return env, err
 }

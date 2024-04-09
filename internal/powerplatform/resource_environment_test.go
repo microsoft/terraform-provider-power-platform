@@ -808,6 +808,16 @@ func TestUnitEnvironmentsResource_Validate_Create_With_D365_Template(t *testing.
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_And_Force_Recreate/get_currencies.json").String()), nil
 		})
 
+	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2022-05-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusAccepted, ""), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_With_D365_Template/get_environments.json").String()), nil
+		})
+
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
@@ -817,19 +827,41 @@ func TestUnitEnvironmentsResource_Validate_Create_With_D365_Template(t *testing.
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "PLN"
 					environment_type                          = "Sandbox"
-					domain                                    = "00000000-0000-0000-0000-000000000001"
-					security_group_id                         = "00000000-0000-0000-0000-000000000000"
-					billing_policy_id                         = "00000000-0000-0000-0000-000000000002"
-					templates = ["D365_FinOps_Finance"]
-  					template_metadata = "{\"PostProvisioningPackages\": [{ \"applicationUniqueName\": \"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\n \"parameters\": \"DevToolsEnabled=true|DemoDataEnabled=true\"\n }\n ]\n }"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+						templates = ["D365_FinOps_Finance"]
+						template_metadata = "{\"PostProvisioningPackages\":[{\"applicationUniqueName\":\"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\"parameters\":\"DevToolsEnabled=true|DemoDataEnabled=true\"}]}"
+					}
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckTypeSetElemAttr("powerplatform_environment.development", "templates.*", "D365_FinOps_Finance"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "template_metadata", "{\"PostProvisioningPackages\": [{ \"applicationUniqueName\": \"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\n \"parameters\": \"DevToolsEnabled=true|DemoDataEnabled=true\"\n }\n ]\n }"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment.development", "dataverse.templates.*", "D365_FinOps_Finance"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.template_metadata", "{\"PostProvisioningPackages\":[{\"applicationUniqueName\":\"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\"parameters\":\"DevToolsEnabled=true|DemoDataEnabled=true\"}]}"),
+				),
+			},
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+						templates = ["D365_FinOps_Finance"]
+						template_metadata = "{\"PostProvisioningPackages\":[{\"applicationUniqueName\":\"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\"parameters\":\"DevToolsEnabled=true|DemoDataEnabled=true\"}]}"
+					}
+				}`,
+
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckTypeSetElemAttr("powerplatform_environment.development", "dataverse.templates.*", "D365_FinOps_Finance"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.template_metadata", "{\"PostProvisioningPackages\":[{\"applicationUniqueName\":\"msdyn_FinanceAndOperationsProvisioningAppAnchor\",\"parameters\":\"DevToolsEnabled=true|DemoDataEnabled=true\"}]}"),
 				),
 			},
 		},
@@ -877,11 +909,13 @@ func TestUnitEnvironmentsResource_Validate_Taken_Domain_Name(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "PLN"
 					environment_type                          = "Sandbox"
-					domain                                    = "wrong domain name"
-					security_group_id                         = "00000000-0000-0000-0000-00000000000"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "wrong domain name"
+						security_group_id                         = "00000000-0000-0000-0000-00000000000"
+					}
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(),

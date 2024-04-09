@@ -185,8 +185,12 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 		} else {
 			currencyCode = defaultCurrency.IsoCurrencyCode
 		}
-		e := ConvertSourceModelFromEnvironmentDto(env, &currencyCode)
-		state.Environments = append(state.Environments, e)
+		env, err := ConvertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error when converting environment %s", env.DisplayName), err.Error())
+			return
+		}
+		state.Environments = append(state.Environments, *env)
 	}
 	state.Id = types.Int64Value(time.Now().Unix())
 
