@@ -170,6 +170,16 @@ func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req
 	plan.Name = types.StringValue(plan.Name.ValueString())
 	plan.PublisherName = types.StringValue(plan.PublisherName.ValueString())
 
+	dvExits, err := d.ApplicationClient.DataverseExists(ctx, plan.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when checking if Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), err.Error())
+	}
+
+	if !dvExits {
+		resp.Diagnostics.AddError(fmt.Sprintf("No Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), "")
+		return
+	}
+
 	applications, err := d.ApplicationClient.GetApplicationsByEnvironmentId(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())

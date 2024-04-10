@@ -25,6 +25,35 @@ type ApplicationClient struct {
 	Api *api.ApiClient
 }
 
+func (client *ApplicationClient) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
+
+	env, err := client.getEnvironment(ctx, environmentId)
+	if err != nil {
+		return false, err
+	}
+	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
+}
+
+func (client *ApplicationClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
+
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2023-06-01")
+	apiUrl.RawQuery = values.Encode()
+
+	env := EnvironmentIdDto{}
+	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	if err != nil {
+		return nil, err
+	}
+
+	return &env, nil
+}
+
 func (client *ApplicationClient) GetTenantApplications(ctx context.Context) ([]TenantApplicationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",

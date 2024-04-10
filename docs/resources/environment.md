@@ -36,7 +36,7 @@ provider "powerplatform" {
 }
 
 resource "powerplatform_environment" "development" {
-  display_name     = "example_environment10"
+  display_name     = "example_environment"
   location         = "europe"
   environment_type = "Sandbox"
   dataverse = {

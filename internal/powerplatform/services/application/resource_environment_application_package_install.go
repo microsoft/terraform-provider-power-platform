@@ -106,6 +106,16 @@ func (r *EnvironmentApplicationPackageInstallResource) Create(ctx context.Contex
 	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
 	plan.UniqueName = types.StringValue(plan.UniqueName.ValueString())
 
+	dvExits, err := r.ApplicationClient.DataverseExists(ctx, plan.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when checking if Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), err.Error())
+	}
+
+	if !dvExits {
+		resp.Diagnostics.AddError(fmt.Sprintf("No Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), "")
+		return
+	}
+
 	applicationId, err := r.ApplicationClient.InstallApplicationInEnvironment(ctx, plan.EnvironmentId.ValueString(), plan.UniqueName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
