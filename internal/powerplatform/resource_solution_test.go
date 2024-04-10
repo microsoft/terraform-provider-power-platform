@@ -433,9 +433,6 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 }
 
 func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
-
-	os.Setenv("TF_ACC", "1")
-
 	solutionName := "TerraformTestSolution"
 	solutionFileName := solutionName + "_Complex_1_1_0_0.zip"
 	rand.Seed(time.Now().UnixNano())

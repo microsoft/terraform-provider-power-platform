@@ -216,6 +216,17 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 
 	settingsToUpdate := ConvertFromEnvironmentSettingsModel(ctx, plan)
 
+	dvExits, err := r.EnvironmentSettingClient.DataverseExists(ctx, plan.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when checking if Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), err.Error())
+		return
+	}
+
+	if !dvExits {
+		resp.Diagnostics.AddError(fmt.Sprintf("No Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), "")
+		return
+	}
+
 	envSettings, err := r.EnvironmentSettingClient.UpdateEnvironmentSettings(ctx, plan.EnvironmentId.ValueString(), settingsToUpdate)
 	if err != nil {
 		resp.Diagnostics.AddError(

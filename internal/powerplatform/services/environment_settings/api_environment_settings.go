@@ -23,6 +23,15 @@ type EnvironmentSettingsClient struct {
 	Api *api.ApiClient
 }
 
+func (client *EnvironmentSettingsClient) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
+
+	env, err := client.getEnvironment(ctx, environmentId)
+	if err != nil {
+		return false, err
+	}
+	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
+}
+
 func (client *EnvironmentSettingsClient) GetEnvironmentSettings(ctx context.Context, environmentId string) (*EnvironmentSettingsDto, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
