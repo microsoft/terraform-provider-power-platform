@@ -26,6 +26,15 @@ type SolutionClient struct {
 	Api *api.ApiClient
 }
 
+func (client *SolutionClient) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
+
+	env, err := client.getEnvironment(ctx, environmentId)
+	if err != nil {
+		return false, err
+	}
+	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
+}
+
 func (client *SolutionClient) GetSolutions(ctx context.Context, environmentId string) ([]SolutionDto, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
