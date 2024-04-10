@@ -110,12 +110,12 @@ type EnvironmentCreatePropertiesDto struct {
 }
 
 type EnvironmentCreateLinkEnvironmentMetadataDto struct {
-	BaseLanguage     int                               `json:"baseLanguage"`
-	DomainName       string                            `json:"domainName,omitempty"`
-	Currency         EnvironmentCreateCurrency         `json:"currency"`
-	SecurityGroupId  string                            `json:"securityGroupId,omitempty"`
-	Templates        []string                          `json:"templates,omitempty"`
-	TemplateMetadata EnvironmentCreateTemplateMetadata `json:"templateMetadata,omitempty"`
+	BaseLanguage     int                                `json:"baseLanguage"`
+	DomainName       string                             `json:"domainName,omitempty"`
+	Currency         EnvironmentCreateCurrency          `json:"currency"`
+	SecurityGroupId  string                             `json:"securityGroupId,omitempty"`
+	Templates        []string                           `json:"templates,omitempty"`
+	TemplateMetadata *EnvironmentCreateTemplateMetadata `json:"templateMetadata,omitempty"`
 }
 type EnvironmentCreateCurrency struct {
 	Code string `json:"code"`
@@ -297,11 +297,14 @@ func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 		var dataverseSourceModel DataverseSourceModel
 		dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
-		var templateMetadataObject EnvironmentCreateTemplateMetadata
+		var templateMetadataObject *EnvironmentCreateTemplateMetadata
 		if dataverseSourceModel.TemplateMetadata.ValueString() != "" {
 			err := json.Unmarshal([]byte(dataverseSourceModel.TemplateMetadata.ValueString()), &templateMetadataObject)
 			if err != nil {
 				return nil, fmt.Errorf("error when unmarshalling template metadata %s; internal error: %v", dataverseSourceModel.TemplateMetadata.ValueString(), err)
+			}
+			if len(templateMetadataObject.PostProvisioningPackages) == 0 {
+				templateMetadataObject = nil
 			}
 		}
 
@@ -421,6 +424,8 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["language_code"] = types.Int64Null()
 		attrValuesProductProperties["version"] = types.StringNull()
 		attrValuesProductProperties["currency_code"] = types.StringNull()
+		attrValuesProductProperties["template_metadata"] = types.StringNull()
+		attrValuesProductProperties["templates"] = types.ListNull(types.StringType)
 	}
 	model.Dataverse = types.ObjectValueMust(attrTypesDataverseObject, attrValuesProductProperties)
 	return model, nil

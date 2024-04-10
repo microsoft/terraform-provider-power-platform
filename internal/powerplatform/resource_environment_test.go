@@ -29,11 +29,13 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + envName + `"
 					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "USD"
 					environment_type                          = "Sandbox"
-					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-					domain									  =  "` + envName + `"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+						domain									  =  "` + envName + `"
+					}
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -42,14 +44,14 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 
 					// Verify the first power app to ensure all attributes are set
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", envName),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", envName),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", envName),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1033"),
-					resource.TestMatchResourceAttr("powerplatform_environment.development", "organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "00000000-0000-0000-0000-000000000000"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", "https://"+envName+".crm4.dynamics.com/"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.language_code", "1033"),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", "00000000-0000-0000-0000-000000000000"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+envName+".crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
 				),
 			},
@@ -58,17 +60,19 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + envName + `"
 					domain									  =  "` + envNameNew + `"
-					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "USD"
 					environment_type                          = "Sandbox"
-					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						location                                  = "europe"
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", envName),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", envNameNew),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", "https://"+envNameNew+".crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", envNameNew),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+envNameNew+".crm4.dynamics.com/"),
 				),
 			},
 		},
@@ -87,11 +91,13 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + envName + `"
 					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "USD"
 					environment_type                          = "Sandbox"
-					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-					domain									  =  "` + envName + `"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+						domain									  =  "` + envName + `"
+					}
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -99,14 +105,14 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_type", regexp.MustCompile(`^(Default|Sandbox|Developer)$`)),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1033"),
-					resource.TestMatchResourceAttr("powerplatform_environment.development", "organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-					resource.TestMatchResourceAttr("powerplatform_environment.development", "security_group_id", regexp.MustCompile(powerplatform_helpers.GuidOrEmptyValueRegex)),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", envName),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", "https://"+envName+".crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.language_code", "1033"),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", regexp.MustCompile(powerplatform_helpers.GuidOrEmptyValueRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", envName),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+envName+".crm4.dynamics.com/"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", envName),
-					resource.TestMatchResourceAttr("powerplatform_environment.development", "version", regexp.MustCompile(powerplatform_helpers.VersionRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.version", regexp.MustCompile(powerplatform_helpers.VersionRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
 					// resource.TestMatchResourceAttr("powerplatform_environment.development", "templates", regexp.MustCompile(`D365_FinOps_Finance$`)),
 					// resource.TestMatchResourceAttr("powerplatform_environment.development", "template_metadata", regexp.MustCompile(`{"PostProvisioningPackages": [{ "applicationUniqueName": "msdyn_FinanceAndOperationsProvisioningAppAnchor",\n "parameters": "DevToolsEnabled=true\|DemoDataEnabled=true"\n }\n ]\n }`)),
@@ -203,17 +209,18 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "PLN"
 					environment_type                          = "Sandbox"
-					domain									  = "00000000-0000-0000-0000-000000000001"
-					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-	
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain									  = "00000000-0000-0000-0000-000000000001"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "PLN"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.currency_code", "PLN"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
 				),
 			},
@@ -222,16 +229,18 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "unitedstates"
-					language_code                             = "1033"
-					currency_code                             = "PLN"
 					environment_type                          = "Sandbox"
-					domain									  = "00000000-0000-0000-0000-000000000002"
-					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain									  = "00000000-0000-0000-0000-000000000002"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000002"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "unitedstates"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "PLN"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.currency_code", "PLN"),
 				),
 			},
 			{
@@ -239,15 +248,17 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "unitedstates"
-					language_code                             = "1033"
-					currency_code                             = "EUR"
 					environment_type                          = "Sandbox"
-					domain									  = "00000000-0000-0000-0000-000000000003"
-					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "EUR"
+						domain									  = "00000000-0000-0000-0000-000000000003"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000003"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.currency_code", "EUR"),
 				),
 			},
 			{
@@ -255,16 +266,18 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "unitedstates"
-					language_code                             = "1033"
-					currency_code                             = "EUR"
 					environment_type                          = "Trial"
-					domain									  = "00000000-0000-0000-0000-000000000004"
-					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "EUR"
+						domain									  = "00000000-0000-0000-0000-000000000004"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000004"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Trial"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.currency_code", "EUR"),
 				),
 			},
 			{
@@ -272,16 +285,18 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "unitedstates"
-					language_code                             = "1031"
-					currency_code                             = "EUR"
 					environment_type                          = "Trial"
-					domain									  = "00000000-0000-0000-0000-000000000005"
-					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code                             = "1031"
+						currency_code                             = "EUR"
+						domain									  = "00000000-0000-0000-0000-000000000005"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000005"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1031"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "EUR"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.language_code", "1031"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.currency_code", "EUR"),
 				),
 			},
 		},
@@ -367,17 +382,19 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "PLN"
 					environment_type                          = "Sandbox"
-					domain									  = "00000000-0000-0000-0000-000000000001"
-					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain									  = "00000000-0000-0000-0000-000000000001"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example1"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "00000000-0000-0000-0000-000000000001"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "00000000-0000-0000-0000-000000000000"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", "00000000-0000-0000-0000-000000000000"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
 				),
 			},
@@ -386,17 +403,19 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example123"
 					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "PLN"
 					environment_type                          = "Sandbox"
-					domain									  = "00000000-0000-0000-0000-000000000001"
-					security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain									  = "00000000-0000-0000-0000-000000000001"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "Example123"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "00000000-0000-0000-0000-000000000001"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "00000000-0000-0000-0000-000000000000"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", "00000000-0000-0000-0000-000000000000"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
 				),
 			},
@@ -469,25 +488,27 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "PLN"
 					environment_type                          = "Sandbox"
-					domain                                    = "00000000-0000-0000-0000-000000000001"
-					security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "displayname"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "url", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "domain", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "language_code", "1033"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "currency_code", "PLN"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "organization_id", "orgid"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "security_group_id", "00000000-0000-0000-0000-000000000000"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "version", "9.2.23092.00206"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.language_code", "1033"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.currency_code", "PLN"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.organization_id", "orgid"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", "00000000-0000-0000-0000-000000000000"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.version", "9.2.23092.00206"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
 				),
 			},
@@ -560,12 +581,14 @@ func TestUnitEnvironmentsResource_Validate_Create_With_Billing_Policy(t *testing
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "PLN"
-					environment_type                          = "Sandbox"
-					domain                                    = "00000000-0000-0000-0000-000000000001"
-					security_group_id                         = "00000000-0000-0000-0000-000000000000"
 					billing_policy_id                         = "00000000-0000-0000-0000-000000000002"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						currency_code                             = "PLN"
+						language_code                             = "1033"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
@@ -683,11 +706,13 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "PLN"
 					environment_type                          = "Sandbox"
-					domain                                    = "00000000-0000-0000-0000-000000000001"
-					security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
@@ -700,12 +725,14 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "PLN"
 					environment_type                          = "Sandbox"
-					domain                                    = "00000000-0000-0000-0000-000000000001"
-					security_group_id                         = "00000000-0000-0000-0000-000000000000"
 					billing_policy_id                         = "00000000-0000-0000-0000-000000000001"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
@@ -718,12 +745,14 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "PLN"
 					environment_type                          = "Sandbox"
-					domain                                    = "00000000-0000-0000-0000-000000000001"
-					security_group_id                         = "00000000-0000-0000-0000-000000000000"
 					billing_policy_id                         = "00000000-0000-0000-0000-000000000002"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
@@ -736,12 +765,14 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
-					language_code                             = "1033"
-					currency_code                             = "PLN"
-					environment_type                          = "Sandbox"
-					domain                                    = "00000000-0000-0000-0000-000000000001"
-					security_group_id                         = "00000000-0000-0000-0000-000000000000"
 					billing_policy_id                         = ""
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					}
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(

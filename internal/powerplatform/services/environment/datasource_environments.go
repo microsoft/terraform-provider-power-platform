@@ -139,6 +139,17 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 									MarkdownDescription: "Unique currency name (EUR, USE, GBP etc.)",
 									Computed:            true,
 								},
+								"templates": schema.ListAttribute{
+									Description:         "The selected instance provisioning template (if any)",
+									MarkdownDescription: "The selected instance provisioning template (if any)",
+									Computed:            true,
+									ElementType:         types.StringType,
+								},
+								"template_metadata": schema.StringAttribute{
+									Description:         "Additional D365 environment template metadata (if any)",
+									MarkdownDescription: "Additional D365 environment template metadata (if any)",
+									Computed:            true,
+								},
 							},
 						},
 					},

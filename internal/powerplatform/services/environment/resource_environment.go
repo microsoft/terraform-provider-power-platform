@@ -243,7 +243,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		currencyCode = envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code
 
 		//because BAPI does not retrieve template info after create, we have to rewrite it
-		templateMetadata = &envToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
+		templateMetadata = envToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
 		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
 
@@ -282,6 +282,11 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	defaultCurrency, err := r.EnvironmentClient.GetDefaultCurrencyForEnvironment(ctx, envDto.Name)
 	if err != nil {
 		resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", envDto.Name), err.Error())
+		if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
+			var dataverseSourceModel DataverseSourceModel
+			state.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+			currencyCode = dataverseSourceModel.CurrencyCode.ValueString()
+		}
 	} else {
 		currencyCode = defaultCurrency.IsoCurrencyCode
 	}
@@ -295,7 +300,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 			return
 		}
 		if dv != nil {
-			templateMetadata = &dv.TemplateMetadata
+			templateMetadata = dv.TemplateMetadata
 			templates = dv.Templates
 		}
 	}
@@ -430,7 +435,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 		if dv != nil {
-			templateMetadata = &dv.TemplateMetadata
+			templateMetadata = dv.TemplateMetadata
 			templates = dv.Templates
 		}
 	}

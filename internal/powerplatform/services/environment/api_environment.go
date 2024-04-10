@@ -379,7 +379,7 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 	}
 	if env.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates != nil {
 		env.Properties.LinkedEnvironmentMetadata.Templates = environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates
-		env.Properties.LinkedEnvironmentMetadata.TemplateMetadata = &environmentToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
+		env.Properties.LinkedEnvironmentMetadata.TemplateMetadata = environmentToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
 	}
 	return env, err
 }
