@@ -25,10 +25,12 @@ func TestAccManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name     = "example_managed_environment"
 					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
 					environment_type = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code    = "1033"
+						currency_code    = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -71,10 +73,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name     = "example_managed_environment"
 					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
 					environment_type = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code    = "1033"
+						currency_code    = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -98,10 +102,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name     = "example_managed_environment"
 					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
 					environment_type = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code    = "1033"
+						currency_code    = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -126,10 +132,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name     = "example_managed_environment"
 					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
 					environment_type = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code    = "1033"
+						currency_code    = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -154,10 +162,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name     = "example_managed_environment"
 					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
 					environment_type = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code    = "1033"
+						currency_code    = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -182,10 +192,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name     = "example_managed_environment"
 					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
 					environment_type = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code    = "1033"
+						currency_code    = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -210,10 +222,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name     = "example_managed_environment"
 					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
 					environment_type = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code    = "1033"
+						currency_code    = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -238,10 +252,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name     = "example_managed_environment"
 					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
 					environment_type = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code    = "1033"
+						currency_code    = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -266,10 +282,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name     = "example_managed_environment"
 					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
 					environment_type = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code    = "1033"
+						currency_code    = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -293,11 +311,13 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "example_managed_environment"
-					location         = "europe"
-					language_code    = "1033"
-					currency_code    = "USD"
-					environment_type = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						location         = "europe"
+						language_code    = "1033"
+						currency_code    = "USD"
+						environment_type = "Sandbox"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {

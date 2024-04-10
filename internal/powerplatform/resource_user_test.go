@@ -3,6 +3,7 @@ package powerplatform
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"regexp"
 	"testing"
 
@@ -13,6 +14,9 @@ import (
 )
 
 func TestAccUserResource_Validate_Create(t *testing.T) {
+
+	os.Setenv("TF_ACC", "1")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
@@ -61,10 +65,12 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 				resource "powerplatform_environment" "dataverse_user_example" {
 					display_name      = "TestAccUserResource_Validate_Create"
 					location          = "europe"
-					language_code     = "1033"
-					currency_code     = "USD"
 					environment_type  = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
 				}
 				  
 				resource "powerplatform_user" "new_user" {
