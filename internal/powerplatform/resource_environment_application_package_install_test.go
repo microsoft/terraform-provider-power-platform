@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccEnvironmentApplicationPackageInstallResource_Validate_Install(t *testing.T) {
@@ -59,10 +60,18 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
+	mock_helpers.ActivateEnvironmentHttpMocks()
+
 	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
 			id := httpmock.MustGetSubmatch(req, 1)
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/environment/tests/resource/Validate_Create/get_environment_%s.json", id)).String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/environment/tests/resource/Validate_Install/get_environment_%s.json", id)).String()), nil
+		},
+	)
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusAccepted, ""), nil
 		},
 	)
 
@@ -72,7 +81,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 		},
 	)
 
-	httpmock.RegisterResponder("POST", "https://api.powerplatform.com/appmanagement/environments/00000000-0000-0000-0000-000000000000/applicationPackages/ProcessMiningAnchor/install?api-version=2022-03-01-preview",
+	httpmock.RegisterResponder("POST", "https://api.powerplatform.com/appmanagement/environments/00000000-0000-0000-0000-000000000001/applicationPackages/ProcessMiningAnchor/install?api-version=2022-03-01-preview",
 		func(req *http.Request) (*http.Response, error) {
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Operation-Location", "https://api.powerplatform.com/appmanagement/environments/402c2b45-f5dc-e561-869f-368544f94a13/operations/475af49d-9bca-437f-8be1-9e467f44be8a?api-version=1")
@@ -80,13 +89,56 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 		},
 	)
 
-	httpmock.RegisterResponder("POST", "https://api.powerplatform.com/appmanagement/environments/00000000-0000-0000-0000-000000000000/applicationPackages/MicrosoftFormsPro/install?api-version=2022-03-01-preview",
+	httpmock.RegisterResponder("POST", "https://api.powerplatform.com/appmanagement/environments/00000000-0000-0000-0000-000000000001/applicationPackages/MicrosoftFormsPro/install?api-version=2022-03-01-preview",
 		func(req *http.Request) (*http.Response, error) {
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Operation-Location", "https://api.powerplatform.com/appmanagement/environments/402c2b45-f5dc-e561-869f-368544f94a13/operations/475af49d-9bca-437f-8be1-9e467f44be8a?api-version=1")
 			return resp, nil
 		},
 	)
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/validateEnvironmentDetails?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/resource/Validate_Install/get_lifecycle_delete.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/application/tests/resource/Validate_Install/get_environment_%s.json", id)).String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/resource/Validate_Install/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/resource/Validate_Install/get_locations.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentLanguages?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/resource/Validate_Install/get_languages.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentCurrencies?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/resource/Validate_Install/get_currencies.json").String()), nil
+		})
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
@@ -94,8 +146,20 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 		Steps: []resource.TestStep{
 			{
 				Config: TestsProviderConfig + `
+				resource "powerplatform_environment" "env" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                           = "1033"
+						currency_code                           = "PLN"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+						
+					}
+				}
+
 				resource "powerplatform_environment_application_package_install" "development" {
-					environment_id   = "00000000-0000-0000-0000-000000000000"
+					environment_id   = powerplatform_environment.env.id
 					unique_name      = "ProcessMiningAnchor"
 				}`,
 
@@ -107,8 +171,19 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 			},
 			{
 				Config: TestsProviderConfig + `
+				resource "powerplatform_environment" "env" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                           = "1033"
+						currency_code                           = "PLN"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
 				resource "powerplatform_environment_application_package_install" "development" {
-					environment_id   = "00000000-0000-0000-0000-000000000000"
+					environment_id   =  powerplatform_environment.env.id
 					unique_name      = "MicrosoftFormsPro"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -214,7 +289,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_No_Dataverse(
 					unique_name      = "ProcessMiningAnchor"
 				}`,
 
-				ExpectError: regexp.MustCompile("No Dataverse exists in environment '00000000-0000-0000-0000-000000000001'"),
+				ExpectError: regexp.MustCompile("No Dataverse exists in environment"),
 				Check:       resource.ComposeTestCheckFunc(),
 			},
 		},
