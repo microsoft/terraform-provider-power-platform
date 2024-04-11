@@ -32,6 +32,7 @@ func (client *EnvironmentSettingsClient) DataverseExists(ctx context.Context, en
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
+
 func (client *EnvironmentSettingsClient) GetEnvironmentSettings(ctx context.Context, environmentId string) (*EnvironmentSettingsDto, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
