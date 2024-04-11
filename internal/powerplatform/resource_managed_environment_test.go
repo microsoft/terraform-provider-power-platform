@@ -6,7 +6,6 @@ package powerplatform
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"regexp"
 	"testing"
 
@@ -578,9 +577,6 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 }
 
 func TestAccManagedEnvironmentsResource_Validate_No_Dataverse(t *testing.T) {
-
-	os.Setenv("TF_ACC", "1")
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,

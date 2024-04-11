@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
@@ -187,6 +188,8 @@ func TestUnitTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T)
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
+	mock_helpers.ActivateEnvironmentHttpMocks()
+
 	var getOrgInx = 0
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
@@ -203,11 +206,6 @@ func TestUnitTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T)
 	httpmock.RegisterResponder("PATCH", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations%2843f51247-aee6-ee11-9048-000d3a688755%29`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
-		})
-
-	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/validateEnvironmentDetails?api-version=2021-04-01",
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
@@ -238,21 +236,6 @@ func TestUnitTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T)
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
-		})
-
-	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01",
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment_settings/tests/resources/Validate_No_Dataverse/get_locations.json").String()), nil
-		})
-
-	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentLanguages?api-version=2023-06-01",
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment_settings/tests/resources/Validate_No_Dataverse/get_languages.json").String()), nil
-		})
-
-	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentCurrencies?api-version=2023-06-01",
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment_settings/tests/resources/Validate_No_Dataverse/get_currencies.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{

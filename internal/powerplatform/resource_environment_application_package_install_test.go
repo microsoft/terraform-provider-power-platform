@@ -69,12 +69,6 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 		},
 	)
 
-	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusAccepted, ""), nil
-		},
-	)
-
 	httpmock.RegisterResponder("GET", "https://api.powerplatform.com/appmanagement/environments/402c2b45-f5dc-e561-869f-368544f94a13/operations/475af49d-9bca-437f-8be1-9e467f44be8a?api-version=1",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/resource/Validate_Install/get_operation.json").String()), nil
@@ -96,11 +90,6 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 			return resp, nil
 		},
 	)
-
-	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/validateEnvironmentDetails?api-version=2021-04-01",
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, ""), nil
-		})
 
 	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
@@ -125,19 +114,11 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 			return resp, nil
 		})
 
-	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01",
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/resource/Validate_Install/get_locations.json").String()), nil
-		})
-
-	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentLanguages?api-version=2023-06-01",
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/resource/Validate_Install/get_languages.json").String()), nil
-		})
-
-	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentCurrencies?api-version=2023-06-01",
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/resource/Validate_Install/get_currencies.json").String()), nil
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -154,7 +135,6 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 						language_code                           = "1033"
 						currency_code                           = "PLN"
 						security_group_id = "00000000-0000-0000-0000-000000000000"
-						
 					}
 				}
 
@@ -200,6 +180,8 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_No_Dataverse(
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
+	mock_helpers.ActivateEnvironmentHttpMocks()
+
 	httpmock.RegisterResponder("GET", "https://api.powerplatform.com/appmanagement/environments/402c2b45-f5dc-e561-869f-368544f94a13/operations/475af49d-9bca-437f-8be1-9e467f44be8a?api-version=1",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/resource/Validate_No_Dataverse/get_operation.json").String()), nil
@@ -221,11 +203,6 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_No_Dataverse(
 			return resp, nil
 		},
 	)
-
-	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/validateEnvironmentDetails?api-version=2021-04-01",
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, ""), nil
-		})
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
@@ -255,21 +232,6 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_No_Dataverse(
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
-		})
-
-	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations?api-version=2023-06-01",
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/resource/Validate_No_Dataverse/get_locations.json").String()), nil
-		})
-
-	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentLanguages?api-version=2023-06-01",
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/resource/Validate_No_Dataverse/get_languages.json").String()), nil
-		})
-
-	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/locations/europe/environmentCurrencies?api-version=2023-06-01",
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/resource/Validate_No_Dataverse/get_currencies.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
