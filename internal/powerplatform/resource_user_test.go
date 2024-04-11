@@ -61,10 +61,12 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 				resource "powerplatform_environment" "dataverse_user_example" {
 					display_name      = "TestAccUserResource_Validate_Create"
 					location          = "europe"
-					language_code     = "1033"
-					currency_code     = "USD"
 					environment_type  = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
 				}
 				  
 				resource "powerplatform_user" "new_user" {
@@ -153,6 +155,61 @@ func TestUnitUserResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "1"),
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.0", "d58407f2-48d5-e711-a82c-000d3a37c848"),
 				),
+			},
+		},
+	})
+
+}
+
+func TestUnitUserResource_Validate_No_Dataverse(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mock_helpers.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/addUser?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusConflict, "{\"error\":{\"code\":\"UnlinkedEnvironmentForbiddenOperation\",\"message\":\"The environment '00000000-0000-0000-0000-000000000001' is not linked to a new CDS 2.0 instance. The following operation is forbidden for unlinked environments: 'POST/PROVIDERS/MICROSOFT.BUSINESSAPPPLATFORM/SCOPES/ADMIN/ENVIRONMENTS/ADDUSER'\"}}")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/authorization/tests/resource/user/Validate_No_Dataverse/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/systemusers?%24expand=systemuserroles_association%28%24select%3Droleid%2Cname%2Cismanaged%2C_businessunitid_value%29&%24filter=azureactivedirectoryobjectid+eq+00000000-0000-0000-0000-000000000002",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/authorization/tests/resource/user/Validate_No_Dataverse/get_systemusers.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/systemusers%2800000000-0000-0000-0000-000000000002%29/systemuserroles_association/$ref",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusNoContent, "")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/systemusers%2800000000-0000-0000-0000-000000000002%29?%24expand=systemuserroles_association%28%24select%3Droleid%2Cname%2Cismanaged%2C_businessunitid_value%29",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/authorization/tests/resource/user/Validate_No_Dataverse/get_systemuser_00000000-0000-0000-0000-000000000002.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_user" "new_user" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					security_roles = [
+					  "d58407f2-48d5-e711-a82c-000d3a37c848",
+					]
+					aad_id         = "00000000-0000-0000-0000-000000000002"
+					disable_delete = false
+				}`,
+				ExpectError: regexp.MustCompile("UnlinkedEnvironmentForbiddenOperation"),
+				Check:       resource.ComposeTestCheckFunc(),
 			},
 		},
 	})

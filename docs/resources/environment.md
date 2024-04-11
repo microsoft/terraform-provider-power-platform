@@ -36,13 +36,15 @@ provider "powerplatform" {
 }
 
 resource "powerplatform_environment" "development" {
-  display_name      = "example_environment"
-  location          = "europe"
-  language_code     = "1033"
-  currency_code     = "USD"
-  environment_type  = "Sandbox"
-  domain            = "mydomain"
-  security_group_id = "00000000-0000-0000-0000-000000000000"
+  display_name     = "example_environment"
+  location         = "europe"
+  environment_type = "Sandbox"
+  dataverse = {
+    language_code     = "1033"
+    currency_code     = "USD"
+    domain            = "mydomain"
+    security_group_id = "00000000-0000-0000-0000-000000000000"
+  }
 }
 ```
 
@@ -51,28 +53,42 @@ resource "powerplatform_environment" "development" {
 
 ### Required
 
-- `currency_code` (String) Unique currency name
 - `display_name` (String) Display name
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
-- `language_code` (Number) Unique language LCID (integer)
 - `location` (String) Location of the environment (europe, unitedstates etc.)
-- `security_group_id` (String) Unique security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`
 
 ### Optional
 
 - `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
-- `domain` (String) Domain name of the environment
-- `template_metadata` (String) Additional D365 environment template metadata (if any)
-- `templates` (List of String) The selected instance provisioning template (if any)
+- `dataverse` (Attributes) Dataverse environment details (see [below for nested schema](#nestedatt--dataverse))
 
 ### Read-Only
 
 - `id` (String) Unique environment id (guid)
+
+<a id="nestedatt--dataverse"></a>
+### Nested Schema for `dataverse`
+
+Required:
+
+- `currency_code` (String) Unique currency name
+- `language_code` (Number) Unique language LCID (integer)
+- `security_group_id` (String) Unique security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`
+
+Optional:
+
+- `domain` (String) Domain name of the environment
+- `template_metadata` (String) Additional D365 environment template metadata (if any)
+- `templates` (List of String) The selected instance provisioning template (if any)
+
+Read-Only:
+
 - `linked_app_id` (String) The GUID of the linked D365 application
 - `linked_app_type` (String) The type of the linked D365 application
 - `linked_app_url` (String) The URL of the linked D365 application
 - `organization_id` (String) Unique organization id (guid)
 - `url` (String) Url of the environment
 - `version` (String) Version of the environment
+
 
 

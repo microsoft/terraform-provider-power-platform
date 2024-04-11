@@ -121,3 +121,17 @@ type EnvironmentApplicationLifecycleErrorDto struct {
 	StatusCode int    `json:"statusCode"`
 	Source     string `json:"source"`
 }
+
+type EnvironmentIdDto struct {
+	Id         string                     `json:"id"`
+	Name       string                     `json:"name"`
+	Properties EnvironmentIdPropertiesDto `json:"properties"`
+}
+
+type EnvironmentIdPropertiesDto struct {
+	LinkedEnvironmentMetadata LinkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
+}
+
+type LinkedEnvironmentIdMetadataDto struct {
+	InstanceURL string
+}

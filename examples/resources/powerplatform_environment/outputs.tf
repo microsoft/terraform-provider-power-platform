@@ -10,5 +10,5 @@ output "id" {
 
 output "url" {
   description = "URL of the environment"
-  value       = powerplatform_environment.development.url
+  value       = powerplatform_environment.development.dataverse.url
 }

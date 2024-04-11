@@ -4,6 +4,7 @@
 package powerplatform
 
 import (
+	"fmt"
 	"net/http"
 	"regexp"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccApplicationsDataSource_Validate_Read(t *testing.T) {
@@ -23,10 +25,12 @@ func TestAccApplicationsDataSource_Validate_Read(t *testing.T) {
 				resource "powerplatform_environment" "env" {
 					display_name      = "env_application_acceptance_test"
 					location          = "europe"
-					language_code     = "1033"
-					currency_code     = "USD"
 					environment_type  = "Sandbox"
-					security_group_id = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
 				}
 
 				data "powerplatform_environment_application_packages" "all_applications" {
@@ -57,9 +61,42 @@ func TestUnitApplicationsDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
+	mock_helpers.ActivateEnvironmentHttpMocks()
+
 	httpmock.RegisterResponder("GET", `https://api.powerplatform.com/appmanagement/environments/00000000-0000-0000-0000-000000000001/applicationPackages?api-version=2022-03-01-preview`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/datasource/environment_application_packages/Validate_Read/get_applications.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/datasource/environment_application_packages/Validate_Read/get_lifecycle_delete.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+
+			id := httpmock.MustGetSubmatch(req, 1)
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/application/tests/datasource/environment_application_packages/Validate_Read/get_environment_%s.json", id)).String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/datasource/environment_application_packages/Validate_Read/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -68,8 +105,20 @@ func TestUnitApplicationsDataSource_Validate_Read(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: TestsProviderConfig + `
+				resource "powerplatform_environment" "env" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
 				data "powerplatform_environment_application_packages" "all_applications" {
-					environment_id = "00000000-0000-0000-0000-000000000001"
+					environment_id = powerplatform_environment.env.id
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -83,6 +132,70 @@ func TestUnitApplicationsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_environment_application_packages.all_applications", "applications.1.application_name", "Intelligent Order Management Portal"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_application_packages.all_applications", "applications.1.unique_name", "msdyn_IOMOrderReturnsPortalAnchor"),
 				),
+			},
+		},
+	})
+}
+
+func TestUnitApplicationsDataSource_Validate_No_Dataverse(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mock_helpers.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", `https://api.powerplatform.com/appmanagement/environments/00000000-0000-0000-0000-000000000001/applicationPackages?api-version=2022-03-01-preview`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/datasource/environment_application_packages/Validate_No_Dataverse/get_applications.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/datasource/environment_application_packages/Validate_No_Dataverse/get_lifecycle_delete.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+
+			id := httpmock.MustGetSubmatch(req, 1)
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/application/tests/datasource/environment_application_packages/Validate_No_Dataverse/get_environment_%s.json", id)).String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/application/tests/datasource/environment_application_packages/Validate_No_Dataverse/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_environment" "env" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+				}
+
+				data "powerplatform_environment_application_packages" "all_applications" {
+					environment_id = powerplatform_environment.env.id
+				}`,
+				ExpectError: regexp.MustCompile("No Dataverse exists in environment"),
+				Check:       resource.ComposeAggregateTestCheckFunc(),
 			},
 		},
 	})
