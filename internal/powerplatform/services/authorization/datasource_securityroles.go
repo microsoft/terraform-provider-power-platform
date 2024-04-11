@@ -130,6 +130,15 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadR
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}
+	dvExits, err := d.UserClient.DataverseExists(ctx, state.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when checking if Dataverse exists in environment '%s'", state.EnvironmentId.ValueString()), err.Error())
+	}
+
+	if !dvExits {
+		resp.Diagnostics.AddError(fmt.Sprintf("No Dataverse exists in environment '%s'", state.EnvironmentId.ValueString()), "")
+		return
+	}
 
 	roles, err := d.UserClient.GetSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.BusinessUnitId.ValueString())
 	if err != nil {
