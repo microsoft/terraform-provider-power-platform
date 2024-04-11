@@ -165,6 +165,16 @@ func (d *SolutionsDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SOLUTIONS START: %s", d.ProviderTypeName))
 
+	dvExits, err := d.SolutionClient.DataverseExists(ctx, state.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when checking if Dataverse exists in environment '%s'", state.EnvironmentId.ValueString()), err.Error())
+	}
+
+	if !dvExits {
+		resp.Diagnostics.AddError(fmt.Sprintf("No Dataverse exists in environment '%s'", state.EnvironmentId.ValueString()), "")
+		return
+	}
+
 	solutions, err := d.SolutionClient.GetSolutions(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
