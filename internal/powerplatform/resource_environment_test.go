@@ -840,13 +840,13 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Create_No_Dataverse/get_lifecycle_delete.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_No_Dataverse/get_lifecycle_delete.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
 			id := httpmock.MustGetSubmatch(req, 1)
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/environment/tests/resource/Create_No_Dataverse/get_environment_%s.json", id)).String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/environment/tests/resource/Validate_Create_No_Dataverse/get_environment_%s.json", id)).String()), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
@@ -858,7 +858,7 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Create_No_Dataverse/get_lifecycle.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Create_No_Dataverse/get_lifecycle.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
@@ -883,12 +883,13 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "displayname"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", "00000000-0000-0000-0000-000000000001"),
+
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
 
+					resource.TestCheckNoResourceAttr("powerplatform_environment.development", "dataverse.url"),
+					resource.TestCheckNoResourceAttr("powerplatform_environment.development", "dataverse.domain"),
 					resource.TestCheckNoResourceAttr("powerplatform_environment.development", "dataverse.language_code"),
 					resource.TestCheckNoResourceAttr("powerplatform_environment.development", "dataverse.currency_code"),
 					resource.TestCheckNoResourceAttr("powerplatform_environment.development", "dataverse.organization_id"),
