@@ -38,6 +38,7 @@ type DataRecordResourceModel struct {
 	Id            types.String  `tfsdk:"id"`
 	EnvironmentId types.String  `tfsdk:"environment_id"`
 	TableName     types.String  `tfsdk:"table_name"`
+	RecordId      types.String  `tfsdk:"record_id"`
 	Columns       types.Dynamic `tfsdk:"columns"`
 }
 
@@ -68,6 +69,14 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"table_name": schema.StringAttribute{
 				Description: "Name of the data record table",
 				Required:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"record_id": schema.StringAttribute{
+				Description: "Id of the record",
+				Optional:    true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -115,27 +124,22 @@ func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequ
 	plan.Id = types.StringValue(strconv.FormatInt(time.Now().Unix(), 10))
 	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
 	plan.TableName = types.StringValue(plan.TableName.ValueString())
+	plan.RecordId = types.StringValue(plan.RecordId.ValueString())
 	plan.Columns = types.DynamicValue(plan.Columns)
 
-	postBody, err := json.Marshal(plan.Columns.String())
-	if err != nil {
-		return
-	}
+	var mapColumns map[string]interface{}
 
-	unquotedPostBody, _ := strconv.Unquote(string(postBody))
+	jsonColumns, _ := json.Marshal(plan.Columns.String())
+	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
+	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
 
-	var jsonData interface{}
-	json.Unmarshal([]byte(unquotedPostBody), &jsonData)
-
-	dataMap := jsonData.(map[string]interface{})
-
-	_, err = r.DataRecordClient.ApplyDataRecords(ctx, plan.EnvironmentId.ValueString(), plan.TableName.ValueString(), dataMap)
+	dr, err := r.DataRecordClient.ApplyDataRecords(ctx, plan.EnvironmentId.ValueString(), plan.TableName.ValueString(), plan.RecordId.ValueString(), mapColumns)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
 		return
 	}
 
-	plan.Id = types.StringValue("")
+	plan.Id = types.StringValue(dr.Id)
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.TableName.ValueString()))
 

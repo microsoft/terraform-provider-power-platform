@@ -38,6 +38,10 @@ type LinkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }
 
+type RelationApiBody struct {
+	OdataID string `json:"@odata.id"`
+}
+
 func (client *DataRecordClient) GetEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
@@ -88,26 +92,66 @@ func (client *DataRecordClient) GetDataRecords(ctx context.Context) (DataRecordD
 	return result, nil
 }
 
-func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmentId string, tableName string, records map[string]interface{}) (DataRecordDto, error) {
+func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmentId string, tableName string, recordId string, columns map[string]interface{}) (DataRecordDto, error) {
 	result := DataRecordDto{}
 
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
 		return result, err
 	}
+
+	method := "POST"
+	path := fmt.Sprintf("/api/data/v9.2/%s", tableName)
+
+	if recordId != "" {
+		method = "PATCH"
+		path = fmt.Sprintf("%s(%s)", path, recordId)
+	}
+
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   strings.TrimPrefix(environmentUrl, "https://"),
-		Path:   fmt.Sprintf("/api/data/v9.2/%s", tableName),
+		Path:   path,
 	}
 
-	response, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, records, []int{http.StatusOK, http.StatusNoContent}, nil)
+	relations := make(map[string]interface{}, 0)
+
+	for key, value := range columns {
+		if nestedMap, ok := value.(map[string]interface{}); ok {
+			delete(columns, key)
+			columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("/%s(%s)", nestedMap["entity_logical_name"], nestedMap["data_record_id"])
+		}
+		if nestedMapList, ok := value.([]interface{}); ok {
+			delete(columns, key)
+			relations[key] = nestedMapList
+		}
+	}
+
+	response, err := client.Api.Execute(ctx, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
 	if err != nil {
 		return result, err
 	}
 
 	if response.BodyAsBytes != nil {
 		json.Unmarshal(response.BodyAsBytes, &result)
+	}
+
+	for key, value := range relations {
+		if nestedMapList, ok := value.([]interface{}); ok {
+			apiUrl := &url.URL{
+				Scheme: "https",
+				Host:   strings.TrimPrefix(environmentUrl, "https://"),
+				Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)/%s/$ref", tableName, result.Id, key),
+			}
+
+			for _, nestedItem := range nestedMapList {
+				nestedMap := nestedItem.(map[string]interface{})
+				relation := RelationApiBody{
+					OdataID: fmt.Sprintf("/%s(%s)", nestedMap["entity_logical_name"], nestedMap["data_record_id"]),
+				}
+				client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
+			}
+		}
 	}
 
 	return result, nil
