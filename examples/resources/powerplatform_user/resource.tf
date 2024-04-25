@@ -43,12 +43,14 @@ resource "azuread_user" "test_user" {
 }
 
 resource "powerplatform_environment" "dataverse_user_example" {
-  display_name      = "user_example"
-  location          = "europe"
-  language_code     = "1033"
-  currency_code     = "USD"
-  environment_type  = "Sandbox"
-  security_group_id = "00000000-0000-0000-0000-000000000000"
+  display_name     = "user_example"
+  location         = "europe"
+  environment_type = "Sandbox"
+  dataverse = {
+    language_code     = "1033"
+    currency_code     = "USD"
+    security_group_id = "00000000-0000-0000-0000-000000000000"
+  }
 }
 
 resource "powerplatform_user" "new_user" {

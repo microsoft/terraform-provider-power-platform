@@ -3,18 +3,17 @@
 page_title: "powerplatform_user Resource - powerplatform"
 subcategory: ""
 description: |-
-  This resource associates a user to a Power Platform environment.
-                                Additional Resources:\n\n
-                          \n\n * Add users to an environment https://learn.microsoft.com/en-us/power-platform/admin/add-users-to-environment"
-                          \n\n * Overview of User Security https://learn.microsoft.com/en-us/power-platform/admin/grant-users-access
+  This resource associates a user to a Power Platform environment. Additional Resources:
+  Add users to an environment https://learn.microsoft.com/en-us/power-platform/admin/add-users-to-environmentOverview of User Security https://learn.microsoft.com/en-us/power-platform/admin/grant-users-access
 ---
 
 # powerplatform_user (Resource)
 
-This resource associates a user to a Power Platform environment. 
-							  Additional Resources:\n\n 
-						\n\n * [Add users to an environment](https://learn.microsoft.com/en-us/power-platform/admin/add-users-to-environment)"
-						\n\n * [Overview of User Security](https://learn.microsoft.com/en-us/power-platform/admin/grant-users-access)
+This resource associates a user to a Power Platform environment. Additional Resources:
+
+* [Add users to an environment](https://learn.microsoft.com/en-us/power-platform/admin/add-users-to-environment)
+
+* [Overview of User Security](https://learn.microsoft.com/en-us/power-platform/admin/grant-users-access)
 
 ## Example Usage
 
@@ -64,12 +63,14 @@ resource "azuread_user" "test_user" {
 }
 
 resource "powerplatform_environment" "dataverse_user_example" {
-  display_name      = "user_example"
-  location          = "europe"
-  language_code     = "1033"
-  currency_code     = "USD"
-  environment_type  = "Sandbox"
-  security_group_id = "00000000-0000-0000-0000-000000000000"
+  display_name     = "user_example"
+  location         = "europe"
+  environment_type = "Sandbox"
+  dataverse = {
+    language_code     = "1033"
+    currency_code     = "USD"
+    security_group_id = "00000000-0000-0000-0000-000000000000"
+  }
 }
 
 resource "powerplatform_user" "new_user" {

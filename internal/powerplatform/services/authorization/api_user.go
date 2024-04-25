@@ -25,6 +25,15 @@ type UserClient struct {
 	Api *api.ApiClient
 }
 
+func (client *UserClient) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
+
+	env, err := client.getEnvironment(ctx, environmentId)
+	if err != nil {
+		return false, err
+	}
+	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
+}
+
 func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([]UserDto, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {

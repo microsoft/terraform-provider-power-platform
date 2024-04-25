@@ -278,6 +278,16 @@ func (r *SolutionResource) importSolution(ctx context.Context, plan *SolutionRes
 		}
 	}
 
+	dvExits, err := r.SolutionClient.DataverseExists(ctx, plan.EnvironmentId.ValueString())
+	if err != nil {
+		diagnostics.AddError(fmt.Sprintf("Client error when checking if Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), err.Error())
+	}
+
+	if !dvExits {
+		diagnostics.AddError(fmt.Sprintf("No Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), "")
+		return nil
+	}
+
 	solution, err := r.SolutionClient.CreateSolution(ctx, plan.EnvironmentId.ValueString(), s, solutionContent, settingsContent)
 	if err != nil {
 		diagnostics.AddError(fmt.Sprintf("Client error when importing solution %s", plan.SolutionFile), err.Error())
