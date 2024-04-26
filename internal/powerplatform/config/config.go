@@ -14,9 +14,11 @@ type ProviderConfig struct {
 }
 
 type ProviderConfigUrls struct {
-	BapiUrl          string
-	PowerAppsUrl     string
-	PowerPlatformUrl string
+	BapiUrl            string
+	PowerAppsUrl       string
+	PowerAppsScope     string
+	PowerPlatformUrl   string
+	PowerPlatformScope string
 }
 
 type ProviderCredentials struct {
@@ -38,7 +40,8 @@ type ProviderCredentialsModel struct {
 	UseCli  types.Bool `tfsdk:"use_cli"`
 	UseOidc types.Bool `tfsdk:"use_oidc"`
 
-	TelemetryOptout types.Bool `tfsdk:"telemetry_optout"`
+	Cloud           types.String `tfsdk:"cloud"`
+	TelemetryOptout types.Bool   `tfsdk:"telemetry_optout"`
 
 	TenantId     types.String `tfsdk:"tenant_id"`
 	ClientId     types.String `tfsdk:"client_id"`

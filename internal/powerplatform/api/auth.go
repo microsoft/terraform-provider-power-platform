@@ -20,7 +20,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 )
 
@@ -60,9 +59,9 @@ func NewAuthBase(config *config.ProviderConfig) *Auth {
 	}
 }
 
-func (client *Auth) GetAuthority(tenantid string) string {
-	return constants.OAUTH_AUTHORITY_URL + tenantid
-}
+// func (client *Auth) GetAuthority(tenantid string) string {
+// 	return constants.OAUTH_AUTHORITY_URL + tenantid
+// }
 
 func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string) (string, time.Time, error) {
 	azureCLICredentials, err := azidentity.NewAzureCLICredential(nil)
