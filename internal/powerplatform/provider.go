@@ -122,8 +122,9 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				Optional:    true,
 			},
 			"cloud": schema.StringAttribute{
-				Description: "The cloud to use for authentication and Power Platform API requests. Default is `public`. Valid values are `public`, `gcc`, `gcchigh`, `china`, `usdod`",
-				Optional:    true,
+				Description:         "The cloud to use for authentication and Power Platform API requests. Default is `public`. Valid values are `public`, `gcc`, `gcchigh`, `china`, `dod`, `ex`, `rx`",
+				MarkdownDescription: "The cloud to use for authentication and Power Platform API requests. Default is `public`. Valid values are `public`, `gcc`, `gcchigh`, `china`, `dod`, `ex`, `rx`",
+				Optional:            true,
 			},
 			"telemetry_optout": schema.BoolAttribute{
 				Description:         "Flag to indicate whether to opt out of telemetry. Default is `false`",
