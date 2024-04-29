@@ -93,7 +93,7 @@ jobs:
 
     - name: Run Linter
       run: |
-        tfproviderlint ./...
+        /usr/bin/tfproviderlint ./...
 
   # run unit tests
   unit_test:
