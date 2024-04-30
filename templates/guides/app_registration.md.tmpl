@@ -91,13 +91,15 @@ Or you can add them directly into your App Registration manifest:
  ]
 ```
 
+>! Note: The `resourceAppId` values are the application IDs of the services in the Public cloud.  If you are using a sovereign cloud, you will need to use the appropriate application IDs for those services.
+
 ## Expose API
 
 In "Expose API" menu of your App Registration, you need to define your application ID URI:
 
 - Application ID URI: `api://<client_id>`, for example:
 
-```bash
+```plaintext
 api://powerplatform_provider_terraform
 ```
 
@@ -150,5 +152,5 @@ Or you can add them directly into your App Registration manifest:
 After above steps you should be able to authenticate using Azure CLI:
 
 ```bash
-az login --scope api://powerplatform_provider_terraform/access
+az login --scope api://powerplatform_provider_terraform/.default
 ```

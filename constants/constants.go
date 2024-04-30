@@ -64,6 +64,7 @@ const (
 	EX_POWERAPPS_SCOPE          = "https://service.powerapps.eaglex.ic.gov/.default"
 	EX_POWERPLATFORM_API_DOMAIN = "api.powerplatform.eaglex.ic.gov"
 	EX_POWERPLATFORM_API_SCOPE  = "https://api.powerplatform.eaglex.ic.gov/.default"
+	EX_AUTHORITY_HOST           = "https://login.microsoftonline.eaglex.ic.gov/"
 )
 
 const (
@@ -73,4 +74,5 @@ const (
 	RX_POWERAPPS_SCOPE          = "https://service.powerapps.microsoft.scloud/.default"
 	RX_POWERPLATFORM_API_DOMAIN = "api.powerplatform.microsoft.scloud"
 	RX_POWERPLATFORM_API_SCOPE  = "https://api.powerplatform.microsoft.scloud/.default"
+	RX_AUTHORITY_HOST           = "https://login.microsoftonline.microsoft.scloud/"
 )

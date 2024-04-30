@@ -4,6 +4,7 @@
 package powerplatform_config
 
 import (
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -11,6 +12,7 @@ type ProviderConfig struct {
 	Credentials     *ProviderCredentials
 	Urls            ProviderConfigUrls
 	TelemetryOptout bool
+	Cloud           cloud.Configuration
 }
 
 type ProviderConfigUrls struct {

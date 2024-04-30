@@ -7,6 +7,7 @@ import (
 	"context"
 	"os"
 
+	azcloud "github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -51,6 +52,7 @@ func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func
 			PowerPlatformUrl:   constants.PUBLIC_POWERPLATFORM_API_DOMAIN,
 			PowerPlatformScope: constants.PUBLIC_POWERPLATFORM_API_SCOPE,
 		},
+		Cloud: azcloud.AzurePublic,
 	}
 
 	if len(testModeEnabled) > 0 && testModeEnabled[0] {
@@ -282,48 +284,61 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Urls.PowerAppsScope = constants.PUBLIC_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.PUBLIC_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.PUBLIC_POWERPLATFORM_API_SCOPE
+		p.Config.Cloud = azcloud.AzurePublic
 	case "gcc":
 		p.Config.Urls.BapiUrl = constants.USGOV_BAPI_DOMAIN
 		p.Config.Urls.PowerAppsUrl = constants.USGOV_POWERAPPS_API_DOMAIN
 		p.Config.Urls.PowerAppsScope = constants.USGOV_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.USGOV_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.USGOV_POWERPLATFORM_API_SCOPE
+		p.Config.Cloud = azcloud.AzurePublic //GCC uses public cloud for authentication
 	case "gcchigh":
 		p.Config.Urls.BapiUrl = constants.USGOVHIGH_BAPI_DOMAIN
 		p.Config.Urls.PowerAppsUrl = constants.USGOVHIGH_POWERAPPS_API_DOMAIN
 		p.Config.Urls.PowerAppsScope = constants.USGOVHIGH_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.USGOVHIGH_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.USGOVHIGH_POWERPLATFORM_API_SCOPE
+		p.Config.Cloud = azcloud.AzureGovernment
 	case "dod":
 		p.Config.Urls.BapiUrl = constants.USDOD_BAPI_DOMAIN
 		p.Config.Urls.PowerAppsUrl = constants.USDOD_POWERAPPS_API_DOMAIN
 		p.Config.Urls.PowerAppsScope = constants.USDOD_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.USDOD_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.USDOD_POWERPLATFORM_API_SCOPE
+		p.Config.Cloud = azcloud.AzureGovernment
 	case "china":
 		p.Config.Urls.BapiUrl = constants.CHINA_BAPI_DOMAIN
 		p.Config.Urls.PowerAppsUrl = constants.CHINA_POWERAPPS_API_DOMAIN
 		p.Config.Urls.PowerAppsScope = constants.CHINA_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.CHINA_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.CHINA_POWERPLATFORM_API_SCOPE
+		p.Config.Cloud = azcloud.AzureChina
 	case "ex":
 		p.Config.Urls.BapiUrl = constants.EX_BAPI_DOMAIN
 		p.Config.Urls.PowerAppsUrl = constants.EX_POWERAPPS_API_DOMAIN
 		p.Config.Urls.PowerAppsScope = constants.EX_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.EX_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.EX_POWERPLATFORM_API_SCOPE
+		p.Config.Cloud = azcloud.Configuration{
+			ActiveDirectoryAuthorityHost: constants.EX_AUTHORITY_HOST,
+			Services:                     map[azcloud.ServiceName]azcloud.ServiceConfiguration{},
+		}
 	case "rx":
 		p.Config.Urls.BapiUrl = constants.RX_BAPI_DOMAIN
 		p.Config.Urls.PowerAppsUrl = constants.RX_POWERAPPS_API_DOMAIN
 		p.Config.Urls.PowerAppsScope = constants.RX_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.RX_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.RX_POWERPLATFORM_API_SCOPE
+		p.Config.Cloud = azcloud.Configuration{
+			ActiveDirectoryAuthorityHost: constants.RX_AUTHORITY_HOST,
+			Services:                     map[azcloud.ServiceName]azcloud.ServiceConfiguration{},
+		}
 	default:
 		resp.Diagnostics.AddAttributeError(
 			path.Root("cloud"),
 			"Unknown cloud",
-			"The provider cannot create the API client as there is an unknown configuration value for the cloud. "+
-				"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_CLOUD environment variable.",
+			"The provider cannot create the API client as there is an unknown configuration value for `cloud`. "+
+				"Either set the value in the provider configuration or use the POWER_PLATFORM_CLOUD environment variable.",
 		)
 	}
 

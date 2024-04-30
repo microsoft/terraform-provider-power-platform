@@ -83,7 +83,11 @@ func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []strin
 	clientSecretCredential, err := azidentity.NewClientSecretCredential(
 		client.config.Credentials.TenantId,
 		client.config.Credentials.ClientId,
-		client.config.Credentials.ClientSecret, nil)
+		client.config.Credentials.ClientSecret, &azidentity.ClientSecretCredentialOptions{
+			ClientOptions: azcore.ClientOptions{
+				Cloud: client.config.Cloud,
+			},
+		})
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -141,12 +145,9 @@ func (w *OidcCredential) GetToken(ctx context.Context, opts policy.TokenRequestO
 func (client *Auth) AuthenticateOIDC(ctx context.Context, scopes []string) (string, time.Time, error) {
 	var creds []azcore.TokenCredential
 
-	//This could be passed in in the future if needed.
-	options := &azidentity.DefaultAzureCredentialOptions{}
-
 	oidcCred, err := NewOidcCredential(&OidcCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
-			Cloud: options.Cloud,
+			Cloud: client.config.Cloud,
 		},
 		TenantID:      client.config.Credentials.TenantId,
 		ClientID:      client.config.Credentials.ClientId,
