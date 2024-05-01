@@ -23,6 +23,8 @@ Configure the Azure CLI to work with that Cloud:
 az cloud set --name AzureUSGovernment | AzureChinaCloud
 ```
 
+See the [Azure CLI documentation](https://learn.microsoft.com/en-us/cli/azure/manage-clouds-azure-cli) for more information on connecting to alternate clouds.
+
 Login to the Azure CLI using:
 
 ```bash
