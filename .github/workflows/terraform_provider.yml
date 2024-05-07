@@ -76,10 +76,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Install Provider Linter
-      run: |
-        go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@latest
-
     - name: Harden Runner
       uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1
       with:
@@ -89,6 +85,10 @@ jobs:
 #    - uses: bflad/tfproviderlint-github-action@3d16e28385eb2783700821cdf1b70f9f318bed3d # master
 #      with:
 #        args: ./...
+    - name: Install Provider Linter
+      run: |
+        go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@latest
+
     - name: Run tfproviderlint
       run: |
         go vet -vettool $(which tfproviderlint) ./...
