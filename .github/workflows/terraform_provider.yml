@@ -93,7 +93,9 @@ jobs:
 
     - name: Run Linter
       run: |
-        /usr/bin/tfproviderlint ./...
+        go vet -vettool $(which tfproviderlint) ./...
+
+#      /usr/bin/tfproviderlint ./...
 
 
   # run unit tests
