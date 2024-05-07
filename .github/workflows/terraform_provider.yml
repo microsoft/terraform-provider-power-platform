@@ -93,8 +93,7 @@ jobs:
 
     - name: Run Linter
       run: |
-          echo "$PATH"
-#        /usr/bin/tfproviderlint ./...
+        /usr/bin/tfproviderlint ./...
 
 
   # run unit tests
