@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -51,6 +50,7 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 		Description:         "PowerPlatform Data Record Resource",
 		MarkdownDescription: "Resource for managing PowerPlatform Data Record",
 		Attributes: map[string]schema.Attribute{
+			//todo would be good to add the record url here as well or set is as "id"
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id (guid)",
 				Description:         "Unique id (guid)",
@@ -121,7 +121,7 @@ func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	plan.Id = types.StringValue(strconv.FormatInt(time.Now().Unix(), 10))
+	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.RecordId, plan.TableName.ValueString()))
 	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
 	plan.TableName = types.StringValue(plan.TableName.ValueString())
 	plan.RecordId = types.StringValue(plan.RecordId.ValueString())
@@ -139,7 +139,8 @@ func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	plan.Id = types.StringValue(dr.Id)
+	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", dr.Id, plan.TableName.ValueString()))
+	plan.RecordId = types.StringValue(dr.Id)
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.TableName.ValueString()))
 
@@ -158,6 +159,8 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	//todo implement read logic
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_data_record with table_name %s", r.ProviderTypeName, state.TableName.ValueString()))
 
@@ -180,6 +183,8 @@ func (r *DataRecordResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	//todo implement update logic
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
@@ -196,8 +201,10 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
+	//todo implement delete logic
+
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
-	tflog.Debug(ctx, "No data_record have been uninstalled, as this is the expected behavior")
+	//stflog.Debug(ctx, "No data_record have been uninstalled, as this is the expected behavior")
 }
 
 func (r *DataRecordResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

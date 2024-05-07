@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
@@ -58,7 +59,7 @@ func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentI
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
+	//values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
@@ -71,33 +72,12 @@ func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentI
 	return &env, nil
 }
 
-func (client *DataRecordClient) GetDataRecords(ctx context.Context) (DataRecordDto, error) {
-	apiUrl := &url.URL{
-		Scheme: "https",
-		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
-		Path:   "/appmanagement/applicationPackages",
-	}
-	values := url.Values{
-		"api-version": []string{"2022-03-01-preview"},
-	}
-	apiUrl.RawQuery = values.Encode()
-
-	result := DataRecordDto{}
-
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
-	if err != nil {
-		return result, err
-	}
-
-	return result, nil
-}
-
-func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmentId string, tableName string, recordId string, columns map[string]interface{}) (DataRecordDto, error) {
+func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmentId string, tableName string, recordId string, columns map[string]interface{}) (*DataRecordDto, error) {
 	result := DataRecordDto{}
 
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 
 	method := "POST"
@@ -127,13 +107,23 @@ func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmen
 		}
 	}
 
-	response, err := client.Api.Execute(ctx, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
+	response, err := client.Api.Execute(ctx, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent, http.StatusCreated}, nil)
 	if err != nil {
-		return result, err
+		return nil, err
 	}
 
-	if response.BodyAsBytes != nil {
+	if len(response.BodyAsBytes) != 0 {
 		json.Unmarshal(response.BodyAsBytes, &result)
+	} else if response.Response.Header.Get("OData-EntityId") != "" {
+		re := regexp.MustCompile(`\(([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\)`)
+		match := re.FindStringSubmatch(response.Response.Header.Get("OData-EntityId"))
+		if len(match) > 1 {
+			result.Id = match[1]
+		} else {
+			return nil, fmt.Errorf("no entity record id returned from the odata-entityid header")
+		}
+	} else {
+		return nil, fmt.Errorf("no entity record id returned from the API")
 	}
 
 	for key, value := range relations {
@@ -153,6 +143,5 @@ func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmen
 			}
 		}
 	}
-
-	return result, nil
+	return &result, nil
 }
