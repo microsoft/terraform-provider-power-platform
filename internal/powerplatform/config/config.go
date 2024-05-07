@@ -4,6 +4,7 @@
 package powerplatform_config
 
 import (
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -11,12 +12,15 @@ type ProviderConfig struct {
 	Credentials     *ProviderCredentials
 	Urls            ProviderConfigUrls
 	TelemetryOptout bool
+	Cloud           cloud.Configuration
 }
 
 type ProviderConfigUrls struct {
-	BapiUrl          string
-	PowerAppsUrl     string
-	PowerPlatformUrl string
+	BapiUrl            string
+	PowerAppsUrl       string
+	PowerAppsScope     string
+	PowerPlatformUrl   string
+	PowerPlatformScope string
 }
 
 type ProviderCredentials struct {
@@ -38,7 +42,8 @@ type ProviderCredentialsModel struct {
 	UseCli  types.Bool `tfsdk:"use_cli"`
 	UseOidc types.Bool `tfsdk:"use_oidc"`
 
-	TelemetryOptout types.Bool `tfsdk:"telemetry_optout"`
+	Cloud           types.String `tfsdk:"cloud"`
+	TelemetryOptout types.Bool   `tfsdk:"telemetry_optout"`
 
 	TenantId     types.String `tfsdk:"tenant_id"`
 	ClientId     types.String `tfsdk:"client_id"`
