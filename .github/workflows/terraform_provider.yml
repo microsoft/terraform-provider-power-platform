@@ -89,7 +89,7 @@ jobs:
 
     - name: Run tfproviderlint
       run: |
-        go vet -vettool $(which tfproviderlint) ./...
+        /usr/bin/tfproviderlint ./...
 
   # run unit tests
   unit_test:
