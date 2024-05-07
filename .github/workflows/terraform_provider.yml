@@ -89,7 +89,7 @@ jobs:
 
     - name: Run tfproviderlint
       run: |
-        /usr/bin/tfproviderlint ./...
+        tfproviderlint ./...
 
   # run unit tests
   unit_test:
