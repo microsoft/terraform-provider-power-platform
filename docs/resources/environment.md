@@ -38,6 +38,7 @@ provider "powerplatform" {
 resource "powerplatform_environment" "development" {
   display_name     = "example_environment"
   location         = "europe"
+  azure_region     = "northeurope"
   environment_type = "Sandbox"
   dataverse = {
     language_code     = "1033"
@@ -59,6 +60,7 @@ resource "powerplatform_environment" "development" {
 
 ### Optional
 
+- `azure_region` (String) Azure region of the environment (westeurope, eastus etc.)
 - `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
 - `dataverse` (Attributes) Dataverse environment details (see [below for nested schema](#nestedatt--dataverse))
 
