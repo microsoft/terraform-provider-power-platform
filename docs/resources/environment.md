@@ -56,11 +56,11 @@ resource "powerplatform_environment" "development" {
 
 - `display_name` (String) Display name
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
-- `location` (String) Location of the environment (europe, unitedstates etc.)
+- `location` (String) Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source. The region of your Entra tenant may [limit the available locations for Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/regions-overview#who-can-create-environments-in-these-regions). Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).
 
 ### Optional
 
-- `azure_region` (String) Azure region of the environment (westeurope, eastus etc.)
+- `azure_region` (String) Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source. This property should only be set if absolutely necessary like when trying to create an environment in the same Azure region as Azure resources or Fabric capacity.  Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).
 - `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
 - `dataverse` (Attributes) Dataverse environment details (see [below for nested schema](#nestedatt--dataverse))
 
