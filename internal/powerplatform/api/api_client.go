@@ -7,10 +7,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	neturl "net/url"
 	"strings"
 
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
@@ -37,27 +37,23 @@ func NewApiClientBase(config *config.ProviderConfig, baseAuth *Auth) *ApiClient 
 	}
 }
 
-func TryGetScopeFromURL(url string) (string, error) {
+func TryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (string, error) {
 	switch {
-	case strings.LastIndex(url, "api.bap.microsoft.com") != -1,
-		strings.LastIndex(url, "api.powerapps.com") != -1:
+	case strings.LastIndex(url, cloudConfig.BapiUrl) != -1,
+		strings.LastIndex(url, cloudConfig.PowerAppsUrl) != -1:
+		return cloudConfig.PowerAppsScope, nil
 
-		return "https://service.powerapps.com/.default", nil
-	case strings.LastIndex(url, "api.powerplatform.com") != -1:
+	case strings.LastIndex(url, cloudConfig.PowerPlatformUrl) != -1:
+		return cloudConfig.PowerPlatformScope, nil
 
-		return "https://api.powerplatform.com/.default", nil
-	case strings.LastIndex(url, ".com/") != -1:
-
-		scope := strings.SplitAfterN(url, ".com/", 2)[0]
-		scope = scope + ".default"
-		return scope, nil
 	default:
-		return "", errors.New("Unable to determine scope from url: '" + url + "'. Please provide your own scope.")
+		u, err := neturl.Parse(url)
+		return u.Scheme + "://" + u.Host + "/.default", err
 	}
 }
 
 func (client *ApiClient) Execute(ctx context.Context, method string, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
-	scope, err := TryGetScopeFromURL(url)
+	scope, err := TryGetScopeFromURL(url, client.Config.Urls)
 
 	if err != nil {
 		return nil, err
