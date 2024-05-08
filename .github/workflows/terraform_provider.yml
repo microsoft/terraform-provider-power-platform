@@ -90,11 +90,9 @@ jobs:
         cache: true
         go-version-file: 'go.mod'
       id: go
+      
     - run: |
         go version
-
-    - run: |
-        ls -al
 
     - name: Install Provider Linter
       run: |
