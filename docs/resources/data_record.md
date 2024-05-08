@@ -29,8 +29,8 @@ provider "powerplatform" {
 data "powerplatform_environments" "all_environments" {}
 
 resource "powerplatform_data_record" "data_record_sample_contact1" {
-  environment_id = data.powerplatform_environments.all_environments.environments[0].id
-  table_logical_name     = "contact"
+  environment_id     = data.powerplatform_environments.all_environments.environments[0].id
+  table_logical_name = "contact"
   columns = {
     firstname          = "John"
     lastname           = "Doe"
@@ -46,8 +46,8 @@ resource "powerplatform_data_record" "data_record_sample_contact1" {
 }
 
 resource "powerplatform_data_record" "data_record_sample_contact2" {
-  environment_id = data.powerplatform_environments.all_environments.environments[0].id
-  table_logical_name     = "contact"
+  environment_id     = data.powerplatform_environments.all_environments.environments[0].id
+  table_logical_name = "contact"
   columns = {
     firstname          = "Jane"
     lastname           = "Doe"
@@ -63,8 +63,8 @@ resource "powerplatform_data_record" "data_record_sample_contact2" {
 }
 
 resource "powerplatform_data_record" "data_record_sample_account" {
-  environment_id = "daa7c689-db54-e20e-9038-ccf1a9e6e14a"
-  table_logical_name     = "account"
+  environment_id     = "daa7c689-db54-e20e-9038-ccf1a9e6e14a"
+  table_logical_name = "account"
   columns = {
     name                = "Terraform Sample Account1"
     description         = "This is the description of the the terraform sample account"
@@ -129,14 +129,14 @@ resource "powerplatform_data_record" "data_record_sample_account" {
 }
 
 resource "powerplatform_data_record" "data_record_accounts" {
-  environment_id = data.powerplatform_environments.all_environments.environments[0].id
-  table_logical_name     = "account"
+  environment_id     = data.powerplatform_environments.all_environments.environments[0].id
+  table_logical_name = "account"
   columns = {
-    name = "Sample Account"
-    creditonhold = false
-    address1_latitude = 47.639583
-    description = "This is the description of the sample account"
-    revenue = 5000000
+    name                = "Sample Account"
+    creditonhold        = false
+    address1_latitude   = 47.639583
+    description         = "This is the description of the sample account"
+    revenue             = 5000000
     accountcategorycode = 1
   }
 }
