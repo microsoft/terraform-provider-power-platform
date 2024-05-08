@@ -113,18 +113,18 @@ resource "powerplatform_data_record" "data_record_sample_account" {
   }
 }
 
-# resource "powerplatform_data_record" "data_record_accounts" {
-#   environment_id = data.powerplatform_environments.all_environments.environments[0].id
-#   table_logical_name     = "accounts"
-#   columns = {
-#     name = "Sample Account"
-#     creditonhold = false
-#     address1_latitude = 47.639583
-#     description = "This is the description of the sample account"
-#     revenue = 5000000
-#     accountcategorycode = 1
-#   }
-# }
+resource "powerplatform_data_record" "data_record_accounts" {
+  environment_id = data.powerplatform_environments.all_environments.environments[0].id
+  table_logical_name     = "account"
+  columns = {
+    name = "Sample Account"
+    creditonhold = false
+    address1_latitude = 47.639583
+    description = "This is the description of the sample account"
+    revenue = 5000000
+    accountcategorycode = 1
+  }
+}
 
 # resource "powerplatform_data_record" "data_record_testones" {
 #   environment_id = data.powerplatform_environments.all_environments.environments[0].id
