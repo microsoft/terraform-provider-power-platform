@@ -67,6 +67,17 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"azure_region": schema.StringAttribute{
+				Description:         "Azure region of the environment (westeurope, eastus etc.)",
+				MarkdownDescription: "Azure region of the environment (westeurope, eastus etc.)",
+				Required:            false,
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"environment_type": schema.StringAttribute{
 				Description:         "Type of the environment (Sandbox, Production etc.)",
 				MarkdownDescription: "Type of the environment (Sandbox, Production etc.)",
@@ -210,7 +221,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		resp.Diagnostics.AddError("Error when converting source model to create environment dto", err.Error())
 	}
 
-	err = locationValidator(r.EnvironmentClient.Api, envToCreate.Location)
+	err = locationValidator(r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.AzureRegion)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return

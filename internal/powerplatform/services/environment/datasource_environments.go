@@ -58,8 +58,13 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 							Computed:            true,
 						},
 						"location": schema.StringAttribute{
-							Description:         "Location of the environment (europe, unitedstates etc.)",
-							MarkdownDescription: "Location of the environment (europe, unitedstates etc.)",
+							Description:         "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source",
+							MarkdownDescription: "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source",
+							Computed:            true,
+						},
+						"azure_region": schema.StringAttribute{
+							Description:         "Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_azure_regions` data source",
+							MarkdownDescription: "Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_azure_regions` data source",
 							Computed:            true,
 						},
 						"environment_type": schema.StringAttribute{
@@ -92,7 +97,6 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 									MarkdownDescription: "Domain name of the environment",
 									Computed:            true,
 								},
-
 								"organization_id": schema.StringAttribute{
 									Description:         "Unique organization id (guid)",
 									MarkdownDescription: "Unique organization id (guid)",
