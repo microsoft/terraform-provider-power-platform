@@ -58,8 +58,8 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 							Computed:            true,
 						},
 						"location": schema.StringAttribute{
-							Description:         "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source",
-							MarkdownDescription: "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source",
+							Description:         "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source.  The region of your Entra tenant may [limit the available locations for Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/regions-overview#who-can-create-environments-in-these-regions). Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).",
+							MarkdownDescription: "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source. The region of your Entra tenant may [limit the available locations for Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/regions-overview#who-can-create-environments-in-these-regions). Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).",
 							Computed:            true,
 						},
 						"azure_region": schema.StringAttribute{
