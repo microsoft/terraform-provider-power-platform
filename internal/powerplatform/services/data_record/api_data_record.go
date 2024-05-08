@@ -39,6 +39,13 @@ type LinkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }
 
+type EntityDefinitionsDto struct {
+	OdataContext          string `json:"@odata.context"`
+	PrimaryIDAttribute    string `json:"PrimaryIdAttribute"`
+	LogicalCollectionName string `json:"LogicalCollectionName"`
+	MetadataID            string `json:"MetadataId"`
+}
+
 type RelationApiBody struct {
 	OdataID string `json:"@odata.id"`
 }
@@ -59,7 +66,6 @@ func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentI
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	//values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
@@ -72,7 +78,7 @@ func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentI
 	return &env, nil
 }
 
-func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmentId string, tableName string, recordId string, columns map[string]interface{}) (*DataRecordDto, error) {
+func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmentId string, tableName string, columns map[string]interface{}) (*DataRecordDto, error) {
 	result := DataRecordDto{}
 
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
@@ -80,26 +86,12 @@ func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmen
 		return nil, err
 	}
 
-	method := "POST"
-	path := fmt.Sprintf("/api/data/v9.2/%s", tableName)
-
-	if recordId != "" {
-		method = "PATCH"
-		path = fmt.Sprintf("%s(%s)", path, recordId)
-	}
-
-	apiUrl := &url.URL{
-		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
-		Path:   path,
-	}
-
 	relations := make(map[string]interface{}, 0)
 
 	for key, value := range columns {
 		if nestedMap, ok := value.(map[string]interface{}); ok {
 			delete(columns, key)
-			columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("/%s(%s)", nestedMap["entity_logical_name"], nestedMap["data_record_id"])
+			columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("/%s(%s)", nestedMap["table_logical_name"], nestedMap["data_record_id"])
 		}
 		if nestedMapList, ok := value.([]interface{}); ok {
 			delete(columns, key)
@@ -107,7 +99,35 @@ func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmen
 		}
 	}
 
-	response, err := client.Api.Execute(ctx, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent, http.StatusCreated}, nil)
+	apiUrl := &url.URL{
+		Scheme:   "https",
+		Host:     strings.TrimPrefix(environmentUrl, "https://"),
+		Path:     fmt.Sprintf("/api/data/v9.2/EntityDefinitions(LogicalName='%s')", tableName),
+		Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
+	}
+
+	entityDefinition := EntityDefinitionsDto{}
+	x := apiUrl.String()
+	_, err = client.Api.Execute(ctx, "GET", x, nil, columns, []int{http.StatusOK}, &entityDefinition)
+	if err != nil {
+		return &result, err
+	}
+
+	method := "POST"
+	path := fmt.Sprintf("/api/data/v9.2/%s", entityDefinition.LogicalCollectionName)
+
+	if columns[entityDefinition.PrimaryIDAttribute] != nil {
+		method = "PATCH"
+		path = fmt.Sprintf("%s(%s)", path, columns[entityDefinition.PrimaryIDAttribute])
+	}
+
+	apiUrl = &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Path:   path,
+	}
+
+	response, err := client.Api.Execute(ctx, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -126,22 +146,35 @@ func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmen
 		return nil, fmt.Errorf("no entity record id returned from the API")
 	}
 
-	for key, value := range relations {
-		if nestedMapList, ok := value.([]interface{}); ok {
-			apiUrl := &url.URL{
-				Scheme: "https",
-				Host:   strings.TrimPrefix(environmentUrl, "https://"),
-				Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)/%s/$ref", tableName, result.Id, key),
-			}
+	locationHeader := response.GetHeader("Location")
+	locationHeader = strings.TrimPrefix(locationHeader, fmt.Sprintf("%s/api/data/v9.2/%s(", environmentUrl, entityDefinition.LogicalCollectionName))
+	locationHeader = strings.TrimSuffix(locationHeader, ")")
 
-			for _, nestedItem := range nestedMapList {
-				nestedMap := nestedItem.(map[string]interface{})
-				relation := RelationApiBody{
-					OdataID: fmt.Sprintf("/%s(%s)", nestedMap["entity_logical_name"], nestedMap["data_record_id"]),
+	result.Id = locationHeader
+
+	/*
+		for key, value := range relations {
+			if nestedMapList, ok := value.([]interface{}); ok {
+				apiUrl := &url.URL{
+					Scheme: "https",
+					Host:   strings.TrimPrefix(environmentUrl, "https://"),
+					Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)/%s/$ref", tableName, result.Id, key),
 				}
-				client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
+
+				for _, nestedItem := range nestedMapList {
+					nestedMap := nestedItem.(map[string]interface{})
+					relation := RelationApiBody{
+						OdataID: fmt.Sprintf("%s/api/data/v9.2/%s(%s)", environmentUrl, nestedMap["table_logical_name"], nestedMap["data_record_id"]),
+					}
+					response, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
+					if err != nil {
+						return result, err
+					}
+					fmt.Println(response.Response.StatusCode)
+				}
 			}
 		}
-	}
+	*/
+
 	return &result, nil
 }

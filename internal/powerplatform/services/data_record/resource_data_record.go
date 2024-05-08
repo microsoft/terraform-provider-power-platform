@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/dynamicplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -34,11 +33,10 @@ type DataRecordResource struct {
 }
 
 type DataRecordResourceModel struct {
-	Id            types.String  `tfsdk:"id"`
-	EnvironmentId types.String  `tfsdk:"environment_id"`
-	TableName     types.String  `tfsdk:"table_name"`
-	RecordId      types.String  `tfsdk:"record_id"`
-	Columns       types.Dynamic `tfsdk:"columns"`
+	Id               types.String  `tfsdk:"id"`
+	EnvironmentId    types.String  `tfsdk:"environment_id"`
+	TableLogicalName types.String  `tfsdk:"table_logical_name"`
+	Columns          types.Dynamic `tfsdk:"columns"`
 }
 
 func (r *DataRecordResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -50,7 +48,6 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 		Description:         "PowerPlatform Data Record Resource",
 		MarkdownDescription: "Resource for managing PowerPlatform Data Record",
 		Attributes: map[string]schema.Attribute{
-			//todo would be good to add the record url here as well or set is as "id"
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id (guid)",
 				Description:         "Unique id (guid)",
@@ -66,17 +63,9 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"table_name": schema.StringAttribute{
+			"table_logical_name": schema.StringAttribute{
 				Description: "Name of the data record table",
 				Required:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"record_id": schema.StringAttribute{
-				Description: "Id of the record",
-				Optional:    true,
-				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -84,9 +73,6 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"columns": schema.DynamicAttribute{
 				Description: "Columns of the data record table",
 				Required:    true,
-				PlanModifiers: []planmodifier.Dynamic{
-					dynamicplanmodifier.RequiresReplace(),
-				},
 			},
 		},
 	}
@@ -110,6 +96,9 @@ func (r *DataRecordResource) Configure(ctx context.Context, req resource.Configu
 }
 
 func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var state *DataRecordResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+
 	var plan DataRecordResourceModel
 	resp.State.Get(ctx, &plan)
 
@@ -121,10 +110,8 @@ func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.RecordId, plan.TableName.ValueString()))
 	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
-	plan.TableName = types.StringValue(plan.TableName.ValueString())
-	plan.RecordId = types.StringValue(plan.RecordId.ValueString())
+	plan.TableLogicalName = types.StringValue(plan.TableLogicalName.ValueString())
 	plan.Columns = types.DynamicValue(plan.Columns)
 
 	var mapColumns map[string]interface{}
@@ -133,16 +120,13 @@ func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequ
 	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
 	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
 
-	dr, err := r.DataRecordClient.ApplyDataRecords(ctx, plan.EnvironmentId.ValueString(), plan.TableName.ValueString(), plan.RecordId.ValueString(), mapColumns)
+	_, err := r.DataRecordClient.ApplyDataRecords(ctx, plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
 		return
 	}
 
-	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", dr.Id, plan.TableName.ValueString()))
-	plan.RecordId = types.StringValue(dr.Id)
-
-	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.TableName.ValueString()))
+	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.TableLogicalName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
@@ -160,9 +144,7 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	//todo implement read logic
-
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_data_record with table_name %s", r.ProviderTypeName, state.TableName.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s_data_record with table_name %s", r.ProviderTypeName, state.TableLogicalName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
@@ -208,5 +190,5 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *DataRecordResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("data_record_id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

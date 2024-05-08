@@ -113,10 +113,6 @@ resource "powerplatform_data_record" "data_record_sample_account" {
   }
 }
 
-
-
-
-
 # resource "powerplatform_data_record" "data_record_accounts" {
 #   environment_id = data.powerplatform_environments.all_environments.environments[0].id
 #   table_name     = "accounts"
