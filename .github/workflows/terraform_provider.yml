@@ -93,6 +93,9 @@ jobs:
     - run: |
         go version
 
+    - run: |
+        ls -al
+
     - name: Install Provider Linter
       run: |
         go install github.com/bflad/tfproviderlint/cmd/tfproviderlint@latest
