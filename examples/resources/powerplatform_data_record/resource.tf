@@ -15,7 +15,7 @@ data "powerplatform_environments" "all_environments" {}
 
 resource "powerplatform_data_record" "data_record_sample_contact1" {
   environment_id = data.powerplatform_environments.all_environments.environments[0].id
-  table_name     = "contacts"
+  table_logical_name     = "contact"
   columns = {
     firstname          = "John"
     lastname           = "Doe"
@@ -32,7 +32,7 @@ resource "powerplatform_data_record" "data_record_sample_contact1" {
 
 resource "powerplatform_data_record" "data_record_sample_contact2" {
   environment_id = data.powerplatform_environments.all_environments.environments[0].id
-  table_name     = "contacts"
+  table_logical_name     = "contact"
   columns = {
     firstname          = "Jane"
     lastname           = "Doe"
@@ -49,7 +49,7 @@ resource "powerplatform_data_record" "data_record_sample_contact2" {
 
 resource "powerplatform_data_record" "data_record_sample_account" {
   environment_id = "daa7c689-db54-e20e-9038-ccf1a9e6e14a"
-  table_name     = "accounts"
+  table_logical_name     = "account"
   columns = {
     name                = "Terraform Sample Account1"
     description         = "This is the description of the the terraform sample account"
@@ -72,18 +72,18 @@ resource "powerplatform_data_record" "data_record_sample_account" {
     telephone1          = "555-555-5555"
 
     primarycontactid = {
-      entity_logical_name = powerplatform_data_record.data_record_sample_contact1.table_name
-      data_record_id      = powerplatform_data_record.data_record_sample_contact1.record_id
+      entity_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
+      data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
     }
 
     contact_customer_accounts = [
       {
-        entity_logical_name = powerplatform_data_record.data_record_sample_contact1.table_name
-        data_record_id      = powerplatform_data_record.data_record_sample_contact1.record_id
+        entity_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
+        data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
       },
       {
-        entity_logical_name = powerplatform_data_record.data_record_sample_contact2.table_name
-        data_record_id      = powerplatform_data_record.data_record_sample_contact2.record_id
+        entity_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
+        data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
       }
     ]
 
@@ -115,7 +115,7 @@ resource "powerplatform_data_record" "data_record_sample_account" {
 
 # resource "powerplatform_data_record" "data_record_accounts" {
 #   environment_id = data.powerplatform_environments.all_environments.environments[0].id
-#   table_name     = "accounts"
+#   table_logical_name     = "accounts"
 #   columns = {
 #     name = "Sample Account"
 #     creditonhold = false
@@ -128,7 +128,7 @@ resource "powerplatform_data_record" "data_record_sample_account" {
 
 # resource "powerplatform_data_record" "data_record_testones" {
 #   environment_id = data.powerplatform_environments.all_environments.environments[0].id
-#   table_name     = "cr4d0_testones"
+#   table_logical_name     = "cr4d0_testones"
 #   columns = {
 #     cr4d0_multilinefield          = "asdasd\nasd\na\nsdasd"
 #     cr4d0_wholenumberfield        = 1231
@@ -175,7 +175,7 @@ resource "powerplatform_data_record" "data_record_sample_account" {
 
 # resource "powerplatform_data_record" "data_record_tabletwos" {
 #   environment_id = "61ba1e49-21ed-eaba-8192-aaa376d6150d"
-#   table_name     = "cr4d0_tabletwos"
+#   table_logical_name     = "cr4d0_tabletwos"
 #   record_id      = "21715311-9ff6-ee11-a1fd-7c1e5217db96"
 #   columns = {
 #     cr4d0_name = "Updated Set"

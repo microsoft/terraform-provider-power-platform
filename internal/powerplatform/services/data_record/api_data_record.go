@@ -107,8 +107,7 @@ func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmen
 	}
 
 	entityDefinition := EntityDefinitionsDto{}
-	x := apiUrl.String()
-	_, err = client.Api.Execute(ctx, "GET", x, nil, columns, []int{http.StatusOK}, &entityDefinition)
+	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, columns, []int{http.StatusOK}, &entityDefinition)
 	if err != nil {
 		return &result, err
 	}
