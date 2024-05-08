@@ -41,7 +41,7 @@ func findLocation(locations LocationArrayDto, locationToFind string) (*LocationD
 	for i, loc := range locations.Value {
 		locationNames[i] = loc.Name
 	}
-	return nil, fmt.Errorf("location %s is not valid. valid locations are: %s", locationToFind, strings.Join(locationNames, ", "))
+	return nil, fmt.Errorf("location '%s' is not valid. valid locations are: %s", locationToFind, strings.Join(locationNames, ", "))
 }
 
 func findAzureRegion(location *LocationDto, azureRegion string) (bool, error) {
@@ -50,7 +50,7 @@ func findAzureRegion(location *LocationDto, azureRegion string) (bool, error) {
 			return true, nil
 		}
 	}
-	return false, fmt.Errorf("region %s is not valid for location %s. valid regions are: %s", azureRegion, location.Name, strings.Join(location.Properties.AzureRegions, ", "))
+	return false, fmt.Errorf("region '%s' is not valid for location %s. valid regions are: %s", azureRegion, location.Name, strings.Join(location.Properties.AzureRegions, ", "))
 }
 
 func locationValidator(client *api.ApiClient, location, azureRegion string) error {
