@@ -90,7 +90,7 @@ terraform plan
 If you prefer to use you operating system terminal instead of VSCode you can run the following command:
 
 ```bash
-docker exec -u vscode -w /workspaces/terraform-provider-power-platform -it <<YOUR_DOCKER_CONTAINER_NAME_HERE>> bash -c "exec bash"
+docker exec -u vscode -w /workspaces/terraform-provider-power-platform -it <your_docker_container_name_goes_here> bash -c "exec bash"
 ```
 
 > [!NOTE]
@@ -144,6 +144,26 @@ TF_ACC=0 go test -v ./... -run TestUnit<test_name>
 sudo chown -R vscode /workspaces/terraform-provider-power-platform/
 sudo chown -R vscode /go/pkg
 ```
+
+## Writing Tests
+
+All the test for a given resource/datasource are located in `/internal/powerplatform/<resource/datasource_name>_test.go` file. When writing a new feature you should try to create [happy path](https://en.wikipedia.org/wiki/Happy_path) test(s) for you feature covering create, read and deletion of your new feature. For updates you should cover not only update of all properties but situation when a force recreate of a resource is requried (if you have such propeties in you resource).
+
+### Writing Unit Tests
+
+Unit test are created by mocking HTTP request, some of the often used HTTP mocks encapsulated in `ActivateEnvironmentHttpMocks` function, so that you don't have to write them for every test.
+
+when implementing new mocks, the mokcked response json files should be located in `/internal/powerplatform/services/<your_service_name>/test/<resource_or_datasource>/<name_of_the_unit_test>` folder
+
+> [!TIP]
+> When creating mocked json responses you can resuse the exising one by **duplicating** then into you `<name_of_the_unit_test>` folder.
+
+> [!CAUTION]
+> Your mocked json response file should not contain any Personally Identifiable Information such as tenantid, usernames, phone numbers, emails, addresses etc. You should anonymize that data.
+
+### Writing Acceptance Tests
+
+Each acceptance test is a copy of an unit test from tested use case perspective. That means for a given unit test we should have an acceptance test that validates the same use case but against a real infrastructure.
 
 ## Adding Dependencies
 
@@ -212,9 +232,10 @@ Once the release is pushed to the repo, the [release.yml](/.github/workflows/rel
 Once you decide to contribute back to this reposity by fixing a bug or adding a feature you work flow will be as follows:
 
 1. Fork this repository and open in locally
-1. Start working in devcontainer on your changes
-1. When working on a bug remember to add a new unit and acceptance test(s) covering your use case if that test does not exist yet.
-1. When working on a new feature add unit and acceptance tests covering [happy path](https://en.wikipedia.org/wiki/Happy_path) for your feature, ideally also some edge cases.
+1. Start working in devcontainer on your changes. Completly new feature should be located in a new `/internal/powerplatform/services/<new_service_name>` folder.
+1. Add and/or update unit and accaptance tests. Tests for new feature should be created in new resource/datasource_test.go file
+    - When working on a bug remember to add a new unit and acceptance test(s) covering your use case if that test does not exist yet.
+    - When working on a new feature add unit and acceptance tests covering [happy path](https://en.wikipedia.org/wiki/Happy_path) for your feature, ideally also some edge cases.
 1. Raise a pull request from your fork back the this repository
 
 > [!NOTE]
