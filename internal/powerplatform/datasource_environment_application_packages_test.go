@@ -22,7 +22,7 @@ func TestAccEnvironmentApplicationPackagesDataSource_Validate_Read(t *testing.T)
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "env" {
-					display_name      = "TestAccEnvironmentApplicationPackagesDataSource_Validate_Read"
+					display_name      = "` + mock_helpers.TestName() + `"
 					location          = "europe"
 					environment_type  = "Sandbox"
 					dataverse = {

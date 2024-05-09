@@ -17,8 +17,8 @@ import (
 )
 
 func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
-	envName := fmt.Sprintf("orgtest%d", rand.Intn(100000))
-	envNameNew := fmt.Sprintf("orgtest%d", rand.Intn(100000))
+	domainName := fmt.Sprintf("terraformprovidertest%d", rand.Intn(100000))
+	newDomaimName := fmt.Sprintf("terraformprovidertest%d", rand.Intn(100000))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
@@ -27,14 +27,14 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name                              = "` + envName + `"
+					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 					dataverse = {
 						language_code                             = "1033"
 						currency_code                             = "USD"
 						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-						domain									  =  "` + envName + `"
+						domain									  =  "` + domainName + `"
 					}
 				}`,
 
@@ -43,14 +43,14 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 
 					// Verify the first power app to ensure all attributes are set
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", envName),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", envName),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", mock_helpers.TestName()),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", domainName),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.language_code", "1033"),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", "00000000-0000-0000-0000-000000000000"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+envName+".crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+domainName+".crm4.dynamics.com/"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
 				),
@@ -58,11 +58,11 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name                              = "` + envName + `"
+					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 					dataverse = {
-						domain									  =  "` + envNameNew + `"
+						domain									  =  "` + newDomaimName + `"
 						language_code                             = "1033"
 						currency_code                             = "USD"
 						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
@@ -70,8 +70,8 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", envNameNew),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+envNameNew+".crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", newDomaimName),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+newDomaimName+".crm4.dynamics.com/"),
 				),
 			},
 		},
@@ -79,7 +79,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 }
 
 func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
-	envName := fmt.Sprintf("orgtest%d", rand.Intn(100000))
+	domainName := fmt.Sprintf("orgtest%d", rand.Intn(100000))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
@@ -88,14 +88,14 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name                              = "` + envName + `"
+					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 					dataverse = {
 						language_code                             = "1033"
 						currency_code                             = "USD"
 						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-						domain									  =  "` + envName + `"
+						domain									  =  "` + domainName + `"
 					}
 				}`,
 
@@ -107,10 +107,10 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.language_code", "1033"),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", regexp.MustCompile(powerplatform_helpers.GuidOrEmptyValueRegex)),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", envName),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+envName+".crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", domainName),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+domainName+".crm4.dynamics.com/"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", envName),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", mock_helpers.TestName()),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.version", regexp.MustCompile(powerplatform_helpers.VersionRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
 					// resource.TestMatchResourceAttr("powerplatform_environment.development", "templates", regexp.MustCompile(`D365_FinOps_Finance$`)),
@@ -907,13 +907,13 @@ func TestAccEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name                              = "TestAccEnvironmentsResource_Validate_Create_No_Dataverse"
+					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "TestAccEnvironmentsResource_Validate_Create_No_Dataverse"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", mock_helpers.TestName()),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
@@ -936,7 +936,7 @@ func TestAccEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *te
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name                              = "TestAccEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse"
+					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 					dataverse = {
@@ -957,7 +957,7 @@ func TestAccEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *te
 			{
 				Config: TestsProviderConfig + `
 					resource "powerplatform_environment" "development" {
-						display_name                              = "displayname"
+						display_name                              = "` + mock_helpers.TestName() + `"
 						location                                  = "europe"
 						environment_type                          = "Sandbox"
 					}`,
@@ -1178,13 +1178,13 @@ func TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *te
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name                              = "TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse"
+					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", mock_helpers.TestName()),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
@@ -1201,7 +1201,7 @@ func TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *te
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name                              = "TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse"
+					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 					dataverse = {
@@ -1212,7 +1212,7 @@ func TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *te
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", mock_helpers.TestName()),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.language_code", "1033"),
