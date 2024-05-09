@@ -221,8 +221,8 @@ Use the `preview` extension to the MAJOR.MINOR.PATCH format for preview release 
 Use the `git tag` command on the `main` branch (ensure main is up to date) and then push that release back to origin.
 
 ``` bash
-git tag -a v0.7.0-preview -m "v0.7.0-preview"
-git push origin v0.7.0-preview
+git tag -a v1.0.0-preview -m "v1.0.0-preview"
+git push origin v1.0.0-preview
 ```
 
 Once the release is pushed to the repo, the [release.yml](/.github/workflows/release.yml) action pipeline will detect the new tag and create a draft release. After the build completes, you can publish the release if it looks good.
