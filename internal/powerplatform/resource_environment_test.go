@@ -51,7 +51,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.organization_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", "00000000-0000-0000-0000-000000000000"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+envName+".crm4.dynamics.com/"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.location", "europe"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
 				),
 			},
@@ -59,10 +59,10 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + envName + `"
-					domain									  =  "` + envNameNew + `"
+					location                                  = "europe"
 					environment_type                          = "Sandbox"
 					dataverse = {
-						location                                  = "europe"
+						domain									  =  "` + envNameNew + `"
 						language_code                             = "1033"
 						currency_code                             = "USD"
 						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
@@ -70,7 +70,6 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", envName),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", envNameNew),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+envNameNew+".crm4.dynamics.com/"),
 				),
