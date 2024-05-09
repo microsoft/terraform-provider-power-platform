@@ -511,7 +511,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					default_connectors_classification = "Blocked"
 					environment_type                  = "AllEnvironments"
 					environments = []
-	
+
 					business_connectors = []
 					non_business_connectors = []
 					blocked_connectors = []
@@ -562,8 +562,8 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					default_connectors_classification = "General"
 					environment_type                  = "OnlyEnvironments"
 					environments = [ "00000000-0000-0000-0000-000000000000" ]
-	
-					business_connectors = toset([
+
+					non_business_connectors = toset([
 							{
 								id                           = "/providers/Microsoft.PowerApps/apis/shared_sql"
 								default_action_rule_behavior = "",
@@ -571,7 +571,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 								endpoint_rules = [],
 							}
 						])
-					non_business_connectors = toset([
+					business_connectors = toset([
 							{
 								id                           = "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
 								default_action_rule_behavior = "",
@@ -603,11 +603,11 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.#", "0"),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.#", "0"),
 
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.#", "1"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.default_action_rule_behavior", ""),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.#", "0"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.#", "0"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.#", "1"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.default_action_rule_behavior", ""),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.#", "0"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.#", "0"),
 
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "blocked_connectors.#", "1"),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "blocked_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_azureblob"),
@@ -626,7 +626,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					environment_type                  = "OnlyEnvironments"
 					environments = [ "00000000-0000-0000-0000-000000000000" ]
 
-					business_connectors = toset([
+					non_business_connectors = toset([
 					{
 						id                           = "/providers/Microsoft.PowerApps/apis/shared_sql"
 						default_action_rule_behavior = "Allow",
@@ -654,7 +654,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 						]
 					}
 				])
-				non_business_connectors = toset([
+				business_connectors = toset([
 						{
 							id                           = "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
 							default_action_rule_behavior = "",
@@ -705,7 +705,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					environment_type                  = "OnlyEnvironments"
 					environments = [ "00000000-0000-0000-0000-000000000000" ]
 
-					business_connectors = toset([
+					non_business_connectors = toset([
 							{
 								id                           = "/providers/Microsoft.PowerApps/apis/shared_sql"
 								default_action_rule_behavior = "Allow",
@@ -733,7 +733,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 								]
 							}
 						])
-					non_business_connectors = toset([
+					business_connectors = toset([
 							{
 								id                           = "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
 								default_action_rule_behavior = "",
