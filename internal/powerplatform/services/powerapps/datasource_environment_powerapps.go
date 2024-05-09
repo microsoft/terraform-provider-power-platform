@@ -6,7 +6,7 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"time"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -64,7 +64,9 @@ func (d *EnvironmentPowerAppsDataSource) Schema(_ context.Context, _ datasource.
 		MarkdownDescription: "Fetches the list of Power Apps in an environment.  See [Manage Power Apps](https://learn.microsoft.com/en-us/power-platform/admin/admin-manage-apps) for more details about how this data is surfaced in Power Platform Admin Center.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				Description:         "Id of the read operation",
+				MarkdownDescription: "Id of the read operation",
+				Computed:            true,
 			},
 			"powerapps": schema.ListNestedAttribute{
 				Description:         "List of Power Apps",
@@ -134,7 +136,7 @@ func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasourc
 		state.PowerApps = append(state.PowerApps, appModel)
 	}
 
-	state.Id = types.StringValue(fmt.Sprint((time.Now().Unix())))
+	state.Id = types.StringValue(strconv.Itoa(len(apps)))
 
 	diags := resp.State.Set(ctx, &state)
 

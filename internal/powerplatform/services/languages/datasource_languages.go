@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
-// Licensed under the MIT license. 
+// Licensed under the MIT license.
 
 package powerplatform
 
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -58,8 +57,9 @@ func (d *LanguagesDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 		MarkdownDescription: "Fetches the list of Dynamics 365 languages. For more information see [Power Platform Enable Languages](https://learn.microsoft.com/en-us/power-platform/admin/enable-languages)",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
-				Description: "Id of the read operation",
-				Optional:    true,
+				Description:         "Id of the read operation",
+				MarkdownDescription: "Id of the read operation",
+				Optional:            true,
 			},
 			"location": schema.StringAttribute{
 				Description: "Location of the languages",
@@ -124,14 +124,14 @@ func (d *LanguagesDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LANGUAGES START: %s", d.ProviderTypeName))
 
-	plan.Id = types.Int64Value(time.Now().Unix())
-	plan.Location = types.StringValue(plan.Location.ValueString())
-
 	languages, err := d.LanguagesClient.GetLanguagesByLocation(ctx, plan.Location.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
+
+	plan.Id = types.Int64Value(int64(len(languages.Value)))
+	plan.Location = types.StringValue(plan.Location.ValueString())
 
 	for _, language := range languages.Value {
 		plan.Value = append(plan.Value, LanguageDataModel{

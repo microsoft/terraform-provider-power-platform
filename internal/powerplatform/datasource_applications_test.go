@@ -23,7 +23,7 @@ func TestAccApplicationsDataSource_Validate_Read(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "env" {
-					display_name      = "env_application_acceptance_test"
+					display_name      = "TestAccApplicationsDataSource_Validate_Read"
 					location          = "europe"
 					environment_type  = "Sandbox"
 					dataverse = {
@@ -38,7 +38,7 @@ func TestAccApplicationsDataSource_Validate_Read(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_environment_application_packages.all_applications", "id", regexp.MustCompile(`^[1-9]\d*$`)),
+					resource.TestMatchResourceAttr("data.powerplatform_environment_application_packages.all_applications", "id", regexp.MustCompile(`^[\dA-Fa-f]{8}-[\dA-Fa-f]{4}-[\dA-Fa-f]{4}-[\dA-Fa-f]{4}-[\dA-Fa-f]{12}_\d+$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environment_application_packages.all_applications", "environment_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environment_application_packages.all_applications", "applications.#", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environment_application_packages.all_applications", "applications.0.application_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
@@ -122,7 +122,7 @@ func TestUnitApplicationsDataSource_Validate_Read(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_environment_application_packages.all_applications", "id", regexp.MustCompile(`^[1-9]\d*$`)),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_application_packages.all_applications", "id", "00000000-0000-0000-0000-000000000001_2"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_application_packages.all_applications", "environment_id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_application_packages.all_applications", "applications.#", "2"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_application_packages.all_applications", "applications.0.application_id", "4bbd5362-21f6-47a8-bcd9-e2a75e8242ef"),

@@ -6,7 +6,6 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -43,8 +42,9 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 		MarkdownDescription: "Fetches the list of environments in a tenant.  See [Environments overview](https://learn.microsoft.com/en-us/power-platform/admin/environments-overview) for more information.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
-				Description: "Placeholder identifier attribute",
-				Computed:    true,
+				Description:         "Id of the read operation",
+				MarkdownDescription: "Id of the read operation",
+				Computed:            true,
 			},
 			"environments": schema.ListNestedAttribute{
 				Description:         "List of environments",
@@ -203,7 +203,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 		}
 		state.Environments = append(state.Environments, *env)
 	}
-	state.Id = types.Int64Value(time.Now().Unix())
+	state.Id = types.Int64Value(int64(len(envs)))
 
 	diags := resp.State.Set(ctx, &state)
 

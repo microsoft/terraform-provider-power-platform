@@ -6,7 +6,7 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"time"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -160,7 +160,7 @@ func (d *ConnectorsDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		connectorModel := ConvertFromConnectorDto(connector)
 		state.Connectors = append(state.Connectors, connectorModel)
 	}
-	state.Id = types.StringValue(fmt.Sprint((time.Now().Unix())))
+	state.Id = types.StringValue(strconv.Itoa(len(connectors)))
 
 	diags := resp.State.Set(ctx, &state)
 

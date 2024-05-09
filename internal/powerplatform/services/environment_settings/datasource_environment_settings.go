@@ -81,6 +81,7 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 	}
 
 	state = ConvertFromEnvironmentSettingsDto(envSettings)
+	state.Id = state.EnvironmentId
 
 	diags := resp.State.Set(ctx, &state)
 
@@ -98,8 +99,9 @@ func (d *EnvironmentSettingsDataSource) Schema(_ context.Context, _ datasource.S
 		MarkdownDescription: "Power Platform Environment Settings Data Source. Power Platform Settings are configuration options that apply to a specific environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/admin-settings) for more details.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description: "Id",
-				Computed:    true,
+				Description:         "Id of the read operation",
+				MarkdownDescription: "Id of the read operation",
+				Computed:            true,
 			},
 			"environment_id": schema.StringAttribute{
 				Description:         "Unique environment id (guid)",

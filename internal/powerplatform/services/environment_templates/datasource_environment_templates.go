@@ -6,7 +6,6 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -161,9 +160,6 @@ func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasourc
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT TEMPLATES START: %s", d.ProviderTypeName))
 
-	plan.Id = types.Int64Value(time.Now().Unix())
-	plan.Location = types.StringValue(plan.Location.ValueString())
-
 	environment_templates, err := d.EnvironmentTemplatesClient.GetEnvironmentTemplatesByLocation(ctx, plan.Location.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
@@ -183,6 +179,9 @@ func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasourc
 	appendToList(environment_templates.SubscriptionBasedTrial, "subscriptionBasedTrial", &plan.Templates)
 	appendToList(environment_templates.Teams, "teams", &plan.Templates)
 	appendToList(environment_templates.Platform, "platform", &plan.Templates)
+
+	plan.Id = types.Int64Value(int64(len(plan.Templates)))
+	plan.Location = types.StringValue(plan.Location.ValueString())
 
 	diags := resp.State.Set(ctx, &plan)
 

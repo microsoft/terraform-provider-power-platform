@@ -6,7 +6,6 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -62,8 +61,9 @@ func (d *BillingPoliciesDataSource) Schema(_ context.Context, _ datasource.Schem
 		MarkdownDescription: "Fetches the list of [billing policies](https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy) in a tenant. A billing policy is a set of rules that define how a tenant is billed for usage of Power Platform services. A billing policy is associated with a billing instrument, which is a subscription and resource group that is used to pay for usage of Power Platform services.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
-				Description: "Placeholder identifier attribute",
-				Computed:    true,
+				Description:         "Id of the read operation",
+				MarkdownDescription: "Id of the read operation",
+				Computed:            true,
 			},
 			"billing_policies": schema.ListNestedAttribute{
 				Description:         "Power Platform Billing Policy",
@@ -165,7 +165,7 @@ func (d *BillingPoliciesDataSource) Read(ctx context.Context, req datasource.Rea
 		})
 	}
 
-	state.Id = types.Int64Value(time.Now().Unix())
+	state.Id = types.Int64Value(int64(len(policies)))
 	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE BILLING POLICIES END: %s", d.ProviderTypeName))
