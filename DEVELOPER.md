@@ -232,10 +232,15 @@ Once the release is pushed to the repo, the [release.yml](/.github/workflows/rel
 Once you decide to contribute back to this reposity by fixing a bug or adding a feature you work flow will be as follows:
 
 1. Fork this repository and open in locally
-1. Start working in devcontainer on your changes. Completly new feature should be located in a new `/internal/powerplatform/services/<new_service_name>` folder.
-1. Add and/or update unit and accaptance tests. Tests for new feature should be created in new resource/datasource_test.go file
+1. Start working in devcontainer on your changes. (commands: `make install`, `terraform plan`, `terraform apply`)
+    - Completly new feature should be located in a new `/internal/powerplatform/services/<new_service_name>` folder.
+1. Add and/or update unit and accaptance tests. Tests for new feature should be created in new resource/datasource_test.go file (commands: `make unittest`, `make acctest`)
     - When working on a bug remember to add a new unit and acceptance test(s) covering your use case if that test does not exist yet.
-    - When working on a new feature add unit and acceptance tests covering [happy path](https://en.wikipedia.org/wiki/Happy_path) for your feature, ideally also some edge cases.
+    - When working on a new feature add unit and acceptance tests covering [happy path](https://en.wikipedia.org/wiki/Happy_path) for your feature, ideally also some edge cases. If you feature enhances existing resource/datasource, add/change validation of your new properties in all tests that use that resource/datasource
+1. Create/Update examples in `/examples/...` folder(s)
+    - When working on enhacement remeber to add new enhacement properties to all existing examples using that resource/datasource, especially if it is a requried property.
+    - When creating new resource/datasource, create new examples showcasing how to use it.
+1. Regenerate the docs. (commands: `make docs`)
 1. Raise a pull request from your fork back the this repository
 
 > [!NOTE]
