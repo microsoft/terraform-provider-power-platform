@@ -41,12 +41,13 @@ data "powerplatform_environments" "all_environments" {}
 
 Read-Only:
 
+- `azure_region` (String) Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source.
 - `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
 - `dataverse` (Attributes) Dataverse environment details (see [below for nested schema](#nestedatt--environments--dataverse))
 - `display_name` (String) Display name
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
 - `id` (String) Unique environment id (guid)
-- `location` (String) Location of the environment (europe, unitedstates etc.)
+- `location` (String) Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source.
 
 <a id="nestedatt--environments--dataverse"></a>
 ### Nested Schema for `environments.dataverse`

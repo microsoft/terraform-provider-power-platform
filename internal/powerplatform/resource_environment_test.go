@@ -1224,3 +1224,123 @@ func TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *te
 		},
 	})
 }
+
+func TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testing.T) {
+
+	t.Setenv("TF_ACC", "1")
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               false,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions"
+					location                                  = "foo"
+					environment_type                          = "Sandbox"
+				}`,
+				ExpectError: regexp.MustCompile(".*location 'foo' is not valid.*"),
+			},
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions"
+					location                                  = "europe"
+					azure_region 							  = "bar"
+					environment_type                          = "Sandbox"
+				}`,
+				ExpectError: regexp.MustCompile(".*region 'bar' is not valid for location europe.*"),
+			},
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions"
+					location                                  = "europe"
+					azure_region 							  = "westeurope"
+					environment_type                          = "Sandbox"
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "azure_region", "westeurope"),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mock_helpers.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Locations_And_Azure_Regions/get_lifecycle_delete.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/environment/tests/resource/Validate_Locations_And_Azure_Regions/get_environment_%s.json", id)).String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment/tests/resource/Validate_Locations_And_Azure_Regions/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "foo"
+					environment_type                          = "Sandbox"
+				}`,
+				ExpectError: regexp.MustCompile(".*location 'foo' is not valid.*"),
+			},
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					azure_region 							  = "bar"
+					environment_type                          = "Sandbox"
+				}`,
+				ExpectError: regexp.MustCompile(".*region 'bar' is not valid for location europe.*"),
+			},
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					azure_region 							  = "westeurope"
+					environment_type                          = "Sandbox"
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "azure_region", "westeurope"),
+				),
+			},
+		},
+	})
+}
