@@ -273,8 +273,8 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 		policyModel.EnvironmentType = types.StringValue(policy.EnvironmentType)
 		policyModel.Environments = convertToAttrValueEnvironments(policy.Environments)
 		policyModel.CustomConnectorsPatterns = convertToAttrValueCustomConnectorUrlPatternsDefinition(policy.CustomConnectorUrlPatternsDefinition)
-		policyModel.BusinessGeneralConnectors = convertToAttrValueConnectorsGroup("General", policy.ConnectorGroups)
-		policyModel.NonBusinessConfidentialConnectors = convertToAttrValueConnectorsGroup("Confidential", policy.ConnectorGroups)
+		policyModel.BusinessGeneralConnectors = convertToAttrValueConnectorsGroup("Confidential", policy.ConnectorGroups)
+		policyModel.NonBusinessConfidentialConnectors = convertToAttrValueConnectorsGroup("General", policy.ConnectorGroups)
 		policyModel.BlockedConnectors = convertToAttrValueConnectorsGroup("Blocked", policy.ConnectorGroups)
 		state.Policies = append(state.Policies, policyModel)
 	}
