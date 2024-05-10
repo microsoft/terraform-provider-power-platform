@@ -30,24 +30,30 @@ type EnvironmentClient struct {
 	Api            *api.ApiClient
 }
 
-func locationValidator(client *api.ApiClient, location string) error {
-	var parsed struct {
-		Value []struct {
-			ID         string `json:"id"`
-			Type       string `json:"type"`
-			Name       string `json:"name"`
-			Properties struct {
-				DisplayName                            string   `json:"displayName"`
-				Code                                   string   `json:"code"`
-				IsDefault                              bool     `json:"isDefault"`
-				IsDisabled                             bool     `json:"isDisabled"`
-				CanProvisionDatabase                   bool     `json:"canProvisionDatabase"`
-				CanProvisionCustomerEngagementDatabase bool     `json:"canProvisionCustomerEngagementDatabase"`
-				AzureRegions                           []string `json:"azureRegions"`
-			} `json:"properties"`
-		} `json:"value"`
+func findLocation(locations LocationArrayDto, locationToFind string) (*LocationDto, error) {
+	for _, loc := range locations.Value {
+		if loc.Name == locationToFind {
+			return &loc, nil
+		}
 	}
 
+	locationNames := make([]string, len(locations.Value))
+	for i, loc := range locations.Value {
+		locationNames[i] = loc.Name
+	}
+	return nil, fmt.Errorf("location '%s' is not valid. valid locations are: %s", locationToFind, strings.Join(locationNames, ", "))
+}
+
+func findAzureRegion(location *LocationDto, azureRegion string) (bool, error) {
+	for _, region := range location.Properties.AzureRegions {
+		if region == azureRegion {
+			return true, nil
+		}
+	}
+	return false, fmt.Errorf("region '%s' is not valid for location %s. valid regions are: %s", azureRegion, location.Name, strings.Join(location.Properties.AzureRegions, ", "))
+}
+
+func locationValidator(client *api.ApiClient, location, azureRegion string) error {
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.GetConfig().Urls.BapiUrl,
@@ -65,28 +71,25 @@ func locationValidator(client *api.ApiClient, location string) error {
 
 	defer response.Response.Body.Close()
 
-	err = json.Unmarshal(response.BodyAsBytes, &parsed)
+	locationsArray := LocationArrayDto{}
+	err = json.Unmarshal(response.BodyAsBytes, &locationsArray)
 
 	if err != nil {
 		return err
 	}
 
-	names := make([]string, len(parsed.Value))
-	for i, loc := range parsed.Value {
-		names[i] = loc.Name
+	foundLocation, err := findLocation(locationsArray, location)
+	if err != nil {
+		return err
 	}
 
-	found := func(items []string, check string) bool {
-		for _, item := range items {
-			if item == check {
-				return true
-			}
-		}
-		return false
-	}(names, location)
+	if azureRegion == "" {
+		return nil
+	}
 
-	if !found {
-		return fmt.Errorf("location %s is not valid. valid locations are: %s", location, strings.Join(names, ", "))
+	isRegionFound, err := findAzureRegion(foundLocation, azureRegion)
+	if err != nil || !isRegionFound {
+		return err
 	}
 
 	return nil
