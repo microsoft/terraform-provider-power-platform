@@ -151,9 +151,7 @@ All the test for a given resource/datasource are located in `/internal/powerplat
 
 ### Writing Unit Tests
 
-Unit test are created by mocking HTTP request, some of the often used HTTP mocks encapsulated in `ActivateEnvironmentHttpMocks` function, so that you don't have to write them for every test.
-
-when implementing new mocks, the mokcked response json files should be located in `/internal/powerplatform/services/<your_service_name>/test/<resource_or_datasource>/<name_of_the_unit_test>` folder
+Unit test are created by mocking HTTP request, some of the often used HTTP mocks encapsulated in `ActivateEnvironmentHttpMocks` function, so that you don't have to write them for every test. When implementing new mocks, the mokcked response json files should be located in `/internal/powerplatform/services/<your_service_name>/test/<resource_or_datasource>/<name_of_the_unit_test>` folder
 
 > [!TIP]
 > When creating mocked json responses you can resuse the exising one by **duplicating** then into you `<name_of_the_unit_test>` folder.
