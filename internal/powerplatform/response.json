@@ -1,0 +1,687 @@
+{
+  "standard": [],
+  "premium": [],
+  "developer": [
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CDSSampleApp",
+      "name": "D365_CDSSampleApp",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Sample App",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": false
+      }
+    }
+  ],
+  "basic": [],
+  "production": [
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_Sales",
+      "name": "D365_Sales",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Sales Enterprise",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Sales Enterprise' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_DeveloperEdition",
+      "name": "D365_DeveloperEdition",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Developer Edition",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_ProjectOperations",
+      "name": "D365_ProjectOperations",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Project Operations",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Project Operations' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CustomerService",
+      "name": "D365_CustomerService",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Customer Service",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Customer Service' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_FieldService",
+      "name": "D365_FieldService",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Field Service",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Field Service' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_SmbMarketing",
+      "name": "D365_SmbMarketing",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "SMB Marketing",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'SMB Marketing' Dynamics app."
+        },
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CDSSampleApp",
+      "name": "D365_CDSSampleApp",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Sample App",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_SalesPro",
+      "name": "D365_SalesPro",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Sales Pro",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Sales Pro' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CustomerServicePro",
+      "name": "D365_CustomerServicePro",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Customer Service Pro",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Customer Service Pro' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_RemoteAssist",
+      "name": "D365_RemoteAssist",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Remote Assist",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Remote Assist' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_PowerFrameworkTemplate",
+      "name": "D365_PowerFrameworkTemplate",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Power Framework",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_Guides",
+      "name": "D365_Guides",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Guides",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Guides' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    }
+  ],
+  "sandbox": [
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_Sales",
+      "name": "D365_Sales",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Sales Enterprise",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Sales Enterprise' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_DeveloperEdition",
+      "name": "D365_DeveloperEdition",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Developer Edition",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_ProjectOperations",
+      "name": "D365_ProjectOperations",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Project Operations",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Project Operations' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CustomerService",
+      "name": "D365_CustomerService",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Customer Service",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Customer Service' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_FieldService",
+      "name": "D365_FieldService",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Field Service",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Field Service' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_SmbMarketing",
+      "name": "D365_SmbMarketing",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "SMB Marketing",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'SMB Marketing' Dynamics app."
+        },
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CDSSampleApp",
+      "name": "D365_CDSSampleApp",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Sample App",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_SalesPro",
+      "name": "D365_SalesPro",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Sales Pro",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Sales Pro' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CustomerServicePro",
+      "name": "D365_CustomerServicePro",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Customer Service Pro",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Customer Service Pro' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_RemoteAssist",
+      "name": "D365_RemoteAssist",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Remote Assist",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Remote Assist' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_PowerFrameworkTemplate",
+      "name": "D365_PowerFrameworkTemplate",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Power Framework",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_Guides",
+      "name": "D365_Guides",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Guides",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Guides' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    }
+  ],
+  "trial": [
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_Sales",
+      "name": "D365_Sales",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Sales Enterprise",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_DeveloperEdition",
+      "name": "D365_DeveloperEdition",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Developer Edition",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CustomerService",
+      "name": "D365_CustomerService",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Customer Service",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_FieldService",
+      "name": "D365_FieldService",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Field Service",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CDSSampleApp",
+      "name": "D365_CDSSampleApp",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Sample App",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_RemoteAssist",
+      "name": "D365_RemoteAssist",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Remote Assist",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_PowerFrameworkTemplate",
+      "name": "D365_PowerFrameworkTemplate",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Power Framework",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CustomerServiceTrial",
+      "name": "D365_CustomerServiceTrial",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Customer Service Trial",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_FieldServicePremiumTrial",
+      "name": "D365_FieldServicePremiumTrial",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "FieldService Premium Trial",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    }
+  ],
+  "default": [
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CDSSampleApp",
+      "name": "D365_CDSSampleApp",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Sample App",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": false
+      }
+    }
+  ],
+  "support": [],
+  "subscriptionBasedTrial": [
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_DeveloperEdition",
+      "name": "D365_DeveloperEdition",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Developer Edition",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_ProjectOperations_DualWrite_Trial",
+      "name": "D365_ProjectOperations_DualWrite_Trial",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Project Operations for Stocked",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Project Operations for Stocked' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_FinOps_Finance",
+      "name": "D365_FinOps_Finance",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Finance (Preview)",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_FinOps_SCM",
+      "name": "D365_FinOps_SCM",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Supply Chain Management (Preview)",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Supply Chain Management (Preview)' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_FinOps_DemoHub_AIO",
+      "name": "D365_FinOps_DemoHub_AIO",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Finance and Operations DemoHub All-in-One",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_ProjectOperations",
+      "name": "D365_ProjectOperations",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Project Operations",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_Administration",
+      "name": "D365_Administration",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "All enterprise applications",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CDSSampleApp",
+      "name": "D365_CDSSampleApp",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Sample App",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_SalesPro",
+      "name": "D365_SalesPro",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Sales Pro",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CustomerServicePro",
+      "name": "D365_CustomerServicePro",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Customer Service Pro",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_RemoteAssist",
+      "name": "D365_RemoteAssist",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Remote Assist",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_SalesPremiumTrial",
+      "name": "D365_SalesPremiumTrial",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Sales Premium Trial",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_PowerFrameworkTemplate",
+      "name": "D365_PowerFrameworkTemplate",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Power Framework",
+        "isDisabled": false,
+        "isCustomerEngagement": false,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_FnOProjectOperations_Trial",
+      "name": "D365_FnOProjectOperations_Trial",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Project Operations for Non Stocked",
+        "isDisabled": true,
+        "disabledReason": {
+          "code": "DynamicsEntitlementMissing",
+          "message": "You do not have the required Dynamics 365 licenses to create databases with the 'Project Operations for Non Stocked' Dynamics app."
+        },
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_IntelligentOrderManagement",
+      "name": "D365_IntelligentOrderManagement",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Intelligent Order Management",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": true
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_Guides",
+      "name": "D365_Guides",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Guides",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CustomerServiceTrial",
+      "name": "D365_CustomerServiceTrial",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "Customer Service Trial",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    },
+    {
+      "id": "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_FieldServicePremiumTrial",
+      "name": "D365_FieldServicePremiumTrial",
+      "location": "unitedstates",
+      "properties": {
+        "displayName": "FieldService Premium Trial",
+        "isDisabled": false,
+        "isCustomerEngagement": true,
+        "isSupportedForResetOperation": false
+      }
+    }
+  ],
+  "teams": [],
+  "platform": []
+}

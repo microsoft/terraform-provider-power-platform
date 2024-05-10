@@ -27,6 +27,7 @@ type EnvironmentDto struct {
 }
 
 type EnvironmentPropertiesDto struct {
+	AzureRegion               string                        `json:"azureRegion,omitempty"`
 	DatabaseType              string                        `json:"databaseType"`
 	DisplayName               string                        `json:"displayName"`
 	EnvironmentSku            string                        `json:"environmentSku"`
@@ -102,6 +103,7 @@ type EnvironmentCreateDto struct {
 }
 
 type EnvironmentCreatePropertiesDto struct {
+	AzureRegion               string                                       `json:"azureRegion,omitempty"`
 	BillingPolicy             BillingPolicyDto                             `json:"billingPolicy,omitempty"`
 	DataBaseType              string                                       `json:"databaseType,omitempty"`
 	DisplayName               string                                       `json:"displayName"`
@@ -188,6 +190,7 @@ type EnvironmentsListDataSourceModel struct {
 type EnvironmentSourceModel struct {
 	Id              types.String `tfsdk:"id"`
 	Location        types.String `tfsdk:"location"`
+	AzureRegion     types.String `tfsdk:"azure_region"`
 	DisplayName     types.String `tfsdk:"display_name"`
 	EnvironmentType types.String `tfsdk:"environment_type"`
 	BillingPolicyId types.String `tfsdk:"billing_policy_id"`
@@ -219,10 +222,6 @@ func ConvertUpdateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		Properties: EnvironmentPropertiesDto{
 			DisplayName:    environmentSource.DisplayName.ValueString(),
 			EnvironmentSku: environmentSource.EnvironmentType.ValueString(),
-			// LinkedEnvironmentMetadata: &LinkedEnvironmentMetadataDto{
-			// 	//SecurityGroupId: plan.SecurityGroupId.ValueString(),
-			// 	//DomainName:      plan.Domain.ValueString(),
-			// },
 		},
 	}
 
@@ -263,6 +262,10 @@ func ConvertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		},
 	}
 
+	if !environmentSource.AzureRegion.IsNull() && environmentSource.AzureRegion.ValueString() != "" {
+		environmentDto.Properties.AzureRegion = environmentSource.AzureRegion.ValueString()
+	}
+
 	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != "" {
 		environmentDto.Properties.BillingPolicy = BillingPolicyDto{
 			Id: environmentSource.BillingPolicyId.ValueString(),
@@ -272,14 +275,6 @@ func ConvertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 	if !environmentSource.Dataverse.IsNull() && !environmentSource.Dataverse.IsUnknown() {
 		var dataverseSourceModel DataverseSourceModel
 		environmentSource.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
-
-		// var templateMetadataObject EnvironmentCreateTemplateMetadata
-		// if dataverseSourceModel.TemplateMetadata.ValueString() != "" {
-		// 	err := json.Unmarshal([]byte(dataverseSourceModel.TemplateMetadata.ValueString()), &templateMetadataObject)
-		// 	if err != nil {
-		// 		return nil, fmt.Errorf("error when unmarshalling template metadata %s; internal error: %v", dataverseSourceModel.TemplateMetadata.ValueString(), err)
-		// 	}
-		// }
 
 		environmentDto.Properties.DataBaseType = "CommonDataService"
 		linkedMetadata, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, environmentSource.Dataverse)
@@ -333,6 +328,7 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		Id:              types.StringValue(environmentDto.Name),
 		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
 		Location:        types.StringValue(environmentDto.Location),
+		AzureRegion:     types.StringValue(environmentDto.Properties.AzureRegion),
 		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),
 	}
 
@@ -429,4 +425,23 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 	}
 	model.Dataverse = types.ObjectValueMust(attrTypesDataverseObject, attrValuesProductProperties)
 	return model, nil
+}
+
+type LocationArrayDto struct {
+	Value []LocationDto `json:"value"`
+}
+
+type LocationDto struct {
+	ID         string `json:"id"`
+	Type       string `json:"type"`
+	Name       string `json:"name"`
+	Properties struct {
+		DisplayName                            string   `json:"displayName"`
+		Code                                   string   `json:"code"`
+		IsDefault                              bool     `json:"isDefault"`
+		IsDisabled                             bool     `json:"isDisabled"`
+		CanProvisionDatabase                   bool     `json:"canProvisionDatabase"`
+		CanProvisionCustomerEngagementDatabase bool     `json:"canProvisionCustomerEngagementDatabase"`
+		AzureRegions                           []string `json:"azureRegions"`
+	} `json:"properties"`
 }

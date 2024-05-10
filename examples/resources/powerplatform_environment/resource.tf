@@ -13,6 +13,7 @@ provider "powerplatform" {
 resource "powerplatform_environment" "development" {
   display_name     = "example_environment"
   location         = "europe"
+  azure_region     = "northeurope"
   environment_type = "Sandbox"
   dataverse = {
     language_code     = "1033"
