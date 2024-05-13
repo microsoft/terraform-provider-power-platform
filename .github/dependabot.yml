@@ -11,13 +11,13 @@ updates:
       interval: "daily"
   - package-ecosystem: "terraform" # See documentation for possible values
     directories: # Location of terraform modules
-    # Workaround for not having glob support yet.  Uncommment globs and remove individual paths when available.
+    # Workaround for not having glob support yet.  Uncommment globs and remove individual paths when available. https://github.blog/changelog/2024-04-29-dependabot-multi-directory-configuration-public-beta-now-available/
     # - "/examples/resources/*"
     # - "/examples/data-sources/*"
     - "/examples/resources/powerplatform_billing_policy" 
     - "/examples/resources/powerplatform_billing_policy_environment"
     - "/examples/resources/powerplatform_data_loss_prevention_policy"
-    - "/examples/resources/powerplatform_environment_settings"
+    - "/examples/resources/powerplatform_environment"
     - "/examples/resources/powerplatform_environment_application_packages"
     - "/examples/resources/powerplatform_environment_settings"
     - "/examples/resources/powerplatform_managed_environment"
