@@ -110,6 +110,7 @@ func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	plan.Id = types.StringValue(plan.Id.ValueString())
 	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
 	plan.TableLogicalName = types.StringValue(plan.TableLogicalName.ValueString())
 	plan.Columns = types.DynamicValue(plan.Columns)
@@ -120,11 +121,13 @@ func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequ
 	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
 	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
 
-	_, err := r.DataRecordClient.ApplyDataRecords(ctx, plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
+	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, plan.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
 		return
 	}
+
+	plan.Id = types.StringValue(dr.Id)
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.TableLogicalName.ValueString()))
 
@@ -165,7 +168,24 @@ func (r *DataRecordResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	//todo implement update logic
+	plan.Id = types.StringValue(plan.Id.ValueString())
+	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
+	plan.TableLogicalName = types.StringValue(plan.TableLogicalName.ValueString())
+	plan.Columns = types.DynamicValue(plan.Columns)
+
+	var mapColumns map[string]interface{}
+
+	jsonColumns, _ := json.Marshal(plan.Columns.String())
+	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
+	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
+
+	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
+		return
+	}
+
+	plan.Id = types.StringValue(dr.Id)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
@@ -183,10 +203,19 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	//todo implement delete logic
+	var mapColumns map[string]interface{}
+
+	jsonColumns, _ := json.Marshal(state.Columns.String())
+	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
+	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
+
+	err := r.DataRecordClient.DeleteDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
 
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
-	//stflog.Debug(ctx, "No data_record have been uninstalled, as this is the expected behavior")
 }
 
 func (r *DataRecordResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

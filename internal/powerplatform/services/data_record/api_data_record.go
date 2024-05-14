@@ -78,7 +78,7 @@ func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentI
 	return &env, nil
 }
 
-func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmentId string, tableName string, columns map[string]interface{}) (*DataRecordDto, error) {
+func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId string, environmentId string, tableName string, columns map[string]interface{}) (*DataRecordDto, error) {
 	result := DataRecordDto{}
 
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
@@ -91,7 +91,23 @@ func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmen
 	for key, value := range columns {
 		if nestedMap, ok := value.(map[string]interface{}); ok {
 			delete(columns, key)
-			columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("/%s(%s)", nestedMap["table_logical_name"], nestedMap["data_record_id"])
+			if len(nestedMap) > 0 {
+				entityLogicalName := nestedMap["entity_logical_name"]
+
+				entityDefinitionApiUrl := &url.URL{
+					Scheme:   "https",
+					Host:     strings.TrimPrefix(environmentUrl, "https://"),
+					Path:     fmt.Sprintf("/api/data/v9.2/EntityDefinitions(LogicalName='%s')", entityLogicalName),
+					Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
+				}
+				entityDefinition := EntityDefinitionsDto{}
+				_, err = client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
+				if err != nil {
+					return &result, err
+				}
+
+				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("%s/api/data/v9.2/%s(%s)", environmentUrl, entityDefinition.LogicalCollectionName, nestedMap["data_record_id"])
+			}
 		}
 		if nestedMapList, ok := value.([]interface{}); ok {
 			delete(columns, key)
@@ -107,7 +123,7 @@ func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmen
 	}
 
 	entityDefinition := EntityDefinitionsDto{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, columns, []int{http.StatusOK}, &entityDefinition)
+	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
 	if err != nil {
 		return &result, err
 	}
@@ -115,9 +131,12 @@ func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmen
 	method := "POST"
 	path := fmt.Sprintf("/api/data/v9.2/%s", entityDefinition.LogicalCollectionName)
 
-	if columns[entityDefinition.PrimaryIDAttribute] != nil {
+	if val, ok := columns[entityDefinition.PrimaryIDAttribute]; ok {
 		method = "PATCH"
-		path = fmt.Sprintf("%s(%s)", path, columns[entityDefinition.PrimaryIDAttribute])
+		path = fmt.Sprintf("%s(%s)", path, val)
+	} else if recordId != "" {
+		method = "PATCH"
+		path = fmt.Sprintf("%s(%s)", path, recordId)
 	}
 
 	apiUrl = &url.URL{
@@ -151,29 +170,124 @@ func (client *DataRecordClient) ApplyDataRecords(ctx context.Context, environmen
 
 	result.Id = locationHeader
 
-	/*
-		for key, value := range relations {
-			if nestedMapList, ok := value.([]interface{}); ok {
-				apiUrl := &url.URL{
-					Scheme: "https",
-					Host:   strings.TrimPrefix(environmentUrl, "https://"),
-					Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)/%s/$ref", tableName, result.Id, key),
+	for key, value := range relations {
+		if nestedMapList, ok := value.([]interface{}); ok {
+			apiUrl := &url.URL{
+				Scheme: "https",
+				Host:   strings.TrimPrefix(environmentUrl, "https://"),
+				Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)/%s", entityDefinition.LogicalCollectionName, result.Id, key),
+			}
+
+			for _, nestedItem := range nestedMapList {
+				nestedMap := nestedItem.(map[string]interface{})
+
+				entityLogicalName := nestedMap["entity_logical_name"]
+
+				entityDefinitionApiUrl := &url.URL{
+					Scheme:   "https",
+					Host:     strings.TrimPrefix(environmentUrl, "https://"),
+					Path:     fmt.Sprintf("/api/data/v9.2/EntityDefinitions(LogicalName='%s')", entityLogicalName),
+					Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
+				}
+				entityDefinition := EntityDefinitionsDto{}
+				_, err = client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
+				if err != nil {
+					return &result, err
 				}
 
-				for _, nestedItem := range nestedMapList {
-					nestedMap := nestedItem.(map[string]interface{})
-					relation := RelationApiBody{
-						OdataID: fmt.Sprintf("%s/api/data/v9.2/%s(%s)", environmentUrl, nestedMap["table_logical_name"], nestedMap["data_record_id"]),
-					}
-					response, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
-					if err != nil {
-						return result, err
-					}
-					fmt.Println(response.Response.StatusCode)
+				relation := RelationApiBody{
+					OdataID: fmt.Sprintf("%s/api/data/v9.2/%s(%s)", environmentUrl, entityDefinition.LogicalCollectionName, nestedMap["data_record_id"]),
+				}
+				_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
+				if err != nil {
+					return &result, err
 				}
 			}
 		}
-	*/
+	}
 
 	return &result, nil
+}
+
+func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId string, environmentId string, tableName string, columns map[string]interface{}) error {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return err
+	}
+
+	relations := make(map[string]interface{}, 0)
+
+	for key, value := range columns {
+		if _, ok := value.(map[string]interface{}); ok {
+			delete(columns, key)
+		}
+		if nestedMapList, ok := value.([]interface{}); ok {
+			delete(columns, key)
+			relations[key] = nestedMapList
+		}
+	}
+
+	apiUrl := &url.URL{
+		Scheme:   "https",
+		Host:     strings.TrimPrefix(environmentUrl, "https://"),
+		Path:     fmt.Sprintf("/api/data/v9.2/EntityDefinitions(LogicalName='%s')", tableName),
+		Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
+	}
+
+	tableEntityDefinition := EntityDefinitionsDto{}
+	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &tableEntityDefinition)
+	if err != nil {
+		return err
+	}
+
+	apiUrl = &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)", tableEntityDefinition.LogicalCollectionName, recordId),
+	}
+
+	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
+	if err != nil {
+		return err
+	}
+
+	for key, value := range relations {
+		if nestedMapList, ok := value.([]interface{}); ok {
+			apiUrl := &url.URL{
+				Scheme: "https",
+				Host:   strings.TrimPrefix(environmentUrl, "https://"),
+				Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)/%s", tableEntityDefinition.LogicalCollectionName, recordId, key),
+			}
+
+			for _, nestedItem := range nestedMapList {
+				nestedMap := nestedItem.(map[string]interface{})
+
+				entityLogicalName := nestedMap["entity_logical_name"]
+
+				entityDefinitionApiUrl := &url.URL{
+					Scheme:   "https",
+					Host:     strings.TrimPrefix(environmentUrl, "https://"),
+					Path:     fmt.Sprintf("/api/data/v9.2/EntityDefinitions(LogicalName='%s')", entityLogicalName),
+					Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
+				}
+				columnEntityDefinition := EntityDefinitionsDto{}
+				_, err = client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &columnEntityDefinition)
+				if err != nil {
+					return err
+				}
+
+				apiUrl = &url.URL{
+					Scheme: "https",
+					Host:   strings.TrimPrefix(environmentUrl, "https://"),
+					Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)/%s/$ref?$id=%s/api/data/v9.2/%s(%s)", tableEntityDefinition.LogicalCollectionName, nestedMap["data_record_id"], key, environmentUrl, columnEntityDefinition.LogicalCollectionName, nestedMap["data_record_id"]),
+				}
+				_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
 }
