@@ -5,14 +5,12 @@ package powerplatform
 
 import (
 	"fmt"
-	"math/rand"
 	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
@@ -23,8 +21,6 @@ import (
 func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 	solutionName := "TerraformTestSolution"
 	solutionFileName := solutionName + "_Complex_1_1_0_0.zip"
-	rand.Seed(time.Now().UnixNano())
-	envDomain := fmt.Sprintf("orgtest%d", rand.Intn(100000))
 
 	solutionFileBytes, err := os.ReadFile(filepath.Join("../../examples/resources/powerplatform_solution", solutionFileName))
 	if err != nil {
@@ -46,7 +42,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 				Config: TestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
-					display_name                              = "` + envDomain + `"
+					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 					dataverse = {
@@ -154,8 +150,6 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 	solutionName := "TerraformTestSolution"
 	solutionFileName := solutionName + "_Complex_1_1_0_0.zip"
 	solutionSettingsFileName := "test_solution_settings.json"
-	rand.Seed(time.Now().UnixNano())
-	envDomain := fmt.Sprintf("orgtest%d", rand.Intn(100000))
 
 	solutionFileBytes, err := os.ReadFile(filepath.Join("../../examples/resources/powerplatform_solution", solutionFileName))
 	if err != nil {
@@ -207,7 +201,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 				Config: TestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
-					display_name                              = "` + envDomain + `"
+					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 					dataverse = {
@@ -435,8 +429,6 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 	solutionName := "TerraformTestSolution"
 	solutionFileName := solutionName + "_Complex_1_1_0_0.zip"
-	rand.Seed(time.Now().UnixNano())
-	envDomain := fmt.Sprintf("orgtest%d", rand.Intn(100000))
 
 	solutionFileBytes, err := os.ReadFile(filepath.Join("../../examples/resources/powerplatform_solution", solutionFileName))
 	if err != nil {
@@ -456,7 +448,7 @@ func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 				Config: TestsProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
-					display_name                              = "` + envDomain + `"
+					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 				}

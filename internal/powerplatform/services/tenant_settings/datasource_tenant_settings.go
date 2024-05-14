@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -168,7 +167,11 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 
 	state = ConvertFromTenantSettingsDto(*tenantSettings)
-	state.Id = types.StringValue(uuid.New().String())
+	hash, err := tenantSettings.CalcObjectHash()
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", d.ProviderTypeName), err.Error())
+	}
+	state.Id = types.StringValue(*hash)
 
 	diags := resp.State.Set(ctx, &state)
 
@@ -186,8 +189,9 @@ func (d *TenantSettingsDataSource) Schema(_ context.Context, _ datasource.Schema
 		MarkdownDescription: "Fetches Power Platform Tenant Settings.  See [Tenant Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/tenant-settings) for more information.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description: "Id",
-				Computed:    true,
+				Description:         "Id of the read operation",
+				MarkdownDescription: "Id of the read operation",
+				Computed:            true,
 			},
 			"walk_me_opt_out": schema.BoolAttribute{
 				Description: "Walk Me Opt Out",

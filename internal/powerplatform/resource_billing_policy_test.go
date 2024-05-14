@@ -15,16 +15,15 @@ import (
 	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
-//We can't test the create method as it requires a valid subscription id and resource group id
+// We can't test the create method as it requires a valid subscription id and resource group id
 // func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 // 	resource.Test(t, resource.TestCase{
-// 		PreCheck:                 func() { TestAccPreCheck(t) },
 // 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 // 		Steps: []resource.TestStep{
 // 			{
-// 				Config: AcceptanceTestsProviderConfig + `
+// 				Config: TestsProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-// 					name     = "payAsYouGoBillingPolicyExample"
+// 					name     = "` + mock_helpers.TestName() + `"
 // 					location = "europe"
 // 					status   = "Enabled"
 // 					billing_instrument = {
@@ -36,7 +35,7 @@ import (
 // 					//Verify placeholder id attribute
 // 					resource.TestMatchResourceAttr("powerplatform_billing_policy.pay_as_you_go", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 // 					// Verify the first power app to ensure all attributes are set
-// 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", "payAsYouGoBillingPolicyExample"),
+// 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", mock_helpers.TestName()),
 // 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "location", "europe"),
 // 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "status", "Enabled"),
 // 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "billing_instrument.resource_group", "resource_group_name"),
@@ -101,16 +100,15 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 	})
 }
 
-//We can't test the create method as it requires a valid subscription id and resource group id
+// We can't test the create method as it requires a valid subscription id and resource group id
 // func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 // 	resource.Test(t, resource.TestCase{
-// 		PreCheck:                 func() { TestAccPreCheck(t) },
 // 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 // 		Steps: []resource.TestStep{
 // 			{
-// 				Config: AcceptanceTestsProviderConfig + `
+// 				Config: TestsProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-// 					name     = "payAsYouGoBillingPolicyExample"
+// 					name     = "` + mock_helpers.TestName() + `"
 // 					location = "europe"
 // 					status   = "Enabled"
 // 					billing_instrument = {
@@ -123,9 +121,9 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 // 				),
 // 			},
 // 			{
-// 				Config: AcceptanceTestsProviderConfig + `
+// 				Config: TestsProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-// 					name     = "payAsYouGoBillingPolicyExample1"
+// 					name     = "` + mock_helpers.TestName() + `1"
 // 					location = "europe"
 // 					status   = "Enabled"
 // 					billing_instrument = {
@@ -135,14 +133,14 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 // 				}`,
 // 				Check: resource.ComposeAggregateTestCheckFunc(
 // 					resource.TestMatchResourceAttr("powerplatform_billing_policy.pay_as_you_go", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-// 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", "payAsYouGoBillingPolicyExample1"),
+// 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", mock_helpers.TestName()+"1"),
 // 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "status", "Enabled"),
 // 				),
 // 			},
 // 			{
-// 				Config: AcceptanceTestsProviderConfig + `
+// 				Config: TestsProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-// 					name     = "payAsYouGoBillingPolicyExample1"
+// 					name     = "` + mock_helpers.TestName() + `1"
 // 					location = "europe"
 // 					status   = "Disabled"
 // 					billing_instrument = {
@@ -152,7 +150,7 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 // 				}`,
 // 				Check: resource.ComposeAggregateTestCheckFunc(
 // 					resource.TestMatchResourceAttr("powerplatform_billing_policy.pay_as_you_go", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
-// 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", "payAsYouGoBillingPolicyExample1"),
+// 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", mock_helpers.TestName()+"1"),
 // 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "status", "Disabled"),
 // 				),
 // 			},
@@ -250,13 +248,12 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 // We can't test the create method as it requires a valid subscription id and resource group id
 // func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 // 	resource.Test(t, resource.TestCase{
-// 		PreCheck:                 func() { TestAccPreCheck(t) },
 // 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 // 		Steps: []resource.TestStep{
 // 			{
-// 				Config: AcceptanceTestsProviderConfig + `
+// 				Config: TestsProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-// 					name     = "payAsYouGoBillingPolicyExample"
+// 					name     = "` + mock_helpers.TestName() + `"
 // 					location = "europe"
 // 					status   = "Enabled"
 // 					billing_instrument = {
@@ -269,9 +266,9 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 // 				),
 // 			},
 // 			{
-// 				Config: AcceptanceTestsProviderConfig + `
+// 				Config: TestsProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-// 					name     = "payAsYouGoBillingPolicyExample"
+// 					name     = "` + mock_helpers.TestName() + `"
 // 					location = "switzerland"
 // 					status   = "Enabled"
 // 					billing_instrument = {
@@ -285,9 +282,9 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 // 				),
 // 			},
 // 			{
-// 				Config: AcceptanceTestsProviderConfig + `
+// 				Config: TestsProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-// 					name     = "payAsYouGoBillingPolicyExample"
+// 					name     = "` + mock_helpers.TestName() + `"
 // 					location = "switzerland"
 // 					status   = "Enabled"
 // 					billing_instrument = {
@@ -302,9 +299,9 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 // 				),
 // 			},
 // 			{
-// 				Config: AcceptanceTestsProviderConfig + `
+// 				Config: TestsProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-// 					name     = "payAsYouGoBillingPolicyExample"
+// 					name     = "` + mock_helpers.TestName() + `"
 // 					location = "switzerland"
 // 					status   = "Enabled"
 // 					billing_instrument = {

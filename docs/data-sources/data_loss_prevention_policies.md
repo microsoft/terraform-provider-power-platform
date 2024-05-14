@@ -17,7 +17,7 @@ Fetches the list of Data Loss Prevention Policies in a Power Platform tenant. Se
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
+- `id` (String) Id of the read operation
 - `policies` (Attributes List) List of Data Loss Prevention Policies (see [below for nested schema](#nestedatt--policies))
 
 <a id="nestedatt--policies"></a>
