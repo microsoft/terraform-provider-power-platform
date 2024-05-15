@@ -1227,9 +1227,6 @@ func TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *te
 }
 
 func TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testing.T) {
-
-	t.Setenv("TF_ACC", "1")
-
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               false,
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
