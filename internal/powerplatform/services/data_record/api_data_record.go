@@ -50,6 +50,22 @@ type RelationApiBody struct {
 	OdataID string `json:"@odata.id"`
 }
 
+func getEntityDefinition(ctx context.Context, client *DataRecordClient, environmentUrl string, entityLogicalName string) *EntityDefinitionsDto {
+	entityDefinitionApiUrl := &url.URL{
+		Scheme:   "https",
+		Host:     strings.TrimPrefix(environmentUrl, "https://"),
+		Path:     fmt.Sprintf("/api/data/v9.2/EntityDefinitions(LogicalName='%s')", entityLogicalName),
+		Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
+	}
+	entityDefinition := EntityDefinitionsDto{}
+	_, err := client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
+	if err != nil {
+		return nil
+	}
+
+	return &entityDefinition
+}
+
 func (client *DataRecordClient) GetEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
@@ -92,19 +108,9 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 		if nestedMap, ok := value.(map[string]interface{}); ok {
 			delete(columns, key)
 			if len(nestedMap) > 0 {
-				entityLogicalName := nestedMap["entity_logical_name"]
+				entityLogicalName := nestedMap["entity_logical_name"].(string)
 
-				entityDefinitionApiUrl := &url.URL{
-					Scheme:   "https",
-					Host:     strings.TrimPrefix(environmentUrl, "https://"),
-					Path:     fmt.Sprintf("/api/data/v9.2/EntityDefinitions(LogicalName='%s')", entityLogicalName),
-					Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
-				}
-				entityDefinition := EntityDefinitionsDto{}
-				_, err = client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
-				if err != nil {
-					return &result, err
-				}
+				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, entityLogicalName)
 
 				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("%s/api/data/v9.2/%s(%s)", environmentUrl, entityDefinition.LogicalCollectionName, nestedMap["data_record_id"])
 			}
@@ -115,18 +121,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 		}
 	}
 
-	apiUrl := &url.URL{
-		Scheme:   "https",
-		Host:     strings.TrimPrefix(environmentUrl, "https://"),
-		Path:     fmt.Sprintf("/api/data/v9.2/EntityDefinitions(LogicalName='%s')", tableName),
-		Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
-	}
-
-	entityDefinition := EntityDefinitionsDto{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
-	if err != nil {
-		return &result, err
-	}
+	entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
 
 	method := "POST"
 	path := fmt.Sprintf("/api/data/v9.2/%s", entityDefinition.LogicalCollectionName)
@@ -139,7 +134,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 		path = fmt.Sprintf("%s(%s)", path, recordId)
 	}
 
-	apiUrl = &url.URL{
+	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   strings.TrimPrefix(environmentUrl, "https://"),
 		Path:   path,
@@ -181,19 +176,9 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 			for _, nestedItem := range nestedMapList {
 				nestedMap := nestedItem.(map[string]interface{})
 
-				entityLogicalName := nestedMap["entity_logical_name"]
+				entityLogicalName := nestedMap["entity_logical_name"].(string)
 
-				entityDefinitionApiUrl := &url.URL{
-					Scheme:   "https",
-					Host:     strings.TrimPrefix(environmentUrl, "https://"),
-					Path:     fmt.Sprintf("/api/data/v9.2/EntityDefinitions(LogicalName='%s')", entityLogicalName),
-					Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
-				}
-				entityDefinition := EntityDefinitionsDto{}
-				_, err = client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
-				if err != nil {
-					return &result, err
-				}
+				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, entityLogicalName)
 
 				relation := RelationApiBody{
 					OdataID: fmt.Sprintf("%s/api/data/v9.2/%s(%s)", environmentUrl, entityDefinition.LogicalCollectionName, nestedMap["data_record_id"]),
@@ -227,20 +212,9 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		}
 	}
 
+	tableEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
+
 	apiUrl := &url.URL{
-		Scheme:   "https",
-		Host:     strings.TrimPrefix(environmentUrl, "https://"),
-		Path:     fmt.Sprintf("/api/data/v9.2/EntityDefinitions(LogicalName='%s')", tableName),
-		Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
-	}
-
-	tableEntityDefinition := EntityDefinitionsDto{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &tableEntityDefinition)
-	if err != nil {
-		return err
-	}
-
-	apiUrl = &url.URL{
 		Scheme: "https",
 		Host:   strings.TrimPrefix(environmentUrl, "https://"),
 		Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)", tableEntityDefinition.LogicalCollectionName, recordId),
@@ -262,19 +236,9 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 			for _, nestedItem := range nestedMapList {
 				nestedMap := nestedItem.(map[string]interface{})
 
-				entityLogicalName := nestedMap["entity_logical_name"]
+				entityLogicalName := nestedMap["entity_logical_name"].(string)
 
-				entityDefinitionApiUrl := &url.URL{
-					Scheme:   "https",
-					Host:     strings.TrimPrefix(environmentUrl, "https://"),
-					Path:     fmt.Sprintf("/api/data/v9.2/EntityDefinitions(LogicalName='%s')", entityLogicalName),
-					Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
-				}
-				columnEntityDefinition := EntityDefinitionsDto{}
-				_, err = client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &columnEntityDefinition)
-				if err != nil {
-					return err
-				}
+				columnEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, entityLogicalName)
 
 				apiUrl = &url.URL{
 					Scheme: "https",
