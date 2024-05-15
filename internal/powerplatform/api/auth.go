@@ -59,9 +59,22 @@ func NewAuthBase(config *config.ProviderConfig) *Auth {
 	}
 }
 
-// func (client *Auth) GetAuthority(tenantid string) string {
-// 	return constants.OAUTH_AUTHORITY_URL + tenantid
-// }
+func (client *Auth) AuthUserPassPreview(ctx context.Context, scopes []string) (string, time.Time, error) {
+	cred, err := azidentity.NewEnvironmentCredential(nil)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	accessToken, err := cred.GetToken(ctx, policy.TokenRequestOptions{
+		TenantID: client.config.Credentials.TenantId,
+		Scopes:   scopes,
+	})
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	return accessToken.Token, accessToken.ExpiresOn, nil
+}
 
 func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string) (string, time.Time, error) {
 	azureCLICredentials, err := azidentity.NewAzureCLICredential(nil)
@@ -256,7 +269,11 @@ func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*st
 	case client.config.Credentials.IsClientSecretCredentialsProvided():
 		token, tokenExpiry, err = client.AuthenticateClientSecret(ctx, scopes)
 	case client.config.Credentials.IsCliProvided():
-		token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes)
+		//injecting pac_cli first party appId as it has nessesary permissions to access the resources that we need
+		//TODO check if that works with everything
+		os.Setenv("AZURE_CLIENT_ID", "9cee029c-6210-4654-90bb-17e6e9d36617")
+		token, tokenExpiry, err = client.AuthUserPassPreview(ctx, scopes)
+		//token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes)
 	case client.config.Credentials.IsOidcProvided():
 		token, tokenExpiry, err = client.AuthenticateOIDC(ctx, scopes)
 
