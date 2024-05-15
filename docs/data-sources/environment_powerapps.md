@@ -33,7 +33,7 @@ data "powerplatform_environment_powerapps" "all" {}
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
+- `id` (String) Id of the read operation
 - `powerapps` (Attributes List) List of Power Apps (see [below for nested schema](#nestedatt--powerapps))
 
 <a id="nestedatt--powerapps"></a>

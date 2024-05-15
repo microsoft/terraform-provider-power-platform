@@ -34,7 +34,7 @@ data "powerplatform_environments" "all_environments" {}
 ### Read-Only
 
 - `environments` (Attributes List) List of environments (see [below for nested schema](#nestedatt--environments))
-- `id` (Number) Placeholder identifier attribute
+- `id` (Number) Id of the read operation
 
 <a id="nestedatt--environments"></a>
 ### Nested Schema for `environments`

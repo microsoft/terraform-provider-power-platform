@@ -47,12 +47,14 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 		MarkdownDescription: "Manages Power Platform Settings for a given environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/admin-settings) for more details.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description: "Id",
-				Computed:    true,
+				Description:         "Id of the read operation",
+				MarkdownDescription: "Id of the read operation",
+				Computed:            true,
 			},
 			"environment_id": schema.StringAttribute{
-				Description: "Environment Id",
-				Required:    true,
+				Description:         "Environment Id",
+				MarkdownDescription: "Environment Id",
+				Required:            true,
 			},
 			"audit_and_logs": schema.SingleNestedAttribute{
 				Description:         "Audit and Logs",
@@ -236,6 +238,7 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 	}
 
 	var state = ConvertFromEnvironmentSettingsDto(envSettings)
+	state.Id = plan.EnvironmentId
 	state.EnvironmentId = plan.EnvironmentId
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", state.Id.ValueString()))
@@ -266,6 +269,7 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	var newState = ConvertFromEnvironmentSettingsDto(envSettings)
+	newState.Id = state.EnvironmentId
 	newState.EnvironmentId = state.EnvironmentId
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
@@ -305,6 +309,7 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 	}
 
 	plan = ConvertFromEnvironmentSettingsDto(environmentSettings)
+	plan.Id = state.EnvironmentId
 	plan.EnvironmentId = state.EnvironmentId
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)

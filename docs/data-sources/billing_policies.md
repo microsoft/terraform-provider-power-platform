@@ -34,7 +34,7 @@ data "powerplatform_billing_policies" "all_policies" {}
 ### Read-Only
 
 - `billing_policies` (Attributes List) [Power Platform Billing Policy](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy/get-billing-policy#billingpolicyresponsemodel) (see [below for nested schema](#nestedatt--billing_policies))
-- `id` (Number) Placeholder identifier attribute
+- `id` (Number) Id of the read operation
 
 <a id="nestedatt--billing_policies"></a>
 ### Nested Schema for `billing_policies`

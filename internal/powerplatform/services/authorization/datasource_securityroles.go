@@ -6,7 +6,6 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -146,6 +145,8 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
+	state.Id = state.EnvironmentId
+
 	for _, role := range roles {
 		state.SecurityRoles = append(state.SecurityRoles, SecurityRoleDataSourceModel{
 			RoleId:         types.StringValue(role.RoleId),
@@ -155,8 +156,6 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadR
 		})
 
 	}
-
-	state.Id = types.StringValue(fmt.Sprint((time.Now().Unix())))
 
 	diags := resp.State.Set(ctx, &state)
 

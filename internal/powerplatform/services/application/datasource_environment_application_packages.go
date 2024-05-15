@@ -6,8 +6,6 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -165,7 +163,6 @@ func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES START: %s", d.ProviderTypeName))
 
-	plan.Id = types.StringValue(strconv.FormatInt(time.Now().Unix(), 10))
 	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
 	plan.Name = types.StringValue(plan.Name.ValueString())
 	plan.PublisherName = types.StringValue(plan.PublisherName.ValueString())
@@ -205,6 +202,7 @@ func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req
 		})
 	}
 
+	plan.Id = types.StringValue(fmt.Sprintf("%s_%d", plan.EnvironmentId.ValueString(), len(applications)))
 	diags := resp.State.Set(ctx, &plan)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES END: %s", d.ProviderTypeName))

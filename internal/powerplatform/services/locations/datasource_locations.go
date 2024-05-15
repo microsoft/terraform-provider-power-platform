@@ -6,7 +6,6 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -60,8 +59,9 @@ func (d *LocationsDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 		MarkdownDescription: "Fetches the list of available Dynamics 365 locations. For more information see [Power Platform Geos](https://learn.microsoft.com/en-us/power-platform/admin/regions-overview)",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
-				Description: "Id of the read operation",
-				Optional:    true,
+				Description:         "Id of the read operation",
+				MarkdownDescription: "Id of the read operation",
+				Optional:            true,
 			},
 			"locations": schema.ListNestedAttribute{
 				Description:         "List of available locations",
@@ -136,13 +136,13 @@ func (d *LocationsDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LOCATIONS START: %s", d.ProviderTypeName))
 
-	plan.Id = types.Int64Value(time.Now().Unix())
-
 	locations, err := d.LocationsClient.GetLocations(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
+
+	plan.Id = types.Int64Value(int64(len(locations.Value)))
 
 	for _, location := range locations.Value {
 		plan.Value = append(plan.Value, LocationDataModel{
