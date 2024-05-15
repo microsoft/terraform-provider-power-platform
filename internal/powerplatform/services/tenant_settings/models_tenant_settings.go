@@ -5,6 +5,9 @@ package powerplatform
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
+	"encoding/json"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -98,6 +101,17 @@ type CatalogSettingsDto struct {
 
 type UserManagementSettingsDto struct {
 	EnableDeleteDisabledUserinAllEnvironments *bool `json:"enableDeleteDisabledUserinAllEnvironments,omitempty"`
+}
+
+func (tenantSettings *TenantSettingsDto) CalcObjectHash() (*string, error) {
+	json, err := json.Marshal(tenantSettings)
+	if err != nil {
+		return nil, err
+	}
+
+	hash := md5.Sum(json)
+	hashString := hex.EncodeToString(hash[:])
+	return &hashString, nil
 }
 
 type TenantSettingsDto struct {

@@ -6,7 +6,6 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -124,14 +123,14 @@ func (d *CurrenciesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE CURRENCIES START: %s", d.ProviderTypeName))
 
-	plan.Id = types.Int64Value(time.Now().Unix())
-	plan.Location = types.StringValue(plan.Location.ValueString())
-
 	currencies, err := d.CurrenciesClient.GetCurrenciesByLocation(ctx, plan.Location.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
+
+	plan.Id = types.Int64Value(int64(len(currencies.Value)))
+	plan.Location = types.StringValue(plan.Location.ValueString())
 
 	for _, location := range currencies.Value {
 		plan.Value = append(plan.Value, CurrencyDataModel{

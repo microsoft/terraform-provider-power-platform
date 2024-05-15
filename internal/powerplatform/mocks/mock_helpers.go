@@ -5,9 +5,20 @@ package powerplatform_mocks
 
 import (
 	"net/http"
+	"path/filepath"
+	"runtime"
+	"strings"
 
 	"github.com/jarcoal/httpmock"
 )
+
+func TestName() string {
+	pc, _, _, _ := runtime.Caller(1)
+	nameFull := runtime.FuncForPC(pc).Name()
+	nameEnd := filepath.Ext(nameFull)
+	name := strings.TrimPrefix(nameEnd, ".")
+	return name
+}
 
 func ActivateEnvironmentHttpMocks() {
 	httpmock.RegisterResponder("GET", `=~^https://([\d-]+)\.crm4\.dynamics\.com/api/data/v9\.2/transactioncurrencies\z`,

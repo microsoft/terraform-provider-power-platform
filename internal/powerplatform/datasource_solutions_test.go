@@ -146,7 +146,7 @@ func TestAccSolutionsDataSource_Validate_Read(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name     = "testaccsolutionsdatasource"
+					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
 					environment_type = "Sandbox"
 					dataverse = {
