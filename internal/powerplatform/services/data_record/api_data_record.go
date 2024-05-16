@@ -194,7 +194,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 			apiUrl := &url.URL{
 				Scheme: "https",
 				Host:   strings.TrimPrefix(environmentUrl, "https://"),
-				Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)/%s", entityDefinition.LogicalCollectionName, result.Id, key),
+				Path:  path.Join("/api/data", DATAVERSE_API_VERSION, fmt.Sprintf("%s(%s)", entityDefinition.LogicalCollectionName, result.Id), key)
 			}
 
 			for _, nestedItem := range nestedMapList {
