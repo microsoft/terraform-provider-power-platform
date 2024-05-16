@@ -9,9 +9,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"path"
 	"regexp"
 	"strings"
 
+	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -54,7 +56,7 @@ func getEntityDefinition(ctx context.Context, client *DataRecordClient, environm
 	entityDefinitionApiUrl := &url.URL{
 		Scheme:   "https",
 		Host:     strings.TrimPrefix(environmentUrl, "https://"),
-		Path:     fmt.Sprintf("/api/data/v9.2/EntityDefinitions(LogicalName='%s')", entityLogicalName),
+		Path:     fmt.Sprintf("/api/data/%s/EntityDefinitions(LogicalName='%s')", constants.DATAVERSE_API_VERSION, entityLogicalName),
 		Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
 	}
 	entityDefinition := EntityDefinitionsDto{}
@@ -105,7 +107,7 @@ func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId stri
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   strings.TrimPrefix(environmentUrl, "https://"),
-		Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)", entityDefinition.LogicalCollectionName, recordId),
+		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, recordId),
 	}
 
 	result := make(map[string]interface{}, 0)
@@ -136,7 +138,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 
 				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, entityLogicalName)
 
-				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("%s/api/data/v9.2/%s(%s)", environmentUrl, entityDefinition.LogicalCollectionName, nestedMap["data_record_id"])
+				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, nestedMap["data_record_id"])
 			}
 		}
 		if nestedMapList, ok := value.([]interface{}); ok {
@@ -148,20 +150,20 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 	entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
 
 	method := "POST"
-	path := fmt.Sprintf("/api/data/v9.2/%s", entityDefinition.LogicalCollectionName)
+	apiPath := fmt.Sprintf("/api/data/%s/%s", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName)
 
 	if val, ok := columns[entityDefinition.PrimaryIDAttribute]; ok {
 		method = "PATCH"
-		path = fmt.Sprintf("%s(%s)", path, val)
+		apiPath = fmt.Sprintf("%s(%s)", apiPath, val)
 	} else if recordId != "" {
 		method = "PATCH"
-		path = fmt.Sprintf("%s(%s)", path, recordId)
+		apiPath = fmt.Sprintf("%s(%s)", apiPath, recordId)
 	}
 
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   strings.TrimPrefix(environmentUrl, "https://"),
-		Path:   path,
+		Path:   apiPath,
 	}
 
 	response, err := client.Api.Execute(ctx, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
@@ -184,7 +186,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 	}
 
 	locationHeader := response.GetHeader("Location")
-	locationHeader = strings.TrimPrefix(locationHeader, fmt.Sprintf("%s/api/data/v9.2/%s(", environmentUrl, entityDefinition.LogicalCollectionName))
+	locationHeader = strings.TrimPrefix(locationHeader, fmt.Sprintf("%s/api/data/%s/%s(", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName))
 	locationHeader = strings.TrimSuffix(locationHeader, ")")
 
 	result.Id = locationHeader
@@ -194,7 +196,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 			apiUrl := &url.URL{
 				Scheme: "https",
 				Host:   strings.TrimPrefix(environmentUrl, "https://"),
-				Path:  path.Join("/api/data", DATAVERSE_API_VERSION, fmt.Sprintf("%s(%s)", entityDefinition.LogicalCollectionName, result.Id), key)
+				Path:   path.Join("/api/data", constants.DATAVERSE_API_VERSION, fmt.Sprintf("%s(%s)", entityDefinition.LogicalCollectionName, result.Id), key),
 			}
 
 			for _, nestedItem := range nestedMapList {
@@ -205,7 +207,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, entityLogicalName)
 
 				relation := RelationApiBody{
-					OdataID: fmt.Sprintf("%s/api/data/v9.2/%s(%s)", environmentUrl, entityDefinition.LogicalCollectionName, nestedMap["data_record_id"]),
+					OdataID: fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, nestedMap["data_record_id"]),
 				}
 				_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
 				if err != nil {
@@ -241,7 +243,7 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   strings.TrimPrefix(environmentUrl, "https://"),
-		Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)", tableEntityDefinition.LogicalCollectionName, recordId),
+		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId),
 	}
 
 	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
@@ -254,7 +256,7 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 			apiUrl := &url.URL{
 				Scheme: "https",
 				Host:   strings.TrimPrefix(environmentUrl, "https://"),
-				Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)/%s", tableEntityDefinition.LogicalCollectionName, recordId, key),
+				Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId, key),
 			}
 
 			for _, nestedItem := range nestedMapList {
@@ -267,7 +269,7 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 				apiUrl = &url.URL{
 					Scheme: "https",
 					Host:   strings.TrimPrefix(environmentUrl, "https://"),
-					Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)/%s/$ref?$id=%s/api/data/v9.2/%s(%s)", tableEntityDefinition.LogicalCollectionName, nestedMap["data_record_id"], key, environmentUrl, columnEntityDefinition.LogicalCollectionName, nestedMap["data_record_id"]),
+					Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s/$ref?$id=%s/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, nestedMap["data_record_id"], key, environmentUrl, constants.DATAVERSE_API_VERSION, columnEntityDefinition.LogicalCollectionName, nestedMap["data_record_id"]),
 				}
 				_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 				if err != nil {
