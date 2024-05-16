@@ -78,7 +78,7 @@ func (client *LicensingClient) CreateBillingPolicy(ctx context.Context, policyTo
 
 	// If billing policy status is not Enabled or Disabled, wait for it to reach a terminal state
 	if policy.Status != "Enabled" && policy.Status != "Disabled" {
-		policy, err = client.DoWaitForLifecycleOperationStatus(ctx, policy)
+		policy, err = client.DoWaitForFinalStatus(ctx, policy)
 
 		if err != nil {
 			return nil, err
@@ -104,7 +104,7 @@ func (client *LicensingClient) UpdateBillingPolicy(ctx context.Context, billingI
 
 	// If billing policy status is not Enabled or Disabled, wait for it to reach a terminal state
 	if policy.Status != "Enabled" && policy.Status != "Disabled" {
-		policy, err = client.DoWaitForLifecycleOperationStatus(ctx, policy)
+		policy, err = client.DoWaitForFinalStatus(ctx, policy)
 
 		if err != nil {
 			return nil, err
@@ -192,7 +192,7 @@ func (client *LicensingClient) RemoveEnvironmentsToBillingPolicy(ctx context.Con
 	return err
 }
 
-func (client *LicensingClient) DoWaitForLifecycleOperationStatus(ctx context.Context, billingPolicyDto *BillingPolicyDto) (*BillingPolicyDto, error) {
+func (client *LicensingClient) DoWaitForFinalStatus(ctx context.Context, billingPolicyDto *BillingPolicyDto) (*BillingPolicyDto, error) {
 	// Get the ID of the billing policy
 	billingId := billingPolicyDto.Id
 
