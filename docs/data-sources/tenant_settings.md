@@ -41,7 +41,7 @@ data "powerplatform_tenant_settings" "settings" {}
 - `disable_support_tickets_visible_by_all_users` (Boolean) Disable Support Tickets Visible By All Users
 - `disable_survey_feedback` (Boolean) Disable Survey Feedback
 - `disable_trial_environment_creation_by_non_admin_users` (Boolean) Disable Trial Environment Creation By Non Admin Users
-- `id` (String) Id
+- `id` (String) Id of the read operation
 - `power_platform` (Attributes) Power Platform (see [below for nested schema](#nestedatt--power_platform))
 - `walk_me_opt_out` (Boolean) Walk Me Opt Out
 

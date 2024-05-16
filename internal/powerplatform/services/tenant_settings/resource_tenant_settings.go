@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -49,8 +48,9 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 		MarkdownDescription: "Manages Power Platform Tenant Settings. Power Platform Tenant Settings are configuration options that apply to the entire tenant. They control various aspects of Power Platform features and behaviors, such as security, data protection, licensing, and more. These settings apply to all environments within your tenant. See [Tenant Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/tenant-settings) for more details.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description: "Id",
-				Computed:    true,
+				Description:         "Id of the read operation",
+				MarkdownDescription: "Id of the read operation",
+				Computed:            true,
 			},
 			"walk_me_opt_out": schema.BoolAttribute{
 				Description: "Walk Me Opt Out",
@@ -510,7 +510,11 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 	}
 
 	plan = ConvertFromTenantSettingsDto(*tenantSettings)
-	plan.Id = types.StringValue(uuid.New().String())
+	hash, err := tenantSettings.CalcObjectHash()
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())
+	}
+	plan.Id = types.StringValue(*hash)
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -537,7 +541,11 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	state = ConvertFromTenantSettingsDto(*tenantSettings)
-	state.Id = types.StringValue(uuid.New().String())
+	hash, err := tenantSettings.CalcObjectHash()
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())
+	}
+	state.Id = types.StringValue(*hash)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
 
@@ -567,6 +575,11 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	}
 
 	plan = ConvertFromTenantSettingsDto(*tenantSettings)
+	hash, err := tenantSettings.CalcObjectHash()
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())
+	}
+	plan.Id = types.StringValue(*hash)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))

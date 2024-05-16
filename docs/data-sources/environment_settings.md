@@ -27,7 +27,7 @@ Power Platform Environment Settings Data Source. Power Platform Settings are con
 
 ### Read-Only
 
-- `id` (String) Id
+- `id` (String) Id of the read operation
 
 <a id="nestedatt--audit_and_logs"></a>
 ### Nested Schema for `audit_and_logs`

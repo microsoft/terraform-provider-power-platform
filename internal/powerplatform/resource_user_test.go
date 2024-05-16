@@ -51,15 +51,15 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 				}
 				  
 				resource "azuread_user" "test_user" {
-					user_principal_name = "TestAccUserResource_Validate_Create@${local.domain_name}"
-					display_name        = "TestAccUserResource_Validate_Create"
-					mail_nickname       = "TestAccUserResource_Validate_Create"
+					user_principal_name = "` + mock_helpers.TestName() + `@${local.domain_name}"
+					display_name        = "` + mock_helpers.TestName() + `"
+					mail_nickname       = "` + mock_helpers.TestName() + `"
 					password            = random_password.passwords.result
 					usage_location      = "US"
 				}
 				  
 				resource "powerplatform_environment" "dataverse_user_example" {
-					display_name      = "TestAccUserResource_Validate_Create"
+					display_name      = "` + mock_helpers.TestName() + `"
 					location          = "europe"
 					environment_type  = "Sandbox"
 					dataverse = {
@@ -84,7 +84,7 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "1"),
 					resource.TestMatchResourceAttr("powerplatform_user.new_user", "aad_id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", "#"),
-					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", "TestAccUserResource_Validate_Create"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", mock_helpers.TestName()),
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "disable_delete", "false"),
 
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.0", "e0d2794e-82f3-e811-a951-000d3a1bcf17"),

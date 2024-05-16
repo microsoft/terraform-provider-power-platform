@@ -5,7 +5,6 @@ package powerplatform
 
 import (
 	"fmt"
-	"math/rand"
 	"net/http"
 	"regexp"
 	"testing"
@@ -17,8 +16,6 @@ import (
 )
 
 func TestAccEnvironmentApplicationPackageInstallResource_Validate_Install(t *testing.T) {
-	envDisplayName := fmt.Sprintf("orgtest%d", rand.Intn(100000))
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
@@ -26,7 +23,7 @@ func TestAccEnvironmentApplicationPackageInstallResource_Validate_Install(t *tes
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "environment" {
-					display_name                              = "` + envDisplayName + `"
+					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 					dataverse = {

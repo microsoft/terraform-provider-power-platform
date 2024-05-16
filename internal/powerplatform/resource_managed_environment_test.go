@@ -23,7 +23,7 @@ func TestAccManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
+					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
 					environment_type = "Sandbox"
 					dataverse = {
@@ -71,7 +71,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
+					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
 					environment_type = "Sandbox"
 					dataverse = {
@@ -100,7 +100,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
+					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
 					environment_type = "Sandbox"
 					dataverse = {
@@ -130,7 +130,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
+					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
 					environment_type = "Sandbox"
 					dataverse = {
@@ -160,7 +160,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
+					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
 					environment_type = "Sandbox"
 					dataverse = {
@@ -190,7 +190,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
+					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
 					environment_type = "Sandbox"
 					dataverse = {
@@ -220,7 +220,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
+					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
 					environment_type = "Sandbox"
 					dataverse = {
@@ -250,7 +250,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
+					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
 					environment_type = "Sandbox"
 					dataverse = {
@@ -280,7 +280,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
+					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
 					environment_type = "Sandbox"
 					dataverse = {
@@ -310,12 +310,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
+					display_name     = "` + mock_helpers.TestName() + `"
+					location         = "europe"
+					environment_type = "Sandbox"
 					dataverse = {
-						location         = "europe"
 						language_code    = "1033"
 						currency_code    = "USD"
-						environment_type = "Sandbox"
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
 				}
@@ -584,7 +584,7 @@ func TestAccManagedEnvironmentsResource_Validate_No_Dataverse(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "development" {
-					display_name     = "example_managed_environment"
+					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
 					environment_type = "Sandbox"
 				}
