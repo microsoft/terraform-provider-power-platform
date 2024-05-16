@@ -3,8 +3,7 @@
 package powerplatform
 
 type DataRecordDto struct {
-	Id string
-}
-
-type DataRecordArrayDto struct {
+	Id           string `json:"id"`
+	OdataContext string `json:"@odata.context"`
+	OdataEtag    string `json:"@odata.etag"`
 }

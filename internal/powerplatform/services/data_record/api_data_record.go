@@ -94,6 +94,30 @@ func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentI
 	return &env, nil
 }
 
+func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId string, environmentId string, tableName string) (*map[string]interface{}, error) {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
+
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Path:   fmt.Sprintf("/api/data/v9.2/%s(%s)", entityDefinition.LogicalCollectionName, recordId),
+	}
+
+	result := make(map[string]interface{}, 0)
+
+	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
 func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId string, environmentId string, tableName string, columns map[string]interface{}) (*DataRecordDto, error) {
 	result := DataRecordDto{}
 
