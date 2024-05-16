@@ -53,9 +53,10 @@ type RelationApiBody struct {
 }
 
 func getEntityDefinition(ctx context.Context, client *DataRecordClient, environmentUrl string, entityLogicalName string) *EntityDefinitionsDto {
+	e, _ := url.Parse(environmentUrl)
 	entityDefinitionApiUrl := &url.URL{
-		Scheme:   "https",
-		Host:     strings.TrimPrefix(environmentUrl, "https://"),
+		Scheme:   e.Scheme,
+		Host:     e.Host,
 		Path:     fmt.Sprintf("/api/data/%s/EntityDefinitions(LogicalName='%s')", constants.DATAVERSE_API_VERSION, entityLogicalName),
 		Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
 	}
@@ -104,9 +105,10 @@ func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId stri
 
 	entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
 
+	e, _ := url.Parse(environmentUrl)
 	apiUrl := &url.URL{
-		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Scheme: e.Scheme,
+		Host:   e.Host,
 		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, recordId),
 	}
 
@@ -160,9 +162,10 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 		apiPath = fmt.Sprintf("%s(%s)", apiPath, recordId)
 	}
 
+	e, _ := url.Parse(environmentUrl)
 	apiUrl := &url.URL{
-		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Scheme: e.Scheme,
+		Host:   e.Host,
 		Path:   apiPath,
 	}
 
@@ -193,9 +196,10 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 
 	for key, value := range relations {
 		if nestedMapList, ok := value.([]interface{}); ok {
+			e, _ := url.Parse(environmentUrl)
 			apiUrl := &url.URL{
-				Scheme: "https",
-				Host:   strings.TrimPrefix(environmentUrl, "https://"),
+				Scheme: e.Scheme,
+				Host:   e.Host,
 				Path:   path.Join("/api/data", constants.DATAVERSE_API_VERSION, fmt.Sprintf("%s(%s)", entityDefinition.LogicalCollectionName, result.Id), key),
 			}
 
@@ -240,9 +244,10 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 
 	tableEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
 
+	e, _ := url.Parse(environmentUrl)
 	apiUrl := &url.URL{
-		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Scheme: e.Scheme,
+		Host:   e.Host,
 		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId),
 	}
 
@@ -254,8 +259,8 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 	for key, value := range relations {
 		if nestedMapList, ok := value.([]interface{}); ok {
 			apiUrl := &url.URL{
-				Scheme: "https",
-				Host:   strings.TrimPrefix(environmentUrl, "https://"),
+				Scheme: e.Scheme,
+				Host:   e.Host,
 				Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId, key),
 			}
 
@@ -267,8 +272,8 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 				columnEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, entityLogicalName)
 
 				apiUrl = &url.URL{
-					Scheme: "https",
-					Host:   strings.TrimPrefix(environmentUrl, "https://"),
+					Scheme: e.Scheme,
+					Host:   e.Host,
 					Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s/$ref?$id=%s/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, nestedMap["data_record_id"], key, environmentUrl, constants.DATAVERSE_API_VERSION, columnEntityDefinition.LogicalCollectionName, nestedMap["data_record_id"]),
 				}
 				_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)

@@ -76,3 +76,7 @@ const (
 	RX_POWERPLATFORM_API_SCOPE  = "https://api.powerplatform.microsoft.scloud/.default"
 	RX_AUTHORITY_HOST           = "https://login.microsoftonline.microsoft.scloud/"
 )
+
+const (
+	DATAVERSE_API_VERSION = "v9.2"
+)
