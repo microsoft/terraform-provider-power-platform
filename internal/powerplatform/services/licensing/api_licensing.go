@@ -218,6 +218,7 @@ func (client *LicensingClient) DoWaitForFinalStatus(ctx context.Context, billing
 			return nil, err
 		}
 
+		//lintignore:R018
 		time.Sleep(retryAfter)
 
 		tflog.Debug(ctx, "Billing Policy Operation State: '"+billingPolicy.Status+"'")
