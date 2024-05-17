@@ -4,7 +4,7 @@ output "data_record_sample_contact1" {
 }
 
 output "data_record_sample_contact2" {
-  description = "Sample Contact 1 Data Record"
+  description = "Sample Contact 2 Data Record"
   value       = resource.powerplatform_data_record.data_record_sample_contact2
 }
 
