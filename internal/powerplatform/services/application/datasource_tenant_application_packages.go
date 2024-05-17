@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -215,7 +214,6 @@ func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req data
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT APPLICATION PACKAGES START: %s", d.ProviderTypeName))
 
-	plan.Id = types.StringValue(strconv.FormatInt(time.Now().Unix(), 10))
 	plan.Name = types.StringValue(plan.Name.ValueString())
 	plan.PublisherName = types.StringValue(plan.PublisherName.ValueString())
 
@@ -225,7 +223,7 @@ func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	plan.Id = types.StringValue(strconv.FormatInt(time.Now().Unix(), 10))
+	plan.Id = types.StringValue(strconv.Itoa(len(applications)))
 
 	for _, application := range applications {
 		if (plan.Name.ValueString() != "" && plan.Name.ValueString() != application.ApplicationName) ||

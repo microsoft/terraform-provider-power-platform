@@ -121,7 +121,7 @@ resource "powerplatform_tenant_settings" "settings" {
 
 ### Read-Only
 
-- `id` (String) Id
+- `id` (String) Id of the read operation
 
 <a id="nestedatt--power_platform"></a>
 ### Nested Schema for `power_platform`

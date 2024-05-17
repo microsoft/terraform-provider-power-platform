@@ -6,7 +6,6 @@ package powerplatform
 import (
 	"context"
 
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -118,9 +117,7 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 }
 
 func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettingsDto) EnvironmenttSettingsSourceModel {
-	environmentSettings := EnvironmenttSettingsSourceModel{
-		Id: types.StringValue(uuid.New().String()),
-	}
+	environmentSettings := EnvironmenttSettingsSourceModel{}
 
 	pluginTraceSettings := "Unknown"
 	if environmentSettingsDto.PluginTraceLogSetting != nil {

@@ -6,7 +6,7 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"time"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -114,7 +114,9 @@ func (d *DataLossPreventionPolicyDataSource) Schema(_ context.Context, _ datasou
 		MarkdownDescription: "Fetches the list of Data Loss Prevention Policies in a Power Platform tenant. See [Manage data loss prevention policies](https://learn.microsoft.com/en-us/power-platform/admin/prevent-data-loss) for more information.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				Description:         "Id of the read operation",
+				MarkdownDescription: "Id of the read operation",
+				Computed:            true,
 			},
 			"policies": schema.ListNestedAttribute{
 				Description:         "List of Data Loss Prevention Policies",
@@ -256,7 +258,7 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	state.Id = types.StringValue(fmt.Sprint((time.Now().Unix())))
+	state.Id = types.StringValue(strconv.Itoa(len(policies)))
 
 	for _, policy := range policies {
 
@@ -271,8 +273,8 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 		policyModel.EnvironmentType = types.StringValue(policy.EnvironmentType)
 		policyModel.Environments = convertToAttrValueEnvironments(policy.Environments)
 		policyModel.CustomConnectorsPatterns = convertToAttrValueCustomConnectorUrlPatternsDefinition(policy.CustomConnectorUrlPatternsDefinition)
-		policyModel.BusinessGeneralConnectors = convertToAttrValueConnectorsGroup("General", policy.ConnectorGroups)
-		policyModel.NonBusinessConfidentialConnectors = convertToAttrValueConnectorsGroup("Confidential", policy.ConnectorGroups)
+		policyModel.BusinessGeneralConnectors = convertToAttrValueConnectorsGroup("Confidential", policy.ConnectorGroups)
+		policyModel.NonBusinessConfidentialConnectors = convertToAttrValueConnectorsGroup("General", policy.ConnectorGroups)
 		policyModel.BlockedConnectors = convertToAttrValueConnectorsGroup("Blocked", policy.ConnectorGroups)
 		state.Policies = append(state.Policies, policyModel)
 	}

@@ -6,8 +6,7 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"time"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -102,7 +101,7 @@ func (r *EnvironmentApplicationPackageInstallResource) Create(ctx context.Contex
 		return
 	}
 
-	plan.Id = types.StringValue(strconv.FormatInt(time.Now().Unix(), 10))
+	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.EnvironmentId.ValueString(), strings.ReplaceAll(strings.ToLower(plan.UniqueName.ValueString()), " ", "_")))
 	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
 	plan.UniqueName = types.StringValue(plan.UniqueName.ValueString())
 
@@ -166,6 +165,7 @@ func (r *EnvironmentApplicationPackageInstallResource) Update(ctx context.Contex
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
+	tflog.Debug(ctx, "No application have been updated, as this is the expected behavior")
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

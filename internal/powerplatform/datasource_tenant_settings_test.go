@@ -24,7 +24,7 @@ func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					//Verify placeholder id attribute
-					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "id", regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "id", regexp.MustCompile("^[0-9a-fA-F]{32}$")),
 
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "disable_capacity_allocation_by_environment_admins", regexp.MustCompile(powerplatform_helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "disable_environment_creation_by_non_admin_users", regexp.MustCompile(powerplatform_helpers.BooleanRegex)),

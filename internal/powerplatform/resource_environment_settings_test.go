@@ -23,7 +23,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "example_environment_settings" {
-					display_name      = "TestAccTestEnvironmentSettingsResource_Validate_Read"
+					display_name      = "` + mock_helpers.TestName() + `"
 					location          = "europe" 
 					environment_type  = "Sandbox"
 					dataverse = {
@@ -80,7 +80,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T) 
 			{
 				Config: TestsProviderConfig + `
 				resource "powerplatform_environment" "example_environment_settings" {
-					display_name      = "TestAccTestEnvironmentSettingsResource_Validate_No_Dataverse"
+					display_name      = "` + mock_helpers.TestName() + `"
 					location          = "europe" 
 					environment_type  = "Sandbox"
 				}
@@ -115,7 +115,6 @@ func TestAccTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T) 
 		},
 	})
 }
-
 
 func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 
@@ -284,4 +283,3 @@ func TestUnitTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T)
 		},
 	})
 }
-

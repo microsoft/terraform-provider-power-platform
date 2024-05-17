@@ -86,7 +86,6 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description:         "Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/en-us/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details",
 				Optional:            true,
 			},
-
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique identifier of the solution",
 				Description:         "Unique identifier of the solution",

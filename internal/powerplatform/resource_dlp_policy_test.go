@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
@@ -511,7 +512,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					default_connectors_classification = "Blocked"
 					environment_type                  = "AllEnvironments"
 					environments = []
-	
+
 					business_connectors = []
 					non_business_connectors = []
 					blocked_connectors = []
@@ -562,8 +563,8 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					default_connectors_classification = "General"
 					environment_type                  = "OnlyEnvironments"
 					environments = [ "00000000-0000-0000-0000-000000000000" ]
-	
-					business_connectors = toset([
+
+					non_business_connectors = toset([
 							{
 								id                           = "/providers/Microsoft.PowerApps/apis/shared_sql"
 								default_action_rule_behavior = "",
@@ -571,7 +572,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 								endpoint_rules = [],
 							}
 						])
-					non_business_connectors = toset([
+					business_connectors = toset([
 							{
 								id                           = "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
 								default_action_rule_behavior = "",
@@ -597,17 +598,17 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.#", "1"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.default_action_rule_behavior", ""),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.#", "0"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.#", "0"),
-
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.#", "1"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.default_action_rule_behavior", ""),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.#", "0"),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.#", "0"),
+
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.#", "1"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.default_action_rule_behavior", ""),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.#", "0"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.#", "0"),
 
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "blocked_connectors.#", "1"),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "blocked_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_azureblob"),
@@ -626,7 +627,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					environment_type                  = "OnlyEnvironments"
 					environments = [ "00000000-0000-0000-0000-000000000000" ]
 
-					business_connectors = toset([
+					non_business_connectors = toset([
 					{
 						id                           = "/providers/Microsoft.PowerApps/apis/shared_sql"
 						default_action_rule_behavior = "Allow",
@@ -654,7 +655,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 						]
 					}
 				])
-				non_business_connectors = toset([
+				business_connectors = toset([
 						{
 							id                           = "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
 							default_action_rule_behavior = "",
@@ -680,21 +681,21 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.#", "1"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.default_action_rule_behavior", "Allow"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.#", "2"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.0.action_id", "DeleteItem_V2"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.0.behavior", "Block"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.1.action_id", "ExecutePassThroughNativeQuery_V2"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.1.behavior", "Block"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.#", "2"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.0.order", "1"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.0.behavior", "Allow"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.0.endpoint", "contoso.com"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.1.order", "2"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.1.behavior", "Deny"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.1.endpoint", "*"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.#", "1"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.default_action_rule_behavior", "Allow"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.0.action_id", "DeleteItem_V2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.0.behavior", "Block"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.1.action_id", "ExecutePassThroughNativeQuery_V2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.1.behavior", "Block"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.0.order", "1"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.0.behavior", "Allow"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.0.endpoint", "contoso.com"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.1.order", "2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.1.behavior", "Deny"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.1.endpoint", "*"),
 				),
 			},
 			{
@@ -705,7 +706,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 					environment_type                  = "OnlyEnvironments"
 					environments = [ "00000000-0000-0000-0000-000000000000" ]
 
-					business_connectors = toset([
+					non_business_connectors = toset([
 							{
 								id                           = "/providers/Microsoft.PowerApps/apis/shared_sql"
 								default_action_rule_behavior = "Allow",
@@ -733,7 +734,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 								]
 							}
 						])
-					non_business_connectors = toset([
+					business_connectors = toset([
 							{
 								id                           = "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
 								default_action_rule_behavior = "",
@@ -808,7 +809,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 					environment_type                  = "OnlyEnvironments"
 					environments = [ "00000000-0000-0000-0000-000000000000" ]
 
-					business_connectors = toset([
+					non_business_connectors = toset([
 						{
 							id                           = "/providers/Microsoft.PowerApps/apis/shared_sql"
 							default_action_rule_behavior = "Allow",
@@ -836,7 +837,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 							]
 						  }
 					])
-					non_business_connectors = toset([
+					business_connectors = toset([
 						{
 							id                           = "/providers/Microsoft.PowerApps/apis/shared_sharepointonline",
 							default_action_rule_behavior = "",
@@ -875,27 +876,27 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environments.#", "1"),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environments.0", "00000000-0000-0000-0000-000000000000"),
 
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.#", "1"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.default_action_rule_behavior", "Allow"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.#", "2"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.0.action_id", "DeleteItem_V2"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.0.behavior", "Block"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.1.action_id", "ExecutePassThroughNativeQuery_V2"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.1.behavior", "Block"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.#", "2"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.0.order", "1"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.0.behavior", "Allow"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.0.endpoint", "contoso.com"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.1.order", "2"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.1.behavior", "Deny"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.1.endpoint", "*"),
-
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.#", "1"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.default_action_rule_behavior", ""),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.#", "0"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.#", "0"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.default_action_rule_behavior", "Allow"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.0.action_id", "DeleteItem_V2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.0.behavior", "Block"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.1.action_id", "ExecutePassThroughNativeQuery_V2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.1.behavior", "Block"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.0.order", "1"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.0.behavior", "Allow"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.0.endpoint", "contoso.com"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.1.order", "2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.1.behavior", "Deny"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.1.endpoint", "*"),
+
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.#", "1"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.default_action_rule_behavior", ""),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.#", "0"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.#", "0"),
 
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "blocked_connectors.#", "1"),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "blocked_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_azureblob"),
@@ -915,3 +916,151 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 		},
 	})
 }
+
+func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               false,
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				data "powerplatform_connectors" "all_connectors" {}
+
+				locals {
+					business_connectors = toset([
+					  {
+						action_rules = [
+						  {
+							action_id = "DeleteItem_V2"
+							behavior  = "Block"
+						  },
+						  {
+							action_id = "ExecutePassThroughNativeQuery_V2"
+							behavior  = "Block"
+						  },
+						]
+						default_action_rule_behavior = "Allow"
+						endpoint_rules = [
+						  {
+							behavior = "Allow"
+							endpoint = "contoso.com"
+							order    = 1
+						  },
+						  {
+							behavior = "Deny"
+							endpoint = "*"
+							order    = 2
+						  },
+						]
+						id = "/providers/Microsoft.PowerApps/apis/shared_sql"
+					  },
+					  {
+						action_rules                 = []
+						default_action_rule_behavior = ""
+						endpoint_rules               = []
+						id                           = "/providers/Microsoft.PowerApps/apis/shared_approvals"
+					  },
+					  {
+						action_rules                 = []
+						default_action_rule_behavior = ""
+						endpoint_rules               = []
+						id                           = "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"
+					  }
+					])
+				  
+					non_business_connectors = toset([for conn
+					  in data.powerplatform_connectors.all_connectors.connectors :
+					  {
+						id                           = conn.id
+						name                         = conn.name
+						default_action_rule_behavior = ""
+						action_rules                 = [],
+						endpoint_rules               = []
+					  }
+					  if conn.unblockable == true && !contains([for bus_conn in local.business_connectors : bus_conn.id], conn.id)
+					])
+				  
+					blocked_connectors = toset([for conn
+					  in data.powerplatform_connectors.all_connectors.connectors :
+					  {
+						id                           = conn.id
+						default_action_rule_behavior = ""
+						action_rules                 = [],
+						endpoint_rules               = []
+					  }
+					if conn.unblockable == false && !contains([for bus_conn in local.business_connectors : bus_conn.id], conn.id)])
+				  }
+
+				  resource "powerplatform_data_loss_prevention_policy" "my_policy" {
+					display_name                      = "` + mock_helpers.TestName() + `"
+					default_connectors_classification = "Blocked"
+					environment_type                  = "AllEnvironments"
+					environments                      = []
+				  
+					business_connectors     = local.business_connectors
+					non_business_connectors = local.non_business_connectors
+					blocked_connectors      = local.blocked_connectors
+				  
+					custom_connectors_patterns = toset([
+					  {
+						order            = 1
+						host_url_pattern = "https://*.contoso.com"
+						data_group       = "Blocked"
+					  },
+					  {
+						order            = 2
+						host_url_pattern = "*"
+						data_group       = "Ignore"
+					  }
+					])
+				  }`,
+
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "display_name", mock_helpers.TestName()),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "default_connectors_classification", "Blocked"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environment_type", "AllEnvironments"),
+
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environments.#", "0"),
+
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.#", "3"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.1.id", "/providers/Microsoft.PowerApps/apis/shared_approvals"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.2.id", "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.default_action_rule_behavior", "Allow"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.0.action_id", "DeleteItem_V2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.0.behavior", "Block"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.1.action_id", "ExecutePassThroughNativeQuery_V2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.action_rules.1.behavior", "Block"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.0.order", "1"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.0.behavior", "Allow"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.0.endpoint", "contoso.com"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.1.order", "2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.1.behavior", "Deny"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "business_connectors.0.endpoint_rules.1.endpoint", "*"),
+
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.#", "22"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_commondataservice"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.default_action_rule_behavior", ""),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.action_rules.#", "0"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "non_business_connectors.0.endpoint_rules.#", "0"),
+
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "blocked_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_10to8"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "blocked_connectors.0.default_action_rule_behavior", ""),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "blocked_connectors.0.action_rules.#", "0"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "blocked_connectors.0.endpoint_rules.#", "0"),
+
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "custom_connectors_patterns.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "custom_connectors_patterns.0.order", "1"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "custom_connectors_patterns.0.host_url_pattern", "https://*.contoso.com"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "custom_connectors_patterns.0.data_group", "Blocked"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "custom_connectors_patterns.1.order", "2"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "custom_connectors_patterns.1.host_url_pattern", "*"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "custom_connectors_patterns.1.data_group", "Ignore"),
+				),
+			},
+		},
+	})
+}
+

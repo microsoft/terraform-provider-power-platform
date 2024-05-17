@@ -6,7 +6,7 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"time"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -75,7 +75,9 @@ func (d *SolutionsDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 		MarkdownDescription: "Fetches the list of Solutions in an environment.  This is the equivalent of the [`pac solution list`](https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/solution#pac-solution-list) command in the Power Platform CLI.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Computed: true,
+				Description:         "Id of the read operation",
+				MarkdownDescription: "Id of the read operation",
+				Computed:            true,
 			},
 			"environment_id": schema.StringAttribute{
 				Description:         "Unique environment id (guid)",
@@ -186,7 +188,7 @@ func (d *SolutionsDataSource) Read(ctx context.Context, req datasource.ReadReque
 		state.Solutions = append(state.Solutions, solutionModel)
 	}
 
-	state.Id = types.StringValue(fmt.Sprint((time.Now().Unix())))
+	state.Id = types.StringValue(strconv.Itoa(len(solutions)))
 
 	diags := resp.State.Set(ctx, &state)
 
