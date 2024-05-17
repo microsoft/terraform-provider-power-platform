@@ -15,31 +15,26 @@ type ConnectionDto struct {
 }
 
 type PropertiesDto struct {
-	ApiId       string      `json:"apiId"`
-	DisplayName string      `json:"displayName"`
-	IconUri     string      `json:"iconUri"`
-	Statuses    []StatusDto `json:"statuses"`
-	//ConnectionParametersSet string          `json:"connectionParametersSet"`
-	KeywordsRemaining int             `json:"keywordsRemaining"`
-	CreatedBy         CreatedByDto    `json:"createdBy"`
-	CreatedTime       string          `json:"createdTime"`
-	LastModifiedTime  string          `json:"lastModifiedTime"`
-	ExpirationTime    string          `json:"expirationTime"`
-	TestLinks         []TestLinkDto   `json:"testLinks"`
-	Environment       EnvironmentDto  `json:"environment"`
-	Permissions       []PermissionDto `json:"permissions"`
-	AccountName       string          `json:"accountName"`
-	AllowSharing      bool            `json:"allowSharing"`
+	ApiId                   string                 `json:"apiId"`
+	DisplayName             string                 `json:"displayName"`
+	IconUri                 string                 `json:"iconUri"`
+	Statuses                []StatusDto            `json:"statuses"`
+	ConnectionParametersSet map[string]interface{} `json:"connectionParametersSet,omitempty"`
+	KeywordsRemaining       int                    `json:"keywordsRemaining"`
+	CreatedBy               CreatedByDto           `json:"createdBy"`
+	CreatedTime             string                 `json:"createdTime"`
+	LastModifiedTime        string                 `json:"lastModifiedTime"`
+	ExpirationTime          string                 `json:"expirationTime"`
+	TestLinks               []TestLinkDto          `json:"testLinks"`
+	Environment             EnvironmentDto         `json:"environment"`
+	Permissions             []PermissionDto        `json:"permissions"`
+	AccountName             string                 `json:"accountName"`
+	AllowSharing            bool                   `json:"allowSharing"`
 }
 
 type StatusDto struct {
 	Status string `json:"status"`
 }
-
-// type ConnectionParametersSetDto struct {
-// 	Name   string                 `json:"name"`
-// 	Values map[string]interface{} `json:"values"`
-// }
 
 type CreatedByDto struct {
 	Id                string `json:"id"`

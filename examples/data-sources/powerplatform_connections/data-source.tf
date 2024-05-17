@@ -10,6 +10,8 @@ provider "powerplatform" {
   use_cli = true
 }
 
+data "powerplatform_environments" "all_environments" {}
+
 data "powerplatform_connections" "all_connections" {
-  environment_id = "469aeedd-f3d1-ee95-bafa-3e5364302246"
+  environment_id = data.powerplatform_environments.all_environments.environments[0].id
 }

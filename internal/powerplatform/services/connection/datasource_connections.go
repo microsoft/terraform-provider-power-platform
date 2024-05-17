@@ -5,6 +5,7 @@ package powerplatform
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 
@@ -43,6 +44,8 @@ type ConnectionsDataSourceModel struct {
 	Id          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	DisplayName types.String `tfsdk:"display_name"`
+	Status      []string     `tfsdk:"status"`
+	Parameters  types.String `tfsdk:"parameters"`
 }
 
 func (d *ConnectionsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -81,6 +84,17 @@ func (d *ConnectionsDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 						"display_name": schema.StringAttribute{
 							MarkdownDescription: "Display name of the connection.",
 							Description:         "Display name of the connection.",
+							Computed:            true,
+						},
+						"status": schema.SetAttribute{
+							Description:         "List of connection statuses",
+							MarkdownDescription: "List of connection statuses",
+							ElementType:         types.StringType,
+							Computed:            true,
+						},
+						"parameters": schema.StringAttribute{
+							Description:         "Connection parameters. Json string containing the authentication connection parameters. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+							MarkdownDescription: "Connection parameters. Json string containing the authentication connection parameters, (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
 							Computed:            true,
 						},
 					},
@@ -138,9 +152,20 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 }
 
 func ConvertFromConnectionDto(connection ConnectionDto) ConnectionsDataSourceModel {
-	return ConnectionsDataSourceModel{
-		Id:          types.StringValue(connection.Id),
-		Name:        types.StringValue(connection.Name),
+	conn := ConnectionsDataSourceModel{
+		Id:          types.StringValue(connection.Name),
+		Name:        types.StringValue(connection.Id),
 		DisplayName: types.StringValue(connection.Properties.DisplayName),
 	}
+	for _, status := range connection.Properties.Statuses {
+		conn.Status = append(conn.Status, status.Status)
+	}
+
+	if connection.Properties.ConnectionParametersSet != nil {
+
+		p, _ := json.Marshal(connection.Properties.ConnectionParametersSet)
+		conn.Parameters = types.StringValue(string(p))
+	}
+
+	return conn
 }
