@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"path"
 	"regexp"
 	"strings"
 
@@ -200,7 +199,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 			apiUrl := &url.URL{
 				Scheme: e.Scheme,
 				Host:   e.Host,
-				Path:   path.Join("/api/data", constants.DATAVERSE_API_VERSION, fmt.Sprintf("%s(%s)", entityDefinition.LogicalCollectionName, result.Id), key),
+				Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s/$ref", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, result.Id, key),
 			}
 
 			for _, nestedItem := range nestedMapList {
