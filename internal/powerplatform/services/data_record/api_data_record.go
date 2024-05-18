@@ -10,8 +10,12 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
@@ -96,7 +100,7 @@ func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentI
 	return &env, nil
 }
 
-func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId string, environmentId string, tableName string) (*map[string]interface{}, error) {
+func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId string, environmentId string, tableName string, columns types.Dynamic) (*basetypes.DynamicValue, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -118,7 +122,46 @@ func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId stri
 		return nil, err
 	}
 
-	return &result, nil
+	var mapColumns map[string]interface{}
+	jsonColumns, _ := json.Marshal(columns.String())
+	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
+	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
+
+	attributeTypes := make(map[string]attr.Type)
+	attributes := make(map[string]attr.Value)
+
+	for key, value := range mapColumns {
+		switch value.(type) {
+		case bool:
+			v, ok := result[key].(bool)
+			if ok {
+				attributeTypes[key] = types.BoolType
+				attributes[key] = types.BoolValue(v)
+			}
+		case int64:
+			v, ok := result[key].(int64)
+			if ok {
+				attributeTypes[key] = types.Int64Type
+				attributes[key] = types.Int64Value(v)
+			}
+		case float64:
+			v, ok := result[key].(float64)
+			if ok {
+				attributeTypes[key] = types.Float64Type
+				attributes[key] = types.Float64Value(v)
+			}
+		case string:
+			v, ok := result[key].(string)
+			if ok {
+				attributeTypes[key] = types.StringType
+				attributes[key] = types.StringValue(v)
+			}
+		}
+	}
+	stateValue, _ := types.ObjectValue(attributeTypes, attributes)
+	newState := basetypes.NewDynamicValue(stateValue)
+
+	return &newState, nil
 }
 
 func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId string, environmentId string, tableName string, columns map[string]interface{}) (*DataRecordDto, error) {
