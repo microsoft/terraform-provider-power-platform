@@ -197,7 +197,7 @@ func (client *LicensingClient) DoWaitForFinalStatus(ctx context.Context, billing
 
 	retryAfter := time.Duration(5) * time.Second
 
-	timeout := time.Duration(10) * time.Minute
+	timeout := time.Duration(3) * time.Minute
 
 	startTime := time.Now()
 
