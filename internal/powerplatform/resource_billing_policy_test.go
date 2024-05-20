@@ -418,3 +418,99 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitTestBillingPolicy_Validate_Create_WithoutFinalStatusInPostResponse(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mock_helpers.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("POST", "https://api.powerplatform.com/licensing/BillingPolicies?api-version=2022-03-01-preview",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("services/licensing/test/resource/policies/Validate_Create_WithoutFinalStatusInPostResponse/post_billing_policy.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000001?api-version=2022-03-01-preview",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/licensing/test/resource/policies/Validate_Create_WithoutFinalStatusInPostResponse/get_billing_policy.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", "https://api.powerplatform.com/licensing/BillingPolicies/00000000-0000-0000-0000-000000000001?api-version=2022-03-01-preview",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_billing_policy" "pay_as_you_go" {
+					name     = "payAsYouGoBillingPolicyExample"
+					location = "europe"
+					status   = "Enabled"
+					billing_instrument = {
+					  resource_group  = "resource_group_name"
+					  subscription_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", "payAsYouGoBillingPolicyExample"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "location", "europe"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "status", "Enabled"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "billing_instrument.id", "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resource_group_name/providers/Microsoft.PowerPlatform/accounts/payAsYouGoBillingPolicyExample"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "billing_instrument.resource_group", "resource_group_name"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "billing_instrument.subscription_id", "00000000-0000-0000-0000-000000000000"),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitTestBillingPolicy_Validate_Create_TimeoutWithoutFinalStatus(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mock_helpers.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("POST", "https://api.powerplatform.com/licensing/BillingPolicies?api-version=2022-03-01-preview",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("services/licensing/test/resource/policies/Validate_Create_TimeoutWithoutFinalStatus/post_billing_policy.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000001?api-version=2022-03-01-preview",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/licensing/test/resource/policies/Validate_Create_TimeoutWithoutFinalStatus/get_billing_policy.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", "https://api.powerplatform.com/licensing/BillingPolicies/00000000-0000-0000-0000-000000000001?api-version=2022-03-01-preview",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_billing_policy" "pay_as_you_go" {
+					name     = "payAsYouGoBillingPolicyExample"
+					location = "europe"
+					status   = "Enabled"
+					billing_instrument = {
+					  resource_group  = "resource_group_name"
+					  subscription_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				ExpectError: regexp.MustCompile("timeout reached while waiting for billing policy to reach a terminal state"),
+
+				Check: resource.ComposeAggregateTestCheckFunc(),
+			},
+		},
+	})
+}
