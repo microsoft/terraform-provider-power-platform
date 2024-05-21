@@ -15,13 +15,13 @@ Fetches the list of Dynamics 365 tenant level applications
 ```terraform
 terraform {
   required_providers {
-    powerplatform = {
+    power-platform = {
       source = "microsoft/power-platform"
     }
   }
 }
 
-provider "powerplatform" {
+provider "power-platform" {
   use_cli = true
 }
 

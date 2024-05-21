@@ -18,13 +18,13 @@ This is functionally equivalent to the [Environment-level view of apps](https://
 ```terraform
 terraform {
   required_providers {
-    powerplatform = {
+    power-platform = {
       source = "microsoft/power-platform"
     }
   }
 }
 
-provider "powerplatform" {
+provider "power-platform" {
   use_cli = true
 }
 
