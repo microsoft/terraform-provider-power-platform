@@ -6,9 +6,11 @@ package powerplatform
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 
+	"github.com/google/uuid"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -31,6 +33,75 @@ func (client *ConnectionsClient) BuildHostUri(environmentId string) string {
 
 }
 
+func (client *ConnectionsClient) CreateConnection(ctx context.Context, environmentId, connectorName string, connectionToCreate ConnectionToCreateDto) (*ConnectionDto, error) {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.BuildHostUri(environmentId),
+		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, strings.ReplaceAll(uuid.New().String(), "-", "")),
+	}
+	values := url.Values{}
+	values.Add("api-version", "1")
+	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
+	apiUrl.RawQuery = values.Encode()
+
+	connection := ConnectionDto{}
+	_, err := client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, connectionToCreate, []int{http.StatusCreated}, &connection)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Printf("Created connection: %s\n", connection.Id)
+
+	return &connection, nil
+}
+
+func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environmentId, connectorName, connectionId, displayName string) (*ConnectionDto, error) {
+
+	conn, err := client.GetConnection(ctx, environmentId, connectorName, connectionId)
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.BuildHostUri(environmentId),
+		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, connectionId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "1")
+	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
+	apiUrl.RawQuery = values.Encode()
+
+	conn.Properties.DisplayName = displayName
+
+	updatedConnection := ConnectionDto{}
+	_, err = client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, conn, []int{http.StatusOK}, &updatedConnection)
+	if err != nil {
+		return nil, err
+	}
+
+	return &updatedConnection, nil
+}
+
+func (client *ConnectionsClient) GetConnection(ctx context.Context, environmentId, connectorName, connectionId string) (*ConnectionDto, error) {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.BuildHostUri(environmentId),
+		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, connectionId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "1")
+	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
+	apiUrl.RawQuery = values.Encode()
+
+	connection := ConnectionDto{}
+	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connection)
+	if err != nil {
+		return nil, err
+	}
+	return &connection, nil
+}
+
 func (client *ConnectionsClient) GetConnections(ctx context.Context, environmentId string) ([]ConnectionDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
@@ -45,10 +116,28 @@ func (client *ConnectionsClient) GetConnections(ctx context.Context, environment
 	apiUrl.RawQuery = values.Encode()
 
 	connetionsArray := ConnectionDtoArray{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{200}, &connetionsArray)
+	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connetionsArray)
 	if err != nil {
 		return nil, err
 	}
 
 	return connetionsArray.Value, nil
+}
+
+func (client *ConnectionsClient) DeleteConnection(ctx context.Context, environmentId, connectorName, connectionId string) error {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.BuildHostUri(environmentId),
+		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, connectionId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "1")
+	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
+	apiUrl.RawQuery = values.Encode()
+
+	_, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	if err != nil {
+		return err
+	}
+	return nil
 }

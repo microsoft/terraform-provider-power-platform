@@ -5,10 +5,11 @@ package powerplatform
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -44,7 +45,7 @@ type ConnectionsDataSourceModel struct {
 	Id          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	DisplayName types.String `tfsdk:"display_name"`
-	Status      []string     `tfsdk:"status"`
+	Status      types.List   `tfsdk:"status"`
 	Parameters  types.String `tfsdk:"parameters"`
 }
 
@@ -152,20 +153,26 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 }
 
 func ConvertFromConnectionDto(connection ConnectionDto) ConnectionsDataSourceModel {
+	nameConnectorSplit := strings.Split(connection.Properties.ApiId, "/")
+	nameConnector := nameConnectorSplit[len(nameConnectorSplit)-1]
+
 	conn := ConnectionsDataSourceModel{
 		Id:          types.StringValue(connection.Name),
-		Name:        types.StringValue(connection.Id),
+		Name:        types.StringValue(nameConnector),
 		DisplayName: types.StringValue(connection.Properties.DisplayName),
 	}
+
+	statusValues := []attr.Value{}
 	for _, status := range connection.Properties.Statuses {
-		conn.Status = append(conn.Status, status.Status)
+		statusValues = append(statusValues, types.StringValue(status.Status))
 	}
+	conn.Status = types.ListValueMust(types.StringType, statusValues)
 
-	if connection.Properties.ConnectionParametersSet != nil {
+	// if connection.Properties.ConnectionParametersSet != nil {
 
-		p, _ := json.Marshal(connection.Properties.ConnectionParametersSet)
-		conn.Parameters = types.StringValue(string(p))
-	}
+	// 	p, _ := json.Marshal(connection.Properties.ConnectionParametersSet)
+	// 	conn.Parameters = types.StringValue(string(p))
+	// }
 
 	return conn
 }

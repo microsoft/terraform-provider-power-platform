@@ -19,6 +19,7 @@ import (
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
+	connection "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connection"
 	connections "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connection"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
@@ -367,6 +368,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
 		func() resource.Resource { return auth.NewUserResource() },
 		func() resource.Resource { return env_settings.NewEnvironmentSettingsResource() },
+		func() resource.Resource { return connection.NewConnectionResource() },
 	}
 }
 
