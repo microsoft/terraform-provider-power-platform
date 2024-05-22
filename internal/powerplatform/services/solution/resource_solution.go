@@ -6,7 +6,6 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -263,19 +262,19 @@ func (r *SolutionResource) importSolution(ctx context.Context, plan *SolutionRes
 		ComponentParameters:              make([]interface{}, 0),
 	}
 
-	solutionContent, err := os.ReadFile(plan.SolutionFile.ValueString())
-	if err != nil {
-		diagnostics.AddError(fmt.Sprintf("Client error when reading solution file %s", plan.SolutionFile.ValueString()), err.Error())
-	}
+	// solutionContent, err := os.ReadFile(plan.SolutionFile.ValueString())
+	// if err != nil {
+	// 	diagnostics.AddError(fmt.Sprintf("Client error when reading solution file %s", plan.SolutionFile.ValueString()), err.Error())
+	// }
 
-	settingsContent := make([]byte, 0)
-	//todo check if settings file is not empty in .tf
-	if plan.SettingsFile.ValueString() != "" {
-		settingsContent, err = os.ReadFile(plan.SettingsFile.ValueString())
-		if err != nil {
-			diagnostics.AddError(fmt.Sprintf("Client error when reading settings file %s", plan.SettingsFile.ValueString()), err.Error())
-		}
-	}
+	// settingsContent := make([]byte, 0)
+	// //todo check if settings file is not empty in .tf
+	// if plan.SettingsFile.ValueString() != "" {
+	// 	settingsContent, err = os.ReadFile(plan.SettingsFile.ValueString())
+	// 	if err != nil {
+	// 		diagnostics.AddError(fmt.Sprintf("Client error when reading settings file %s", plan.SettingsFile.ValueString()), err.Error())
+	// 	}
+	// }
 
 	dvExits, err := r.SolutionClient.DataverseExists(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
@@ -287,7 +286,10 @@ func (r *SolutionResource) importSolution(ctx context.Context, plan *SolutionRes
 		return nil
 	}
 
-	solution, err := r.SolutionClient.CreateSolution(ctx, plan.EnvironmentId.ValueString(), s, solutionContent, settingsContent)
+	//solution, err := r.SolutionClient.CreateSolution(ctx, plan.EnvironmentId.ValueString(), s, solutionContent, settingsContent)
+	a := []byte{0, 1, 2, 3, 4}
+
+	solution, err := r.SolutionClient.CreateSolution(ctx, plan.EnvironmentId.ValueString(), s, a, a)
 	if err != nil {
 		diagnostics.AddError(fmt.Sprintf("Client error when importing solution %s", plan.SolutionFile), err.Error())
 	}
