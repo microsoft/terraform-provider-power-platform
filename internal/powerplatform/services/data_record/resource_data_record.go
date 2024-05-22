@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -147,11 +148,18 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	newState, err := r.DataRecordClient.GetDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), state.Columns)
+	var mapColumns map[string]interface{}
+	jsonColumns, _ := json.Marshal(state.Columns.String())
+	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
+	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
+
+	newColumns, err := r.DataRecordClient.GetDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
 		return
 	}
+
+	newState := convertColumnsToState(ctx, &r.DataRecordClient, state, state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), newColumns)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_data_record with table_name %s", r.ProviderTypeName, state.TableLogicalName.ValueString()))
 
@@ -226,4 +234,98 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 
 func (r *DataRecordResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, currentState *DataRecordResourceModel, new_environment_id string, new_table_logical_name string, new_columns map[string]interface{}) *DataRecordResourceModel {
+	var objectType = map[string]attr.Type{
+		"entity_logical_name": types.StringType,
+		"data_record_id":      types.StringType,
+	}
+
+	var old_columns map[string]interface{}
+	jsonColumns, _ := json.Marshal(currentState.Columns.String())
+	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
+	json.Unmarshal([]byte(unquotedJsonColumns), &old_columns)
+
+	attributeTypes := make(map[string]attr.Type)
+	attributes := make(map[string]attr.Value)
+
+	for key, value := range old_columns {
+		switch value.(type) {
+		case bool:
+			v, ok := new_columns[key].(bool)
+			if ok {
+				attributeTypes[key] = types.BoolType
+				attributes[key] = types.BoolValue(v)
+			}
+		case int64:
+			v, ok := new_columns[key].(int64)
+			if ok {
+				attributeTypes[key] = types.Int64Type
+				attributes[key] = types.Int64Value(v)
+			}
+		case float64:
+			v, ok := new_columns[key].(float64)
+			if ok {
+				attributeTypes[key] = types.Float64Type
+				attributes[key] = types.Float64Value(v)
+			}
+		case string:
+			v, ok := new_columns[key].(string)
+			if ok {
+				attributeTypes[key] = types.StringType
+				attributes[key] = types.StringValue(v)
+			}
+		case map[string]interface{}:
+			v, ok := new_columns[fmt.Sprintf("_%s_value", key)].(string)
+			if ok {
+				entityLogicalName := apiClient.GetEntityRelationTableName(ctx, new_environment_id, new_table_logical_name, key)
+				dataRecordId := v
+
+				nestedObjectType := types.ObjectType{
+					AttrTypes: objectType,
+				}
+				nestedObjectValue, _ := types.ObjectValue(
+					objectType,
+					map[string]attr.Value{
+						"entity_logical_name": types.StringValue(entityLogicalName),
+						"data_record_id":      types.StringValue(dataRecordId),
+					},
+				)
+
+				attributeTypes[key] = nestedObjectType
+				attributes[key] = nestedObjectValue
+			}
+		case []map[string]interface{}:
+			for _, item := range value.([]map[string]interface{}) {
+				v, ok := new_columns[fmt.Sprintf("_%s_value", item)].(string)
+				if ok {
+					entityLogicalName := apiClient.GetEntityRelationTableName(ctx, new_environment_id, new_table_logical_name, key)
+					dataRecordId := v
+
+					nestedObjectType := types.ObjectType{
+						AttrTypes: objectType,
+					}
+					nestedObjectValue, _ := types.ObjectValue(
+						objectType,
+						map[string]attr.Value{
+							"entity_logical_name": types.StringValue(entityLogicalName),
+							"data_record_id":      types.StringValue(dataRecordId),
+						},
+					)
+
+					attributeTypes[key] = nestedObjectType
+					attributes[key] = nestedObjectValue
+				}
+			}
+		}
+	}
+
+	column_field, _ := types.ObjectValue(attributeTypes, attributes)
+
+	currentState.EnvironmentId = types.StringValue(new_environment_id)
+	currentState.TableLogicalName = types.StringValue(new_table_logical_name)
+	currentState.Columns = types.DynamicValue(column_field)
+
+	return currentState
 }
