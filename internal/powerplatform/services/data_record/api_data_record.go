@@ -312,6 +312,11 @@ func (client *DataRecordClient) GetEntityRelationTableName(ctx context.Context, 
 		item := list.(map[string]interface{})
 		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
 			tableName = item["ReferencedEntity"].(string)
+			break
+		}
+		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName {
+			tableName = item["ReferencingEntity"].(string)
+			break
 		}
 	}
 
@@ -320,14 +325,24 @@ func (client *DataRecordClient) GetEntityRelationTableName(ctx context.Context, 
 		item := list.(map[string]interface{})
 		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
 			tableName = item["ReferencedEntity"].(string)
+			break
+		}
+		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName {
+			tableName = item["ReferencingEntity"].(string)
+			break
 		}
 	}
 
 	manyToMany, _ := mapResponse["ManyToManyRelationships"].([]interface{})
 	for _, list := range manyToMany {
 		item := list.(map[string]interface{})
-		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
-			tableName = item["ReferencedEntity"].(string)
+		if item["Entity1NavigationPropertyName"] == relationLogicalName {
+			tableName = item["Entity1LogicalName"].(string)
+			break
+		}
+		if item["Entity2NavigationPropertyName"] == relationLogicalName {
+			tableName = item["Entity2LogicalName"].(string)
+			break
 		}
 	}
 

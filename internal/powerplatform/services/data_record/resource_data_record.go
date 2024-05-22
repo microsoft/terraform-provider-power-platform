@@ -296,28 +296,33 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 				attributeTypes[key] = nestedObjectType
 				attributes[key] = nestedObjectValue
 			}
-		case []map[string]interface{}:
-			for _, item := range value.([]map[string]interface{}) {
-				v, ok := new_columns[fmt.Sprintf("_%s_value", item)].(string)
-				if ok {
-					entityLogicalName := apiClient.GetEntityRelationTableName(ctx, new_environment_id, new_table_logical_name, key)
-					dataRecordId := v
-
-					nestedObjectType := types.ObjectType{
-						AttrTypes: objectType,
-					}
-					nestedObjectValue, _ := types.ObjectValue(
-						objectType,
-						map[string]attr.Value{
-							"entity_logical_name": types.StringValue(entityLogicalName),
-							"data_record_id":      types.StringValue(dataRecordId),
-						},
-					)
-
-					attributeTypes[key] = nestedObjectType
-					attributes[key] = nestedObjectValue
-				}
+		case []interface{}:
+			var listTypes []attr.Type
+			var listValues []attr.Value
+			tupleElementType := types.ObjectType{
+				AttrTypes: objectType,
 			}
+			for _, value := range value.([]interface{}) {
+				item := value.(map[string]interface{})
+
+				entityLogicalName := apiClient.GetEntityRelationTableName(ctx, new_environment_id, new_table_logical_name, key)
+				dataRecordId := item["data_record_id"].(string)
+
+				v, _ := types.ObjectValue(objectType, map[string]attr.Value{
+					"entity_logical_name": types.StringValue(entityLogicalName),
+					"data_record_id":      types.StringValue(dataRecordId),
+				})
+				listValues = append(listValues, v)
+				listTypes = append(listTypes, tupleElementType)
+			}
+
+			nestedObjectType := types.TupleType{
+				ElemTypes: listTypes,
+			}
+			nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
+
+			attributes[key] = nestedObjectValue
+			attributeTypes[key] = nestedObjectType
 		}
 	}
 
