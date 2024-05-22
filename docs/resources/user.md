@@ -20,7 +20,7 @@ This resource associates a user to a Power Platform environment. Additional Reso
 ```terraform
 terraform {
   required_providers {
-    powerplatform = {
+    power-platform = {
       source = "microsoft/power-platform"
     }
     azuread = {
@@ -32,7 +32,7 @@ terraform {
   }
 }
 
-provider "powerplatform" {
+provider "power-platform" {
   use_cli = true
 }
 
