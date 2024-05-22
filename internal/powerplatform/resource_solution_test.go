@@ -373,54 +373,54 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
 				),
 			},
-			// {
-			// 	Config: TestsProviderConfig + `
+			{
+				Config: TestsProviderConfig + `
 
-			// 	resource "powerplatform_solution" "solution" {
-			// 		environment_id = "00000000-0000-0000-0000-000000000001"
-			// 		solution_name    = "TerraformTestSolution"
-			// 		solution_file    = "test_solution_before.zip"
-			// 		settings_file 	 = "test_settings_before.json"
-			// 	}`,
+				resource "powerplatform_solution" "solution" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					solution_name    = "TerraformTestSolution"
+					solution_file    = "test_solution_before.zip"
+					settings_file 	 = "test_settings_before.json"
+				}`,
 
-			// 	Check: resource.ComposeAggregateTestCheckFunc(
-			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
-			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_before_checksum),
-			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_before_checksum),
-			// 	),
-			// },
-			// {
-			// 	Config: TestsProviderConfig + `
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_before_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_before_checksum),
+				),
+			},
+			{
+				Config: TestsProviderConfig + `
 
-			// 	resource "powerplatform_solution" "solution" {
-			// 		environment_id = "00000000-0000-0000-0000-000000000001"
-			// 		solution_name    = "TerraformTestSolution"
-			// 		solution_file    = "test_solution_after.zip"
-			// 		settings_file 	 = "test_settings_before.json"
-			// 	}`,
+				resource "powerplatform_solution" "solution" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					solution_name    = "TerraformTestSolution"
+					solution_file    = "test_solution_after.zip"
+					settings_file 	 = "test_settings_before.json"
+				}`,
 
-			// 	Check: resource.ComposeAggregateTestCheckFunc(
-			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
-			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_after_checksum),
-			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_before_checksum),
-			// 	),
-			// },
-			// {
-			// 	Config: TestsProviderConfig + `
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_after_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_before_checksum),
+				),
+			},
+			{
+				Config: TestsProviderConfig + `
 
-			// 	resource "powerplatform_solution" "solution" {
-			// 		environment_id = "00000000-0000-0000-0000-000000000001"
-			// 		solution_name    = "TerraformTestSolution"
-			// 		solution_file    = "test_solution_after.zip"
-			// 		settings_file 	 = "test_settings_after.json"
-			// 	}`,
+				resource "powerplatform_solution" "solution" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					solution_name    = "TerraformTestSolution"
+					solution_file    = "test_solution_after.zip"
+					settings_file 	 = "test_settings_after.json"
+				}`,
 
-			// 	Check: resource.ComposeAggregateTestCheckFunc(
-			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
-			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_after_checksum),
-			// 		resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_after_checksum),
-			// 	),
-			// },
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_after_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_after_checksum),
+				),
+			},
 		},
 	})
 }
