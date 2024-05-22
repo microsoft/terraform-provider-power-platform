@@ -78,8 +78,7 @@ func (client *ApiClient) DoWaitForLifecycleOperationStatus(ctx context.Context, 
 			return nil, err
 		}
 
-		//lintignore:R018
-		time.Sleep(retryAfter)
+		client.Sleep(retryAfter)
 
 		tflog.Debug(ctx, "Environment Creation Operation State: '"+lifecycleResponse.State.Id+"'")
 		tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+response.Response.Status+"'")
