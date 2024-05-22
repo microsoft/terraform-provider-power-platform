@@ -8,6 +8,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -60,14 +61,15 @@ func (client *ApiClient) DoWaitForLifecycleOperationStatus(ctx context.Context, 
 		tflog.Error(ctx, "Error parsing location header: "+err.Error())
 	}
 
-	// retryHeader := response.GetHeader("Retry-After")
-	// tflog.Debug(ctx, "Retry Header: "+retryHeader)
-	// retryAfter, err := time.ParseDuration(retryHeader)
-	// if err != nil {
-	// 	retryAfter = time.Duration(5) * time.Second
-	// } else {
-	// 	retryAfter = retryAfter * time.Second
-	// }
+	retryHeader := response.GetHeader("Retry-After")
+	tflog.Debug(ctx, "Retry Header: "+retryHeader)
+	retryAfter, err := time.ParseDuration(retryHeader)
+
+	if err != nil {
+		retryAfter = time.Duration(5) * time.Second
+	} else {
+		retryAfter = retryAfter * time.Second
+	}
 
 	for {
 		lifecycleResponse := LifecycleDto{}
@@ -77,7 +79,7 @@ func (client *ApiClient) DoWaitForLifecycleOperationStatus(ctx context.Context, 
 		}
 
 		//lintignore:R018
-		//time.Sleep(retryAfter)
+		time.Sleep(retryAfter)
 
 		tflog.Debug(ctx, "Environment Creation Operation State: '"+lifecycleResponse.State.Id+"'")
 		tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+response.Response.Status+"'")

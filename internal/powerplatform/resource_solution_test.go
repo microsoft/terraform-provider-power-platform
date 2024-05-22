@@ -508,7 +508,7 @@ func TestUnitSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
-			resp.Header.Add("Retry-After", "1")
+			resp.Header.Add("Retry-After", "0")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
 			return resp, nil
 		})
@@ -532,7 +532,7 @@ func TestUnitSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
-			resp.Header.Add("Retry-After", "1")
+			resp.Header.Add("Retry-After", "0")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
 			return resp, nil
 		})
