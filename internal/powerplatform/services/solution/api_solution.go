@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
@@ -132,7 +131,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 
 	//pull for solution import completion
 	//lintignore:R018
-	time.Sleep(10 * time.Second)
+	//time.Sleep(10 * time.Second)
 
 	apiUrl = &url.URL{
 		Scheme: "https",
@@ -157,7 +156,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 			return solution, nil
 		}
 		//lintignore:R018
-		time.Sleep(10 * time.Second)
+		//time.Sleep(10 * time.Second)
 	}
 }
 
