@@ -109,10 +109,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: Harden Runner
-      uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1
-      with:
-        egress-policy: audit
+    # - name: Harden Runner
+    #   uses: step-security/harden-runner@a4aa98b93cab29d9b1101a6143fb8bce00e2eac4 # v2.7.1
+    #   with:
+    #     egress-policy: audit
 
     - name: Check out code into the Go module directory
       uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
