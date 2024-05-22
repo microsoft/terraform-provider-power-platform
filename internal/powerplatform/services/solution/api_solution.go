@@ -131,8 +131,8 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	//pull for solution import completion
-	//lintignore:R018
-	time.Sleep(10 * time.Second)
+	sleepDuration := 10 * time.Second
+	client.Api.Sleep(sleepDuration)
 
 	apiUrl = &url.URL{
 		Scheme: "https",
@@ -156,8 +156,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 			}
 			return solution, nil
 		}
-		//lintignore:R018
-		time.Sleep(10 * time.Second)
+		client.Api.Sleep(sleepDuration)
 	}
 }
 

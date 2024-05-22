@@ -12,6 +12,7 @@ import (
 	"net/http"
 	neturl "net/url"
 	"strings"
+	"time"
 
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 )
@@ -99,4 +100,14 @@ func (client *ApiClient) Execute(ctx context.Context, method string, url string,
 		}
 	}
 	return apiResponse, nil
+}
+
+func (client *ApiClient) Sleep(duration time.Duration) {
+	if client.Config.Credentials.TestMode {
+		//Don't sleep during testing
+		return
+	} else {
+		//lintignore:R018
+		time.Sleep(duration)
+	}
 }
