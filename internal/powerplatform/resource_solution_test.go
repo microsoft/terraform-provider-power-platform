@@ -310,9 +310,9 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 	mock_helpers.ActivateEnvironmentHttpMocks()
 
 	solution_before_checksum := createFile("test_solution_before.zip", "test_solution_before")
-	//settings_before_checksum := createFile("test_settings_before.json", "")
-	///solution_after_checksum := createFile("test_solution_after.zip", "test_solution_after")
-	//settings_after_checksum := createFile("test_settings_after.json", "")
+	settings_before_checksum := createFile("test_settings_before.json", "")
+	solution_after_checksum := createFile("test_solution_after.zip", "test_solution_after")
+	settings_after_checksum := createFile("test_settings_after.json", "")
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
