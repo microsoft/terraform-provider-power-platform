@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -71,10 +73,19 @@ func (client *LicensingClient) CreateBillingPolicy(ctx context.Context, policyTo
 	values.Add("api-version", API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
-	policy := BillingPolicyDto{}
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, policyToCreate, []int{http.StatusCreated}, &policy)
+	policy := &BillingPolicyDto{}
+	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, policyToCreate, []int{http.StatusCreated}, policy)
 
-	return &policy, err
+	// If billing policy status is not Enabled or Disabled, wait for it to reach a terminal state
+	if policy.Status != "Enabled" && policy.Status != "Disabled" {
+		policy, err = client.DoWaitForFinalStatus(ctx, policy)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return policy, err
 }
 
 func (client *LicensingClient) UpdateBillingPolicy(ctx context.Context, billingId string, policyToUpdate BillingPolicyUpdateDto) (*BillingPolicyDto, error) {
@@ -88,10 +99,19 @@ func (client *LicensingClient) UpdateBillingPolicy(ctx context.Context, billingI
 	values.Add("api-version", API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
-	policy := BillingPolicyDto{}
-	_, err := client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, policyToUpdate, []int{http.StatusOK}, &policy)
+	policy := &BillingPolicyDto{}
+	_, err := client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, policyToUpdate, []int{http.StatusOK}, policy)
 
-	return &policy, err
+	// If billing policy status is not Enabled or Disabled, wait for it to reach a terminal state
+	if policy.Status != "Enabled" && policy.Status != "Disabled" {
+		policy, err = client.DoWaitForFinalStatus(ctx, policy)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return policy, err
 }
 
 func (client *LicensingClient) DeleteBillingPolicy(ctx context.Context, billingId string) error {
@@ -170,4 +190,37 @@ func (client *LicensingClient) RemoveEnvironmentsToBillingPolicy(ctx context.Con
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environments, []int{http.StatusOK}, nil)
 
 	return err
+}
+
+func (client *LicensingClient) DoWaitForFinalStatus(ctx context.Context, billingPolicyDto *BillingPolicyDto) (*BillingPolicyDto, error) {
+	billingId := billingPolicyDto.Id
+
+	retryAfter := time.Duration(5) * time.Second
+
+	timeout := time.Duration(3) * time.Minute
+
+	startTime := time.Now()
+
+	for {
+		billingPolicy, err := client.GetBillingPolicy(ctx, billingId)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if billingPolicy.Status == "Enabled" || billingPolicy.Status == "Disabled" {
+			return billingPolicy, nil
+		}
+
+		if time.Since(startTime) >= timeout {
+			tflog.Debug(ctx, "Timeout reached while waiting for billing policy to reach a terminal state (Enabled or Disabled)")
+			err := fmt.Errorf("timeout reached while waiting for billing policy to reach a terminal state (Enabled or Disabled)")
+			return nil, err
+		}
+
+		//lintignore:R018
+		time.Sleep(retryAfter)
+
+		tflog.Debug(ctx, fmt.Sprintf("Billing Policy Operation State: '%s'", billingPolicy.Status))
+	}
 }
