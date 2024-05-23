@@ -15,13 +15,13 @@ Manages a [Managed Environment](https://learn.microsoft.com/en-us/power-platform
 ```terraform
 terraform {
   required_providers {
-    powerplatform = {
+    power-platform = {
       source = "microsoft/power-platform"
     }
   }
 }
 
-provider "powerplatform" {
+provider "power-platform" {
   use_cli = true
 }
 

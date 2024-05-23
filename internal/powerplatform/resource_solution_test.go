@@ -303,7 +303,6 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		},
 	})
 }
-
 func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -562,9 +561,19 @@ func TestUnitSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 }
 
 func createFile(fileName string, content string) string {
-	file, _ := os.Create(fileName)
-	file.Write([]byte(content))
-	file.Close()
+	file, err := os.Create(fileName)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer file.Close()
+
+	_, err = file.Write([]byte(content))
+	if err != nil {
+		panic(err)
+	}
+
 	fileChecksum, _ := powerplatform_helpers.CalculateMd5(fileName)
 	return fileChecksum
 }

@@ -313,8 +313,8 @@ func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, 
 		if err != nil {
 			return nil, err
 		}
-		//lintignore:R018
-		time.Sleep(retryAfter)
+
+		client.Api.Sleep(retryAfter)
 
 		tflog.Debug(ctx, "Dataverse Creation Operation State: '"+lifecycleEnv.Properties.ProvisioningState+"'")
 		tflog.Debug(ctx, "Dataverse Creation Operation HTTP Status: '"+lifecycleResponse.Response.Status+"'")
@@ -409,8 +409,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 		return nil, err
 	}
 
-	//lintignore:R018
-	time.Sleep(10 * time.Second)
+	client.Api.Sleep(10 * time.Second)
 
 	environments, err := client.GetEnvironments(ctx)
 	if err != nil {
@@ -425,8 +424,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 					return nil, err
 				}
 				tflog.Info(ctx, "Environment State: '"+createdEnv.Properties.States.Management.Id+"'")
-				//lintignore:R018
-				time.Sleep(3 * time.Second)
+				client.Api.Sleep(3 * time.Second)
 				if createdEnv.Properties.States.Management.Id == "Ready" {
 
 					return createdEnv, nil
