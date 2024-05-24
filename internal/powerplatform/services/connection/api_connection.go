@@ -33,6 +33,26 @@ func (client *ConnectionsClient) BuildHostUri(environmentId string) string {
 
 }
 
+func (client *ConnectionsClient) GetConnectorDefinition(ctx context.Context, environmentId, connectorName string) (*ConnectorDefinition, error) {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.BuildHostUri(environmentId),
+		Path:   fmt.Sprintf("/connectivity/connectors/%s", connectorName, strings.ReplaceAll(uuid.New().String(), "-", "")),
+	}
+	values := url.Values{}
+	values.Add("api-version", "1")
+	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
+	apiUrl.RawQuery = values.Encode()
+
+	connector := ConnectorDefinition{}
+	_, err := client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, nil, []int{http.StatusCreated}, &connector)
+	if err != nil {
+		return nil, err
+	}
+
+	return &connector, nil
+}
+
 func (client *ConnectionsClient) CreateConnection(ctx context.Context, environmentId, connectorName string, connectionToCreate ConnectionToCreateDto) (*ConnectionDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",

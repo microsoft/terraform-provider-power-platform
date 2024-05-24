@@ -89,3 +89,41 @@ type ConnectionToCreateEnvironmentDto struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }
+
+type ConnectorDefinition struct {
+	Name       string `json:"name"`
+	Id         string `json:"id"`
+	Type       string `json:"type"`
+	Properties struct {
+		DisplayName             string          `json:"displayName"`
+		IconUri                 string          `json:"iconUri"`
+		IconBrandColor          string          `json:"iconBrandColor"`
+		ApiEnvironment          string          `json:"apiEnvironment"`
+		IsCustomApi             bool            `json:"isCustomApi"`
+		BlobUrisAreProxied      bool            `json:"blobUrisAreProxied"`
+		ConnectionParameters    *map[string]any `json:"connectionParameters,omitempty"`
+		ConnectionParameterSets *map[string]any `json:"connectionParameterSets,omitempty"`
+		Swagger                 *map[string]any `json:"swagger,omitempty"`
+	} `json:"properties"`
+}
+
+// type ConnectorConnectionParameterSets struct {
+// 	UiDefinition ConnectorUiDefinition `json:"uiDefinition"`
+// 	Values       []struct {
+// 		Name         string                `json:"name"`
+// 		UiDefinition ConnectorUiDefinition `json:"uiDefinition"`
+// 		Parameters   *map[string]any       `json:"parameters,omitempty"`
+// 	} `json:"values"`
+// }
+
+// type ConnectorUiDefinition struct {
+// 	DisplayName string               `json:"displayName"`
+// 	Description string               `json:"description"`
+// 	Tooltip     *string              `json:"tooltip,omitempty"`
+// 	Constrains  *ConnectorConstrains `json:"constrains,omitempty"`
+// }
+
+// type ConnectorConstrains struct {
+// 	Required *string `json:"required,omitempty"`
+// 	Hidden   *string `json:"hidden,omitempty"`
+// }
