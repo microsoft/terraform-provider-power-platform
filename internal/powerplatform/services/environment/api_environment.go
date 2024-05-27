@@ -15,6 +15,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 )
 
@@ -235,6 +236,9 @@ func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environment
 	env := EnvironmentDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
+		if strings.ContainsAny(err.Error(), "404") {
+			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment '%s' not found", environmentId))
+		}
 		return nil, err
 	}
 
