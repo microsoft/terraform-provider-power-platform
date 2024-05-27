@@ -193,8 +193,13 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	userDto, err := r.UserClient.GetUserByAadObjectId(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-		return
+		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
+			resp.State.RemoveResource(ctx)
+			return
+		} else {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
 	}
 
 	model := ConvertFromUserDto(userDto, state.DisableDelete.ValueBool())

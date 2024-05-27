@@ -13,6 +13,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewUserClient(api *api.ApiClient) UserClient {
@@ -69,6 +70,9 @@ func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environment
 	user := UserDto{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
+		if strings.ContainsAny(err.Error(), "404") {
+			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with systemUserId %s not found", systemUserId))
+		}
 		return nil, err
 	}
 	return &user, nil
@@ -93,6 +97,10 @@ func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentI
 	user := UserDtoArray{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
+		if strings.ContainsAny(err.Error(), "404") {
+			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with aadObjectId %s not found", aadObjectId))
+		}
+
 		return nil, err
 	}
 	return &user.Value[0], nil
@@ -256,6 +264,9 @@ func (client *UserClient) getEnvironment(ctx context.Context, environmentId stri
 	env := EnvironmentIdDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
+		if strings.ContainsAny(err.Error(), "404") {
+			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
+		}
 		return nil, err
 	}
 
@@ -280,6 +291,9 @@ func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId, b
 	securityRoleArray := SecurityRoleDtoArray{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &securityRoleArray)
 	if err != nil {
+		if strings.ContainsAny(err.Error(), "404") {
+			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("security roles not found"))
+		}
 		return nil, err
 	}
 	return securityRoleArray.Value, nil
