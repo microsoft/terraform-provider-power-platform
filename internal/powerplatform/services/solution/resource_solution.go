@@ -219,8 +219,13 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	solutions, err := r.SolutionClient.GetSolutions(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
-		return
+		if powerplatform_helpers.Code(err) == powerplatform_helpers.ERROR_OBJECT_NOT_FOUND {
+			resp.State.RemoveResource(ctx)
+			return
+		} else {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
+			return
+		}
 	}
 
 	solutionFound := false
