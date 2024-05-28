@@ -15,13 +15,13 @@ Fetches the list of Power Apps in an environment.  See [Manage Power Apps](https
 ```terraform
 terraform {
   required_providers {
-    power-platform = {
+    powerplatform = {
       source = "microsoft/power-platform"
     }
   }
 }
 
-provider "power-platform" {
+provider "powerplatform" {
   use_cli = true
 }
 
