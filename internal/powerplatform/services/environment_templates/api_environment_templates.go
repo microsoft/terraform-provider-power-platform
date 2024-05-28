@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
@@ -42,8 +41,6 @@ func (client *EnvironmentTemplatesClient) GetEnvironmentTemplatesByLocation(ctx 
 	}
 
 	defer response.Response.Body.Close()
-
-	os.WriteFile("response.json", response.BodyAsBytes, 0644)
 
 	err = json.Unmarshal(response.BodyAsBytes, &templates)
 

@@ -19,6 +19,7 @@ import (
 	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
+	data_record "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/data_record"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 	env_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_settings"
@@ -92,6 +93,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		licensing.NewBillingPolicyEnvironmentResource(),
 		auth.NewUserResource(),
 		env_settings.NewEnvironmentSettingsResource(),
+		data_record.NewDataRecordResource(),
 	}
 	resources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).Resources(context.Background())
 
