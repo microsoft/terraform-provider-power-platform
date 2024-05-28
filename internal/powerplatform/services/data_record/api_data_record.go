@@ -96,7 +96,7 @@ func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentI
 	return &env, nil
 }
 
-func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId string, environmentId string, tableName string, columns map[string]interface{}) (map[string]interface{}, error) {
+func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId string, environmentId string, tableName string) (map[string]interface{}, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -119,6 +119,31 @@ func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId stri
 	}
 
 	return result, nil
+}
+
+func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId string, environmentId string, tableName string, relationName string) ([]interface{}, error) {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
+
+	e, _ := url.Parse(environmentUrl)
+	apiUrl := &url.URL{
+		Scheme: e.Scheme,
+		Host:   e.Host,
+		Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, recordId, relationName),
+	}
+
+	result := make(map[string]interface{}, 0)
+
+	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result["value"].([]interface{}), nil
 }
 
 func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId string, environmentId string, tableName string, columns map[string]interface{}) (*DataRecordDto, error) {
@@ -286,36 +311,33 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 	return nil
 }
 
-func (client *DataRecordClient) GetEntityRelationTableName(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) string {
+func (client *DataRecordClient) GetEntityRelationDefiitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string, primaryIdField string) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
-		return ""
+		return "", ""
 	}
 
 	apiUrl := fmt.Sprintf("%s/api/data/%s/EntityDefinitions(LogicalName='%s')?$expand=OneToManyRelationships,ManyToManyRelationships,ManyToOneRelationships", environmentUrl, constants.DATAVERSE_API_VERSION, entityLogicalName)
 
 	response, err := client.Api.Execute(ctx, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
-		return ""
+		return "", ""
 	}
 
 	var mapResponse map[string]interface{}
 	json.Unmarshal(response.BodyAsBytes, &mapResponse)
-
-	tableName := ""
-
-	y := mapResponse["OneToManyRelationships"]
-	fmt.Println(y)
 
 	oneToMany, _ := mapResponse["OneToManyRelationships"].([]interface{})
 	for _, list := range oneToMany {
 		item := list.(map[string]interface{})
 		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
 			tableName = item["ReferencedEntity"].(string)
+			primaryIdField = item["ReferencedAttribute"].(string)
 			break
 		}
 		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName {
 			tableName = item["ReferencingEntity"].(string)
+			primaryIdField = item["ReferencingAttribute"].(string)
 			break
 		}
 	}
@@ -325,10 +347,12 @@ func (client *DataRecordClient) GetEntityRelationTableName(ctx context.Context, 
 		item := list.(map[string]interface{})
 		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
 			tableName = item["ReferencedEntity"].(string)
+			primaryIdField = item["ReferencedAttribute"].(string)
 			break
 		}
 		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName {
 			tableName = item["ReferencingEntity"].(string)
+			primaryIdField = item["ReferencingAttribute"].(string)
 			break
 		}
 	}
@@ -338,13 +362,15 @@ func (client *DataRecordClient) GetEntityRelationTableName(ctx context.Context, 
 		item := list.(map[string]interface{})
 		if item["Entity1NavigationPropertyName"] == relationLogicalName {
 			tableName = item["Entity1LogicalName"].(string)
+			primaryIdField = item["Entity1IntersectAttribute"].(string)
 			break
 		}
 		if item["Entity2NavigationPropertyName"] == relationLogicalName {
 			tableName = item["Entity2LogicalName"].(string)
+			primaryIdField = item["Entity2IntersectAttribute"].(string)
 			break
 		}
 	}
 
-	return tableName
+	return tableName, primaryIdField
 }

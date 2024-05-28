@@ -148,12 +148,7 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	var mapColumns map[string]interface{}
-	jsonColumns, _ := json.Marshal(state.Columns.String())
-	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
-	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
-
-	newColumns, err := r.DataRecordClient.GetDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
+	newColumns, err := r.DataRecordClient.GetDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
 		return
@@ -279,7 +274,7 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 		case map[string]interface{}:
 			v, ok := new_columns[fmt.Sprintf("_%s_value", key)].(string)
 			if ok {
-				entityLogicalName := apiClient.GetEntityRelationTableName(ctx, new_environment_id, new_table_logical_name, key)
+				entityLogicalName, _ := apiClient.GetEntityRelationDefiitionInfo(ctx, new_environment_id, new_table_logical_name, key)
 				dataRecordId := v
 
 				nestedObjectType := types.ObjectType{
@@ -302,15 +297,21 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 			tupleElementType := types.ObjectType{
 				AttrTypes: objectType,
 			}
-			for _, value := range value.([]interface{}) {
+
+			relationMap, _ := apiClient.GetRelationData(ctx, currentState.Id.ValueString(), new_environment_id, new_table_logical_name, key)
+			entityLogicalName, primaryIdFieldName := apiClient.GetEntityRelationDefiitionInfo(ctx, new_environment_id, new_table_logical_name, key)
+
+			for _, value := range relationMap {
 				item := value.(map[string]interface{})
 
-				entityLogicalName := apiClient.GetEntityRelationTableName(ctx, new_environment_id, new_table_logical_name, key)
-				dataRecordId := item["data_record_id"].(string)
+				field := item[primaryIdFieldName]
+				if field == nil {
+					field = item[fmt.Sprintf("_%s_value", primaryIdFieldName)]
+				}
 
 				v, _ := types.ObjectValue(objectType, map[string]attr.Value{
 					"entity_logical_name": types.StringValue(entityLogicalName),
-					"data_record_id":      types.StringValue(dataRecordId),
+					"data_record_id":      types.StringValue(field.(string)),
 				})
 				listValues = append(listValues, v)
 				listTypes = append(listTypes, tupleElementType)
