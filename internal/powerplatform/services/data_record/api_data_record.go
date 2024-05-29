@@ -131,9 +131,10 @@ func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId st
 
 	e, _ := url.Parse(environmentUrl)
 	apiUrl := &url.URL{
-		Scheme: e.Scheme,
-		Host:   e.Host,
-		Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, recordId, relationName),
+		Scheme:   e.Scheme,
+		Host:     e.Host,
+		Path:     fmt.Sprintf("/api/data/%s/%s(%s)/%s", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, recordId, relationName),
+		RawQuery: "$select=createdon",
 	}
 
 	result := make(map[string]interface{}, 0)
@@ -160,9 +161,9 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 		if nestedMap, ok := value.(map[string]interface{}); ok {
 			delete(columns, key)
 			if len(nestedMap) > 0 {
-				entityLogicalName := nestedMap["entity_logical_name"].(string)
+				tableLogicalName := nestedMap["table_logical_name"].(string)
 
-				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, entityLogicalName)
+				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
 
 				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, nestedMap["data_record_id"])
 			}
@@ -230,9 +231,9 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 			for _, nestedItem := range nestedMapList {
 				nestedMap := nestedItem.(map[string]interface{})
 
-				entityLogicalName := nestedMap["entity_logical_name"].(string)
+				tableLogicalName := nestedMap["table_logical_name"].(string)
 
-				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, entityLogicalName)
+				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
 
 				relation := RelationApiBody{
 					OdataID: fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, nestedMap["data_record_id"]),
@@ -291,9 +292,9 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 			for _, nestedItem := range nestedMapList {
 				nestedMap := nestedItem.(map[string]interface{})
 
-				entityLogicalName := nestedMap["entity_logical_name"].(string)
+				tableLogicalName := nestedMap["table_logical_name"].(string)
 
-				columnEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, entityLogicalName)
+				columnEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
 
 				apiUrl = &url.URL{
 					Scheme: e.Scheme,
@@ -311,17 +312,17 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 	return nil
 }
 
-func (client *DataRecordClient) GetEntityRelationDefiitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string, primaryIdField string) {
+func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
-		return "", ""
+		return ""
 	}
 
 	apiUrl := fmt.Sprintf("%s/api/data/%s/EntityDefinitions(LogicalName='%s')?$expand=OneToManyRelationships,ManyToManyRelationships,ManyToOneRelationships", environmentUrl, constants.DATAVERSE_API_VERSION, entityLogicalName)
 
 	response, err := client.Api.Execute(ctx, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
-		return "", ""
+		return ""
 	}
 
 	var mapResponse map[string]interface{}
@@ -332,12 +333,10 @@ func (client *DataRecordClient) GetEntityRelationDefiitionInfo(ctx context.Conte
 		item := list.(map[string]interface{})
 		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
 			tableName = item["ReferencedEntity"].(string)
-			primaryIdField = item["ReferencedAttribute"].(string)
 			break
 		}
 		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName {
 			tableName = item["ReferencingEntity"].(string)
-			primaryIdField = item["ReferencingAttribute"].(string)
 			break
 		}
 	}
@@ -347,12 +346,10 @@ func (client *DataRecordClient) GetEntityRelationDefiitionInfo(ctx context.Conte
 		item := list.(map[string]interface{})
 		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
 			tableName = item["ReferencedEntity"].(string)
-			primaryIdField = item["ReferencedAttribute"].(string)
 			break
 		}
 		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName {
 			tableName = item["ReferencingEntity"].(string)
-			primaryIdField = item["ReferencingAttribute"].(string)
 			break
 		}
 	}
@@ -362,15 +359,13 @@ func (client *DataRecordClient) GetEntityRelationDefiitionInfo(ctx context.Conte
 		item := list.(map[string]interface{})
 		if item["Entity1NavigationPropertyName"] == relationLogicalName {
 			tableName = item["Entity1LogicalName"].(string)
-			primaryIdField = item["Entity1IntersectAttribute"].(string)
 			break
 		}
 		if item["Entity2NavigationPropertyName"] == relationLogicalName {
 			tableName = item["Entity2LogicalName"].(string)
-			primaryIdField = item["Entity2IntersectAttribute"].(string)
 			break
 		}
 	}
 
-	return tableName, primaryIdField
+	return tableName
 }
