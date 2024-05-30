@@ -4,7 +4,7 @@ page_title: "powerplatform_environment_application_package_install Resource - po
 subcategory: ""
 description: |-
   This resource allows you to install a Dynamics 365 application in an environment.
-  This is functionally equivalent to the 'Install' button in the Power Platform admin center or pac application install in the Power Platform CLI https://docs.microsoft.com/en-us/powerapps/developer/data-platform/powerapps-cli#pac-application-install.  This resource uses the Install Application Package https://docs.microsoft.com/en-us/rest/api/power-platform/appmanagement/applications/installapplicationpackage endpoint in the Power Platform API.
+  This is functionally equivalent to the 'Install' button in the Power Platform admin center or pac application install in the Power Platform CLI https://docs.microsoft.com/powerapps/developer/data-platform/powerapps-cli#pac-application-install.  This resource uses the Install Application Package https://learn.microsoft.com/rest/api/power-platform/appmanagement/applications/install-application-package endpoint in the Power Platform API.
   ~> This resource does not support updating or deleting applications.  The expected behavior is that the application is installed and remains installed until the environment is deleted.
 ---
 
@@ -12,7 +12,7 @@ description: |-
 
 This resource allows you to install a Dynamics 365 application in an environment.
 
-This is functionally equivalent to the 'Install' button in the Power Platform admin center or [`pac application install` in the Power Platform CLI](https://docs.microsoft.com/en-us/powerapps/developer/data-platform/powerapps-cli#pac-application-install).  This resource uses the [Install Application Package](https://docs.microsoft.com/en-us/rest/api/power-platform/appmanagement/applications/installapplicationpackage) endpoint in the Power Platform API.
+This is functionally equivalent to the 'Install' button in the Power Platform admin center or [`pac application install` in the Power Platform CLI](https://docs.microsoft.com/powerapps/developer/data-platform/powerapps-cli#pac-application-install).  This resource uses the [Install Application Package](https://learn.microsoft.com/rest/api/power-platform/appmanagement/applications/install-application-package) endpoint in the Power Platform API.
 
 ~> This resource does not support updating or deleting applications.  The expected behavior is that the application is installed and remains installed until the environment is deleted.
 

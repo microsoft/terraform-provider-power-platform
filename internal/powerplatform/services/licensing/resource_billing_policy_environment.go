@@ -45,7 +45,7 @@ func (r *BillingPolicyEnvironmentResource) Metadata(ctx context.Context, req res
 func (r *BillingPolicyEnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "This resource allows you to manage the environments associated with a Billing Policy",
-		MarkdownDescription: "This resource allows you to manage the environments associated with a [billing policy](https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy). A billing policy is a set of rules that define how a tenant is billed for usage of Power Platform services. A billing policy is associated with a billing instrument, which is a subscription and resource group that is used to pay for usage of Power Platform services.",
+		MarkdownDescription: "This resource allows you to manage the environments associated with a [billing policy](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy). A billing policy is a set of rules that define how a tenant is billed for usage of Power Platform services. A billing policy is associated with a billing instrument, which is a subscription and resource group that is used to pay for usage of Power Platform services.",
 		Attributes: map[string]schema.Attribute{
 			"billing_policy_id": schema.StringAttribute{
 				Required:            true,

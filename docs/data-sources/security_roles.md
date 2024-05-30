@@ -3,12 +3,12 @@
 page_title: "powerplatform_security_roles Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of Dataverse security roles for a given environment and business unit.  For more information see About security roles and privileges https://learn.microsoft.com/en-us/power-platform/admin/security-roles-privileges
+  Fetches the list of Dataverse security roles for a given environment and business unit.  For more information see About security roles and privileges https://learn.microsoft.com/power-platform/admin/security-roles-privileges
 ---
 
 # powerplatform_security_roles (Data Source)
 
-Fetches the list of Dataverse security roles for a given environment and business unit.  For more information see [About security roles and privileges](https://learn.microsoft.com/en-us/power-platform/admin/security-roles-privileges)
+Fetches the list of Dataverse security roles for a given environment and business unit.  For more information see [About security roles and privileges](https://learn.microsoft.com/power-platform/admin/security-roles-privileges)
 
 
 
