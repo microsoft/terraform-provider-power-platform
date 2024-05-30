@@ -220,7 +220,6 @@ func (client *SolutionClient) validateSolutionImportResult(ctx context.Context, 
 		return err
 	}
 	if validateSolutionImportResponseDto.SolutionOperationResult.Status != "Passed" {
-		//todo read error and warning messages
 		return fmt.Errorf("solution import failed: %s", validateSolutionImportResponseDto.SolutionOperationResult.ErrorMessages...)
 	}
 	return nil
