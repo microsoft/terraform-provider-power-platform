@@ -14,6 +14,7 @@ import (
 	"time"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewSolutionClient(api *api.ApiClient) SolutionClient {
@@ -114,9 +115,6 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 		SolutionParameters: ImportSolutionSolutionParametersDto{
 			StageSolutionUploadId: stageSolutionResponse.StageSolutionResults.StageSolutionUploadId,
 		},
-	}
-	if err != nil {
-		return nil, err
 	}
 
 	apiUrl = &url.URL{
@@ -223,7 +221,7 @@ func (client *SolutionClient) validateSolutionImportResult(ctx context.Context, 
 	}
 	if validateSolutionImportResponseDto.SolutionOperationResult.Status != "Passed" {
 		//todo read error and warning messages
-		return fmt.Errorf("solution import failed: %s", validateSolutionImportResponseDto.SolutionOperationResult.Status)
+		return fmt.Errorf("solution import failed: %s", validateSolutionImportResponseDto.SolutionOperationResult.ErrorMessages...)
 	}
 	return nil
 }
@@ -294,7 +292,11 @@ func (client *SolutionClient) getEnvironment(ctx context.Context, environmentId 
 	env := EnvironmentIdDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
+		if strings.ContainsAny(err.Error(), "404") {
+			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
+		}
 		return nil, err
+
 	}
 
 	return &env, nil
