@@ -21,7 +21,7 @@ To use this provider, add the following to your Terraform configuration:
 ```terraform
 terraform {
   required_providers {
-    power-platform = {
+    powerplatform = {
       source  = "microsoft/power-platform"
       version = "~> 1.0" # Replace with the latest version
     }
@@ -35,20 +35,9 @@ See the official Terraform documentation for more information about [requiring p
 
 Terraform supports a number of different methods for authenticating to Power Platform.
 
-- [Power Platform Provider](#power-platform-provider)
-  - [Requirements](#requirements)
-  - [Installation](#installation)
-  - [Authenticating to Power Platform](#authenticating-to-power-platform)
-    - [Authenticating to Power Platform using the Azure CLI](#authenticating-to-power-platform-using-the-azure-cli)
-      - [Prerequisites](#prerequisites)
-    - [Authenticating to Power Platform using a Service Principal with OIDC](#authenticating-to-power-platform-using-a-service-principal-with-oidc)
-    - [Authenticating to Power Platform using a Service Principal and a Client Secret](#authenticating-to-power-platform-using-a-service-principal-and-a-client-secret)
-      - [Using Environment Variables](#using-environment-variables)
-      - [Using Terraform Variables](#using-terraform-variables)
-  - [Additional configuration](#additional-configuration)
-  - [Resources and Data Sources](#resources-and-data-sources)
-  - [Examples](#examples)
-  - [Contributing](#contributing)
+* [Authenticating to Power Platform using the Azure CLI](#authenticating-to-power-platform-using-the-azure-cli)
+* [Authenticating to Power Platform using a Service Principal with OIDC](#authenticating-to-power-platform-using-a-service-principal-with-oidc)
+* [Authenticating to Power Platform using a Service Principal and a Client Secret](#authenticating-to-power-platform-using-a-service-principal-and-a-client-secret)
 
 We recommend using either a Service Principal when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
 
@@ -68,13 +57,13 @@ The Power Platform provider can use the [Azure CLI](https://learn.microsoft.com/
 1. Login using the scope as the "expose API" you configured when creating the app registration
 
 ```bash
-az login --allow-no-subscriptions --scope api://power-platform_provider_terraform/.default
+az login --allow-no-subscriptions --scope api://powerplatform_provider_terraform/.default
 ```
 
 Configure the provider to use the Azure CLI with the following code:
 
 ```terraform
-provider "power-platform" {
+provider "powerplatform" {
   use_cli = true
 }
 ```
@@ -89,7 +78,7 @@ The Power Platform provider can use a Service Principal with OpenID Connect (OID
 1. Configure the provider to use OIDC with the following code:
 
 ```terraform
-provider "power-platform" {
+provider "powerplatform" {
   use_oidc = true
 }
 ```
@@ -123,7 +112,7 @@ We recomend using Environment Variables to pass the credentials to the provider.
 Alternatively, you can configure the provider using variables in your Terraform configuration which can be passed in via [command line parameters](https://developer.hashicorp.com/terraform/language/values/variables#variables-on-the-command-line), [a `*.tfvars` file](https://developer.hashicorp.com/terraform/language/values/variables#variable-definitions-tfvars-files), or [environment variables](https://developer.hashicorp.com/terraform/language/values/variables#environment-variables).  If you choose to use variables, please be sure to [protect sensitive input variables](https://developer.hashicorp.com/terraform/tutorials/configuration-language/sensitive-variables) so that you do not expose your credentials in your Terraform configuration. 
 
 ```terraform
-provider "power-platform" {
+provider "powerplatform" {
   # Use a service principal to authenticate with the Power Platform service
   client_id     = var.client_id
   client_secret = var.client_secret
