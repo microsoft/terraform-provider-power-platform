@@ -55,7 +55,7 @@ func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataReques
 func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "This resource associates a user to a Power Platform environment. Additional Resources:\n\n* [Add users to an environment](https://learn.microsoft.com/en-us/power-platform/admin/add-users-to-environment)\n\n* [Overview of User Security](https://learn.microsoft.com/en-us/power-platform/admin/grant-users-access)",
+		MarkdownDescription: "This resource associates a user to a Power Platform environment. Additional Resources:\n\n* [Add users to an environment](https://learn.microsoft.com/power-platform/admin/add-users-to-environment)\n\n* [Overview of User Security](https://learn.microsoft.com/power-platform/admin/grant-users-access)",
 		Description:         "This resource associates a user to a Power Platform environment",
 
 		Attributes: map[string]schema.Attribute{
@@ -110,7 +110,7 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Computed:            true,
 			},
 			"disable_delete": schema.BoolAttribute{
-				MarkdownDescription: "Disable delete. When set to `True` is expects that (Disable Delte)[https://learn.microsoft.com/en-us/power-platform/admin/delete-users?WT.mc_id=ppac_inproduct_settings#soft-delete-users-in-power-platform] feature to be enabled." +
+				MarkdownDescription: "Disable delete. When set to `True` is expects that (Disable Delte)[https://learn.microsoft.com/power-platform/admin/delete-users?WT.mc_id=ppac_inproduct_settings#soft-delete-users-in-power-platform] feature to be enabled." +
 					"Removing resource will try to delete the systemuser from Dataverse. This is the default behaviour. If you just want to remove the resource and not delete the user from Dataverse, set this propertyto `False`",
 				Description: "Disable delete. Deletes systemuser from Dataverse if it was aleardy removed from Entra.",
 				Optional:    true,
@@ -193,8 +193,13 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	userDto, err := r.UserClient.GetUserByAadObjectId(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-		return
+		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
+			resp.State.RemoveResource(ctx)
+			return
+		} else {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
 	}
 
 	model := ConvertFromUserDto(userDto, state.DisableDelete.ValueBool())

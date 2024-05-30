@@ -3,12 +3,12 @@
 page_title: "powerplatform_managed_environment Resource - powerplatform"
 subcategory: ""
 description: |-
-  Manages a Managed Environment https://learn.microsoft.com/en-us/power-platform/admin/managed-environment-overview and associated settings. A Power Platform Managed Environment is a suite of premium capabilities that allows administrators to manage Power Platform at scale with more control, less effort, and more insights. Once an environment is managed, it unlocks additional features across the Power Platform
+  Manages a Managed Environment https://learn.microsoft.com/power-platform/admin/managed-environment-overview and associated settings. A Power Platform Managed Environment is a suite of premium capabilities that allows administrators to manage Power Platform at scale with more control, less effort, and more insights. Once an environment is managed, it unlocks additional features across the Power Platform
 ---
 
 # powerplatform_managed_environment (Resource)
 
-Manages a [Managed Environment](https://learn.microsoft.com/en-us/power-platform/admin/managed-environment-overview) and associated settings. A Power Platform Managed Environment is a suite of premium capabilities that allows administrators to manage Power Platform at scale with more control, less effort, and more insights. Once an environment is managed, it unlocks additional features across the Power Platform
+Manages a [Managed Environment](https://learn.microsoft.com/power-platform/admin/managed-environment-overview) and associated settings. A Power Platform Managed Environment is a suite of premium capabilities that allows administrators to manage Power Platform at scale with more control, less effort, and more insights. Once an environment is managed, it unlocks additional features across the Power Platform
 
 ## Example Usage
 
@@ -55,13 +55,13 @@ resource "powerplatform_managed_environment" "managed_development" {
 ### Required
 
 - `environment_id` (String) Unique environment id (guid), of the environment that is managed by these settings
-- `is_group_sharing_disabled` (Boolean) Limits how widely canvas apps can be shared. See [Managed Environment sharing limits](https://learn.microsoft.com/en-us/power-platform/admin/managed-environment-sharing-limits) for more details.
-- `is_usage_insights_disabled` (Boolean) [Weekly insights digest for the environment](https://learn.microsoft.com/en-us/power-platform/admin/managed-environment-usage-insights)
-- `limit_sharing_mode` (String) Limits how widely canvas apps can be shared.  See [Managed Environment sharing limits](https://learn.microsoft.com/en-us/power-platform/admin/managed-environment-sharing-limits) for more details
-- `maker_onboarding_markdown` (String) First-time Power Apps makers will see this content in the Studio.  See [Maker welcome content](https://learn.microsoft.com/en-us/power-platform/admin/welcome-content) for more details.
-- `maker_onboarding_url` (String) Maker onboarding 'Learn more' URL. See [Maker welcome content](https://learn.microsoft.com/en-us/power-platform/admin/welcome-content) for more details.
+- `is_group_sharing_disabled` (Boolean) Limits how widely canvas apps can be shared. See [Managed Environment sharing limits](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits) for more details.
+- `is_usage_insights_disabled` (Boolean) [Weekly insights digest for the environment](https://learn.microsoft.com/power-platform/admin/managed-environment-usage-insights)
+- `limit_sharing_mode` (String) Limits how widely canvas apps can be shared.  See [Managed Environment sharing limits](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits) for more details
+- `maker_onboarding_markdown` (String) First-time Power Apps makers will see this content in the Studio.  See [Maker welcome content](https://learn.microsoft.com/power-platform/admin/welcome-content) for more details.
+- `maker_onboarding_url` (String) Maker onboarding 'Learn more' URL. See [Maker welcome content](https://learn.microsoft.com/power-platform/admin/welcome-content) for more details.
 - `max_limit_user_sharing` (Number) Limits how many users can share canvas apps. if 'is_group_sharing_disabled' is 'False', then this values should be '-1'
-- `solution_checker_mode` (String) Automatically verify solution checker results for security and reliability issues before solution import.  See [Solution Checker enforcement](https://learn.microsoft.com/en-us/power-platform/admin/managed-environment-solution-checker) for more details.
+- `solution_checker_mode` (String) Automatically verify solution checker results for security and reliability issues before solution import.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.
 - `suppress_validation_emails` (Boolean) Send emails only when a solution is blocked. If 'False', you'll also get emails when there are warnings
 
 ### Read-Only
