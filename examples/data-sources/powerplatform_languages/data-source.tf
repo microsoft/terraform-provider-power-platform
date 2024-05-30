@@ -1,12 +1,12 @@
 terraform {
   required_providers {
-    power-platform = {
-      source  = "microsoft/power-platform"
+    powerplatform = {
+      source = "microsoft/power-platform"
     }
   }
 }
 
-provider "power-platform" {
+provider "powerplatform" {
   use_cli = true
 }
 

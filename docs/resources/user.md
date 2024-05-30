@@ -4,7 +4,9 @@ page_title: "powerplatform_user Resource - powerplatform"
 subcategory: ""
 description: |-
   This resource associates a user to a Power Platform environment. Additional Resources:
-  Add users to an environment https://learn.microsoft.com/en-us/power-platform/admin/add-users-to-environmentOverview of User Security https://learn.microsoft.com/en-us/power-platform/admin/grant-users-access
+  
+  Add users to an environment https://learn.microsoft.com/en-us/power-platform/admin/add-users-to-environment
+  Overview of User Security https://learn.microsoft.com/en-us/power-platform/admin/grant-users-access
 ---
 
 # powerplatform_user (Resource)
@@ -20,7 +22,7 @@ This resource associates a user to a Power Platform environment. Additional Reso
 ```terraform
 terraform {
   required_providers {
-    power-platform = {
+    powerplatform = {
       source = "microsoft/power-platform"
     }
     azuread = {
@@ -32,7 +34,7 @@ terraform {
   }
 }
 
-provider "power-platform" {
+provider "powerplatform" {
   use_cli = true
 }
 

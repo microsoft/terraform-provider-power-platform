@@ -15,13 +15,13 @@ Fetches the list of Solutions in an environment.  This is the equivalent of the 
 ```terraform
 terraform {
   required_providers {
-    power-platform = {
+    powerplatform = {
       source = "microsoft/power-platform"
     }
   }
 }
 
-provider "power-platform" {
+provider "powerplatform" {
   use_cli = true
 }
 

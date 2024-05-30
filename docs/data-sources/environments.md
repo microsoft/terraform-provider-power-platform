@@ -15,13 +15,13 @@ Fetches the list of environments in a tenant.  See [Environments overview](https
 ```terraform
 terraform {
   required_providers {
-    power-platform = {
+    powerplatform = {
       source = "microsoft/power-platform"
     }
   }
 }
 
-provider "power-platform" {
+provider "powerplatform" {
   use_cli = true
 }
 
