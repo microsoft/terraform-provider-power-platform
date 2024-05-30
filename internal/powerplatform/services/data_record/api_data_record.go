@@ -147,6 +147,64 @@ func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId st
 	return result["value"].([]interface{}), nil
 }
 
+func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string) {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return ""
+	}
+
+	apiUrl := fmt.Sprintf("%s/api/data/%s/EntityDefinitions(LogicalName='%s')?$expand=OneToManyRelationships,ManyToManyRelationships,ManyToOneRelationships", environmentUrl, constants.DATAVERSE_API_VERSION, entityLogicalName)
+
+	response, err := client.Api.Execute(ctx, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
+	if err != nil {
+		return ""
+	}
+
+	var mapResponse map[string]interface{}
+	json.Unmarshal(response.BodyAsBytes, &mapResponse)
+
+	oneToMany, _ := mapResponse["OneToManyRelationships"].([]interface{})
+	for _, list := range oneToMany {
+		item := list.(map[string]interface{})
+		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
+			tableName = item["ReferencedEntity"].(string)
+			break
+		}
+		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName {
+			tableName = item["ReferencingEntity"].(string)
+			break
+		}
+	}
+
+	manyToOne, _ := mapResponse["ManyToOneRelationships"].([]interface{})
+	for _, list := range manyToOne {
+		item := list.(map[string]interface{})
+		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
+			tableName = item["ReferencedEntity"].(string)
+			break
+		}
+		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName {
+			tableName = item["ReferencingEntity"].(string)
+			break
+		}
+	}
+
+	manyToMany, _ := mapResponse["ManyToManyRelationships"].([]interface{})
+	for _, list := range manyToMany {
+		item := list.(map[string]interface{})
+		if item["Entity1NavigationPropertyName"] == relationLogicalName {
+			tableName = item["Entity1LogicalName"].(string)
+			break
+		}
+		if item["Entity2NavigationPropertyName"] == relationLogicalName {
+			tableName = item["Entity2LogicalName"].(string)
+			break
+		}
+	}
+
+	return tableName
+}
+
 func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId string, environmentId string, tableName string, columns map[string]interface{}) (*DataRecordDto, error) {
 	result := DataRecordDto{}
 
@@ -255,18 +313,6 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		return err
 	}
 
-	relations := make(map[string]interface{}, 0)
-
-	for key, value := range columns {
-		if _, ok := value.(map[string]interface{}); ok {
-			delete(columns, key)
-		}
-		if nestedMapList, ok := value.([]interface{}); ok {
-			delete(columns, key)
-			relations[key] = nestedMapList
-		}
-	}
-
 	tableEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
 
 	e, _ := url.Parse(environmentUrl)
@@ -276,30 +322,20 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId),
 	}
 
-	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
-	if err != nil {
-		return err
-	}
-
-	for key, value := range relations {
+	for key, value := range columns {
+		if _, ok := value.(map[string]interface{}); ok {
+			delete(columns, key)
+		}
 		if nestedMapList, ok := value.([]interface{}); ok {
-			apiUrl := &url.URL{
-				Scheme: e.Scheme,
-				Host:   e.Host,
-				Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId, key),
-			}
+			delete(columns, key)
 
 			for _, nestedItem := range nestedMapList {
 				nestedMap := nestedItem.(map[string]interface{})
 
-				tableLogicalName := nestedMap["table_logical_name"].(string)
-
-				columnEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
-
 				apiUrl = &url.URL{
 					Scheme: e.Scheme,
 					Host:   e.Host,
-					Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s/$ref?$id=%s/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, nestedMap["data_record_id"], key, environmentUrl, constants.DATAVERSE_API_VERSION, columnEntityDefinition.LogicalCollectionName, nestedMap["data_record_id"]),
+					Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s(%s)/$ref", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId, key, nestedMap["data_record_id"].(string)),
 				}
 				_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 				if err != nil {
@@ -309,63 +345,10 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		}
 	}
 
+	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
+	if err != nil {
+		return err
+	}
+
 	return nil
-}
-
-func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
-	if err != nil {
-		return ""
-	}
-
-	apiUrl := fmt.Sprintf("%s/api/data/%s/EntityDefinitions(LogicalName='%s')?$expand=OneToManyRelationships,ManyToManyRelationships,ManyToOneRelationships", environmentUrl, constants.DATAVERSE_API_VERSION, entityLogicalName)
-
-	response, err := client.Api.Execute(ctx, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
-	if err != nil {
-		return ""
-	}
-
-	var mapResponse map[string]interface{}
-	json.Unmarshal(response.BodyAsBytes, &mapResponse)
-
-	oneToMany, _ := mapResponse["OneToManyRelationships"].([]interface{})
-	for _, list := range oneToMany {
-		item := list.(map[string]interface{})
-		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
-			tableName = item["ReferencedEntity"].(string)
-			break
-		}
-		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName {
-			tableName = item["ReferencingEntity"].(string)
-			break
-		}
-	}
-
-	manyToOne, _ := mapResponse["ManyToOneRelationships"].([]interface{})
-	for _, list := range manyToOne {
-		item := list.(map[string]interface{})
-		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
-			tableName = item["ReferencedEntity"].(string)
-			break
-		}
-		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName {
-			tableName = item["ReferencingEntity"].(string)
-			break
-		}
-	}
-
-	manyToMany, _ := mapResponse["ManyToManyRelationships"].([]interface{})
-	for _, list := range manyToMany {
-		item := list.(map[string]interface{})
-		if item["Entity1NavigationPropertyName"] == relationLogicalName {
-			tableName = item["Entity1LogicalName"].(string)
-			break
-		}
-		if item["Entity2NavigationPropertyName"] == relationLogicalName {
-			tableName = item["Entity2LogicalName"].(string)
-			break
-		}
-	}
-
-	return tableName
 }
