@@ -15,13 +15,13 @@ Fetches Power Platform Tenant Settings.  See [Tenant Settings Overview](https://
 ```terraform
 terraform {
   required_providers {
-    power-platform = {
+    powerplatform = {
       source = "microsoft/power-platform"
     }
   }
 }
 
-provider "power-platform" {
+provider "powerplatform" {
   use_cli = true
 }
 
