@@ -148,12 +148,7 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	var mapColumns map[string]interface{}
-	jsonColumns, _ := json.Marshal(state.Columns.String())
-	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
-	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
-
-	newColumns, err := r.DataRecordClient.GetDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
+	newColumns, err := r.DataRecordClient.GetDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
 		return
@@ -236,10 +231,10 @@ func (r *DataRecordResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, currentState *DataRecordResourceModel, new_environment_id string, new_table_logical_name string, new_columns map[string]interface{}) *DataRecordResourceModel {
+func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, currentState *DataRecordResourceModel, environmentId string, tableLogicalName string, columns map[string]interface{}) *DataRecordResourceModel {
 	var objectType = map[string]attr.Type{
-		"entity_logical_name": types.StringType,
-		"data_record_id":      types.StringType,
+		"table_logical_name": types.StringType,
+		"data_record_id":     types.StringType,
 	}
 
 	var old_columns map[string]interface{}
@@ -253,33 +248,33 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 	for key, value := range old_columns {
 		switch value.(type) {
 		case bool:
-			v, ok := new_columns[key].(bool)
+			v, ok := columns[key].(bool)
 			if ok {
 				attributeTypes[key] = types.BoolType
 				attributes[key] = types.BoolValue(v)
 			}
 		case int64:
-			v, ok := new_columns[key].(int64)
+			v, ok := columns[key].(int64)
 			if ok {
 				attributeTypes[key] = types.Int64Type
 				attributes[key] = types.Int64Value(v)
 			}
 		case float64:
-			v, ok := new_columns[key].(float64)
+			v, ok := columns[key].(float64)
 			if ok {
 				attributeTypes[key] = types.Float64Type
 				attributes[key] = types.Float64Value(v)
 			}
 		case string:
-			v, ok := new_columns[key].(string)
+			v, ok := columns[key].(string)
 			if ok {
 				attributeTypes[key] = types.StringType
 				attributes[key] = types.StringValue(v)
 			}
 		case map[string]interface{}:
-			v, ok := new_columns[fmt.Sprintf("_%s_value", key)].(string)
+			v, ok := columns[fmt.Sprintf("_%s_value", key)].(string)
 			if ok {
-				entityLogicalName := apiClient.GetEntityRelationTableName(ctx, new_environment_id, new_table_logical_name, key)
+				entityLogicalName := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
 				dataRecordId := v
 
 				nestedObjectType := types.ObjectType{
@@ -288,8 +283,8 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 				nestedObjectValue, _ := types.ObjectValue(
 					objectType,
 					map[string]attr.Value{
-						"entity_logical_name": types.StringValue(entityLogicalName),
-						"data_record_id":      types.StringValue(dataRecordId),
+						"table_logical_name": types.StringValue(entityLogicalName),
+						"data_record_id":     types.StringValue(dataRecordId),
 					},
 				)
 
@@ -302,15 +297,24 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 			tupleElementType := types.ObjectType{
 				AttrTypes: objectType,
 			}
-			for _, value := range value.([]interface{}) {
-				item := value.(map[string]interface{})
 
-				entityLogicalName := apiClient.GetEntityRelationTableName(ctx, new_environment_id, new_table_logical_name, key)
-				dataRecordId := item["data_record_id"].(string)
+			relationMap, _ := apiClient.GetRelationData(ctx, currentState.Id.ValueString(), environmentId, tableLogicalName, key)
+
+			for _, rawItem := range relationMap {
+				item := rawItem.(map[string]interface{})
+
+				relationTableLogicalName := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
+				dataRecordId := ""
+
+				for itemKey, itemValue := range item {
+					if itemKey != "@odata.etag" && itemKey != "createdon" {
+						dataRecordId = itemValue.(string)
+					}
+				}
 
 				v, _ := types.ObjectValue(objectType, map[string]attr.Value{
-					"entity_logical_name": types.StringValue(entityLogicalName),
-					"data_record_id":      types.StringValue(dataRecordId),
+					"table_logical_name": types.StringValue(relationTableLogicalName),
+					"data_record_id":     types.StringValue(dataRecordId),
 				})
 				listValues = append(listValues, v)
 				listTypes = append(listTypes, tupleElementType)
@@ -326,11 +330,11 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 		}
 	}
 
-	column_field, _ := types.ObjectValue(attributeTypes, attributes)
+	columnField, _ := types.ObjectValue(attributeTypes, attributes)
 
-	currentState.EnvironmentId = types.StringValue(new_environment_id)
-	currentState.TableLogicalName = types.StringValue(new_table_logical_name)
-	currentState.Columns = types.DynamicValue(column_field)
+	currentState.EnvironmentId = types.StringValue(environmentId)
+	currentState.TableLogicalName = types.StringValue(tableLogicalName)
+	currentState.Columns = types.DynamicValue(columnField)
 
 	return currentState
 }
