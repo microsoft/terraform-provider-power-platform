@@ -292,12 +292,10 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 				attributes[key] = nestedObjectValue
 			}
 		case []interface{}:
-			var listTypes []attr.Type
-			var listValues []attr.Value
-			tupleElementType := types.ObjectType{
+			setObjectValues := []attr.Value{}
+			var setObjectType = types.ObjectType{
 				AttrTypes: objectType,
 			}
-
 			relationMap, _ := apiClient.GetRelationData(ctx, currentState.Id.ValueString(), environmentId, tableLogicalName, key)
 
 			for _, rawItem := range relationMap {
@@ -312,21 +310,16 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 					}
 				}
 
-				v, _ := types.ObjectValue(objectType, map[string]attr.Value{
-					"table_logical_name": types.StringValue(relationTableLogicalName),
-					"data_record_id":     types.StringValue(dataRecordId),
-				})
-				listValues = append(listValues, v)
-				listTypes = append(listTypes, tupleElementType)
+				setObjectValues = append(setObjectValues, types.ObjectValueMust(objectType,
+					map[string]attr.Value{
+						"table_logical_name": types.StringValue(relationTableLogicalName),
+						"data_record_id":     types.StringValue(dataRecordId),
+					}))
 			}
 
-			nestedObjectType := types.TupleType{
-				ElemTypes: listTypes,
-			}
-			nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
-
-			attributes[key] = nestedObjectValue
-			attributeTypes[key] = nestedObjectType
+			setValue, _ := types.SetValue(setObjectType, setObjectValues)
+			attributes[key] = setValue
+			attributeTypes[key] = types.SetType{ElemType: setObjectType}
 		}
 	}
 
