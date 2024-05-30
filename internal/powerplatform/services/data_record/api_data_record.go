@@ -96,6 +96,33 @@ func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentI
 	return &env, nil
 }
 
+type drs struct {
+	Value []map[string]interface{} `json:"value"`
+}
+
+func (client *DataRecordClient) GetDataRecordsByODataQuery(ctx context.Context, environmentId, query string) ([]map[string]interface{}, error) {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	e, _ := url.Parse(environmentUrl)
+	apiUrl := &url.URL{
+		Scheme: e.Scheme,
+		Host:   e.Host,
+		Path:   fmt.Sprintf("/api/data/%s/%s", constants.DATAVERSE_API_VERSION, query),
+	}
+
+	result := drs{}
+
+	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	return result.Value, nil
+}
+
 func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId string, environmentId string, tableName string) (map[string]interface{}, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
