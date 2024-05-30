@@ -15,13 +15,13 @@ Fetches the list of Dynamics 365 languages. For more information see [Power Plat
 ```terraform
 terraform {
   required_providers {
-    power-platform = {
-      source  = "microsoft/power-platform"
+    powerplatform = {
+      source = "microsoft/power-platform"
     }
   }
 }
 
-provider "power-platform" {
+provider "powerplatform" {
   use_cli = true
 }
 
