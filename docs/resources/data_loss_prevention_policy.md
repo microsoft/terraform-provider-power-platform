@@ -3,12 +3,12 @@
 page_title: "powerplatform_data_loss_prevention_policy Resource - powerplatform"
 subcategory: ""
 description: |-
-  This resource manages a Data Loss Prevention Policy. See Data Loss Prevention https://learn.microsoft.com/en-us/power-platform/admin/prevent-data-loss for more information.
+  This resource manages a Data Loss Prevention Policy. See Data Loss Prevention https://learn.microsoft.com/power-platform/admin/prevent-data-loss for more information.
 ---
 
 # powerplatform_data_loss_prevention_policy (Resource)
 
-This resource manages a Data Loss Prevention Policy. See [Data Loss Prevention](https://learn.microsoft.com/en-us/power-platform/admin/prevent-data-loss) for more information.
+This resource manages a Data Loss Prevention Policy. See [Data Loss Prevention](https://learn.microsoft.com/power-platform/admin/prevent-data-loss) for more information.
 
 ## Example Usage
 

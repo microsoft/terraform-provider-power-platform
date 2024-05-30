@@ -3,12 +3,12 @@
 page_title: "powerplatform_locations Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of available Dynamics 365 locations. For more information see Power Platform Geos https://learn.microsoft.com/en-us/power-platform/admin/regions-overview
+  Fetches the list of available Dynamics 365 locations. For more information see Power Platform Geos https://learn.microsoft.com/power-platform/admin/regions-overview
 ---
 
 # powerplatform_locations (Data Source)
 
-Fetches the list of available Dynamics 365 locations. For more information see [Power Platform Geos](https://learn.microsoft.com/en-us/power-platform/admin/regions-overview)
+Fetches the list of available Dynamics 365 locations. For more information see [Power Platform Geos](https://learn.microsoft.com/power-platform/admin/regions-overview)
 
 ## Example Usage
 
