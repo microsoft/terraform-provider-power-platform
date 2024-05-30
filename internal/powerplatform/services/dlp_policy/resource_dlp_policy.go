@@ -111,7 +111,7 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 	}
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "This resource manages a Data Loss Prevention Policy. See [Data Loss Prevention](https://learn.microsoft.com/en-us/power-platform/admin/prevent-data-loss) for more information.",
+		MarkdownDescription: "This resource manages a Data Loss Prevention Policy. See [Data Loss Prevention](https://learn.microsoft.com/power-platform/admin/prevent-data-loss) for more information.",
 		Description:         "This resource manages a Data Loss Prevention Policy",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{

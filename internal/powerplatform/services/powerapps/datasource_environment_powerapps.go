@@ -61,7 +61,7 @@ func (d *EnvironmentPowerAppsDataSource) Metadata(_ context.Context, req datasou
 func (d *EnvironmentPowerAppsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Power Apps in an environment",
-		MarkdownDescription: "Fetches the list of Power Apps in an environment.  See [Manage Power Apps](https://learn.microsoft.com/en-us/power-platform/admin/admin-manage-apps) for more details about how this data is surfaced in Power Platform Admin Center.",
+		MarkdownDescription: "Fetches the list of Power Apps in an environment.  See [Manage Power Apps](https://learn.microsoft.com/power-platform/admin/admin-manage-apps) for more details about how this data is surfaced in Power Platform Admin Center.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",

@@ -3,12 +3,12 @@
 page_title: "powerplatform_environments Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of environments in a tenant.  See Environments overview https://learn.microsoft.com/en-us/power-platform/admin/environments-overview for more information.
+  Fetches the list of environments in a tenant.  See Environments overview https://learn.microsoft.com/power-platform/admin/environments-overview for more information.
 ---
 
 # powerplatform_environments (Data Source)
 
-Fetches the list of environments in a tenant.  See [Environments overview](https://learn.microsoft.com/en-us/power-platform/admin/environments-overview) for more information.
+Fetches the list of environments in a tenant.  See [Environments overview](https://learn.microsoft.com/power-platform/admin/environments-overview) for more information.
 
 ## Example Usage
 

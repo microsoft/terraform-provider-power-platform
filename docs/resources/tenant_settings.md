@@ -3,12 +3,12 @@
 page_title: "powerplatform_tenant_settings Resource - powerplatform"
 subcategory: ""
 description: |-
-  Manages Power Platform Tenant Settings. Power Platform Tenant Settings are configuration options that apply to the entire tenant. They control various aspects of Power Platform features and behaviors, such as security, data protection, licensing, and more. These settings apply to all environments within your tenant. See Tenant Settings Overview https://learn.microsoft.com/en-us/power-platform/admin/tenant-settings for more details.
+  Manages Power Platform Tenant Settings. Power Platform Tenant Settings are configuration options that apply to the entire tenant. They control various aspects of Power Platform features and behaviors, such as security, data protection, licensing, and more. These settings apply to all environments within your tenant. See Tenant Settings Overview https://learn.microsoft.com/power-platform/admin/tenant-settings for more details.
 ---
 
 # powerplatform_tenant_settings (Resource)
 
-Manages Power Platform Tenant Settings. Power Platform Tenant Settings are configuration options that apply to the entire tenant. They control various aspects of Power Platform features and behaviors, such as security, data protection, licensing, and more. These settings apply to all environments within your tenant. See [Tenant Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/tenant-settings) for more details.
+Manages Power Platform Tenant Settings. Power Platform Tenant Settings are configuration options that apply to the entire tenant. They control various aspects of Power Platform features and behaviors, such as security, data protection, licensing, and more. These settings apply to all environments within your tenant. See [Tenant Settings Overview](https://learn.microsoft.com/power-platform/admin/tenant-settings) for more details.
 
 ## Example Usage
 
@@ -108,14 +108,14 @@ resource "powerplatform_tenant_settings" "settings" {
 
 ### Optional
 
-- `disable_capacity_allocation_by_environment_admins` (Boolean) Disable Capacity Allocation By Environment Admins. See [Add-on capacity management](https://learn.microsoft.com/en-us/power-platform/admin/capacity-add-on#control-who-can-allocate-add-on-capacity) for more details.
-- `disable_environment_creation_by_non_admin_users` (Boolean) Disable Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/en-us/power-platform/admin/control-environment-creation) for more details.
+- `disable_capacity_allocation_by_environment_admins` (Boolean) Disable Capacity Allocation By Environment Admins. See [Add-on capacity management](https://learn.microsoft.com/power-platform/admin/capacity-add-on#control-who-can-allocate-add-on-capacity) for more details.
+- `disable_environment_creation_by_non_admin_users` (Boolean) Disable Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.
 - `disable_newsletter_sendout` (Boolean) Disable Newsletter Sendout
 - `disable_nps_comments_reachout` (Boolean) Disable NPS Comments Reachout
 - `disable_portals_creation_by_non_admin_users` (Boolean) Disable Portals Creation By Non Admin Users
 - `disable_support_tickets_visible_by_all_users` (Boolean) Disable Support Tickets Visible By All Users
 - `disable_survey_feedback` (Boolean) Disable Survey Feedback
-- `disable_trial_environment_creation_by_non_admin_users` (Boolean) Disable Trial Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/en-us/power-platform/admin/control-environment-creation) for more details.
+- `disable_trial_environment_creation_by_non_admin_users` (Boolean) Disable Trial Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.
 - `power_platform` (Attributes) Power Platform (see [below for nested schema](#nestedatt--power_platform))
 - `walk_me_opt_out` (Boolean) Walk Me Opt Out
 
