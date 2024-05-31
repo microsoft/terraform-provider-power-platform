@@ -11,11 +11,11 @@ provider "powerplatform" {
 }
 
 data "powerplatform_data_records" "example_data_records" {
-  environment_id = "838f76c8-a192-e59c-a835-089ad8cfb047"
-  # prefer = tomap({
-  #   //respond-async             = null
-  #   odata.maxpagesize         = "1"
-  #   odata.include-annotations = "OData.Community.Display.V1.FormattedValue,Microsoft.PowerApps.CDS.ErrorDetails*"
-  # })
-  query = "systemusers?$select=fullname,systemuserid,createdon$expand=systemuserroles_association($select=roleid,roleidname)$top=2"
+  environment_id    = "838f76c8-a192-e59c-a835-089ad8cfb047"
+  entity_collection = "systemusers"
+  //entity_collection = "systemusers(1f70a364-5019-ef11-840b-002248ca35c3)"
+  select                     = ["firstname", "lastname", "createdon"]
+  top                        = 2
+  return_total_records_count = true
+  //query          = "systemusers?$select=fullname,systemuserid,createdon&$top=3&$expand=systemuserroles_association($select=name)"
 }

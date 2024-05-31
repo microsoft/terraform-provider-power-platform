@@ -7,7 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
+	http "net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -100,27 +100,47 @@ type drs struct {
 	Value []map[string]interface{} `json:"value"`
 }
 
-func (client *DataRecordClient) GetDataRecordsByODataQuery(ctx context.Context, environmentId, query string) ([]map[string]interface{}, error) {
+func (client *DataRecordClient) GetDataRecordsByODataQuery(ctx context.Context, environmentId, query string, headers map[string]string) ([]map[string]interface{}, *int64, *bool, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
+	}
+
+	var h http.Header = make(http.Header)
+	for k, v := range headers {
+		h.Add(k, v)
 	}
 
 	e, _ := url.Parse(environmentUrl)
-	apiUrl := &url.URL{
-		Scheme: e.Scheme,
-		Host:   e.Host,
-		Path:   fmt.Sprintf("/api/data/%s/%s", constants.DATAVERSE_API_VERSION, query),
-	}
+	apiUrl := fmt.Sprintf("%s://%s/api/data/%s/%s", e.Scheme, e.Host, constants.DATAVERSE_API_VERSION, query)
 
-	result := drs{}
-
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
+	response := map[string]interface{}{}
+	_, err = client.Api.Execute(ctx, "GET", apiUrl, h, nil, []int{http.StatusOK}, &response)
 	if err != nil {
-		return nil, err
+		return nil, nil, nil, err
 	}
 
-	return result.Value, nil
+	var totalRecords *int64 = nil
+	if response["@Microsoft.Dynamics.CRM.totalrecordcount"] != nil {
+		count := int64(response["@Microsoft.Dynamics.CRM.totalrecordcount"].(float64))
+		totalRecords = &count
+	}
+	var totalRecordsCountLimitExceeded *bool = nil
+	if response["@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded"] != nil {
+		isLimitExceeded := response["@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded"].(bool)
+		totalRecordsCountLimitExceeded = &isLimitExceeded
+	}
+
+	records := []map[string]interface{}{}
+	if response["@odata.context"] != nil && response["value"] != nil {
+		for _, item := range response["value"].([]interface{}) {
+			value := item.(map[string]interface{})
+			records = append(records, value)
+		}
+	} else {
+		records = append(records, response)
+	}
+	return records, totalRecords, totalRecordsCountLimitExceeded, nil
 }
 
 func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId string, environmentId string, tableName string) (map[string]interface{}, error) {
