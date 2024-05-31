@@ -1,13 +1,13 @@
 terraform {
   required_providers {
-    power-platform = {
-      source  = "microsoft/power-platform"
+    powerplatform = {
+      source = "microsoft/power-platform"
     }
   }
 }
 
-provider "power-platform" {
-  use_client = true
+provider "powerplatform" {
+  use_cli = true
 }
 
 data "powerplatform_locations" "all_locations" {}

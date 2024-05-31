@@ -15,12 +15,12 @@ This resource manages a Data Loss Prevention Policy. See [Data Loss Prevention](
 ```terraform
 terraform {
   required_providers {
-    power-platform = {
+    powerplatform = {
       source = "microsoft/power-platform"
     }
   }
 }
-provider "power-platform" {
+provider "powerplatform" {
   use_cli = true
 }
 data "powerplatform_connectors" "all_connectors" {}

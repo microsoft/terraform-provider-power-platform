@@ -15,17 +15,17 @@ Resource for importing exporting solutions in Power Platform environments.  This
 ```terraform
 terraform {
   required_providers {
-    power-platform = {
+    powerplatform = {
       source = "microsoft/power-platform"
     }
     local = {
-      version = "2.4.0"
+      version = "2.5.1"
       source  = "hashicorp/local"
     }
   }
 }
 
-provider "power-platform" {
+provider "powerplatform" {
   use_cli = true
 }
 

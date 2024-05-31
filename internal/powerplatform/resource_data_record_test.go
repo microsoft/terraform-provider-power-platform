@@ -17,6 +17,7 @@ import (
 )
 
 func TestAccDataRecordResource_Validate_Create(t *testing.T) {
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
@@ -55,22 +56,22 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 						columns = {
 							name                = "Sample Account"
 							creditonhold        = false
-							address1_latitude   = 47.639583
+							address1_latitude   = 47.63
 							description         = "This is the description of the sample account"
 							revenue             = 5000000
 							accountcategorycode = 1
 						
 							primarycontactid = {
-								entity_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
+								table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 								data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 							}
 						
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
-									entity_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
+									table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 								}
-							]
+							])
 						}
 					}
 				`,
@@ -91,18 +92,18 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"name":                knownvalue.StringExact("Sample Account"),
 							"creditonhold":        knownvalue.Bool(false),
-							"address1_latitude":   knownvalue.Float64Exact(47.639583),
+							"address1_latitude":   knownvalue.Float64Exact(47.63),
 							"description":         knownvalue.StringExact("This is the description of the sample account"),
 							"revenue":             knownvalue.Float64Exact(5000000),
 							"accountcategorycode": knownvalue.Int64Exact(1),
 							"primarycontactid": knownvalue.MapExact(map[string]knownvalue.Check{
-								"entity_logical_name": knownvalue.StringExact("contact"),
-								"data_record_id":      knownvalue.StringRegexp(regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+								"table_logical_name": knownvalue.StringExact("contact"),
+								"data_record_id":     knownvalue.StringRegexp(regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 							}),
-							"contact_customer_accounts": knownvalue.ListExact([]knownvalue.Check{
+							"contact_customer_accounts": knownvalue.SetExact([]knownvalue.Check{
 								0: knownvalue.MapExact(map[string]knownvalue.Check{
-									"entity_logical_name": knownvalue.StringExact("contact"),
-									"data_record_id":      knownvalue.StringRegexp(regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+									"table_logical_name": knownvalue.StringExact("contact"),
+									"data_record_id":     knownvalue.StringRegexp(regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 								}),
 							}),
 						})),
@@ -254,16 +255,16 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 							name                = "Sample Account"
 							
 							primarycontactid = {
-								entity_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
+								table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 								data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 							}
 						
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
-									entity_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
+									table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 								}
-							]
+							])
 						}
 					}
 				`,
@@ -274,13 +275,13 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 						knownvalue.MapExact(map[string]knownvalue.Check{
 							"name": knownvalue.StringExact("Sample Account"),
 							"primarycontactid": knownvalue.MapExact(map[string]knownvalue.Check{
-								"entity_logical_name": knownvalue.StringExact("contact"),
-								"data_record_id":      knownvalue.StringRegexp(regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+								"table_logical_name": knownvalue.StringExact("contact"),
+								"data_record_id":     knownvalue.StringRegexp(regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 							}),
-							"contact_customer_accounts": knownvalue.ListExact([]knownvalue.Check{
+							"contact_customer_accounts": knownvalue.SetExact([]knownvalue.Check{
 								0: knownvalue.MapExact(map[string]knownvalue.Check{
-									"entity_logical_name": knownvalue.StringExact("contact"),
-									"data_record_id":      knownvalue.StringRegexp(regexp.MustCompile(powerplatform_helpers.GuidRegex)),
+									"table_logical_name": knownvalue.StringExact("contact"),
+									"data_record_id":     knownvalue.StringRegexp(regexp.MustCompile(powerplatform_helpers.GuidRegex)),
 								}),
 							}),
 						})),
@@ -331,8 +332,6 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 }
 
 func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
-
-	t.Setenv("TF_ACC", "1")
 
 	var primarycontactidStep1 = &mock_helpers.StateValue{}
 	var primarycontactidStep2 = &mock_helpers.StateValue{}
@@ -395,20 +394,20 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 							name                = "Sample Account"
 						
 							primarycontactid = {
-								entity_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
+								table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 								data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 							}
 
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
-									entity_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
+									table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 								},
 								{
-									entity_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
+									table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 								}
-							]
+							])
 						}
 					}
 				`,
@@ -420,17 +419,17 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					statecheck.ExpectKnownValue("powerplatform_data_record.data_record_account", tfjsonpath.New("columns"),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
 							"primarycontactid": knownvalue.MapExact(map[string]knownvalue.Check{
-								"entity_logical_name": knownvalue.StringExact("contact"),
-								"data_record_id":      mock_helpers.GetStateValue(primarycontactidStep1),
+								"table_logical_name": knownvalue.StringExact("contact"),
+								"data_record_id":     mock_helpers.GetStateValue(primarycontactidStep1),
 							}),
-							"contact_customer_accounts": knownvalue.ListExact([]knownvalue.Check{
+							"contact_customer_accounts": knownvalue.SetExact([]knownvalue.Check{
 								0: knownvalue.MapExact(map[string]knownvalue.Check{
-									"entity_logical_name": knownvalue.StringExact("contact"),
-									"data_record_id":      mock_helpers.GetStateValue(contactAtIndex1Step1),
+									"table_logical_name": knownvalue.StringExact("contact"),
+									"data_record_id":     mock_helpers.GetStateValue(contactAtIndex1Step1),
 								}),
 								1: knownvalue.MapExact(map[string]knownvalue.Check{
-									"entity_logical_name": knownvalue.StringExact("contact"),
-									"data_record_id":      mock_helpers.GetStateValue(contactAtIndex2Step1),
+									"table_logical_name": knownvalue.StringExact("contact"),
+									"data_record_id":     mock_helpers.GetStateValue(contactAtIndex2Step1),
 								}),
 							}),
 						})),
@@ -465,7 +464,6 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					}
 				}
 
-				
 				resource "powerplatform_data_record" "data_record_sample_contact3" {
 					environment_id     = powerplatform_environment.test_env.id
 					table_logical_name = "contact"
@@ -474,28 +472,27 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					}
 				}
 
-
 				resource "powerplatform_data_record" "data_record_account" {
 						environment_id     = powerplatform_environment.test_env.id
 						table_logical_name = "account"
 						columns = {
 							name                = "Sample Account"
-						
+
 							primarycontactid = {
-								entity_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
+								table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 								data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 							}
 
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
-									entity_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
+									table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 								},
 								{
-									entity_logical_name = powerplatform_data_record.data_record_sample_contact3.table_logical_name
+									table_logical_name = powerplatform_data_record.data_record_sample_contact3.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact3.id
 								}
-							]
+							])
 						}
 					}
 				`,
@@ -504,17 +501,17 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					statecheck.ExpectKnownValue("powerplatform_data_record.data_record_account", tfjsonpath.New("columns"),
 						knownvalue.MapPartial(map[string]knownvalue.Check{
 							"primarycontactid": knownvalue.MapExact(map[string]knownvalue.Check{
-								"entity_logical_name": knownvalue.StringExact("contact"),
-								"data_record_id":      mock_helpers.GetStateValue(primarycontactidStep2),
+								"table_logical_name": knownvalue.StringExact("contact"),
+								"data_record_id":     mock_helpers.GetStateValue(primarycontactidStep2),
 							}),
-							"contact_customer_accounts": knownvalue.ListExact([]knownvalue.Check{
+							"contact_customer_accounts": knownvalue.SetExact([]knownvalue.Check{
 								0: knownvalue.MapExact(map[string]knownvalue.Check{
-									"entity_logical_name": knownvalue.StringExact("contact"),
-									"data_record_id":      mock_helpers.GetStateValue(contactAtIndex1Step2),
+									"table_logical_name": knownvalue.StringExact("contact"),
+									"data_record_id":     mock_helpers.GetStateValue(contactAtIndex1Step2),
 								}),
 								1: knownvalue.MapExact(map[string]knownvalue.Check{
-									"entity_logical_name": knownvalue.StringExact("contact"),
-									"data_record_id":      mock_helpers.GetStateValue(contactAtIndex2Step2),
+									"table_logical_name": knownvalue.StringExact("contact"),
+									"data_record_id":     mock_helpers.GetStateValue(contactAtIndex2Step2),
 								}),
 							}),
 						})),
@@ -549,7 +546,6 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					}
 				}
 
-				
 				resource "powerplatform_data_record" "data_record_sample_contact3" {
 					environment_id     = powerplatform_environment.test_env.id
 					table_logical_name = "contact"
@@ -558,28 +554,27 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					}
 				}
 
-
 				resource "powerplatform_data_record" "data_record_account" {
 						environment_id     = powerplatform_environment.test_env.id
 						table_logical_name = "account"
 						columns = {
 							name                = "Sample Account"
-						
+
 							primarycontactid = {
-								entity_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
+								table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 								data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 							}
 
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
-									entity_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
+									table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 								},
 								{
-									entity_logical_name = powerplatform_data_record.data_record_sample_contact3.table_logical_name
+									table_logical_name = powerplatform_data_record.data_record_sample_contact3.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact3.id
 								}
-							]
+							])
 						}
 					}
 				`,
