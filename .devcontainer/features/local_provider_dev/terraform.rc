@@ -4,6 +4,7 @@ provider_installation {
     "microsoft/power-platform" = "/go/bin"
     "hashicorp/azuread" = "/go/bin"
     "hashicorp/random" = "/go/bin"
+    "hashicorp/local" = "/go/bin"
   }
 
   # For all other providers, install them directly from their origin provider

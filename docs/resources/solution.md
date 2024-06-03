@@ -3,12 +3,12 @@
 page_title: "powerplatform_solution Resource - powerplatform"
 subcategory: ""
 description: |-
-  Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the pac solution import https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/solution#pac-solution-import command in the Power Platform CLI.
+  Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the pac solution import https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-import command in the Power Platform CLI.
 ---
 
 # powerplatform_solution (Resource)
 
-Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the [`pac solution import`](https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/solution#pac-solution-import) command in the Power Platform CLI.
+Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the [`pac solution import`](https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-import) command in the Power Platform CLI.
 
 ## Example Usage
 
@@ -91,7 +91,7 @@ resource "powerplatform_solution" "solution" {
 
 ### Optional
 
-- `settings_file` (String) Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/en-us/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details
+- `settings_file` (String) Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details
 
 ### Read-Only
 

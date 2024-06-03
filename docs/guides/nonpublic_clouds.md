@@ -7,7 +7,7 @@ description: |-
 
 # Connecting to non-public sovereign clouds
 
-Microsoft offers sovereign clouds (for example [US Government](https://learn.microsoft.com/en-us/power-platform/admin/microsoft-dynamics-365-government) and [China](https://learn.microsoft.com/en-us/power-platform/admin/about-microsoft-cloud-china)) that are physically isolated instances of Power Platform, Entra ID, and Azure. These isolated clouds are designed to make sure that data residency, sovereignty, and compliance requirements are honored within geographical boundaries.
+Microsoft offers sovereign clouds (for example [US Government](https://learn.microsoft.com/power-platform/admin/microsoft-dynamics-365-government) and [China](https://learn.microsoft.com/power-platform/admin/about-microsoft-cloud-china)) that are physically isolated instances of Power Platform, Entra ID, and Azure. These isolated clouds are designed to make sure that data residency, sovereignty, and compliance requirements are honored within geographical boundaries.
 
 >! Warning: Sovereign clouds may not support the same features as the public cloud. Make sure to [check the documentation](https://aka.ms/bapfunctionalparity) for the specific cloud you are using.
 
@@ -23,7 +23,7 @@ Configure the Azure CLI to work with that Cloud:
 az cloud set --name AzureUSGovernment | AzureChinaCloud
 ```
 
-See the [Azure CLI documentation](https://learn.microsoft.com/en-us/cli/azure/manage-clouds-azure-cli) for more information on connecting to alternate clouds.
+See the [Azure CLI documentation](https://learn.microsoft.com/cli/azure/manage-clouds-azure-cli) for more information on connecting to alternate clouds.
 
 Login to the Azure CLI using:
 

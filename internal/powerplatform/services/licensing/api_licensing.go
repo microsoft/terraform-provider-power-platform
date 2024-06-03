@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 type LicensingClient struct {
@@ -59,6 +61,9 @@ func (client *LicensingClient) GetBillingPolicy(ctx context.Context, billingId s
 	policy := BillingPolicyDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 
+	if err != nil && strings.ContainsAny(err.Error(), "404") {
+		return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+	}
 	return &policy, err
 }
 
@@ -144,6 +149,9 @@ func (client *LicensingClient) GetEnvironmentsForBillingPolicy(ctx context.Conte
 	billingPolicyEnvironments := BillingPolicyEnvironmentsArrayResponseDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &billingPolicyEnvironments)
 	if err != nil {
+		if strings.ContainsAny(err.Error(), "404") {
+			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+		}
 		return nil, err
 	}
 
@@ -155,6 +163,9 @@ func (client *LicensingClient) GetEnvironmentsForBillingPolicy(ctx context.Conte
 }
 
 func (client *LicensingClient) AddEnvironmentsToBillingPolicy(ctx context.Context, billingId string, environmentIds []string) error {
+	if len(environmentIds) == 0 {
+		return nil
+	}
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -174,6 +185,9 @@ func (client *LicensingClient) AddEnvironmentsToBillingPolicy(ctx context.Contex
 }
 
 func (client *LicensingClient) RemoveEnvironmentsToBillingPolicy(ctx context.Context, billingId string, environmentIds []string) error {
+	if len(environmentIds) == 0 {
+		return nil
+	}
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,

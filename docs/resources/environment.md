@@ -10,9 +10,9 @@ This resource manages a PowerPlatform environment
 
 A Power Platform environment is a space in which you can store, manage, and share your organization's business data, apps, chatbots, and flows. It also serves as a container to separate apps that may have different roles, security requirements, or target audiences. Each environment is created under an Azure Active Directory tenant and is bound to a geographic location. You can create different types of environments, such as production, sandbox, trial, or developer, depending on your license and permissions. You can also move resources between environments and set data loss prevention policies. A Power Platform environment can have zero or one Microsoft Dataverse database, which provides storage for your apps and chatbots. You can only connect to the data sources that are deployed in the same environment as your app or chatbot. For more information, you can check out the following links:
 
-- [Environments overview - Power Platform | Microsoft Learn](https://learn.microsoft.com/en-us/power-platform/admin/environments-overview)
-- [Create and manage environments in the Power Platform admin center](https://learn.microsoft.com/en-us/power-platform/admin/create-environment)
-- [Establishing an environment strategy - Microsoft Power Platform](https://learn.microsoft.com/en-us/power-platform/guidance/adoption/environment-strategy)
+- [Environments overview - Power Platform | Microsoft Learn](https://learn.microsoft.com/power-platform/admin/environments-overview)
+- [Create and manage environments in the Power Platform admin center](https://learn.microsoft.com/power-platform/admin/create-environment)
+- [Establishing an environment strategy - Microsoft Power Platform](https://learn.microsoft.com/power-platform/guidance/adoption/environment-strategy)
 
 ## Known Limitations
 
@@ -56,7 +56,7 @@ resource "powerplatform_environment" "development" {
 
 - `display_name` (String) Display name
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
-- `location` (String) Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source. The region of your Entra tenant may [limit the available locations for Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/regions-overview#who-can-create-environments-in-these-regions). Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).
+- `location` (String) Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source. The region of your Entra tenant may [limit the available locations for Power Platform](https://learn.microsoft.com/power-platform/admin/regions-overview#who-can-create-environments-in-these-regions). Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).
 
 ### Optional
 

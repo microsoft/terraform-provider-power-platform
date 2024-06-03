@@ -7,7 +7,7 @@ description: |-
 
 # Creating an App Registration to use the Power Platform Provider
 
-You can follow this [guide](https://learn.microsoft.com/en-us/entra/identity-platform/quickstart-register-app#register-an-application) to create an app registration.
+You can follow this [guide](https://learn.microsoft.com/entra/identity-platform/quickstart-register-app#register-an-application) to create an app registration.
 
 ## API Permissions
 
