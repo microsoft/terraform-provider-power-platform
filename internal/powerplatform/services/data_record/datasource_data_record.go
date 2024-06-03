@@ -6,10 +6,14 @@ package powerplatform
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -34,23 +38,129 @@ type DataRecordDataSource struct {
 	TypeName         string
 }
 
+type ExpandModel struct {
+	NavigationProperty types.String  `tfsdk:"navigation_property"`
+	Select             []string      `tfsdk:"select"`
+	Filter             types.String  `tfsdk:"filter"`
+	OrderBy            types.String  `tfsdk:"order_by"`
+	Top                types.Int64   `tfsdk:"top"`
+	Expand             []ExpandModel `tfsdk:"expand"`
+}
+
 type DataRecordListDataSourceModel struct {
-	EnvironmentId                  types.String  `tfsdk:"environment_id"`
-	EntityCollection               types.String  `tfsdk:"entity_collection"`
-	Select                         []string      `tfsdk:"select"`
-	Top                            types.Int64   `tfsdk:"top"`
-	ReturnTotalRecordsCount        types.Bool    `tfsdk:"return_total_records_count"`
-	TotalRecordsCount              types.Int64   `tfsdk:"total_records_count"`
-	TotalRecordsCountLimitExceeded types.Bool    `tfsdk:"total_records_count_limit_exceeded"`
-	Query                          types.String  `tfsdk:"query"`
-	Items                          types.Dynamic `tfsdk:"items"`
+	EnvironmentId               types.String  `tfsdk:"environment_id"`
+	EntityCollection            types.String  `tfsdk:"entity_collection"`
+	Select                      []string      `tfsdk:"select"`
+	Filter                      types.String  `tfsdk:"filter"`
+	Apply                       types.String  `tfsdk:"apply"`
+	OrderBy                     types.String  `tfsdk:"order_by"`
+	Top                         types.Int64   `tfsdk:"top"`
+	ReturnTotalRowsCount        types.Bool    `tfsdk:"return_total_rows_count"`
+	TotalRowsCount              types.Int64   `tfsdk:"total_rows_count"`
+	TotalRowsCountLimitExceeded types.Bool    `tfsdk:"total_rows_count_limit_exceeded"`
+	SavedQuery                  types.String  `tfsdk:"saved_query"`
+	UserQuery                   types.String  `tfsdk:"user_query"`
+	Expand                      []ExpandModel `tfsdk:"expand"`
+	Rows                        types.Dynamic `tfsdk:"rows"`
 }
 
 func (d *DataRecordDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
+var navigationPropertySchema = schema.StringAttribute{
+	MarkdownDescription: "Navigation property of the entity collection. \n\nMore information on (OData Navigation)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#expand-collection-valued-navigation-properties]",
+	Required:            true,
+}
+
+var selectListAttributeSchema = schema.ListAttribute{
+	MarkdownDescription: "List of columns to be selected from record(s) defined in entity collection. \n\nMore information on (OData Select)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#select-columns]",
+	Required:            false,
+	Optional:            true,
+	ElementType:         types.StringType,
+}
+
+var filterSchema = schema.StringAttribute{
+	MarkdownDescription: "Filter the data records. \n\nMore information on (OData Filter)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#filter-rows]",
+	Required:            false,
+	Optional:            true,
+}
+
+var orderbySchema = schema.StringAttribute{
+	MarkdownDescription: "Order the data records. \n\nMore information on (OData Order By)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#order-rows]",
+	Required:            false,
+	Optional:            true,
+}
+
+var topSchema = schema.Int64Attribute{
+	MarkdownDescription: "Number of records to be retrieved. \n\nMore information on (OData Top)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#odata-query-options]",
+	Required:            false,
+	Optional:            true,
+}
+
+func returnExpandSchema(depth int) *schema.ListNestedAttribute {
+	description := "Expand the navigation property of the entity collection. \n\nMore information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables]"
+	if depth == 0 {
+		return &schema.ListNestedAttribute{
+			MarkdownDescription: description,
+			Optional:            true,
+			Required:            false,
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"navigation_property": navigationPropertySchema,
+					"select":              selectListAttributeSchema,
+					"filter":              filterSchema,
+					"order_by":            orderbySchema,
+					"top":                 topSchema,
+				},
+			},
+		}
+	} else {
+		return &schema.ListNestedAttribute{
+			MarkdownDescription: description,
+			Optional:            true,
+			Required:            false,
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"navigation_property": navigationPropertySchema,
+					"select":              selectListAttributeSchema,
+					"filter":              filterSchema,
+					"order_by":            orderbySchema,
+					"top":                 topSchema,
+					"expand":              returnExpandSchema(depth - 1),
+				},
+			},
+		}
+	}
+}
+
 func (d *DataRecordDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+
+	// selectListAttributeSchema := schema.ListAttribute{
+	// 	MarkdownDescription: "List of columns to be selected from record(s) defined in entity collection. \n\nMore information on (OData Select)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#select-columns]",
+	// 	Required:            false,
+	// 	Optional:            true,
+	// 	ElementType:         types.StringType,
+	// }
+
+	// filterSchema := schema.StringAttribute{
+	// 	MarkdownDescription: "Filter the data records. \n\nMore information on (OData Filter)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#filter-rows]",
+	// 	Required:            false,
+	// 	Optional:            true,
+	// }
+
+	// orderbySchema := schema.StringAttribute{
+	// 	MarkdownDescription: "Order the data records. \n\nMore information on (OData Order By)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#order-rows]",
+	// 	Required:            false,
+	// 	Optional:            true,
+	// }
+
+	// topSchema := schema.Int64Attribute{
+	// 	MarkdownDescription: "Number of records to be retrieved. \n\nMore information on (OData Top)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#odata-query-options]",
+	// 	Required:            false,
+	// 	Optional:            true,
+	// }
+
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Resource for retrieving data records from Dataverse using (OData Query)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#page-results].",
 		Attributes: map[string]schema.Attribute{
@@ -64,41 +174,55 @@ func (d *DataRecordDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 					"\n\n*contacts(firstname='Joe',emailaddress1='joe@contoso.com') when using (alternate key(s))[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/use-alternate-key-reference-record?tabs=webapi] for single record retrieval",
 				Required: true,
 			},
-			"select": schema.ListAttribute{
-				MarkdownDescription: "List of columns to be selected from record(s) defined in entity collection. \n\nMore information on (OData Select)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#select-columns]",
+			"select":   selectListAttributeSchema,
+			"expand":   returnExpandSchema(5),
+			"filter":   filterSchema,
+			"order_by": orderbySchema,
+			"top":      topSchema,
+			"apply": schema.StringAttribute{
+				MarkdownDescription: "Apply the aggregation function to the data records. \n\nMore information on (OData Apply)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#aggregate-data]",
 				Required:            false,
 				Optional:            true,
-				ElementType:         types.StringType,
 			},
-			"top": schema.Int64Attribute{
-				MarkdownDescription: "Number of records to be retrieved. \n\nMore information on (OData Top)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#odata-query-options]",
+
+			"saved_query": schema.StringAttribute{
+				MarkdownDescription: "predefined saved query to be used for filtering the data records. \n\nMore information on (Saved Query)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/retrieve-and-execute-predefined-queries]",
 				Required:            false,
 				Optional:            true,
 			},
-			"return_total_records_count": schema.BoolAttribute{
+			"user_query": schema.StringAttribute{
+				MarkdownDescription: "Predefined user query to be used for filtering the data records. \n\nMore information on (Saved Query)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/retrieve-and-execute-predefined-queries]",
+				Required:            false,
+				Optional:            true,
+			},
+
+			"return_total_rows_count": schema.BoolAttribute{
 				MarkdownDescription: "Should total records count be also retrived. \n\nMore information on (OData Count)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#count-number-of-rows]",
 				Required:            false,
 				Optional:            true,
 			},
-			"total_records_count": schema.Int64Attribute{
-				MarkdownDescription: "Total number of records if attribute `return_total_records_count` is set to `true`",
+			"total_rows_count": schema.Int64Attribute{
+				MarkdownDescription: "Total number of records if attribute `return_total_rows_count` is set to `true`",
 				Computed:            true,
 			},
-			"total_records_count_limit_exceeded": schema.BoolAttribute{
+			"total_rows_count_limit_exceeded": schema.BoolAttribute{
 				MarkdownDescription: "Is total records count limit exceeded. \n\nMore information on (OData Count)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#count-number-of-rows]",
 				Computed:            true,
 			},
-			"items": schema.DynamicAttribute{
+			"rows": schema.DynamicAttribute{
 				Description: "Columns of the data record table",
 				Computed:    true,
 			},
-
-			"query": schema.StringAttribute{
-				MarkdownDescription: "(OData Query)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#page-results] to filter the data records",
-				Required:            false,
-				Optional:            true,
-			},
 		},
+	}
+}
+
+func (d *DataRecordDataSource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.Conflicting(
+			path.MatchRoot("user_query"),
+			path.MatchRoot("saved_query"),
+		),
 	}
 }
 
@@ -121,30 +245,221 @@ func (d *DataRecordDataSource) Configure(_ context.Context, req datasource.Confi
 	d.DataRecordClient = NewDataRecordClient(client)
 }
 
+func (d *DataRecordDataSource) buildExpandQueryFilterPart(model *ExpandModel, subExpandValueString *string) *string {
+	resultQuery := ""
+
+	s := d.buildODataSelectPart(model.Select)
+	if s != nil {
+		resultQuery += *s
+	}
+	f := d.buildODataFilterPart(model.Filter.ValueStringPointer())
+	if f != nil {
+		resultQuery += *f
+	}
+	o := d.
+
+	if subExpandValueString != nil {
+		if len(resultQuery) > 0 {
+			resultQuery += ";"
+		}
+		resultQuery += *subExpandValueString
+	}
+	if resultQuery == "" {
+		return nil
+	}
+	return &resultQuery
+}
+
+func (d *DataRecordDataSource) buildExpandODataQueryPathRecursive(model []ExpandModel) *string {
+	if model == nil {
+		return nil
+	}
+
+	s := make([]string, 0)
+	for _, m := range model {
+
+		expandString := d.buildExpandODataQueryPathRecursive(m.Expand)
+		expandQueryFilterString := d.buildExpandQueryFilterPart(&m, expandString)
+
+		if expandQueryFilterString != nil {
+			s = append(s, fmt.Sprintf("$expand=%s(%s)", m.NavigationProperty.ValueString(), *expandQueryFilterString))
+		}
+		// if expandQueryFilterString != nil {
+		// 	s = append(s, fmt.Sprintf("$expand=%s(%s)", m.NavigationProperty.ValueString(), *expandQueryFilterString))
+		// } else {
+		// 	s = append(s, fmt.Sprintf("$expand=%s", m.NavigationProperty.ValueString()))
+		// }
+	}
+
+	if len(s) > 0 {
+		aaa := ""
+		for i := 0; i < len(s); i++ {
+			aaa += fmt.Sprintf("%s,", s[i])
+		}
+		aaa = strings.TrimSuffix(aaa, ",")
+		return &aaa
+	}
+	return nil
+}
+
+func (d *DataRecordDataSource) buildODataSelectPart(selectPart []string) *string {
+	resultQuery := ""
+	if len(selectPart) > 0 {
+		resultQuery = fmt.Sprintf("$select=%s", selectPart[0])
+		for i := 1; i < len(selectPart); i++ {
+			resultQuery = fmt.Sprintf("%s,%s", resultQuery, selectPart[i])
+		}
+	}
+	if resultQuery == "" {
+		return nil
+	}
+	return &resultQuery
+}
+
+func (d *DataRecordDataSource) buildODataFilterPart(filter *string) *string {
+	resultQuery := ""
+	if filter != nil {
+		encoded := url.Values{}
+		encoded.Add("$filter", *filter)
+		resultQuery += encoded.Encode()
+	}
+	if resultQuery == "" {
+		return nil
+	}
+	return &resultQuery
+}
+
+func (d *DataRecordDataSource) buildODataOrderByPart(orderBy *string) *string {
+	resultQuery := ""
+	if orderBy != nil {
+		encoded := url.Values{}
+		encoded.Add("$orderby", *orderBy)
+		resultQuery += encoded.Encode()
+	}
+	if resultQuery == "" {
+		return nil
+	}
+	return &resultQuery
+}
+
+func (d *DataRecordDataSource) buildODataTopPart(top *string) *string {
+	resultQuery := ""
+	if top != nil {
+		resultQuery = fmt.Sprintf("$top=%s", *top)
+	}
+	if resultQuery == "" {
+		return nil
+	}
+	return &resultQuery
+}
+
+func (d *DataRecordDataSource) buildOdataApplyPart(apply *string) *string {
+	resultQuery := ""
+	if apply != nil {
+		encoded := url.Values{}
+		encoded.Add("$apply", *apply)
+		resultQuery += encoded.Encode()
+	}
+	if resultQuery == "" {
+		return nil
+	}
+	return &resultQuery
+}
+
+func (d *DataRecordDataSource) appendQuery(query, part *string) {
+	if part != nil {
+		if len(*query)> 0 {
+			*query += "&"
+		}
+		*query += *part
+	}
+}
+
 func (d *DataRecordDataSource) buildODataQueryFromModel(model *DataRecordListDataSourceModel) (string, map[string]string, error) {
 	var resultQuery = ""
 	var headers = make(map[string]string)
 
-	if len(model.Select) > 0 {
-		resultQuery = fmt.Sprintf("$select=%s", model.Select[0])
-		for i := 1; i < len(model.Select); i++ {
-			resultQuery = fmt.Sprintf("%s,%s", resultQuery, model.Select[i])
-		}
-	}
+	// if len(model.Select) > 0 {
+	// 	resultQuery = fmt.Sprintf("$select=%s", model.Select[0])
+	// 	for i := 1; i < len(model.Select); i++ {
+	// 		resultQuery = fmt.Sprintf("%s,%s", resultQuery, model.Select[i])
+	// 	}
+	// }
+	d.appendQuery(&resultQuery, d.buildODataSelectPart(model.Select))
+	// if s != nil {
+	// 	if len(resultQuery) > 0 {
+	// 		resultQuery += "&"
+	// 	}
+	// 	resultQuery += *s
+	// }
 
-	if model.Top.ValueInt64Pointer() != nil {
-		if len(resultQuery) > 0 {
-			resultQuery += "&"
-		}
-		resultQuery += fmt.Sprintf("$top=%d", *model.Top.ValueInt64Pointer())
-	}
+	//if len(model.Expand) > 0 {
+	 	d.appendQuery(d.buildExpandODataQueryPathRecursive(model.Expand))
+		// if s != nil {
+		// 	if len(resultQuery) > 0 {
+		// 		resultQuery += "&"
+		// 	}
+		// 	resultQuery += *s
+		// }
+	//}
 
-	if model.ReturnTotalRecordsCount.ValueBoolPointer() != nil && *model.ReturnTotalRecordsCount.ValueBoolPointer() {
+	d.appendQuery(&resultQuery, d.buildODataFilterPart(model.Filter.ValueStringPointer()))
+	// if f != nil {
+	// 	if len(resultQuery) > 0 {
+	// 		resultQuery += "&"
+	// 	}
+	// 	resultQuery += *f
+	// }
+	// if model.Filter.ValueStringPointer() != nil {
+	// 	if len(resultQuery) > 0 {
+	// 		resultQuery += "&"
+	// 	}
+	// 	encoded := url.Values{}
+	// 	encoded.Add("$filter", model.Filter.ValueString())
+	// 	resultQuery += encoded.Encode()
+	// }
+
+	// if model.Apply.ValueStringPointer() != nil {
+	// 	if len(resultQuery) > 0 {
+	// 		resultQuery += "&"
+	// 	}
+	// 	encoded := url.Values{}
+	// 	encoded.Add("$apply", model.Apply.ValueString())
+	// 	resultQuery += encoded.Encode()
+	// }
+	d.appendQuery(&resultQuery, d.buildOdataApplyPart(model.Apply.ValueStringPointer()))
+
+	// if model.OrderBy.ValueStringPointer() != nil {
+	// 	if len(resultQuery) > 0 {
+	// 		resultQuery += "&"
+	// 	}
+	// 	encoded := url.Values{}
+	// 	encoded.Add("$orderby", model.OrderBy.ValueString())
+	// 	resultQuery += encoded.Encode()
+	// }
+	d.appendQuery(&resultQuery, d.buildODataOrderByPart(model.OrderBy.ValueStringPointer()))
+	// if ob != nil {
+	// 	if len(resultQuery) > 0 {
+	// 		resultQuery += "&"
+	// 	}
+	// 	resultQuery += *ob
+	// }
+
+	// if model.Top.ValueInt64Pointer() != nil {
+	// 	if len(resultQuery) > 0 {
+	// 		resultQuery += "&"
+	// 	}
+	// 	resultQuery += fmt.Sprintf("$top=%d", *model.Top.ValueInt64Pointer())
+	// }
+	d.appendQuery(&resultQuery,d.buildODataTopPart(model.Top.ValueInt64Pointer()))
+
+	if model.ReturnTotalRowsCount.ValueBoolPointer() != nil && *model.ReturnTotalRowsCount.ValueBoolPointer() {
 		headers["Prefer"] = "odata.include-annotations=\"Microsoft.Dynamics.CRM.totalrecordcount,Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded\""
-		if len(resultQuery) > 0 {
-			resultQuery += "&"
-		}
-		resultQuery += "$count=true"
+		d.appendQuery(&resultQuery, "$count=true")
+		// if len(resultQuery) > 0 {
+		// 	resultQuery += "&"
+		// }
+		// resultQuery += "$count=true"
 	}
 
 	if len(resultQuery) > 0 {
@@ -181,10 +496,10 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	if totalrecords != nil {
-		state.TotalRecordsCount = types.Int64Value(*totalrecords)
+		state.TotalRowsCount = types.Int64Value(*totalrecords)
 	}
 	if totalRecordsCountLimitExceeded != nil {
-		state.TotalRecordsCountLimitExceeded = types.BoolValue(*totalRecordsCountLimitExceeded)
+		state.TotalRowsCountLimitExceeded = types.BoolValue(*totalRecordsCountLimitExceeded)
 	}
 
 	var elements = []attr.Value{}
@@ -202,8 +517,8 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	for range elements {
 		elementTypes = append(elementTypes, types.DynamicType)
 	}
-	items, _ := types.TupleValue(elementTypes, elements)
-	state.Items = types.DynamicValue(items)
+	rows, _ := types.TupleValue(elementTypes, elements)
+	state.Rows = types.DynamicValue(rows)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
