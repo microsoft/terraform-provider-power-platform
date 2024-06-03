@@ -47,6 +47,11 @@ type EntityDefinitionsDto struct {
 	MetadataID            string `json:"MetadataId"`
 }
 
+type RelationApiResponse struct {
+	OdataContext string            `json:"@odata.context"`
+	Value        []RelationApiBody `json:"value"`
+}
+
 type RelationApiBody struct {
 	OdataID string `json:"@odata.id"`
 }
@@ -284,6 +289,36 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 				Scheme: e.Scheme,
 				Host:   e.Host,
 				Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s/$ref", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, result.Id, key),
+			}
+
+			existingRelationsResponse := RelationApiResponse{}
+
+			apiResponse, _ := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+
+			json.Unmarshal(apiResponse.BodyAsBytes, &existingRelationsResponse)
+
+			var toBeDeleted []RelationApiBody = make([]RelationApiBody, 0)
+
+			for _, existingRelation := range existingRelationsResponse.Value {
+				delete := true
+				for _, nestedItem := range nestedMapList {
+					nestedMap := nestedItem.(map[string]interface{})
+					relationEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, nestedMap["table_logical_name"].(string))
+					if existingRelation.OdataID == fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, relationEntityDefinition.LogicalCollectionName, nestedMap["data_record_id"]) {
+						delete = false
+						break
+					}
+				}
+				if delete {
+					toBeDeleted = append(toBeDeleted, existingRelation)
+				}
+			}
+
+			for _, relation := range toBeDeleted {
+				_, err = client.Api.Execute(ctx, "DELETE", relation.OdataID, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			for _, nestedItem := range nestedMapList {
