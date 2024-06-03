@@ -238,11 +238,18 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 		if nestedMap, ok := value.(map[string]interface{}); ok {
 			delete(columns, key)
 			if len(nestedMap) > 0 {
-				tableLogicalName := nestedMap["table_logical_name"].(string)
+				tableLogicalName, ok := nestedMap["table_logical_name"].(string)
+				if !ok {
+					return nil, fmt.Errorf("table_logical_name field is missing or not a string")
+				}
+				dataRecordId, ok := nestedMap["data_record_id"].(string)
+				if !ok {
+					return nil, fmt.Errorf("data_record_id field is missing or not a string")
+				}
 
 				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
 
-				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, nestedMap["data_record_id"])
+				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId)
 			}
 		}
 		if nestedMapList, ok := value.([]interface{}); ok {
@@ -317,8 +324,18 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 				delete := true
 				for _, nestedItem := range nestedMapList {
 					nestedMap := nestedItem.(map[string]interface{})
-					relationEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, nestedMap["table_logical_name"].(string))
-					if existingRelation.OdataID == fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, relationEntityDefinition.LogicalCollectionName, nestedMap["data_record_id"]) {
+
+					tableLogicalName, ok := nestedMap["table_logical_name"].(string)
+					if !ok {
+						return nil, fmt.Errorf("table_logical_name field is missing or not a string")
+					}
+					dataRecordId, ok := nestedMap["data_record_id"].(string)
+					if !ok {
+						return nil, fmt.Errorf("data_record_id field is missing or not a string")
+					}
+
+					relationEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+					if existingRelation.OdataID == fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, relationEntityDefinition.LogicalCollectionName, dataRecordId) {
 						delete = false
 						break
 					}
@@ -338,12 +355,19 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 			for _, nestedItem := range nestedMapList {
 				nestedMap := nestedItem.(map[string]interface{})
 
-				tableLogicalName := nestedMap["table_logical_name"].(string)
+				tableLogicalName, ok := nestedMap["table_logical_name"].(string)
+				if !ok {
+					return nil, fmt.Errorf("table_logical_name field is missing or not a string")
+				}
+				dataRecordId, ok := nestedMap["data_record_id"].(string)
+				if !ok {
+					return nil, fmt.Errorf("data_record_id field is missing or not a string")
+				}
 
 				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
 
 				relation := RelationApiBody{
-					OdataID: fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, nestedMap["data_record_id"]),
+					OdataID: fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId),
 				}
 				_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
 				if err != nil {
@@ -381,10 +405,15 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 			for _, nestedItem := range nestedMapList {
 				nestedMap := nestedItem.(map[string]interface{})
 
+				dataRecordId, ok := nestedMap["data_record_id"].(string)
+				if !ok {
+					return fmt.Errorf("data_record_id field is missing or not a string")
+				}
+
 				apiUrl = &url.URL{
 					Scheme: e.Scheme,
 					Host:   e.Host,
-					Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s(%s)/$ref", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId, key, nestedMap["data_record_id"].(string)),
+					Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s(%s)/$ref", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId, key, dataRecordId),
 				}
 				_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 				if err != nil {
