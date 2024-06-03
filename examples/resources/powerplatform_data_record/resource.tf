@@ -60,36 +60,36 @@ resource "powerplatform_data_record" "data_record_accounts" {
   columns = {
     name                = "Sample Account"
     creditonhold        = false
-    address1_latitude   = 47.639583
+    address1_latitude   = 47.63958
     description         = "This is the description of the sample account"
     revenue             = 5000000
     accountcategorycode = 1
 
-    primarycontactid = {
-      entity_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
+    primarycontactid = { # one to many
+      table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
       data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
     }
 
-    contact_customer_accounts = toset([
+    contact_customer_accounts = toset([ # many to one
       {
-        entity_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
+        table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
         data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
       },
       {
-        entity_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
+        table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
         data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
       }
     ])
 
-    # new_Account_Contact_Contact = toset([
-    #   {
-    #     entity_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
-    #     data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
-    #   },
-    #   # {
-    #   #   entity_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
-    #   #   data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
-    #   # }
-    # ])
+    cr4d0_Account_Contact_Contact = toset([ # many to many
+      {
+        table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
+        data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
+      },
+      {
+        table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
+        data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
+      }
+    ])
   }
 }
