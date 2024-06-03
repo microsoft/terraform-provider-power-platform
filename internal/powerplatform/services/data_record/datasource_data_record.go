@@ -256,7 +256,10 @@ func (d *DataRecordDataSource) buildExpandQueryFilterPart(model *ExpandModel, su
 	if f != nil {
 		resultQuery += *f
 	}
-	o := d.
+	o := d.buildODataOrderByPart(model.OrderBy.ValueStringPointer())
+	if o != nil {
+		resultQuery += *o
+	}
 
 	if subExpandValueString != nil {
 		if len(resultQuery) > 0 {
@@ -368,7 +371,7 @@ func (d *DataRecordDataSource) buildOdataApplyPart(apply *string) *string {
 
 func (d *DataRecordDataSource) appendQuery(query, part *string) {
 	if part != nil {
-		if len(*query)> 0 {
+		if len(*query) > 0 {
 			*query += "&"
 		}
 		*query += *part
@@ -394,13 +397,13 @@ func (d *DataRecordDataSource) buildODataQueryFromModel(model *DataRecordListDat
 	// }
 
 	//if len(model.Expand) > 0 {
-	 	d.appendQuery(d.buildExpandODataQueryPathRecursive(model.Expand))
-		// if s != nil {
-		// 	if len(resultQuery) > 0 {
-		// 		resultQuery += "&"
-		// 	}
-		// 	resultQuery += *s
-		// }
+	d.appendQuery(&resultQuery, d.buildExpandODataQueryPathRecursive(model.Expand))
+	// if s != nil {
+	// 	if len(resultQuery) > 0 {
+	// 		resultQuery += "&"
+	// 	}
+	// 	resultQuery += *s
+	// }
 	//}
 
 	d.appendQuery(&resultQuery, d.buildODataFilterPart(model.Filter.ValueStringPointer()))
@@ -451,11 +454,14 @@ func (d *DataRecordDataSource) buildODataQueryFromModel(model *DataRecordListDat
 	// 	}
 	// 	resultQuery += fmt.Sprintf("$top=%d", *model.Top.ValueInt64Pointer())
 	// }
-	d.appendQuery(&resultQuery,d.buildODataTopPart(model.Top.ValueInt64Pointer()))
+
+	//TODO
+	//d.appendQuery(&resultQuery, d.buildODataTopPart(model.Top.ValueInt64Pointer()))
 
 	if model.ReturnTotalRowsCount.ValueBoolPointer() != nil && *model.ReturnTotalRowsCount.ValueBoolPointer() {
 		headers["Prefer"] = "odata.include-annotations=\"Microsoft.Dynamics.CRM.totalrecordcount,Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded\""
-		d.appendQuery(&resultQuery, "$count=true")
+		countTrueString := "$count=true"
+		d.appendQuery(&resultQuery, &countTrueString)
 		// if len(resultQuery) > 0 {
 		// 	resultQuery += "&"
 		// }
