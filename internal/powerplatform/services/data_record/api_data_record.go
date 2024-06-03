@@ -122,7 +122,7 @@ func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId stri
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
-			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("DLP Policy '%s' not found", recordId))
+			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Data Record '%s' not found", recordId))
 		}
 		return nil, err
 	}
@@ -153,7 +153,17 @@ func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId st
 		return nil, err
 	}
 
-	return result["value"].([]interface{}), nil
+	field, ok := result["value"]
+	if !ok {
+		return nil, fmt.Errorf("value field not found in result")
+	}
+
+	value, ok := field.([]interface{})
+	if !ok {
+		return nil, fmt.Errorf("value field is not of type []interface{}")
+	}
+
+	return value, nil
 }
 
 func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string) {
