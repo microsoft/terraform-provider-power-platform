@@ -66,7 +66,7 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 			},
 			"table_logical_name": schema.StringAttribute{
-				Description: "Name of the data record table",
+				Description: "Logical name of the data record table",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
