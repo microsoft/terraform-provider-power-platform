@@ -152,7 +152,7 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 	newColumns, err := r.DataRecordClient.GetDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString())
 	if err != nil {
 		if powerplatform_helpers.Code(err) == "404" {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), "Data record not found")
+			resp.State.RemoveResource(ctx)
 			return
 		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
