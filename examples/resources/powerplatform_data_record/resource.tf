@@ -21,7 +21,6 @@ resource "powerplatform_environment" "data_record_example_env" {
   }
 }
 
-
 resource "powerplatform_data_record" "data_record_sample_contact1" {
   environment_id     = powerplatform_environment.data_record_example_env.id
   table_logical_name = "contact"
