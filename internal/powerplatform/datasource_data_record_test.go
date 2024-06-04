@@ -7,9 +7,25 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
-func TestAccDataRecordDatasource_Validate_Create(t *testing.T) {
+func BootstrapDataRecordTest(name string) string {
+	return `
+	resource "powerplatform_environment" "data_env" {
+		display_name     = "` + name + `"
+		location         = "europe"
+		environment_type = "Sandbox"
+		dataverse = {
+		  language_code     = "1033"
+		  currency_code     = "USD"
+		  security_group_id = "00000000-0000-0000-0000-000000000000"
+		}
+	  }
+	`
+}
+
+func TestAccDataRecordDatasource_Validate_Read_Single_Record(t *testing.T) {
 
 	t.Setenv("TF_ACC", "1")
 
@@ -18,7 +34,8 @@ func TestAccDataRecordDatasource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsProviderConfig +
+					BootstrapDataRecordTest(mock_helpers.TestName()) + `
 				data "powerplatform_data_rows" "example_data_rows" {
 					environment_id = "838f76c8-a192-e59c-a835-089ad8cfb047"
 					entity_collection = "systemusers(1f70a364-5019-ef11-840b-002248ca35c3)"
