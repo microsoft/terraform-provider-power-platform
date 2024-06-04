@@ -117,11 +117,11 @@ func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequ
 	plan.TableLogicalName = types.StringValue(plan.TableLogicalName.ValueString())
 	plan.Columns = types.DynamicValue(plan.Columns)
 
-	var mapColumns map[string]interface{}
-
-	jsonColumns, _ := json.Marshal(plan.Columns.String())
-	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
-	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
+	mapColumns, err := convertResourceModelToMap(plan)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to map: %s", err.Error()), err.Error())
+		return
+	}
 
 	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, plan.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
@@ -187,11 +187,11 @@ func (r *DataRecordResource) Update(ctx context.Context, req resource.UpdateRequ
 	plan.TableLogicalName = types.StringValue(plan.TableLogicalName.ValueString())
 	plan.Columns = types.DynamicValue(plan.Columns)
 
-	var mapColumns map[string]interface{}
-
-	jsonColumns, _ := json.Marshal(plan.Columns.String())
-	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
-	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
+	mapColumns, err := convertResourceModelToMap(*plan)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to map: %s", err.Error()), err.Error())
+		return
+	}
 
 	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
@@ -217,13 +217,13 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	var mapColumns map[string]interface{}
+	mapColumns, err := convertResourceModelToMap(*state)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to map: %s", err.Error()), err.Error())
+		return
+	}
 
-	jsonColumns, _ := json.Marshal(state.Columns.String())
-	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
-	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
-
-	err := r.DataRecordClient.DeleteDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
+	err = r.DataRecordClient.DeleteDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
@@ -242,15 +242,15 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 		"data_record_id":     types.StringType,
 	}
 
-	var old_columns map[string]interface{}
-	jsonColumns, _ := json.Marshal(currentState.Columns.String())
-	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
-	json.Unmarshal([]byte(unquotedJsonColumns), &old_columns)
+	mapColumns, err := convertResourceModelToMap(*currentState)
+	if err != nil {
+		return nil
+	}
 
 	attributeTypes := make(map[string]attr.Type)
 	attributes := make(map[string]attr.Value)
 
-	for key, value := range old_columns {
+	for key, value := range mapColumns {
 		switch value.(type) {
 		case bool:
 			v, ok := columns[key].(bool)
@@ -338,4 +338,17 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 	currentState.Columns = types.DynamicValue(columnField)
 
 	return currentState
+}
+
+func convertResourceModelToMap(plan DataRecordResourceModel) (mapColumns map[string]interface{}, err error) {
+	jsonColumns, err := json.Marshal(plan.Columns.String())
+	if err != nil {
+		return nil, err
+	}
+	unquotedJsonColumns, err := strconv.Unquote(string(jsonColumns))
+	if err != nil {
+		return nil, err
+	}
+	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
+	return mapColumns, nil
 }
