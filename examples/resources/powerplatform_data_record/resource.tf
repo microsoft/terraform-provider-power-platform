@@ -57,7 +57,7 @@ resource "powerplatform_data_record" "data_record_accounts" {
   columns = {
     name                = "Sample Account"
     creditonhold        = false
-    address1_latitude   = 47.63958
+    address1_latitude   = 47.63
     description         = "This is the description of the sample account"
     revenue             = 5000000
     accountcategorycode = 1
