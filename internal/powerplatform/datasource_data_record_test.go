@@ -206,18 +206,27 @@ func TestAccDataRecordDatasource_Validate_Create8(t *testing.T) {
 					environment_id    = "838f76c8-a192-e59c-a835-089ad8cfb047"
 					entity_collection = "systemusers"
 					select            = ["fullname", "systemuserid"]
+					filter = "main eq 1"
 					expand = [
 					  {
 						navigation_property = "level1"
 						select              = ["l1", "l1"]
+						filter = "l1 eq 1"
 						expand = [
 						  {
 							navigation_property = "level2"
 							select              = ["l2", "l2"]
+							filter = "l2 eq 1"
 							expand = [
 							  {
 								navigation_property = "level3"
-								select              = ["l2", "l2"]
+								select              = ["l3", "l3"]
+								filter = "l3 eq 1"
+							  },
+							  {
+								navigation_property = "level3a"
+								select              = ["l3a", "l3a"]
+								filter = "l3a eq 1"
 							  },
 							]
 						  },
@@ -226,10 +235,14 @@ func TestAccDataRecordDatasource_Validate_Create8(t *testing.T) {
 					  {
 						navigation_property = "teammembership_association"
 						select              = ["teamid", "name"]
+						fitler = "teamid eq 1"
 						expand = [
 							{
 								navigation_property = "teamroles_association"
 								select              = ["roleid", "name"]
+								filer = "roleid eq 1"
+								order_by = "name desc, roleid asc"
+								top = 2
 							}
 						]
 					  }

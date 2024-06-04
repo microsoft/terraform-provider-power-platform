@@ -24,14 +24,21 @@ data "powerplatform_data_records" "example_data_records" {
   environment_id    = "838f76c8-a192-e59c-a835-089ad8cfb047"
   entity_collection = "systemusers"
   select            = ["fullname", "systemuserid"]
+  top               = 4
   expand = [
     {
       navigation_property = "systemuserroles_association"
       select              = ["roleid", "name"]
-      // filter, select, orderby, top, expand
-      //filter = "roleid eq 'f5e3d3d1-1ee7-4f3d-8f1d-4b4b1f7e3e3d'"
+      filter              = "name ne 'foo'"
+      top                 = 100
+      orderby             = "name desc"
     },
-
+    {
+      navigation_property = "teammembership_association"
+      select              = ["teamid", "name"]
+      filter              = "name ne 'foo'"
+      top                 = 100
+      orderby             = "name desc"
+    }
   ]
-
 }

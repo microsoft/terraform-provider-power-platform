@@ -6,8 +6,6 @@ package powerplatform
 import (
 	"context"
 	"fmt"
-	"net/url"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -135,32 +133,6 @@ func returnExpandSchema(depth int) *schema.ListNestedAttribute {
 }
 
 func (d *DataRecordDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-
-	// selectListAttributeSchema := schema.ListAttribute{
-	// 	MarkdownDescription: "List of columns to be selected from record(s) defined in entity collection. \n\nMore information on (OData Select)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#select-columns]",
-	// 	Required:            false,
-	// 	Optional:            true,
-	// 	ElementType:         types.StringType,
-	// }
-
-	// filterSchema := schema.StringAttribute{
-	// 	MarkdownDescription: "Filter the data records. \n\nMore information on (OData Filter)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#filter-rows]",
-	// 	Required:            false,
-	// 	Optional:            true,
-	// }
-
-	// orderbySchema := schema.StringAttribute{
-	// 	MarkdownDescription: "Order the data records. \n\nMore information on (OData Order By)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#order-rows]",
-	// 	Required:            false,
-	// 	Optional:            true,
-	// }
-
-	// topSchema := schema.Int64Attribute{
-	// 	MarkdownDescription: "Number of records to be retrieved. \n\nMore information on (OData Top)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#odata-query-options]",
-	// 	Required:            false,
-	// 	Optional:            true,
-	// }
-
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Resource for retrieving data records from Dataverse using (OData Query)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#page-results].",
 		Attributes: map[string]schema.Attribute{
@@ -245,236 +217,6 @@ func (d *DataRecordDataSource) Configure(_ context.Context, req datasource.Confi
 	d.DataRecordClient = NewDataRecordClient(client)
 }
 
-func (d *DataRecordDataSource) buildExpandQueryFilterPart(model *ExpandModel, subExpandValueString *string) *string {
-	resultQuery := ""
-
-	s := d.buildODataSelectPart(model.Select)
-	if s != nil {
-		resultQuery += *s
-	}
-	f := d.buildODataFilterPart(model.Filter.ValueStringPointer())
-	if f != nil {
-		resultQuery += *f
-	}
-	o := d.buildODataOrderByPart(model.OrderBy.ValueStringPointer())
-	if o != nil {
-		resultQuery += *o
-	}
-
-	if subExpandValueString != nil {
-		if len(resultQuery) > 0 {
-			resultQuery += ";"
-		}
-		resultQuery += *subExpandValueString
-	}
-	if resultQuery == "" {
-		return nil
-	}
-	return &resultQuery
-}
-
-func (d *DataRecordDataSource) buildExpandODataQueryPathRecursive(model []ExpandModel) *string {
-	if model == nil {
-		return nil
-	}
-
-	s := make([]string, 0)
-	for _, m := range model {
-
-		expandString := d.buildExpandODataQueryPathRecursive(m.Expand)
-		expandQueryFilterString := d.buildExpandQueryFilterPart(&m, expandString)
-
-		if expandQueryFilterString != nil {
-			s = append(s, fmt.Sprintf("$expand=%s(%s)", m.NavigationProperty.ValueString(), *expandQueryFilterString))
-		}
-		// if expandQueryFilterString != nil {
-		// 	s = append(s, fmt.Sprintf("$expand=%s(%s)", m.NavigationProperty.ValueString(), *expandQueryFilterString))
-		// } else {
-		// 	s = append(s, fmt.Sprintf("$expand=%s", m.NavigationProperty.ValueString()))
-		// }
-	}
-
-	if len(s) > 0 {
-		aaa := ""
-		for i := 0; i < len(s); i++ {
-			aaa += fmt.Sprintf("%s,", s[i])
-		}
-		aaa = strings.TrimSuffix(aaa, ",")
-		return &aaa
-	}
-	return nil
-}
-
-func (d *DataRecordDataSource) buildODataSelectPart(selectPart []string) *string {
-	resultQuery := ""
-	if len(selectPart) > 0 {
-		resultQuery = fmt.Sprintf("$select=%s", selectPart[0])
-		for i := 1; i < len(selectPart); i++ {
-			resultQuery = fmt.Sprintf("%s,%s", resultQuery, selectPart[i])
-		}
-	}
-	if resultQuery == "" {
-		return nil
-	}
-	return &resultQuery
-}
-
-func (d *DataRecordDataSource) buildODataFilterPart(filter *string) *string {
-	resultQuery := ""
-	if filter != nil {
-		encoded := url.Values{}
-		encoded.Add("$filter", *filter)
-		resultQuery += encoded.Encode()
-	}
-	if resultQuery == "" {
-		return nil
-	}
-	return &resultQuery
-}
-
-func (d *DataRecordDataSource) buildODataOrderByPart(orderBy *string) *string {
-	resultQuery := ""
-	if orderBy != nil {
-		encoded := url.Values{}
-		encoded.Add("$orderby", *orderBy)
-		resultQuery += encoded.Encode()
-	}
-	if resultQuery == "" {
-		return nil
-	}
-	return &resultQuery
-}
-
-func (d *DataRecordDataSource) buildODataTopPart(top *string) *string {
-	resultQuery := ""
-	if top != nil {
-		resultQuery = fmt.Sprintf("$top=%s", *top)
-	}
-	if resultQuery == "" {
-		return nil
-	}
-	return &resultQuery
-}
-
-func (d *DataRecordDataSource) buildOdataApplyPart(apply *string) *string {
-	resultQuery := ""
-	if apply != nil {
-		encoded := url.Values{}
-		encoded.Add("$apply", *apply)
-		resultQuery += encoded.Encode()
-	}
-	if resultQuery == "" {
-		return nil
-	}
-	return &resultQuery
-}
-
-func (d *DataRecordDataSource) appendQuery(query, part *string) {
-	if part != nil {
-		if len(*query) > 0 {
-			*query += "&"
-		}
-		*query += *part
-	}
-}
-
-func (d *DataRecordDataSource) buildODataQueryFromModel(model *DataRecordListDataSourceModel) (string, map[string]string, error) {
-	var resultQuery = ""
-	var headers = make(map[string]string)
-
-	// if len(model.Select) > 0 {
-	// 	resultQuery = fmt.Sprintf("$select=%s", model.Select[0])
-	// 	for i := 1; i < len(model.Select); i++ {
-	// 		resultQuery = fmt.Sprintf("%s,%s", resultQuery, model.Select[i])
-	// 	}
-	// }
-	d.appendQuery(&resultQuery, d.buildODataSelectPart(model.Select))
-	// if s != nil {
-	// 	if len(resultQuery) > 0 {
-	// 		resultQuery += "&"
-	// 	}
-	// 	resultQuery += *s
-	// }
-
-	//if len(model.Expand) > 0 {
-	d.appendQuery(&resultQuery, d.buildExpandODataQueryPathRecursive(model.Expand))
-	// if s != nil {
-	// 	if len(resultQuery) > 0 {
-	// 		resultQuery += "&"
-	// 	}
-	// 	resultQuery += *s
-	// }
-	//}
-
-	d.appendQuery(&resultQuery, d.buildODataFilterPart(model.Filter.ValueStringPointer()))
-	// if f != nil {
-	// 	if len(resultQuery) > 0 {
-	// 		resultQuery += "&"
-	// 	}
-	// 	resultQuery += *f
-	// }
-	// if model.Filter.ValueStringPointer() != nil {
-	// 	if len(resultQuery) > 0 {
-	// 		resultQuery += "&"
-	// 	}
-	// 	encoded := url.Values{}
-	// 	encoded.Add("$filter", model.Filter.ValueString())
-	// 	resultQuery += encoded.Encode()
-	// }
-
-	// if model.Apply.ValueStringPointer() != nil {
-	// 	if len(resultQuery) > 0 {
-	// 		resultQuery += "&"
-	// 	}
-	// 	encoded := url.Values{}
-	// 	encoded.Add("$apply", model.Apply.ValueString())
-	// 	resultQuery += encoded.Encode()
-	// }
-	d.appendQuery(&resultQuery, d.buildOdataApplyPart(model.Apply.ValueStringPointer()))
-
-	// if model.OrderBy.ValueStringPointer() != nil {
-	// 	if len(resultQuery) > 0 {
-	// 		resultQuery += "&"
-	// 	}
-	// 	encoded := url.Values{}
-	// 	encoded.Add("$orderby", model.OrderBy.ValueString())
-	// 	resultQuery += encoded.Encode()
-	// }
-	d.appendQuery(&resultQuery, d.buildODataOrderByPart(model.OrderBy.ValueStringPointer()))
-	// if ob != nil {
-	// 	if len(resultQuery) > 0 {
-	// 		resultQuery += "&"
-	// 	}
-	// 	resultQuery += *ob
-	// }
-
-	// if model.Top.ValueInt64Pointer() != nil {
-	// 	if len(resultQuery) > 0 {
-	// 		resultQuery += "&"
-	// 	}
-	// 	resultQuery += fmt.Sprintf("$top=%d", *model.Top.ValueInt64Pointer())
-	// }
-
-	//TODO
-	//d.appendQuery(&resultQuery, d.buildODataTopPart(model.Top.ValueInt64Pointer()))
-
-	if model.ReturnTotalRowsCount.ValueBoolPointer() != nil && *model.ReturnTotalRowsCount.ValueBoolPointer() {
-		headers["Prefer"] = "odata.include-annotations=\"Microsoft.Dynamics.CRM.totalrecordcount,Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded\""
-		countTrueString := "$count=true"
-		d.appendQuery(&resultQuery, &countTrueString)
-		// if len(resultQuery) > 0 {
-		// 	resultQuery += "&"
-		// }
-		// resultQuery += "$count=true"
-	}
-
-	if len(resultQuery) > 0 {
-		return fmt.Sprintf("%s?%s", model.EntityCollection.ValueString(), resultQuery), headers, nil
-	} else {
-		return model.EntityCollection.ValueString(), headers, nil
-	}
-}
-
 func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state DataRecordListDataSourceModel
 	var config DataRecordListDataSourceModel
@@ -488,7 +230,7 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	query, headers, err := d.buildODataQueryFromModel(&config)
+	query, headers, err := BuildODataQueryFromModel(&config)
 	tflog.Warn(ctx, fmt.Sprintf("Query: %s", query))
 	tflog.Warn(ctx, fmt.Sprintf("Headers: %v", headers))
 	if err != nil {
@@ -532,7 +274,6 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 }
 
 func convertColumnsToState2(ctx context.Context, apiClient *DataRecordClient, environmentId, tableLogicalName, primaryFieldName string, columns map[string]interface{}) (*basetypes.ObjectValue, error) {
