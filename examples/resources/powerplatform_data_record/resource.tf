@@ -21,7 +21,6 @@ resource "powerplatform_environment" "data_record_example_env" {
   }
 }
 
-
 resource "powerplatform_data_record" "data_record_sample_contact1" {
   environment_id     = powerplatform_environment.data_record_example_env.id
   table_logical_name = "contact"
@@ -30,7 +29,6 @@ resource "powerplatform_data_record" "data_record_sample_contact1" {
     lastname           = "Doe"
     telephone1         = "555-555-5555"
     emailaddress1      = "johndoe@contoso.com"
-    address1_composite = "123 Main St\nRedmond\nWA\n98052\nUS"
     anniversary        = "2024-04-10"
     annualincome       = 1234.56
     birthdate          = "2024-04-10"
@@ -46,7 +44,6 @@ resource "powerplatform_data_record" "data_record_sample_contact2" {
     lastname           = "Doe"
     telephone1         = "555-555-5555"
     emailaddress1      = "janedoe@contoso.com"
-    address1_composite = "123 Main St\nRedmond\nWA\n98052\nUS"
     anniversary        = "2024-04-11"
     annualincome       = 1234.56
     birthdate          = "2024-04-11"

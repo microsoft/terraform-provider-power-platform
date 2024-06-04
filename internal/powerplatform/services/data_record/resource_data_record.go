@@ -47,8 +47,8 @@ func (r *DataRecordResource) Metadata(ctx context.Context, req resource.Metadata
 
 func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "PowerPlatform Data Record Resource",
-		MarkdownDescription: "Resource for managing PowerPlatform Data Record",
+		Description:         "The Power Platform Data Record Resource allows the management of configuration records that are stored in Dataverse as records. This resource is not recommended for managing business data or other data that may be changed by Dataverse users in the context of normal business activities.",
+		MarkdownDescription: "The Power Platform Data Record Resource allows the management of configuration records that are stored in Dataverse as records. This resource is not recommended for managing business data or other data that may be changed by Dataverse users in the context of normal business activities.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id (guid)",
@@ -66,7 +66,7 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 			},
 			"table_logical_name": schema.StringAttribute{
-				Description: "Name of the data record table",
+				Description: "Logical name of the data record table",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
