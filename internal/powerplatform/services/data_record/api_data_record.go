@@ -133,7 +133,7 @@ func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId stri
 	return result, nil
 }
 
-func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId string, environmentId string, tableName string, relationName string) ([]interface{}, error) {
+func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId, environmentId, tableName, relationName string) ([]interface{}, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
 		return nil, err
