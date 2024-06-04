@@ -267,13 +267,9 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 		if nestedMap, ok := value.(map[string]interface{}); ok {
 			delete(columns, key)
 			if len(nestedMap) > 0 {
-				tableLogicalName, ok := nestedMap["table_logical_name"].(string)
-				if !ok {
-					return nil, fmt.Errorf("table_logical_name field is missing or not a string")
-				}
-				dataRecordId, ok := nestedMap["data_record_id"].(string)
-				if !ok {
-					return nil, fmt.Errorf("data_record_id field is missing or not a string")
+				tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
+				if err != nil {
+					return nil, err
 				}
 
 				entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
@@ -362,13 +358,9 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 				for _, nestedItem := range nestedMapList {
 					nestedMap := nestedItem.(map[string]interface{})
 
-					tableLogicalName, ok := nestedMap["table_logical_name"].(string)
-					if !ok {
-						return nil, fmt.Errorf("table_logical_name field is missing or not a string")
-					}
-					dataRecordId, ok := nestedMap["data_record_id"].(string)
-					if !ok {
-						return nil, fmt.Errorf("data_record_id field is missing or not a string")
+					tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
+					if err != nil {
+						return nil, err
 					}
 
 					relationEntityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
@@ -395,13 +387,9 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 			for _, nestedItem := range nestedMapList {
 				nestedMap := nestedItem.(map[string]interface{})
 
-				tableLogicalName, ok := nestedMap["table_logical_name"].(string)
-				if !ok {
-					return nil, fmt.Errorf("table_logical_name field is missing or not a string")
-				}
-				dataRecordId, ok := nestedMap["data_record_id"].(string)
-				if !ok {
-					return nil, fmt.Errorf("data_record_id field is missing or not a string")
+				tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
+				if err != nil {
+					return nil, err
 				}
 
 				entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
@@ -485,4 +473,16 @@ func parseLocationHeader(response *api.ApiHttpResponse, environmentUrl string, e
 	locationHeader = strings.TrimPrefix(locationHeader, fmt.Sprintf("%s/api/data/%s/%s(", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName))
 	locationHeader = strings.TrimSuffix(locationHeader, ")")
 	return locationHeader
+}
+
+func getTableLogicalNameAndDataRecordIdFromMap(nestedMap map[string]interface{}) (string, string, error) {
+	tableLogicalName, ok := nestedMap["table_logical_name"].(string)
+	if !ok {
+		return "", "", fmt.Errorf("table_logical_name field is missing or not a string")
+	}
+	dataRecordId, ok := nestedMap["data_record_id"].(string)
+	if !ok {
+		return "", "", fmt.Errorf("data_record_id field is missing or not a string")
+	}
+	return tableLogicalName, dataRecordId, nil
 }
