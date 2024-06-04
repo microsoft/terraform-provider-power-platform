@@ -77,16 +77,5 @@ resource "powerplatform_data_record" "data_record_accounts" {
         data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
       }
     ])
-
-    cr4d0_Account_Contact_Contact = toset([ # many to many
-      {
-        table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
-        data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
-      },
-      {
-        table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
-        data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
-      }
-    ])
   }
 }
