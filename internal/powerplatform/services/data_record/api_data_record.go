@@ -155,7 +155,7 @@ func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId st
 
 	field, ok := result["value"]
 	if !ok {
-		return nil, fmt.Errorf("value field not found in result")
+		return nil, fmt.Errorf("value field not found in result when retrieving relational data")
 	}
 
 	value, ok := field.([]interface{})
