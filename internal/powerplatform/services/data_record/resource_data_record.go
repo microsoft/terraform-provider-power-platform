@@ -279,7 +279,11 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 		case map[string]interface{}:
 			v, ok := columns[fmt.Sprintf("_%s_value", key)].(string)
 			if ok {
-				entityLogicalName := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
+				entityLogicalName, _, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
+				if err != nil {
+					tflog.Error(ctx, fmt.Sprintf("Error getting entity relation definition info: %s", err.Error()))
+					return nil
+				}
 				dataRecordId := v
 
 				nestedObjectType := types.ObjectType{
@@ -306,14 +310,13 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 			for _, rawItem := range relationMap {
 				item := rawItem.(map[string]interface{})
 
-				relationTableLogicalName := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
-				dataRecordId := ""
-
-				for itemKey, itemValue := range item {
-					if itemKey != "@odata.etag" && itemKey != "createdon" {
-						dataRecordId = itemValue.(string)
-					}
+				relationTableLogicalName, primaryIdFieldName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
+				if err != nil {
+					tflog.Error(ctx, fmt.Sprintf("Error getting entity relation definition info: %s", err.Error()))
+					return nil
 				}
+
+				dataRecordId := item[primaryIdFieldName].(string)
 
 				setObjectValues = append(setObjectValues, types.ObjectValueMust(objectType,
 					map[string]attr.Value{

@@ -68,10 +68,10 @@ func getEntityDefinition(ctx context.Context, client *DataRecordClient, environm
 	entityDefinition := EntityDefinitionsDto{}
 	_, err := client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	return &entityDefinition
+	return &entityDefinition, nil
 }
 
 func (client *DataRecordClient) GetEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {
@@ -108,7 +108,10 @@ func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId stri
 		return nil, err
 	}
 
-	entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	if err != nil {
+		return nil, err
+	}
 
 	e, _ := url.Parse(environmentUrl)
 	apiUrl := &url.URL{
@@ -136,7 +139,10 @@ func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId st
 		return nil, err
 	}
 
-	entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	if err != nil {
+		return nil, err
+	}
 
 	e, _ := url.Parse(environmentUrl)
 	apiUrl := &url.URL{
@@ -166,17 +172,17 @@ func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId st
 	return value, nil
 }
 
-func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string) {
+func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string, primaryIdFieldName string, err error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
-		return ""
+		return "", "", err
 	}
 
 	apiUrl := fmt.Sprintf("%s/api/data/%s/EntityDefinitions(LogicalName='%s')?$expand=OneToManyRelationships,ManyToManyRelationships,ManyToOneRelationships", environmentUrl, constants.DATAVERSE_API_VERSION, entityLogicalName)
 
 	response, err := client.Api.Execute(ctx, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
-		return ""
+		return "", "", err
 	}
 
 	var mapResponse map[string]interface{}
@@ -221,7 +227,9 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 		}
 	}
 
-	return tableName
+	entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+
+	return tableName, entityDefinition.PrimaryIDAttribute, nil
 }
 
 func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId string, environmentId string, tableName string, columns map[string]interface{}) (*DataRecordDto, error) {
@@ -247,7 +255,10 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 					return nil, fmt.Errorf("data_record_id field is missing or not a string")
 				}
 
-				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+				entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+				if err != nil {
+					return nil, err
+				}
 
 				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId)
 			}
@@ -258,7 +269,10 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 		}
 	}
 
-	entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	if err != nil {
+		return nil, err
+	}
 
 	method := "POST"
 	apiPath := fmt.Sprintf("/api/data/%s/%s", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName)
@@ -334,7 +348,10 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 						return nil, fmt.Errorf("data_record_id field is missing or not a string")
 					}
 
-					relationEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+					relationEntityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+					if err != nil {
+						return nil, err
+					}
 					if existingRelation.OdataID == fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, relationEntityDefinition.LogicalCollectionName, dataRecordId) {
 						delete = false
 						break
@@ -364,7 +381,10 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 					return nil, fmt.Errorf("data_record_id field is missing or not a string")
 				}
 
-				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+				entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+				if err != nil {
+					return nil, err
+				}
 
 				relation := RelationApiBody{
 					OdataID: fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId),
@@ -386,7 +406,10 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		return err
 	}
 
-	tableEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	tableEntityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	if err != nil {
+		return err
+	}
 
 	e, _ := url.Parse(environmentUrl)
 	apiUrl := &url.URL{
