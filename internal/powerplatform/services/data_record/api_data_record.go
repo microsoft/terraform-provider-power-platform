@@ -57,7 +57,7 @@ type RelationApiBody struct {
 	OdataID string `json:"@odata.id"`
 }
 
-func getEntityDefinition(ctx context.Context, client *DataRecordClient, environmentUrl string, entityLogicalName string) *EntityDefinitionsDto {
+func getEntityDefinition(ctx context.Context, client *DataRecordClient, environmentUrl, entityLogicalName string) (*EntityDefinitionsDto, error) {
 	e, _ := url.Parse(environmentUrl)
 	entityDefinitionApiUrl := &url.URL{
 		Scheme:   e.Scheme,
