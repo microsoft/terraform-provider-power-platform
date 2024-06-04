@@ -166,7 +166,7 @@ func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId st
 
 	value, ok := field.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("value field is not of type []interface{}")
+		return nil, fmt.Errorf("value field is not of type []interface{} in relational data")
 	}
 
 	return value, nil
