@@ -21,61 +21,32 @@ resource "powerplatform_environment" "data_record_example_env" {
   }
 }
 
-resource "powerplatform_data_record" "data_record_sample_contact1" {
-  environment_id     = powerplatform_environment.data_record_example_env.id
-  table_logical_name = "contact"
-  columns = {
-    firstname          = "John"
-    lastname           = "Doe"
-    telephone1         = "555-555-5555"
-    emailaddress1      = "johndoe@contoso.com"
-    anniversary        = "2024-04-10"
-    annualincome       = 1234.56
-    birthdate          = "2024-04-10"
-    description        = "This is the description of the the terraform \n\nsample contact"
-  }
-}
+resource "powerplatform_data_record" "role" {
+  environment_id     = var.environment_id
+  table_logical_name = "role"
 
-resource "powerplatform_data_record" "data_record_sample_contact2" {
-  environment_id     = powerplatform_environment.data_record_example_env.id
-  table_logical_name = "contact"
   columns = {
-    firstname          = "Jane"
-    lastname           = "Doe"
-    telephone1         = "555-555-5555"
-    emailaddress1      = "janedoe@contoso.com"
-    anniversary        = "2024-04-11"
-    annualincome       = 1234.56
-    birthdate          = "2024-04-11"
-    description        = "This is the description of the the terraform \n\nsample contact"
-  }
-}
+    name = "my custom role"
 
-resource "powerplatform_data_record" "data_record_accounts" {
-  environment_id     = powerplatform_environment.data_record_example_env.id
-  table_logical_name = "account"
-  columns = {
-    name                = "Sample Account"
-    creditonhold        = false
-    address1_latitude   = 47.63
-    description         = "This is the description of the sample account"
-    revenue             = 5000000
-    accountcategorycode = 1
-
-    primarycontactid = { # one to many
-      table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
-      data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
+    businessunitid = {
+      table_logical_name = "businessunit"
+      data_record_id     = var.parent_business_unit_id
     }
+  }
+}
 
-    contact_customer_accounts = toset([ # many to one
+resource "powerplatform_data_record" "team" {
+  environment_id     = var.environment_id
+  table_logical_name = "team"
+  columns = {
+    name        = "main team"
+    description = "main team description"
+
+    teamroles_association = [
       {
-        table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
-        data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
-      },
-      {
-        table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
-        data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
+        table_logical_name = "role"
+        data_record_id     = powerplatform_data_record.role.id
       }
-    ])
+    ]
   }
 }
