@@ -98,42 +98,39 @@ func (r *DataRecordResource) Configure(ctx context.Context, req resource.Configu
 }
 
 func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var state *DataRecordResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
-
-	var plan DataRecordResourceModel
-	resp.State.Get(ctx, &plan)
+	var state DataRecordResourceModel
+	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	plan.Id = types.StringValue(plan.Id.ValueString())
-	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
-	plan.TableLogicalName = types.StringValue(plan.TableLogicalName.ValueString())
-	plan.Columns = types.DynamicValue(plan.Columns)
+	state.Id = types.StringValue(state.Id.ValueString())
+	state.EnvironmentId = types.StringValue(state.EnvironmentId.ValueString())
+	state.TableLogicalName = types.StringValue(state.TableLogicalName.ValueString())
+	state.Columns = types.DynamicValue(state.Columns)
 
-	mapColumns, err := convertResourceModelToMap(plan)
+	mapColumns, err := convertResourceModelToMap(state)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to map: %s", err.Error()), err.Error())
 		return
 	}
 
-	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, plan.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
+	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
 		return
 	}
 
-	plan.Id = types.StringValue(dr.Id)
+	state.Id = types.StringValue(dr.Id)
 
-	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.TableLogicalName.ValueString()))
+	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", state.TableLogicalName.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
