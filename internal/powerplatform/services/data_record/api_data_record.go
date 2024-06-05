@@ -279,8 +279,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 
 				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId)
 			}
-		}
-		if nestedMapList, ok := value.([]interface{}); ok {
+		} else if nestedMapList, ok := value.([]interface{}); ok {
 			delete(columns, key)
 			relations[key] = nestedMapList
 		}
@@ -333,79 +332,9 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 
 	result.Id = parseLocationHeader(response, environmentUrl, entityDefinition)
 
-	for key, value := range relations {
-		if nestedMapList, ok := value.([]interface{}); ok {
-			e, err := url.Parse(environmentUrl)
-			if err != nil {
-				return nil, err
-			}
-			apiUrl := &url.URL{
-				Scheme: e.Scheme,
-				Host:   e.Host,
-				Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s/$ref", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, result.Id, key),
-			}
-
-			existingRelationsResponse := RelationApiResponse{}
-
-			apiResponse, _ := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
-
-			json.Unmarshal(apiResponse.BodyAsBytes, &existingRelationsResponse)
-
-			var toBeDeleted []RelationApiBody = make([]RelationApiBody, 0)
-
-			for _, existingRelation := range existingRelationsResponse.Value {
-				delete := true
-				for _, nestedItem := range nestedMapList {
-					nestedMap := nestedItem.(map[string]interface{})
-
-					tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
-					if err != nil {
-						return nil, err
-					}
-
-					relationEntityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
-					if err != nil {
-						return nil, err
-					}
-					if existingRelation.OdataID == fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, relationEntityDefinition.LogicalCollectionName, dataRecordId) {
-						delete = false
-						break
-					}
-				}
-				if delete {
-					toBeDeleted = append(toBeDeleted, existingRelation)
-				}
-			}
-
-			for _, relation := range toBeDeleted {
-				_, err = client.Api.Execute(ctx, "DELETE", relation.OdataID, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			for _, nestedItem := range nestedMapList {
-				nestedMap := nestedItem.(map[string]interface{})
-
-				tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
-				if err != nil {
-					return nil, err
-				}
-
-				entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
-				if err != nil {
-					return nil, err
-				}
-
-				relation := RelationApiBody{
-					OdataID: fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId),
-				}
-				_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
-				if err != nil {
-					return &result, err
-				}
-			}
-		}
+	err = applyRelations(ctx, client, relations, environmentUrl, result.Id, entityDefinition)
+	if err != nil {
+		return nil, err
 	}
 
 	return &result, nil
@@ -485,4 +414,82 @@ func getTableLogicalNameAndDataRecordIdFromMap(nestedMap map[string]interface{})
 		return "", "", fmt.Errorf("data_record_id field is missing or not a string")
 	}
 	return tableLogicalName, dataRecordId, nil
+}
+
+func applyRelations(ctx context.Context, client *DataRecordClient, relations map[string]interface{}, environmentUrl string, parentRecordId string, entityDefinition *EntityDefinitionsDto) error {
+	for key, value := range relations {
+		if nestedMapList, ok := value.([]interface{}); ok {
+			e, err := url.Parse(environmentUrl)
+			if err != nil {
+				return err
+			}
+			apiUrl := &url.URL{
+				Scheme: e.Scheme,
+				Host:   e.Host,
+				Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s/$ref", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, parentRecordId, key),
+			}
+
+			existingRelationsResponse := RelationApiResponse{}
+
+			apiResponse, _ := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+
+			json.Unmarshal(apiResponse.BodyAsBytes, &existingRelationsResponse)
+
+			var toBeDeleted []RelationApiBody = make([]RelationApiBody, 0)
+
+			for _, existingRelation := range existingRelationsResponse.Value {
+				delete := true
+				for _, nestedItem := range nestedMapList {
+					nestedMap := nestedItem.(map[string]interface{})
+
+					tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
+					if err != nil {
+						return err
+					}
+
+					relationEntityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+					if err != nil {
+						return err
+					}
+					if existingRelation.OdataID == fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, relationEntityDefinition.LogicalCollectionName, dataRecordId) {
+						delete = false
+						break
+					}
+				}
+				if delete {
+					toBeDeleted = append(toBeDeleted, existingRelation)
+				}
+			}
+
+			for _, relation := range toBeDeleted {
+				_, err = client.Api.Execute(ctx, "DELETE", relation.OdataID, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+				if err != nil {
+					return err
+				}
+			}
+
+			for _, nestedItem := range nestedMapList {
+				nestedMap := nestedItem.(map[string]interface{})
+
+				tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
+				if err != nil {
+					return err
+				}
+
+				entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+				if err != nil {
+					return err
+				}
+
+				relation := RelationApiBody{
+					OdataID: fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId),
+				}
+				_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	return nil
 }
