@@ -426,11 +426,6 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 	if err != nil {
 		return err
 	}
-	apiUrl := &url.URL{
-		Scheme: e.Scheme,
-		Host:   e.Host,
-		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId),
-	}
 
 	for key, value := range columns {
 		if _, ok := value.(map[string]interface{}); ok {
@@ -447,7 +442,7 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 					return fmt.Errorf("data_record_id field is missing or not a string")
 				}
 
-				apiUrl = &url.URL{
+				apiUrl := &url.URL{
 					Scheme: e.Scheme,
 					Host:   e.Host,
 					Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s(%s)/$ref", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId, key, dataRecordId),
@@ -460,6 +455,11 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		}
 	}
 
+	apiUrl := &url.URL{
+		Scheme: e.Scheme,
+		Host:   e.Host,
+		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId),
+	}
 	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
 	if err != nil {
 		return err
