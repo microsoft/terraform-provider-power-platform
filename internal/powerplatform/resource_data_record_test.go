@@ -17,7 +17,6 @@ import (
 )
 
 func TestAccDataRecordResource_Validate_Create(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
@@ -66,12 +65,12 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 							}
 						
-							contact_customer_accounts = toset([
+							contact_customer_accounts = [
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 								}
-							])
+							]
 						}
 					}
 				`,
@@ -259,12 +258,12 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 							}
 						
-							contact_customer_accounts = toset([
+							contact_customer_accounts = [
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 								}
-							])
+							]
 						}
 					}
 				`,
@@ -300,15 +299,15 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 					}
 				}
 
-				resource "powerplatform_data_record" "data_record_sample_contact1" {
-					environment_id     = powerplatform_environment.test_env.id
-					table_logical_name = "contact"
-					columns = {
-					  firstname          = "John"
-					  lastname           = "Doe"
-					  emailaddress1      = "johndoe@contoso.com"
-					}
-				}
+				// resource "powerplatform_data_record" "data_record_sample_contact1" {
+				// 	environment_id     = powerplatform_environment.test_env.id
+				// 	table_logical_name = "contact"
+				// 	columns = {
+				// 	  firstname          = "John"
+				// 	  lastname           = "Doe"
+				// 	  emailaddress1      = "johndoe@contoso.com"
+				// 	}
+				// }
 
 				resource "powerplatform_data_record" "data_record_account" {
 						environment_id     = powerplatform_environment.test_env.id
@@ -398,7 +397,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 							}
 
-							contact_customer_accounts = toset([
+							contact_customer_accounts = [
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
@@ -407,7 +406,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 									table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 								}
-							])
+							]
 						}
 					}
 				`,
@@ -483,7 +482,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 							}
 
-							contact_customer_accounts = toset([
+							contact_customer_accounts = [
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
@@ -492,7 +491,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 									table_logical_name = powerplatform_data_record.data_record_sample_contact3.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact3.id
 								}
-							])
+							]
 						}
 					}
 				`,
@@ -565,7 +564,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 							}
 
-							contact_customer_accounts = toset([
+							contact_customer_accounts = [
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
@@ -574,7 +573,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 									table_logical_name = powerplatform_data_record.data_record_sample_contact3.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact3.id
 								}
-							])
+							]
 						}
 					}
 				`,

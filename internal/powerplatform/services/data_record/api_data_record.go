@@ -319,10 +319,10 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 	if len(response.BodyAsBytes) != 0 {
 		json.Unmarshal(response.BodyAsBytes, &result)
 	} else if response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID) != "" {
-		re := regexp.MustCompile(powerplatform_helpers.GuidRegex)
+		re := regexp.MustCompile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
 		match := re.FindStringSubmatch(response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID))
-		if len(match) > 1 {
-			result.Id = match[1]
+		if len(match) > 0 {
+			result.Id = match[0]
 		} else {
 			return nil, fmt.Errorf("no entity record id returned from the odata-entityid header")
 		}
