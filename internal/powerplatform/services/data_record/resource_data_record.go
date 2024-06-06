@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
@@ -156,11 +157,16 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	newState := convertColumnsToState(ctx, &r.DataRecordClient, state, state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), newColumns)
+	columns, err := convertColumnsToState(ctx, &r.DataRecordClient, state, state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), newColumns)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to state: %s", err.Error()), err.Error())
+		return
+	}
+	state.Columns = *columns
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_data_record with table_name %s", r.ProviderTypeName, state.TableLogicalName.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
@@ -233,7 +239,7 @@ func (r *DataRecordResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, currentState *DataRecordResourceModel, environmentId string, tableLogicalName string, columns map[string]interface{}) *DataRecordResourceModel {
+func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, currentState *DataRecordResourceModel, environmentId string, tableLogicalName string, columns map[string]interface{}) (*basetypes.DynamicValue, error) {
 	var objectType = map[string]attr.Type{
 		"table_logical_name": types.StringType,
 		"data_record_id":     types.StringType,
@@ -241,7 +247,7 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 
 	mapColumns, err := convertResourceModelToMap(*currentState)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
 	attributeTypes := make(map[string]attr.Type)
@@ -278,8 +284,7 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 			if ok {
 				entityLogicalName, _, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
 				if err != nil {
-					tflog.Error(ctx, fmt.Sprintf("Error getting entity relation definition info: %s", err.Error()))
-					return nil
+					return nil, fmt.Errorf("error getting entity relation definition info: %s", err.Error())
 				}
 				dataRecordId := v
 
@@ -298,43 +303,48 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 				attributes[key] = nestedObjectValue
 			}
 		case []interface{}:
-			setObjectValues := []attr.Value{}
-			var setObjectType = types.ObjectType{
+			var listTypes []attr.Type
+			var listValues []attr.Value
+			tupleElementType := types.ObjectType{
 				AttrTypes: objectType,
 			}
-			relationMap, _ := apiClient.GetRelationData(ctx, currentState.Id.ValueString(), environmentId, tableLogicalName, key)
+
+			relationMap, err := apiClient.GetRelationData(ctx, currentState.Id.ValueString(), environmentId, tableLogicalName, key)
+			if err != nil {
+				return nil, fmt.Errorf("error getting relation data: %s", err.Error())
+			}
 
 			for _, rawItem := range relationMap {
 				item := rawItem.(map[string]interface{})
 
 				relationTableLogicalName, primaryIdFieldName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
 				if err != nil {
-					tflog.Error(ctx, fmt.Sprintf("Error getting entity relation definition info: %s", err.Error()))
-					return nil
+					return nil, fmt.Errorf("error getting entity relation definition info: %s", err.Error())
 				}
-
 				dataRecordId := item[primaryIdFieldName].(string)
 
-				setObjectValues = append(setObjectValues, types.ObjectValueMust(objectType,
-					map[string]attr.Value{
-						"table_logical_name": types.StringValue(relationTableLogicalName),
-						"data_record_id":     types.StringValue(dataRecordId),
-					}))
+				v, _ := types.ObjectValue(objectType, map[string]attr.Value{
+					"table_logical_name": types.StringValue(relationTableLogicalName),
+					"data_record_id":     types.StringValue(dataRecordId),
+				})
+				listValues = append(listValues, v)
+				listTypes = append(listTypes, tupleElementType)
 			}
 
-			setValue, _ := types.SetValue(setObjectType, setObjectValues)
-			attributes[key] = setValue
-			attributeTypes[key] = types.SetType{ElemType: setObjectType}
+			nestedObjectType := types.TupleType{
+				ElemTypes: listTypes,
+			}
+			nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
+
+			attributes[key] = nestedObjectValue
+			attributeTypes[key] = nestedObjectType
+
 		}
 	}
 
 	columnField, _ := types.ObjectValue(attributeTypes, attributes)
-
-	currentState.EnvironmentId = types.StringValue(environmentId)
-	currentState.TableLogicalName = types.StringValue(tableLogicalName)
-	currentState.Columns = types.DynamicValue(columnField)
-
-	return currentState
+	result := types.DynamicValue(columnField)
+	return &result, nil
 }
 
 func convertResourceModelToMap(plan DataRecordResourceModel) (mapColumns map[string]interface{}, err error) {

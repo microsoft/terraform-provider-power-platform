@@ -22,7 +22,7 @@ resource "powerplatform_environment" "data_record_example_env" {
 }
 
 resource "powerplatform_data_record" "role" {
-  environment_id     = var.environment_id
+  environment_id     = powerplatform_environment.data_record_example_env.id
   table_logical_name = "role"
 
   columns = {
@@ -36,7 +36,7 @@ resource "powerplatform_data_record" "role" {
 }
 
 resource "powerplatform_data_record" "team" {
-  environment_id     = var.environment_id
+  environment_id     = powerplatform_environment.data_record_example_env.id
   table_logical_name = "team"
   columns = {
     name        = "main team"

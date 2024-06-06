@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -114,17 +115,17 @@ func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Con
 
 	applicationId := ""
 	if response.Response.StatusCode == http.StatusAccepted {
-		locationHeader := response.GetHeader("Operation-Location")
-		tflog.Debug(ctx, "Location Header: "+locationHeader)
+		operationLocationHeader := response.GetHeader(constants.HEADER_OPERATION_LOCATION)
+		tflog.Debug(ctx, "Opeartion Location Header: "+operationLocationHeader)
 
-		_, err = url.Parse(locationHeader)
+		_, err = url.Parse(operationLocationHeader)
 		if err != nil {
 			tflog.Error(ctx, "Error parsing location header: "+err.Error())
 		}
 
 		for {
 			lifecycleResponse := EnvironmentApplicationLifecycleDto{}
-			_, err = client.Api.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
+			_, err = client.Api.Execute(ctx, "GET", operationLocationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
 			if err != nil {
 				return "", err
 			}

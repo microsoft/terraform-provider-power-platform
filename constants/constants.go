@@ -78,5 +78,9 @@ const (
 )
 
 const (
-	DATAVERSE_API_VERSION = "v9.2"
+	DATAVERSE_API_VERSION     = "v9.2"
+	HEADER_ODATA_ENTITY_ID    = "OData-EntityId"
+	HEADER_LOCATION           = "Location"
+	HEADER_RETRY_AFTER        = "Retry-After"
+	HEADER_OPERATION_LOCATION = "Operation-Location"
 )

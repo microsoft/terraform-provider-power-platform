@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
@@ -295,7 +296,7 @@ func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, 
 
 	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.Response.Status+"'")
 
-	locationHeader := apiResponse.GetHeader("Location")
+	locationHeader := apiResponse.GetHeader(constants.HEADER_LOCATION)
 	tflog.Debug(ctx, "Location Header: "+locationHeader)
 
 	_, err = url.Parse(locationHeader)
@@ -303,7 +304,7 @@ func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, 
 		tflog.Error(ctx, "Error parsing location header: "+err.Error())
 	}
 
-	retryHeader := apiResponse.GetHeader("Retry-After")
+	retryHeader := apiResponse.GetHeader(constants.HEADER_RETRY_AFTER)
 	tflog.Debug(ctx, "Retry Header: "+retryHeader)
 	retryAfter, err := time.ParseDuration(retryHeader)
 	if err != nil {

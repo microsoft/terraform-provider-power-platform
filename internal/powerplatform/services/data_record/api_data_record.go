@@ -318,9 +318,9 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 
 	if len(response.BodyAsBytes) != 0 {
 		json.Unmarshal(response.BodyAsBytes, &result)
-	} else if response.Response.Header.Get("OData-EntityId") != "" {
+	} else if response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID) != "" {
 		re := regexp.MustCompile(powerplatform_helpers.GuidRegex)
-		match := re.FindStringSubmatch(response.Response.Header.Get("OData-EntityId"))
+		match := re.FindStringSubmatch(response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID))
 		if len(match) > 1 {
 			result.Id = match[1]
 		} else {
@@ -398,7 +398,7 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 }
 
 func parseLocationHeader(response *api.ApiHttpResponse, environmentUrl string, entityDefinition *EntityDefinitionsDto) string {
-	locationHeader := response.GetHeader("Location")
+	locationHeader := response.GetHeader(constants.HEADER_LOCATION)
 	locationHeader = strings.TrimPrefix(locationHeader, fmt.Sprintf("%s/api/data/%s/%s(", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName))
 	locationHeader = strings.TrimSuffix(locationHeader, ")")
 	return locationHeader
