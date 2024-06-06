@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 )
 
 type LifecycleDto struct {
@@ -53,7 +54,7 @@ type LifecycleRequestedByDto struct {
 
 func (client *ApiClient) DoWaitForLifecycleOperationStatus(ctx context.Context, response *ApiHttpResponse) (*LifecycleDto, error) {
 
-	locationHeader := response.GetHeader("Location")
+	locationHeader := response.GetHeader(constants.HEADER_LOCATION)
 	tflog.Debug(ctx, "Location Header: "+locationHeader)
 
 	_, err := url.Parse(locationHeader)
@@ -61,7 +62,7 @@ func (client *ApiClient) DoWaitForLifecycleOperationStatus(ctx context.Context, 
 		tflog.Error(ctx, "Error parsing location header: "+err.Error())
 	}
 
-	retryHeader := response.GetHeader("Retry-After")
+	retryHeader := response.GetHeader(constants.HEADER_RETRY_AFTER)
 	tflog.Debug(ctx, "Retry Header: "+retryHeader)
 	retryAfter, err := time.ParseDuration(retryHeader)
 
