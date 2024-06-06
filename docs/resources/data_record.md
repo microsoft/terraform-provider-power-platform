@@ -3,12 +3,12 @@
 page_title: "powerplatform_data_record Resource - powerplatform"
 subcategory: ""
 description: |-
-  Resource for managing PowerPlatform Data Record
+  The Power Platform Data Record Resource allows the management of configuration records that are stored in Dataverse as records. This resource is not recommended for managing business data or other data that may be changed by Dataverse users in the context of normal business activities.
 ---
 
 # powerplatform_data_record (Resource)
 
-Resource for managing PowerPlatform Data Record
+The Power Platform Data Record Resource allows the management of configuration records that are stored in Dataverse as records. This resource is not recommended for managing business data or other data that may be changed by Dataverse users in the context of normal business activities.
 
 ## Example Usage
 
@@ -36,73 +36,33 @@ resource "powerplatform_environment" "data_record_example_env" {
   }
 }
 
-resource "powerplatform_data_record" "data_record_sample_contact1" {
-  environment_id     = powerplatform_environment.data_record_example_env.id
-  table_logical_name = "contact"
-  columns = {
-    firstname          = "John"
-    lastname           = "Doe"
-    telephone1         = "555-555-5555"
-    emailaddress1      = "johndoe@contoso.com"
-    anniversary        = "2024-04-10"
-    annualincome       = 1234.56
-    birthdate          = "2024-04-10"
-    description        = "This is the description of the the terraform \n\nsample contact"
-  }
-}
+resource "powerplatform_data_record" "role" {
+  environment_id     = var.environment_id
+  table_logical_name = "role"
 
-resource "powerplatform_data_record" "data_record_sample_contact2" {
-  environment_id     = powerplatform_environment.data_record_example_env.id
-  table_logical_name = "contact"
   columns = {
-    firstname          = "Jane"
-    lastname           = "Doe"
-    telephone1         = "555-555-5555"
-    emailaddress1      = "janedoe@contoso.com"
-    anniversary        = "2024-04-11"
-    annualincome       = 1234.56
-    birthdate          = "2024-04-11"
-    description        = "This is the description of the the terraform \n\nsample contact"
-  }
-}
+    name = "my custom role"
 
-resource "powerplatform_data_record" "data_record_accounts" {
-  environment_id     = powerplatform_environment.data_record_example_env.id
-  table_logical_name = "account"
-  columns = {
-    name                = "Sample Account"
-    creditonhold        = false
-    address1_latitude   = 47.63958
-    description         = "This is the description of the sample account"
-    revenue             = 5000000
-    accountcategorycode = 1
-
-    primarycontactid = { # one to many
-      table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
-      data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
+    businessunitid = {
+      table_logical_name = "businessunit"
+      data_record_id     = var.parent_business_unit_id
     }
+  }
+}
 
-    contact_customer_accounts = toset([ # many to one
-      {
-        table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
-        data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
-      },
-      {
-        table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
-        data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
-      }
-    ])
+resource "powerplatform_data_record" "team" {
+  environment_id     = var.environment_id
+  table_logical_name = "team"
+  columns = {
+    name        = "main team"
+    description = "main team description"
 
-    cr4d0_Account_Contact_Contact = toset([ # many to many
+    teamroles_association = [
       {
-        table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
-        data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
-      },
-      {
-        table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
-        data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
+        table_logical_name = "role"
+        data_record_id     = powerplatform_data_record.role.id
       }
-    ])
+    ]
   }
 }
 ```
@@ -114,7 +74,7 @@ resource "powerplatform_data_record" "data_record_accounts" {
 
 - `columns` (Dynamic) Columns of the data record table
 - `environment_id` (String) Id of the Dynamics 365 environment
-- `table_logical_name` (String) Name of the data record table
+- `table_logical_name` (String) Logical name of the data record table
 
 ### Read-Only
 

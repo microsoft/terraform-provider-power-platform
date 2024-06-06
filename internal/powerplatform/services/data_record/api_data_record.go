@@ -57,8 +57,11 @@ type RelationApiBody struct {
 	OdataID string `json:"@odata.id"`
 }
 
-func getEntityDefinition(ctx context.Context, client *DataRecordClient, environmentUrl string, entityLogicalName string) *EntityDefinitionsDto {
-	e, _ := url.Parse(environmentUrl)
+func getEntityDefinition(ctx context.Context, client *DataRecordClient, environmentUrl, entityLogicalName string) (*EntityDefinitionsDto, error) {
+	e, err := url.Parse(environmentUrl)
+	if err != nil {
+		return nil, err
+	}
 	entityDefinitionApiUrl := &url.URL{
 		Scheme:   e.Scheme,
 		Host:     e.Host,
@@ -66,12 +69,12 @@ func getEntityDefinition(ctx context.Context, client *DataRecordClient, environm
 		Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
 	}
 	entityDefinition := EntityDefinitionsDto{}
-	_, err := client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
+	_, err = client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
 	if err != nil {
-		return nil
+		return nil, err
 	}
 
-	return &entityDefinition
+	return &entityDefinition, nil
 }
 
 func (client *DataRecordClient) GetEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {
@@ -149,15 +152,21 @@ func (client *DataRecordClient) GetDataRecordsByODataQuery(ctx context.Context, 
 	return records, totalRecords, totalRecordsCountLimitExceeded, nil
 }
 
-func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId string, environmentId string, tableName string) (map[string]interface{}, error) {
+func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId, environmentId, tableName string) (map[string]interface{}, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
-	entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	if err != nil {
+		return nil, err
+	}
 
-	e, _ := url.Parse(environmentUrl)
+	e, err := url.Parse(environmentUrl)
+	if err != nil {
+		return nil, err
+	}
 	apiUrl := &url.URL{
 		Scheme: e.Scheme,
 		Host:   e.Host,
@@ -177,15 +186,21 @@ func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId stri
 	return result, nil
 }
 
-func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId string, environmentId string, tableName string, relationName string) ([]interface{}, error) {
+func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId, environmentId, tableName, relationName string) ([]interface{}, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
-	entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	if err != nil {
+		return nil, err
+	}
 
-	e, _ := url.Parse(environmentUrl)
+	e, err := url.Parse(environmentUrl)
+	if err != nil {
+		return nil, err
+	}
 	apiUrl := &url.URL{
 		Scheme:   e.Scheme,
 		Host:     e.Host,
@@ -202,34 +217,37 @@ func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId st
 
 	field, ok := result["value"]
 	if !ok {
-		return nil, fmt.Errorf("value field not found in result")
+		return nil, fmt.Errorf("value field not found in result when retrieving relational data")
 	}
 
 	value, ok := field.([]interface{})
 	if !ok {
-		return nil, fmt.Errorf("value field is not of type []interface{}")
+		return nil, fmt.Errorf("value field is not of type []interface{} in relational data")
 	}
 
 	return value, nil
 }
 
-func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string) {
+func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string, primaryIdFieldName string, err error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
-		return ""
+		return "", "", err
 	}
 
 	apiUrl := fmt.Sprintf("%s/api/data/%s/EntityDefinitions(LogicalName='%s')?$expand=OneToManyRelationships,ManyToManyRelationships,ManyToOneRelationships", environmentUrl, constants.DATAVERSE_API_VERSION, entityLogicalName)
 
 	response, err := client.Api.Execute(ctx, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
-		return ""
+		return "", "", err
 	}
 
 	var mapResponse map[string]interface{}
 	json.Unmarshal(response.BodyAsBytes, &mapResponse)
 
-	oneToMany, _ := mapResponse["OneToManyRelationships"].([]interface{})
+	oneToMany, ok := mapResponse["OneToManyRelationships"].([]interface{})
+	if !ok {
+		return "", "", fmt.Errorf("OneToManyRelationships field is not of type []interface{}")
+	}
 	for _, list := range oneToMany {
 		item := list.(map[string]interface{})
 		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
@@ -242,7 +260,10 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 		}
 	}
 
-	manyToOne, _ := mapResponse["ManyToOneRelationships"].([]interface{})
+	manyToOne, ok := mapResponse["ManyToOneRelationships"].([]interface{})
+	if !ok {
+		return "", "", fmt.Errorf("ManyToOneRelationships field is not of type []interface{}")
+	}
 	for _, list := range manyToOne {
 		item := list.(map[string]interface{})
 		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
@@ -255,7 +276,10 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 		}
 	}
 
-	manyToMany, _ := mapResponse["ManyToManyRelationships"].([]interface{})
+	manyToMany, ok := mapResponse["ManyToManyRelationships"].([]interface{})
+	if !ok {
+		return "", "", fmt.Errorf("ManyToManyRelationships field is not of type []interface{}")
+	}
 	for _, list := range manyToMany {
 		item := list.(map[string]interface{})
 		if item["Entity1NavigationPropertyName"] == relationLogicalName {
@@ -268,10 +292,15 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 		}
 	}
 
-	return tableName
+	entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	if err != nil {
+		return "", "", err
+	}
+
+	return tableName, entityDefinition.PrimaryIDAttribute, nil
 }
 
-func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId string, environmentId string, tableName string, columns map[string]interface{}) (*DataRecordDto, error) {
+func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, environmentId, tableName string, columns map[string]interface{}) (*DataRecordDto, error) {
 	result := DataRecordDto{}
 
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
@@ -285,27 +314,28 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 		if nestedMap, ok := value.(map[string]interface{}); ok {
 			delete(columns, key)
 			if len(nestedMap) > 0 {
-				tableLogicalName, ok := nestedMap["table_logical_name"].(string)
-				if !ok {
-					return nil, fmt.Errorf("table_logical_name field is missing or not a string")
-				}
-				dataRecordId, ok := nestedMap["data_record_id"].(string)
-				if !ok {
-					return nil, fmt.Errorf("data_record_id field is missing or not a string")
+				tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
+				if err != nil {
+					return nil, err
 				}
 
-				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+				entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+				if err != nil {
+					return nil, err
+				}
 
 				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId)
 			}
-		}
-		if nestedMapList, ok := value.([]interface{}); ok {
+		} else if nestedMapList, ok := value.([]interface{}); ok {
 			delete(columns, key)
 			relations[key] = nestedMapList
 		}
 	}
 
-	entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	if err != nil {
+		return nil, err
+	}
 
 	method := "POST"
 	apiPath := fmt.Sprintf("/api/data/%s/%s", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName)
@@ -318,7 +348,10 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 		apiPath = fmt.Sprintf("%s(%s)", apiPath, recordId)
 	}
 
-	e, _ := url.Parse(environmentUrl)
+	e, err := url.Parse(environmentUrl)
+	if err != nil {
+		return nil, err
+	}
 	apiUrl := &url.URL{
 		Scheme: e.Scheme,
 		Host:   e.Host,
@@ -332,11 +365,11 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 
 	if len(response.BodyAsBytes) != 0 {
 		json.Unmarshal(response.BodyAsBytes, &result)
-	} else if response.Response.Header.Get("OData-EntityId") != "" {
-		re := regexp.MustCompile(`\(([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\)`)
-		match := re.FindStringSubmatch(response.Response.Header.Get("OData-EntityId"))
-		if len(match) > 1 {
-			result.Id = match[1]
+	} else if response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID) != "" {
+		re := regexp.MustCompile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
+		match := re.FindStringSubmatch(response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID))
+		if len(match) > 0 {
+			result.Id = match[0]
 		} else {
 			return nil, fmt.Errorf("no entity record id returned from the odata-entityid header")
 		}
@@ -344,84 +377,11 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId st
 		return nil, fmt.Errorf("no entity record id returned from the API")
 	}
 
-	locationHeader := response.GetHeader("Location")
-	locationHeader = strings.TrimPrefix(locationHeader, fmt.Sprintf("%s/api/data/%s/%s(", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName))
-	locationHeader = strings.TrimSuffix(locationHeader, ")")
+	result.Id = parseLocationHeader(response, environmentUrl, entityDefinition)
 
-	result.Id = locationHeader
-
-	for key, value := range relations {
-		if nestedMapList, ok := value.([]interface{}); ok {
-			e, _ := url.Parse(environmentUrl)
-			apiUrl := &url.URL{
-				Scheme: e.Scheme,
-				Host:   e.Host,
-				Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s/$ref", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, result.Id, key),
-			}
-
-			existingRelationsResponse := RelationApiResponse{}
-
-			apiResponse, _ := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
-
-			json.Unmarshal(apiResponse.BodyAsBytes, &existingRelationsResponse)
-
-			var toBeDeleted []RelationApiBody = make([]RelationApiBody, 0)
-
-			for _, existingRelation := range existingRelationsResponse.Value {
-				delete := true
-				for _, nestedItem := range nestedMapList {
-					nestedMap := nestedItem.(map[string]interface{})
-
-					tableLogicalName, ok := nestedMap["table_logical_name"].(string)
-					if !ok {
-						return nil, fmt.Errorf("table_logical_name field is missing or not a string")
-					}
-					dataRecordId, ok := nestedMap["data_record_id"].(string)
-					if !ok {
-						return nil, fmt.Errorf("data_record_id field is missing or not a string")
-					}
-
-					relationEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
-					if existingRelation.OdataID == fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, relationEntityDefinition.LogicalCollectionName, dataRecordId) {
-						delete = false
-						break
-					}
-				}
-				if delete {
-					toBeDeleted = append(toBeDeleted, existingRelation)
-				}
-			}
-
-			for _, relation := range toBeDeleted {
-				_, err = client.Api.Execute(ctx, "DELETE", relation.OdataID, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			for _, nestedItem := range nestedMapList {
-				nestedMap := nestedItem.(map[string]interface{})
-
-				tableLogicalName, ok := nestedMap["table_logical_name"].(string)
-				if !ok {
-					return nil, fmt.Errorf("table_logical_name field is missing or not a string")
-				}
-				dataRecordId, ok := nestedMap["data_record_id"].(string)
-				if !ok {
-					return nil, fmt.Errorf("data_record_id field is missing or not a string")
-				}
-
-				entityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
-
-				relation := RelationApiBody{
-					OdataID: fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId),
-				}
-				_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
-				if err != nil {
-					return &result, err
-				}
-			}
-		}
+	err = applyRelations(ctx, client, relations, environmentUrl, result.Id, entityDefinition)
+	if err != nil {
+		return nil, err
 	}
 
 	return &result, nil
@@ -433,8 +393,15 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		return err
 	}
 
-	tableEntityDefinition := getEntityDefinition(ctx, client, environmentUrl, tableName)
-	e, _ := url.Parse(environmentUrl)
+	tableEntityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	if err != nil {
+		return err
+	}
+
+	e, err := url.Parse(environmentUrl)
+	if err != nil {
+		return err
+	}
 
 	for key, value := range columns {
 		if _, ok := value.(map[string]interface{}); ok {
@@ -469,11 +436,107 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		Host:   e.Host,
 		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId),
 	}
-
 	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
 	if err != nil {
 		return err
 	}
 
+	return nil
+}
+
+func parseLocationHeader(response *api.ApiHttpResponse, environmentUrl string, entityDefinition *EntityDefinitionsDto) string {
+	locationHeader := response.GetHeader(constants.HEADER_LOCATION)
+	locationHeader = strings.TrimPrefix(locationHeader, fmt.Sprintf("%s/api/data/%s/%s(", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName))
+	locationHeader = strings.TrimSuffix(locationHeader, ")")
+	return locationHeader
+}
+
+func getTableLogicalNameAndDataRecordIdFromMap(nestedMap map[string]interface{}) (string, string, error) {
+	tableLogicalName, ok := nestedMap["table_logical_name"].(string)
+	if !ok {
+		return "", "", fmt.Errorf("table_logical_name field is missing or not a string")
+	}
+	dataRecordId, ok := nestedMap["data_record_id"].(string)
+	if !ok {
+		return "", "", fmt.Errorf("data_record_id field is missing or not a string")
+	}
+	return tableLogicalName, dataRecordId, nil
+}
+
+func applyRelations(ctx context.Context, client *DataRecordClient, relations map[string]interface{}, environmentUrl string, parentRecordId string, entityDefinition *EntityDefinitionsDto) error {
+	for key, value := range relations {
+		if nestedMapList, ok := value.([]interface{}); ok {
+			e, err := url.Parse(environmentUrl)
+			if err != nil {
+				return err
+			}
+			apiUrl := &url.URL{
+				Scheme: e.Scheme,
+				Host:   e.Host,
+				Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s/$ref", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, parentRecordId, key),
+			}
+
+			existingRelationsResponse := RelationApiResponse{}
+
+			apiResponse, _ := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+
+			json.Unmarshal(apiResponse.BodyAsBytes, &existingRelationsResponse)
+
+			var toBeDeleted []RelationApiBody = make([]RelationApiBody, 0)
+
+			for _, existingRelation := range existingRelationsResponse.Value {
+				delete := true
+				for _, nestedItem := range nestedMapList {
+					nestedMap := nestedItem.(map[string]interface{})
+
+					tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
+					if err != nil {
+						return err
+					}
+
+					relationEntityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+					if err != nil {
+						return err
+					}
+					if existingRelation.OdataID == fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, relationEntityDefinition.LogicalCollectionName, dataRecordId) {
+						delete = false
+						break
+					}
+				}
+				if delete {
+					toBeDeleted = append(toBeDeleted, existingRelation)
+				}
+			}
+
+			for _, relation := range toBeDeleted {
+				_, err = client.Api.Execute(ctx, "DELETE", relation.OdataID, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+				if err != nil {
+					return err
+				}
+			}
+
+			for _, nestedItem := range nestedMapList {
+				nestedMap := nestedItem.(map[string]interface{})
+
+				tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
+				if err != nil {
+					return err
+				}
+
+				entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+				if err != nil {
+					return err
+				}
+
+				relation := RelationApiBody{
+					OdataID: fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId),
+				}
+				_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
 	return nil
 }

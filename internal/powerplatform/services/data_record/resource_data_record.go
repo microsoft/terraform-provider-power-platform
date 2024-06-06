@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
@@ -98,42 +99,39 @@ func (r *DataRecordResource) Configure(ctx context.Context, req resource.Configu
 }
 
 func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var state *DataRecordResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
-
-	var plan DataRecordResourceModel
-	resp.State.Get(ctx, &plan)
+	var state DataRecordResourceModel
+	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	plan.Id = types.StringValue(plan.Id.ValueString())
-	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
-	plan.TableLogicalName = types.StringValue(plan.TableLogicalName.ValueString())
-	plan.Columns = types.DynamicValue(plan.Columns)
+	state.Id = types.StringValue(state.Id.ValueString())
+	state.EnvironmentId = types.StringValue(state.EnvironmentId.ValueString())
+	state.TableLogicalName = types.StringValue(state.TableLogicalName.ValueString())
+	state.Columns = types.DynamicValue(state.Columns)
 
-	var mapColumns map[string]interface{}
+	mapColumns, err := convertResourceModelToMap(state)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to map: %s", err.Error()), err.Error())
+		return
+	}
 
-	jsonColumns, _ := json.Marshal(plan.Columns.String())
-	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
-	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
-
-	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, plan.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
+	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
 		return
 	}
 
-	plan.Id = types.StringValue(dr.Id)
+	state.Id = types.StringValue(dr.Id)
 
-	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.TableLogicalName.ValueString()))
+	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", state.TableLogicalName.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
@@ -159,16 +157,15 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	// newState := convertColumnsToState(ctx, &r.DataRecordClient, state, state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), newColumns)
-
-	state.Columns = convertColumnsToState(ctx, &r.DataRecordClient, state, state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), newColumns)
-	// state.Id = state.Id
-	// state.EnvironmentId = state.EnvironmentId
-	// state.TableLogicalName = state.TableLogicalName
+	columns, err := convertColumnsToState(ctx, &r.DataRecordClient, state, state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), newColumns)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to state: %s", err.Error()), err.Error())
+		return
+	}
+	state.Columns = *columns
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_data_record with table_name %s", r.ProviderTypeName, state.TableLogicalName.ValueString()))
 
-	//resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
@@ -193,11 +190,11 @@ func (r *DataRecordResource) Update(ctx context.Context, req resource.UpdateRequ
 	plan.TableLogicalName = types.StringValue(plan.TableLogicalName.ValueString())
 	plan.Columns = types.DynamicValue(plan.Columns)
 
-	var mapColumns map[string]interface{}
-
-	jsonColumns, _ := json.Marshal(plan.Columns.String())
-	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
-	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
+	mapColumns, err := convertResourceModelToMap(*plan)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to map: %s", err.Error()), err.Error())
+		return
+	}
 
 	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
@@ -223,13 +220,13 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 		return
 	}
 
-	var mapColumns map[string]interface{}
+	mapColumns, err := convertResourceModelToMap(*state)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to map: %s", err.Error()), err.Error())
+		return
+	}
 
-	jsonColumns, _ := json.Marshal(state.Columns.String())
-	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
-	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
-
-	err := r.DataRecordClient.DeleteDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
+	err = r.DataRecordClient.DeleteDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
@@ -242,27 +239,21 @@ func (r *DataRecordResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, currentState *DataRecordResourceModel,
-	environmentId string, tableLogicalName string, columns map[string]interface{}) types.Dynamic { // *DataRecordResourceModel {
+func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, currentState *DataRecordResourceModel, environmentId string, tableLogicalName string, columns map[string]interface{}) (*basetypes.DynamicValue, error) {
 	var objectType = map[string]attr.Type{
 		"table_logical_name": types.StringType,
 		"data_record_id":     types.StringType,
 	}
 
-	var old_columns map[string]interface{}
-	jsonColumns, _ := json.Marshal(currentState.Columns.String())
-	unquotedJsonColumns, _ := strconv.Unquote(string(jsonColumns))
-	json.Unmarshal([]byte(unquotedJsonColumns), &old_columns)
+	mapColumns, err := convertResourceModelToMap(*currentState)
+	if err != nil {
+		return nil, err
+	}
 
 	attributeTypes := make(map[string]attr.Type)
 	attributes := make(map[string]attr.Value)
 
-	for key, value := range old_columns {
-
-		if key == "@data.etag" {
-			continue
-		}
-
+	for key, value := range mapColumns {
 		switch value.(type) {
 		case bool:
 			v, ok := columns[key].(bool)
@@ -291,7 +282,10 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 		case map[string]interface{}:
 			v, ok := columns[fmt.Sprintf("_%s_value", key)].(string)
 			if ok {
-				entityLogicalName := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
+				entityLogicalName, _, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
+				if err != nil {
+					return nil, fmt.Errorf("error getting entity relation definition info: %s", err.Error())
+				}
 				dataRecordId := v
 
 				nestedObjectType := types.ObjectType{
@@ -315,19 +309,19 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 				AttrTypes: objectType,
 			}
 
-			relationMap, _ := apiClient.GetRelationData(ctx, currentState.Id.ValueString(), environmentId, tableLogicalName, key)
+			relationMap, err := apiClient.GetRelationData(ctx, currentState.Id.ValueString(), environmentId, tableLogicalName, key)
+			if err != nil {
+				return nil, fmt.Errorf("error getting relation data: %s", err.Error())
+			}
 
 			for _, rawItem := range relationMap {
 				item := rawItem.(map[string]interface{})
 
-				relationTableLogicalName := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
-				dataRecordId := ""
-
-				for itemKey, itemValue := range item {
-					if itemKey != "@odata.etag" && itemKey != "createdon" {
-						dataRecordId = itemValue.(string)
-					}
+				relationTableLogicalName, primaryIdFieldName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
+				if err != nil {
+					return nil, fmt.Errorf("error getting entity relation definition info: %s", err.Error())
 				}
+				dataRecordId := item[primaryIdFieldName].(string)
 
 				v, _ := types.ObjectValue(objectType, map[string]attr.Value{
 					"table_logical_name": types.StringValue(relationTableLogicalName),
@@ -348,12 +342,19 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 	}
 
 	columnField, _ := types.ObjectValue(attributeTypes, attributes)
+	result := types.DynamicValue(columnField)
+	return &result, nil
+}
 
-	//currentState.EnvironmentId = types.StringValue(environmentId)
-	//currentState.TableLogicalName = types.StringValue(tableLogicalName)
-	//currentState.Columns = types.DynamicValue(columnField)
-
-	//return currentState
-	return types.DynamicValue(columnField)
-
+func convertResourceModelToMap(plan DataRecordResourceModel) (mapColumns map[string]interface{}, err error) {
+	jsonColumns, err := json.Marshal(plan.Columns.String())
+	if err != nil {
+		return nil, err
+	}
+	unquotedJsonColumns, err := strconv.Unquote(string(jsonColumns))
+	if err != nil {
+		return nil, err
+	}
+	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
+	return mapColumns, nil
 }
