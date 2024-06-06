@@ -18,6 +18,8 @@ import (
 
 func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 
+	t.Setenv("TF_ACC", "1")
+
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,

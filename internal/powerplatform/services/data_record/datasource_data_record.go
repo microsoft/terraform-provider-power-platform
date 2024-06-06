@@ -252,7 +252,11 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	var elements = []attr.Value{}
 	for _, record := range records {
-		columns, err := convertColumnsToState2(ctx, &d.DataRecordClient, config.EnvironmentId.ValueString(), "systemuser", "systemuserid", record)
+
+		//TODO temporary code
+
+		///
+		columns, err := convertColumnsToState2(ctx, &d.DataRecordClient, config.EnvironmentId.ValueString(), "contact", "contactid", record)
 		if err != nil {
 			resp.Diagnostics.AddError("Failed to convert columns to state", err.Error())
 			return
@@ -294,6 +298,11 @@ func convertColumnsToState2(ctx context.Context, apiClient *DataRecordClient, en
 	attributes := make(map[string]attr.Value)
 
 	for key, value := range columns {
+
+		if key == "@odata.etag" {
+			continue
+		}
+
 		switch value.(type) {
 		case bool:
 			v, ok := columns[key].(bool)

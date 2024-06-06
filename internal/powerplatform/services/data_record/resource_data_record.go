@@ -159,11 +159,17 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	newState := convertColumnsToState(ctx, &r.DataRecordClient, state, state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), newColumns)
+	// newState := convertColumnsToState(ctx, &r.DataRecordClient, state, state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), newColumns)
+
+	state.Columns = convertColumnsToState(ctx, &r.DataRecordClient, state, state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), newColumns)
+	// state.Id = state.Id
+	// state.EnvironmentId = state.EnvironmentId
+	// state.TableLogicalName = state.TableLogicalName
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_data_record with table_name %s", r.ProviderTypeName, state.TableLogicalName.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
+	//resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
@@ -236,7 +242,8 @@ func (r *DataRecordResource) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, currentState *DataRecordResourceModel, environmentId string, tableLogicalName string, columns map[string]interface{}) *DataRecordResourceModel {
+func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, currentState *DataRecordResourceModel,
+	environmentId string, tableLogicalName string, columns map[string]interface{}) types.Dynamic { // *DataRecordResourceModel {
 	var objectType = map[string]attr.Type{
 		"table_logical_name": types.StringType,
 		"data_record_id":     types.StringType,
@@ -251,6 +258,11 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 	attributes := make(map[string]attr.Value)
 
 	for key, value := range old_columns {
+
+		if key == "@data.etag" {
+			continue
+		}
+
 		switch value.(type) {
 		case bool:
 			v, ok := columns[key].(bool)
@@ -297,10 +309,12 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 				attributes[key] = nestedObjectValue
 			}
 		case []interface{}:
-			setObjectValues := []attr.Value{}
-			var setObjectType = types.ObjectType{
+			var listTypes []attr.Type
+			var listValues []attr.Value
+			tupleElementType := types.ObjectType{
 				AttrTypes: objectType,
 			}
+
 			relationMap, _ := apiClient.GetRelationData(ctx, currentState.Id.ValueString(), environmentId, tableLogicalName, key)
 
 			for _, rawItem := range relationMap {
@@ -315,24 +329,31 @@ func convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, cur
 					}
 				}
 
-				setObjectValues = append(setObjectValues, types.ObjectValueMust(objectType,
-					map[string]attr.Value{
-						"table_logical_name": types.StringValue(relationTableLogicalName),
-						"data_record_id":     types.StringValue(dataRecordId),
-					}))
+				v, _ := types.ObjectValue(objectType, map[string]attr.Value{
+					"table_logical_name": types.StringValue(relationTableLogicalName),
+					"data_record_id":     types.StringValue(dataRecordId),
+				})
+				listValues = append(listValues, v)
+				listTypes = append(listTypes, tupleElementType)
 			}
 
-			setValue, _ := types.SetValue(setObjectType, setObjectValues)
-			attributes[key] = setValue
-			attributeTypes[key] = types.SetType{ElemType: setObjectType}
+			nestedObjectType := types.TupleType{
+				ElemTypes: listTypes,
+			}
+			nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
+
+			attributes[key] = nestedObjectValue
+			attributeTypes[key] = nestedObjectType
 		}
 	}
 
 	columnField, _ := types.ObjectValue(attributeTypes, attributes)
 
-	currentState.EnvironmentId = types.StringValue(environmentId)
-	currentState.TableLogicalName = types.StringValue(tableLogicalName)
-	currentState.Columns = types.DynamicValue(columnField)
+	//currentState.EnvironmentId = types.StringValue(environmentId)
+	//currentState.TableLogicalName = types.StringValue(tableLogicalName)
+	//currentState.Columns = types.DynamicValue(columnField)
 
-	return currentState
+	//return currentState
+	return types.DynamicValue(columnField)
+
 }

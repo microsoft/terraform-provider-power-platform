@@ -7,22 +7,66 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
 func BootstrapDataRecordTest(name string) string {
 	return `
-	resource "powerplatform_environment" "data_env" {
-		display_name     = "` + name + `"
-		location         = "europe"
-		environment_type = "Sandbox"
-		dataverse = {
-		  language_code     = "1033"
-		  currency_code     = "USD"
-		  security_group_id = "00000000-0000-0000-0000-000000000000"
-		}
-	  }
-	`
+// resource "powerplatform_environment" "data_env" {
+// 	display_name     = "` + name + `"
+// 	location         = "europe"
+// 	environment_type = "Sandbox"
+// 	dataverse = {
+// 	  language_code     = "1033"
+// 	  currency_code     = "USD"
+// 	  security_group_id = "00000000-0000-0000-0000-000000000000"
+// 	}
+//   }
+
+resource "powerplatform_data_record" "contact1" {
+	environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641"//powerplatform_environment.data_env.id
+	table_logical_name = "contact"
+	columns = {
+		contactid     = "00000000-0000-0000-0000-000000000001"
+		firstname     = "contact1"
+		lastname      = "contact1"
+
+		contact_customer_contacts = [
+			{
+			  table_logical_name = powerplatform_data_record.contact2.table_logical_name
+			  data_record_id     = powerplatform_data_record.contact2.columns.contactid
+			},
+			{
+			  table_logical_name = powerplatform_data_record.contact3.table_logical_name
+			  data_record_id     = powerplatform_data_record.contact3.columns.contactid
+			}
+		  ]
+	}
+}
+
+resource "powerplatform_data_record" "contact2" {
+	environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641"//powerplatform_environment.data_env.id
+	table_logical_name = "contact"
+	columns = {
+		contactid     = "00000000-0000-0000-0000-000000000002"
+		firstname     = "contact2"
+		lastname      = "contact2"
+	}
+}
+
+resource "powerplatform_data_record" "contact3" {
+	environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641"//powerplatform_environment.data_env.id
+	table_logical_name = "contact"
+	columns = {
+	  contactid = "00000000-0000-0000-0000-000000000003"
+	  firstname = "contact3"
+	  lastname  = "contact3"
+	}
+}
+
+`
 }
 
 func TestAccDataRecordDatasource_Validate_Read_Single_Record(t *testing.T) {
@@ -34,15 +78,53 @@ func TestAccDataRecordDatasource_Validate_Read_Single_Record(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig +
-					BootstrapDataRecordTest(mock_helpers.TestName()) + `
-				data "powerplatform_data_rows" "example_data_rows" {
-					environment_id = "838f76c8-a192-e59c-a835-089ad8cfb047"
-					entity_collection = "systemusers(1f70a364-5019-ef11-840b-002248ca35c3)"
-					return_total_rows_count = true
-				}
-				`,
-				Check: resource.ComposeAggregateTestCheckFunc(),
+				Config: TestsProviderConfig + BootstrapDataRecordTest("TODO") +
+					`
+				data "powerplatform_data_records" "data_query" {
+					environment_id = "a1e605fb-80ad-e1b2-bae0-f046efc0e641"//powerplatform_environment.data_env.id
+					entity_collection = "contacts(00000000-0000-0000-0000-000000000001)"
+					select = ["contactid", "firstname", "lastname"]
+					expand = toset([
+						{
+							navigation_property = "contact_customer_contacts"
+							select = ["contactid", "firstname", "lastname"]
+						},
+					])
+
+					depends_on = [ 
+						powerplatform_data_record.contact1, 
+						powerplatform_data_record.contact2,
+						powerplatform_data_record.contact3 
+					]
+				}`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("data.powerplatform_data_records.data_query", tfjsonpath.New("rows"),
+						knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.MapPartial(map[string]knownvalue.Check{
+								"@odata.context": knownvalue.NotNull(),
+								//"@odata.etag":    knownvalue.NotNull(),
+								"contactid":                 knownvalue.StringExact("00000000-0000-0000-0000-000000000001"),
+								"firstname":                 knownvalue.StringExact("contact1"),
+								"lastname":                  knownvalue.StringExact("contact1"),
+								"contact_customer_contacts": knownvalue.ListSizeExact(2),
+							}),
+						}),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.#", "1"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.0.contactid", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.0.firstname", "contact1"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.0.lastname", "contact1"),
+					resource.TestCheckNoResourceAttr("data.powerplatform_data_records.data_query", "rows.0.fullname1"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.0.contact_customer_contacts.#", "2"),
+
+					//resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.0.contact_customer_contacts.0.contactid", "00000000-0000-0000-0000-000000000001"),
+					//resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.0.contact_customer_contacts.1.contactid", "00000000-0000-0000-0000-000000000002"),
+
+				//resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "total_rows_count", "2"),
+				//resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "total_rows_count_limit_exceeded", "false"),
+				),
 			},
 		},
 	})

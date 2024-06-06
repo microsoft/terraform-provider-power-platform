@@ -10,35 +10,83 @@ provider "powerplatform" {
   use_cli = true
 }
 
-//https://orgda1371a4.crm17.dynamics.com/api/data/v9.2/savedqueries?$select=name,savedqueryid,returnedtypecode&$filter=returnedtypecode%20eq%20%27systemuser%27%20and%20name%20eq%20%27Enabled%20Users%27
-# data "powerplatform_data_records" "saved_view" {
-#   environment_id    = "838f76c8-a192-e59c-a835-089ad8cfb047"
-#   entity_collection = "userqueries"
-#   select            = ["name", "returnedtypecode"]
-#   //filter            = "returnedtypecode eq 'systemuser' and name eq 'Enabled Users'"
-#   //top               = 1
+
+
+# resource "powerplatform_data_record" "sub_business_unit_1" {
+#   environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+#   table_logical_name = "businessunit"
+#   columns = {
+#     name       = "sub buissness unit 1"
+#     costcenter = "cost center 1"
+
+#     parent_business_unit = {
+#       data_record_id     = powerplatform_data_record.main_business_unit.id
+#       table_logical_name = "businessunit"
+#     }
+#   }
 # }
 
-//https://orgda1371a4.crm17.dynamics.com/api/data/v9.2/systemusers?$select=fullname&$expand=systemuserroles_association($select=name),teammembership_association($select=name)
-data "powerplatform_data_records" "example_data_records" {
-  environment_id    = "838f76c8-a192-e59c-a835-089ad8cfb047"
-  entity_collection = "systemusers"
-  select            = ["fullname", "systemuserid"]
-  top               = 4
-  expand = [
-    {
-      navigation_property = "systemuserroles_association"
-      select              = ["roleid", "name"]
-      filter              = "name ne 'foo'"
-      top                 = 100
-      orderby             = "name desc"
-    },
-    {
-      navigation_property = "teammembership_association"
-      select              = ["teamid", "name"]
-      filter              = "name ne 'foo'"
-      top                 = 100
-      orderby             = "name desc"
-    }
-  ]
-}
+# resource "powerplatform_data_record" "sub_business_unit_2" {
+#   environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+#   table_logical_name = "businessunit"
+#   columns = {
+#     name       = "sub buissness unit 1"
+#     costcenter = "cost center 1"
+
+#     parent_business_unit = {
+#       data_record_id     = powerplatform_data_record.main_business_unit.id
+#       table_logical_name = "businessunit"
+#     }
+#   }
+# }
+
+# resource "powerplatform_data_record" "contact1" {
+#   environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+#   table_logical_name = "contact"
+#   columns = {
+#     contactid = "00000000-0000-0000-0000-000000000001"
+
+#   }
+# }
+
+# resource "powerplatform_data_record" "contact2" {
+#   environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+#   table_logical_name = "contact"
+#   columns = {
+#     contactid = "00000000-0000-0000-0000-000000000002"
+#     contact_customer_contacts = [
+#       {
+#         table_logical_name = "contact"
+#         data_record_id     = "00000000-0000-0000-0000-000000000001"
+#       }
+#     ]
+#   }
+# }
+
+# resource "powerplatform_data_record" "contact3" {
+#   environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+#   table_logical_name = "contact"
+#   columns = {
+#     contactid = "00000000-0000-0000-0000-000000000003"
+#     firstname = "contact3"
+#     lastname  = "contact3"
+#   }
+# }
+
+# data "powerplatform_data_records" "data_query" {
+#   environment_id    = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+#   entity_collection = "contacts(00000000-0000-0000-0000-000000000001)"
+#   select            = ["contactid", "firstname", "lastname"]
+#   expand = toset([
+#     {
+#       navigation_property = "contact_customer_contacts"
+#       select              = ["contactid", "firstname", "lastname"]
+#     },
+#   ])
+
+#   depends_on = [
+#     powerplatform_data_record.contact1,
+#     powerplatform_data_record.contact2,
+#     powerplatform_data_record.contact3
+#   ]
+# }
