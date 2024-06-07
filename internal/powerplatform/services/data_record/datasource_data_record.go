@@ -147,7 +147,7 @@ func (d *DataRecordDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 				Required: true,
 			},
 			"select":   selectListAttributeSchema,
-			"expand":   returnExpandSchema(5),
+			"expand":   returnExpandSchema(10),
 			"filter":   filterSchema,
 			"order_by": orderbySchema,
 			"top":      topSchema,
@@ -237,32 +237,37 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		resp.Diagnostics.AddError("Failed to build OData query", err.Error())
 	}
 
-	records, totalrecords, totalRecordsCountLimitExceeded, err := d.DataRecordClient.GetDataRecordsByODataQuery(ctx, config.EnvironmentId.ValueString(), query, headers)
+	queryRespnse, err := d.DataRecordClient.GetDataRecordsByODataQuery(ctx, config.EnvironmentId.ValueString(), query, headers)
+	println(query)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get data records", err.Error())
 		return
 	}
 
-	if totalrecords != nil {
-		state.TotalRowsCount = types.Int64Value(*totalrecords)
+	if queryRespnse.TotalReccord != nil {
+		state.TotalRowsCount = types.Int64Value(*queryRespnse.TotalReccord)
 	}
-	if totalRecordsCountLimitExceeded != nil {
-		state.TotalRowsCountLimitExceeded = types.BoolValue(*totalRecordsCountLimitExceeded)
+	if queryRespnse.TotalReccordLimitExceeded != nil {
+		state.TotalRowsCountLimitExceeded = types.BoolValue(*queryRespnse.TotalReccordLimitExceeded)
+	}
+
+	tableSingularName, err := d.DataRecordClient.GetTableSingularNameFromPlural(ctx, config.EnvironmentId.ValueString(), queryRespnse.TablePluralName)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Faied to get table singular name from '%s'", queryRespnse.TablePluralName), err.Error())
+		return
 	}
 
 	var elements = []attr.Value{}
-	for _, record := range records {
+	for _, record := range queryRespnse.Records {
 
-		//TODO temporary code
-
-		///
-		columns, err := convertColumnsToState2(ctx, &d.DataRecordClient, config.EnvironmentId.ValueString(), "contact", "contactid", record)
+		columns, err := d.convertColumnsToState(ctx, &d.DataRecordClient, config.EnvironmentId.ValueString(), *tableSingularName, record)
 		if err != nil {
 			resp.Diagnostics.AddError("Failed to convert columns to state", err.Error())
 			return
 		}
-		elements = append(elements, types.DynamicValue(columns))
-
+		if columns != nil {
+			elements = append(elements, types.DynamicValue(columns))
+		}
 	}
 
 	elementTypes := []attr.Type{}
@@ -280,29 +285,20 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 }
 
-func convertColumnsToState2(ctx context.Context, apiClient *DataRecordClient, environmentId, tableLogicalName, primaryFieldName string, columns map[string]interface{}) (*basetypes.ObjectValue, error) {
+func (d *DataRecordDataSource) convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, environmentId, tableLogicalName string, columns map[string]interface{}) (*basetypes.DynamicValue, error) {
+	if columns == nil {
+		return nil, nil
+	}
+
 	var objectType = map[string]attr.Type{
 		"table_logical_name": types.StringType,
 		"data_record_id":     types.StringType,
 	}
 
-	// var old_columns map[string]interface{}
-	// jsonColumns, _ := json.Marshal(columns)
-	// unquotedJsonColumns, err := strconv.Unquote(string(jsonColumns))
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// json.Unmarshal([]byte(unquotedJsonColumns), &old_columns)
-
 	attributeTypes := make(map[string]attr.Type)
 	attributes := make(map[string]attr.Value)
 
 	for key, value := range columns {
-
-		if key == "@odata.etag" {
-			continue
-		}
-
 		switch value.(type) {
 		case bool:
 			v, ok := columns[key].(bool)
@@ -331,7 +327,10 @@ func convertColumnsToState2(ctx context.Context, apiClient *DataRecordClient, en
 		case map[string]interface{}:
 			v, ok := columns[fmt.Sprintf("_%s_value", key)].(string)
 			if ok {
-				entityLogicalName := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
+				entityLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
+				if err != nil {
+					return nil, fmt.Errorf("error getting entity relation definition info: %s", err.Error())
+				}
 				dataRecordId := v
 
 				nestedObjectType := types.ObjectType{
@@ -349,41 +348,97 @@ func convertColumnsToState2(ctx context.Context, apiClient *DataRecordClient, en
 				attributes[key] = nestedObjectValue
 			}
 		case []interface{}:
-			setObjectValues := []attr.Value{}
-			var setObjectType = types.ObjectType{
-				AttrTypes: objectType,
-			}
-			recordId := columns[primaryFieldName]
-			relationMap, err := apiClient.GetRelationData(ctx, recordId.(string), environmentId, tableLogicalName, key)
-			if err != nil {
-				return nil, err
-			}
+			var listTypes []attr.Type
+			var listValues []attr.Value
+			for _, item := range columns[key].([]interface{}) {
 
-			for _, rawItem := range relationMap {
-				item := rawItem.(map[string]interface{})
-
-				relationTableLogicalName := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
-				dataRecordId := ""
-
-				for itemKey, itemValue := range item {
-					if itemKey != "@odata.etag" && itemKey != "createdon" {
-						dataRecordId = itemValue.(string)
-					}
+				typ, val, _ := d.buildObjectValueFromX(item.(map[string]interface{}))
+				tupleElementType := types.ObjectType{
+					AttrTypes: typ,
 				}
+				v, _ := types.ObjectValue(typ, val)
+				listValues = append(listValues, v)
+				listTypes = append(listTypes, tupleElementType)
 
-				setObjectValues = append(setObjectValues, types.ObjectValueMust(objectType,
-					map[string]attr.Value{
-						"table_logical_name": types.StringValue(relationTableLogicalName),
-						"data_record_id":     types.StringValue(dataRecordId),
-					}))
 			}
 
-			setValue, _ := types.SetValue(setObjectType, setObjectValues)
-			attributes[key] = setValue
-			attributeTypes[key] = types.SetType{ElemType: setObjectType}
+			nestedObjectType := types.TupleType{
+				ElemTypes: listTypes,
+			}
+			nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
+
+			attributes[key] = nestedObjectValue
+			attributeTypes[key] = nestedObjectType
 		}
 	}
 
 	columnField, _ := types.ObjectValue(attributeTypes, attributes)
-	return &columnField, nil
+	result := types.DynamicValue(columnField)
+	return &result, nil
+}
+
+func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]interface{}) (map[string]attr.Type, map[string]attr.Value, error) {
+
+	knownObjectType := map[string]attr.Type{}
+	knownObjectValue := map[string]attr.Value{}
+
+	for key, value := range columns {
+		switch value.(type) {
+		case bool:
+			v, ok := columns[key].(bool)
+			if ok {
+				knownObjectType[key] = types.BoolType
+				knownObjectValue[key] = types.BoolValue(v)
+			}
+		case int64:
+			v, ok := columns[key].(int64)
+			if ok {
+				knownObjectType[key] = types.Int64Type
+				knownObjectValue[key] = types.Int64Value(v)
+			}
+		case float64:
+			v, ok := columns[key].(float64)
+			if ok {
+				knownObjectType[key] = types.Float64Type
+				knownObjectValue[key] = types.Float64Value(v)
+			}
+		case string:
+			v, ok := columns[key].(string)
+			if ok {
+				knownObjectType[key] = types.StringType
+				knownObjectValue[key] = types.StringValue(v)
+			}
+		case map[string]interface{}:
+			panic("not implemented lookups!")
+			// v, ok := columns[fmt.Sprintf("_%s_value", key)].(string)
+			// if ok {
+			// }
+		case []interface{}:
+			var listTypes []attr.Type
+			var listValues []attr.Value
+			for _, item := range columns[key].([]interface{}) {
+
+				typ, val, _ := d.buildObjectValueFromX(item.(map[string]interface{}))
+				tupleElementType := types.ObjectType{
+					AttrTypes: typ,
+				}
+				v, _ := types.ObjectValue(typ, val)
+				listValues = append(listValues, v)
+				listTypes = append(listTypes, tupleElementType)
+
+			}
+
+			nestedObjectType := types.TupleType{
+				ElemTypes: listTypes,
+			}
+			nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
+
+			knownObjectType[key] = nestedObjectType
+			knownObjectValue[key] = nestedObjectValue
+
+		}
+
+	}
+
+	return knownObjectType, knownObjectValue, nil
 }
