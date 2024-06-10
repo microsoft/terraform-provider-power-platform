@@ -15,19 +15,19 @@ import (
 
 func BootstrapDataRecordTest(name string) string {
 	return `
-// resource "powerplatform_environment" "data_env" {
-// 	display_name     = "` + name + `"
-// 	location         = "europe"
-// 	environment_type = "Sandbox"
-// 	dataverse = {
-// 	  language_code     = "1033"
-// 	  currency_code     = "USD"
-// 	  security_group_id = "00000000-0000-0000-0000-000000000000"
-// 	}
-//   }
+resource "powerplatform_environment" "data_env" {
+	display_name     = "` + name + `"
+	location         = "europe"
+	environment_type = "Sandbox"
+	dataverse = {
+	  language_code     = "1033"
+	  currency_code     = "USD"
+	  security_group_id = "00000000-0000-0000-0000-000000000000"
+	}
+  }
 
 resource "powerplatform_data_record" "contact1" {
-  environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+  environment_id     = powerplatform_environment.data_env.id
   table_logical_name = "contact"
 
   columns = {
@@ -49,7 +49,7 @@ resource "powerplatform_data_record" "contact1" {
 }
 
 resource "powerplatform_data_record" "contact2" {
-  environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+  environment_id     = powerplatform_environment.data_env.id
   table_logical_name = "contact"
   columns = {
     contactid = "00000000-0000-0000-0000-000000000002"
@@ -66,7 +66,7 @@ resource "powerplatform_data_record" "contact2" {
 }
 
 resource "powerplatform_data_record" "contact3" {
-  environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+  environment_id     = powerplatform_environment.data_env.id
   table_logical_name = "contact"
   columns = {
     contactid = "00000000-0000-0000-0000-000000000003"
@@ -76,7 +76,7 @@ resource "powerplatform_data_record" "contact3" {
 }
 
 resource "powerplatform_data_record" "contact4" {
-  environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+  environment_id     = powerplatform_environment.data_env.id
   table_logical_name = "contact"
   columns = {
     contactid = "00000000-0000-0000-0000-000000000004"
@@ -94,7 +94,7 @@ resource "powerplatform_data_record" "contact4" {
 
 
 resource "powerplatform_data_record" "account1" {
-  environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+  environment_id     = powerplatform_environment.data_env.id
   table_logical_name = "account"
   columns = {
     accountid = "00000000-0000-0000-0000-000000000010"
@@ -109,7 +109,7 @@ resource "powerplatform_data_record" "account1" {
 }
 
 resource "powerplatform_data_record" "contact5" {
-  environment_id     = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+  environment_id     = powerplatform_environment.data_env.id
   table_logical_name = "contact"
   columns = {
     contactid = "00000000-0000-0000-0000-000000000005"
@@ -128,7 +128,7 @@ func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
-						environment_id    = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+						environment_id    = powerplatform_environment.data_env.id
 						entity_collection = "contacts"
 						filter            = "firstname eq 'contact1'"
 						select            = ["fullname","firstname","lastname"]
@@ -227,7 +227,7 @@ func TestAccDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.
 				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
-						environment_id    = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+						environment_id    = powerplatform_environment.data_env.id
 						entity_collection = "contacts(00000000-0000-0000-0000-000000000001)"
 						select            = ["fullname","firstname","lastname"]
 						expand = [
@@ -297,10 +297,9 @@ func TestAccDataRecordDatasource_Validate_Top(t *testing.T) {
 				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
-						environment_id    = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+						environment_id    = powerplatform_environment.data_env.id
 						entity_collection = "contacts"
 						select            = ["fullname","firstname","lastname"]
-						//Top = 2
 						return_total_rows_count = true
 					  
 						depends_on = [
@@ -324,9 +323,6 @@ func TestAccDataRecordDatasource_Validate_Top(t *testing.T) {
 }
 
 func TestAccDataRecordDatasource_Validate_Apply(t *testing.T) {
-
-	t.Setenv("TF_ACC", "1")
-
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
@@ -335,7 +331,7 @@ func TestAccDataRecordDatasource_Validate_Apply(t *testing.T) {
 				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
-						environment_id    = "a1e605fb-80ad-e1b2-bae0-f046efc0e641" //powerplatform_environment.data_env.id
+						environment_id    = powerplatform_environment.data_env.id
 						entity_collection = "contacts"
 						apply             = "groupby((statuscode),aggregate($count as count))"
 					  
@@ -359,225 +355,118 @@ func TestAccDataRecordDatasource_Validate_Apply(t *testing.T) {
 	})
 }
 
-func TestAccDataRecordDatasource_Validate_Create2(t *testing.T) {
-
-	t.Setenv("TF_ACC", "1")
-
+func TestAccDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
+					`
+					data "powerplatform_data_records" "data_query" {
+						environment_id    = powerplatform_environment.data_env.id
+						entity_collection = "contacts"
+						order_by             = "firstname desc, lastname desc"
+					  
+						depends_on = [
+						  powerplatform_data_record.contact1,
+						  powerplatform_data_record.contact2,
+						  powerplatform_data_record.contact3,
+						  powerplatform_data_record.contact4,
+						  powerplatform_data_record.contact5,
+						]
+					  }
+					`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.#", "5"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.0.firstname", "contact5"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.1.firstname", "contact4"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.2.firstname", "contact3"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.3.firstname", "contact2"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.4.firstname", "contact1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) + `
 				data "powerplatform_data_records" "saved_view" {
-					environment_id    = "838f76c8-a192-e59c-a835-089ad8cfb047"
+					environment_id    = powerplatform_environment.data_env.id
 					entity_collection = "savedqueries"
 					select            = ["name", "savedqueryid", "returnedtypecode"]
-					filter            = "returnedtypecode eq 'systemuser' and name eq 'Enabled Users'"
+					filter            = "returnedtypecode eq 'contact' and name eq 'All Contacts'"
 					top               = 1
+
+					depends_on = [
+						  powerplatform_data_record.contact1,
+						  powerplatform_data_record.contact2,
+						  powerplatform_data_record.contact3,
+						  powerplatform_data_record.contact4,
+						  powerplatform_data_record.contact5,
+					]
 				  }
 				  
-				  data "powerplatform_data_records" "example_data_records" {
-					environment_id    = "838f76c8-a192-e59c-a835-089ad8cfb047"
-					entity_collection = "systemusers"
+				  data "powerplatform_data_records" "data_query" {
+					environment_id    = powerplatform_environment.data_env.id
+					entity_collection = "contacts"
 					saved_query       = data.powerplatform_data_records.saved_view.rows[0].savedqueryid
-					select            = ["fullname", "internalemailaddress", "domainname"]
-					top               = 3
+					select            = ["fullname"]
 				  }
 				  
 				`,
-				Check: resource.ComposeAggregateTestCheckFunc(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.#", "5"),
+				),
 			},
 		},
 	})
 }
 
-func TestAccDataRecordDatasource_Validate_Create3(t *testing.T) {
-
-	t.Setenv("TF_ACC", "1")
-
+func TestAccDataRecordDatasource_Validate_UserQuer(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
-				data "powerplatform_data_rows" "example_data_rows" {
-					environment_id = "838f76c8-a192-e59c-a835-089ad8cfb047"
-					entity_collection = "systemusers"
-					select            = ["firstname", "lastname", "createdon"]
-					//top               = 2
-					return_total_rows_count = true
+				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) + `
+				resource "powerplatform_data_record" "userquery" {
+					environment_id     = powerplatform_environment.data_env.id
+					table_logical_name = "userquery"
+					columns = {
+						name             = "user_query_acceptance_test"
+						userqueryid      = "00000000-0000-0000-0000-000000000021"
+						fetchxml         = "<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" no-lock=\"false\" userqueryid=\"00000000-0000-0000-0000-000000000021\"><entity name=\"contact\"><attribute name=\"statecode\" /><attribute name=\"entityimage_url\" /><attribute name=\"fullname\" /><attribute name=\"contactid\" /></entity></fetch>"
+						querytype        = 0
+						returnedtypecode = "contact"
+						layoutxml        = "<grid name=\"resultset\" object=\"2\" jump=\"fullname\" select=\"1\" icon=\"false\" preview=\"1\"><row name=\"result\" id=\"contactid\"><cell name=\"fullname\" width=\"300\"/><cell name=\"emailaddress1\" width=\"150\"/></row></grid>"
+					}
 				}
-				`,
-				Check: resource.ComposeAggregateTestCheckFunc(),
-			},
-		},
-	})
-}
+				
+				data "powerplatform_data_records" "data_query" {
+				environment_id    = powerplatform_environment.data_env.id
+				entity_collection = "contacts"
+				user_query        = powerplatform_data_record.userquery.columns.userqueryid
+				select            = ["fullname", "firstname", "lastname"]
 
-func TestAccDataRecordDatasource_Validate_Create4(t *testing.T) {
-
-	t.Setenv("TF_ACC", "1")
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: TestsProviderConfig + `
-				data "powerplatform_data_records" "saved_view" {
-					environment_id    = "838f76c8-a192-e59c-a835-089ad8cfb047"
-					entity_collection = "savedqueries"
-					select            = ["name", "savedqueryid", "returnedtypecode"]
-					filter            = "returnedtypecode eq 'systemuser' and name eq 'Enabled Users'"
-					top               = 1
-				}
-				`,
-				Check: resource.ComposeAggregateTestCheckFunc(),
-			},
-		},
-	})
-}
-
-func TestAccDataRecordDatasource_Validate_Create5(t *testing.T) {
-
-	t.Setenv("TF_ACC", "1")
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: TestsProviderConfig + `
-				data "powerplatform_data_records" "example_data_records" {
-					environment_id    = "838f76c8-a192-e59c-a835-089ad8cfb047"
-					entity_collection = "systemusers"
-					apply             = "groupby((isdisabled),aggregate($count as count))"
-				}
-				`,
-				Check: resource.ComposeAggregateTestCheckFunc(),
-			},
-		},
-	})
-}
-
-func TestAccDataRecordDatasource_Validate_Create6(t *testing.T) {
-
-	t.Setenv("TF_ACC", "1")
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: TestsProviderConfig + `
-				data "powerplatform_data_records" "example_data_records" {
-					environment_id    = "838f76c8-a192-e59c-a835-089ad8cfb047"
-					entity_collection = "systemusers"
-					select            = ["internalemailaddress", "systemuserid"]
-					filter            = "internalemailaddress ne null"
-					order_by          = "internalemailaddress"
-					top               = 5
-				  }
-				`,
-				Check: resource.ComposeAggregateTestCheckFunc(),
-			},
-		},
-	})
-}
-
-func TestAccDataRecordDatasource_Validate_Create7(t *testing.T) {
-
-	t.Setenv("TF_ACC", "1")
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: TestsProviderConfig + `
-				data "powerplatform_data_records" "example_data_records" {
-					environment_id    = "838f76c8-a192-e59c-a835-089ad8cfb047"
-					entity_collection = "systemusers"
-					select            = ["fullname", "systemuserid"]
-					expand = [
-					  {
-						navigation_property = "systemuserroles_association"
-						select              = ["roleid", "name"]
-						// filter, select, orderby, top, expand
-					  },
-					  {
-						navigation_property = "teammembership_association"
-						select              = ["teamid", "name"]
-					  }
+				depends_on = [
+						powerplatform_data_record.contact1,
+						powerplatform_data_record.contact2,
+						powerplatform_data_record.contact3,
+						powerplatform_data_record.contact4,
+						powerplatform_data_record.contact5,
 					]
-				  }
+				}
 				`,
-				Check: resource.ComposeAggregateTestCheckFunc(),
-			},
-		},
-	})
-}
-
-func TestAccDataRecordDatasource_Validate_Create8(t *testing.T) {
-
-	t.Setenv("TF_ACC", "1")
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: TestsProviderConfig + `
-				data "powerplatform_data_records" "example_data_records" {
-					environment_id    = "838f76c8-a192-e59c-a835-089ad8cfb047"
-					entity_collection = "systemusers"
-					select            = ["fullname", "systemuserid"]
-					filter = "main eq 1"
-					expand = [
-					  {
-						navigation_property = "level1"
-						select              = ["l1", "l1"]
-						filter = "l1 eq 1"
-						expand = [
-						  {
-							navigation_property = "level2"
-							select              = ["l2", "l2"]
-							filter = "l2 eq 1"
-							expand = [
-							  {
-								navigation_property = "level3"
-								select              = ["l3", "l3"]
-								filter = "l3 eq 1"
-							  },
-							  {
-								navigation_property = "level3a"
-								select              = ["l3a", "l3a"]
-								filter = "l3a eq 1"
-							  },
-							]
-						  },
-						]
-					  },
-					  {
-						navigation_property = "teammembership_association"
-						select              = ["teamid", "name"]
-						fitler = "teamid eq 1"
-						expand = [
-							{
-								navigation_property = "teamroles_association"
-								select              = ["roleid", "name"]
-								filer = "roleid eq 1"
-								order_by = "name desc, roleid asc"
-								top = 2
-							}
-						]
-					  }
-					]
-				  }
-				`,
-				Check: resource.ComposeAggregateTestCheckFunc(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.#", "5"),
+				),
 			},
 		},
 	})
