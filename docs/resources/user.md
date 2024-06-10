@@ -4,9 +4,7 @@ page_title: "powerplatform_user Resource - powerplatform"
 subcategory: ""
 description: |-
   This resource associates a user to a Power Platform environment. Additional Resources:
-  
-  Add users to an environment https://learn.microsoft.com/power-platform/admin/add-users-to-environment
-  Overview of User Security https://learn.microsoft.com/power-platform/admin/grant-users-access
+  Add users to an environment https://learn.microsoft.com/power-platform/admin/add-users-to-environmentOverview of User Security https://learn.microsoft.com/power-platform/admin/grant-users-access
 ---
 
 # powerplatform_user (Resource)

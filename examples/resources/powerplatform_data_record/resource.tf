@@ -10,6 +10,12 @@ provider "powerplatform" {
   use_cli = true
 }
 
+variable "parent_business_unit_id" {
+  type        = string
+  description = "The parent business unit id"
+
+}
+
 resource "powerplatform_environment" "data_record_example_env" {
   display_name     = "powerplatform_data_record_example"
   location         = "europe"
