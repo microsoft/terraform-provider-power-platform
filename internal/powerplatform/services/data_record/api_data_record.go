@@ -346,11 +346,11 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 	}
 	for _, list := range manyToMany {
 		item := list.(map[string]interface{})
-		if item["Entity1NavigationPropertyName"] == relationLogicalName {
+		if item["Entity1NavigationPropertyName"] == relationLogicalName && item["Entity1LogicalName"] != entityLogicalName {
 			tableName = item["Entity1LogicalName"].(string)
 			break
 		}
-		if item["Entity2NavigationPropertyName"] == relationLogicalName {
+		if item["Entity2NavigationPropertyName"] == relationLogicalName && item["Entity2LogicalName"] != entityLogicalName {
 			tableName = item["Entity2LogicalName"].(string)
 			break
 		}
