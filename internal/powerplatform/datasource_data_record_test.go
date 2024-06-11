@@ -321,7 +321,7 @@ func TestAccDataRecordDatasource_Validate_Top(t *testing.T) {
 					  }
 					`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.#", "2"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.#", "5"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "total_rows_count", "5"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "total_rows_count_limit_exceeded", "false"),
 				),

@@ -231,14 +231,13 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 
 	query, headers, err := BuildODataQueryFromModel(&config)
-	tflog.Warn(ctx, fmt.Sprintf("Query: %s", query))
-	tflog.Warn(ctx, fmt.Sprintf("Headers: %v", headers))
+	tflog.Debug(ctx, fmt.Sprintf("Query: %s", query))
+	tflog.Debug(ctx, fmt.Sprintf("Headers: %v", headers))
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to build OData query", err.Error())
 	}
 
 	queryRespnse, err := d.DataRecordClient.GetDataRecordsByODataQuery(ctx, config.EnvironmentId.ValueString(), query, headers)
-	println(query)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get data records", err.Error())
 		return

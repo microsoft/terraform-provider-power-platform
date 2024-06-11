@@ -382,7 +382,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 					return nil, err
 				}
 
-				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId)
+				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("/%s(%s)", entityDefinition.LogicalCollectionName, dataRecordId)
 			}
 		} else if nestedMapList, ok := value.([]interface{}); ok {
 			delete(columns, key)
