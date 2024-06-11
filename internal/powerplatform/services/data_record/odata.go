@@ -50,6 +50,9 @@ func buildExpandODataQueryPart(model []ExpandModel) *string {
 
 		if expandQueryFilterString != nil {
 			expandQueryStrings = append(expandQueryStrings, fmt.Sprintf("%s(%s)", m.NavigationProperty.ValueString(), *expandQueryFilterString))
+		} else {
+			expandQueryStrings = append(expandQueryStrings, m.NavigationProperty.ValueString())
+
 		}
 	}
 
