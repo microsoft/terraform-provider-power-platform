@@ -27,7 +27,7 @@ resource "powerplatform_environment" "data_env" {
   }
 
 resource "powerplatform_data_record" "contact1" {
-  environment_id     = powerplatform_environment.data_env.id
+  environment_id     = powerplatform_environment.data_env.id 
   table_logical_name = "contact"
 
   columns = {
@@ -49,7 +49,7 @@ resource "powerplatform_data_record" "contact1" {
 }
 
 resource "powerplatform_data_record" "contact2" {
-  environment_id     = powerplatform_environment.data_env.id
+  environment_id     = powerplatform_environment.data_env.id 
   table_logical_name = "contact"
   columns = {
     contactid = "00000000-0000-0000-0000-000000000002"
@@ -66,7 +66,7 @@ resource "powerplatform_data_record" "contact2" {
 }
 
 resource "powerplatform_data_record" "contact3" {
-  environment_id     = powerplatform_environment.data_env.id
+  environment_id     = powerplatform_environment.data_env.id 
   table_logical_name = "contact"
   columns = {
     contactid = "00000000-0000-0000-0000-000000000003"
@@ -76,7 +76,7 @@ resource "powerplatform_data_record" "contact3" {
 }
 
 resource "powerplatform_data_record" "contact4" {
-  environment_id     = powerplatform_environment.data_env.id
+  environment_id     = powerplatform_environment.data_env.id 
   table_logical_name = "contact"
   columns = {
     contactid = "00000000-0000-0000-0000-000000000004"
@@ -94,7 +94,7 @@ resource "powerplatform_data_record" "contact4" {
 
 
 resource "powerplatform_data_record" "account1" {
-  environment_id     = powerplatform_environment.data_env.id
+  environment_id     = powerplatform_environment.data_env.id 
   table_logical_name = "account"
   columns = {
     accountid = "00000000-0000-0000-0000-000000000010"
@@ -148,6 +148,10 @@ func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 									  {
 										navigation_property = "contact_customer_accounts"
 										select              = ["fullname"]
+									  },
+									  {
+										navigation_property = "primarycontactid"
+										select              = ["fullname"]
 									  }
 									]
 								  }
@@ -190,6 +194,10 @@ func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 															0: knownvalue.MapExact(map[string]knownvalue.Check{
 																"contactid": knownvalue.StringExact("00000000-0000-0000-0000-000000000005"),
 																"fullname":  knownvalue.StringExact("contact5 contact5")}),
+														}),
+														"primarycontactid": knownvalue.ObjectExact(map[string]knownvalue.Check{
+															"contactid": knownvalue.StringExact("00000000-0000-0000-0000-000000000004"),
+															"fullname":  knownvalue.StringExact("contact4 contact4"),
 														}),
 													}),
 												}),
@@ -466,6 +474,69 @@ func TestAccDataRecordDatasource_Validate_UserQuer(t *testing.T) {
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.#", "5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
+					`
+					data "powerplatform_data_records" "data_query" {
+					environment_id    = powerplatform_environment.data_env.id
+					entity_collection = "accounts"
+					filter            = "accountid eq 00000000-0000-0000-0000-000000000010"
+					select            = ["name", "accountid", "owninguser"]
+					expand = [
+						{
+						navigation_property = "primarycontactid"
+						select              = ["contactid", "firstname", "lastname"],
+						},
+						{
+						navigation_property = "owningbusinessunit"
+						select              = ["createdon", "name"],
+						}
+					]
+					depends_on = [
+						powerplatform_data_record.contact1,
+						powerplatform_data_record.contact2,
+						powerplatform_data_record.contact3,
+						powerplatform_data_record.contact4,
+						powerplatform_data_record.contact5,
+						powerplatform_data_record.account1,
+						]
+					}
+				`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("data.powerplatform_data_records.data_query", tfjsonpath.New("rows"),
+						knownvalue.ListExact([]knownvalue.Check{
+							knownvalue.MapExact(map[string]knownvalue.Check{
+								"@odata.etag": knownvalue.NotNull(),
+								"accountid":   knownvalue.StringExact("00000000-0000-0000-0000-000000000010"),
+								"name":        knownvalue.StringExact("account1"),
+								"owningbusinessunit": knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"businessunitid": knownvalue.NotNull(),
+									"createdon":      knownvalue.NotNull(),
+									"name":           knownvalue.NotNull(),
+								}),
+								"primarycontactid": knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"contactid": knownvalue.StringExact("00000000-0000-0000-0000-000000000004"),
+									"firstname": knownvalue.StringExact("contact4"),
+									"lastname":  knownvalue.StringExact("contact4"),
+								}),
+							}),
+						}),
+					),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.#", "1"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_records.data_query", "rows.0.name", "account1"),
 				),
 			},
 		},

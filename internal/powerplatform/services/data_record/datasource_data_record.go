@@ -289,12 +289,6 @@ func (d *DataRecordDataSource) convertColumnsToState(ctx context.Context, apiCli
 	if columns == nil {
 		return nil, nil
 	}
-
-	var objectType = map[string]attr.Type{
-		"table_logical_name": types.StringType,
-		"data_record_id":     types.StringType,
-	}
-
 	attributeTypes := make(map[string]attr.Type)
 	attributes := make(map[string]attr.Value)
 
@@ -325,50 +319,17 @@ func (d *DataRecordDataSource) convertColumnsToState(ctx context.Context, apiCli
 				attributes[key] = types.StringValue(v)
 			}
 		case map[string]interface{}:
-			v, ok := columns[fmt.Sprintf("_%s_value", key)].(string)
-			if ok {
-				entityLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
-				if err != nil {
-					return nil, fmt.Errorf("error getting entity relation definition info: %s", err.Error())
-				}
-				dataRecordId := v
-
-				nestedObjectType := types.ObjectType{
-					AttrTypes: objectType,
-				}
-				nestedObjectValue, _ := types.ObjectValue(
-					objectType,
-					map[string]attr.Value{
-						"table_logical_name": types.StringValue(entityLogicalName),
-						"data_record_id":     types.StringValue(dataRecordId),
-					},
-				)
-
-				attributeTypes[key] = nestedObjectType
-				attributes[key] = nestedObjectValue
+			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]interface{}))
+			tupleElementType := types.ObjectType{
+				AttrTypes: typ,
 			}
+			v, _ := types.ObjectValue(typ, val)
+			attributes[key] = v
+			attributeTypes[key] = tupleElementType
 		case []interface{}:
-			var listTypes []attr.Type
-			var listValues []attr.Value
-			for _, item := range columns[key].([]interface{}) {
-
-				typ, val, _ := d.buildObjectValueFromX(item.(map[string]interface{}))
-				tupleElementType := types.ObjectType{
-					AttrTypes: typ,
-				}
-				v, _ := types.ObjectValue(typ, val)
-				listValues = append(listValues, v)
-				listTypes = append(listTypes, tupleElementType)
-
-			}
-
-			nestedObjectType := types.TupleType{
-				ElemTypes: listTypes,
-			}
-			nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
-
-			attributes[key] = nestedObjectValue
-			attributeTypes[key] = nestedObjectType
+			typeObj, valObj := d.buildExpandObject(columns[key].([]interface{}))
+			attributeTypes[key] = typeObj
+			attributes[key] = valObj
 		}
 	}
 
@@ -409,36 +370,39 @@ func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]interfac
 				knownObjectValue[key] = types.StringValue(v)
 			}
 		case map[string]interface{}:
-			panic("not implemented lookups!")
-			// v, ok := columns[fmt.Sprintf("_%s_value", key)].(string)
-			// if ok {
-			// }
+			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]interface{}))
+			tupleElementType := types.ObjectType{
+				AttrTypes: typ,
+			}
+			v, _ := types.ObjectValue(typ, val)
+			knownObjectValue[key] = v
+			knownObjectType[key] = tupleElementType
 		case []interface{}:
-			var listTypes []attr.Type
-			var listValues []attr.Value
-			for _, item := range columns[key].([]interface{}) {
-
-				typ, val, _ := d.buildObjectValueFromX(item.(map[string]interface{}))
-				tupleElementType := types.ObjectType{
-					AttrTypes: typ,
-				}
-				v, _ := types.ObjectValue(typ, val)
-				listValues = append(listValues, v)
-				listTypes = append(listTypes, tupleElementType)
-
-			}
-
-			nestedObjectType := types.TupleType{
-				ElemTypes: listTypes,
-			}
-			nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
-
-			knownObjectType[key] = nestedObjectType
-			knownObjectValue[key] = nestedObjectValue
-
+			typeObj, valObj := d.buildExpandObject(columns[key].([]interface{}))
+			knownObjectValue[key] = valObj
+			knownObjectType[key] = typeObj
 		}
+	}
+	return knownObjectType, knownObjectValue, nil
+}
+
+func (d *DataRecordDataSource) buildExpandObject(items []interface{}) (basetypes.TupleType, basetypes.TupleValue) {
+	var listTypes []attr.Type
+	var listValues []attr.Value
+	for _, item := range items {
+
+		typ, val, _ := d.buildObjectValueFromX(item.(map[string]interface{}))
+		tupleElementType := types.ObjectType{
+			AttrTypes: typ,
+		}
+		v, _ := types.ObjectValue(typ, val)
+		listValues = append(listValues, v)
+		listTypes = append(listTypes, tupleElementType)
 
 	}
-
-	return knownObjectType, knownObjectValue, nil
+	nestedObjectType := types.TupleType{
+		ElemTypes: listTypes,
+	}
+	nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
+	return nestedObjectType, nestedObjectValue
 }

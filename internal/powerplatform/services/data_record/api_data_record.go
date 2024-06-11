@@ -153,13 +153,18 @@ func (client *DataRecordClient) GetDataRecordsByODataQuery(ctx context.Context, 
 		records = append(records, response)
 	}
 
+	pluralName := strings.Split(response["@odata.context"].(string), "#")[1]
+	if index := strings.IndexAny(pluralName, "(/"); index != -1 {
+		pluralName = pluralName[:index]
+	}
+
 	return &ODataQueryResponse{
 		Records:                   records,
 		TotalReccord:              totalRecords,
 		TotalReccordLimitExceeded: totalRecordsCountLimitExceeded,
 		TableMetadataUrl:          response["@odata.context"].(string),
-		//url will be as example: https://org.crm4.dynamics.com/api/data/v9.2/$metadata#tablepluralname
-		TablePluralName: strings.Split(strings.Split(response["@odata.context"].(string), "#")[1], "(")[0],
+		//url will be as example: https://org.crm4.dynamics.com/api/data/v9.2/$metadata#tablepluralname/$entity
+		TablePluralName: pluralName,
 	}, nil
 }
 
@@ -275,10 +280,14 @@ func (client *DataRecordClient) GetTableSingularNameFromPlural(ctx context.Conte
 	json.Unmarshal(response.BodyAsBytes, &mapResponse)
 
 	var result string
-	if mapResponse["value"] != nil {
+	if mapResponse["value"] != nil && len(mapResponse["value"].([]interface{})) > 0 &&
+		mapResponse["value"].([]interface{})[0].(map[string]interface{}) != nil &&
+		mapResponse["value"].([]interface{})[0].(map[string]interface{})["LogicalName"] != nil {
 		result = mapResponse["value"].([]interface{})[0].(map[string]interface{})["LogicalName"].(string)
-	} else {
+	} else if mapResponse["LogicalName"] != nil {
 		result = mapResponse["LogicalName"].(string)
+	} else {
+		return nil, fmt.Errorf("logicalName field not found in result when retrieving table singular name")
 	}
 	return &result, nil
 }
