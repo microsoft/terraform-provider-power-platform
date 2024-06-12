@@ -182,9 +182,9 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	useOidc := false
-	_, envUseOidcExists := os.LookupEnv("POWER_PLATFORM_USE_OIDC")
+	_, envUseOidc := os.LookupEnv("POWER_PLATFORM_USE_OIDC")
 	if config.UseOidc.IsNull() {
-		useOidc = envUseOidcExists
+		useOidc = envUseOidc
 	} else {
 		useOidc = config.UseOidc.ValueBool()
 	}
