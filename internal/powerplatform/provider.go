@@ -182,9 +182,9 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	useCli := false
-	_, envUseCliExists := os.LookupEnv("POWER_PLATFORM_USE_CLI")
+	_, envUseCli := os.LookupEnv("POWER_PLATFORM_USE_CLI")
 	if config.UseCli.IsNull() {
-		useCli = envUseCliExists
+		useCli = envUseCli
 	} else {
 		useCli = config.UseCli.ValueBool()
 	}
