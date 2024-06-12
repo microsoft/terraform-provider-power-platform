@@ -228,5 +228,5 @@ func (r *BillingPolicyEnvironmentResource) Delete(ctx context.Context, req resou
 }
 
 func (r *BillingPolicyEnvironmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("billing_policy_id"), req, resp)
 }
