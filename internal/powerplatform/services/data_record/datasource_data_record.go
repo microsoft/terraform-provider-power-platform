@@ -243,11 +243,11 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	if queryRespnse.TotalReccord != nil {
-		state.TotalRowsCount = types.Int64Value(*queryRespnse.TotalReccord)
+	if queryRespnse.TotalRecord != nil {
+		state.TotalRowsCount = types.Int64Value(*queryRespnse.TotalRecord)
 	}
-	if queryRespnse.TotalReccordLimitExceeded != nil {
-		state.TotalRowsCountLimitExceeded = types.BoolValue(*queryRespnse.TotalReccordLimitExceeded)
+	if queryRespnse.TotalRecordLimitExceeded != nil {
+		state.TotalRowsCountLimitExceeded = types.BoolValue(*queryRespnse.TotalRecordLimitExceeded)
 	}
 
 	tableSingularName, err := d.DataRecordClient.GetTableSingularNameFromPlural(ctx, config.EnvironmentId.ValueString(), queryRespnse.TablePluralName)

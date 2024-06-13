@@ -17,18 +17,8 @@ func BuildODataQueryFromModel(model *DataRecordListDataSourceModel) (string, map
 	appendQuery(&resultQuery, buildODataFilterPart(model.Filter.ValueStringPointer()))
 	appendQuery(&resultQuery, buildOdataApplyPart(model.Apply.ValueStringPointer()))
 	appendQuery(&resultQuery, buildODataOrderByPart(model.OrderBy.ValueStringPointer()))
-
-	if model.Top.ValueInt64Pointer() != nil {
-		topString := strconv.Itoa(int(*model.Top.ValueInt64Pointer()))
-		appendQuery(&resultQuery, buildODataTopPart(&topString))
-	}
-
-	if model.ReturnTotalRowsCount.ValueBoolPointer() != nil && *model.ReturnTotalRowsCount.ValueBoolPointer() {
-		headers["Prefer"] = "odata.include-annotations=\"Microsoft.Dynamics.CRM.totalrecordcount,Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded\""
-		countTrueString := "$count=true"
-		appendQuery(&resultQuery, &countTrueString)
-	}
-
+	appendQuery(&resultQuery, buildODataTopPart(model.Top.ValueInt64Pointer()))
+	appendQuery(&resultQuery, buildTotalRowsCountPart(headers, model.ReturnTotalRowsCount.ValueBoolPointer()))
 	appendQuery(&resultQuery, buildExpandODataQueryPart(model.Expand))
 
 	if len(resultQuery) > 0 {
@@ -36,6 +26,15 @@ func BuildODataQueryFromModel(model *DataRecordListDataSourceModel) (string, map
 	} else {
 		return model.EntityCollection.ValueString(), headers, nil
 	}
+}
+
+func buildTotalRowsCountPart(headers map[string]string, returnTotalRowsCount *bool) *string {
+	if returnTotalRowsCount != nil && *returnTotalRowsCount {
+		headers["Prefer"] = "odata.include-annotations=\"Microsoft.Dynamics.CRM.totalrecordcount,Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded\""
+		countTrueString := "$count=true"
+		return &countTrueString
+	}
+	return nil
 }
 
 func buildExpandODataQueryPart(model []ExpandModel) *string {
@@ -57,10 +56,7 @@ func buildExpandODataQueryPart(model []ExpandModel) *string {
 	}
 
 	if len(expandQueryStrings) > 0 {
-		result := ""
-		for i := 0; i < len(expandQueryStrings); i++ {
-			result += fmt.Sprintf("%s,", expandQueryStrings[i])
-		}
+		result := strings.Join(expandQueryStrings, ",")
 		result = "$expand=" + strings.TrimSuffix(result, ",")
 		return &result
 	}
@@ -89,15 +85,12 @@ func buildExpandFilterQueryPart(model *ExpandModel, subExpandValueString *string
 		resultQuery += *orderByString
 	}
 
-	if model.Top.ValueInt64Pointer() != nil {
-		top := strconv.Itoa(int(*model.Top.ValueInt64Pointer()))
-		topString := buildODataTopPart(&top)
-		if topString != nil {
-			if len(resultQuery) > 0 {
-				resultQuery += ";"
-			}
-			resultQuery += *topString
+	topString := buildODataTopPart(model.Top.ValueInt64Pointer())
+	if topString != nil {
+		if len(resultQuery) > 0 {
+			resultQuery += ";"
 		}
+		resultQuery += *topString
 	}
 
 	if subExpandValueString != nil {
@@ -124,10 +117,7 @@ func appendQuery(query, part *string) {
 func buildODataSelectPart(selectPart []string) *string {
 	resultQuery := ""
 	if len(selectPart) > 0 {
-		resultQuery = fmt.Sprintf("$select=%s", selectPart[0])
-		for i := 1; i < len(selectPart); i++ {
-			resultQuery = fmt.Sprintf("%s,%s", resultQuery, selectPart[i])
-		}
+		resultQuery = "$select=" + strings.Join(selectPart, ",")
 	}
 	if resultQuery == "" {
 		return nil
@@ -161,10 +151,11 @@ func buildODataOrderByPart(orderBy *string) *string {
 	return &resultQuery
 }
 
-func buildODataTopPart(top *string) *string {
+func buildODataTopPart(top *int64) *string {
 	resultQuery := ""
 	if top != nil {
-		resultQuery = fmt.Sprintf("$top=%s", *top)
+		topString := strconv.Itoa(int(*top))
+		resultQuery = fmt.Sprintf("$top=%s", topString)
 	}
 	if resultQuery == "" {
 		return nil

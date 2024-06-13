@@ -159,21 +159,21 @@ func (client *DataRecordClient) GetDataRecordsByODataQuery(ctx context.Context, 
 	}
 
 	return &ODataQueryResponse{
-		Records:                   records,
-		TotalReccord:              totalRecords,
-		TotalReccordLimitExceeded: totalRecordsCountLimitExceeded,
-		TableMetadataUrl:          response["@odata.context"].(string),
+		Records:                  records,
+		TotalRecord:              totalRecords,
+		TotalRecordLimitExceeded: totalRecordsCountLimitExceeded,
+		TableMetadataUrl:         response["@odata.context"].(string),
 		//url will be as example: https://org.crm4.dynamics.com/api/data/v9.2/$metadata#tablepluralname/$entity
 		TablePluralName: pluralName,
 	}, nil
 }
 
 type ODataQueryResponse struct {
-	Records                   []map[string]interface{}
-	TotalReccord              *int64
-	TotalReccordLimitExceeded *bool
-	TableMetadataUrl          string
-	TablePluralName           string
+	Records                  []map[string]interface{}
+	TotalRecord              *int64
+	TotalRecordLimitExceeded *bool
+	TableMetadataUrl         string
+	TablePluralName          string
 }
 
 func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId, environmentId, tableName string) (map[string]interface{}, error) {
