@@ -184,5 +184,5 @@ func (r *EnvironmentApplicationPackageInstallResource) Delete(ctx context.Contex
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("application_name"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
