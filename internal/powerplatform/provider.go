@@ -185,7 +185,6 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	oidcRequestUrl := ""
 	envOidcRequestUrl := MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"})
 	if config.OidcRequestUrl.IsNull() {
-		tflog.Debug(ctx, "OIDC request URL environment variable is null")
 		oidcRequestUrl = envOidcRequestUrl
 	} else {
 		oidcRequestUrl = config.OidcRequestUrl.ValueString()
