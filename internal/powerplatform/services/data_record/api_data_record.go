@@ -330,8 +330,6 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 		return nil, fmt.Errorf("no entity record id returned from the API")
 	}
 
-	//result.Id = parseLocationHeader(response, environmentUrl, entityDefinition)
-
 	err = applyRelations(ctx, client, relations, environmentUrl, result.Id, entityDefinition)
 	if err != nil {
 		return nil, err
@@ -396,13 +394,6 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 
 	return nil
 }
-
-// func parseLocationHeader(response *api.ApiHttpResponse, environmentUrl string, entityDefinition *EntityDefinitionsDto) string {
-// 	locationHeader := response.GetHeader(constants.HEADER_LOCATION)
-// 	locationHeader = strings.TrimPrefix(locationHeader, fmt.Sprintf("%s/api/data/%s/%s(", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName))
-// 	locationHeader = strings.TrimSuffix(locationHeader, ")")
-// 	return locationHeader
-// }
 
 func getTableLogicalNameAndDataRecordIdFromMap(nestedMap map[string]interface{}) (string, string, error) {
 	tableLogicalName, ok := nestedMap["table_logical_name"].(string)
