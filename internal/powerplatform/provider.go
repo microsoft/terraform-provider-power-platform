@@ -187,8 +187,9 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		useOidc = envUseOidc
 	} else {
 		useOidc = config.UseOidc.ValueBool()
+	}
 
-  useCli := false
+	useCli := false
 	_, envUseCli := os.LookupEnv("POWER_PLATFORM_USE_CLI")
 	if config.UseCli.IsNull() {
 		useCli = envUseCli
