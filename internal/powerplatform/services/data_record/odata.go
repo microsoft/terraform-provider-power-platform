@@ -68,21 +68,22 @@ func buildExpandFilterQueryPart(model *ExpandModel, subExpandValueString *string
 
 	selectString := buildODataSelectPart(model.Select)
 	if selectString != nil {
-		resultQuery += *selectString
+		resultQuery = strings.Join([]string{resultQuery, *selectString}, "")
 	}
 	filterString := buildODataFilterPart(model.Filter.ValueStringPointer())
 	if filterString != nil {
 		if len(resultQuery) > 0 {
 			resultQuery += ";"
 		}
-		resultQuery += *filterString
+		resultQuery = strings.Join([]string{resultQuery, *filterString}, "")
 	}
 	orderByString := buildODataOrderByPart(model.OrderBy.ValueStringPointer())
 	if orderByString != nil {
 		if len(resultQuery) > 0 {
 			resultQuery += ";"
+
 		}
-		resultQuery += *orderByString
+		resultQuery = strings.Join([]string{resultQuery, *orderByString}, "")
 	}
 
 	topString := buildODataTopPart(model.Top.ValueInt64Pointer())
@@ -90,14 +91,13 @@ func buildExpandFilterQueryPart(model *ExpandModel, subExpandValueString *string
 		if len(resultQuery) > 0 {
 			resultQuery += ";"
 		}
-		resultQuery += *topString
+		resultQuery = strings.Join([]string{resultQuery, *topString}, "")
 	}
-
 	if subExpandValueString != nil {
 		if len(resultQuery) > 0 {
 			resultQuery += ";"
 		}
-		resultQuery += *subExpandValueString
+		resultQuery = strings.Join([]string{resultQuery, *subExpandValueString}, "")
 	}
 	if resultQuery == "" {
 		return nil
@@ -110,14 +110,14 @@ func appendQuery(query, part *string) {
 		if len(*query) > 0 {
 			*query += "&"
 		}
-		*query += *part
+		*query = strings.Join([]string{*query, *part}, "")
 	}
 }
 
 func buildODataSelectPart(selectPart []string) *string {
 	resultQuery := ""
 	if len(selectPart) > 0 {
-		resultQuery = "$select=" + strings.Join(selectPart, ",")
+		resultQuery = "$select=" + url.QueryEscape(strings.Join(selectPart, ","))
 	}
 	if resultQuery == "" {
 		return nil
@@ -128,9 +128,7 @@ func buildODataSelectPart(selectPart []string) *string {
 func buildODataFilterPart(filter *string) *string {
 	resultQuery := ""
 	if filter != nil {
-		encoded := url.Values{}
-		encoded.Add("filter", *filter)
-		resultQuery += "$" + encoded.Encode()
+		resultQuery = "$filter=" + url.QueryEscape(*filter)
 	}
 	if resultQuery == "" {
 		return nil
@@ -141,9 +139,7 @@ func buildODataFilterPart(filter *string) *string {
 func buildODataOrderByPart(orderBy *string) *string {
 	resultQuery := ""
 	if orderBy != nil {
-		encoded := url.Values{}
-		encoded.Add("orderby", *orderBy)
-		resultQuery += "$" + encoded.Encode()
+		resultQuery = "$orderby=" + url.QueryEscape(*orderBy)
 	}
 	if resultQuery == "" {
 		return nil
@@ -154,8 +150,7 @@ func buildODataOrderByPart(orderBy *string) *string {
 func buildODataTopPart(top *int64) *string {
 	resultQuery := ""
 	if top != nil {
-		topString := strconv.Itoa(int(*top))
-		resultQuery = fmt.Sprintf("$top=%s", topString)
+		resultQuery = "$top=" + url.QueryEscape(strconv.Itoa(int(*top)))
 	}
 	if resultQuery == "" {
 		return nil
@@ -166,9 +161,7 @@ func buildODataTopPart(top *int64) *string {
 func buildOdataApplyPart(apply *string) *string {
 	resultQuery := ""
 	if apply != nil {
-		encoded := url.Values{}
-		encoded.Add("apply", *apply)
-		resultQuery += "$" + encoded.Encode()
+		resultQuery = "$apply=" + url.QueryEscape(*apply)
 	}
 	if resultQuery == "" {
 		return nil

@@ -236,6 +236,7 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to build OData query", err.Error())
 	}
+	tflog.Debug(ctx, fmt.Sprintf("Query: %s", query))
 
 	queryRespnse, err := d.DataRecordClient.GetDataRecordsByODataQuery(ctx, config.EnvironmentId.ValueString(), query, headers)
 	if err != nil {
