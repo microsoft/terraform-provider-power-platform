@@ -1,0 +1,8 @@
+{
+    "@odata.context": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#Collection($ref)",
+    "value": [
+        {
+            "@odata.id": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts(00000000-0000-0000-0000-000000000010)"
+        }
+    ]
+}

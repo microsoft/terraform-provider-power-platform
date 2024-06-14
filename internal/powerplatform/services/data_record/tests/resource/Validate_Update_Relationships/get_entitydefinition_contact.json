@@ -1,0 +1,356 @@
+{
+    "@odata.context": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#EntityDefinitions/$entity",
+    "ActivityTypeMask": 0,
+    "AutoRouteToOwnerQueue": false,
+    "CanTriggerWorkflow": true,
+    "EntityHelpUrlEnabled": false,
+    "EntityHelpUrl": null,
+    "IsDocumentManagementEnabled": false,
+    "IsOneNoteIntegrationEnabled": false,
+    "IsInteractionCentricEnabled": true,
+    "IsKnowledgeManagementEnabled": false,
+    "IsSLAEnabled": false,
+    "IsBPFEntity": false,
+    "IsDocumentRecommendationsEnabled": false,
+    "IsMSTeamsIntegrationEnabled": false,
+    "SettingOf": null,
+    "DataProviderId": null,
+    "DataSourceId": null,
+    "AutoCreateAccessTeams": false,
+    "IsActivity": false,
+    "IsActivityParty": true,
+    "IsRetrieveAuditEnabled": false,
+    "IsRetrieveMultipleAuditEnabled": false,
+    "IsArchivalEnabled": false,
+    "IsRetentionEnabled": false,
+    "IsAvailableOffline": true,
+    "IsChildEntity": false,
+    "IsAIRUpdated": true,
+    "IconLargeName": null,
+    "IconMediumName": null,
+    "IconSmallName": null,
+    "IconVectorName": null,
+    "IsCustomEntity": false,
+    "IsBusinessProcessEnabled": true,
+    "SyncToExternalSearchIndex": true,
+    "IsOptimisticConcurrencyEnabled": true,
+    "ChangeTrackingEnabled": true,
+    "IsImportable": true,
+    "IsIntersect": false,
+    "IsManaged": true,
+    "IsEnabledForCharts": true,
+    "IsEnabledForTrace": false,
+    "IsValidForAdvancedFind": true,
+    "DaysSinceRecordLastModified": 10,
+    "MobileOfflineFilters": "\n\t\t<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"false\">\n\t\t\t<entity name=\"contact\">\n\t\t\t\t<filter type=\"and\">\n\t\t\t\t\t<condition attribute=\"modifiedon\" operator=\"last-x-days\" value=\"10\"/>\n\t\t\t\t</filter>\n\t\t\t</entity>\n\t\t</fetch>\n\t\t",
+    "IsReadingPaneEnabled": true,
+    "IsQuickCreateEnabled": true,
+    "LogicalName": "contact",
+    "ObjectTypeCode": 2,
+    "OwnershipType": "UserOwned",
+    "PrimaryNameAttribute": "fullname",
+    "PrimaryImageAttribute": "entityimage",
+    "PrimaryIdAttribute": "contactid",
+    "RecurrenceBaseEntityLogicalName": null,
+    "ReportViewName": "FilteredContact",
+    "SchemaName": "Contact",
+    "IntroducedVersion": "5.0.0.0",
+    "IsStateModelAware": true,
+    "EnforceStateTransitions": false,
+    "ExternalName": null,
+    "EntityColor": "#005088",
+    "LogicalCollectionName": "contacts",
+    "ExternalCollectionName": null,
+    "CollectionSchemaName": "Contacts",
+    "EntitySetName": "contacts",
+    "IsEnabledForExternalChannels": true,
+    "IsPrivate": false,
+    "UsesBusinessDataLabelTable": false,
+    "IsLogicalEntity": false,
+    "HasNotes": true,
+    "HasActivities": true,
+    "HasFeedback": true,
+    "IsSolutionAware": false,
+    "CreatedOn": "1900-01-01T00:00:00Z",
+    "ModifiedOn": "2024-06-01T02:50:48Z",
+    "HasEmailAddresses": true,
+    "OwnerId": null,
+    "OwnerIdType": 8,
+    "OwningBusinessUnit": null,
+    "TableType": "Standard",
+    "MetadataId": "608861bc-50a4-4c5f-a02c-21fe1943e2cf",
+    "HasChanged": null,
+    "Description": {
+        "LocalizedLabels": [
+            {
+                "Label": "Person with whom a business unit has a relationship, such as customer, supplier, and colleague.",
+                "LanguageCode": 1033,
+                "IsManaged": true,
+                "MetadataId": "b99709b3-2241-db11-898a-0007e9e17ebd",
+                "HasChanged": null
+            }
+        ],
+        "UserLocalizedLabel": {
+            "Label": "Person with whom a business unit has a relationship, such as customer, supplier, and colleague.",
+            "LanguageCode": 1033,
+            "IsManaged": true,
+            "MetadataId": "b99709b3-2241-db11-898a-0007e9e17ebd",
+            "HasChanged": null
+        }
+    },
+    "DisplayCollectionName": {
+        "LocalizedLabels": [
+            {
+                "Label": "Contacts",
+                "LanguageCode": 1033,
+                "IsManaged": true,
+                "MetadataId": "bb9709b3-2241-db11-898a-0007e9e17ebd",
+                "HasChanged": null
+            }
+        ],
+        "UserLocalizedLabel": {
+            "Label": "Contacts",
+            "LanguageCode": 1033,
+            "IsManaged": true,
+            "MetadataId": "bb9709b3-2241-db11-898a-0007e9e17ebd",
+            "HasChanged": null
+        }
+    },
+    "DisplayName": {
+        "LocalizedLabels": [
+            {
+                "Label": "Contact",
+                "LanguageCode": 1033,
+                "IsManaged": true,
+                "MetadataId": "ba9709b3-2241-db11-898a-0007e9e17ebd",
+                "HasChanged": null
+            }
+        ],
+        "UserLocalizedLabel": {
+            "Label": "Contact",
+            "LanguageCode": 1033,
+            "IsManaged": true,
+            "MetadataId": "ba9709b3-2241-db11-898a-0007e9e17ebd",
+            "HasChanged": null
+        }
+    },
+    "IsAuditEnabled": {
+        "Value": false,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifyauditsettings"
+    },
+    "IsValidForQueue": {
+        "Value": false,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifyqueuesettings"
+    },
+    "IsConnectionsEnabled": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifyconnectionsettings"
+    },
+    "IsCustomizable": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "iscustomizable"
+    },
+    "IsRenameable": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "isrenameable"
+    },
+    "IsMappable": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "ismappable"
+    },
+    "IsDuplicateDetectionEnabled": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifyduplicatedetectionsettings"
+    },
+    "CanCreateAttributes": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "cancreateattributes"
+    },
+    "CanCreateForms": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "cancreateforms"
+    },
+    "CanCreateViews": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "cancreateviews"
+    },
+    "CanCreateCharts": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "cancreatecharts"
+    },
+    "CanBeRelatedEntityInRelationship": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canberelatedentityinrelationship"
+    },
+    "CanBePrimaryEntityInRelationship": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canbeprimaryentityinrelationship"
+    },
+    "CanBeInManyToMany": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canbeinmanytomany"
+    },
+    "CanBeInCustomEntityAssociation": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canbeincustomentityassociation"
+    },
+    "CanEnableSyncToExternalSearchIndex": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canenablesynctoexternalsearchindex"
+    },
+    "CanModifyAdditionalSettings": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifyadditionalsettings"
+    },
+    "CanChangeHierarchicalRelationship": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canchangehierarchicalrelationship"
+    },
+    "CanChangeTrackingBeEnabled": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canchangetrackingbeenabled"
+    },
+    "IsMailMergeEnabled": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifymailmergesettings"
+    },
+    "IsVisibleInMobile": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifymobilevisibility"
+    },
+    "IsVisibleInMobileClient": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifymobileclientvisibility"
+    },
+    "IsReadOnlyInMobileClient": {
+        "Value": false,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifymobileclientreadonly"
+    },
+    "IsOfflineInMobileClient": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifymobileclientoffline"
+    },
+    "Privileges": [
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvCreateContact",
+            "PrivilegeId": "a8bff87f-0df0-41d4-babd-f093faf1e32c",
+            "PrivilegeType": "Create"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvReadContact",
+            "PrivilegeId": "ba09ec92-12c4-4312-ba16-5715c2cbd6da",
+            "PrivilegeType": "Read"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvWriteContact",
+            "PrivilegeId": "65c22075-4e09-4f39-baec-e4bc3a950686",
+            "PrivilegeType": "Write"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvDeleteContact",
+            "PrivilegeId": "2ddded47-7488-4039-b9ff-81defe81fdd3",
+            "PrivilegeType": "Delete"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvAssignContact",
+            "PrivilegeId": "43c63782-c7c6-471c-bd9c-24f79bf8c2a1",
+            "PrivilegeType": "Assign"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvShareContact",
+            "PrivilegeId": "ae756940-61ff-4bd3-bfbb-f2b0d542c608",
+            "PrivilegeType": "Share"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvAppendContact",
+            "PrivilegeId": "2b16ba12-6ab4-4ad2-b7c0-8641d2d6dff2",
+            "PrivilegeType": "Append"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvAppendToContact",
+            "PrivilegeId": "158327b5-f4c1-448e-93d1-5f135126665b",
+            "PrivilegeType": "AppendTo"
+        }
+    ],
+    "Settings": []
+}
