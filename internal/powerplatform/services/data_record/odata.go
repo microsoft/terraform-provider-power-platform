@@ -13,6 +13,8 @@ func BuildODataQueryFromModel(model *DataRecordListDataSourceModel) (string, map
 	var resultQuery = ""
 	var headers = make(map[string]string)
 
+	appendQuery(&resultQuery, buildODataSavedQuery(model.SavedQuery.ValueStringPointer()))
+	appendQuery(&resultQuery, buildODataUserQuery(model.UserQuery.ValueStringPointer()))
 	appendQuery(&resultQuery, buildODataSelectPart(model.Select))
 	appendQuery(&resultQuery, buildODataFilterPart(model.Filter.ValueStringPointer()))
 	appendQuery(&resultQuery, buildOdataApplyPart(model.Apply.ValueStringPointer()))
@@ -123,6 +125,24 @@ func buildODataSelectPart(selectPart []string) *string {
 		return nil
 	}
 	return &resultQuery
+}
+
+func buildODataSavedQuery(savedQuery *string) *string {
+	resultQuery := ""
+	if savedQuery != nil {
+		resultQuery = strings.Join([]string{"savedQuery=", url.QueryEscape(*savedQuery)}, "")
+		return &resultQuery
+	}
+	return nil
+}
+
+func buildODataUserQuery(userQuery *string) *string {
+	resultQuery := ""
+	if userQuery != nil {
+		resultQuery = strings.Join([]string{"userQuery=", url.QueryEscape(*userQuery)}, "")
+		return &resultQuery
+	}
+	return nil
 }
 
 func buildODataFilterPart(filter *string) *string {
