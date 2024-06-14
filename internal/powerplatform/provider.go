@@ -181,6 +181,14 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		clientSecret = config.ClientSecret.ValueString()
 	}
 
+	useCli := false
+	_, envUseCli := os.LookupEnv("POWER_PLATFORM_USE_CLI")
+	if config.UseCli.IsNull() {
+		useCli = envUseCli
+	} else {
+		useCli = config.UseCli.ValueBool()
+	}
+
 	//Check for AzDO and GitHub environment variables
 	oidcRequestUrl := ""
 	envOidcRequestUrl := MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"})
@@ -214,7 +222,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		oidcTokenFilePath = config.OidcTokenFilePath.ValueString()
 	}
 
-	ctx = tflog.SetField(ctx, "use_cli", config.UseCli.ValueBool())
+	ctx = tflog.SetField(ctx, "use_cli", useCli)
 	ctx = tflog.SetField(ctx, "use_oidc", config.UseOidc.ValueBool())
 	ctx = tflog.SetField(ctx, "cloud", cloud)
 	ctx = tflog.SetField(ctx, "power_platform_tenant_id", tenantId)
