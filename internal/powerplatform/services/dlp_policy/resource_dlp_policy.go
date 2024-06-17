@@ -412,5 +412,5 @@ func (r *DataLossPreventionPolicyResource) Delete(ctx context.Context, req resou
 }
 
 func (r *DataLossPreventionPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("Id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
