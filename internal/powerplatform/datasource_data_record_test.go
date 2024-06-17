@@ -4,12 +4,15 @@
 package powerplatform
 
 import (
+	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
+	"github.com/jarcoal/httpmock"
 	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
@@ -118,7 +121,6 @@ resource "powerplatform_data_record" "contact5" {
   }
 }`
 }
-
 func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
@@ -226,6 +228,76 @@ func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 	})
 }
 
+func TestUnitDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	isOdataQueryRun := false
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts?$select=fullname%2Cfirstname%2Clastname&$filter=firstname+eq+%27contact1%27&$expand=contact_customer_contacts($select=fullname;$expand=contact_customer_contacts($select=fullname;$expand=account_primary_contact($select=name;$expand=contact_customer_accounts($select=fullname),primarycontactid($select=fullname))))",
+		func(req *http.Request) (*http.Response, error) {
+			isOdataQueryRun = true
+			return httpmock.NewStringResponse(http.StatusOK, `{"@odata.context":"https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#contacts","value":[]}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions?%24filter=LogicalCollectionName+eq+%27contacts%27&%24select=PrimaryIdAttribute%2CLogicalCollectionName%2CLogicalName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_entitydefinition_contact.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig +
+					`data "powerplatform_data_records" "data_query" {
+						environment_id    = "00000000-0000-0000-0000-000000000001"
+						entity_collection = "contacts"
+						filter            = "firstname eq 'contact1'"
+						select            = ["fullname","firstname","lastname"]
+						expand = [
+							{
+							navigation_property = "contact_customer_contacts"
+							select              = ["fullname"]
+							expand = [
+								{
+								navigation_property = "contact_customer_contacts"
+								select              = ["fullname"]
+								expand = [
+									{
+									navigation_property = "account_primary_contact"
+									select              = ["name"]
+									expand = [
+										{
+										navigation_property = "contact_customer_accounts"
+										select              = ["fullname"]
+										},
+										{
+										navigation_property = "primarycontactid"
+										select              = ["fullname"]
+										}
+									]
+									}
+								]
+								}
+							]
+							},
+						]
+					}`,
+			},
+		},
+	})
+
+	if !isOdataQueryRun {
+		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+	}
+}
+
 func TestAccDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
@@ -296,6 +368,59 @@ func TestAccDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.
 	})
 }
 
+func TestUnitDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	isOdataQueryRun := false
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts(00000000-0000-0000-0000-000000000001)?$select=fullname%2Cfirstname%2Clastname&$expand=contact_customer_contacts($select=fullname;$expand=contact_customer_contacts($select=fullname))",
+		func(req *http.Request) (*http.Response, error) {
+			isOdataQueryRun = true
+			return httpmock.NewStringResponse(http.StatusOK, `{"@odata.context":"https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#contacts","value":[]}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions?%24filter=LogicalCollectionName+eq+%27contacts%27&%24select=PrimaryIdAttribute%2CLogicalCollectionName%2CLogicalName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_entitydefinition_contact.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig +
+					`data "powerplatform_data_records" "data_query" {
+						environment_id    = "00000000-0000-0000-0000-000000000001"
+						entity_collection = "contacts(00000000-0000-0000-0000-000000000001)"
+						select            = ["fullname","firstname","lastname"]
+						expand = [
+						  {
+							navigation_property = "contact_customer_contacts"
+							select              = ["fullname"]
+							expand = [
+							  {
+								navigation_property = "contact_customer_contacts"
+								select              = ["fullname"]
+							  }
+							]
+						  },
+						]
+					  }`,
+			},
+		},
+	})
+
+	if !isOdataQueryRun {
+		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+	}
+}
+
 func TestAccDataRecordDatasource_Validate_Top(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
@@ -328,6 +453,48 @@ func TestAccDataRecordDatasource_Validate_Top(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestUnitDataRecordDatasource_Validate_Top(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	isOdataQueryRun := false
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts?$select=fullname%2Cfirstname%2Clastname&$count=true",
+		func(req *http.Request) (*http.Response, error) {
+			isOdataQueryRun = true
+			return httpmock.NewStringResponse(http.StatusOK, `{"@odata.context":"https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#contacts","value":[]}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions?%24filter=LogicalCollectionName+eq+%27contacts%27&%24select=PrimaryIdAttribute%2CLogicalCollectionName%2CLogicalName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_entitydefinition_contact.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig +
+					`data "powerplatform_data_records" "data_query" {
+						environment_id    = "00000000-0000-0000-0000-000000000001"
+						entity_collection = "contacts"
+						select            = ["fullname","firstname","lastname"]
+						return_total_rows_count = true
+					  }`,
+			},
+		},
+	})
+
+	if !isOdataQueryRun {
+		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+	}
 }
 
 func TestAccDataRecordDatasource_Validate_Apply(t *testing.T) {
@@ -363,6 +530,48 @@ func TestAccDataRecordDatasource_Validate_Apply(t *testing.T) {
 	})
 }
 
+func TestUnitDataRecordDatasource_Validate_Apply(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	isOdataQueryRun := false
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts?$apply=groupby%28%28statuscode%29%2Caggregate%28%24count+as+count%29%29",
+		func(req *http.Request) (*http.Response, error) {
+			isOdataQueryRun = true
+			return httpmock.NewStringResponse(http.StatusOK, `{"@odata.context":"https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#contacts","value":[]}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions?%24filter=LogicalCollectionName+eq+%27contacts%27&%24select=PrimaryIdAttribute%2CLogicalCollectionName%2CLogicalName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_entitydefinition_contact.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig +
+					`data "powerplatform_data_records" "data_query" {
+						environment_id    = "00000000-0000-0000-0000-000000000001"
+						entity_collection = "contacts"
+						apply             = "groupby((statuscode),aggregate($count as count))"
+					  
+					  }`,
+			},
+		},
+	})
+
+	if !isOdataQueryRun {
+		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+	}
+}
+
 func TestAccDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
@@ -396,6 +605,47 @@ func TestAccDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestUnitDataRecordDatasource_Validate_OrderBy(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	isOdataQueryRun := false
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts?$orderby=firstname+desc%2C+lastname+desc",
+		func(req *http.Request) (*http.Response, error) {
+			isOdataQueryRun = true
+			return httpmock.NewStringResponse(http.StatusOK, `{"@odata.context":"https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#contacts","value":[]}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions?%24filter=LogicalCollectionName+eq+%27contacts%27&%24select=PrimaryIdAttribute%2CLogicalCollectionName%2CLogicalName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_entitydefinition_contact.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig +
+					`data "powerplatform_data_records" "data_query" {
+						environment_id    = "00000000-0000-0000-0000-000000000001"
+						entity_collection = "contacts"
+						order_by             = "firstname desc, lastname desc"
+					  }`,
+			},
+		},
+	})
+
+	if !isOdataQueryRun {
+		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+	}
 }
 
 func TestAccDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
@@ -437,7 +687,49 @@ func TestAccDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 	})
 }
 
-func TestAccDataRecordDatasource_Validate_UserQuer(t *testing.T) {
+func TestUnitDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	isOdataQueryRun := false
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts?savedQuery=00000000-0000-0000-0000-000000000002&$select=fullname",
+		func(req *http.Request) (*http.Response, error) {
+			isOdataQueryRun = true
+			return httpmock.NewStringResponse(http.StatusOK, `{"@odata.context":"https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#contacts","value":[]}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions?%24filter=LogicalCollectionName+eq+%27contacts%27&%24select=PrimaryIdAttribute%2CLogicalCollectionName%2CLogicalName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_entitydefinition_contact.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig +
+					`data "powerplatform_data_records" "data_query" {
+						environment_id    = "00000000-0000-0000-0000-000000000001"
+						entity_collection = "contacts"
+						saved_query       = "00000000-0000-0000-0000-000000000002"
+						select            = ["fullname"]
+					}`,
+			},
+		},
+	})
+
+	if !isOdataQueryRun {
+		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+	}
+}
+
+func TestAccDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
@@ -478,6 +770,50 @@ func TestAccDataRecordDatasource_Validate_UserQuer(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestUnitDataRecordDatasource_Validate_UserQuery(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	isOdataQueryRun := false
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts?userQuery=00000000-0000-0000-0000-000000000002&$select=fullname%2Cfirstname%2Clastname",
+		func(req *http.Request) (*http.Response, error) {
+			isOdataQueryRun = true
+			return httpmock.NewStringResponse(http.StatusOK, `{"@odata.context":"https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#contacts","value":[]}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions?%24filter=LogicalCollectionName+eq+%27contacts%27&%24select=PrimaryIdAttribute%2CLogicalCollectionName%2CLogicalName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_entitydefinition_contact.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig +
+					`data "powerplatform_data_records" "data_query" {
+						environment_id    = "00000000-0000-0000-0000-000000000001"
+						entity_collection = "contacts"
+						user_query        = "00000000-0000-0000-0000-000000000002"
+						select            = ["fullname", "firstname", "lastname"]
+
+						
+					}`,
+			},
+		},
+	})
+
+	if !isOdataQueryRun {
+		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+	}
 }
 
 func TestAccDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
@@ -541,4 +877,57 @@ func TestAccDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestUnitDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	isOdataQueryRun := false
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/accounts?$select=name%2Caccountid%2Cowninguser&$filter=accountid+eq+00000000-0000-0000-0000-000000000010&$expand=primarycontactid($select=contactid%2Cfirstname%2Clastname),owningbusinessunit($select=createdon%2Cname)",
+		func(req *http.Request) (*http.Response, error) {
+			isOdataQueryRun = true
+			return httpmock.NewStringResponse(http.StatusOK, `{"@odata.context":"https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#accounts","value":[]}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions?%24filter=LogicalCollectionName+eq+%27accounts%27&%24select=PrimaryIdAttribute%2CLogicalCollectionName%2CLogicalName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_entitydefinition_account.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/data_record/tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig +
+					`data "powerplatform_data_records" "data_query" {
+						environment_id    = "00000000-0000-0000-0000-000000000001"
+						entity_collection = "accounts"
+						filter            = "accountid eq 00000000-0000-0000-0000-000000000010"
+						select            = ["name", "accountid", "owninguser"]
+						expand = [
+							{
+								navigation_property = "primarycontactid"
+								select              = ["contactid", "firstname", "lastname"],
+							},
+							{
+								navigation_property = "owningbusinessunit"
+								select              = ["createdon", "name"],
+							}
+						]
+					}		
+					`,
+			},
+		},
+	})
+
+	if !isOdataQueryRun {
+		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+	}
 }
