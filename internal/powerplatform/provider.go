@@ -181,6 +181,14 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		clientSecret = config.ClientSecret.ValueString()
 	}
 
+	useOidc := false
+	_, envUseOidc := os.LookupEnv("POWER_PLATFORM_USE_OIDC")
+	if config.UseOidc.IsNull() {
+		useOidc = envUseOidc
+	} else {
+		useOidc = config.UseOidc.ValueBool()
+	}
+
 	useCli := false
 	_, envUseCli := os.LookupEnv("POWER_PLATFORM_USE_CLI")
 	if config.UseCli.IsNull() {
@@ -222,8 +230,8 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		oidcTokenFilePath = config.OidcTokenFilePath.ValueString()
 	}
 
+	ctx = tflog.SetField(ctx, "use_oidc", useOidc)
 	ctx = tflog.SetField(ctx, "use_cli", useCli)
-	ctx = tflog.SetField(ctx, "use_oidc", config.UseOidc.ValueBool())
 	ctx = tflog.SetField(ctx, "cloud", cloud)
 	ctx = tflog.SetField(ctx, "power_platform_tenant_id", tenantId)
 	ctx = tflog.SetField(ctx, "power_platform_client_id", clientId)
