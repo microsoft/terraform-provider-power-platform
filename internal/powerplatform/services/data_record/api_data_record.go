@@ -435,7 +435,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 		return nil, fmt.Errorf("no entity record id returned from the API")
 	}
 
-	err = applyRelations(ctx, client, relations, environmentUrl, result.Id, entityDefinition)
+	err = applyRelations(ctx, client, relations, environmentId, result.Id, entityDefinition)
 
 	if err != nil {
 		return nil, err
