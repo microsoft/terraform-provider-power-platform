@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/jarcoal/httpmock"
+
 	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
@@ -121,6 +122,8 @@ resource "powerplatform_data_record" "contact5" {
   }
 }`
 }
+
+
 func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
@@ -228,6 +231,7 @@ func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 	})
 }
 
+
 func TestUnitDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -298,6 +302,7 @@ func TestUnitDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 	}
 }
 
+
 func TestAccDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
@@ -367,6 +372,7 @@ func TestAccDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.
 		},
 	})
 }
+
 
 func TestUnitDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.T) {
 	httpmock.Activate()
@@ -529,6 +535,7 @@ func TestAccDataRecordDatasource_Validate_Apply(t *testing.T) {
 		},
 	})
 }
+
 
 func TestUnitDataRecordDatasource_Validate_Apply(t *testing.T) {
 	httpmock.Activate()
@@ -772,6 +779,7 @@ func TestAccDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 	})
 }
 
+
 func TestUnitDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -887,7 +895,7 @@ func TestUnitDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/accounts?$select=name%2Caccountid%2Cowninguser&$filter=accountid+eq+00000000-0000-0000-0000-000000000010&$expand=primarycontactid($select=contactid%2Cfirstname%2Clastname),owningbusinessunit($select=createdon%2Cname)",
 		func(req *http.Request) (*http.Response, error) {
 			isOdataQueryRun = true
-			return httpmock.NewStringResponse(http.StatusOK, `{"@odata.context":"https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#accounts","value":[]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, `{"@odata.context":"https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/a/v9.2/$metadata#accounts","value":[]}`), nil
 		})
 
 	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions?%24filter=LogicalCollectionName+eq+%27accounts%27&%24select=PrimaryIdAttribute%2CLogicalCollectionName%2CLogicalName`,
@@ -931,3 +939,4 @@ func TestUnitDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
 	}
 }
+
