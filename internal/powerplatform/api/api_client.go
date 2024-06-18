@@ -84,15 +84,20 @@ func (client *ApiClient) Execute(ctx context.Context, method string, url string,
 	}
 
 	isStatusCodeValid := false
-	for _, statusCode := range acceptableStatusCodes {
-		if apiResponse.Response.StatusCode == statusCode {
-			isStatusCodeValid = true
-			break
+	if len(acceptableStatusCodes) == 0 {
+		isStatusCodeValid = true
+	} else {
+		for _, statusCode := range acceptableStatusCodes {
+			if apiResponse.Response.StatusCode == statusCode {
+				isStatusCodeValid = true
+				break
+			}
+		}
+		if !isStatusCodeValid {
+			return nil, fmt.Errorf("expected status code: %d, recieved: %d", acceptableStatusCodes, apiResponse.Response.StatusCode)
 		}
 	}
-	if !isStatusCodeValid {
-		return nil, fmt.Errorf("expected status code: %d, recieved: %d", acceptableStatusCodes, apiResponse.Response.StatusCode)
-	}
+
 	if responseObj != nil {
 		err = apiResponse.MarshallTo(responseObj)
 		if err != nil {
