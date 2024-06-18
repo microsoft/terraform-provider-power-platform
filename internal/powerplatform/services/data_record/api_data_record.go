@@ -425,9 +425,9 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 		json.Unmarshal(response.BodyAsBytes, &result)
 	} else if response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID) != "" {
 		re := regexp.MustCompile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-		match := re.FindStringSubmatch(response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID))
+		match := re.FindAllStringSubmatch(response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID), -1)
 		if len(match) > 0 {
-			result.Id = match[0]
+			result.Id = match[len(match)-1][0]
 		} else {
 			return nil, fmt.Errorf("no entity record id returned from the odata-entityid header")
 		}
@@ -435,9 +435,8 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 		return nil, fmt.Errorf("no entity record id returned from the API")
 	}
 
-	result.Id = parseLocationHeader(response, environmentUrl, entityDefinition)
-
 	err = applyRelations(ctx, client, relations, environmentId, result.Id, entityDefinition)
+
 	if err != nil {
 		return nil, err
 	}
@@ -501,13 +500,6 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 	return nil
 }
 
-func parseLocationHeader(response *api.ApiHttpResponse, environmentUrl string, entityDefinition *EntityDefinitionsDto) string {
-	locationHeader := response.GetHeader(constants.HEADER_LOCATION)
-	locationHeader = strings.TrimPrefix(locationHeader, fmt.Sprintf("%s/api/data/%s/%s(", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName))
-	locationHeader = strings.TrimSuffix(locationHeader, ")")
-	return locationHeader
-}
-
 func getTableLogicalNameAndDataRecordIdFromMap(nestedMap map[string]interface{}) (string, string, error) {
 	tableLogicalName, ok := nestedMap["table_logical_name"].(string)
 	if !ok {
@@ -540,7 +532,10 @@ func applyRelations(ctx context.Context, client *DataRecordClient, relations map
 
 			existingRelationsResponse := RelationApiResponse{}
 
-			apiResponse, _ := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+			apiResponse, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+			if err != nil {
+				return err
+			}
 
 			json.Unmarshal(apiResponse.BodyAsBytes, &existingRelationsResponse)
 
