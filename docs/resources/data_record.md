@@ -25,10 +25,12 @@ provider "powerplatform" {
   use_cli = true
 }
 
-variable "parent_business_unit_id" {
-  type        = string
-  description = "The parent business unit id"
 
+data "powerplatform_data_records" "root_business_unit" {
+  environment_id    = "a1e605fb-80ad-e1b2-bae0-f046efc0e641"
+  entity_collection = "businessunits"
+  filter            = "parentbusinessunitid eq null"
+  select            = ["name"]
 }
 
 resource "powerplatform_environment" "data_record_example_env" {
@@ -51,7 +53,7 @@ resource "powerplatform_data_record" "role" {
 
     businessunitid = {
       table_logical_name = "businessunit"
-      data_record_id     = var.parent_business_unit_id
+      data_record_id     = data.powerplatform_data_records.root_business_unit.rows[0].businessunitid
     }
   }
 }

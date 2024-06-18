@@ -7,7 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
+	http "net/http"
 	"net/url"
 	"regexp"
 	"strings"
@@ -57,17 +57,24 @@ type RelationApiBody struct {
 	OdataID string `json:"@odata.id"`
 }
 
-func getEntityDefinition(ctx context.Context, client *DataRecordClient, environmentUrl, entityLogicalName string) (*EntityDefinitionsDto, error) {
+func GetEntityDefinition(ctx context.Context, client *DataRecordClient, environmentId, entityLogicalName string) (*EntityDefinitionsDto, error) {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
 	e, err := url.Parse(environmentUrl)
 	if err != nil {
 		return nil, err
 	}
+
 	entityDefinitionApiUrl := &url.URL{
 		Scheme:   e.Scheme,
 		Host:     e.Host,
 		Path:     fmt.Sprintf("/api/data/%s/EntityDefinitions(LogicalName='%s')", constants.DATAVERSE_API_VERSION, entityLogicalName),
 		Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
 	}
+
 	entityDefinition := EntityDefinitionsDto{}
 	_, err = client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
 	if err != nil {
@@ -105,13 +112,77 @@ func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentI
 	return &env, nil
 }
 
+func (client *DataRecordClient) GetDataRecordsByODataQuery(ctx context.Context, environmentId, query string, headers map[string]string) (*ODataQueryResponse, error) {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	var h http.Header = make(http.Header)
+	for k, v := range headers {
+		h.Add(k, v)
+	}
+
+	e, _ := url.Parse(environmentUrl)
+	apiUrl := fmt.Sprintf("%s://%s/api/data/%s/%s", e.Scheme, e.Host, constants.DATAVERSE_API_VERSION, query)
+
+	response := map[string]interface{}{}
+	_, err = client.Api.Execute(ctx, "GET", apiUrl, h, nil, []int{http.StatusOK}, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	var totalRecords *int64 = nil
+	if response["@Microsoft.Dynamics.CRM.totalrecordcount"] != nil {
+		count := int64(response["@Microsoft.Dynamics.CRM.totalrecordcount"].(float64))
+		totalRecords = &count
+	}
+	var totalRecordsCountLimitExceeded *bool = nil
+	if response["@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded"] != nil {
+		isLimitExceeded := response["@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded"].(bool)
+		totalRecordsCountLimitExceeded = &isLimitExceeded
+	}
+
+	records := []map[string]interface{}{}
+	if response["value"] != nil {
+		for _, item := range response["value"].([]interface{}) {
+			value := item.(map[string]interface{})
+			records = append(records, value)
+		}
+	} else {
+		records = append(records, response)
+	}
+
+	pluralName := strings.Split(response["@odata.context"].(string), "#")[1]
+	if index := strings.IndexAny(pluralName, "(/"); index != -1 {
+		pluralName = pluralName[:index]
+	}
+
+	return &ODataQueryResponse{
+		Records:                  records,
+		TotalRecord:              totalRecords,
+		TotalRecordLimitExceeded: totalRecordsCountLimitExceeded,
+		TableMetadataUrl:         response["@odata.context"].(string),
+		//url will be as example: https://org.crm4.dynamics.com/api/data/v9.2/$metadata#tablepluralname/$entity
+		TablePluralName: pluralName,
+	}, nil
+}
+
+type ODataQueryResponse struct {
+	Records                  []map[string]interface{}
+	TotalRecord              *int64
+	TotalRecordLimitExceeded *bool
+	TableMetadataUrl         string
+	TablePluralName          string
+}
+
 func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId, environmentId, tableName string) (map[string]interface{}, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
-	entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	entityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -139,13 +210,13 @@ func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId, env
 	return result, nil
 }
 
-func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId, environmentId, tableName, relationName string) ([]interface{}, error) {
+func (client *DataRecordClient) GetRelationData(ctx context.Context, environmentId, tableName, recordId, relationName string) ([]interface{}, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
-	entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	entityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -181,17 +252,57 @@ func (client *DataRecordClient) GetRelationData(ctx context.Context, recordId, e
 	return value, nil
 }
 
-func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string, primaryIdFieldName string, err error) {
+func (client *DataRecordClient) GetTableSingularNameFromPlural(ctx context.Context, environmentId, logicalCollectionName string) (*string, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
-		return "", "", err
+		return nil, err
+	}
+	e, err := url.Parse(environmentUrl)
+	if err != nil {
+		return nil, err
+	}
+	apiUrl := &url.URL{
+		Scheme: e.Scheme,
+		Host:   e.Host,
+		Path:   fmt.Sprintf("/api/data/%s/EntityDefinitions", constants.DATAVERSE_API_VERSION),
+	}
+	q := apiUrl.Query()
+	q.Add("$filter", fmt.Sprintf("LogicalCollectionName eq '%s'", logicalCollectionName))
+	q.Add("$select", "PrimaryIdAttribute,LogicalCollectionName,LogicalName")
+	apiUrl.RawQuery = q.Encode()
+
+	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var mapResponse map[string]interface{}
+	json.Unmarshal(response.BodyAsBytes, &mapResponse)
+
+	var result string
+	if mapResponse["value"] != nil && len(mapResponse["value"].([]interface{})) > 0 &&
+		mapResponse["value"].([]interface{})[0].(map[string]interface{}) != nil &&
+		mapResponse["value"].([]interface{})[0].(map[string]interface{})["LogicalName"] != nil {
+		result = mapResponse["value"].([]interface{})[0].(map[string]interface{})["LogicalName"].(string)
+	} else if mapResponse["LogicalName"] != nil {
+		result = mapResponse["LogicalName"].(string)
+	} else {
+		return nil, fmt.Errorf("logicalName field not found in result when retrieving table singular name")
+	}
+	return &result, nil
+}
+
+func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string, err error) {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return "", err
 	}
 
 	apiUrl := fmt.Sprintf("%s/api/data/%s/EntityDefinitions(LogicalName='%s')?$expand=OneToManyRelationships,ManyToManyRelationships,ManyToOneRelationships", environmentUrl, constants.DATAVERSE_API_VERSION, entityLogicalName)
 
 	response, err := client.Api.Execute(ctx, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	var mapResponse map[string]interface{}
@@ -199,15 +310,15 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 
 	oneToMany, ok := mapResponse["OneToManyRelationships"].([]interface{})
 	if !ok {
-		return "", "", fmt.Errorf("OneToManyRelationships field is not of type []interface{}")
+		return "", fmt.Errorf("OneToManyRelationships field is not of type []interface{}")
 	}
 	for _, list := range oneToMany {
 		item := list.(map[string]interface{})
-		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
+		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName && item["Entity1LogicalName"] != entityLogicalName {
 			tableName = item["ReferencedEntity"].(string)
 			break
 		}
-		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName {
+		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName && item["Entity2LogicalName"] != entityLogicalName {
 			tableName = item["ReferencingEntity"].(string)
 			break
 		}
@@ -215,7 +326,7 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 
 	manyToOne, ok := mapResponse["ManyToOneRelationships"].([]interface{})
 	if !ok {
-		return "", "", fmt.Errorf("ManyToOneRelationships field is not of type []interface{}")
+		return "", fmt.Errorf("ManyToOneRelationships field is not of type []interface{}")
 	}
 	for _, list := range manyToOne {
 		item := list.(map[string]interface{})
@@ -231,7 +342,7 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 
 	manyToMany, ok := mapResponse["ManyToManyRelationships"].([]interface{})
 	if !ok {
-		return "", "", fmt.Errorf("ManyToManyRelationships field is not of type []interface{}")
+		return "", fmt.Errorf("ManyToManyRelationships field is not of type []interface{}")
 	}
 	for _, list := range manyToMany {
 		item := list.(map[string]interface{})
@@ -244,13 +355,7 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 			break
 		}
 	}
-
-	entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
-	if err != nil {
-		return "", "", err
-	}
-
-	return tableName, entityDefinition.PrimaryIDAttribute, nil
+	return tableName, nil
 }
 
 func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, environmentId, tableName string, columns map[string]interface{}) (*DataRecordDto, error) {
@@ -272,12 +377,12 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 					return nil, err
 				}
 
-				entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+				entityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableLogicalName)
 				if err != nil {
 					return nil, err
 				}
 
-				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("%s/api/data/%s/%s(%s)", environmentUrl, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId)
+				columns[fmt.Sprintf("%s@odata.bind", key)] = fmt.Sprintf("/%s(%s)", entityDefinition.LogicalCollectionName, dataRecordId)
 			}
 		} else if nestedMapList, ok := value.([]interface{}); ok {
 			delete(columns, key)
@@ -285,7 +390,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 		}
 	}
 
-	entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	entityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -331,6 +436,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 	}
 
 	err = applyRelations(ctx, client, relations, environmentUrl, result.Id, entityDefinition)
+
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +450,7 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		return err
 	}
 
-	tableEntityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableName)
+	tableEntityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableName)
 	if err != nil {
 		return err
 	}
@@ -375,7 +481,7 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 					Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s(%s)/$ref", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId, key, dataRecordId),
 				}
 				_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
-				if err != nil {
+				if err != nil && !strings.ContainsAny(err.Error(), "404") {
 					return err
 				}
 			}
@@ -388,10 +494,9 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId),
 	}
 	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
-	if err != nil {
+	if err != nil && !strings.ContainsAny(err.Error(), "404") {
 		return err
 	}
-
 	return nil
 }
 
@@ -407,7 +512,12 @@ func getTableLogicalNameAndDataRecordIdFromMap(nestedMap map[string]interface{})
 	return tableLogicalName, dataRecordId, nil
 }
 
-func applyRelations(ctx context.Context, client *DataRecordClient, relations map[string]interface{}, environmentUrl string, parentRecordId string, entityDefinition *EntityDefinitionsDto) error {
+func applyRelations(ctx context.Context, client *DataRecordClient, relations map[string]interface{}, environmentId string, parentRecordId string, entityDefinition *EntityDefinitionsDto) error {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return err
+	}
+
 	for key, value := range relations {
 		if nestedMapList, ok := value.([]interface{}); ok {
 			e, err := url.Parse(environmentUrl)
@@ -441,7 +551,7 @@ func applyRelations(ctx context.Context, client *DataRecordClient, relations map
 						return err
 					}
 
-					relationEntityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+					relationEntityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableLogicalName)
 					if err != nil {
 						return err
 					}
@@ -470,7 +580,7 @@ func applyRelations(ctx context.Context, client *DataRecordClient, relations map
 					return err
 				}
 
-				entityDefinition, err := getEntityDefinition(ctx, client, environmentUrl, tableLogicalName)
+				entityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableLogicalName)
 				if err != nil {
 					return err
 				}

@@ -72,6 +72,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		auth.NewSecurityRolesDataSource(),
 		env_settings.NewEnvironmentSettingsDataSource(),
 		application.NewTenantApplicationPackagesDataSource(),
+		data_record.NewDataRecordDataSource(),
 	}
 	datasources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).DataSources(context.Background())
 
