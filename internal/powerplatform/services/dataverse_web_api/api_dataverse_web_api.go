@@ -38,24 +38,22 @@ type LinkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }
 
-func (client *WebApiClient) ExecuteWebApiRequest(ctx context.Context, environmentId, url, method, body string) (*string, error) {
+func (client *WebApiClient) ExecuteWebApiRequest(ctx context.Context, environmentId, url, method string, body *string, headers map[string]string) (*api.ApiHttpResponse, error) {
 	environmentUrl, err := client.getEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
 	e, _ := u.Parse(environmentUrl)
-	apiUrl := fmt.Sprintf("%s://%s/", e.Scheme, e.Host, url)
+	apiUrl := fmt.Sprintf("%s://%s/%s", e.Scheme, e.Host, url)
 
-	response, err := client.Api.Execute(ctx, method, apiUrl, nil, body, nil, nil)
-
-	if err != nil {
-		return nil, err
+	h := http.Header{}
+	for k, v := range headers {
+		h.Add(k, v)
 	}
-	
-	
 
-	return nil, nil
+	res, err := client.Api.Execute(ctx, method, apiUrl, h, body, nil, nil)
+	return res, err
 }
 
 func (client *WebApiClient) getEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {

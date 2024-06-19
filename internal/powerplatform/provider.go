@@ -22,6 +22,7 @@ import (
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
 	data_record "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/data_record"
+	webapi "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dataverse_web_api"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 	env_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_settings"
@@ -381,6 +382,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return auth.NewUserResource() },
 		func() resource.Resource { return data_record.NewDataRecordResource() },
 		func() resource.Resource { return env_settings.NewEnvironmentSettingsResource() },
+		func() resource.Resource { return webapi.NewDataverseWebApiResource() },
 	}
 }
 

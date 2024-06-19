@@ -80,7 +80,7 @@ func (client *ApiClient) Execute(ctx context.Context, method string, url string,
 	}
 	apiResponse, err := client.doRequest(token, request, headers)
 	if err != nil {
-		return nil, err
+		return apiResponse, err
 	}
 
 	isStatusCodeValid := false
@@ -101,7 +101,7 @@ func (client *ApiClient) Execute(ctx context.Context, method string, url string,
 	if responseObj != nil {
 		err = apiResponse.MarshallTo(responseObj)
 		if err != nil {
-			return nil, err
+			return apiResponse, err
 		}
 	}
 	return apiResponse, nil
