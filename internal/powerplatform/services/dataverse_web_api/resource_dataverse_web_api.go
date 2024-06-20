@@ -6,8 +6,9 @@ package powerplatform
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -40,11 +41,6 @@ type DataverseWebApiResourceModel struct {
 	Output        types.Object                      `tfsdk:"output"`
 }
 
-// type aaa struct {
-// 	Body   string `json:"body"`
-// 	Status int64  `json:"status"`
-// }
-
 type DataverseWebApiOperationResource struct {
 	Method  types.String                             `tfsdk:"method"`
 	Url     types.String                             `tfsdk:"url"`
@@ -64,7 +60,7 @@ func (r *DataverseWebApiResource) Metadata(ctx context.Context, req resource.Met
 func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "",
+		MarkdownDescription: "Resource to execute web api requests",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id (guid)",
@@ -177,36 +173,9 @@ func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	state.Id = types.StringValue("123")
-	url := state.Create.Url.ValueString()
-	method := state.Create.Method.ValueString()
-	var body *string = nil
-	var headers map[string]string = nil
-	if state.Create.Body.ValueStringPointer() != nil {
-		b := state.Create.Body.ValueString()
-		body = &b
-	}
-	if len(state.Create.Headers) > 0 {
-		headers = make(map[string]string)
-		for _, h := range state.Create.Headers {
-			headers[h.Name.ValueString()] = h.Value.ValueString()
-		}
-	}
-
-	res, _ := r.DataRecordClient.ExecuteWebApiRequest(ctx, state.EnvironmentId.ValueString(), url, method, body, headers)
-
-	output := map[string]attr.Value{
-		"status": types.Int64Value(int64(res.Response.StatusCode)),
-		"body":   types.StringNull(),
-	}
-	if len(res.BodyAsBytes) > 0 {
-		output["body"] = types.StringValue(string(res.BodyAsBytes))
-	}
-
-	state.Output = types.ObjectValueMust(map[string]attr.Type{
-		"status": types.Int64Type,
-		"body":   types.StringType,
-	}, output)
+	state.Id = types.StringValue(strconv.Itoa(int(time.Now().UnixMilli())))
+	output := r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueString(), state.Create)
+	state.Output = output
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.TypeName))
@@ -223,10 +192,35 @@ func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
+	if state.Read != nil {
+		output := r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueString(), state.Read)
+		state.Output = output
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.TypeName))
 }
 
 func (r *DataverseWebApiResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan *DataverseWebApiResourceModel
+
+	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.TypeName))
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if plan.Update != nil {
+		output := r.DataRecordClient.SendOperation(ctx, plan.EnvironmentId.ValueString(), plan.Update)
+		plan.Output = output
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+
+	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.TypeName))
 }
 
 func (r *DataverseWebApiResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -239,17 +233,9 @@ func (r *DataverseWebApiResource) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
-	// url := state.Url.ValueString()
-	// method := state.Method.ValueString()
-	// if state.DeleteUrl.ValueStringPointer() != nil {
-	// 	url = state.DeleteUrl.ValueString()
-	// }
-
-	// _, err := r.DataRecordClient.ExecuteWebApiRequest(ctx, state.EnvironmentId.ValueString(), url, method, state.Body.ValueString())
-
-	// if err != nil {
-	// 	resp.Diagnostics.AddError("Failed to execute web api request", err.Error())
-	// }
+	if state.Delete != nil {
+		r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueString(), state.Delete)
+	}
 
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.TypeName))
 

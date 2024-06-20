@@ -1,0 +1,144 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
+package powerplatform
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+)
+
+func NewDataverseWebApiDatasource() datasource.DataSource {
+	return &DataverseWebApiDatasource{
+		ProviderTypeName: "powerplatform",
+		TypeName:         "_dataverse_web_apis",
+	}
+}
+
+type DataverseWebApiDatasource struct {
+	DataRecordClient WebApiClient
+	ProviderTypeName string
+	TypeName         string
+}
+
+type DataverseWebApiDatasourceModel struct {
+	EnvironmentId types.String                             `tfsdk:"environment_id"`
+	Method        types.String                             `tfsdk:"method"`
+	Url           types.String                             `tfsdk:"url"`
+	Body          types.String                             `tfsdk:"body"`
+	Headers       []DataverseWebApiOperationHeaderResource `tfsdk:"headers"`
+	Output        types.Object                             `tfsdk:"output"`
+}
+
+func (d *DataverseWebApiDatasource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + d.TypeName
+}
+
+func (d *DataverseWebApiDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		MarkdownDescription: "Resource to execute web api requests",
+		Attributes: map[string]schema.Attribute{
+			"environment_id": schema.StringAttribute{
+				Description: "Id of the Dynamics 365 environment",
+				Required:    true,
+			},
+			"method": schema.StringAttribute{
+				MarkdownDescription: "HTTP method",
+				Required:            true,
+				Optional:            false,
+			},
+			"url": schema.StringAttribute{
+				MarkdownDescription: "URL of the web api",
+				Required:            true,
+				Optional:            false,
+			},
+			"body": schema.StringAttribute{
+				MarkdownDescription: "Body of the request",
+				Required:            false,
+				Optional:            true,
+			},
+			"headers": schema.ListNestedAttribute{
+				MarkdownDescription: "Headers of the request",
+				Required:            false,
+				Optional:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							MarkdownDescription: "Header name",
+							Required:            true,
+							Optional:            false,
+						},
+						"value": schema.StringAttribute{
+							MarkdownDescription: "Header value",
+							Required:            true,
+							Optional:            false,
+						},
+					},
+				},
+			},
+			"output": schema.SingleNestedAttribute{
+				MarkdownDescription: "Response body after executing the web api request",
+				Computed:            true,
+				Attributes: map[string]schema.Attribute{
+					"body": schema.StringAttribute{
+						MarkdownDescription: "Response body after executing the web api request",
+						Computed:            true,
+					},
+					"status": schema.Int64Attribute{
+						MarkdownDescription: "Response status code after executing the web api request",
+						Computed:            true,
+					},
+				},
+			},
+		},
+	}
+}
+
+func (d *DataverseWebApiDatasource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+	clientApi := req.ProviderData.(*api.ProviderClient).Api
+
+	if clientApi == nil {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+	d.DataRecordClient = NewWebApiClient(clientApi)
+}
+
+func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state DataverseWebApiDatasourceModel
+
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
+
+	resp.State.Get(ctx, &state)
+
+	outputObjectType := d.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueString(), &DataverseWebApiOperationResource{
+		Method:  state.Method,
+		Url:     state.Url,
+		Body:    state.Body,
+		Headers: state.Headers,
+	})
+
+	state.Output = outputObjectType
+
+	diags := resp.State.Set(ctx, &state)
+
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
+
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+}

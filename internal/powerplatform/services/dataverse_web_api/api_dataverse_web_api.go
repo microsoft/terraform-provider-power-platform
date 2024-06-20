@@ -11,6 +11,8 @@ import (
 	u "net/url"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -36,6 +38,44 @@ type EnvironmentIdPropertiesDto struct {
 
 type LinkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
+}
+
+func (client *WebApiClient) SendOperation(ctx context.Context, environmentId string, operation *DataverseWebApiOperationResource) types.Object {
+	url := operation.Url.ValueString()
+	method := operation.Method.ValueString()
+	var body *string = nil
+	var headers map[string]string = nil
+	if operation.Body.ValueStringPointer() != nil {
+		b := operation.Body.ValueString()
+		body = &b
+	}
+	if len(operation.Headers) > 0 {
+		headers = make(map[string]string)
+		for _, h := range operation.Headers {
+			headers[h.Name.ValueString()] = h.Value.ValueString()
+		}
+	}
+
+	res, err := client.ExecuteWebApiRequest(ctx, environmentId, url, method, body, headers)
+
+	output := map[string]attr.Value{
+		"status": types.Int64Null(),
+		"body":   types.StringNull(),
+	}
+	if res == nil && err != nil {
+		output["status"] = types.Int64Value(500)
+		output["body"] = types.StringValue(err.Error())
+	} else {
+		if len(res.BodyAsBytes) > 0 {
+			output["body"] = types.StringValue(string(res.BodyAsBytes))
+		}
+		output["status"] = types.Int64Value(int64(res.Response.StatusCode))
+	}
+	return types.ObjectValueMust(map[string]attr.Type{
+		"status": types.Int64Type,
+		"body":   types.StringType,
+	}, output)
+
 }
 
 func (client *WebApiClient) ExecuteWebApiRequest(ctx context.Context, environmentId, url, method string, body *string, headers map[string]string) (*api.ApiHttpResponse, error) {
