@@ -15,6 +15,7 @@ import (
 	"time"
 
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
+	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 type ProviderClient struct {
@@ -94,7 +95,7 @@ func (client *ApiClient) Execute(ctx context.Context, method string, url string,
 			}
 		}
 		if !isStatusCodeValid {
-			return nil, fmt.Errorf("expected status code: %d, recieved: %d", acceptableStatusCodes, apiResponse.Response.StatusCode)
+			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE, fmt.Sprintf("expected status code: %d, recieved: [%d]", acceptableStatusCodes, apiResponse.Response.StatusCode))
 		}
 	}
 

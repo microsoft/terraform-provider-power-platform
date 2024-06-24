@@ -21,7 +21,7 @@ import (
 func NewDataverseWebApiResource() resource.Resource {
 	return &DataverseWebApiResource{
 		ProviderTypeName: "powerplatform",
-		TypeName:         "_dataverse_web_api",
+		TypeName:         "_rest",
 	}
 }
 
@@ -36,16 +36,17 @@ type DataverseWebApiResourceModel struct {
 	EnvironmentId types.String                      `tfsdk:"environment_id"`
 	Create        *DataverseWebApiOperationResource `tfsdk:"create"`
 	Update        *DataverseWebApiOperationResource `tfsdk:"update"`
-	Delete        *DataverseWebApiOperationResource `tfsdk:"delete"`
+	Destroy       *DataverseWebApiOperationResource `tfsdk:"destroy"`
 	Read          *DataverseWebApiOperationResource `tfsdk:"read"`
 	Output        types.Object                      `tfsdk:"output"`
 }
 
 type DataverseWebApiOperationResource struct {
-	Method  types.String                             `tfsdk:"method"`
-	Url     types.String                             `tfsdk:"url"`
-	Body    types.String                             `tfsdk:"body"`
-	Headers []DataverseWebApiOperationHeaderResource `tfsdk:"headers"`
+	Method             types.String                             `tfsdk:"method"`
+	Url                types.String                             `tfsdk:"url"`
+	Body               types.String                             `tfsdk:"body"`
+	Headers            []DataverseWebApiOperationHeaderResource `tfsdk:"headers"`
+	ExpectedHttpStatus []int64                                  `tfsdk:"expected_http_status"`
 }
 
 type DataverseWebApiOperationHeaderResource struct {
@@ -77,10 +78,11 @@ func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"create": r.buildOperationSchema("Create operation", true),
-			"update": r.buildOperationSchema("Update operation", false),
-			"delete": r.buildOperationSchema("Delete operation", false),
-			"read":   r.buildOperationSchema("Read operation", false),
+			//scope
+			"create":  r.buildOperationSchema("Create operation"),
+			"update":  r.buildOperationSchema("Update operation"),
+			"destroy": r.buildOperationSchema("Destroy operation"),
+			"read":    r.buildOperationSchema("Read operation"),
 			"output": schema.SingleNestedAttribute{
 				MarkdownDescription: "Response body after executing the web api request",
 				Computed:            true,
@@ -89,22 +91,24 @@ func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.Schem
 						MarkdownDescription: "Response body after executing the web api request",
 						Computed:            true,
 					},
-					"status": schema.Int64Attribute{
-						MarkdownDescription: "Response status code after executing the web api request",
-						Computed:            true,
-					},
 				},
 			},
 		},
 	}
 }
 
-func (r *DataverseWebApiResource) buildOperationSchema(description string, isRequired bool) schema.SingleNestedAttribute {
+func (r *DataverseWebApiResource) buildOperationSchema(description string) schema.SingleNestedAttribute {
 	return schema.SingleNestedAttribute{
 		MarkdownDescription: description,
-		Required:            isRequired,
-		Optional:            !isRequired,
+		Required:            false,
+		Optional:            true,
 		Attributes: map[string]schema.Attribute{
+			"expected_http_status": schema.ListAttribute{
+				ElementType:         types.Int64Type,
+				MarkdownDescription: "Expected HTTP status code. If the response status code does not match any of the expected status codes, the operation will fail.",
+				Required:            false,
+				Optional:            true,
+			},
 			"method": schema.StringAttribute{
 				MarkdownDescription: "HTTP method",
 				Required:            true,
@@ -174,8 +178,12 @@ func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	state.Id = types.StringValue(strconv.Itoa(int(time.Now().UnixMilli())))
-	output := r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueString(), state.Create)
-	state.Output = output
+	output, err := r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueString(), state.Create)
+	if err != nil {
+		resp.Diagnostics.AddError("Error executing create operation", err.Error())
+		return
+	}
+	state.Output = *output
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.TypeName))
@@ -193,8 +201,12 @@ func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	if state.Read != nil {
-		output := r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueString(), state.Read)
-		state.Output = output
+		output, err := r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueString(), state.Read)
+		if err != nil {
+			resp.Diagnostics.AddError("Error executing read operation", err.Error())
+			return
+		}
+		state.Output = *output
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
@@ -214,8 +226,12 @@ func (r *DataverseWebApiResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	if plan.Update != nil {
-		output := r.DataRecordClient.SendOperation(ctx, plan.EnvironmentId.ValueString(), plan.Update)
-		plan.Output = output
+		output, err := r.DataRecordClient.SendOperation(ctx, plan.EnvironmentId.ValueString(), plan.Update)
+		if err != nil {
+			resp.Diagnostics.AddError("Error executing update operation", err.Error())
+			return
+		}
+		plan.Output = *output
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -233,8 +249,12 @@ func (r *DataverseWebApiResource) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
-	if state.Delete != nil {
-		r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueString(), state.Delete)
+	if state.Destroy != nil {
+		_, err := r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueString(), state.Destroy)
+		if err != nil {
+			resp.Diagnostics.AddError("Error executing destroy operation", err.Error())
+			return
+		}
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.TypeName))

@@ -17,7 +17,7 @@ import (
 func NewDataverseWebApiDatasource() datasource.DataSource {
 	return &DataverseWebApiDatasource{
 		ProviderTypeName: "powerplatform",
-		TypeName:         "_dataverse_web_apis",
+		TypeName:         "_rest_query",
 	}
 }
 
@@ -28,12 +28,13 @@ type DataverseWebApiDatasource struct {
 }
 
 type DataverseWebApiDatasourceModel struct {
-	EnvironmentId types.String                             `tfsdk:"environment_id"`
-	Method        types.String                             `tfsdk:"method"`
-	Url           types.String                             `tfsdk:"url"`
-	Body          types.String                             `tfsdk:"body"`
-	Headers       []DataverseWebApiOperationHeaderResource `tfsdk:"headers"`
-	Output        types.Object                             `tfsdk:"output"`
+	EnvironmentId      types.String                             `tfsdk:"environment_id"`
+	Method             types.String                             `tfsdk:"method"`
+	Url                types.String                             `tfsdk:"url"`
+	Body               types.String                             `tfsdk:"body"`
+	ExpectedHttpStatus []int64                                  `tfsdk:"expected_http_status"`
+	Headers            []DataverseWebApiOperationHeaderResource `tfsdk:"headers"`
+	Output             types.Object                             `tfsdk:"output"`
 }
 
 func (d *DataverseWebApiDatasource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -42,12 +43,14 @@ func (d *DataverseWebApiDatasource) Metadata(_ context.Context, req datasource.M
 
 func (d *DataverseWebApiDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Resource to execute web api requests",
+		MarkdownDescription: "Datasource to fetch api requests",
 		Attributes: map[string]schema.Attribute{
 			"environment_id": schema.StringAttribute{
 				Description: "Id of the Dynamics 365 environment",
 				Required:    true,
 			},
+			// "scope": schema.StringAttribute{
+			// },
 			"method": schema.StringAttribute{
 				MarkdownDescription: "HTTP method",
 				Required:            true,
@@ -60,6 +63,12 @@ func (d *DataverseWebApiDatasource) Schema(_ context.Context, _ datasource.Schem
 			},
 			"body": schema.StringAttribute{
 				MarkdownDescription: "Body of the request",
+				Required:            false,
+				Optional:            true,
+			},
+			"expected_http_status": schema.ListAttribute{
+				ElementType:         types.Int64Type,
+				MarkdownDescription: "Expected HTTP status code. If the response status code does not match any of the expected status codes, the operation will fail.",
 				Required:            false,
 				Optional:            true,
 			},
@@ -88,10 +97,6 @@ func (d *DataverseWebApiDatasource) Schema(_ context.Context, _ datasource.Schem
 				Attributes: map[string]schema.Attribute{
 					"body": schema.StringAttribute{
 						MarkdownDescription: "Response body after executing the web api request",
-						Computed:            true,
-					},
-					"status": schema.Int64Attribute{
-						MarkdownDescription: "Response status code after executing the web api request",
 						Computed:            true,
 					},
 				},
@@ -124,14 +129,19 @@ func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.Rea
 
 	resp.State.Get(ctx, &state)
 
-	outputObjectType := d.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueString(), &DataverseWebApiOperationResource{
-		Method:  state.Method,
-		Url:     state.Url,
-		Body:    state.Body,
-		Headers: state.Headers,
+	outputObjectType, err := d.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueString(), &DataverseWebApiOperationResource{
+		Method:             state.Method,
+		Url:                state.Url,
+		Body:               state.Body,
+		Headers:            state.Headers,
+		ExpectedHttpStatus: state.ExpectedHttpStatus,
 	})
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to execute request", err.Error())
+		return
+	}
 
-	state.Output = outputObjectType
+	state.Output = *outputObjectType
 
 	diags := resp.State.Set(ctx, &state)
 

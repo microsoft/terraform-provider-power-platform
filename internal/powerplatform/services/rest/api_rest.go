@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewWebApiClient(api *api.ApiClient) WebApiClient {
@@ -40,7 +41,7 @@ type LinkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }
 
-func (client *WebApiClient) SendOperation(ctx context.Context, environmentId string, operation *DataverseWebApiOperationResource) types.Object {
+func (client *WebApiClient) SendOperation(ctx context.Context, environmentId string, operation *DataverseWebApiOperationResource) (*types.Object, error) {
 	url := operation.Url.ValueString()
 	method := operation.Method.ValueString()
 	var body *string = nil
@@ -56,29 +57,29 @@ func (client *WebApiClient) SendOperation(ctx context.Context, environmentId str
 		}
 	}
 
-	res, err := client.ExecuteWebApiRequest(ctx, environmentId, url, method, body, headers)
+	res, err := client.ExecuteApiRequest(ctx, environmentId, url, method, body, headers, operation.ExpectedHttpStatus)
+	if helpers.Code(err) == helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE {
+		return nil, err
+	}
 
 	output := map[string]attr.Value{
-		"status": types.Int64Null(),
-		"body":   types.StringNull(),
+		"body": types.StringNull(),
 	}
 	if res == nil && err != nil {
-		output["status"] = types.Int64Value(500)
 		output["body"] = types.StringValue(err.Error())
 	} else {
 		if len(res.BodyAsBytes) > 0 {
 			output["body"] = types.StringValue(string(res.BodyAsBytes))
 		}
-		output["status"] = types.Int64Value(int64(res.Response.StatusCode))
 	}
-	return types.ObjectValueMust(map[string]attr.Type{
-		"status": types.Int64Type,
-		"body":   types.StringType,
+	o := types.ObjectValueMust(map[string]attr.Type{
+		"body": types.StringType,
 	}, output)
+	return &o, nil
 
 }
 
-func (client *WebApiClient) ExecuteWebApiRequest(ctx context.Context, environmentId, url, method string, body *string, headers map[string]string) (*api.ApiHttpResponse, error) {
+func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, environmentId, url, method string, body *string, headers map[string]string, expectedStatusCodes []int64) (*api.ApiHttpResponse, error) {
 	environmentUrl, err := client.getEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -92,7 +93,12 @@ func (client *WebApiClient) ExecuteWebApiRequest(ctx context.Context, environmen
 		h.Add(k, v)
 	}
 
-	res, err := client.Api.Execute(ctx, method, apiUrl, h, body, nil, nil)
+	codes := make([]int, len(expectedStatusCodes))
+	for i, code := range expectedStatusCodes {
+		codes[i] = int(code)
+	}
+
+	res, err := client.Api.Execute(ctx, method, apiUrl, h, body, codes, nil)
 	return res, err
 }
 
