@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
@@ -29,6 +31,7 @@ type DataverseWebApiDatasource struct {
 
 type DataverseWebApiDatasourceModel struct {
 	EnvironmentId      types.String                             `tfsdk:"environment_id"`
+	Scope              types.String                             `tfsdk:"scope"`
 	Method             types.String                             `tfsdk:"method"`
 	Url                types.String                             `tfsdk:"url"`
 	Body               types.String                             `tfsdk:"body"`
@@ -41,16 +44,27 @@ func (d *DataverseWebApiDatasource) Metadata(_ context.Context, req datasource.M
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
+func (d *DataverseWebApiDatasource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.ExactlyOneOf(
+			path.MatchRoot("environment_id"),
+			path.MatchRoot("scope"),
+		),
+	}
+}
+
 func (d *DataverseWebApiDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Datasource to fetch api requests",
 		Attributes: map[string]schema.Attribute{
 			"environment_id": schema.StringAttribute{
-				Description: "Id of the Dynamics 365 environment",
-				Required:    true,
+				MarkdownDescription: "Id of the Dynamics 365 environment",
+				Optional:            true,
 			},
-			// "scope": schema.StringAttribute{
-			// },
+			"scope": schema.StringAttribute{
+				MarkdownDescription: "Authentication scope for the request if environment_id is not provided. See more: [Authentication Scopes](https://learn.microsoft.com/en-us/entra/identity-platform/scopes-oidc)",
+				Optional:            true,
+			},
 			"method": schema.StringAttribute{
 				MarkdownDescription: "HTTP method",
 				Required:            true,
@@ -129,7 +143,7 @@ func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.Rea
 
 	resp.State.Get(ctx, &state)
 
-	outputObjectType, err := d.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueString(), &DataverseWebApiOperationResource{
+	outputObjectType, err := d.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueStringPointer(), state.Scope.ValueStringPointer(), &DataverseWebApiOperationResource{
 		Method:             state.Method,
 		Url:                state.Url,
 		Body:               state.Body,

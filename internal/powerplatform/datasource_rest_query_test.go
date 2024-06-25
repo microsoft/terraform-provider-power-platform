@@ -41,3 +41,94 @@ func TestUnitDatasourceRestQuery_WhoAmI(t *testing.T) {
 		},
 	})
 }
+
+func TestAccDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
+
+	t.Setenv("TF_ACC", "1")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				// data "powerplatform_rest_query" "webapi_query" {
+				// 	scope                = "https://org330c32f4.crm4.dynamics.com/.default"
+				// 	url                  = "https://org330c32f4.crm4.dynamics.com/api/data/v9.2/WhoAmI"
+				// 	method               = "GET"
+				// 	expected_http_status = [200]
+				// }
+				// data "powerplatform_rest_query" "bapi_query" {
+				// 	scope                = "https://service.powerapps.com/.default"
+				// 	url                  = "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments"
+				// 	method               = "GET"
+				// 	expected_http_status = [200]
+				// }
+				resource "powerplatform_rest" "create_environment" {
+				scope = "https://service.powerapps.com/.default"
+				create = {
+					url                  = "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2021-04-01&retainOnProvisionFailure=false"
+					method               = "POST"
+					expected_http_status = [202, 201]
+					body = jsonencode({
+					"location" : "switzerland",
+					"properties" : {
+						"displayName" : "Sample3",
+						"environmentSku" : "Sandbox",
+						"databaseType" : "",
+						"usedBy" : null,
+						"billingPolicy" : null,
+						"linkedEnvironmentMetadata" : null,
+						"parentEnvironmentGroup" : null,
+						"cluster" : null,
+						"governanceConfiguration" : null
+					}
+					})
+				}
+				}
+
+				resource "powerplatform_rest" "destroy_environment" {
+					scope = "https://service.powerapps.com/.default"
+					destroy = {
+						url                  = "https://api.bap.microsoft.com//providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/${jsondecode(resource.powerplatform_rest.create_environment.output.body).name}?api-version=2023-06-01"
+						method               = "DELETE"
+						expected_http_status = [202]
+					}
+				}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(),
+			},
+		},
+	})
+}
+
+func TestUnitDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/rest/tests/datasource/Web_Apis_WhoAmI/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/whoami`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/rest/tests/datasource/Web_Apis_WhoAmI/get_whoami.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				data "powerplatform_rest_query" "webapi_query" {
+					scope = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/.default"
+					url            = "api/data/v9.2/whoami"
+					method         = "GET"
+				}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(),
+			},
+		},
+	})
+}

@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	neturl "net/url"
+	"reflect"
 	"strings"
 	"time"
 
@@ -54,25 +55,27 @@ func TryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (stri
 	}
 }
 
-func (client *ApiClient) Execute(ctx context.Context, method string, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
-	scope, err := TryGetScopeFromURL(url, client.Config.Urls)
-
-	if err != nil {
-		return nil, err
+func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+	if !strings.HasPrefix(url, "http") {
+		return nil, powerplatform_helpers.WrapIntoProviderError(nil, powerplatform_helpers.ERROR_INCORRECT_URL_FORMAT, "when using scope, the calling url must be an absolute url, not a relative path")
 	}
-
 	token, err := client.BaseAuth.GetTokenForScopes(ctx, []string{scope})
 	if err != nil {
 		return nil, err
 	}
 
 	var bodyBuffer io.Reader = nil
-	if body != nil {
-		bodyBytes, err := json.Marshal(body)
-		if err != nil {
-			return nil, err
+	if body != nil && (reflect.ValueOf(body).Kind() != reflect.Ptr || !reflect.ValueOf(body).IsNil()) {
+		if reflect.ValueOf(body).Kind() == reflect.Ptr && reflect.ValueOf(body).Elem().Kind() == reflect.String {
+			strp, _ := body.(*string)
+			bodyBuffer = strings.NewReader(*strp)
+		} else {
+			bodyBytes, err := json.Marshal(body)
+			if err != nil {
+				return nil, err
+			}
+			bodyBuffer = bytes.NewBuffer(bodyBytes)
 		}
-		bodyBuffer = bytes.NewBuffer(bodyBytes)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, method, url, bodyBuffer)
@@ -106,6 +109,14 @@ func (client *ApiClient) Execute(ctx context.Context, method string, url string,
 		}
 	}
 	return apiResponse, nil
+}
+
+func (client *ApiClient) Execute(ctx context.Context, method, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+	scope, err := TryGetScopeFromURL(url, client.Config.Urls)
+	if err != nil {
+		return nil, err
+	}
+	return client.ExecuteForGivenScope(ctx, scope, method, url, headers, body, acceptableStatusCodes, responseObj)
 }
 
 func (client *ApiClient) Sleep(duration time.Duration) {

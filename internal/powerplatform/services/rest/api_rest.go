@@ -41,7 +41,7 @@ type LinkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }
 
-func (client *WebApiClient) SendOperation(ctx context.Context, environmentId string, operation *DataverseWebApiOperationResource) (*types.Object, error) {
+func (client *WebApiClient) SendOperation(ctx context.Context, environmentId, scope *string, operation *DataverseWebApiOperationResource) (*types.Object, error) {
 	url := operation.Url.ValueString()
 	method := operation.Method.ValueString()
 	var body *string = nil
@@ -57,7 +57,7 @@ func (client *WebApiClient) SendOperation(ctx context.Context, environmentId str
 		}
 	}
 
-	res, err := client.ExecuteApiRequest(ctx, environmentId, url, method, body, headers, operation.ExpectedHttpStatus)
+	res, err := client.ExecuteApiRequest(ctx, environmentId, scope, url, method, body, headers, operation.ExpectedHttpStatus)
 	if helpers.Code(err) == helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE {
 		return nil, err
 	}
@@ -79,14 +79,7 @@ func (client *WebApiClient) SendOperation(ctx context.Context, environmentId str
 
 }
 
-func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, environmentId, url, method string, body *string, headers map[string]string, expectedStatusCodes []int64) (*api.ApiHttpResponse, error) {
-	environmentUrl, err := client.getEnvironmentUrlById(ctx, environmentId)
-	if err != nil {
-		return nil, err
-	}
-
-	e, _ := u.Parse(environmentUrl)
-	apiUrl := fmt.Sprintf("%s://%s/%s", e.Scheme, e.Host, url)
+func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, environmentId, scope *string, url, method string, body *string, headers map[string]string, expectedStatusCodes []int64) (*api.ApiHttpResponse, error) {
 
 	h := http.Header{}
 	for k, v := range headers {
@@ -98,8 +91,23 @@ func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, environmentId
 		codes[i] = int(code)
 	}
 
-	res, err := client.Api.Execute(ctx, method, apiUrl, h, body, codes, nil)
-	return res, err
+	if environmentId != nil {
+		environmentUrl, err := client.getEnvironmentUrlById(ctx, *environmentId)
+		if err != nil {
+			return nil, err
+		}
+
+		e, _ := u.Parse(environmentUrl)
+		apiUrl := fmt.Sprintf("%s://%s/%s", e.Scheme, e.Host, url)
+		return client.Api.Execute(ctx, method, apiUrl, h, body, codes, nil)
+
+	} else if scope != nil {
+
+		
+		return client.Api.ExecuteForGivenScope(ctx, *scope, method, url, h, body, codes, nil)
+	} else {
+		panic("scope or evironment_id must be provided")
+	}
 }
 
 func (client *WebApiClient) getEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {

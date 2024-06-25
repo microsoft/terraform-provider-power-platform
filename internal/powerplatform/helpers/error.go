@@ -13,6 +13,7 @@ type ErrorCode string
 const (
 	ERROR_OBJECT_NOT_FOUND            ErrorCode = "OBJECT_NOT_FOUND"
 	ERROR_UNEXPECTED_HTTP_RETURN_CODE ErrorCode = "UNEXPECTED_HTTP_RETURN_CODE"
+	ERROR_INCORRECT_URL_FORMAT        ErrorCode = "INCORRECT_URL_FORMAT"
 )
 
 type providerError struct {
