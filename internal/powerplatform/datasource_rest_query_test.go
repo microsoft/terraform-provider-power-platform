@@ -4,11 +4,15 @@ package powerplatform
 
 import (
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
+
+const whoAmIResponseRegex = `^{"@odata.context":"https:\/\/[^"]+","BusinessUnitId":"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}","UserId":"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}","OrganizationId":"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"}$`
 
 func TestUnitDatasourceRestQuery_WhoAmI(t *testing.T) {
 	httpmock.Activate()
@@ -36,66 +40,9 @@ func TestUnitDatasourceRestQuery_WhoAmI(t *testing.T) {
 					method         = "GET"
 				}
 				`,
-				Check: resource.ComposeAggregateTestCheckFunc(),
-			},
-		},
-	})
-}
-
-func TestAccDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
-
-	t.Setenv("TF_ACC", "1")
-
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: TestsProviderConfig + `
-				// data "powerplatform_rest_query" "webapi_query" {
-				// 	scope                = "https://org330c32f4.crm4.dynamics.com/.default"
-				// 	url                  = "https://org330c32f4.crm4.dynamics.com/api/data/v9.2/WhoAmI"
-				// 	method               = "GET"
-				// 	expected_http_status = [200]
-				// }
-				// data "powerplatform_rest_query" "bapi_query" {
-				// 	scope                = "https://service.powerapps.com/.default"
-				// 	url                  = "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments"
-				// 	method               = "GET"
-				// 	expected_http_status = [200]
-				// }
-				resource "powerplatform_rest" "create_environment" {
-				scope = "https://service.powerapps.com/.default"
-				create = {
-					url                  = "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2021-04-01&retainOnProvisionFailure=false"
-					method               = "POST"
-					expected_http_status = [202, 201]
-					body = jsonencode({
-					"location" : "switzerland",
-					"properties" : {
-						"displayName" : "Sample3",
-						"environmentSku" : "Sandbox",
-						"databaseType" : "",
-						"usedBy" : null,
-						"billingPolicy" : null,
-						"linkedEnvironmentMetadata" : null,
-						"parentEnvironmentGroup" : null,
-						"cluster" : null,
-						"governanceConfiguration" : null
-					}
-					})
-				}
-				}
-
-				resource "powerplatform_rest" "destroy_environment" {
-					scope = "https://service.powerapps.com/.default"
-					destroy = {
-						url                  = "https://api.bap.microsoft.com//providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/${jsondecode(resource.powerplatform_rest.create_environment.output.body).name}?api-version=2023-06-01"
-						method               = "DELETE"
-						expected_http_status = [202]
-					}
-				}
-				`,
-				Check: resource.ComposeAggregateTestCheckFunc(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_rest_query.webapi_query", "output.body", httpmock.File("services/rest/tests/datasource/Web_Apis_WhoAmI/get_whoami.json").String()),
+				),
 			},
 		},
 	})
@@ -123,11 +70,76 @@ func TestUnitDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
 				Config: TestsProviderConfig + `
 				data "powerplatform_rest_query" "webapi_query" {
 					scope = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/.default"
-					url            = "api/data/v9.2/whoami"
+					url            = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/whoami"
 					method         = "GET"
 				}
 				`,
-				Check: resource.ComposeAggregateTestCheckFunc(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_rest_query.webapi_query", "output.body", httpmock.File("services/rest/tests/datasource/Web_Apis_WhoAmI/get_whoami.json").String()),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDatasourceRestQuery_WhoAmI(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_environment" "env" {
+					display_name     = "` + mock_helpers.TestName() + `"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
+				data "powerplatform_rest_query" "webapi_query" {
+					environment_id = powerplatform_environment.env.id
+					url            = "api/data/v9.2/WhoAmI"
+					method         = "GET"
+				}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("data.powerplatform_rest_query.webapi_query", "output.body", regexp.MustCompile(whoAmIResponseRegex)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_environment" "env" {
+					display_name     = "` + mock_helpers.TestName() + `"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
+				data "powerplatform_rest_query" "webapi_query" {
+					scope                = "${powerplatform_environment.env.dataverse.url}.default"
+					url                  = "${powerplatform_environment.env.dataverse.url}api/data/v9.2/WhoAmI"
+					method               = "GET"
+					expected_http_status = [200]
+				}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("data.powerplatform_rest_query.webapi_query", "output.body", regexp.MustCompile(whoAmIResponseRegex)),
+				),
 			},
 		},
 	})
