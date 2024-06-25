@@ -54,7 +54,7 @@ func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datas
 }
 
 func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state EnvironmenttSettingsSourceModel
+	var state EnvironmentSettingsSourceModel
 	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS START: %s", d.ProviderTypeName))
