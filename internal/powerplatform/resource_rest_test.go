@@ -124,7 +124,7 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 				}
 
 				resource "powerplatform_rest" "query" {
-					environment_id = "a1e605fb-80ad-e1b2-bae0-f046efc0e641"
+					environment_id = powerplatform_environment.env.id
 					create = {
 						url     = "/api/data/v9.2/accounts?$select=name,accountid"
 						method  = "POST"
