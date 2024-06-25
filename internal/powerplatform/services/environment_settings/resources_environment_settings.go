@@ -206,7 +206,7 @@ func (r *EnvironmentSettingsResource) Configure(ctx context.Context, req resourc
 }
 
 func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan EnvironmenttSettingsSourceModel
+	var plan EnvironmentSettingsSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE ENVIRONMENT SETTINGS RESOURCE START: %s", r.ProviderTypeName))
 
@@ -247,7 +247,7 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 }
 
 func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state EnvironmenttSettingsSourceModel
+	var state EnvironmentSettingsSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ ENVIRONMENT SETTINGS RESOURCE START: %s", r.ProviderTypeName))
 
@@ -277,8 +277,8 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan EnvironmenttSettingsSourceModel
-	var state EnvironmenttSettingsSourceModel
+	var plan EnvironmentSettingsSourceModel
+	var state EnvironmentSettingsSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE ENVIRONMENT SETTINGS RESOURCE START: %s", r.ProviderTypeName))
 
