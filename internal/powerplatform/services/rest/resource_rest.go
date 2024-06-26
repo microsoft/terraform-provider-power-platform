@@ -9,9 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -36,17 +34,18 @@ type DataverseWebApiResource struct {
 }
 
 type DataverseWebApiResourceModel struct {
-	Id            types.String                      `tfsdk:"id"`
-	EnvironmentId types.String                      `tfsdk:"environment_id"`
-	Scope         types.String                      `tfsdk:"scope"`
-	Create        *DataverseWebApiOperationResource `tfsdk:"create"`
-	Update        *DataverseWebApiOperationResource `tfsdk:"update"`
-	Destroy       *DataverseWebApiOperationResource `tfsdk:"destroy"`
-	Read          *DataverseWebApiOperationResource `tfsdk:"read"`
-	Output        types.Object                      `tfsdk:"output"`
+	Id            types.String `tfsdk:"id"`
+	EnvironmentId types.String `tfsdk:"environment_id"`
+
+	Create  *DataverseWebApiOperation `tfsdk:"create"`
+	Update  *DataverseWebApiOperation `tfsdk:"update"`
+	Destroy *DataverseWebApiOperation `tfsdk:"destroy"`
+	Read    *DataverseWebApiOperation `tfsdk:"read"`
+	Output  types.Object              `tfsdk:"output"`
 }
 
-type DataverseWebApiOperationResource struct {
+type DataverseWebApiOperation struct {
+	Scope              types.String                             `tfsdk:"scope"`
 	Method             types.String                             `tfsdk:"method"`
 	Url                types.String                             `tfsdk:"url"`
 	Body               types.String                             `tfsdk:"body"`
@@ -65,10 +64,7 @@ func (r *DataverseWebApiResource) Metadata(ctx context.Context, req resource.Met
 
 func (d *DataverseWebApiResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("environment_id"),
-			path.MatchRoot("scope"),
-		),
+		ScopeValidator{},
 	}
 }
 
@@ -88,13 +84,6 @@ func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.Schem
 			"environment_id": schema.StringAttribute{
 				Description: "Id of the Dynamics 365 environment",
 				Optional:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"scope": schema.StringAttribute{
-				MarkdownDescription: "Authentication scope for the request if environment_id is not provided. See more: [Authentication Scopes](https://learn.microsoft.com/en-us/entra/identity-platform/scopes-oidc)",
-				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -123,6 +112,13 @@ func (r *DataverseWebApiResource) buildOperationSchema(description string) schem
 		Required:            false,
 		Optional:            true,
 		Attributes: map[string]schema.Attribute{
+			"scope": schema.StringAttribute{
+				MarkdownDescription: "Authentication scope for the request if environment_id is not provided. See more: [Authentication Scopes](https://learn.microsoft.com/en-us/entra/identity-platform/scopes-oidc)",
+				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"expected_http_status": schema.ListAttribute{
 				ElementType:         types.Int64Type,
 				MarkdownDescription: "Expected HTTP status code. If the response status code does not match any of the expected status codes, the operation will fail.",
@@ -199,7 +195,7 @@ func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.Creat
 
 	state.Id = types.StringValue(strconv.Itoa(int(time.Now().UnixMilli())))
 	if state.Create != nil {
-		output, err := r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueStringPointer(), state.Scope.ValueStringPointer(), state.Create)
+		output, err := r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueStringPointer(), state.Create)
 		if err != nil {
 			resp.Diagnostics.AddError("Error executing create operation", err.Error())
 			return
@@ -225,7 +221,7 @@ func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	if state.Read != nil {
-		output, err := r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueStringPointer(), state.Scope.ValueStringPointer(), state.Read)
+		output, err := r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueStringPointer(), state.Read)
 		if err != nil {
 			resp.Diagnostics.AddError("Error executing read operation", err.Error())
 			return
@@ -250,7 +246,7 @@ func (r *DataverseWebApiResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	if plan.Update != nil {
-		output, err := r.DataRecordClient.SendOperation(ctx, plan.EnvironmentId.ValueStringPointer(), plan.Scope.ValueStringPointer(), plan.Update)
+		output, err := r.DataRecordClient.SendOperation(ctx, plan.EnvironmentId.ValueStringPointer(), plan.Update)
 		if err != nil {
 			resp.Diagnostics.AddError("Error executing update operation", err.Error())
 			return
@@ -274,7 +270,7 @@ func (r *DataverseWebApiResource) Delete(ctx context.Context, req resource.Delet
 	}
 
 	if state.Destroy != nil {
-		output, err := r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueStringPointer(), state.Scope.ValueStringPointer(), state.Destroy)
+		output, err := r.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueStringPointer(), state.Destroy)
 		if err != nil {
 			resp.Diagnostics.AddError("Error executing destroy operation", err.Error())
 			return

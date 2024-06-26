@@ -143,7 +143,8 @@ func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.Rea
 
 	resp.State.Get(ctx, &state)
 
-	outputObjectType, err := d.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueStringPointer(), state.Scope.ValueStringPointer(), &DataverseWebApiOperationResource{
+	outputObjectType, err := d.DataRecordClient.SendOperation(ctx, state.EnvironmentId.ValueStringPointer(), &DataverseWebApiOperation{
+		Scope:              state.Scope,
 		Method:             state.Method,
 		Url:                state.Url,
 		Body:               state.Body,
