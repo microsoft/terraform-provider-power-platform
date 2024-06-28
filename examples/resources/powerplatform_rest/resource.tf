@@ -22,14 +22,15 @@ resource "powerplatform_environment" "env" {
 }
 
 resource "powerplatform_rest" "install_sample_data" {
-  environment_id = powerplatform_environment.env.id
   create = {
-    url                  = "/api/data/v9.2/InstallSampleData"
+    scope                = "${powerplatform_environment.env.dataverse.url}/.default"
+    url                  = "${powerplatform_environment.env.dataverse.url}/api/data/v9.2/InstallSampleData"
     method               = "POST"
     expected_http_status = [204]
   }
   destroy = {
-    url                  = "/api/data/v9.2/UninstallSampleData"
+    scope                = "${powerplatform_environment.env.dataverse.url}/.default"
+    url                  = "${powerplatform_environment.env.dataverse.url}/api/data/v9.2/UninstallSampleData"
     method               = "POST"
     expected_http_status = [204]
   }

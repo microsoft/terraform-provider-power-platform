@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	u "net/url"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -41,7 +40,7 @@ type LinkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }
 
-func (client *WebApiClient) SendOperation(ctx context.Context, environmentId *string, operation *DataverseWebApiOperation) (*types.Object, error) {
+func (client *WebApiClient) SendOperation(ctx context.Context, operation *DataverseWebApiOperation) (*types.Object, error) {
 	url := operation.Url.ValueString()
 	method := operation.Method.ValueString()
 	var body *string = nil
@@ -57,7 +56,7 @@ func (client *WebApiClient) SendOperation(ctx context.Context, environmentId *st
 		}
 	}
 
-	res, err := client.ExecuteApiRequest(ctx, environmentId, operation.Scope.ValueStringPointer(), url, method, body, headers, operation.ExpectedHttpStatus)
+	res, err := client.ExecuteApiRequest(ctx, operation.Scope.ValueStringPointer(), url, method, body, headers, operation.ExpectedHttpStatus)
 	if helpers.Code(err) == helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE {
 		return nil, err
 	}
@@ -79,7 +78,7 @@ func (client *WebApiClient) SendOperation(ctx context.Context, environmentId *st
 
 }
 
-func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, environmentId, scope *string, url, method string, body *string, headers map[string]string, expectedStatusCodes []int64) (*api.ApiHttpResponse, error) {
+func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, scope *string, url, method string, body *string, headers map[string]string, expectedStatusCodes []int64) (*api.ApiHttpResponse, error) {
 
 	h := http.Header{}
 	for k, v := range headers {
@@ -91,18 +90,7 @@ func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, environmentId
 		codes[i] = int(code)
 	}
 
-	if environmentId != nil {
-		environmentUrl, err := client.getEnvironmentUrlById(ctx, *environmentId)
-		if err != nil {
-			return nil, err
-		}
-
-		e, _ := u.Parse(environmentUrl)
-		apiUrl := fmt.Sprintf("%s://%s/%s", e.Scheme, e.Host, url)
-		return client.Api.Execute(ctx, method, apiUrl, h, body, codes, nil)
-
-	} else if scope != nil {
-
+	if scope != nil {
 		return client.Api.ExecuteForGivenScope(ctx, *scope, method, url, h, body, codes, nil)
 	} else {
 		panic("scope or evironment_id must be provided")

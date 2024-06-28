@@ -32,7 +32,6 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 					}
 				}
 
-
 				locals {
 					body = jsonencode({
 						"accountid" : "00000000-0000-0000-0000-000000000001",
@@ -64,25 +63,28 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 				}
 
 				resource "powerplatform_rest" "query" {
-					environment_id = powerplatform_environment.env.id
 					create = {
-						url     = "/api/data/v9.2/accounts?$select=name,accountid"
+					    scope   = "${powerplatform_environment.env.dataverse.url}/.default"
+						url     = "${powerplatform_environment.env.dataverse.url}/api/data/v9.2/accounts?$select=name,accountid"
 						method  = "POST"
 						body    = local.body
 						headers = local.headers
 					}
 					read = {
-						url    = "api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name,accountid"
+					    scope  = "${powerplatform_environment.env.dataverse.url}/.default"
+						url    = "${powerplatform_environment.env.dataverse.url}/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name,accountid"
 						method = "GET"
 					}
 					update = {
-						url     = "api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name,accountid"
+					    scope   = "${powerplatform_environment.env.dataverse.url}/.default"
+						url     = "${powerplatform_environment.env.dataverse.url}/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name,accountid"
 						method  = "PATCH"
 						body    = local.body
 						headers = local.headers
 					}
 					destroy = {
-						url    = "api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)"
+					    scope  = "${powerplatform_environment.env.dataverse.url}/.default"
+						url    = "${powerplatform_environment.env.dataverse.url}/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)"
 						method = "DELETE"
 					}
 				}`,
@@ -92,6 +94,17 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 			},
 			{
 				Config: TestsProviderConfig + `
+
+			resource "powerplatform_environment" "env" {
+				display_name     = "` + mock_helpers.TestName() + `"
+				location         = "europe"
+				environment_type = "Sandbox"
+				dataverse = {
+					language_code     = "1033"
+					currency_code     = "USD"
+					security_group_id = "00000000-0000-0000-0000-000000000000"
+				}
+			}
 
 				locals {
 					body = jsonencode({
@@ -124,25 +137,28 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 				}
 
 				resource "powerplatform_rest" "query" {
-					environment_id = powerplatform_environment.env.id
 					create = {
-						url     = "/api/data/v9.2/accounts?$select=name,accountid"
+					    scope   = "${powerplatform_environment.env.dataverse.url}/.default"
+						url     = "${powerplatform_environment.env.dataverse.url}/api/data/v9.2/accounts?$select=name,accountid"
 						method  = "POST"
 						body    = local.body
 						headers = local.headers
 					}
 					read = {
-						url    = "api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name,accountid"
+					    scope  = "${powerplatform_environment.env.dataverse.url}/.default"
+						url    = "${powerplatform_environment.env.dataverse.url}/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name,accountid"
 						method = "GET"
 					}
 					update = {
-						url     = "api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name,accountid"
+					    scope   = "${powerplatform_environment.env.dataverse.url}/.default"
+						url     = "${powerplatform_environment.env.dataverse.url}/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name,accountid"
 						method  = "PATCH"
 						body    = local.body
 						headers = local.headers
 					}
 					destroy = {
-						url    = "api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)"
+					    scope  = "${powerplatform_environment.env.dataverse.url}/.default"
+						url    = "${powerplatform_environment.env.dataverse.url}/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)"
 						method = "DELETE"
 					}
 				}`,
@@ -206,25 +222,28 @@ func TestUnitTestRest_Validate_Create(t *testing.T) {
 				}
 
 				resource "powerplatform_rest" "query" {
-					environment_id = "00000000-0000-0000-0000-000000000001"
 					create = {
-						url     = "api/data/v9.2/accounts?$select=name,accountid"
+					    scope   = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/.default"
+						url     = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/accounts?$select=name,accountid"
 						method  = "POST"
 						body    = local.body
 						headers = local.headers
 					}
 					read = {
-						url    = "api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name,accountid"
+						scope  = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/.default"
+						url    = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name,accountid"
 						method = "GET"
 					}
 					update = {
-						url     = "api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name,accountid"
+						scope   = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/.default"
+						url     = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name,accountid"
 						method  = "PATCH"
 						body    = local.body
 						headers = local.headers
 					}
 					destroy = {
-						url    = "api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)"
+					 	scope  = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/.default"
+						url    = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)"
 						method = "DELETE"
 					}
 				}`,

@@ -23,8 +23,8 @@ resource "powerplatform_environment" "development" {
 }
 
 data "powerplatform_rest_query" "webapi_query" {
-  environment_id       = powerplatform_environment.development.id
-  url                  = "/api/data/v9.2/RetrieveCurrentOrganization(AccessType=@p1)?@p1=Microsoft.Dynamics.CRM.EndpointAccessType'Default'"
+  scope                = "${powerplatform_environment.development.dataverse.url}/.default"
+  url                  = "${powerplatform_environment.development.dataverse.url}/api/data/v9.2/RetrieveCurrentOrganization(AccessType=@p1)?@p1=Microsoft.Dynamics.CRM.EndpointAccessType'Default'"
   method               = "GET"
   expected_http_status = [200]
 }
