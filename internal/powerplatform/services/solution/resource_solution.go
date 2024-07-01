@@ -273,6 +273,9 @@ func (r *SolutionResource) importSolution(ctx context.Context, plan *SolutionRes
 		diagnostics.AddError(fmt.Sprintf("Client error when reading solution file %s", plan.SolutionFile.ValueString()), err.Error())
 	}
 
+	cwd, _ := os.Getwd()
+	tflog.Debug(ctx, fmt.Sprintf("Current working directory: %s", cwd))
+
 	settingsContent := make([]byte, 0)
 	//todo check if settings file is not empty in .tf
 	if plan.SettingsFile.ValueString() != "" {

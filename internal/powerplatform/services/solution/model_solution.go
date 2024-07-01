@@ -46,9 +46,32 @@ type StageSolutionImportResponseDto struct {
 type StageSolutionImportResultResponseDto struct {
 	StageSolutionUploadId     string                          `json:"StageSolutionUploadId"`
 	StageSolutionStatus       string                          `json:"StageSolutionStatus"`
-	SolutionValidationResults []string                        `json:"SolutionValidationResults"`
-	MissingDependencies       []string                        `json:"MissingDependencies"`
+	SolutionValidationResults []SolutionValidationResults     `json:"SolutionValidationResults"`
+	MissingDependencies       []MissingDependenciesDto        `json:"MissingDependencies"`
 	SolutionDetails           StageSolutionSolutionDetailsDto `json:"SolutionDetails"`
+}
+
+type SolutionValidationResults struct {
+	SolutionValidationResultType string `json:"SolutionValidationResultType"`
+	ErrorCode                    int    `json:"ErrorCode"`
+	AdditionalInfo               string `json:"AdditionalInfo"`
+	Message                      string `json:"Message"`
+}
+
+type MissingDependenciesDto struct {
+	RequiredComponentSchemaName         string `json:"RequiredComponentSchemaName"`
+	RequiredComponentDisplayName        string `json:"RequiredComponentDisplayName"`
+	RequiredComponentParentSchemaName   string `json:"RequiredComponentParentSchemaName"`
+	RequiredComponentParentDisplayName  string `json:"RequiredComponentParentDisplayName"`
+	RequiredComponentId                 string `json:"RequiredComponentId"`
+	RequiredSolutionName                string `json:"RequiredSolutionName"`
+	RequiredComponentType               string `json:"RequiredComponentType"`
+	DependentComponentSchemaName        string `json:"DependentComponentSchemaName"`
+	DependentComponentDisplayName       string `json:"DependentComponentDisplayName"`
+	DependentComponentParentSchemaName  string `json:"DependentComponentParentSchemaName"`
+	DependentComponentParentDisplayName string `json:"DependentComponentParentDisplayName"`
+	DependentComponentType              string `json:"DependentComponentType"`
+	DependentComponentId                string `json:"DependentComponentId"`
 }
 
 type StageSolutionSolutionDetailsDto struct {
