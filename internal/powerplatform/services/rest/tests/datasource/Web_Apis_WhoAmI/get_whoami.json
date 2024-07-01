@@ -1,0 +1,6 @@
+{
+    "@odata.context": "https://org330c32f4.crm4.dynamics.com/api/data/v9.2/$metadata#Microsoft.Dynamics.CRM.WhoAmIResponse",
+    "BusinessUnitId": "00000000-0000-0000-0000-000000000003",
+    "UserId": "00000000-0000-0000-0000-000000000002",
+    "OrganizationId": "00000000-0000-0000-0000-000000000001"
+}

@@ -26,13 +26,6 @@ provider "powerplatform" {
 }
 
 
-data "powerplatform_data_records" "root_business_unit" {
-  environment_id    = "a1e605fb-80ad-e1b2-bae0-f046efc0e641"
-  entity_collection = "businessunits"
-  filter            = "parentbusinessunitid eq null"
-  select            = ["name"]
-}
-
 resource "powerplatform_environment" "data_record_example_env" {
   display_name     = "powerplatform_data_record_example"
   location         = "europe"
@@ -42,6 +35,13 @@ resource "powerplatform_environment" "data_record_example_env" {
     currency_code     = "USD"
     security_group_id = "00000000-0000-0000-0000-000000000000"
   }
+}
+
+data "powerplatform_data_records" "root_business_unit" {
+  environment_id    = powerplatform_environment.data_record_example_env.id
+  entity_collection = "businessunits"
+  filter            = "parentbusinessunitid eq null"
+  select            = ["name"]
 }
 
 resource "powerplatform_data_record" "role" {

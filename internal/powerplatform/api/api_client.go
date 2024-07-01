@@ -11,10 +11,12 @@ import (
 	"io"
 	"net/http"
 	neturl "net/url"
+	"reflect"
 	"strings"
 	"time"
 
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
+	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 type ProviderClient struct {
@@ -53,25 +55,27 @@ func TryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (stri
 	}
 }
 
-func (client *ApiClient) Execute(ctx context.Context, method string, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
-	scope, err := TryGetScopeFromURL(url, client.Config.Urls)
-
-	if err != nil {
-		return nil, err
+func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+	if !strings.HasPrefix(url, "http") {
+		return nil, powerplatform_helpers.WrapIntoProviderError(nil, powerplatform_helpers.ERROR_INCORRECT_URL_FORMAT, "when using scope, the calling url must be an absolute url, not a relative path")
 	}
-
 	token, err := client.BaseAuth.GetTokenForScopes(ctx, []string{scope})
 	if err != nil {
 		return nil, err
 	}
 
 	var bodyBuffer io.Reader = nil
-	if body != nil {
-		bodyBytes, err := json.Marshal(body)
-		if err != nil {
-			return nil, err
+	if body != nil && (reflect.ValueOf(body).Kind() != reflect.Ptr || !reflect.ValueOf(body).IsNil()) {
+		if reflect.ValueOf(body).Kind() == reflect.Ptr && reflect.ValueOf(body).Elem().Kind() == reflect.String {
+			strp, _ := body.(*string)
+			bodyBuffer = strings.NewReader(*strp)
+		} else {
+			bodyBytes, err := json.Marshal(body)
+			if err != nil {
+				return nil, err
+			}
+			bodyBuffer = bytes.NewBuffer(bodyBytes)
 		}
-		bodyBuffer = bytes.NewBuffer(bodyBytes)
 	}
 
 	request, err := http.NewRequestWithContext(ctx, method, url, bodyBuffer)
@@ -80,26 +84,39 @@ func (client *ApiClient) Execute(ctx context.Context, method string, url string,
 	}
 	apiResponse, err := client.doRequest(token, request, headers)
 	if err != nil {
-		return nil, err
+		return apiResponse, err
 	}
 
 	isStatusCodeValid := false
-	for _, statusCode := range acceptableStatusCodes {
-		if apiResponse.Response.StatusCode == statusCode {
-			isStatusCodeValid = true
-			break
+	if len(acceptableStatusCodes) == 0 {
+		isStatusCodeValid = true
+	} else {
+		for _, statusCode := range acceptableStatusCodes {
+			if apiResponse.Response.StatusCode == statusCode {
+				isStatusCodeValid = true
+				break
+			}
+		}
+		if !isStatusCodeValid {
+			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE, fmt.Sprintf("expected status code: %d, recieved: [%d]", acceptableStatusCodes, apiResponse.Response.StatusCode))
 		}
 	}
-	if !isStatusCodeValid {
-		return nil, fmt.Errorf("expected status code: %d, recieved: %d", acceptableStatusCodes, apiResponse.Response.StatusCode)
-	}
+
 	if responseObj != nil {
 		err = apiResponse.MarshallTo(responseObj)
 		if err != nil {
-			return nil, err
+			return apiResponse, err
 		}
 	}
 	return apiResponse, nil
+}
+
+func (client *ApiClient) Execute(ctx context.Context, method, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+	scope, err := TryGetScopeFromURL(url, client.Config.Urls)
+	if err != nil {
+		return nil, err
+	}
+	return client.ExecuteForGivenScope(ctx, scope, method, url, headers, body, acceptableStatusCodes, responseObj)
 }
 
 func (client *ApiClient) Sleep(duration time.Duration) {

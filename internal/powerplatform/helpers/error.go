@@ -11,7 +11,9 @@ import (
 type ErrorCode string
 
 const (
-	ERROR_OBJECT_NOT_FOUND ErrorCode = "OBJECT_NOT_FOUND"
+	ERROR_OBJECT_NOT_FOUND            ErrorCode = "OBJECT_NOT_FOUND"
+	ERROR_UNEXPECTED_HTTP_RETURN_CODE ErrorCode = "UNEXPECTED_HTTP_RETURN_CODE"
+	ERROR_INCORRECT_URL_FORMAT        ErrorCode = "INCORRECT_URL_FORMAT"
 )
 
 type providerError struct {
@@ -51,8 +53,15 @@ func NewProviderError(errorCode ErrorCode, format string, args ...interface{}) e
 }
 
 func WrapIntoProviderError(err error, errorCode ErrorCode, msg string) error {
-	return providerError{
-		error:     fmt.Errorf("%s: [%w]", msg, err),
-		errorCode: errorCode,
+	if err == nil {
+		return providerError{
+			error:     fmt.Errorf("%s", msg),
+			errorCode: errorCode,
+		}
+	} else {
+		return providerError{
+			error:     fmt.Errorf("%s: [%w]", msg, err),
+			errorCode: errorCode,
+		}
 	}
 }
