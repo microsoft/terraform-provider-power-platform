@@ -38,8 +38,8 @@ resource "powerplatform_environment" "development" {
 }
 
 data "powerplatform_rest_query" "webapi_query" {
-  environment_id       = powerplatform_environment.development.id
-  url                  = "/api/data/v9.2/RetrieveCurrentOrganization(AccessType=@p1)?@p1=Microsoft.Dynamics.CRM.EndpointAccessType'Default'"
+  scope                = "${powerplatform_environment.development.dataverse.url}/.default"
+  url                  = "${powerplatform_environment.development.dataverse.url}/api/data/v9.2/RetrieveCurrentOrganization(AccessType=@p1)?@p1=Microsoft.Dynamics.CRM.EndpointAccessType'Default'"
   method               = "GET"
   expected_http_status = [200]
 }
@@ -51,15 +51,14 @@ data "powerplatform_rest_query" "webapi_query" {
 ### Required
 
 - `method` (String) HTTP method
-- `url` (String) URL of the web api
+- `scope` (String) Authentication scope for the request. See more: [Authentication Scopes](https://learn.microsoft.com/en-us/entra/identity-platform/scopes-oidc)
+- `url` (String) Absolute url of the api call
 
 ### Optional
 
 - `body` (String) Body of the request
-- `environment_id` (String) Id of the Dynamics 365 environment
 - `expected_http_status` (List of Number) Expected HTTP status code. If the response status code does not match any of the expected status codes, the operation will fail.
 - `headers` (Attributes List) Headers of the request (see [below for nested schema](#nestedatt--headers))
-- `scope` (String) Authentication scope for the request if environment_id is not provided. See more: [Authentication Scopes](https://learn.microsoft.com/en-us/entra/identity-platform/scopes-oidc)
 
 ### Read-Only
 
