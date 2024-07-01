@@ -5,6 +5,7 @@ provider_installation {
     "hashicorp/azuread" = "/go/bin"
     "hashicorp/random" = "/go/bin"
     "hashicorp/local" = "/go/bin"
+    "hashicorp/null" = "/go/bin"
   }
 
   # For all other providers, install them directly from their origin provider
