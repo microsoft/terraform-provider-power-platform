@@ -3,7 +3,7 @@
 page_title: "powerplatform_rest Resource - powerplatform"
 subcategory: ""
 description: |-
-  Resource to execute web api requests. There are four distinct operations, that you can define idepenetly. The HTTP response' body of the operation, that was called as last, will be returned in 'output.body' \n\n:
+  Resource to execute web api requests. There are four distinct operations, that you can define independently. The HTTP response' body of the operation, that was called as last, will be returned in 'output.body' \n\n:
   * Create: will be called once during the lifecycle of the resource (first 'terraform apply')
   * Read: terraform will call this operation every time during 'plan' and 'apply' to get the current state of the resource
   * Update: will be called every time during 'terraform apply' if the resource has changed (change done by the user or different values returned by the 'read' operation than those in the current state)
