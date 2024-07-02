@@ -11,7 +11,7 @@ description: |-
   \n\nYOu don't have to define all the operations but there are some things to consider:
   * lack of 'create' operation will result in no reasource being created. If you only need to read values consider using datasource 'powerplatform_rest_query' instead
   * lack of 'read' operation will result in no resource changes being tracked. That means that the 'update' operation will never be called
-  * lack of destroy will couse, that the resource will not be deleted during 'terraform destroy'
+  * lack of destroy will cause that the resource to not be deleted during 'terraform destroy'
 ---
 
 # powerplatform_rest (Resource)
