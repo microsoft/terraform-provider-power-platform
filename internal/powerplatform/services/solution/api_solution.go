@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -99,7 +100,15 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 		return nil, err
 	}
 	if stageSolutionResponse.StageSolutionResults.StageSolutionStatus != "Passed" {
-		return nil, fmt.Errorf("stage solution failed: %s", stageSolutionResponse.StageSolutionResults.StageSolutionStatus)
+		e := fmt.Errorf("solution failed with status: '%s'", stageSolutionResponse.StageSolutionResults.StageSolutionStatus)
+
+		for _, missingDependency := range stageSolutionResponse.StageSolutionResults.MissingDependencies {
+			e = errors.Join(fmt.Errorf("missing dependency: '%s'", missingDependency.RequiredComponentSchemaName), e)
+		}
+		for _, validation := range stageSolutionResponse.StageSolutionResults.SolutionValidationResults {
+			e = errors.Join(fmt.Errorf("solution validation failed: %s", validation.Message), e)
+		}
+		return nil, e
 	}
 
 	//import solution
