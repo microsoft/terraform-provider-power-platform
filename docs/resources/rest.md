@@ -8,7 +8,7 @@ description: |-
   * Read: terraform will call this operation every time during 'plan' and 'apply' to get the current state of the resource
   * Update: will be called every time during 'terraform apply' if the resource has changed (change done by the user or different values returned by the 'read' operation than those in the current state)
   * Destroy: will be called once during the lifecycle of the resource (last 'terraform destroy')
-  \n\nYOu don't have to define all the operations but there are some things to consider:
+  \n\nYou don't have to define all the operations but there are some things to consider:
   * lack of 'create' operation will result in no reasource being created. If you only need to read values consider using datasource 'powerplatform_rest_query' instead
   * lack of 'read' operation will result in no resource changes being tracked. That means that the 'update' operation will never be called
   * lack of destroy will cause that the resource to not be deleted during 'terraform destroy'
