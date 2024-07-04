@@ -84,6 +84,7 @@ provider "powerplatform" {
 ```
 
 Additional Resources about OIDC:
+
 * [OpenID Connect authentication with Microsoft Entra ID](https://learn.microsoft.com/entra/architecture/auth-oidc)
 * [Configuring OpenID Connect for GitHub and Microsoft Entra ID](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-azure)
 
@@ -95,6 +96,49 @@ The Power Platform provider can use a Service Principal with Client Secret to au
 1. [Register your app registration with Power Platform](https://learn.microsoft.com/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
 1. Configure the provider to use a Service Principal with a Client Secret with either environment variables or using Terraform variables
 
+### Authenticating to Power Platfomr using Service Principal and certificate
+
+1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
+1. [Register your app registration with Power Platform](https://learn.microsoft.com/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
+1. Generate a certificate using openssl or other tools
+
+```bash
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 365
+```
+
+4. Merge public and private part of the certificate files together
+
+Using linux shell
+
+```bash
+cat *.pem > cert+key.pem
+```
+
+Using Powershell
+
+```powershell
+Get-Content .\cert.pem, .\key.pem | Set-Content cert+key.pem
+```
+
+5. Generate pkcs12 file
+
+```bash
+openssl pkcs12 -export -out cert.pkcs12 -in cert+key.pem
+```
+
+6. Add public part of the certificate (`cert.pem` file) to the app registration
+7. Store your key.pem and the password used to generate in a safe place
+8. Configure the provider to use certificate with the following code:
+
+```terraform
+provider "powerplatform" {
+  client_id     = var.client_id
+  tenant_id     = var.tenant_id
+  client_certificate_file_path = "${path.cwd}/cert.pkcs12"
+  client_certificate_password  = var.cert_pass
+}
+```
+
 #### Using Environment Variables
 
 We recomend using Environment Variables to pass the credentials to the provider.
@@ -104,12 +148,18 @@ We recomend using Environment Variables to pass the credentials to the provider.
 | `POWER_PLATFORM_CLIENT_ID` | The service principal client id | |
 | `POWER_PLATFORM_CLIENT_SECRET` | The service principal secret | |
 | `POWER_PLATFORM_TENANT_ID` | The guid of the tenant | |
+| `POWER_PLATFORM_CLOUD` | override for the cloud used (default is `public`) | |
+| `POWER_PLATFORM_USE_OIDC` | if set to `true` then OIDC authentication will be used | |
+| `POWER_PLATFORM_USE_CLI` | if set to `true` then Azure CLI authentication will be used | |
+| `POWER_PLATFORM_CLIENT_CERTIFICATE` | The Base64 format of your certificate that will be used to certificate based authentication | |
+| `POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH` | The path to the certificate that will be used to certificate based authentication | |
+| `POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD` | Password for the provider certificate | |
 
 -> Variables passed into the provider will override the environment variables.
 
 #### Using Terraform Variables
 
-Alternatively, you can configure the provider using variables in your Terraform configuration which can be passed in via [command line parameters](https://developer.hashicorp.com/terraform/language/values/variables#variables-on-the-command-line), [a `*.tfvars` file](https://developer.hashicorp.com/terraform/language/values/variables#variable-definitions-tfvars-files), or [environment variables](https://developer.hashicorp.com/terraform/language/values/variables#environment-variables).  If you choose to use variables, please be sure to [protect sensitive input variables](https://developer.hashicorp.com/terraform/tutorials/configuration-language/sensitive-variables) so that you do not expose your credentials in your Terraform configuration. 
+Alternatively, you can configure the provider using variables in your Terraform configuration which can be passed in via [command line parameters](https://developer.hashicorp.com/terraform/language/values/variables#variables-on-the-command-line), [a `*.tfvars` file](https://developer.hashicorp.com/terraform/language/values/variables#variable-definitions-tfvars-files), or [environment variables](https://developer.hashicorp.com/terraform/language/values/variables#environment-variables).  If you choose to use variables, please be sure to [protect sensitive input variables](https://developer.hashicorp.com/terraform/tutorials/configuration-language/sensitive-variables) so that you do not expose your credentials in your Terraform configuration.
 
 ```terraform
 provider "powerplatform" {

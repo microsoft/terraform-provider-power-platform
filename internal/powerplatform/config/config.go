@@ -32,10 +32,29 @@ type ProviderCredentials struct {
 	ClientId     string
 	ClientSecret string
 
+	ClientCertificatePassword string
+	ClientCertificateRaw      string
+
 	OidcRequestToken  string
 	OidcRequestUrl    string
 	OidcToken         string
 	OidcTokenFilePath string
+}
+
+func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {
+	return model.ClientId != "" && model.ClientSecret != "" && model.TenantId != ""
+}
+
+func (model *ProviderCredentials) IsClientCertificateCredentialsProvided() bool {
+	return model.ClientCertificateRaw != ""
+}
+
+func (model *ProviderCredentials) IsCliProvided() bool {
+	return model.UseCli
+}
+
+func (model *ProviderCredentials) IsOidcProvided() bool {
+	return model.UseOidc
 }
 
 type ProviderCredentialsModel struct {
@@ -49,24 +68,12 @@ type ProviderCredentialsModel struct {
 	ClientId     types.String `tfsdk:"client_id"`
 	ClientSecret types.String `tfsdk:"client_secret"`
 
+	ClientCertificateFilePath types.String `tfsdk:"client_certificate_file_path"`
+	ClientCertificate         types.String `tfsdk:"client_certificate"`
+	ClientCertificatePassword types.String `tfsdk:"client_certificate_password"`
+
 	OidcRequestToken  types.String `tfsdk:"oidc_request_token"`
 	OidcRequestUrl    types.String `tfsdk:"oidc_request_url"`
 	OidcToken         types.String `tfsdk:"oidc_token"`
 	OidcTokenFilePath types.String `tfsdk:"oidc_token_file_path"`
-}
-
-// func (model *ProviderCredentials) IsTelemetryOprout() bool {
-// 	return model.TelemetryOptout
-// }
-
-func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {
-	return model.ClientId != "" && model.ClientSecret != "" && model.TenantId != ""
-}
-
-func (model *ProviderCredentials) IsCliProvided() bool {
-	return model.UseCli
-}
-
-func (model *ProviderCredentials) IsOidcProvided() bool {
-	return model.UseOidc
 }
