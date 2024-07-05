@@ -53,6 +53,8 @@ func (d *syncAttributePlanModifier) PlanModifyString(ctx context.Context, req pl
 
 		if value == "" {
 			resp.PlanValue = types.StringUnknown()
+		} else {
+			resp.PlanValue = types.StringValue(value)
 		}
 	}
 }
