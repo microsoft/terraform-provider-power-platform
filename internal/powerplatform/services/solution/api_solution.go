@@ -206,13 +206,18 @@ func (client *SolutionClient) createSolutionComponentParameters(ctx context.Cont
 		})
 	}
 	for _, envVariableComponent := range solutionSettings.EnvironmentVariables {
-		solutionComponents = append(solutionComponents, ImportSolutionEnvironmentVariablesDto{
-			Type:       "Microsoft.Dynamics.CRM.environmentvariablevalue",
-			SchemaName: envVariableComponent.SchemaName,
-			Value:      envVariableComponent.Value,
-		})
+		if envVariableComponent.Value != "" {
+			solutionComponents = append(solutionComponents, ImportSolutionEnvironmentVariablesDto{
+				Type:       "Microsoft.Dynamics.CRM.environmentvariablevalue",
+				SchemaName: envVariableComponent.SchemaName,
+				Value:      envVariableComponent.Value,
+			})
+		}
 	}
 
+	if len(solutionComponents) == 0 {
+		return nil, nil
+	}
 	return solutionComponents, nil
 }
 
