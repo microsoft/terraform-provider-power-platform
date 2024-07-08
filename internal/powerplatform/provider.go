@@ -34,6 +34,7 @@ import (
 	locations "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
 	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
+	rest "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/rest"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
 )
@@ -421,6 +422,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return auth.NewUserResource() },
 		func() resource.Resource { return data_record.NewDataRecordResource() },
 		func() resource.Resource { return env_settings.NewEnvironmentSettingsResource() },
+		func() resource.Resource { return rest.NewDataverseWebApiResource() },
 	}
 }
 
@@ -443,6 +445,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return auth.NewSecurityRolesDataSource() },
 		func() datasource.DataSource { return application.NewTenantApplicationPackagesDataSource() },
 		func() datasource.DataSource { return data_record.NewDataRecordDataSource() },
+		func() datasource.DataSource { return rest.NewDataverseWebApiDatasource() },
 	}
 }
 
