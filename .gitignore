@@ -74,7 +74,7 @@ test_solution*.json
 *.log.json
 *.log.json.bak
 
-*__debug_bin
+*__debug_bin*
 
 # makefile
 makefile

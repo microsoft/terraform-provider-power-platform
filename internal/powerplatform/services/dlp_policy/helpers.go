@@ -125,24 +125,6 @@ func convertToAttrValueCustomConnectorUrlPatternsDefinition(urlPatterns []DlpCon
 }
 
 func convertToAttrValueEnvironments(environments []DlpEnvironmentDto) []string {
-	// var env []attr.Value
-	// for _, environment := range environments {
-	// 	env = append(env, types.ObjectValueMust(
-	// 		map[string]attr.Type{
-	// 			"name": types.StringType,
-	// 		},
-	// 		map[string]attr.Value{
-	// 			"name": types.StringValue(environment.Name),
-	// 		},
-	// 	))
-	// }
-
-	// if len(environments) == 0 {
-	// 	return types.SetValueMust(environmentSetObjectType, []attr.Value{})
-	// } else {
-	// 	return types.SetValueMust(environmentSetObjectType, env)
-	// }
-
 	if len(environments) == 0 {
 		return []string{}
 	} else {

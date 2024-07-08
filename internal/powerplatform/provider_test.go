@@ -20,6 +20,7 @@ import (
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
 	data_record "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/data_record"
+	rest "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/rest"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 	env_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_settings"
@@ -73,6 +74,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		env_settings.NewEnvironmentSettingsDataSource(),
 		application.NewTenantApplicationPackagesDataSource(),
 		data_record.NewDataRecordDataSource(),
+		rest.NewDataverseWebApiDatasource(),
 	}
 	datasources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).DataSources(context.Background())
 
@@ -95,6 +97,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		auth.NewUserResource(),
 		env_settings.NewEnvironmentSettingsResource(),
 		data_record.NewDataRecordResource(),
+		rest.NewDataverseWebApiResource(),
 	}
 	resources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).Resources(context.Background())
 
