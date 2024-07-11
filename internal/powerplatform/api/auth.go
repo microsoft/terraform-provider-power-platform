@@ -21,6 +21,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 type TokenExpiredError struct {
@@ -59,9 +60,32 @@ func NewAuthBase(config *config.ProviderConfig) *Auth {
 	}
 }
 
-// func (client *Auth) GetAuthority(tenantid string) string {
-// 	return constants.OAUTH_AUTHORITY_URL + tenantid
-// }
+func (client *Auth) AuthenticateClientCertificate(ctx context.Context, scopes []string) (string, time.Time, error) {
+
+	cert, key, err := helpers.ConvertBase64ToCert(client.config.Credentials.ClientCertificateRaw, client.config.Credentials.ClientCertificatePassword)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	azureCertCredentials, err := azidentity.NewClientCertificateCredential(
+		client.config.Credentials.TenantId,
+		client.config.Credentials.ClientId,
+		cert,
+		key,
+		&azidentity.ClientCertificateCredentialOptions{
+			ClientOptions: azcore.ClientOptions{
+				Cloud: client.config.Cloud,
+			},
+		},
+	)
+	accessToken, err := azureCertCredentials.GetToken(ctx, policy.TokenRequestOptions{
+		Scopes: scopes,
+	})
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return accessToken.Token, accessToken.ExpiresOn, nil
+}
 
 func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string) (string, time.Time, error) {
 	azureCLICredentials, err := azidentity.NewAzureCLICredential(nil)
@@ -259,7 +283,8 @@ func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*st
 		token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes)
 	case client.config.Credentials.IsOidcProvided():
 		token, tokenExpiry, err = client.AuthenticateOIDC(ctx, scopes)
-
+	case client.config.Credentials.IsClientCertificateCredentialsProvided():
+		token, tokenExpiry, err = client.AuthenticateClientCertificate(ctx, scopes)
 	default:
 		return nil, errors.New("no credentials provided")
 	}
