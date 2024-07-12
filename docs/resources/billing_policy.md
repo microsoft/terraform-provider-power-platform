@@ -6,7 +6,7 @@ description: |-
   Manages a Power Platform Billing Policy.
   A Power Platform billing policy is a mechanism that allows you to manage the costs associated with your Power Platform usage. It's linked to an Azure subscription and is used to set up pay-as-you-go billing for an environment.
   Additional Resources:
-  What is a billing policy https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policyPower Platform Billing Policy API https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy/get-billing-policy
+  What is a billing policy https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policyPower Platform Billing Policy API https://learn.microsoft.com/rest/api/power-platform/licensing/billing-policy/get-billing-policy
 ---
 
 # powerplatform_billing_policy (Resource)
@@ -17,8 +17,8 @@ A Power Platform billing policy is a mechanism that allows you to manage the cos
 
 Additional Resources:
 
-* [What is a billing policy](https://learn.microsoft.com/en-us/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy)
-* [Power Platform Billing Policy API](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy/get-billing-policy)
+* [What is a billing policy](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy)
+* [Power Platform Billing Policy API](https://learn.microsoft.com/rest/api/power-platform/licensing/billing-policy/get-billing-policy)
 
 ## Example Usage
 

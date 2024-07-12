@@ -14,7 +14,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 )
 
@@ -235,6 +237,9 @@ func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environment
 	env := EnvironmentDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
+		if strings.ContainsAny(err.Error(), "404") {
+			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment '%s' not found", environmentId))
+		}
 		return nil, err
 	}
 
@@ -291,7 +296,7 @@ func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, 
 
 	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.Response.Status+"'")
 
-	locationHeader := apiResponse.GetHeader("Location")
+	locationHeader := apiResponse.GetHeader(constants.HEADER_LOCATION)
 	tflog.Debug(ctx, "Location Header: "+locationHeader)
 
 	_, err = url.Parse(locationHeader)
@@ -299,7 +304,7 @@ func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, 
 		tflog.Error(ctx, "Error parsing location header: "+err.Error())
 	}
 
-	retryHeader := apiResponse.GetHeader("Retry-After")
+	retryHeader := apiResponse.GetHeader(constants.HEADER_RETRY_AFTER)
 	tflog.Debug(ctx, "Retry Header: "+retryHeader)
 	retryAfter, err := time.ParseDuration(retryHeader)
 	if err != nil {
@@ -313,8 +318,8 @@ func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, 
 		if err != nil {
 			return nil, err
 		}
-		//lintignore:R018
-		time.Sleep(retryAfter)
+
+		client.Api.Sleep(retryAfter)
 
 		tflog.Debug(ctx, "Dataverse Creation Operation State: '"+lifecycleEnv.Properties.ProvisioningState+"'")
 		tflog.Debug(ctx, "Dataverse Creation Operation HTTP Status: '"+lifecycleResponse.Response.Status+"'")
@@ -409,8 +414,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 		return nil, err
 	}
 
-	//lintignore:R018
-	time.Sleep(10 * time.Second)
+	client.Api.Sleep(10 * time.Second)
 
 	environments, err := client.GetEnvironments(ctx)
 	if err != nil {
@@ -425,8 +429,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 					return nil, err
 				}
 				tflog.Info(ctx, "Environment State: '"+createdEnv.Properties.States.Management.Id+"'")
-				//lintignore:R018
-				time.Sleep(3 * time.Second)
+				client.Api.Sleep(3 * time.Second)
 				if createdEnv.Properties.States.Management.Id == "Ready" {
 
 					return createdEnv, nil

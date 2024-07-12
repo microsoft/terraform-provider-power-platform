@@ -1,0 +1,15 @@
+{
+    "@odata.context": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#contacts(createdon)",
+    "value": [
+        {
+            "@odata.etag": "W/\"2264386\"",
+            "createdon": "2024-06-12T14:13:17Z",
+            "contactid": "00000000-0000-0000-0000-000000000011"
+        },
+        {
+            "@odata.etag": "W/\"2264386\"",
+            "createdon": "2024-06-12T14:13:17Z",
+            "contactid": "00000000-0000-0000-0000-000000000012"
+        }
+    ]
+}

@@ -16,7 +16,7 @@ Fetches the list of Dynamics 365 environment templates.
 terraform {
   required_providers {
     powerplatform = {
-      source  = "microsoft/power-platform"
+      source = "microsoft/power-platform"
     }
   }
 }

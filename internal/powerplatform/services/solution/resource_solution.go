@@ -58,7 +58,7 @@ func (r *SolutionResource) Metadata(ctx context.Context, req resource.MetadataRe
 func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Resource for importing solutions in Power Platform environments",
-		MarkdownDescription: "Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the [`pac solution import`](https://learn.microsoft.com/en-us/power-platform/developer/cli/reference/solution#pac-solution-import) command in the Power Platform CLI.",
+		MarkdownDescription: "Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the [`pac solution import`](https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-import) command in the Power Platform CLI.",
 		Attributes: map[string]schema.Attribute{
 			"solution_file_checksum": schema.StringAttribute{
 				MarkdownDescription: "Checksum of the solution file",
@@ -82,8 +82,8 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				},
 			},
 			"settings_file": schema.StringAttribute{
-				MarkdownDescription: "Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/en-us/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details",
-				Description:         "Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/en-us/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details",
+				MarkdownDescription: "Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details",
+				Description:         "Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details",
 				Optional:            true,
 			},
 			"id": schema.StringAttribute{
@@ -219,8 +219,13 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	solutions, err := r.SolutionClient.GetSolutions(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
-		return
+		if powerplatform_helpers.Code(err) == powerplatform_helpers.ERROR_OBJECT_NOT_FOUND {
+			resp.State.RemoveResource(ctx)
+			return
+		} else {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
+			return
+		}
 	}
 
 	solutionFound := false
@@ -267,6 +272,9 @@ func (r *SolutionResource) importSolution(ctx context.Context, plan *SolutionRes
 	if err != nil {
 		diagnostics.AddError(fmt.Sprintf("Client error when reading solution file %s", plan.SolutionFile.ValueString()), err.Error())
 	}
+
+	cwd, _ := os.Getwd()
+	tflog.Debug(ctx, fmt.Sprintf("Current working directory: %s", cwd))
 
 	settingsContent := make([]byte, 0)
 	//todo check if settings file is not empty in .tf

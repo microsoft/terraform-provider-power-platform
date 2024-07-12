@@ -1,0 +1,6 @@
+{
+    "@odata.context": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.1/$metadata#accounts(name)/$entity",
+    "@odata.etag": "W/\"36236432\"",
+    "name": "powerplatform_rest",
+    "accountid": "00000000-0000-0000-0000-000000000030"
+}

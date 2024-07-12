@@ -76,3 +76,11 @@ const (
 	RX_POWERPLATFORM_API_SCOPE  = "https://api.powerplatform.microsoft.scloud/.default"
 	RX_AUTHORITY_HOST           = "https://login.microsoftonline.microsoft.scloud/"
 )
+
+const (
+	DATAVERSE_API_VERSION     = "v9.2"
+	HEADER_ODATA_ENTITY_ID    = "Odata-Entityid"
+	HEADER_LOCATION           = "Location"
+	HEADER_RETRY_AFTER        = "Retry-After"
+	HEADER_OPERATION_LOCATION = "Operation-Location"
+)

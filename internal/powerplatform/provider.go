@@ -5,7 +5,9 @@ package powerplatform
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"regexp"
 
 	azcloud "github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -17,12 +19,14 @@ import (
 	constants "github.com/microsoft/terraform-provider-power-platform/constants"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
 	connection "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connection"
 	connections "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connection"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
+	data_record "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/data_record"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 	env_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_settings"
@@ -32,6 +36,7 @@ import (
 	locations "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
 	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
+	rest "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/rest"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
 )
@@ -101,6 +106,20 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 			"client_secret": schema.StringAttribute{
 				Description:         "The secret of the Power Platform API app registration",
 				MarkdownDescription: "The secret of the Power Platform API app registration",
+				Optional:            true,
+				Sensitive:           true,
+			},
+			"client_certificate": schema.StringAttribute{
+				MarkdownDescription: "Base64 encoded PKCS#12 certificate bundle. For use when authenticating as a Service Principal using a Client Certificate.",
+				Optional:            true,
+				Sensitive:           true,
+			},
+			"client_certificate_file_path": schema.StringAttribute{
+				MarkdownDescription: "The path to the Client Certificate associated with the Service Principal for use when authenticating as a Service Principal using a Client Certificate.",
+				Optional:            true,
+			},
+			"client_certificate_password": schema.StringAttribute{
+				MarkdownDescription: "The password associated with the Client Certificate. For use when authenticating as a Service Principal using a Client Certificate.",
 				Optional:            true,
 				Sensitive:           true,
 			},
@@ -182,11 +201,50 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		clientSecret = config.ClientSecret.ValueString()
 	}
 
+	useOidc := false
+	_, envUseOidc := os.LookupEnv("POWER_PLATFORM_USE_OIDC")
+	if config.UseOidc.IsNull() {
+		useOidc = envUseOidc
+	} else {
+		useOidc = config.UseOidc.ValueBool()
+	}
+
+	useCli := false
+	_, envUseCli := os.LookupEnv("POWER_PLATFORM_USE_CLI")
+	if config.UseCli.IsNull() {
+		useCli = envUseCli
+	} else {
+		useCli = config.UseCli.ValueBool()
+	}
+
+	clientCertificate := ""
+	envClientCertificate := os.Getenv("POWER_PLATFORM_CLIENT_CERTIFICATE")
+	if config.ClientCertificate.IsNull() {
+		clientCertificate = envClientCertificate
+	} else {
+		clientCertificate = config.ClientCertificate.ValueString()
+	}
+
+	clientCertificateFilePath := ""
+	envClientCertificateFilePath := os.Getenv("POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH")
+	if config.ClientCertificateFilePath.IsNull() {
+		clientCertificateFilePath = envClientCertificateFilePath
+	} else {
+		clientCertificateFilePath = config.ClientCertificateFilePath.ValueString()
+	}
+
+	clientCertificatePassword := ""
+	envClientCertificatePassword := os.Getenv("POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD")
+	if config.ClientCertificatePassword.IsNull() {
+		clientCertificatePassword = envClientCertificatePassword
+	} else {
+		clientCertificatePassword = config.ClientCertificatePassword.ValueString()
+	}
+
 	//Check for AzDO and GitHub environment variables
 	oidcRequestUrl := ""
 	envOidcRequestUrl := MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"})
 	if config.OidcRequestUrl.IsNull() {
-		tflog.Debug(ctx, "OIDC request URL environment variable is null")
 		oidcRequestUrl = envOidcRequestUrl
 	} else {
 		oidcRequestUrl = config.OidcRequestUrl.ValueString()
@@ -195,7 +253,6 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	oidcRequestToken := ""
 	envOidcRequestToken := MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN"})
 	if config.OidcRequestToken.IsNull() {
-		tflog.Debug(ctx, "OIDC request token environment variable is null")
 		oidcRequestToken = envOidcRequestToken
 	} else {
 		oidcRequestToken = config.OidcRequestToken.ValueString()
@@ -204,7 +261,6 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	oidcToken := ""
 	envOidcToken := EnvDefaultFunc("ARM_OIDC_TOKEN", "")
 	if config.OidcToken.IsNull() {
-		tflog.Debug(ctx, "OIDC token environment variable is null")
 		oidcToken = envOidcToken
 	} else {
 		oidcToken = config.OidcToken.ValueString()
@@ -218,18 +274,25 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		oidcTokenFilePath = config.OidcTokenFilePath.ValueString()
 	}
 
-	ctx = tflog.SetField(ctx, "use_cli", config.UseCli.ValueBool())
-	ctx = tflog.SetField(ctx, "use_oidc", config.UseOidc.ValueBool())
+	ctx = tflog.SetField(ctx, "telemetry_optout", config.TelemetryOptout.ValueBool())
+	ctx = tflog.SetField(ctx, "use_oidc", useOidc)
+	ctx = tflog.SetField(ctx, "use_cli", useCli)
 	ctx = tflog.SetField(ctx, "cloud", cloud)
+
 	ctx = tflog.SetField(ctx, "power_platform_tenant_id", tenantId)
 	ctx = tflog.SetField(ctx, "power_platform_client_id", clientId)
 	ctx = tflog.SetField(ctx, "power_platform_client_secret", clientSecret)
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_client_secret")
+
+	ctx = tflog.SetField(ctx, "client_certificate_file_path", clientCertificateFilePath)
+	ctx = tflog.SetField(ctx, "client_certificate", clientCertificate)
+	ctx = tflog.SetField(ctx, "client_certificate_password", clientCertificatePassword)
+	ctx = tflog.MaskAllFieldValuesRegexes(ctx, regexp.MustCompile(`(?i)client_certificate`))
+
 	ctx = tflog.SetField(ctx, "oidc_request_url", oidcRequestUrl)
 	ctx = tflog.SetField(ctx, "oidc_request_token", oidcRequestToken)
 	ctx = tflog.SetField(ctx, "oidc_token", oidcToken)
 	ctx = tflog.SetField(ctx, "oidc_token_file_path", oidcTokenFilePath)
-	ctx = tflog.SetField(ctx, "telemetry_optout", config.TelemetryOptout.ValueBool())
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_client_secret")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_request_token")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token_file_path")
@@ -237,6 +300,9 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	if config.UseCli.ValueBool() {
 		p.Config.Credentials.UseCli = true
 	} else if config.UseOidc.ValueBool() {
+		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
+		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
+
 		p.Config.Credentials.UseOidc = true
 		p.Config.Credentials.TenantId = tenantId
 		p.Config.Credentials.ClientId = clientId
@@ -244,38 +310,27 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Credentials.OidcRequestUrl = oidcRequestUrl
 		p.Config.Credentials.OidcToken = oidcToken
 		p.Config.Credentials.OidcTokenFilePath = oidcTokenFilePath
+	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
+		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
+		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
 
+		cert, err := helpers.GetCertificateRawFromCertOrFilePath(clientCertificate, clientCertificateFilePath)
+		if err != nil {
+			resp.Diagnostics.AddAttributeError(path.Root("client_certificate"), "Error getting certificate", err.Error())
+		}
+		p.Config.Credentials.ClientCertificateRaw = cert
+		p.Config.Credentials.ClientCertificatePassword = clientCertificatePassword
+		p.Config.Credentials.TenantId = tenantId
+		p.Config.Credentials.ClientId = clientId
 	} else {
-
-		if clientId != "" && clientSecret != "" && tenantId != "" {
+		if tenantId != "" && clientId != "" && clientSecret != "" {
 			p.Config.Credentials.TenantId = tenantId
 			p.Config.Credentials.ClientId = clientId
 			p.Config.Credentials.ClientSecret = clientSecret
 		} else {
-			if tenantId == "" {
-				resp.Diagnostics.AddAttributeError(
-					path.Root("tenant_id"),
-					"Unknown API tenant id",
-					"The provider cannot create the API client as there is an unknown configuration value for the tenant id. "+
-						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_TENANT_ID environment variable.",
-				)
-			}
-			if clientId == "" {
-				resp.Diagnostics.AddAttributeError(
-					path.Root("client_id"),
-					"Unknown client id",
-					"The provider cannot create the API client as there is an unknown configuration value for the client id. "+
-						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_CLIENT_ID environment variable.",
-				)
-			}
-			if clientSecret == "" {
-				resp.Diagnostics.AddAttributeError(
-					path.Root("client_secret"),
-					"Unknown client secret",
-					"The provider cannot create the API client as there is an unknown configuration value for the client secret. "+
-						"Either target apply the source of the value first, set the value statically in the configuration, or use the POWER_PLATFORM_CLIENT_SECRET environment variable.",
-				)
-			}
+			ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
+			ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
+			ValidateProviderAttribute(resp, path.Root("client_secret"), "client secret", clientSecret, "POWER_PLATFORM_CLIENT_SECRET")
 		}
 	}
 
@@ -367,8 +422,10 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return licensing.NewBillingPolicyEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
 		func() resource.Resource { return auth.NewUserResource() },
+		func() resource.Resource { return data_record.NewDataRecordResource() },
 		func() resource.Resource { return env_settings.NewEnvironmentSettingsResource() },
 		func() resource.Resource { return connection.NewConnectionResource() },
+		func() resource.Resource { return rest.NewDataverseWebApiResource() },
 	}
 }
 
@@ -390,7 +447,23 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return currencies.NewCurrenciesDataSource() },
 		func() datasource.DataSource { return auth.NewSecurityRolesDataSource() },
 		func() datasource.DataSource { return application.NewTenantApplicationPackagesDataSource() },
-		func() datasource.DataSource { return connections.NewConnectionsDataSource() },
+		func() datasource.DataSource { return data_record.NewDataRecordDataSource() },
+		func() datasource.DataSource { return rest.NewDataverseWebApiDatasource() },
+	}
+}
+
+func ValidateProviderAttribute(resp *provider.ConfigureResponse, path path.Path, name, value string, environmentVariableName string) {
+
+	environmentVariableText := "Target apply the source of the value first, set the value statically in the configuration."
+	if environmentVariableName != "" {
+		environmentVariableText = fmt.Sprintf("Either target apply the source of the value first, set the value statically in the configuration, or use the %s environment variable.", environmentVariableName)
+	}
+
+	if value == "" {
+		resp.Diagnostics.AddAttributeError(
+			path,
+			fmt.Sprintf("Unknown %s", name),
+			fmt.Sprintf("The provider cannot create the API client as there is an unknown configuration value for %s. %s", name, environmentVariableText))
 	}
 }
 

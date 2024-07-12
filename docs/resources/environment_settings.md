@@ -3,12 +3,12 @@
 page_title: "powerplatform_environment_settings Resource - powerplatform"
 subcategory: ""
 description: |-
-  Manages Power Platform Settings for a given environment. They control various aspects of Power Platform features and behaviors, See Environment Settings Overview https://learn.microsoft.com/en-us/power-platform/admin/admin-settings for more details.
+  Manages Power Platform Settings for a given environment. They control various aspects of Power Platform features and behaviors, See Environment Settings Overview https://learn.microsoft.com/power-platform/admin/admin-settings for more details.
 ---
 
 # powerplatform_environment_settings (Resource)
 
-Manages Power Platform Settings for a given environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/admin-settings) for more details.
+Manages Power Platform Settings for a given environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/power-platform/admin/admin-settings) for more details.
 
 ## Example Usage
 
@@ -85,8 +85,8 @@ resource "powerplatform_environment_settings" "settings" {
 
 Optional:
 
-- `audit_settings` (Attributes) Audit Settings. See [Audit Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/system-settings-dialog-box-auditing-tab) for more details. (see [below for nested schema](#nestedatt--audit_and_logs--audit_settings))
-- `plugin_trace_log_setting` (String) Plugin trace log setting. Available options: Off, Exception, All. See [Plugin Trace Log Settings Overview](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/logging-tracing) for more details.
+- `audit_settings` (Attributes) Audit Settings. See [Audit Settings Overview](https://learn.microsoft.com/power-platform/admin/system-settings-dialog-box-auditing-tab) for more details. (see [below for nested schema](#nestedatt--audit_and_logs--audit_settings))
+- `plugin_trace_log_setting` (String) Plugin trace log setting. Available options: Off, Exception, All. See [Plugin Trace Log Settings Overview](https://learn.microsoft.com/power-apps/developer/data-platform/logging-tracing) for more details.
 
 <a id="nestedatt--audit_and_logs--audit_settings"></a>
 ### Nested Schema for `audit_and_logs.audit_settings`
@@ -104,7 +104,7 @@ Optional:
 
 Optional:
 
-- `email_settings` (Attributes) Email Settings. See [Email Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-email) for more details. (see [below for nested schema](#nestedatt--email--email_settings))
+- `email_settings` (Attributes) Email Settings. See [Email Settings Overview](https://learn.microsoft.com/power-platform/admin/settings-email) for more details. (see [below for nested schema](#nestedatt--email--email_settings))
 
 <a id="nestedatt--email--email_settings"></a>
 ### Nested Schema for `email.email_settings`
@@ -120,8 +120,8 @@ Optional:
 
 Optional:
 
-- `behavior_settings` (Attributes) Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-behavior) for more details. (see [below for nested schema](#nestedatt--product--behavior_settings))
-- `features` (Attributes) Features. See [Features Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-features) for more details. (see [below for nested schema](#nestedatt--product--features))
+- `behavior_settings` (Attributes) Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/power-platform/admin/settings-behavior) for more details. (see [below for nested schema](#nestedatt--product--behavior_settings))
+- `features` (Attributes) Features. See [Features Overview](https://learn.microsoft.com/power-platform/admin/settings-features) for more details. (see [below for nested schema](#nestedatt--product--features))
 
 <a id="nestedatt--product--behavior_settings"></a>
 ### Nested Schema for `product.behavior_settings`

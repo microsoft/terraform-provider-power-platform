@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-type EnvironmenttSettingsSourceModel struct {
+type EnvironmentSettingsSourceModel struct {
 	Id            types.String `tfsdk:"id"`
 	EnvironmentId types.String `tfsdk:"environment_id"`
 	AuditAndLogs  types.Object `tfsdk:"audit_and_logs"`
@@ -51,7 +51,7 @@ type FeaturesSourceModel struct {
 	PowerAppsComponentFrameworkForCanvasApps types.Bool `tfsdk:"power_apps_component_framework_for_canvas_apps"`
 }
 
-func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmenttSettingsSourceModel) EnvironmentSettingsDto {
+func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel) EnvironmentSettingsDto {
 	environmentSettingsDto := EnvironmentSettingsDto{}
 	auditSettingsObject := environmentSettings.AuditAndLogs.Attributes()["audit_settings"]
 	if auditSettingsObject != nil && !auditSettingsObject.IsNull() && !auditSettingsObject.IsUnknown() {
@@ -116,8 +116,8 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 	return environmentSettingsDto
 }
 
-func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettingsDto) EnvironmenttSettingsSourceModel {
-	environmentSettings := EnvironmenttSettingsSourceModel{}
+func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettingsDto) EnvironmentSettingsSourceModel {
+	environmentSettings := EnvironmentSettingsSourceModel{}
 
 	pluginTraceSettings := "Unknown"
 	if environmentSettingsDto.PluginTraceLogSetting != nil {

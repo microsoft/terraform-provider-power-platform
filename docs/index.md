@@ -48,11 +48,11 @@ Important Notes about Authenticating using the Azure CLI:
 
 ### Authenticating to Power Platform using the Azure CLI
 
-The Power Platform provider can use the [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/) to authenticate to Power Platform services. If you have the Azure CLI installed, you can use it to log in to your Microsoft Entra Id account and the Power Platform provider will use the credentials from the Azure CLI.
+The Power Platform provider can use the [Azure CLI](https://learn.microsoft.com/cli/azure/) to authenticate to Power Platform services. If you have the Azure CLI installed, you can use it to log in to your Microsoft Entra Id account and the Power Platform provider will use the credentials from the Azure CLI.
 
 #### Prerequisites
 
-1. [Install the Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+1. [Install the Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli)
 1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
 1. Login using the scope as the "expose API" you configured when creating the app registration
 
@@ -70,11 +70,11 @@ provider "powerplatform" {
 
 ### Authenticating to Power Platform using a Service Principal with OIDC
 
-The Power Platform provider can use a Service Principal with OpenID Connect (OIDC) to authenticate to Power Platform services. By using [Microsoft Entra's workload identity federation](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation) your CI/CD pipelines in GitHub or Azure DevOps can access Power Platform resources without needing to manage secrets.
+The Power Platform provider can use a Service Principal with OpenID Connect (OIDC) to authenticate to Power Platform services. By using [Microsoft Entra's workload identity federation](https://learn.microsoft.com/entra/workload-id/workload-identity-federation) your CI/CD pipelines in GitHub or Azure DevOps can access Power Platform resources without needing to manage secrets.
 
 1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
-1. [Register your app registration with Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
-1. [Create a trust relationship between your CI/CD pipeline and the app registration](https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust?pivots=identity-wif-apps-methods-azp)
+1. [Register your app registration with Power Platform](https://learn.microsoft.com/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
+1. [Create a trust relationship between your CI/CD pipeline and the app registration](https://learn.microsoft.com/entra/workload-id/workload-identity-federation-create-trust?pivots=identity-wif-apps-methods-azp)
 1. Configure the provider to use OIDC with the following code:
 
 ```terraform
@@ -84,7 +84,8 @@ provider "powerplatform" {
 ```
 
 Additional Resources about OIDC:
-* [OpenID Connect authentication with Microsoft Entra ID](https://learn.microsoft.com/en-us/entra/architecture/auth-oidc)
+
+* [OpenID Connect authentication with Microsoft Entra ID](https://learn.microsoft.com/entra/architecture/auth-oidc)
 * [Configuring OpenID Connect for GitHub and Microsoft Entra ID](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-azure)
 
 ### Authenticating to Power Platform using a Service Principal and a Client Secret
@@ -92,8 +93,51 @@ Additional Resources about OIDC:
 The Power Platform provider can use a Service Principal with Client Secret to authenticate to Power Platform services.
 
 1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
-1. [Register your app registration with Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
+1. [Register your app registration with Power Platform](https://learn.microsoft.com/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
 1. Configure the provider to use a Service Principal with a Client Secret with either environment variables or using Terraform variables
+
+### Authenticating to Power Platfomr using Service Principal and certificate
+
+1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
+1. [Register your app registration with Power Platform](https://learn.microsoft.com/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
+1. Generate a certificate using openssl or other tools
+
+```bash
+openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 365
+```
+
+4. Merge public and private part of the certificate files together
+
+Using linux shell
+
+```bash
+cat *.pem > cert+key.pem
+```
+
+Using Powershell
+
+```powershell
+Get-Content .\cert.pem, .\key.pem | Set-Content cert+key.pem
+```
+
+5. Generate pkcs12 file
+
+```bash
+openssl pkcs12 -export -out cert.pkcs12 -in cert+key.pem
+```
+
+6. Add public part of the certificate (`cert.pem` file) to the app registration
+7. Store your key.pem and the password used to generate in a safe place
+8. Configure the provider to use certificate with the following code:
+
+```terraform
+provider "powerplatform" {
+  client_id     = var.client_id
+  tenant_id     = var.tenant_id
+  client_certificate_file_path = "${path.cwd}/cert.pkcs12"
+  client_certificate_password  = var.cert_pass
+}
+```
 
 #### Using Environment Variables
 
@@ -104,12 +148,18 @@ We recomend using Environment Variables to pass the credentials to the provider.
 | `POWER_PLATFORM_CLIENT_ID` | The service principal client id | |
 | `POWER_PLATFORM_CLIENT_SECRET` | The service principal secret | |
 | `POWER_PLATFORM_TENANT_ID` | The guid of the tenant | |
+| `POWER_PLATFORM_CLOUD` | override for the cloud used (default is `public`) | |
+| `POWER_PLATFORM_USE_OIDC` | if set to `true` then OIDC authentication will be used | |
+| `POWER_PLATFORM_USE_CLI` | if set to `true` then Azure CLI authentication will be used | |
+| `POWER_PLATFORM_CLIENT_CERTIFICATE` | The Base64 format of your certificate that will be used to certificate based authentication | |
+| `POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH` | The path to the certificate that will be used to certificate based authentication | |
+| `POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD` | Password for the provider certificate | |
 
 -> Variables passed into the provider will override the environment variables.
 
 #### Using Terraform Variables
 
-Alternatively, you can configure the provider using variables in your Terraform configuration which can be passed in via [command line parameters](https://developer.hashicorp.com/terraform/language/values/variables#variables-on-the-command-line), [a `*.tfvars` file](https://developer.hashicorp.com/terraform/language/values/variables#variable-definitions-tfvars-files), or [environment variables](https://developer.hashicorp.com/terraform/language/values/variables#environment-variables).  If you choose to use variables, please be sure to [protect sensitive input variables](https://developer.hashicorp.com/terraform/tutorials/configuration-language/sensitive-variables) so that you do not expose your credentials in your Terraform configuration. 
+Alternatively, you can configure the provider using variables in your Terraform configuration which can be passed in via [command line parameters](https://developer.hashicorp.com/terraform/language/values/variables#variables-on-the-command-line), [a `*.tfvars` file](https://developer.hashicorp.com/terraform/language/values/variables#variable-definitions-tfvars-files), or [environment variables](https://developer.hashicorp.com/terraform/language/values/variables#environment-variables).  If you choose to use variables, please be sure to [protect sensitive input variables](https://developer.hashicorp.com/terraform/tutorials/configuration-language/sensitive-variables) so that you do not expose your credentials in your Terraform configuration.
 
 ```terraform
 provider "powerplatform" {
@@ -132,7 +182,7 @@ In addition to the authentication options, the following options are also suppor
 
 Use the navigation to the left to read about the available resources and data sources.
 
-!> By calling `terraform destroy` all the resources, that you've created, will be deleted permamently deleted. Please be careful with this command when working with production environments. You can use [prevent-destory](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) lifecycle argument in your resources to prevent accidental deletion.  
+!> By calling `terraform destroy` all the resources, that you've created, will be deleted permamently deleted. Please be careful with this command when working with production environments. You can use [prevent-destroy](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) lifecycle argument in your resources to prevent accidental deletion.  
 
 ## Examples
 

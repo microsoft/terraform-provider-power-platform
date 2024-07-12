@@ -54,7 +54,7 @@ func (d *CurrenciesDataSource) Metadata(_ context.Context, req datasource.Metada
 func (d *CurrenciesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of available Dynamics 365 currencies",
-		MarkdownDescription: "Fetches the list of available Dynamics 365 currencies. For more information see [Power Platform Currencies](https://learn.microsoft.com/en-us/power-platform/admin/manage-transactions-with-multiple-currencies)",
+		MarkdownDescription: "Fetches the list of available Dynamics 365 currencies. For more information see [Power Platform Currencies](https://learn.microsoft.com/power-platform/admin/manage-transactions-with-multiple-currencies)",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.Int64Attribute{
 				Description: "Id of the read operation",
@@ -123,11 +123,16 @@ func (d *CurrenciesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE CURRENCIES START: %s", d.ProviderTypeName))
 
+	currencies, err := d.CurrenciesClient.GetCurrenciesByLocation(ctx, plan.Location.ValueString())
+
 	currencies, err := d.CurrenciesClient.GetCurrenciesByLocation(ctx, state.Location.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
+
+	plan.Id = types.Int64Value(int64(len(currencies.Value)))
+	plan.Location = types.StringValue(plan.Location.ValueString())
 
 	state.Id = types.Int64Value(int64(len(currencies.Value)))
 	state.Location = types.StringValue(state.Location.ValueString())

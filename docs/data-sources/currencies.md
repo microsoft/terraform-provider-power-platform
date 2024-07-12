@@ -3,12 +3,12 @@
 page_title: "powerplatform_currencies Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches the list of available Dynamics 365 currencies. For more information see Power Platform Currencies https://learn.microsoft.com/en-us/power-platform/admin/manage-transactions-with-multiple-currencies
+  Fetches the list of available Dynamics 365 currencies. For more information see Power Platform Currencies https://learn.microsoft.com/power-platform/admin/manage-transactions-with-multiple-currencies
 ---
 
 # powerplatform_currencies (Data Source)
 
-Fetches the list of available Dynamics 365 currencies. For more information see [Power Platform Currencies](https://learn.microsoft.com/en-us/power-platform/admin/manage-transactions-with-multiple-currencies)
+Fetches the list of available Dynamics 365 currencies. For more information see [Power Platform Currencies](https://learn.microsoft.com/power-platform/admin/manage-transactions-with-multiple-currencies)
 
 ## Example Usage
 
@@ -16,13 +16,13 @@ Fetches the list of available Dynamics 365 currencies. For more information see 
 terraform {
   required_providers {
     powerplatform = {
-      source  = "microsoft/power-platform"
+      source = "microsoft/power-platform"
     }
   }
 }
 
 provider "powerplatform" {
-  use_client = true
+  use_cli = true
 }
 
 data "powerplatform_locations" "all_locations" {}

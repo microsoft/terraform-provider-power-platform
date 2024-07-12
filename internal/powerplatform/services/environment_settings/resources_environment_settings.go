@@ -44,7 +44,7 @@ func (r *EnvironmentSettingsResource) Metadata(ctx context.Context, req resource
 func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Manages Power Platform Settings for a given environment.",
-		MarkdownDescription: "Manages Power Platform Settings for a given environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/admin-settings) for more details.",
+		MarkdownDescription: "Manages Power Platform Settings for a given environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/power-platform/admin/admin-settings) for more details.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",
@@ -66,7 +66,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 				Attributes: map[string]schema.Attribute{
 					"plugin_trace_log_setting": schema.StringAttribute{
 						Description:         "Plugin trace log setting. Available options: Off, Exception, All",
-						MarkdownDescription: "Plugin trace log setting. Available options: Off, Exception, All. See [Plugin Trace Log Settings Overview](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/logging-tracing) for more details.",
+						MarkdownDescription: "Plugin trace log setting. Available options: Off, Exception, All. See [Plugin Trace Log Settings Overview](https://learn.microsoft.com/power-apps/developer/data-platform/logging-tracing) for more details.",
 						Optional:            true, Computed: true,
 						PlanModifiers: []planmodifier.String{
 							stringplanmodifier.UseStateForUnknown(),
@@ -77,7 +77,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 					},
 					"audit_settings": schema.SingleNestedAttribute{
 						Description:         "Audit Settings",
-						MarkdownDescription: "Audit Settings. See [Audit Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/system-settings-dialog-box-auditing-tab) for more details.",
+						MarkdownDescription: "Audit Settings. See [Audit Settings Overview](https://learn.microsoft.com/power-platform/admin/system-settings-dialog-box-auditing-tab) for more details.",
 						Optional:            true, Computed: true,
 						PlanModifiers: []planmodifier.Object{
 							objectplanmodifier.UseStateForUnknown(),
@@ -121,7 +121,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 				Attributes: map[string]schema.Attribute{
 					"email_settings": schema.SingleNestedAttribute{
 						Description:         "Email Settings",
-						MarkdownDescription: "Email Settings. See [Email Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-email) for more details.",
+						MarkdownDescription: "Email Settings. See [Email Settings Overview](https://learn.microsoft.com/power-platform/admin/settings-email) for more details.",
 						Optional:            true, Computed: true,
 						PlanModifiers: []planmodifier.Object{
 							objectplanmodifier.UseStateForUnknown(),
@@ -149,7 +149,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 				Attributes: map[string]schema.Attribute{
 					"behavior_settings": schema.SingleNestedAttribute{
 						Description:         "Behavior Settings",
-						MarkdownDescription: "Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-behavior) for more details.",
+						MarkdownDescription: "Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/power-platform/admin/settings-behavior) for more details.",
 						Optional:            true, Computed: true,
 						PlanModifiers: []planmodifier.Object{
 							objectplanmodifier.UseStateForUnknown(),
@@ -167,7 +167,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 					},
 					"features": schema.SingleNestedAttribute{
 						Description:         "Features",
-						MarkdownDescription: "Features. See [Features Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-features) for more details.",
+						MarkdownDescription: "Features. See [Features Overview](https://learn.microsoft.com/power-platform/admin/settings-features) for more details.",
 						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"power_apps_component_framework_for_canvas_apps": schema.BoolAttribute{
@@ -206,7 +206,7 @@ func (r *EnvironmentSettingsResource) Configure(ctx context.Context, req resourc
 }
 
 func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan EnvironmenttSettingsSourceModel
+	var plan EnvironmentSettingsSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE ENVIRONMENT SETTINGS RESOURCE START: %s", r.ProviderTypeName))
 
@@ -247,7 +247,7 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 }
 
 func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state EnvironmenttSettingsSourceModel
+	var state EnvironmentSettingsSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ ENVIRONMENT SETTINGS RESOURCE START: %s", r.ProviderTypeName))
 
@@ -277,8 +277,8 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan EnvironmenttSettingsSourceModel
-	var state EnvironmenttSettingsSourceModel
+	var plan EnvironmentSettingsSourceModel
+	var state EnvironmentSettingsSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE ENVIRONMENT SETTINGS RESOURCE START: %s", r.ProviderTypeName))
 

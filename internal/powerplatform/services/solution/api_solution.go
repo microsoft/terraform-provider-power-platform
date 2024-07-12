@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -14,6 +15,7 @@ import (
 	"time"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewSolutionClient(api *api.ApiClient) SolutionClient {
@@ -98,7 +100,15 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 		return nil, err
 	}
 	if stageSolutionResponse.StageSolutionResults.StageSolutionStatus != "Passed" {
-		return nil, fmt.Errorf("stage solution failed: %s", stageSolutionResponse.StageSolutionResults.StageSolutionStatus)
+		e := fmt.Errorf("solution failed with status: '%s'", stageSolutionResponse.StageSolutionResults.StageSolutionStatus)
+
+		for _, missingDependency := range stageSolutionResponse.StageSolutionResults.MissingDependencies {
+			e = errors.Join(fmt.Errorf("missing dependency: '%s'", missingDependency.RequiredComponentSchemaName), e)
+		}
+		for _, validation := range stageSolutionResponse.StageSolutionResults.SolutionValidationResults {
+			e = errors.Join(fmt.Errorf("solution validation failed: %s", validation.Message), e)
+		}
+		return nil, e
 	}
 
 	//import solution
@@ -115,9 +125,6 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 			StageSolutionUploadId: stageSolutionResponse.StageSolutionResults.StageSolutionUploadId,
 		},
 	}
-	if err != nil {
-		return nil, err
-	}
 
 	apiUrl = &url.URL{
 		Scheme: "https",
@@ -131,8 +138,8 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	//pull for solution import completion
-	//lintignore:R018
-	time.Sleep(10 * time.Second)
+	sleepDuration := 10 * time.Second
+	client.Api.Sleep(sleepDuration)
 
 	apiUrl = &url.URL{
 		Scheme: "https",
@@ -156,8 +163,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 			}
 			return solution, nil
 		}
-		//lintignore:R018
-		time.Sleep(10 * time.Second)
+		client.Api.Sleep(sleepDuration)
 	}
 }
 
@@ -200,13 +206,18 @@ func (client *SolutionClient) createSolutionComponentParameters(ctx context.Cont
 		})
 	}
 	for _, envVariableComponent := range solutionSettings.EnvironmentVariables {
-		solutionComponents = append(solutionComponents, ImportSolutionEnvironmentVariablesDto{
-			Type:       "Microsoft.Dynamics.CRM.environmentvariablevalue",
-			SchemaName: envVariableComponent.SchemaName,
-			Value:      envVariableComponent.Value,
-		})
+		if envVariableComponent.Value != "" {
+			solutionComponents = append(solutionComponents, ImportSolutionEnvironmentVariablesDto{
+				Type:       "Microsoft.Dynamics.CRM.environmentvariablevalue",
+				SchemaName: envVariableComponent.SchemaName,
+				Value:      envVariableComponent.Value,
+			})
+		}
 	}
 
+	if len(solutionComponents) == 0 {
+		return nil, nil
+	}
 	return solutionComponents, nil
 }
 
@@ -223,8 +234,7 @@ func (client *SolutionClient) validateSolutionImportResult(ctx context.Context, 
 		return err
 	}
 	if validateSolutionImportResponseDto.SolutionOperationResult.Status != "Passed" {
-		//todo read error and warning messages
-		return fmt.Errorf("solution import failed: %s", validateSolutionImportResponseDto.SolutionOperationResult.Status)
+		return fmt.Errorf("solution import failed: %s", validateSolutionImportResponseDto.SolutionOperationResult.ErrorMessages...)
 	}
 	return nil
 }
@@ -295,7 +305,11 @@ func (client *SolutionClient) getEnvironment(ctx context.Context, environmentId 
 	env := EnvironmentIdDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
+		if strings.ContainsAny(err.Error(), "404") {
+			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
+		}
 		return nil, err
+
 	}
 
 	return &env, nil

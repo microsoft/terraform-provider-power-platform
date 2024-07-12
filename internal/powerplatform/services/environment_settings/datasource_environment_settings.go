@@ -54,7 +54,7 @@ func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datas
 }
 
 func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state EnvironmenttSettingsSourceModel
+	var state EnvironmentSettingsSourceModel
 	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS START: %s", d.ProviderTypeName))
@@ -96,7 +96,7 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 func (d *EnvironmentSettingsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Power Platform Environment Settings Data Source",
-		MarkdownDescription: "Power Platform Environment Settings Data Source. Power Platform Settings are configuration options that apply to a specific environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/admin-settings) for more details.",
+		MarkdownDescription: "Power Platform Environment Settings Data Source. Power Platform Settings are configuration options that apply to a specific environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/power-platform/admin/admin-settings) for more details.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",
@@ -115,7 +115,7 @@ func (d *EnvironmentSettingsDataSource) Schema(_ context.Context, _ datasource.S
 				Attributes: map[string]schema.Attribute{
 					"plugin_trace_log_setting": schema.StringAttribute{
 						Description:         "Plugin trace log setting. Available options: Off, Exception, All",
-						MarkdownDescription: "Plugin trace log setting. Available options: Off, Exception, All. See [Plugin Trace Log Settings Overview](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/logging-tracing) for more details.",
+						MarkdownDescription: "Plugin trace log setting. Available options: Off, Exception, All. See [Plugin Trace Log Settings Overview](https://learn.microsoft.com/power-apps/developer/data-platform/logging-tracing) for more details.",
 						Optional:            true,
 						Validators: []validator.String{
 							stringvalidator.OneOf("Off", "Exception", "All"),
@@ -123,7 +123,7 @@ func (d *EnvironmentSettingsDataSource) Schema(_ context.Context, _ datasource.S
 					},
 					"audit_settings": schema.SingleNestedAttribute{
 						Description:         "Audit Settings",
-						MarkdownDescription: "Audit Settings. See [Audit Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/system-settings-dialog-box-auditing-tab) for more details.",
+						MarkdownDescription: "Audit Settings. See [Audit Settings Overview](https://learn.microsoft.com/power-platform/admin/system-settings-dialog-box-auditing-tab) for more details.",
 						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"is_audit_enabled": schema.BoolAttribute{
@@ -152,7 +152,7 @@ func (d *EnvironmentSettingsDataSource) Schema(_ context.Context, _ datasource.S
 				Attributes: map[string]schema.Attribute{
 					"email_settings": schema.SingleNestedAttribute{
 						Description:         "Email Settings",
-						MarkdownDescription: "Email Settings. See [Email Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-email) for more details.",
+						MarkdownDescription: "Email Settings. See [Email Settings Overview](https://learn.microsoft.com/power-platform/admin/settings-email) for more details.",
 						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"max_upload_file_size_in_bytes": schema.Int64Attribute{
@@ -171,7 +171,7 @@ func (d *EnvironmentSettingsDataSource) Schema(_ context.Context, _ datasource.S
 				Attributes: map[string]schema.Attribute{
 					"behavior_settings": schema.SingleNestedAttribute{
 						Description:         "Behavior Settings",
-						MarkdownDescription: "Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-behavior) for more details.",
+						MarkdownDescription: "Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/power-platform/admin/settings-behavior) for more details.",
 						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"show_dashboard_cards_in_expanded_state": schema.BoolAttribute{
@@ -183,7 +183,7 @@ func (d *EnvironmentSettingsDataSource) Schema(_ context.Context, _ datasource.S
 					},
 					"features": schema.SingleNestedAttribute{
 						Description:         "Features",
-						MarkdownDescription: "Features. See [Features Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-features) for more details.",
+						MarkdownDescription: "Features. See [Features Overview](https://learn.microsoft.com/power-platform/admin/settings-features) for more details.",
 						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"power_apps_component_framework_for_canvas_apps": schema.BoolAttribute{
