@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -114,22 +113,24 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				MarkdownDescription: "Display name of the solution",
 				Description:         "Display name of the solution",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					powerplatform_modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
+				},
 			},
 			"is_managed": schema.BoolAttribute{
 				MarkdownDescription: "Indicates whether the solution is managed or not",
 				Description:         "Indicates whether the solution is managed or not",
 				Computed:            true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
+					powerplatform_modifiers.SetBoolValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
 				},
 			},
-
 			"solution_version": schema.StringAttribute{
 				MarkdownDescription: "Version of the solution",
 				Description:         "Version of the solution",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+					powerplatform_modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
 				},
 			},
 		},
@@ -178,7 +179,7 @@ func (r *SolutionResource) Create(ctx context.Context, req resource.CreateReques
 	plan.DisplayName = types.StringValue(solution.DisplayName)
 	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.EnvironmentId.ValueString(), solution.Name))
 
-	plan.SettingsFileChecksum = types.StringUnknown()
+	plan.SettingsFileChecksum = types.StringNull()
 	if !plan.SettingsFile.IsNull() && !plan.SettingsFile.IsUnknown() {
 		value, err := powerplatform_helpers.CalculateMd5(plan.SettingsFile.ValueString())
 		if err != nil {
@@ -187,8 +188,6 @@ func (r *SolutionResource) Create(ctx context.Context, req resource.CreateReques
 			plan.SettingsFileChecksum = types.StringValue(value)
 			tflog.Warn(ctx, fmt.Sprintf("CREATE Calculated md5 hash of settings file: %s", value))
 		}
-	} else {
-		plan.SettingsFileChecksum = types.StringNull()
 	}
 
 	plan.SolutionFileChecksum = types.StringUnknown()
@@ -233,7 +232,6 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		if solution.Name == state.SolutionName.ValueString() {
 			state.Id = types.StringValue(fmt.Sprintf("%s_%s", state.EnvironmentId.ValueString(), solution.Name))
 			state.SolutionName = types.StringValue(solution.Name)
-			//TODO test a case when solution version changes
 			state.SolutionVersion = types.StringValue(solution.Version)
 			state.IsManaged = types.BoolValue(solution.IsManaged)
 			state.DisplayName = types.StringValue(solution.DisplayName)
@@ -316,6 +314,9 @@ func (r *SolutionResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	solution := r.importSolution(ctx, plan, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.EnvironmentId.ValueString(), solution.Name))
 
@@ -324,7 +325,7 @@ func (r *SolutionResource) Update(ctx context.Context, req resource.UpdateReques
 	plan.IsManaged = types.BoolValue(solution.IsManaged)
 	plan.DisplayName = types.StringValue(solution.DisplayName)
 
-	plan.SettingsFileChecksum = types.StringUnknown()
+	plan.SettingsFileChecksum = types.StringNull()
 	if !plan.SettingsFile.IsNull() && !plan.SettingsFile.IsUnknown() {
 		value, err := powerplatform_helpers.CalculateMd5(plan.SettingsFile.ValueString())
 		if err != nil {
