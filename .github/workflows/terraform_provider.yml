@@ -205,4 +205,4 @@ jobs:
         run: |
           go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
           tfplugindocs generate --provider-name powerplatform --rendered-provider-name "Power Platform"
-          git diff origin/${{ github.ref }} --exit-code -- docs/
+          git diff origin/${{ github.sha }} --exit-code -- docs/
