@@ -97,9 +97,10 @@ func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method
 				break
 			}
 		}
-		if !isStatusCodeValid {
-			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE, fmt.Sprintf("expected status code: %d, recieved: [%d]", acceptableStatusCodes, apiResponse.Response.StatusCode))
-		}
+	}
+
+	if !isStatusCodeValid {
+		return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE, fmt.Sprintf("expected status code: %d, recieved: [%d]", acceptableStatusCodes, apiResponse.Response.StatusCode))
 	}
 
 	if responseObj != nil {

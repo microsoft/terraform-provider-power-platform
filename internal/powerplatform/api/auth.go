@@ -78,6 +78,9 @@ func (client *Auth) AuthenticateClientCertificate(ctx context.Context, scopes []
 			},
 		},
 	)
+	if err != nil {
+		return "", time.Time{}, err
+	}
 	accessToken, err := azureCertCredentials.GetToken(ctx, policy.TokenRequestOptions{
 		Scopes: scopes,
 	})
@@ -273,7 +276,7 @@ func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*st
 	}
 
 	token := ""
-	tokenExpiry := time.Time{}
+	var tokenExpiry time.Time
 	var err error
 
 	switch {

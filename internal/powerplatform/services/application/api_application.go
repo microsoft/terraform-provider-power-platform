@@ -145,7 +145,10 @@ func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Con
 		}
 	} else if response.Response.StatusCode == http.StatusCreated {
 		appCreatedResponse := EnvironmentApplicationLifecycleCreatedDto{}
-		response.MarshallTo(&appCreatedResponse)
+		err = response.MarshallTo(&appCreatedResponse)
+		if err != nil {
+			return "", err
+		}
 		if appCreatedResponse.Properties.ProvisioningState != "Succeeded" {
 			return "", errors.New("application installation failed. provisioning state: " + appCreatedResponse.Properties.ProvisioningState)
 		}

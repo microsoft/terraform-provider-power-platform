@@ -55,5 +55,9 @@
         "uniquename",
         "unitedstates"
     ],
-    "window.autoDetectColorScheme": true
+    "window.autoDetectColorScheme": true,
+    "go.lintTool": "golangci-lint",
+    "go.lintFlags": [
+        "--fast"
+    ]
 }
