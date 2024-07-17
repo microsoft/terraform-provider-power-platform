@@ -162,12 +162,6 @@ type DataLossPreventionPolicyResourceEnvironmentsModel struct {
 	Name types.String `tfsdk:"name"`
 }
 
-var environmentSetObjectType = types.ObjectType{
-	AttrTypes: map[string]attr.Type{
-		"name": types.StringType,
-	},
-}
-
 type DataLossPreventionPolicyResourceConnectorModel struct {
 	Id                        types.String                                                 `tfsdk:"id"`
 	DefaultActionRuleBehavior types.String                                                 `tfsdk:"default_action_rule_behavior"`

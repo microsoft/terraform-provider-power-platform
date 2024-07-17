@@ -34,7 +34,7 @@ func (v getKnownValue) CheckValue(other any) error {
 }
 
 func (v getKnownValue) String() string {
-	return *&v.value.Value
+	return v.value.Value
 }
 
 func GetStateValue(value *StateValue) getKnownValue {

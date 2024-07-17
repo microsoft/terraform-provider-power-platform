@@ -257,7 +257,10 @@ func convertResourceModelToMap(columnsAsString *string) (mapColumns map[string]i
 	if err != nil {
 		return nil, err
 	}
-	json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
+	err = json.Unmarshal([]byte(unquotedJsonColumns), &mapColumns)
+	if err != nil {
+		return nil, err
+	}
 	return mapColumns, nil
 }
 
