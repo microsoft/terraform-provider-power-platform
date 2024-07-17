@@ -374,7 +374,10 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 		}
 	} else if apiResponse.Response.StatusCode == http.StatusCreated {
 		envCreatedResponse := EnvironmentLifecycleCreatedDto{}
-		apiResponse.MarshallTo(&envCreatedResponse)
+		err = apiResponse.MarshallTo(&envCreatedResponse)
+		if err != nil {
+			return nil, err
+		}
 		if envCreatedResponse.Properties.ProvisioningState != "Succeeded" {
 			return nil, errors.New("environment creation failed. provisioning state: " + envCreatedResponse.Properties.ProvisioningState)
 		}
