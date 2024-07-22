@@ -5,10 +5,7 @@ package powerplatform
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"net/url"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -99,32 +96,4 @@ func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, scope *string
 	} else {
 		panic("scope or evironment_id must be provided")
 	}
-}
-
-func (client *WebApiClient) getEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {
-	env, err := client.getEnvironment(ctx, environmentId)
-	if err != nil {
-		return "", err
-	}
-	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
-	return environmentUrl, nil
-}
-
-func (client *WebApiClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
-	apiUrl := &url.URL{
-		Scheme: "https",
-		Host:   client.Api.GetConfig().Urls.BapiUrl,
-		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
-	}
-	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
-	apiUrl.RawQuery = values.Encode()
-
-	env := EnvironmentIdDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
-	if err != nil {
-		return nil, err
-	}
-
-	return &env, nil
 }
