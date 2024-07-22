@@ -5,7 +5,10 @@ package powerplatform
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -37,7 +40,8 @@ type LinkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }
 
-func (client *WebApiClient) SendOperation(ctx context.Context, operation *DataverseWebApiOperation) (*types.Object, error) {
+func (client *WebApiClient) SendOperation(ctx context.Context, operation *DataverseWebApiOperation) (types.Object, error) {
+
 	url := operation.Url.ValueString()
 	method := operation.Method.ValueString()
 	var body *string = nil
@@ -55,12 +59,15 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 
 	res, err := client.ExecuteApiRequest(ctx, operation.Scope.ValueStringPointer(), url, method, body, headers, operation.ExpectedHttpStatus)
 	if helpers.Code(err) == helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE {
-		return nil, err
+		return types.ObjectUnknown(map[string]attr.Type{
+			"body": types.StringType,
+		}), err
 	}
 
 	output := map[string]attr.Value{
 		"body": types.StringNull(),
 	}
+
 	if res == nil && err != nil {
 		output["body"] = types.StringValue(err.Error())
 	} else {
@@ -71,7 +78,7 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 	o := types.ObjectValueMust(map[string]attr.Type{
 		"body": types.StringType,
 	}, output)
-	return &o, nil
+	return o, nil
 
 }
 
@@ -94,3 +101,30 @@ func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, scope *string
 	}
 }
 
+func (client *WebApiClient) getEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {
+	env, err := client.getEnvironment(ctx, environmentId)
+	if err != nil {
+		return "", err
+	}
+	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
+	return environmentUrl, nil
+}
+
+func (client *WebApiClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2023-06-01")
+	apiUrl.RawQuery = values.Encode()
+
+	env := EnvironmentIdDto{}
+	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	if err != nil {
+		return nil, err
+	}
+
+	return &env, nil
+}

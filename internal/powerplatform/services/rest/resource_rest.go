@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	modifier "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 )
 
 func NewDataverseWebApiResource() resource.Resource {
@@ -77,6 +78,7 @@ func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.Schem
 				MarkdownDescription: "Unique id (guid)",
 				Description:         "Unique id (guid)",
 				Computed:            true,
+				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -86,12 +88,17 @@ func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.Schem
 			"destroy": r.buildOperationSchema("Destroy operation"),
 			"read":    r.buildOperationSchema("Read operation"),
 			"output": schema.SingleNestedAttribute{
-				MarkdownDescription: "Response body after executing the web api request",
+				MarkdownDescription: "Response after executing the web api srequest",
 				Computed:            true,
+				Optional:            true,
+				Required:            false,
 				Attributes: map[string]schema.Attribute{
 					"body": schema.StringAttribute{
 						MarkdownDescription: "Response body after executing the web api request",
 						Computed:            true,
+						PlanModifiers: []planmodifier.String{
+							modifier.ForceStringValueUnknownModifier(),
+						},
 					},
 				},
 			},
@@ -176,35 +183,49 @@ func (r *DataverseWebApiResource) Configure(ctx context.Context, req resource.Co
 }
 
 func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var state DataverseWebApiResourceModel
-	resp.State.Get(ctx, &state)
+	var plan DataverseWebApiResourceModel
+	resp.State.Get(ctx, &plan)
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	state := DataverseWebApiResourceModel{}
+	state.Create = plan.Create
+	state.Update = plan.Update
+	state.Destroy = plan.Destroy
+	state.Read = plan.Read
+	state.Output = plan.Output
+
 	state.Id = types.StringValue(strconv.Itoa(int(time.Now().UnixMilli())))
-	if state.Create != nil {
-		output, err := r.DataRecordClient.SendOperation(ctx, state.Create)
+	if plan.Create != nil {
+		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, plan.Create)
 		if err != nil {
 			resp.Diagnostics.AddError("Error executing create operation", err.Error())
 			return
 		}
-		state.Output = *output
-	} else {
-		state.Output = r.NullOutputValue()
-	}
+		state.Output = bodyWrapped
 
+		if plan.Read != nil {
+			bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, plan.Read)
+			if err != nil {
+				resp.Diagnostics.AddError("Error executing read operation", err.Error())
+				return
+			}
+			state.Output = bodyWrapped
+		}
+
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.TypeName))
 }
 
 func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *DataverseWebApiResourceModel
+	var state DataverseWebApiResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.TypeName))
 
@@ -214,17 +235,30 @@ func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
+	newState := DataverseWebApiResourceModel{}
+	newState.Id = state.Id
+	newState.Create = state.Create
+	newState.Update = state.Update
+	newState.Destroy = state.Destroy
+	newState.Read = state.Read
+	newState.Output = state.Output
+
 	if state.Read != nil {
-		output, err := r.DataRecordClient.SendOperation(ctx, state.Read)
+		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, state.Read)
 		if err != nil {
 			resp.Diagnostics.AddError("Error executing read operation", err.Error())
 			return
 		}
-		state.Output = *output
+
+		if state.Output.String() != bodyWrapped.String() {
+			resp.Private.SetKey(ctx, "force_value_unknown", []byte("true"))
+		} else {
+			resp.Private.SetKey(ctx, "force_value_unknown", []byte("false"))
+		}
+
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
-
+	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.TypeName))
 }
 
@@ -240,12 +274,21 @@ func (r *DataverseWebApiResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	if plan.Update != nil {
-		output, err := r.DataRecordClient.SendOperation(ctx, plan.Update)
+		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, plan.Update)
 		if err != nil {
 			resp.Diagnostics.AddError("Error executing update operation", err.Error())
 			return
 		}
-		plan.Output = *output
+		plan.Output = bodyWrapped
+
+		if plan.Read != nil {
+			bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, plan.Read)
+			if err != nil {
+				resp.Diagnostics.AddError("Error executing read operation", err.Error())
+				return
+			}
+			plan.Output = bodyWrapped
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -264,14 +307,12 @@ func (r *DataverseWebApiResource) Delete(ctx context.Context, req resource.Delet
 	}
 
 	if state.Destroy != nil {
-		output, err := r.DataRecordClient.SendOperation(ctx, state.Destroy)
+		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, state.Destroy)
 		if err != nil {
 			resp.Diagnostics.AddError("Error executing destroy operation", err.Error())
 			return
 		}
-		state.Output = *output
-	} else {
-		state.Output = r.NullOutputValue()
+		state.Output = bodyWrapped
 	}
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.TypeName))
 
@@ -281,6 +322,6 @@ func (r *DataverseWebApiResource) NullOutputValue() basetypes.ObjectValue {
 	return types.ObjectValueMust(map[string]attr.Type{
 		"body": types.StringType,
 	}, map[string]attr.Value{
-		"body": types.StringNull(),
+		"body": types.StringValue("{}"),
 	})
 }
