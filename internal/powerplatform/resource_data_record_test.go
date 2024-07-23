@@ -1116,7 +1116,10 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 		func(req *http.Request) (*http.Response, error) {
 
 			bodyAsBytes := make([]byte, req.ContentLength)
-			req.Body.Read(bodyAsBytes)
+			_, err := req.Body.Read(bodyAsBytes)
+			if err != nil {
+				panic(err)
+			}
 			bodyAsString := string(bodyAsBytes)
 
 			contactId := ""

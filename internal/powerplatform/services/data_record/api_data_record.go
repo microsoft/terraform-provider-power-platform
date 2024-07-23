@@ -277,7 +277,10 @@ func (client *DataRecordClient) GetTableSingularNameFromPlural(ctx context.Conte
 	}
 
 	var mapResponse map[string]interface{}
-	json.Unmarshal(response.BodyAsBytes, &mapResponse)
+	err = json.Unmarshal(response.BodyAsBytes, &mapResponse)
+	if err != nil {
+		return nil, err
+	}
 
 	var result string
 	if mapResponse["value"] != nil && len(mapResponse["value"].([]interface{})) > 0 &&
@@ -306,7 +309,10 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 	}
 
 	var mapResponse map[string]interface{}
-	json.Unmarshal(response.BodyAsBytes, &mapResponse)
+	err = json.Unmarshal(response.BodyAsBytes, &mapResponse)
+	if err != nil {
+		return "", err
+	}
 
 	oneToMany, ok := mapResponse["OneToManyRelationships"].([]interface{})
 	if !ok {
@@ -422,7 +428,10 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 	}
 
 	if len(response.BodyAsBytes) != 0 {
-		json.Unmarshal(response.BodyAsBytes, &result)
+		err = json.Unmarshal(response.BodyAsBytes, &result)
+		if err != nil {
+			return nil, err
+		}
 	} else if response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID) != "" {
 		re := regexp.MustCompile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
 		match := re.FindAllStringSubmatch(response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID), -1)
@@ -537,7 +546,10 @@ func applyRelations(ctx context.Context, client *DataRecordClient, relations map
 				return err
 			}
 
-			json.Unmarshal(apiResponse.BodyAsBytes, &existingRelationsResponse)
+			err = json.Unmarshal(apiResponse.BodyAsBytes, &existingRelationsResponse)
+			if err != nil {
+				return err
+			}
 
 			var toBeDeleted []RelationApiBody = make([]RelationApiBody, 0)
 

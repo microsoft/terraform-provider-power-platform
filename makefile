@@ -40,5 +40,4 @@ test:
 	go test -timeout 120m -v ./...
 
 lint:
-	go install github.com/bflad/tfproviderlint/cmd/tfproviderlintx@latest
-	tfproviderlintx ./...
+	golangci-lint run
