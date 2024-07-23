@@ -38,7 +38,7 @@ func (client *ConnectionsClient) GetConnectorDefinition(ctx context.Context, env
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.BuildHostUri(environmentId),
-		Path:   fmt.Sprintf("/connectivity/connectors/%s", connectorName, strings.ReplaceAll(uuid.New().String(), "-", "")),
+		Path:   fmt.Sprintf("/connectivity/connectors/%s", connectorName),
 	}
 	values := url.Values{}
 	values.Add("api-version", "1")
