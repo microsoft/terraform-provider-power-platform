@@ -63,15 +63,15 @@ func (r *DataverseWebApiResource) Metadata(ctx context.Context, req resource.Met
 func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: `Resource to execute web api requests. There are four distinct operations, that you can define independently. The HTTP response' body of the operation, that was called as last, will be returned in 'output.body' \n\n:
+		MarkdownDescription: `Resource to execute web api requests. There are four distinct operations, that you can define idepenetly. The HTTP response' body of the operation, that was called as last, will be returned in 'output.body' \n\n:
 		* Create: will be called once during the lifecycle of the resource (first 'terraform apply')
 		* Read: terraform will call this operation every time during 'plan' and 'apply' to get the current state of the resource
 		* Update: will be called every time during 'terraform apply' if the resource has changed (change done by the user or different values returned by the 'read' operation than those in the current state)
 		* Destroy: will be called once during the lifecycle of the resource (last 'terraform destroy')
-		\n\nYou don't have to define all the operations but there are some things to consider:
+		\n\nYOu don't have to define all the operations but there are some things to consider:
 		* lack of 'create' operation will result in no reasource being created. If you only need to read values consider using datasource 'powerplatform_rest_query' instead
 		* lack of 'read' operation will result in no resource changes being tracked. That means that the 'update' operation will never be called
-		* lack of destroy will cause, that the resource to not be deleted during 'terraform destroy'`,
+		* lack of destroy will cause that the resource to not be deleted during 'terraform destroy'`,
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id (guid)",
