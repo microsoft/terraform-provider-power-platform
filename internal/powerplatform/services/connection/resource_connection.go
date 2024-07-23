@@ -9,15 +9,19 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 var _ resource.Resource = &ConnectionResource{}
@@ -41,7 +45,7 @@ type ConnectionResourceModel struct {
 	Name                    types.String `tfsdk:"name"`
 	EnvironmentId           types.String `tfsdk:"environment_id"`
 	DisplayName             types.String `tfsdk:"display_name"`
-	Status                  []string     `tfsdk:"status"`
+	Status                  types.Set    `tfsdk:"status"`
 	ConnectionParameters    types.String `tfsdk:"connection_parameters"`
 	ConnectionParametersSet types.String `tfsdk:"connection_parameters_set"`
 }
@@ -82,20 +86,30 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"display_name": schema.StringAttribute{
 				MarkdownDescription: "Display name of the connection",
 				Description:         "Display name of the connection",
-				Optional:            true,
-				Computed:            true,
+				Required:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"status": schema.SetAttribute{
 				Description:         "List of connection statuses",
 				MarkdownDescription: "List of connection statuses",
 				ElementType:         types.StringType,
 				Computed:            true,
+				Default: setdefault.StaticValue(
+					types.SetValueMust(
+						types.StringType,
+						[]attr.Value{},
+					),
+				),
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"connection_parameters": schema.StringAttribute{
 				Description:         "Connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank). Depending on required authentication parameters of a given connector, the connection parameters can vary.",
 				MarkdownDescription: "Connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
 				Optional:            true,
-				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -104,7 +118,6 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Description:         "Set of connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank). Depending on required authentication parameters of a given connector, the connection parameters can vary.",
 				MarkdownDescription: "Set of connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
 				Optional:            true,
-				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -155,7 +168,7 @@ func (r *ConnectionResource) Create(ctx context.Context, req resource.CreateRequ
 		Properties: ConnectionToCreatePropertiesDto{
 			DisplayName: plan.DisplayName.ValueString(),
 			Environment: ConnectionToCreateEnvironmentDto{
-				Name: plan.EnvironmentId.String(),
+				Name: plan.EnvironmentId.ValueString(),
 				Id:   fmt.Sprintf("/providers/Microsoft.PowerApps/environments/%s", plan.EnvironmentId.ValueString()),
 			},
 		},
@@ -188,9 +201,8 @@ func (r *ConnectionResource) Create(ctx context.Context, req resource.CreateRequ
 
 	conectionState := ConvertFromConnectionDto(*connection)
 	plan.Id = types.String(conectionState.Id)
+	req.Plan.SetAttribute(ctx, path.Root("status"), connection.Properties.Statuses)
 	plan.DisplayName = types.String(conectionState.DisplayName)
-	plan.Status = conectionState.Status
-	//plan.Parameters = types.String(conectionState.Parameters)
 	plan.Name = types.String(conectionState.Name)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -211,15 +223,19 @@ func (r *ConnectionResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	connection, err := r.ConnectionsClient.GetConnection(ctx, state.EnvironmentId.ValueString(), state.Name.ValueString(), state.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-		return
+		if powerplatform_helpers.Code(err) == powerplatform_helpers.ERROR_OBJECT_NOT_FOUND {
+			resp.State.RemoveResource(ctx)
+			return
+		} else {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
 	}
 
 	conectionState := ConvertFromConnectionDto(*connection)
 	state.Id = types.String(conectionState.Id)
 	state.DisplayName = types.String(conectionState.DisplayName)
-	state.Status = conectionState.Status
-	//state.Parameters = types.String(conectionState.Parameters)
+	req.State.SetAttribute(ctx, path.Root("status"), connection.Properties.Statuses)
 	state.Name = types.String(conectionState.Name)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -249,12 +265,7 @@ func (r *ConnectionResource) Update(ctx context.Context, req resource.UpdateRequ
 	conectionState := ConvertFromConnectionDto(*connection)
 	plan.Id = types.String(conectionState.Id)
 	plan.DisplayName = types.String(conectionState.DisplayName)
-	plan.Status = conectionState.Status
-	// if state.ConnectionParameters.ValueString() != state.ConnectionParameters.ValueString(){
-	// 	plan.ConnectionParameters = types.StringValue()
-
-	// }
-	// //plan.Parameters = types.String(conectionState.Parameters)
+	//TODO: read parameters and try to set those that are comming back from the API
 	plan.Name = types.String(conectionState.Name)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)

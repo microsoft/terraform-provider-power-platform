@@ -5,6 +5,7 @@ package powerplatform
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
@@ -41,11 +42,12 @@ type ConnectionsListDataSourceModel struct {
 }
 
 type ConnectionsDataSourceModel struct {
-	Id          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	DisplayName types.String `tfsdk:"display_name"`
-	Status      []string     `tfsdk:"status"`
-	//Parameters  types.String `tfsdk:"parameters"`
+	Id                      types.String `tfsdk:"id"`
+	Name                    types.String `tfsdk:"name"`
+	DisplayName             types.String `tfsdk:"display_name"`
+	Status                  []string     `tfsdk:"status"`
+	ConnectionParameters    types.String `tfsdk:"connection_parameters"`
+	ConnectionParametersSet types.String `tfsdk:"connection_parameters_set"`
 }
 
 func (d *ConnectionsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -92,11 +94,16 @@ func (d *ConnectionsDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 							ElementType:         types.StringType,
 							Computed:            true,
 						},
-						// "parameters": schema.StringAttribute{
-						// 	Description:         "Connection parameters. Json string containing the authentication connection parameters. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
-						// 	MarkdownDescription: "Connection parameters. Json string containing the authentication connection parameters, (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
-						// 	Computed:            true,
-						// },
+						"connection_parameters": schema.StringAttribute{
+							Description:         "Connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank). Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+							MarkdownDescription: "Connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+							Computed:            true,
+						},
+						"connection_parameters_set": schema.StringAttribute{
+							Description:         "Set of connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank). Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+							MarkdownDescription: "Set of connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+							Computed:            true,
+						},
 					},
 				},
 			},
@@ -167,10 +174,15 @@ func ConvertFromConnectionDto(connection ConnectionDto) ConnectionsDataSourceMod
 	}
 	conn.Status = statuses
 
-	// if connection.Properties.ConnectionParametersSet != nil {
-	// 	p, _ := json.Marshal(connection.Properties.ConnectionParametersSet)
-	// 	conn.Parameters = types.StringValue(string(p))
-	// }
+	if connection.Properties.ConnectionParametersSet != nil {
+		p, _ := json.Marshal(connection.Properties.ConnectionParametersSet)
+		conn.ConnectionParametersSet = types.StringValue(string(p))
+	}
+
+	if connection.Properties.ConnectionParameters != nil {
+		p, _ := json.Marshal(connection.Properties.ConnectionParameters)
+		conn.ConnectionParameters = types.StringValue(string(p))
+	}
 
 	return conn
 }

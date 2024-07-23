@@ -11,8 +11,14 @@ provider "powerplatform" {
 }
 
 
-resource "powerplatform_connection" "flow_management" {
-  environment_id = "0f555a0d-488a-ecd5-995c-47a85a167255"
-  name           = "flow_management"
-  display_name   = "flow management conn 1"
+resource "powerplatform_connection" "new_connection" {
+  environment_id = "00000000-0000-0000-0000-000000000000"
+  name           = "shared_azureopenai"
+  display_name   = "OpenAI Connection 123"
+  connection_parameters = jsonencode({
+    "azureOpenAIResourceName" : "aaa",
+    "azureOpenAIApiKey" : "bbb",
+    "azureSearchEndpointUrl" : "ccc",
+    "azureSearchApiKey" : "dddd"
+  })
 }
