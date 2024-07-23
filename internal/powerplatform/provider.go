@@ -449,6 +449,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return application.NewTenantApplicationPackagesDataSource() },
 		func() datasource.DataSource { return data_record.NewDataRecordDataSource() },
 		func() datasource.DataSource { return rest.NewDataverseWebApiDatasource() },
+		func() datasource.DataSource { return connections.NewConnectionsDataSource() },
 	}
 }
 

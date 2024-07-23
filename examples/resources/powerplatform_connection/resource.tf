@@ -10,15 +10,9 @@ provider "powerplatform" {
   use_cli = true
 }
 
-# resource "powerplatform_connection" "example" {
-#   environment_id = "838f76c8-a192-e59c-a835-089ad8cfb047"
-#   name           = "shared_servicebus"
-#   display_name   = "blablabla"
-#   parameters     = "{\"name\":\"connectionstringauth\",\"values\":{\"ConnectionString\":{\"value\":\"dadsadsadsds\"}}}"
-# }
 
-resource "powerplatform_connection" "example1" {
-  environment_id = "838f76c8-a192-e59c-a835-089ad8cfb047"
-  name           = "shared_sql"
-  display_name   = "sql123"
+resource "powerplatform_connection" "flow_management" {
+  environment_id = "0f555a0d-488a-ecd5-995c-47a85a167255"
+  name           = "flow_management"
+  display_name   = "flow management conn 1"
 }

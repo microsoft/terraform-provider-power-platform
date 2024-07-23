@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -45,8 +44,8 @@ type ConnectionsDataSourceModel struct {
 	Id          types.String `tfsdk:"id"`
 	Name        types.String `tfsdk:"name"`
 	DisplayName types.String `tfsdk:"display_name"`
-	Status      types.List   `tfsdk:"status"`
-	Parameters  types.String `tfsdk:"parameters"`
+	Status      []string     `tfsdk:"status"`
+	//Parameters  types.String `tfsdk:"parameters"`
 }
 
 func (d *ConnectionsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -93,11 +92,11 @@ func (d *ConnectionsDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 							ElementType:         types.StringType,
 							Computed:            true,
 						},
-						"parameters": schema.StringAttribute{
-							Description:         "Connection parameters. Json string containing the authentication connection parameters. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
-							MarkdownDescription: "Connection parameters. Json string containing the authentication connection parameters, (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
-							Computed:            true,
-						},
+						// "parameters": schema.StringAttribute{
+						// 	Description:         "Connection parameters. Json string containing the authentication connection parameters. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+						// 	MarkdownDescription: "Connection parameters. Json string containing the authentication connection parameters, (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+						// 	Computed:            true,
+						// },
 					},
 				},
 			},
@@ -162,14 +161,13 @@ func ConvertFromConnectionDto(connection ConnectionDto) ConnectionsDataSourceMod
 		DisplayName: types.StringValue(connection.Properties.DisplayName),
 	}
 
-	statusValues := []attr.Value{}
+	statuses := []string{}
 	for _, status := range connection.Properties.Statuses {
-		statusValues = append(statusValues, types.StringValue(status.Status))
+		statuses = append(statuses, status.Status)
 	}
-	conn.Status = types.ListValueMust(types.StringType, statusValues)
+	conn.Status = statuses
 
 	// if connection.Properties.ConnectionParametersSet != nil {
-
 	// 	p, _ := json.Marshal(connection.Properties.ConnectionParametersSet)
 	// 	conn.Parameters = types.StringValue(string(p))
 	// }

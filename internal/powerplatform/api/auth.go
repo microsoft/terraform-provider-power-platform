@@ -280,11 +280,7 @@ func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*st
 	case client.config.Credentials.IsClientSecretCredentialsProvided():
 		token, tokenExpiry, err = client.AuthenticateClientSecret(ctx, scopes)
 	case client.config.Credentials.IsCliProvided():
-		//injecting pac_cli first party appId as it has nessesary permissions to access the resources that we need
-		//TODO check if that works with everything
-		os.Setenv("AZURE_CLIENT_ID", "9cee029c-6210-4654-90bb-17e6e9d36617")
-		token, tokenExpiry, err = client.AuthUserPassPreview(ctx, scopes)
-		//token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes)
+		token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes)
 	case client.config.Credentials.IsOidcProvided():
 		token, tokenExpiry, err = client.AuthenticateOIDC(ctx, scopes)
 	case client.config.Credentials.IsClientCertificateCredentialsProvided():

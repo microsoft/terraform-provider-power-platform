@@ -15,21 +15,22 @@ type ConnectionDto struct {
 }
 
 type PropertiesDto struct {
-	ApiId       string      `json:"apiId"`
-	DisplayName string      `json:"displayName"`
-	IconUri     string      `json:"iconUri"`
-	Statuses    []StatusDto `json:"statuses"`
-	//ConnectionParametersSet map[string]interface{} `json:"connectionParametersSet,omitempty"`
-	KeywordsRemaining int             `json:"keywordsRemaining"`
-	CreatedBy         CreatedByDto    `json:"createdBy"`
-	CreatedTime       string          `json:"createdTime"`
-	LastModifiedTime  string          `json:"lastModifiedTime"`
-	ExpirationTime    string          `json:"expirationTime"`
-	TestLinks         []TestLinkDto   `json:"testLinks"`
-	Environment       EnvironmentDto  `json:"environment"`
-	Permissions       []PermissionDto `json:"permissions"`
-	AccountName       string          `json:"accountName"`
-	AllowSharing      bool            `json:"allowSharing"`
+	ApiId                   string                 `json:"apiId"`
+	DisplayName             string                 `json:"displayName"`
+	IconUri                 string                 `json:"iconUri"`
+	Statuses                []StatusDto            `json:"statuses"`
+	ConnectionParametersSet map[string]interface{} `json:"connectionParametersSet,omitempty"`
+	ConnectionParameters    map[string]interface{} `json:"connectionParameters,omitempty"`
+	KeywordsRemaining       int                    `json:"keywordsRemaining"`
+	CreatedBy               CreatedByDto           `json:"createdBy"`
+	CreatedTime             string                 `json:"createdTime"`
+	LastModifiedTime        string                 `json:"lastModifiedTime"`
+	ExpirationTime          string                 `json:"expirationTime"`
+	TestLinks               []TestLinkDto          `json:"testLinks"`
+	Environment             EnvironmentDto         `json:"environment"`
+	Permissions             []PermissionDto        `json:"permissions"`
+	AccountName             string                 `json:"accountName"`
+	AllowSharing            bool                   `json:"allowSharing"`
 }
 
 type StatusDto struct {
@@ -80,9 +81,10 @@ type ConnectionToCreateDto struct {
 }
 
 type ConnectionToCreatePropertiesDto struct {
-	DisplayName          string                           `json:"displayName"`
-	ConnectionParameters map[string]interface{}           `json:"connectionParametersSet,omitempty"`
-	Environment          ConnectionToCreateEnvironmentDto `json:"environment"`
+	DisplayName             string                           `json:"displayName"`
+	ConnectionParametersSet map[string]interface{}           `json:"connectionParametersSet,omitempty"`
+	ConnectionParameters    map[string]interface{}           `json:"connectionParameters,omitempty"`
+	Environment             ConnectionToCreateEnvironmentDto `json:"environment"`
 }
 
 type ConnectionToCreateEnvironmentDto struct {

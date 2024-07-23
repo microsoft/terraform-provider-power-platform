@@ -5,8 +5,10 @@ package powerplatform
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -35,12 +37,13 @@ type ConnectionResource struct {
 }
 
 type ConnectionResourceModel struct {
-	Id            types.String `tfsdk:"id"`
-	Name          types.String `tfsdk:"name"`
-	EnvironmentId types.String `tfsdk:"environment_id"`
-	DisplayName   types.String `tfsdk:"display_name"`
-	Status        types.List   `tfsdk:"status"`
-	//Parameters    types.String `tfsdk:"parameters"`
+	Id                      types.String `tfsdk:"id"`
+	Name                    types.String `tfsdk:"name"`
+	EnvironmentId           types.String `tfsdk:"environment_id"`
+	DisplayName             types.String `tfsdk:"display_name"`
+	Status                  []string     `tfsdk:"status"`
+	ConnectionParameters    types.String `tfsdk:"connection_parameters"`
+	ConnectionParametersSet types.String `tfsdk:"connection_parameters_set"`
 }
 
 func (r *ConnectionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -82,19 +85,40 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:            true,
 				Computed:            true,
 			},
-			"status": schema.ListAttribute{
+			"status": schema.SetAttribute{
 				Description:         "List of connection statuses",
 				MarkdownDescription: "List of connection statuses",
 				ElementType:         types.StringType,
 				Computed:            true,
 			},
-			// "parameters": schema.StringAttribute{
-			// 	Description:         "Connection parameters. Json string containing the authentication connection parameters. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
-			// 	MarkdownDescription: "Connection parameters. Json string containing the authentication connection parameters, (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
-			// 	Optional:            true,
-			// 	Computed:            true,
-			// },
+			"connection_parameters": schema.StringAttribute{
+				Description:         "Connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank). Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+				MarkdownDescription: "Connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"connection_parameters_set": schema.StringAttribute{
+				Description:         "Set of connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank). Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+				MarkdownDescription: "Set of connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+				Optional:            true,
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 		},
+	}
+}
+
+func (d *ConnectionResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.Conflicting(
+			path.MatchRoot("connection_parameters"),
+			path.MatchRoot("connection_parameters_set"),
+		),
 	}
 }
 
@@ -127,15 +151,6 @@ func (r *ConnectionResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	// var params map[string]interface{} = nil
-	// if !plan.Parameters.IsNull() && plan.Parameters.ValueString() != "" {
-	// 	err := json.Unmarshal([]byte(plan.Parameters.ValueString()), &params)
-	// 	if err != nil {
-	// 		resp.Diagnostics.AddError("Failed to convert connection parameters", err.Error())
-	// 		return
-	// 	}
-	// }
-
 	connectionToCreate := ConnectionToCreateDto{
 		Properties: ConnectionToCreatePropertiesDto{
 			DisplayName: plan.DisplayName.ValueString(),
@@ -143,8 +158,26 @@ func (r *ConnectionResource) Create(ctx context.Context, req resource.CreateRequ
 				Name: plan.EnvironmentId.String(),
 				Id:   fmt.Sprintf("/providers/Microsoft.PowerApps/environments/%s", plan.EnvironmentId.ValueString()),
 			},
-			//ConnectionParameters: params,
 		},
+	}
+
+	if !plan.ConnectionParameters.IsNull() && plan.ConnectionParameters.ValueString() != "" {
+		var params map[string]interface{} = nil
+		err := json.Unmarshal([]byte(plan.ConnectionParameters.ValueString()), &params)
+		if err != nil {
+			resp.Diagnostics.AddError("Failed to convert connection parameters", err.Error())
+			return
+		}
+		connectionToCreate.Properties.ConnectionParameters = params
+	}
+	if !plan.ConnectionParametersSet.IsNull() && plan.ConnectionParametersSet.ValueString() != "" {
+		var params map[string]interface{} = nil
+		err := json.Unmarshal([]byte(plan.ConnectionParametersSet.ValueString()), &params)
+		if err != nil {
+			resp.Diagnostics.AddError("Failed to convert connection parameters set", err.Error())
+			return
+		}
+		connectionToCreate.Properties.ConnectionParametersSet = params
 	}
 
 	connection, err := r.ConnectionsClient.CreateConnection(ctx, plan.EnvironmentId.ValueString(), plan.Name.ValueString(), connectionToCreate)
@@ -217,7 +250,11 @@ func (r *ConnectionResource) Update(ctx context.Context, req resource.UpdateRequ
 	plan.Id = types.String(conectionState.Id)
 	plan.DisplayName = types.String(conectionState.DisplayName)
 	plan.Status = conectionState.Status
-	//plan.Parameters = types.String(conectionState.Parameters)
+	// if state.ConnectionParameters.ValueString() != state.ConnectionParameters.ValueString(){
+	// 	plan.ConnectionParameters = types.StringValue()
+
+	// }
+	// //plan.Parameters = types.String(conectionState.Parameters)
 	plan.Name = types.String(conectionState.Name)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)

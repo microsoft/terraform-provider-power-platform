@@ -123,17 +123,11 @@ func (d *CurrenciesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE CURRENCIES START: %s", d.ProviderTypeName))
 
-	currencies, err := d.CurrenciesClient.GetCurrenciesByLocation(ctx, plan.Location.ValueString())
-
 	currencies, err := d.CurrenciesClient.GetCurrenciesByLocation(ctx, state.Location.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
-
-	plan.Id = types.Int64Value(int64(len(currencies.Value)))
-	plan.Location = types.StringValue(plan.Location.ValueString())
-
 	state.Id = types.Int64Value(int64(len(currencies.Value)))
 	state.Location = types.StringValue(state.Location.ValueString())
 
