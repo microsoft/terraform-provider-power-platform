@@ -109,23 +109,52 @@ type ConnectorDefinition struct {
 	} `json:"properties"`
 }
 
-// type ConnectorConnectionParameterSets struct {
-// 	UiDefinition ConnectorUiDefinition `json:"uiDefinition"`
-// 	Values       []struct {
-// 		Name         string                `json:"name"`
-// 		UiDefinition ConnectorUiDefinition `json:"uiDefinition"`
-// 		Parameters   *map[string]any       `json:"parameters,omitempty"`
-// 	} `json:"values"`
-// }
+type ShareConnectionRequestDto struct {
+	Put    []ShareConnectionRequestPutDto    `json:"put"`
+	Delete []ShareConnectionRequestDeleteDto `json:"delete"`
+}
 
-// type ConnectorUiDefinition struct {
-// 	DisplayName string               `json:"displayName"`
-// 	Description string               `json:"description"`
-// 	Tooltip     *string              `json:"tooltip,omitempty"`
-// 	Constrains  *ConnectorConstrains `json:"constrains,omitempty"`
-// }
+type ShareConnectionRequestPutDto struct {
+	Properties              ShareConnectionRequestPutPropertiesDto `json:"properties"`
+	NotifyShareTargetOption string                                 `json:"notifyShareTargetOption"`
+}
 
-// type ConnectorConstrains struct {
-// 	Required *string `json:"required,omitempty"`
-// 	Hidden   *string `json:"hidden,omitempty"`
-// }
+type ShareConnectionRequestPutPropertiesDto struct {
+	RoleName     string                                          `json:"roleName"`
+	Capabilities []any                                           `json:"capabilities"`
+	Principal    ShareConnectionRequestPutPropertiesPrincipalDto `json:"principal"`
+}
+
+type ShareConnectionRequestPutPropertiesPrincipalDto struct {
+	Id       string `json:"id"`
+	Type     string `json:"type"`
+	TenantId string `json:"tenantId,omitempty"`
+}
+
+type ShareConnectionRequestDeleteDto struct {
+}
+
+type ShareConnectionResponseArrayDto struct {
+	Value []ShareConnectionResponseDto `json:"value"`
+}
+
+type ShareConnectionResponseDto struct {
+	Name       string                               `json:"name"`
+	Id         string                               `json:"id"`
+	Type       string                               `json:"type"`
+	Properties ShareConnectionResponsePropertiesDto `json:"properties"`
+}
+
+type ShareConnectionResponsePropertiesDto struct {
+	RoleName                string                                        `json:"roleName"`
+	Principal               ShareConnectionResponsePropertiesPrincipalDto `json:"principal"`
+	NotifyShareTargetOption string                                        `json:"notifyShareTargetOption"`
+	InviteGuestToTenant     bool                                          `json:"inviteGuestToTenant"`
+}
+
+type ShareConnectionResponsePropertiesPrincipalDto struct {
+	Id          string `json:"id"`
+	DisplayName string `json:"displayName"`
+	Type        string `json:"type"`
+	TenantId    string `json:"tenantId"`
+}

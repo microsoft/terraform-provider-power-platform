@@ -426,6 +426,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return env_settings.NewEnvironmentSettingsResource() },
 		func() resource.Resource { return connection.NewConnectionResource() },
 		func() resource.Resource { return rest.NewDataverseWebApiResource() },
+		func() resource.Resource { return connections.NewConnectionShareResource() },
 	}
 }
 
@@ -450,6 +451,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return data_record.NewDataRecordDataSource() },
 		func() datasource.DataSource { return rest.NewDataverseWebApiDatasource() },
 		func() datasource.DataSource { return connections.NewConnectionsDataSource() },
+		func() datasource.DataSource { return connection.NewConnectionSharesDataSource() },
 	}
 }
 

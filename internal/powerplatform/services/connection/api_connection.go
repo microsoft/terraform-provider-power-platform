@@ -71,44 +71,6 @@ func (client *ConnectionsClient) CreateConnection(ctx context.Context, environme
 		return nil, err
 	}
 
-	fmt.Printf("Created connection: %s\n", connection.Id)
-
-	///---------------------///
-	apiUrl1 := &url.URL{
-		Scheme: "https",
-		Host:   client.BuildHostUri(environmentId),
-		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/modifyPermissions", connectorName, connection.Name),
-	}
-	values1 := url.Values{}
-	values1.Add("api-version", "1")
-	values1.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
-	apiUrl1.RawQuery = values1.Encode()
-
-	body1 := interface{}(map[string]interface{}{
-		"put": []interface{}{
-			map[string]interface{}{
-				"properties": map[string]interface{}{
-					"roleName":     "CanEdit",
-					"capabilities": []interface{}{},
-					"principal": map[string]interface{}{
-						"id":       "f99f844b-ce3b-49ae-86f3-e374ecae789c",
-						"type":     "ServicePrincipal",
-						"tenantId": nil,
-					},
-					"NotifyShareTargetOption": "Notify",
-				},
-			},
-		},
-		"delete": []interface{}{},
-	})
-	aaa := apiUrl1.String()
-	_, err1 := client.Api.Execute(ctx, "POST", aaa, nil, body1, []int{http.StatusOK}, nil)
-	if err1 != nil {
-		panic(err1)
-	}
-
-	////////////////////
-
 	return &connection, nil
 }
 
@@ -200,4 +162,77 @@ func (client *ConnectionsClient) DeleteConnection(ctx context.Context, environme
 		return err
 	}
 	return nil
+}
+
+func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmentId, connectorName, connectionId, roleName, entraUserObjectId string) error {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.BuildHostUri(environmentId),
+		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/modifyPermissions", connectorName, connectionId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "1")
+	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
+	apiUrl.RawQuery = values.Encode()
+
+	// body1 := interface{}(map[string]interface{}{
+	// 	"put": []interface{}{
+	// 		map[string]interface{}{
+	// 			"properties": map[string]interface{}{
+	// 				"roleName":     "CanEdit",
+	// 				"capabilities": []interface{}{},
+	// 				"principal": map[string]interface{}{
+	// 					"id":       "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+	// 					"type":     "ServicePrincipal",
+	// 					"tenantId": nil,
+	// 				},
+	// 				"NotifyShareTargetOption": "Notify",
+	// 			},
+	// 		},
+	// 	},
+	// 	"delete": []interface{}{},
+	// })
+	share := ShareConnectionRequestDto{
+		Put: []ShareConnectionRequestPutDto{
+			{
+				Properties: ShareConnectionRequestPutPropertiesDto{
+					RoleName:     roleName,
+					Capabilities: []interface{}{},
+					Principal: ShareConnectionRequestPutPropertiesPrincipalDto{
+						Id:       entraUserObjectId,
+						Type:     "ServicePrincipal",
+						TenantId: "null",
+					},
+				},
+			},
+		},
+		Delete: []ShareConnectionRequestDeleteDto{},
+	}
+
+	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
+	if err != nil {
+		//todo: check if permissions does not exists
+		return err
+	}
+	return nil
+}
+
+func (client *ConnectionsClient) GetConnectionShares(ctx context.Context, environmentId, connectorName, connectionId string) (*ShareConnectionResponseArrayDto, error) {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.BuildHostUri(environmentId),
+		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/permissions", connectorName, connectionId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "1")
+	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
+	apiUrl.RawQuery = values.Encode()
+
+	share := ShareConnectionResponseArrayDto{}
+
+	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &share)
+	if err != nil {
+		return nil, err
+	}
+	return &share, nil
 }
