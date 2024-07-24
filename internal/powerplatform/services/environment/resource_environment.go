@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
@@ -298,7 +299,10 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	currencyCode := ""
 	defaultCurrency, err := r.EnvironmentClient.GetDefaultCurrencyForEnvironment(ctx, envDto.Name)
 	if err != nil {
-		resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", envDto.Name), err.Error())
+		if helpers.Code(err) != helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND {
+			resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", envDto.Name), err.Error())
+		}
+
 		if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
 			var dataverseSourceModel DataverseSourceModel
 			state.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})

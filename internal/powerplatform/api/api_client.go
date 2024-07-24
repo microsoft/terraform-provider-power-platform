@@ -41,6 +41,8 @@ func NewApiClientBase(config *config.ProviderConfig, baseAuth *Auth) *ApiClient 
 }
 
 func TryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (string, error) {
+	
+
 	switch {
 	case strings.LastIndex(url, cloudConfig.BapiUrl) != -1,
 		strings.LastIndex(url, cloudConfig.PowerAppsUrl) != -1:
