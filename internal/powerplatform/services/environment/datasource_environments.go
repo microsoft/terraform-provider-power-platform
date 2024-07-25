@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 var (
@@ -196,10 +197,13 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 		currencyCode := ""
 		defaultCurrency, err := d.EnvironmentClient.GetDefaultCurrencyForEnvironment(ctx, env.Name)
 		if err != nil {
-			resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", env.Name), err.Error())
+			if helpers.Code(err) != helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND {
+				resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", env.Name), err.Error())
+			}
 		} else {
 			currencyCode = defaultCurrency.IsoCurrencyCode
 		}
+
 		env, err := ConvertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Error when converting environment %s", env.DisplayName), err.Error())
