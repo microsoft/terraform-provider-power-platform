@@ -88,7 +88,7 @@ func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.Schem
 			"destroy": r.buildOperationSchema("Destroy operation"),
 			"read":    r.buildOperationSchema("Read operation"),
 			"output": schema.SingleNestedAttribute{
-				MarkdownDescription: "Response after executing the web api srequest",
+				MarkdownDescription: "Response after executing the web api request",
 				Computed:            true,
 				Optional:            true,
 				Required:            false,
