@@ -90,6 +90,9 @@ func (client *DataRecordClient) GetEnvironmentUrlById(ctx context.Context, envir
 		return "", err
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
+	if environmentUrl == "" {
+		return "", powerplatform_helpers.WrapIntoProviderError(nil, powerplatform_helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+	}
 	return environmentUrl, nil
 }
 
