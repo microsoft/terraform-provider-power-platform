@@ -87,9 +87,6 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				MarkdownDescription: "Display name of the connection",
 				Description:         "Display name of the connection",
 				Required:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"status": schema.SetAttribute{
 				Description:         "List of connection statuses",
@@ -109,6 +106,7 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"connection_parameters": schema.StringAttribute{
 				Description:         "Connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank). Depending on required authentication parameters of a given connector, the connection parameters can vary.",
 				MarkdownDescription: "Connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+				Computed:            true,
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -117,6 +115,7 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 			"connection_parameters_set": schema.StringAttribute{
 				Description:         "Set of connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank). Depending on required authentication parameters of a given connector, the connection parameters can vary.",
 				MarkdownDescription: "Set of connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+				Computed:            true,
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -204,6 +203,13 @@ func (r *ConnectionResource) Create(ctx context.Context, req resource.CreateRequ
 	req.Plan.SetAttribute(ctx, path.Root("status"), connection.Properties.Statuses)
 	plan.DisplayName = types.String(conectionState.DisplayName)
 	plan.Name = types.String(conectionState.Name)
+	if conectionState.ConnectionParameters == types.StringNull() {
+		plan.ConnectionParameters = types.StringValue("")
+	}
+
+	if conectionState.ConnectionParametersSet == types.StringNull() {
+		plan.ConnectionParametersSet = types.StringValue("")
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
@@ -237,6 +243,8 @@ func (r *ConnectionResource) Read(ctx context.Context, req resource.ReadRequest,
 	state.DisplayName = types.String(conectionState.DisplayName)
 	req.State.SetAttribute(ctx, path.Root("status"), connection.Properties.Statuses)
 	state.Name = types.String(conectionState.Name)
+	state.ConnectionParameters = types.String(conectionState.ConnectionParameters)
+	state.ConnectionParametersSet = types.String(conectionState.ConnectionParametersSet)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.TypeName))
@@ -256,7 +264,27 @@ func (r *ConnectionResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
-	connection, err := r.ConnectionsClient.UpdateConnection(ctx, plan.EnvironmentId.ValueString(), plan.Name.ValueString(), plan.Id.ValueString(), plan.DisplayName.ValueString())
+	var connParams map[string]interface{} = nil
+	if !plan.ConnectionParameters.IsNull() && plan.ConnectionParameters.ValueString() != "" {
+
+		err := json.Unmarshal([]byte(plan.ConnectionParameters.ValueString()), &connParams)
+		if err != nil {
+			resp.Diagnostics.AddError("Failed to convert connection parameters", err.Error())
+			return
+		}
+	}
+
+	var connParamsSet map[string]interface{} = nil
+	if !plan.ConnectionParametersSet.IsNull() && plan.ConnectionParametersSet.ValueString() != "" {
+
+		err := json.Unmarshal([]byte(plan.ConnectionParametersSet.ValueString()), &connParamsSet)
+		if err != nil {
+			resp.Diagnostics.AddError("Failed to convert connection parameters set", err.Error())
+			return
+		}
+	}
+
+	connection, err := r.ConnectionsClient.UpdateConnection(ctx, plan.EnvironmentId.ValueString(), plan.Name.ValueString(), plan.Id.ValueString(), plan.DisplayName.ValueString(), connParams, connParamsSet)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
@@ -265,8 +293,14 @@ func (r *ConnectionResource) Update(ctx context.Context, req resource.UpdateRequ
 	conectionState := ConvertFromConnectionDto(*connection)
 	plan.Id = types.String(conectionState.Id)
 	plan.DisplayName = types.String(conectionState.DisplayName)
-	//TODO: read parameters and try to set those that are comming back from the API
 	plan.Name = types.String(conectionState.Name)
+
+	if conectionState.ConnectionParameters == types.StringNull() {
+		plan.ConnectionParameters = types.StringValue("")
+	}
+	if conectionState.ConnectionParametersSet == types.StringNull() {
+		plan.ConnectionParametersSet = types.StringValue("")
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 

@@ -74,7 +74,7 @@ func (client *ConnectionsClient) CreateConnection(ctx context.Context, environme
 	return &connection, nil
 }
 
-func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environmentId, connectorName, connectionId, displayName string) (*ConnectionDto, error) {
+func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environmentId, connectorName, connectionId, displayName string, connParams, connParamsSet map[string]interface{}) (*ConnectionDto, error) {
 
 	conn, err := client.GetConnection(ctx, environmentId, connectorName, connectionId)
 	if err != nil {
@@ -92,6 +92,8 @@ func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environme
 	apiUrl.RawQuery = values.Encode()
 
 	conn.Properties.DisplayName = displayName
+	conn.Properties.ConnectionParametersSet = connParamsSet
+	conn.Properties.ConnectionParameters = connParams
 
 	updatedConnection := ConnectionDto{}
 	_, err = client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, conn, []int{http.StatusOK}, &updatedConnection)
@@ -132,8 +134,6 @@ func (client *ConnectionsClient) GetConnections(ctx context.Context, environment
 	}
 
 	values := url.Values{}
-	//values.Add("$expand", "permissions($filter=maxAssignedTo('<<aaid_objectid_here>>'))")
-	//values.Add("$filter", fmt.Sprintf("environment eq '%s' and ApiId not in ('shared_logicflows', 'shared_powerflows', 'shared_pqogenericconnector')", environmentId))
 	values.Add("api-version", "1")
 	apiUrl.RawQuery = values.Encode()
 
@@ -175,23 +175,6 @@ func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmen
 	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
 	apiUrl.RawQuery = values.Encode()
 
-	// body1 := interface{}(map[string]interface{}{
-	// 	"put": []interface{}{
-	// 		map[string]interface{}{
-	// 			"properties": map[string]interface{}{
-	// 				"roleName":     "CanEdit",
-	// 				"capabilities": []interface{}{},
-	// 				"principal": map[string]interface{}{
-	// 					"id":       "f99f844b-ce3b-49ae-86f3-e374ecae789c",
-	// 					"type":     "ServicePrincipal",
-	// 					"tenantId": nil,
-	// 				},
-	// 				"NotifyShareTargetOption": "Notify",
-	// 			},
-	// 		},
-	// 	},
-	// 	"delete": []interface{}{},
-	// })
 	share := ShareConnectionRequestDto{
 		Put: []ShareConnectionRequestPutDto{
 			{
@@ -201,8 +184,9 @@ func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmen
 					Principal: ShareConnectionRequestPutPropertiesPrincipalDto{
 						Id:       entraUserObjectId,
 						Type:     "ServicePrincipal",
-						TenantId: "null",
+						TenantId: nil,
 					},
+					NotifyShareTargetOption: "Notify",
 				},
 			},
 		},
@@ -235,4 +219,65 @@ func (client *ConnectionsClient) GetConnectionShares(ctx context.Context, enviro
 		return nil, err
 	}
 	return &share, nil
+}
+
+func (client *ConnectionsClient) GetConnectionShare(ctx context.Context, environmentId, connectorName, connectionId, principalId string) (*ShareConnectionResponseDto, error) {
+	shares, err := client.GetConnectionShares(ctx, environmentId, connectorName, connectionId)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, share := range shares.Value {
+		if share.Properties.Principal["id"].(string) == principalId {
+			return &share, nil
+		}
+	}
+	return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Share for principal '%s' not found", principalId))
+}
+
+func (client *ConnectionsClient) UpdateConnectionShare(ctx context.Context, environmentId, connectorName, connectionId string, share ShareConnectionRequestDto) error {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.BuildHostUri(environmentId),
+		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/modifyPermissions", connectorName, connectionId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "1")
+	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
+	apiUrl.RawQuery = values.Encode()
+
+	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
+	if err != nil {
+		//todo: check if permissions does not exists
+		return err
+	}
+	return nil
+}
+
+func (client *ConnectionsClient) DeleteConnectionShare(ctx context.Context, environmentId, connectorName, connectionId, shareId string) error {
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   client.BuildHostUri(environmentId),
+		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/modifyPermissions", connectorName, connectionId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "1")
+	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
+	apiUrl.RawQuery = values.Encode()
+
+	share := ShareConnectionRequestDto{
+		Put: []ShareConnectionRequestPutDto{},
+		Delete: []ShareConnectionRequestDeleteDto{
+			{
+				Id: fmt.Sprintf("/providers/Microsoft.PowerApps/apis/%s/connections/%s/permissions/%s", connectorName, connectionId, shareId),
+			},
+		},
+	}
+
+	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
+	if err != nil {
+		//todo: check if permissions does not exists
+		return err
+	}
+	return nil
 }

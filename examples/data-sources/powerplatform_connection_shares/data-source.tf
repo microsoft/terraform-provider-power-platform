@@ -11,8 +11,8 @@ provider "powerplatform" {
 }
 
 data "powerplatform_connection_shares" "all_shares" {
-  environment_id = "00000000-0000-0000-0000-000000000000"
+  environment_id = var.environment_id
   connector_name = "shared_azureopenai"
-  connection_id  = "11111111-1111-1111-1111-111111111111"
+  connection_id  = var.azure_openai_connection_id
 }
 

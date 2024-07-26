@@ -42,11 +42,7 @@ type ConnectionSharesListDataSourceModel struct {
 }
 
 type ConnectionSharesDataSourceModel struct {
-	Id         types.String                              `tfsdk:"id"`
-	Properties ConnectionSharesPropertiesDataSourceModel `tfsdk:"properties"`
-}
-
-type ConnectionSharesPropertiesDataSourceModel struct {
+	Id        types.String                            `tfsdk:"id"`
 	RoleName  types.String                            `tfsdk:"role_name"`
 	Principal ConnectionShresPrincipalDataSourceModel `tfsdk:"principal"`
 }
@@ -89,27 +85,21 @@ func (d *ConnectionSharesDataSource) Schema(_ context.Context, _ datasource.Sche
 							MarkdownDescription: "Unique share id",
 							Computed:            true,
 						},
-						"properties": schema.SingleNestedAttribute{
+						"role_name": schema.StringAttribute{
+							MarkdownDescription: "Role name of the share",
+							Computed:            true,
+						},
+						"principal": schema.SingleNestedAttribute{
 							MarkdownDescription: "",
 							Computed:            true,
 							Attributes: map[string]schema.Attribute{
-								"role_name": schema.StringAttribute{
-									MarkdownDescription: "Role name of the share",
+								"id": schema.StringAttribute{
+									MarkdownDescription: "Principal Id",
 									Computed:            true,
 								},
-								"principal": schema.SingleNestedAttribute{
-									MarkdownDescription: "",
+								"display_name": schema.StringAttribute{
+									MarkdownDescription: "Principal Display Name",
 									Computed:            true,
-									Attributes: map[string]schema.Attribute{
-										"id": schema.StringAttribute{
-											MarkdownDescription: "Principal Id",
-											Computed:            true,
-										},
-										"display_name": schema.StringAttribute{
-											MarkdownDescription: "Principal Display Name",
-											Computed:            true,
-										},
-									},
 								},
 							},
 						},
@@ -167,15 +157,12 @@ func (d *ConnectionSharesDataSource) Read(ctx context.Context, req datasource.Re
 
 func ConvertFromConnectionSharesDto(connection ShareConnectionResponseDto) ConnectionSharesDataSourceModel {
 	share := ConnectionSharesDataSourceModel{
-		Id: types.StringValue(connection.Name),
-		Properties: ConnectionSharesPropertiesDataSourceModel{
-			RoleName: types.StringValue(connection.Properties.RoleName),
-			Principal: ConnectionShresPrincipalDataSourceModel{
-				Id:          types.StringValue(connection.Properties.Principal.Id),
-				DisplayName: types.StringValue(connection.Properties.Principal.DisplayName),
-			},
+		Id:       types.StringValue(connection.Name),
+		RoleName: types.StringValue(connection.Properties.RoleName),
+		Principal: ConnectionShresPrincipalDataSourceModel{
+			Id:          types.StringValue(connection.Properties.Principal["id"].(string)),
+			DisplayName: types.StringValue(connection.Properties.Principal["displayName"].(string)),
 		},
 	}
-
 	return share
 }

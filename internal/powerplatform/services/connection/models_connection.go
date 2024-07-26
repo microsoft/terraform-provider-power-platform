@@ -66,7 +66,7 @@ type PermissionDto struct {
 type PermissionPropertiesDto struct {
 	RoleName                string       `json:"roleName"`
 	Principal               PrincipalDto `json:"principal"`
-	NotifyShareTargetOption string       `json:"notifyShareTargetOption"`
+	NotifyShareTargetOption string       `json:"NotifyShareTargetOption"`
 	InviteGuestToTenant     bool         `json:"inviteGuestToTenant"`
 }
 
@@ -115,23 +115,24 @@ type ShareConnectionRequestDto struct {
 }
 
 type ShareConnectionRequestPutDto struct {
-	Properties              ShareConnectionRequestPutPropertiesDto `json:"properties"`
-	NotifyShareTargetOption string                                 `json:"notifyShareTargetOption"`
+	Properties ShareConnectionRequestPutPropertiesDto `json:"properties"`
 }
 
 type ShareConnectionRequestPutPropertiesDto struct {
-	RoleName     string                                          `json:"roleName"`
-	Capabilities []any                                           `json:"capabilities"`
-	Principal    ShareConnectionRequestPutPropertiesPrincipalDto `json:"principal"`
+	RoleName                string                                          `json:"roleName"`
+	Capabilities            []any                                           `json:"capabilities"`
+	Principal               ShareConnectionRequestPutPropertiesPrincipalDto `json:"principal"`
+	NotifyShareTargetOption string                                          `json:"NotifyShareTargetOption"`
 }
 
 type ShareConnectionRequestPutPropertiesPrincipalDto struct {
-	Id       string `json:"id"`
-	Type     string `json:"type"`
-	TenantId string `json:"tenantId,omitempty"`
+	Id       string  `json:"id"`
+	Type     string  `json:"type"`
+	TenantId *string `json:"tenantId"`
 }
 
 type ShareConnectionRequestDeleteDto struct {
+	Id string `json:"id"`
 }
 
 type ShareConnectionResponseArrayDto struct {
@@ -146,15 +147,18 @@ type ShareConnectionResponseDto struct {
 }
 
 type ShareConnectionResponsePropertiesDto struct {
-	RoleName                string                                        `json:"roleName"`
-	Principal               ShareConnectionResponsePropertiesPrincipalDto `json:"principal"`
-	NotifyShareTargetOption string                                        `json:"notifyShareTargetOption"`
-	InviteGuestToTenant     bool                                          `json:"inviteGuestToTenant"`
+	RoleName string `json:"roleName"`
+	//Principal               ShareConnectionResponsePropertiesPrincipalDto `json:"princpal"`
+	Principal               map[string]interface{} `json:"principal"`
+	NotifyShareTargetOption string                 `json:"NotifyShareTargetOption"`
+	InviteGuestToTenant     bool                   `json:"inviteGuestToTenant"`
 }
 
 type ShareConnectionResponsePropertiesPrincipalDto struct {
-	Id          string `json:"id"`
-	DisplayName string `json:"displayName"`
-	Type        string `json:"type"`
-	TenantId    string `json:"tenantId"`
+	Id                string `json:"id"`
+	DisplayName       string `json:"displayName"`
+	Type              string `json:"type"`
+	TenantId          string `json:"tenantId"`
+	Email             string `json:"email"`
+	PreferredLanguage string `json:"preferredLanguage"`
 }
