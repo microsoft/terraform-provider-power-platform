@@ -48,7 +48,7 @@ type ConnectionSharesDataSourceModel struct {
 }
 
 type ConnectionShresPrincipalDataSourceModel struct {
-	Id          types.String `tfsdk:"id"`
+	EntraId     types.String `tfsdk:"entra_object_id"`
 	DisplayName types.String `tfsdk:"display_name"`
 }
 
@@ -93,8 +93,8 @@ func (d *ConnectionSharesDataSource) Schema(_ context.Context, _ datasource.Sche
 							MarkdownDescription: "",
 							Computed:            true,
 							Attributes: map[string]schema.Attribute{
-								"id": schema.StringAttribute{
-									MarkdownDescription: "Principal Id",
+								"entra_object_id": schema.StringAttribute{
+									MarkdownDescription: "Entra Object Id of the principal",
 									Computed:            true,
 								},
 								"display_name": schema.StringAttribute{
@@ -160,7 +160,7 @@ func ConvertFromConnectionSharesDto(connection ShareConnectionResponseDto) Conne
 		Id:       types.StringValue(connection.Name),
 		RoleName: types.StringValue(connection.Properties.RoleName),
 		Principal: ConnectionShresPrincipalDataSourceModel{
-			Id:          types.StringValue(connection.Properties.Principal["id"].(string)),
+			EntraId:     types.StringValue(connection.Properties.Principal["id"].(string)),
 			DisplayName: types.StringValue(connection.Properties.Principal["displayName"].(string)),
 		},
 	}

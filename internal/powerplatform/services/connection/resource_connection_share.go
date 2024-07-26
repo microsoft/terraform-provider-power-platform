@@ -154,7 +154,6 @@ func (r *ConnectionShareResource) Create(ctx context.Context, req resource.Creat
 
 	share, err := r.ConnectionsClient.GetConnectionShare(ctx, plan.EnvironmentId.ValueString(), plan.ConnectorName.ValueString(), plan.ConnectionId.ValueString(), plan.Principal.EntraObjectId.ValueString())
 	if err != nil {
-		//todo: not found case
 		resp.Diagnostics.AddError("Error getting connection share", err.Error())
 		return
 	}
@@ -182,7 +181,6 @@ func (r *ConnectionShareResource) Read(ctx context.Context, req resource.ReadReq
 
 	share, err := r.ConnectionsClient.GetConnectionShare(ctx, state.EnvironmentId.ValueString(), state.ConnectorName.ValueString(), state.ConnectionId.ValueString(), state.Principal.EntraObjectId.ValueString())
 	if err != nil {
-		//todo: not found case
 		resp.Diagnostics.AddError("Error getting connection share", err.Error())
 		return
 	}
@@ -229,14 +227,12 @@ func (r *ConnectionShareResource) Update(ctx context.Context, req resource.Updat
 	}
 	err := r.ConnectionsClient.UpdateConnectionShare(ctx, plan.EnvironmentId.ValueString(), plan.ConnectorName.ValueString(), plan.ConnectionId.ValueString(), share)
 	if err != nil {
-		//todo handle not found case
 		resp.Diagnostics.AddError("Error updating connection share", err.Error())
 		return
 	}
 
 	newShare, err := r.ConnectionsClient.GetConnectionShare(ctx, plan.EnvironmentId.ValueString(), plan.ConnectorName.ValueString(), plan.ConnectionId.ValueString(), plan.Principal.EntraObjectId.ValueString())
 	if err != nil {
-		//todo: not found case
 		resp.Diagnostics.AddError("Error getting connection share", err.Error())
 		return
 	}
@@ -265,7 +261,6 @@ func (r *ConnectionShareResource) Delete(ctx context.Context, req resource.Delet
 
 	err := r.ConnectionsClient.DeleteConnectionShare(ctx, state.EnvironmentId.ValueString(), state.ConnectorName.ValueString(), state.ConnectionId.ValueString(), state.Id.ValueString())
 	if err != nil {
-		//todo handle not found case
 		resp.Diagnostics.AddError("Error deleting connection share", err.Error())
 		return
 	}

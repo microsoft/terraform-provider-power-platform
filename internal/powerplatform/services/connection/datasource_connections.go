@@ -75,32 +75,26 @@ func (d *ConnectionsDataSource) Schema(_ context.Context, _ datasource.SchemaReq
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							MarkdownDescription: "Unique connection id",
-							Description:         "Unique connection id",
 							Computed:            true,
 						},
 						"name": schema.StringAttribute{
 							MarkdownDescription: "Name of the connection.",
-							Description:         "Name of the connection.",
 							Computed:            true,
 						},
 						"display_name": schema.StringAttribute{
 							MarkdownDescription: "Display name of the connection.",
-							Description:         "Display name of the connection.",
 							Computed:            true,
 						},
 						"status": schema.SetAttribute{
-							Description:         "List of connection statuses",
 							MarkdownDescription: "List of connection statuses",
 							ElementType:         types.StringType,
 							Computed:            true,
 						},
 						"connection_parameters": schema.StringAttribute{
-							Description:         "Connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank). Depending on required authentication parameters of a given connector, the connection parameters can vary.",
 							MarkdownDescription: "Connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
 							Computed:            true,
 						},
 						"connection_parameters_set": schema.StringAttribute{
-							Description:         "Set of connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank). Depending on required authentication parameters of a given connector, the connection parameters can vary.",
 							MarkdownDescription: "Set of connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
 							Computed:            true,
 						},

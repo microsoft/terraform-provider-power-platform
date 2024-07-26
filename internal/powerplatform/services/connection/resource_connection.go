@@ -56,12 +56,10 @@ func (r *ConnectionResource) Metadata(ctx context.Context, req resource.Metadata
 
 func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		Description:         "Manages a \"Connection\"",
 		MarkdownDescription: "Manages a [Connection](https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/add-manage-connections). A connection in Power Platform serves as a means to integrate external data sources and services with your Power Platform apps, flows, and other solutions. It acts as a bridge, facilitating secure communication between your solutions and various external systems.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique connection id",
-				Description:         "Unique connection id",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -69,7 +67,6 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "Environment id where the connection is to be created",
-				Description:         "Environment id where the connection is to be created",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -77,7 +74,6 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "Name of the connection. This can be found using `powerplatform_connectors` data source by using the `name` attribute",
-				Description:         "Name of the connection. This can be found using `powerplatform_connectors` data source by using the `name` attribute",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -85,11 +81,9 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"display_name": schema.StringAttribute{
 				MarkdownDescription: "Display name of the connection",
-				Description:         "Display name of the connection",
 				Required:            true,
 			},
 			"status": schema.SetAttribute{
-				Description:         "List of connection statuses",
 				MarkdownDescription: "List of connection statuses",
 				ElementType:         types.StringType,
 				Computed:            true,
@@ -104,8 +98,7 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 			},
 			"connection_parameters": schema.StringAttribute{
-				Description:         "Connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank). Depending on required authentication parameters of a given connector, the connection parameters can vary.",
-				MarkdownDescription: "Connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+				MarkdownDescription: "Connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary. Due to how connection parameters and served by the platform, not all values are retrieved. If you don't want the connection to requried in-place-update all the time, consider using `ignore_changes` in the resource block.",
 				Computed:            true,
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
@@ -113,8 +106,7 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 			},
 			"connection_parameters_set": schema.StringAttribute{
-				Description:         "Set of connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank). Depending on required authentication parameters of a given connector, the connection parameters can vary.",
-				MarkdownDescription: "Set of connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary.",
+				MarkdownDescription: "Set of connection parameters. Json string containing the authentication connection parameters (if connection is interactive, leave blank), (for example)[https://learn.microsoft.com/en-us/power-automate/desktop-flows/alm/alm-connection#create-a-connection-using-your-service-principal]. Depending on required authentication parameters of a given connector, the connection parameters can vary. Due to how connection parameters and served by the platform, not all values are retrieved. If you don't want the connection to requried in-place-update all the time, consider using `ignore_changes` in the resource block.",
 				Computed:            true,
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
