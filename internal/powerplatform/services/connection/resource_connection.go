@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -87,12 +86,6 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				MarkdownDescription: "List of connection statuses",
 				ElementType:         types.StringType,
 				Computed:            true,
-				Default: setdefault.StaticValue(
-					types.SetValueMust(
-						types.StringType,
-						[]attr.Value{},
-					),
-				),
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
 				},
@@ -192,7 +185,11 @@ func (r *ConnectionResource) Create(ctx context.Context, req resource.CreateRequ
 
 	conectionState := ConvertFromConnectionDto(*connection)
 	plan.Id = types.String(conectionState.Id)
-	req.Plan.SetAttribute(ctx, path.Root("status"), connection.Properties.Statuses)
+	statuses := []attr.Value{}
+	for _, status := range conectionState.Status {
+		statuses = append(statuses, types.StringValue(status))
+	}
+	plan.Status = types.SetValueMust(types.StringType, statuses)
 	plan.DisplayName = types.String(conectionState.DisplayName)
 	plan.Name = types.String(conectionState.Name)
 	if conectionState.ConnectionParameters == types.StringNull() {
@@ -233,7 +230,11 @@ func (r *ConnectionResource) Read(ctx context.Context, req resource.ReadRequest,
 	conectionState := ConvertFromConnectionDto(*connection)
 	state.Id = types.String(conectionState.Id)
 	state.DisplayName = types.String(conectionState.DisplayName)
-	req.State.SetAttribute(ctx, path.Root("status"), connection.Properties.Statuses)
+	statuses := []attr.Value{}
+	for _, status := range conectionState.Status {
+		statuses = append(statuses, types.StringValue(status))
+	}
+	state.Status = types.SetValueMust(types.StringType, statuses)
 	state.Name = types.String(conectionState.Name)
 	state.ConnectionParameters = types.String(conectionState.ConnectionParameters)
 	state.ConnectionParametersSet = types.String(conectionState.ConnectionParametersSet)
@@ -286,6 +287,11 @@ func (r *ConnectionResource) Update(ctx context.Context, req resource.UpdateRequ
 	plan.Id = types.String(conectionState.Id)
 	plan.DisplayName = types.String(conectionState.DisplayName)
 	plan.Name = types.String(conectionState.Name)
+	statuses := []attr.Value{}
+	for _, status := range conectionState.Status {
+		statuses = append(statuses, types.StringValue(status))
+	}
+	plan.Status = types.SetValueMust(types.StringType, statuses)
 
 	if conectionState.ConnectionParameters == types.StringNull() {
 		plan.ConnectionParameters = types.StringValue("")

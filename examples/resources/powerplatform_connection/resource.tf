@@ -24,8 +24,7 @@ resource "powerplatform_connection" "azure_openai_connection" {
 
   lifecycle {
     ignore_changes = [
-      connection_parameters_set
+      connection_parameters
     ]
   }
-
 }
