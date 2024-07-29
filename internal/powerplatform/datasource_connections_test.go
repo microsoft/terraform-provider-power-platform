@@ -10,7 +10,7 @@ import (
 	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
-func TestAccConnectionssDataSource_Validate_Read(t *testing.T) {
+func TestAccConnectionsDataSource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 
 	"github.com/google/uuid"
@@ -218,6 +219,11 @@ func (client *ConnectionsClient) GetConnectionShares(ctx context.Context, enviro
 	if err != nil {
 		return nil, err
 	}
+
+	sort.SliceStable(share.Value, func(i, j int) bool {
+		return share.Value[i].Properties.Principal["id"].(string) < share.Value[j].Properties.Principal["id"].(string)
+	})
+
 	return &share, nil
 }
 
