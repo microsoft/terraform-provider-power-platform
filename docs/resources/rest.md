@@ -3,15 +3,15 @@
 page_title: "powerplatform_rest Resource - powerplatform"
 subcategory: ""
 description: |-
-  Resource to execute web api requests. There are four distinct operations, that you can define idepenetly. The HTTP response' body of the operation, that was called as last, will be returned in 'output.body' \n\n:
+  Resource to execute web api requests. There are four distinct operations, that you can define independently. The HTTP response' body of the operation, that was called as last, will be returned in 'output.body' \n\n:
   * Create: will be called once during the lifecycle of the resource (first 'terraform apply')
   * Read: terraform will call this operation every time during 'plan' and 'apply' to get the current state of the resource
   * Update: will be called every time during 'terraform apply' if the resource has changed (change done by the user or different values returned by the 'read' operation than those in the current state)
   * Destroy: will be called once during the lifecycle of the resource (last 'terraform destroy')
-  \n\nYOu don't have to define all the operations but there are some things to consider:
+  \n\nYou don't have to define all the operations but there are some things to consider:
   * lack of 'create' operation will result in no reasource being created. If you only need to read values consider using datasource 'powerplatform_rest_query' instead
   * lack of 'read' operation will result in no resource changes being tracked. That means that the 'update' operation will never be called
-  * lack of destroy will couse, that the resource will not be deleted during 'terraform destroy'
+  * lack of destroy will cause that the resource to not be deleted during 'terraform destroy'
 ---
 
 # powerplatform_rest (Resource)
@@ -76,7 +76,7 @@ resource "powerplatform_rest" "install_sample_data" {
 - `create` (Attributes) Create operation (see [below for nested schema](#nestedatt--create))
 - `destroy` (Attributes) Destroy operation (see [below for nested schema](#nestedatt--destroy))
 - `id` (String) Unique id (guid)
-- `output` (Attributes) Response after executing the web api srequest (see [below for nested schema](#nestedatt--output))
+- `output` (Attributes) Response after executing the web api request (see [below for nested schema](#nestedatt--output))
 - `read` (Attributes) Read operation (see [below for nested schema](#nestedatt--read))
 - `update` (Attributes) Update operation (see [below for nested schema](#nestedatt--update))
 
