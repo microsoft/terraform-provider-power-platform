@@ -4,9 +4,11 @@
 package powerplatform
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/jarcoal/httpmock"
 	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
@@ -106,6 +108,44 @@ func TestAccConnectionsShareDataSource_Validate_Read(t *testing.T) {
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitConnectionsShareDataSource_Validate_Read(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.01.environment.api.powerplatform.com/connectivity/connectors/shared_commondataserviceforapps/connections/00000000-0000-0000-0000-000000000002/permissions?%24filter=environment+eq+%2700000000-0000-0000-0000-000000000001%27&api-version=1`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/connection/tests/datasource/connection_shares/Validate_Read/get_connection_shares.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				data "powerplatform_connection_shares" "all_shares" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					connector_name = "shared_commondataserviceforapps"
+					connection_id  = "00000000-0000-0000-0000-000000000002"
+				}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.#", "2"),
+					resource.TestCheckResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.0.id", "4fac9a58-a88e-417e-bad7-fe0ea64582e3"),
+					resource.TestCheckResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.0.role_name", "CanViewWithShare"),
+					resource.TestCheckResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.0.principal.entra_object_id", "c52d4a80-3db9-4152-8601-2f8c131c4a90"),
+					resource.TestCheckResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.0.principal.display_name", "Power Platform API"),
+					resource.TestCheckResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.1.id", "f99f844b-ce3b-49ae-86f3-e374ecae789c"),
+					resource.TestCheckResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.1.role_name", "Owner"),
+					resource.TestCheckResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.1.principal.entra_object_id", "f99f844b-ce3b-49ae-86f3-e374ecae789c"),
+					resource.TestCheckResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.1.principal.display_name", "admin"),
 				),
 			},
 		},

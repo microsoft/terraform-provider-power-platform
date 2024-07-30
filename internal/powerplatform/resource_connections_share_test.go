@@ -4,9 +4,11 @@
 package powerplatform
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/jarcoal/httpmock"
 	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
@@ -98,6 +100,49 @@ func TestAccConnectionsShareResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "connector_name", "shared_azureopenai"),
 					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "role_name", "CanEdit"),
 					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "principal.display_name", mock_helpers.TestName()),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitConnectionsShareResource_Validate_Create(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.00.environment.api.powerplatform.com/connectivity/connectors/shared_commondataserviceforapps/connections/00000000-0000-0000-0000-000000000001/modifyPermissions?%24filter=environment+eq+%2700000000-0000-0000-0000-000000000000%27&api-version=1`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://000000000000000000000000000000.00.environment.api.powerplatform.com/connectivity/connectors/shared_commondataserviceforapps/connections/00000000-0000-0000-0000-000000000001/permissions?%24filter=environment+eq+%2700000000-0000-0000-0000-000000000000%27&api-version=1`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/connection/tests/resource/connection_shares/Validate_Create/get_connection_shares.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
+		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: TestsProviderConfig + `
+				resource "powerplatform_connection_share" "share_with_user1" {
+					environment_id = "00000000-0000-0000-0000-000000000000"
+					connector_name = "shared_commondataserviceforapps"
+					connection_id  = "00000000-0000-0000-0000-000000000001"
+					role_name      = "CanViewWithShare"
+					principal = {
+						entra_object_id = "00000000-0000-0000-0000-000000000002"
+					}
+				}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "connector_name", "shared_commondataserviceforapps"),
+					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "role_name", "CanViewWithShare"),
+					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "principal.display_name", "Power Platform API"),
+					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "principal.entra_object_id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "connection_id", "00000000-0000-0000-0000-000000000001"),
 				),
 			},
 		},
