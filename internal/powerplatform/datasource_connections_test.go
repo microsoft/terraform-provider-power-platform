@@ -31,7 +31,7 @@ func TestAccConnectionsDataSource_Validate_Read(t *testing.T) {
 				resource "powerplatform_connection" "azure_openai_connection" {
 					environment_id = powerplatform_environment.env.id
 					name           = "shared_azureopenai"
-					display_name   = "OpenAI Connection"
+					display_name   = "OpenAI Connection ` + mock_helpers.TestName() + `"
 					connection_parameters = jsonencode({
 						"azureOpenAIResourceName" : "aaa",
 						"azureOpenAIApiKey" : "bbb"
@@ -57,7 +57,7 @@ func TestAccConnectionsDataSource_Validate_Read(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.powerplatform_connections.all_connections", "connections.#", "1"),
 					resource.TestCheckResourceAttr("data.powerplatform_connections.all_connections", "connections.0.name", "shared_azureopenai"),
-					resource.TestCheckResourceAttr("data.powerplatform_connections.all_connections", "connections.0.display_name", "OpenAI Connection"),
+					resource.TestCheckResourceAttr("data.powerplatform_connections.all_connections", "connections.0.display_name", "OpenAI Connection "+mock_helpers.TestName()),
 					resource.TestCheckResourceAttr("data.powerplatform_connections.all_connections", "connections.0.connection_parameters", "{\"azureOpenAIResourceName\":\"aaa\",\"azureSearchEndpointUrl\":\"ccc\",\"sku\":\"Enterprise\"}"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_connections.all_connections", "connections.0.connection_parameters_set"),
 					resource.TestCheckResourceAttr("data.powerplatform_connections.all_connections", "connections.0.status.#", "1"),
