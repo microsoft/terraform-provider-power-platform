@@ -21,7 +21,6 @@ import (
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
 	data_record "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/data_record"
-	rest "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/rest"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 	env_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_settings"
@@ -31,6 +30,7 @@ import (
 	locations "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
 	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
+	rest "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/rest"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
 	"github.com/stretchr/testify/require"
@@ -75,6 +75,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		env_settings.NewEnvironmentSettingsDataSource(),
 		application.NewTenantApplicationPackagesDataSource(),
 		connections.NewConnectionsDataSource(),
+		connections.NewConnectionSharesDataSource(),
 		data_record.NewDataRecordDataSource(),
 		rest.NewDataverseWebApiDatasource(),
 	}
@@ -100,6 +101,8 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		env_settings.NewEnvironmentSettingsResource(),
 		data_record.NewDataRecordResource(),
 		rest.NewDataverseWebApiResource(),
+		connections.NewConnectionResource(),
+		connections.NewConnectionShareResource(),
 	}
 	resources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).Resources(context.Background())
 
