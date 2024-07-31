@@ -15,6 +15,7 @@ import (
 func TestAccTestRest_Validate_Create(t *testing.T) {
 	beforeUpdateRegex := `^\{"@odata\.context":"https:\/\/org[0-9a-fA-F]{8}\.crm4\.dynamics\.com\/api\/data\/v9\.2\/\$metadata#accounts\(name,accountid\)\/\$entity","@odata\.etag":"W\/\\"[0-9]{7}\\"","name":"powerplatform_rest","accountid":"00000000-0000-0000-0000-000000000001"\}$`
 	afterUpdateRegex := `^\{"@odata\.context":"https:\/\/org[0-9a-fA-F]{8}\.crm4\.dynamics\.com\/api\/data\/v9\.2\/\$metadata#accounts\(name,accountid\)\/\$entity","@odata\.etag":"W\/\\"[0-9]{7}\\"","name":"powerplatform_rest_change","accountid":"00000000-0000-0000-0000-000000000001"\}$`
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -180,6 +181,11 @@ func TestUnitTestRest_Validate_Create(t *testing.T) {
 		})
 
 	httpmock.RegisterResponder("POST", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/accounts?$select=name,accountid`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("services/rest/tests/resource/Web_Api_Validate_Create/post_account.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name,accountid`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("services/rest/tests/resource/Web_Api_Validate_Create/post_account.json").String()), nil
 		})

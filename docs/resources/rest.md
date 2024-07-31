@@ -75,13 +75,10 @@ resource "powerplatform_rest" "install_sample_data" {
 
 - `create` (Attributes) Create operation (see [below for nested schema](#nestedatt--create))
 - `destroy` (Attributes) Destroy operation (see [below for nested schema](#nestedatt--destroy))
+- `id` (String) Unique id (guid)
+- `output` (Attributes) Response after executing the web api request (see [below for nested schema](#nestedatt--output))
 - `read` (Attributes) Read operation (see [below for nested schema](#nestedatt--read))
 - `update` (Attributes) Update operation (see [below for nested schema](#nestedatt--update))
-
-### Read-Only
-
-- `id` (String) Unique id (guid)
-- `output` (Attributes) Response body after executing the web api request (see [below for nested schema](#nestedatt--output))
 
 <a id="nestedatt--create"></a>
 ### Nested Schema for `create`
@@ -133,6 +130,14 @@ Required:
 
 
 
+<a id="nestedatt--output"></a>
+### Nested Schema for `output`
+
+Read-Only:
+
+- `body` (String) Response body after executing the web api request
+
+
 <a id="nestedatt--read"></a>
 ### Nested Schema for `read`
 
@@ -180,12 +185,3 @@ Required:
 
 - `name` (String) Header name
 - `value` (String) Header value
-
-
-
-<a id="nestedatt--output"></a>
-### Nested Schema for `output`
-
-Read-Only:
-
-- `body` (String) Response body after executing the web api request
