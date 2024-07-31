@@ -133,6 +133,7 @@ jobs:
         
     - name: Run unit tests
       run: |
+        export TF_LOG=DEBUG
         export TF_ACC=1
         export POWER_PLATFORM_USE_OIDC=true
         export POWER_PLATFORM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
