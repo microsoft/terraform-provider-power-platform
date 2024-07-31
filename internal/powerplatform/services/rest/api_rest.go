@@ -37,7 +37,8 @@ type LinkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }
 
-func (client *WebApiClient) SendOperation(ctx context.Context, operation *DataverseWebApiOperation) (*types.Object, error) {
+func (client *WebApiClient) SendOperation(ctx context.Context, operation *DataverseWebApiOperation) (types.Object, error) {
+
 	url := operation.Url.ValueString()
 	method := operation.Method.ValueString()
 	var body *string = nil
@@ -55,12 +56,15 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 
 	res, err := client.ExecuteApiRequest(ctx, operation.Scope.ValueStringPointer(), url, method, body, headers, operation.ExpectedHttpStatus)
 	if helpers.Code(err) == helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE {
-		return nil, err
+		return types.ObjectUnknown(map[string]attr.Type{
+			"body": types.StringType,
+		}), err
 	}
 
 	output := map[string]attr.Value{
 		"body": types.StringNull(),
 	}
+
 	if res == nil && err != nil {
 		output["body"] = types.StringValue(err.Error())
 	} else {
@@ -71,7 +75,7 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 	o := types.ObjectValueMust(map[string]attr.Type{
 		"body": types.StringType,
 	}, output)
-	return &o, nil
+	return o, nil
 
 }
 
@@ -93,4 +97,3 @@ func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, scope *string
 		panic("scope or evironment_id must be provided")
 	}
 }
-

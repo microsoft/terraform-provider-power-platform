@@ -141,7 +141,7 @@ func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	state.Output = *outputObjectType
+	state.Output = outputObjectType
 
 	diags := resp.State.Set(ctx, &state)
 
