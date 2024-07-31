@@ -1,4 +1,4 @@
-name: Terraform Provider Test
+name: Terraform Provider E2E Test
 
 on:
  workflow_dispatch:
@@ -68,45 +68,8 @@ jobs:
       run: |
         go build -v .
 
-  unit_test:
-    name: Unit Test
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    
-    - name: Harden Runner
-      uses: step-security/harden-runner@0d381219ddf674d61a7572ddd19d7941e271515c # v2.9.0
-      with:
-        egress-policy: audit
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-
-    - name: Set up Go
-      uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
-      with:
-        cache: true
-        go-version-file: 'go.mod'
-        id: go
-
-    # - name: Get dependencies
-    #   run: |
-    #     go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
-    #     go mod download
-        
-    - name: Run unit tests
-      run: |
-        go test -v ./... -run "^TestUnit" -coverprofile=unit-test-coverage.out
-        go tool cover -html=unit-test-coverage.out -o unit-test-coverage.cov.html
-
-    - name: Upload Coverage Artifacts
-      uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
-      with:
-        name: Test Coverage
-        path: unit-test-coverage.cov.html
-
-#   acceptance_test:
-#     name: Acceptance Test
+#   unit_test:
+#     name: Unit Test
 #     needs: build
 #     runs-on: ubuntu-latest
 #     steps:
@@ -126,22 +89,59 @@ jobs:
 #         go-version-file: 'go.mod'
 #         id: go
 
-#     - name: Get dependencies
-#       run: |
-#         go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
-#         go mod download
+#     # - name: Get dependencies
+#     #   run: |
+#     #     go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+#     #     go mod download
         
 #     - name: Run unit tests
 #       run: |
-#         export TF_ACC=1
-#         export POWER_PLATFORM_USE_OIDC=true
-#         export POWER_PLATFORM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
-#         export POWER_PLATFORM_CLIENT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}'
-#         go test -v ./... -run "^TestAcc" -coverprofile=acc-test-coverage.out
-#         go tool cover -html=acc-test-coverage.out -o acc-test-coverage.cov.html
+#         go test -v ./... -run "^TestUnit" -coverprofile=unit-test-coverage.out
+#         go tool cover -html=unit-test-coverage.out -o unit-test-coverage.cov.html
 
 #     - name: Upload Coverage Artifacts
 #       uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
 #       with:
 #         name: Test Coverage
-#         path: acc-test-coverage.cov.html
+#         path: unit-test-coverage.cov.html
+
+  acceptance_test:
+    name: Acceptance Test
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: Harden Runner
+      uses: step-security/harden-runner@0d381219ddf674d61a7572ddd19d7941e271515c # v2.9.0
+      with:
+        egress-policy: audit
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+
+    - name: Set up Go
+      uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+      with:
+        cache: true
+        go-version-file: 'go.mod'
+        id: go
+
+    - name: Get dependencies
+      run: |
+        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+        go mod download
+        
+    - name: Run unit tests
+      run: |
+        export TF_ACC=1
+        export POWER_PLATFORM_USE_OIDC=true
+        export POWER_PLATFORM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
+        export POWER_PLATFORM_CLIENT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}'
+        go test -v ./... -run "^TestAccEnvironmentsResource_Validate_Create" -coverprofile=acc-test-coverage.out
+        go tool cover -html=acc-test-coverage.out -o acc-test-coverage.cov.html
+
+    - name: Upload Coverage Artifacts
+      uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+      with:
+        name: Test Coverage
+        path: acc-test-coverage.cov.html
