@@ -1,0 +1,38 @@
+{
+    "value": [
+        {
+            "name": "4fac9a58-a88e-417e-bad7-fe0ea64582e3",
+            "id": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps/connections/00000000000000000000000000000002/permissions/4fac9a58-a88e-417e-bad7-fe0ea64582e3",
+            "type": "Microsoft.PowerApps/apis/connections/permissions",
+            "properties": {
+                "roleName": "CanViewWithShare",
+                "principal": {
+                    "id": "c52d4a80-3db9-4152-8601-2f8c131c4a90",
+                    "displayName": "Power Platform API",
+                    "type": "ServicePrincipal",
+                    "tenantId": "1111111-8fa6-462e-a5a1-000000000000"
+                },
+                "notifyShareTargetOption": "NotSpecified",
+                "inviteGuestToTenant": false
+            }
+        },
+        {
+            "name": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+            "id": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps/connections/00000000000000000000000000000002/permissions/f99f844b-ce3b-49ae-86f3-e374ecae789c",
+            "type": "Microsoft.PowerApps/apis/connections/permissions",
+            "properties": {
+                "roleName": "Owner",
+                "principal": {
+                    "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+                    "displayName": "admin",
+                    "email": "admin@contoso.com",
+                    "type": "User",
+                    "tenantId": "1111111-8fa6-462e-a5a1-000000000000",
+                    "preferredLanguage": "en-US"
+                },
+                "notifyShareTargetOption": "NotSpecified",
+                "inviteGuestToTenant": false
+            }
+        }
+    ]
+}

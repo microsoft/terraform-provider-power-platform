@@ -17,6 +17,7 @@ import (
 	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
+	connections "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connection"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
 	data_record "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/data_record"
@@ -79,6 +80,8 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		auth.NewSecurityRolesDataSource(),
 		env_settings.NewEnvironmentSettingsDataSource(),
 		application.NewTenantApplicationPackagesDataSource(),
+		connections.NewConnectionsDataSource(),
+		connections.NewConnectionSharesDataSource(),
 		data_record.NewDataRecordDataSource(),
 		rest.NewDataverseWebApiDatasource(),
 	}
@@ -104,6 +107,8 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		env_settings.NewEnvironmentSettingsResource(),
 		data_record.NewDataRecordResource(),
 		rest.NewDataverseWebApiResource(),
+		connections.NewConnectionResource(),
+		connections.NewConnectionShareResource(),
 	}
 	resources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).Resources(context.Background())
 

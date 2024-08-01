@@ -1,0 +1,111 @@
+{
+    "value": [
+        {
+            "name": "00000000-0000-0000-0000-000000000001",
+            "id": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps/connections/00000000-0000-0000-0000-000000000001",
+            "type": "Microsoft.PowerApps/apis/connections",
+            "properties": {
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps",
+                "displayName": "My CDS Connection",
+                "iconUri": "https://connectoricons-prod.azureedge.net/releases/v1.0.1705/1.0.1705.3833/commondataserviceforapps/icon.png",
+                "statuses": [
+                    {
+                        "status": "Connected"
+                    }
+                ],
+                "connectionParameters": {
+                    "token:grantType": "code",
+                    "sku": "Enterprise"
+                },
+                "keywordsRemaining": 78,
+                "createdBy": {
+                    "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+                    "displayName": "admin",
+                    "email": "admin@contoso.com",
+                    "type": "User",
+                    "tenantId": "1111111-8fa6-462e-a5a1-000000000000",
+                    "userPrincipalName": "admin@contoso.com"
+                },
+                "createdTime": "2024-07-23T08:17:04.537991Z",
+                "lastModifiedTime": "2024-07-28T13:57:06.3545891Z",
+                "expirationTime": "2024-07-28T14:57:10.3389898Z",
+                "environment": {
+                    "id": "/providers/Microsoft.PowerApps/environments/00000000-0000-0000-0000-000000000001"
+                },
+                "permissions": [
+                    {
+                        "name": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+                        "id": "/providers/Microsoft.PowerApps/apis/shared_commondataserviceforapps/connections/00000000-0000-0000-0000-000000000001/permissions/f99f844b-ce3b-49ae-86f3-e374ecae789c",
+                        "type": "Microsoft.PowerApps/apis/connections/permissions",
+                        "properties": {
+                            "roleName": "Owner",
+                            "principal": {
+                                "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+                                "type": "NotSpecified",
+                                "tenantId": "1111111-8fa6-462e-a5a1-000000000000"
+                            },
+                            "notifyShareTargetOption": "NotSpecified",
+                            "inviteGuestToTenant": false
+                        }
+                    }
+                ],
+                "accountName": "admin@contoso.com",
+                "allowSharing": false
+            }
+        },
+        {
+            "name": "00000000-0000-0000-0000-000000000002",
+            "id": "/providers/Microsoft.PowerApps/apis/shared_flowmanagement/connections/00000000-0000-0000-0000-000000000002",
+            "type": "Microsoft.PowerApps/apis/connections",
+            "properties": {
+                "apiId": "/providers/Microsoft.PowerApps/apis/shared_flowmanagement",
+                "displayName": "My Flow Connection",
+                "iconUri": "https://connectoricons-prod.azureedge.net/releases/v1.0.1701/1.0.1701.3808/flowmanagement/icon.png",
+                "statuses": [
+                    {
+                        "status": "Connected"
+                    }
+                ],
+                "connectionParametersSet": {
+                    "name": "firstParty",
+                    "values": {}
+                },
+                "keywordsRemaining": 78,
+                "createdBy": {
+                    "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+                    "displayName": "admin",
+                    "email": "admin@contoso.com",
+                    "type": "User",
+                    "tenantId": "00000000-0000-0000-0000-000000000000",
+                    "userPrincipalName": "admin@contoso.com"
+                },
+                "createdTime": "2024-07-23T16:25:25.2465338Z",
+                "lastModifiedTime": "2024-07-29T01:26:20.8602013Z",
+                "expirationTime": "2024-07-29T02:34:52.8446319Z",
+                "environment": {
+                    "id": "/providers/Microsoft.PowerApps/environments/00000000-0000-0000-0000-000000000001",
+                    "name": "00000000-0000-0000-0000-000000000001"
+                },
+                "permissions": [
+                    {
+                        "name": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+                        "id": "/providers/Microsoft.PowerApps/apis/shared_flowmanagement/connections/00000000-0000-0000-0000-000000000002/permissions/f99f844b-ce3b-49ae-86f3-e374ecae789c",
+                        "type": "Microsoft.PowerApps/apis/connections/permissions",
+                        "properties": {
+                            "roleName": "Owner",
+                            "principal": {
+                                "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+                                "type": "NotSpecified",
+                                "tenantId": "00000000-0000-0000-0000-000000000000"
+                            },
+                            "notifyShareTargetOption": "NotSpecified",
+                            "inviteGuestToTenant": false
+                        }
+                    }
+                ],
+                "accountName": "admin@contoso.com",
+                "allowSharing": false
+            }
+        }
+    ]
+}
