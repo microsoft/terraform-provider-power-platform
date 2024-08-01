@@ -300,10 +300,10 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token\n")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token_file_path\n")
 
-	if config.UseCli.ValueBool() {
+	if useCli {
 		tflog.Info(ctx, "Using CLI for authentication")
 		p.Config.Credentials.UseCli = true
-	} else if config.UseOidc.ValueBool() {
+	} else if useOidc {
 		tflog.Info(ctx, "Using OpenID Connect for authentication")
 		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
 		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
