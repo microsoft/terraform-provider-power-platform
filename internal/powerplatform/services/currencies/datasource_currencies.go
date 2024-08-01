@@ -118,22 +118,21 @@ func (d *CurrenciesDataSource) Configure(ctx context.Context, req datasource.Con
 }
 
 func (d *CurrenciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var plan CurrenciesDataSourceModel
-	resp.State.Get(ctx, &plan)
+	var state CurrenciesDataSourceModel
+	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE CURRENCIES START: %s", d.ProviderTypeName))
 
-	currencies, err := d.CurrenciesClient.GetCurrenciesByLocation(ctx, plan.Location.ValueString())
+	currencies, err := d.CurrenciesClient.GetCurrenciesByLocation(ctx, state.Location.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
-
-	plan.Id = types.Int64Value(int64(len(currencies.Value)))
-	plan.Location = types.StringValue(plan.Location.ValueString())
+	state.Id = types.Int64Value(int64(len(currencies.Value)))
+	state.Location = types.StringValue(state.Location.ValueString())
 
 	for _, location := range currencies.Value {
-		plan.Value = append(plan.Value, CurrencyDataModel{
+		state.Value = append(state.Value, CurrencyDataModel{
 			ID:              location.ID,
 			Name:            location.Name,
 			Type:            location.Type,
@@ -143,7 +142,7 @@ func (d *CurrenciesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		})
 	}
 
-	diags := resp.State.Set(ctx, &plan)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE CURRENCIES END: %s", d.ProviderTypeName))
 
