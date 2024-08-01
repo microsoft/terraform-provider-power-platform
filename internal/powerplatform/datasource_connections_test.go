@@ -18,7 +18,7 @@ func TestAccConnectionsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
@@ -85,7 +85,7 @@ func TestUnitConnectionsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 
 				data "powerplatform_connections" "all_connections" {
 					environment_id = "00000000-0000-0000-0000-000000000000"
