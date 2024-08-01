@@ -39,7 +39,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mock_helpers.TestName() + `"
@@ -123,7 +123,7 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -198,7 +198,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mock_helpers.TestName() + `"
@@ -282,7 +282,7 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -359,7 +359,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 		
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -374,7 +374,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -390,7 +390,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -406,7 +406,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -444,7 +444,7 @@ func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mock_helpers.TestName() + `"
@@ -540,7 +540,7 @@ func TestUnitSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"

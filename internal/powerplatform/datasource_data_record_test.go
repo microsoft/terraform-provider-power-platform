@@ -123,14 +123,13 @@ resource "powerplatform_data_record" "contact5" {
 }`
 }
 
-
 func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
+				Config: TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -231,7 +230,6 @@ func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 	})
 }
 
-
 func TestUnitDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -258,7 +256,7 @@ func TestUnitDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig +
+				Config: TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
@@ -302,14 +300,13 @@ func TestUnitDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 	}
 }
 
-
 func TestAccDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { TestAccPreCheck_Basic(t) },
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
+				Config: TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -373,7 +370,6 @@ func TestAccDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.
 	})
 }
 
-
 func TestUnitDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -400,7 +396,7 @@ func TestUnitDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig +
+				Config: TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts(00000000-0000-0000-0000-000000000001)"
@@ -433,7 +429,7 @@ func TestAccDataRecordDatasource_Validate_Top(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
+				Config: TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -487,7 +483,7 @@ func TestUnitDataRecordDatasource_Validate_Top(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig +
+				Config: TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
@@ -509,7 +505,7 @@ func TestAccDataRecordDatasource_Validate_Apply(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
+				Config: TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -535,7 +531,6 @@ func TestAccDataRecordDatasource_Validate_Apply(t *testing.T) {
 		},
 	})
 }
-
 
 func TestUnitDataRecordDatasource_Validate_Apply(t *testing.T) {
 	httpmock.Activate()
@@ -563,7 +558,7 @@ func TestUnitDataRecordDatasource_Validate_Apply(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig +
+				Config: TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
@@ -585,7 +580,7 @@ func TestAccDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
+				Config: TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -640,7 +635,7 @@ func TestUnitDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig +
+				Config: TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
@@ -661,7 +656,7 @@ func TestAccDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) + `
+				Config: TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) + `
 				data "powerplatform_data_records" "saved_view" {
 					environment_id    = powerplatform_environment.data_env.id
 					entity_collection = "savedqueries"
@@ -720,7 +715,7 @@ func TestUnitDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig +
+				Config: TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
@@ -742,7 +737,7 @@ func TestAccDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) + `
+				Config: TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) + `
 				resource "powerplatform_data_record" "userquery" {
 					environment_id     = powerplatform_environment.data_env.id
 					table_logical_name = "userquery"
@@ -779,7 +774,6 @@ func TestAccDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 	})
 }
 
-
 func TestUnitDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -806,7 +800,7 @@ func TestUnitDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig +
+				Config: TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
@@ -830,7 +824,7 @@ func TestAccDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
+				Config: TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mock_helpers.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 					environment_id    = powerplatform_environment.data_env.id
@@ -913,7 +907,7 @@ func TestUnitDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig +
+				Config: TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "accounts"
@@ -939,4 +933,3 @@ func TestUnitDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
 	}
 }
-

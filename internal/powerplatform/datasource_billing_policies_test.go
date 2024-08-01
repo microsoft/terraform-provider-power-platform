@@ -20,7 +20,7 @@ import (
 // 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 // 		Steps: []resource.TestStep{
 // 			{
-// 				Config: AcceptanceTestsProviderConfig + `
+// 				Config: TestsAcceptanceProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 // 					name     = "payAsYouGoBillingPolicyExample"
 // 					location = "europe"
@@ -63,7 +63,7 @@ func TestUnitTestBillingPoliciesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				data "powerplatform_billing_policies" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

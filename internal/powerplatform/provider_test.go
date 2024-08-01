@@ -20,7 +20,6 @@ import (
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
 	data_record "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/data_record"
-	rest "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/rest"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 	env_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_settings"
@@ -30,19 +29,26 @@ import (
 	locations "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
 	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
+	rest "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/rest"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
 	"github.com/stretchr/testify/require"
 )
 
 const (
-	// TestsProviderConfig is a shared configuration to combine with the actual
+	// TestsUnitProviderConfig is a shared configuration to combine with the actual
 	// test configuration so the Power Platform client is properly configured.
 	// It is also possible to use the POWER_PLATFORM_ environment variables instead.
 	//lintignore:AT004
-	TestsProviderConfig = `
+	TestsUnitProviderConfig = `
 provider "powerplatform" {
 	use_cli = true
+}
+`
+
+	//to run acceptance tests locally use environemnt variables or add `usecli=true` in the provider block
+	TestsAcceptanceProviderConfig = `
+provider "powerplatform" {
 }
 `
 )

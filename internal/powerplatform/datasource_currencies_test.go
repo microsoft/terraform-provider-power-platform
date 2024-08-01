@@ -19,7 +19,7 @@ func TestAccCurrenciesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				data "powerplatform_currencies" "all_currencies_for_unitedstates" {
 					location = "unitedstates"
 				}`,
@@ -51,7 +51,7 @@ func TestUnitCurrenciesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				data "powerplatform_currencies" "all_currencies_for_unitedstates" {
 					location = "unitedstates"
 				}`,

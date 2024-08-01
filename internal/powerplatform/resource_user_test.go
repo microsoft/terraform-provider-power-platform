@@ -21,7 +21,7 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				//lintignore:AT004
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 
 				terraform {
 					required_providers {
@@ -134,7 +134,7 @@ func TestUnitUserResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					security_roles = [
@@ -201,7 +201,7 @@ func TestUnitUserResource_Validate_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					security_roles = [
@@ -261,7 +261,7 @@ func TestUnitUserResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					security_roles = [
@@ -275,7 +275,7 @@ func TestUnitUserResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000002"
 					security_roles = [
@@ -345,7 +345,7 @@ func TestUnitUserResource_Validate_Create_And_Force_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					security_roles = [
@@ -362,7 +362,7 @@ func TestUnitUserResource_Validate_Create_And_Force_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					security_roles = [
@@ -427,7 +427,7 @@ func TestUnitUserResource_Validate_Disable_Delete(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					security_roles = [

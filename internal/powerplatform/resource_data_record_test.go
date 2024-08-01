@@ -24,7 +24,7 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -193,7 +193,7 @@ func TestUnitDataRecordResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
@@ -285,7 +285,7 @@ func TestAccDataRecordResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -331,7 +331,7 @@ func TestAccDataRecordResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -425,7 +425,7 @@ func TestUnitDataRecordResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
@@ -461,7 +461,7 @@ func TestUnitDataRecordResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"
@@ -505,7 +505,7 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -567,7 +567,7 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -680,7 +680,7 @@ func TestUnitDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"
@@ -731,7 +731,7 @@ func TestUnitDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 
 				resource "powerplatform_data_record" "data_record_account" {
 						environment_id     = "00000000-0000-0000-0000-000000000001"
@@ -772,7 +772,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -857,7 +857,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -939,7 +939,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -1154,7 +1154,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"
@@ -1228,7 +1228,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"
@@ -1298,7 +1298,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"

@@ -18,7 +18,7 @@ func TestAccLocationsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				data "powerplatform_locations" "all_locations" {
 				}`,
 
@@ -49,7 +49,7 @@ func TestUnitLocationsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				data "powerplatform_locations" "all_locations" {
 				}`,
 

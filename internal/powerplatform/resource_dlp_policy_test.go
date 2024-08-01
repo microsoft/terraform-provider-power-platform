@@ -479,7 +479,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy"
 					default_connectors_classification = "Blocked"
@@ -506,7 +506,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "Blocked"
@@ -530,7 +530,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
@@ -557,7 +557,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
@@ -620,7 +620,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
@@ -699,7 +699,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
@@ -802,7 +802,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy"
 					default_connectors_classification = "Blocked"
@@ -923,7 +923,7 @@ func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				data "powerplatform_connectors" "all_connectors" {}
 
 				locals {
@@ -1063,4 +1063,3 @@ func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 		},
 	})
 }
-

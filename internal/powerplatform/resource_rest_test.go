@@ -20,7 +20,7 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 
 				resource "powerplatform_environment" "env" {
 					display_name     = "` + mock_helpers.TestName() + `"
@@ -94,7 +94,7 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 
 			resource "powerplatform_environment" "env" {
 				display_name     = "` + mock_helpers.TestName() + `"
@@ -195,7 +195,7 @@ func TestUnitTestRest_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 
 				locals {
 					body = jsonencode({
