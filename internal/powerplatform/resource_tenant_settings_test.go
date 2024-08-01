@@ -19,7 +19,7 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = false
 					disable_support_tickets_visible_by_all_users          = false
@@ -161,7 +161,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = false
 					disable_support_tickets_visible_by_all_users          = false
@@ -291,7 +291,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = true
 					disable_support_tickets_visible_by_all_users          = true
@@ -411,7 +411,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = false
 					disable_support_tickets_visible_by_all_users          = false
@@ -558,7 +558,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = true
 					disable_support_tickets_visible_by_all_users          = true
@@ -678,7 +678,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = false
 					disable_support_tickets_visible_by_all_users          = false

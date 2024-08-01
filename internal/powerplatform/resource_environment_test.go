@@ -25,7 +25,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
@@ -56,7 +56,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
@@ -86,7 +86,7 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
@@ -196,7 +196,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -216,7 +216,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "unitedstates"
@@ -235,7 +235,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "unitedstates"
@@ -253,7 +253,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "unitedstates"
@@ -272,7 +272,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "unitedstates"
@@ -349,7 +349,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "europe"
@@ -370,7 +370,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example123"
 					location                                  = "europe"
@@ -435,7 +435,7 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -508,7 +508,7 @@ func TestUnitEnvironmentsResource_Validate_Create_With_Billing_Policy(t *testing
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -613,7 +613,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -632,7 +632,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -652,7 +652,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -672,7 +672,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -745,7 +745,7 @@ func TestUnitEnvironmentsResource_Validate_Create_With_D365_Template(t *testing.
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -766,7 +766,7 @@ func TestUnitEnvironmentsResource_Validate_Create_With_D365_Template(t *testing.
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -812,7 +812,7 @@ func TestUnitEnvironmentsResource_Validate_Taken_Domain_Name(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExpectError: regexp.MustCompile(".*InvalidDomainName.*"),
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -872,7 +872,7 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -905,7 +905,7 @@ func TestAccEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
@@ -934,7 +934,7 @@ func TestAccEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *te
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
@@ -955,7 +955,7 @@ func TestAccEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *te
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + mock_helpers.TestName() + `"
 						location                                  = "europe"
@@ -1010,7 +1010,7 @@ func TestUnitEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *t
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -1038,7 +1038,7 @@ func TestUnitEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *t
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "displayname"
 						location                                  = "europe"
@@ -1115,7 +1115,7 @@ func TestUnitEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *t
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -1139,7 +1139,7 @@ func TestUnitEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *t
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -1176,7 +1176,7 @@ func TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *te
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
@@ -1199,7 +1199,7 @@ func TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *te
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
@@ -1231,7 +1231,7 @@ func TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testing
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions"
 					location                                  = "foo"
@@ -1240,7 +1240,7 @@ func TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testing
 				ExpectError: regexp.MustCompile(".*location 'foo' is not valid.*"),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions"
 					location                                  = "europe"
@@ -1250,7 +1250,7 @@ func TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testing
 				ExpectError: regexp.MustCompile(".*region 'bar' is not valid for location europe.*"),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions"
 					location                                  = "europe"
@@ -1307,7 +1307,7 @@ func TestUnitEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testin
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "foo"
@@ -1316,7 +1316,7 @@ func TestUnitEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testin
 				ExpectError: regexp.MustCompile(".*location 'foo' is not valid.*"),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -1326,7 +1326,7 @@ func TestUnitEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testin
 				ExpectError: regexp.MustCompile(".*region 'bar' is not valid for location europe.*"),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"

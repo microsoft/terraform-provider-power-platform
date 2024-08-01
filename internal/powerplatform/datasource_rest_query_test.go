@@ -33,7 +33,7 @@ func TestUnitDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				data "powerplatform_rest_query" "webapi_query" {
 					scope 		   = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/.default"
 					url            = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/whoami"
@@ -53,7 +53,7 @@ func TestAccDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"

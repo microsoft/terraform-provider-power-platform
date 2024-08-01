@@ -19,7 +19,7 @@ func TestAccConnectionsShareResource_Validate_Create(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				//lintignore:AT004
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				terraform {
 					required_providers {
 					  azuread = {
@@ -126,7 +126,7 @@ func TestUnitConnectionsShareResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_connection_share" "share_with_user1" {
 					environment_id = "00000000-0000-0000-0000-000000000000"
 					connector_name = "shared_commondataserviceforapps"

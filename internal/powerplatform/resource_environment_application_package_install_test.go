@@ -21,7 +21,7 @@ func TestAccEnvironmentApplicationPackageInstallResource_Validate_Install(t *tes
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mock_helpers.TestName() + `"
 					location                                  = "europe"
@@ -123,7 +123,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -147,7 +147,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -236,7 +236,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_No_Dataverse(
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name     = "displayname"
 					location         = "europe"

@@ -21,7 +21,7 @@ func TestAccManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -69,7 +69,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -98,7 +98,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -128,7 +128,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -158,7 +158,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -188,7 +188,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -218,7 +218,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -248,7 +248,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -278,7 +278,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -308,7 +308,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"
@@ -374,7 +374,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_managed_environment" "managed_development" {
 					environment_id             = "00000000-0000-0000-0000-000000000001"
 					is_usage_insights_disabled = true
@@ -440,7 +440,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 						resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -459,7 +459,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -478,7 +478,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -497,7 +497,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -516,7 +516,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -535,7 +535,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -554,7 +554,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -582,7 +582,7 @@ func TestAccManagedEnvironmentsResource_Validate_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mock_helpers.TestName() + `"
 					location         = "europe"

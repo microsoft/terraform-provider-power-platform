@@ -19,7 +19,7 @@ func TestAccConnectionsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 					resource "powerplatform_environment" "env" {
 						display_name                              = "` + mock_helpers.TestName() + `"
 						location                                  = "europe"
@@ -87,7 +87,7 @@ func TestUnitConnectionsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 					resource "powerplatform_connection" "azure_openai_connection" {
 						environment_id = "00000000-0000-0000-0000-000000000000"
 						name           = "shared_azureopenai"

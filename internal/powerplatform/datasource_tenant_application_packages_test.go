@@ -19,7 +19,7 @@ func TestAccTenantApplicationPackagesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				data "powerplatform_tenant_application_packages" "all_applications" {
 				}`,
 
@@ -58,7 +58,7 @@ func TestUnitTenantApplicationPackagesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				data "powerplatform_tenant_application_packages" "all_applications" {
 				}`,
 
@@ -103,7 +103,7 @@ func TestUnitTenantApplicationPackagesDataSource_Validate_Filter(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				data "powerplatform_tenant_application_packages" "all_applications" {
 					publisher_name = "Microsoft Dynamics SMB"
 				}`,
@@ -113,7 +113,7 @@ func TestUnitTenantApplicationPackagesDataSource_Validate_Filter(t *testing.T) {
 				),
 			},
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				data "powerplatform_tenant_application_packages" "all_applications" {
 					name = "Healthcare Home Health"
 				}`,

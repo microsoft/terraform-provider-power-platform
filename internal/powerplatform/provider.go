@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 
 	azcloud "github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -203,9 +204,12 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 
 	useOidc := false
 	_, envUseOidc := os.LookupEnv("POWER_PLATFORM_USE_OIDC")
+	tflog.Debug(ctx, fmt.Sprintf("Use OIDC env value: %v", envUseOidc))
 	if config.UseOidc.IsNull() {
+		tflog.Debug(ctx, fmt.Sprintf("Use OIDC is null. Using env value: %v", envUseOidc))
 		useOidc = envUseOidc
 	} else {
+		tflog.Debug(ctx, fmt.Sprintf("Use OIDC is not null. Using config value: %v", config.UseOidc.ValueBool()))
 		useOidc = config.UseOidc.ValueBool()
 	}
 
@@ -274,32 +278,34 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		oidcTokenFilePath = config.OidcTokenFilePath.ValueString()
 	}
 
-	ctx = tflog.SetField(ctx, "telemetry_optout", config.TelemetryOptout.ValueBool())
-	ctx = tflog.SetField(ctx, "use_oidc", useOidc)
-	ctx = tflog.SetField(ctx, "use_cli", useCli)
-	ctx = tflog.SetField(ctx, "cloud", cloud)
+	ctx = tflog.SetField(ctx, "telemetry_optout", strconv.FormatBool(config.TelemetryOptout.ValueBool())+"\n")
+	ctx = tflog.SetField(ctx, "use_oidc", strconv.FormatBool(useOidc)+"\n")
+	ctx = tflog.SetField(ctx, "use_cli", strconv.FormatBool(useCli)+"\n")
+	ctx = tflog.SetField(ctx, "cloud", cloud+"\n")
 
-	ctx = tflog.SetField(ctx, "power_platform_tenant_id", tenantId)
-	ctx = tflog.SetField(ctx, "power_platform_client_id", clientId)
-	ctx = tflog.SetField(ctx, "power_platform_client_secret", clientSecret)
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_client_secret")
+	ctx = tflog.SetField(ctx, "power_platform_tenant_id", tenantId+"\n")
+	ctx = tflog.SetField(ctx, "power_platform_client_id", clientId+"\n")
+	ctx = tflog.SetField(ctx, "power_platform_client_secret", clientSecret+"\n")
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_client_secret\n")
 
-	ctx = tflog.SetField(ctx, "client_certificate_file_path", clientCertificateFilePath)
-	ctx = tflog.SetField(ctx, "client_certificate", clientCertificate)
-	ctx = tflog.SetField(ctx, "client_certificate_password", clientCertificatePassword)
+	ctx = tflog.SetField(ctx, "client_certificate_file_path", clientCertificateFilePath+"\n")
+	ctx = tflog.SetField(ctx, "client_certificate", clientCertificate+"\n")
+	ctx = tflog.SetField(ctx, "client_certificate_password", clientCertificatePassword+"\n")
 	ctx = tflog.MaskAllFieldValuesRegexes(ctx, regexp.MustCompile(`(?i)client_certificate`))
 
-	ctx = tflog.SetField(ctx, "oidc_request_url", oidcRequestUrl)
-	ctx = tflog.SetField(ctx, "oidc_request_token", oidcRequestToken)
-	ctx = tflog.SetField(ctx, "oidc_token", oidcToken)
-	ctx = tflog.SetField(ctx, "oidc_token_file_path", oidcTokenFilePath)
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_request_token")
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token")
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token_file_path")
+	ctx = tflog.SetField(ctx, "oidc_request_url", oidcRequestUrl+"\n")
+	ctx = tflog.SetField(ctx, "oidc_request_token", oidcRequestToken+"\n")
+	ctx = tflog.SetField(ctx, "oidc_token", oidcToken+"\n")
+	ctx = tflog.SetField(ctx, "oidc_token_file_path", oidcTokenFilePath+"\n")
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_request_token\n")
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token\n")
+	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token_file_path\n")
 
-	if config.UseCli.ValueBool() {
+	if useCli {
+		tflog.Info(ctx, "Using CLI for authentication")
 		p.Config.Credentials.UseCli = true
-	} else if config.UseOidc.ValueBool() {
+	} else if useOidc {
+		tflog.Info(ctx, "Using OpenID Connect for authentication")
 		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
 		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
 
@@ -311,6 +317,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Credentials.OidcToken = oidcToken
 		p.Config.Credentials.OidcTokenFilePath = oidcTokenFilePath
 	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
+		tflog.Info(ctx, "Using client certificate for authentication")
 		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
 		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
 
@@ -323,6 +330,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Credentials.TenantId = tenantId
 		p.Config.Credentials.ClientId = clientId
 	} else {
+		tflog.Info(ctx, "Using client id and secret for authentication")
 		if tenantId != "" && clientId != "" && clientSecret != "" {
 			p.Config.Credentials.TenantId = tenantId
 			p.Config.Credentials.ClientId = clientId

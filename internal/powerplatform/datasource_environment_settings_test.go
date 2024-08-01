@@ -21,7 +21,7 @@ func TestAccTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "example_environment_settings" {
 					display_name      = "` + mock_helpers.TestName() + `"
 					location          = "europe"
@@ -73,7 +73,7 @@ func TestUnitTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				data "powerplatform_environment_settings" "settings" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 				}`,
@@ -144,7 +144,7 @@ func TestUnitTestEnvironmentSettingsDataSource_Validate_No_Dataverse(t *testing.
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsProviderConfig + `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"
