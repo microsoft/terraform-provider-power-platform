@@ -203,9 +203,12 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 
 	useOidc := false
 	_, envUseOidc := os.LookupEnv("POWER_PLATFORM_USE_OIDC")
+	tflog.Debug(ctx, fmt.Sprintf("Use OIDC env value: %v", envUseOidc))
 	if config.UseOidc.IsNull() {
+		tflog.Debug(ctx, fmt.Sprintf("Use OIDC is null. Using env value: %v", envUseOidc))
 		useOidc = envUseOidc
 	} else {
+		tflog.Debug(ctx, fmt.Sprintf("Use OIDC is not null. Using config value: %v", config.UseOidc.ValueBool()))
 		useOidc = config.UseOidc.ValueBool()
 	}
 
