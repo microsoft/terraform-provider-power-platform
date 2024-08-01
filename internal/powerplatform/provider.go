@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strconv"
 
 	azcloud "github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -277,25 +278,25 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		oidcTokenFilePath = config.OidcTokenFilePath.ValueString()
 	}
 
-	ctx = tflog.SetField(ctx, "telemetry_optout\n", config.TelemetryOptout.ValueBool())
-	ctx = tflog.SetField(ctx, "use_oidc\n", useOidc)
-	ctx = tflog.SetField(ctx, "use_cli\n", useCli)
-	ctx = tflog.SetField(ctx, "cloud\n", cloud)
+	ctx = tflog.SetField(ctx, "telemetry_optout", strconv.FormatBool(config.TelemetryOptout.ValueBool())+"\n")
+	ctx = tflog.SetField(ctx, "use_oidc", strconv.FormatBool(useOidc)+"\n")
+	ctx = tflog.SetField(ctx, "use_cli", strconv.FormatBool(useCli)+"\n")
+	ctx = tflog.SetField(ctx, "cloud", cloud+"\n")
 
-	ctx = tflog.SetField(ctx, "power_platform_tenant_id\n", tenantId)
-	ctx = tflog.SetField(ctx, "power_platform_client_id\n", clientId)
-	ctx = tflog.SetField(ctx, "power_platform_client_secret\n", clientSecret)
+	ctx = tflog.SetField(ctx, "power_platform_tenant_id", tenantId+"\n")
+	ctx = tflog.SetField(ctx, "power_platform_client_id", clientId+"\n")
+	ctx = tflog.SetField(ctx, "power_platform_client_secret", clientSecret+"\n")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_client_secret\n")
 
-	ctx = tflog.SetField(ctx, "client_certificate_file_path\n", clientCertificateFilePath)
-	ctx = tflog.SetField(ctx, "client_certificate\n", clientCertificate)
-	ctx = tflog.SetField(ctx, "client_certificate_password\n", clientCertificatePassword)
+	ctx = tflog.SetField(ctx, "client_certificate_file_path", clientCertificateFilePath+"\n")
+	ctx = tflog.SetField(ctx, "client_certificate", clientCertificate+"\n")
+	ctx = tflog.SetField(ctx, "client_certificate_password", clientCertificatePassword+"\n")
 	ctx = tflog.MaskAllFieldValuesRegexes(ctx, regexp.MustCompile(`(?i)client_certificate`))
 
-	ctx = tflog.SetField(ctx, "oidc_request_url\n", oidcRequestUrl)
-	ctx = tflog.SetField(ctx, "oidc_request_token\n", oidcRequestToken)
-	ctx = tflog.SetField(ctx, "oidc_token\n", oidcToken)
-	ctx = tflog.SetField(ctx, "oidc_token_file_path\n", oidcTokenFilePath)
+	ctx = tflog.SetField(ctx, "oidc_request_url", oidcRequestUrl+"\n")
+	ctx = tflog.SetField(ctx, "oidc_request_token", oidcRequestToken+"\n")
+	ctx = tflog.SetField(ctx, "oidc_token", oidcToken+"\n")
+	ctx = tflog.SetField(ctx, "oidc_token_file_path", oidcTokenFilePath+"\n")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_request_token\n")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token\n")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token_file_path\n")
