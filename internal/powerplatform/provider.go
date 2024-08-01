@@ -301,8 +301,10 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token_file_path\n")
 
 	if config.UseCli.ValueBool() {
+		tflog.Info(ctx, "Using CLI for authentication")
 		p.Config.Credentials.UseCli = true
 	} else if config.UseOidc.ValueBool() {
+		tflog.Info(ctx, "Using OpenID Connect for authentication")
 		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
 		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
 
@@ -314,6 +316,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Credentials.OidcToken = oidcToken
 		p.Config.Credentials.OidcTokenFilePath = oidcTokenFilePath
 	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
+		tflog.Info(ctx, "Using client certificate for authentication")
 		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
 		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
 
@@ -326,6 +329,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Credentials.TenantId = tenantId
 		p.Config.Credentials.ClientId = clientId
 	} else {
+		tflog.Info(ctx, "Using client id and secret for authentication")
 		if tenantId != "" && clientId != "" && clientSecret != "" {
 			p.Config.Credentials.TenantId = tenantId
 			p.Config.Credentials.ClientId = clientId
