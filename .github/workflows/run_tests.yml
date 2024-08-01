@@ -2,9 +2,9 @@ name: Terraform Provider E2E Test
 
 on:
  workflow_dispatch:
- push:
-   branches:
-     - main
+#  push:
+#    branches:
+#      - main
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
