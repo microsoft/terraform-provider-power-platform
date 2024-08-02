@@ -135,7 +135,7 @@ jobs:
         go tool cover -html=coverage.out -o coverage.cov.html
 
     - name: Upload Coverage Artifacts
-      uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+      uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
       with:
         name: Test Coverage
         path: coverage.cov.html
@@ -172,7 +172,7 @@ jobs:
   #       go tool cover -html=acc_coverage.out -o acc_coverage.cov.html
 
   #   - name: Upload Coverage Artifacts
-  #     uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b # v4.3.4
+  #     uses: actions/upload-artifact@89ef406dd8d7e03cfd12d9e0a4a378f454709029 # v4.3.5
   #     with:
   #       name: Acceptance Test Coverage
   #       path: acc_coverage.cov.html
