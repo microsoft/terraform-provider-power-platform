@@ -75,7 +75,7 @@ jobs:
     - name: Build
       run: |
         go build -v .
-        
+
   # prep_test_dependencies:
   #   name: Prepare Test Dependencies
   #   runs-on: ubuntu-latest
@@ -133,7 +133,7 @@ jobs:
 
   acceptance_test:
     name: Acceptance Test
-    needs: prep_test_dependencies
+    needs: build
     runs-on: ubuntu-latest
     steps:
     
