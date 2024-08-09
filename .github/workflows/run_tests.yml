@@ -169,18 +169,18 @@ jobs:
     - name: Download Terraform Providers
       run: |
           mkdir deps
-          cp .devcontainer/features/acceptance_test_dependencies/main.tf /deps/main.tf
-          cd deps/
+          cp .devcontainer/features/acceptance_test_dependencies/main.tf deps/main.tf
+          cd deps
           terraform init
           find .terraform/providers/ -type f -exec cp {} . \;
           ls -la
           
     - name: Setting up local provider install
       run: |
-          cd ${GITHUB_WORKSPACE}/deps
-          cp .devcontainer/features/local_provider_dev/terraform.rc ./terraform.rc
+          cp .devcontainer/features/local_provider_dev/terraform.rc deps/terraform.rc
+          cd deps
           ls -la
-          sed -i 's/\/go\/bin/${GITHUB_WORKSPACE}\/deps/g' terraform.rc
+          sed -i "s|/go/bin|${GITHUB_WORKSPACE}/deps|g" terraform.rc
           cat terraform.rc
     
     - name: Run acceptance tests
