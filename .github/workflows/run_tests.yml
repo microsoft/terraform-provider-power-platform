@@ -157,6 +157,9 @@ jobs:
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
         go mod download
     
+    - name: "Set up Terraform"
+      uses: hashicorp/setup-terraform@v3
+
     - name: Print GITHUB_WORKSPACE
       run: echo ${GITHUB_WORKSPACE}
       
@@ -165,7 +168,8 @@ jobs:
 
     - name: Download Terraform Providers
       run: |
-          bash .devcontainer/features/acceptance_test_dependencies/install.sh
+          cd .devcontainer/features/acceptance_test_dependencies
+          bash ./install.sh
           
     - name: Setting up local provider install
       run: |
