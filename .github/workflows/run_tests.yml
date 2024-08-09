@@ -96,14 +96,7 @@ jobs:
         go-version-file: 'go.mod'
         id: go
 
-    - name: Dowload Terraform Providers
-      run: |
-        echo pwd
-        .devcontainer/features/acceptance_test_dependencies/install.sh
-        
-    - name: Setting up local provider install
-      run: |
-        .devcontainer/features/local_provider_dev/install.sh
+
 
   # unit_test:
   #   name: Unit Test
@@ -162,7 +155,21 @@ jobs:
       run: |
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
         go mod download
-        
+    
+    - name: Print GITHUB_WORKSPACE
+      run: echo ${GITHUB_WORKSPACE}
+      
+    - name: Check current directory
+      run: pwd
+
+    - name: Download Terraform Providers
+      run: |
+          bash .devcontainer/features/acceptance_test_dependencies/install.sh
+          
+    - name: Setting up local provider install
+      run: |
+          bash .devcontainer/features/local_provider_dev/install.sh
+    
     - name: Run acceptance tests
       run: |
         export TF_LOG=DEBUG
