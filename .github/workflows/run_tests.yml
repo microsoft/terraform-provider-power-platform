@@ -195,7 +195,7 @@ jobs:
         export POWER_PLATFORM_USE_OIDC=true
         export POWER_PLATFORM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
         export POWER_PLATFORM_CLIENT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}'
-        go test -v ./... -run "^TestAccEnvironmentsDataSource_Basic" -coverprofile=acc-test-coverage.out -timeout 240m
+        go test -v ./... -run "^TestAccEnvironmentsResource_Validate_Update" -coverprofile=acc-test-coverage.out -timeout 240m
         go tool cover -html=acc-test-coverage.out -o acc-test-coverage.cov.html
 
     - name: Upload Coverage Artifacts
