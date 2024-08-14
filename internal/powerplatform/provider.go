@@ -30,6 +30,7 @@ import (
 	data_record "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/data_record"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
+	environment_groups "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_groups"
 	env_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_settings"
 	environment_templates "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_templates"
 	languages "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/languages"
@@ -431,6 +432,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
 		func() resource.Resource { return auth.NewUserResource() },
 		func() resource.Resource { return data_record.NewDataRecordResource() },
+		func() resource.Resource { return environment_groups.NewEnvironmentGroupResource() },
 		func() resource.Resource { return env_settings.NewEnvironmentSettingsResource() },
 		func() resource.Resource { return connection.NewConnectionResource() },
 		func() resource.Resource { return rest.NewDataverseWebApiResource() },
