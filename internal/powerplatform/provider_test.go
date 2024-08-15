@@ -23,6 +23,7 @@ import (
 	data_record "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/data_record"
 	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
+	env_groups "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_groups"
 	env_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_settings"
 	environment_templates "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_templates"
 	languages "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/languages"
@@ -105,6 +106,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		licensing.NewBillingPolicyEnvironmentResource(),
 		auth.NewUserResource(),
 		env_settings.NewEnvironmentSettingsResource(),
+		env_groups.NewEnvironmentGroupResource(),
 		data_record.NewDataRecordResource(),
 		rest.NewDataverseWebApiResource(),
 		connections.NewConnectionResource(),
