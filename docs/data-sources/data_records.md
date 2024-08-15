@@ -207,7 +207,7 @@ Optional:
 
 - `expand` (Attributes List) Expand the navigation property of the entity collection. 
 
-More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--top--expand))
+More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--expand--expand))
 - `filter` (String) Filter the data records. 
 
 More information on (OData Filter)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#filter-rows]
@@ -221,8 +221,8 @@ More information on (OData Select)[https://learn.microsoft.com/en-us/power-apps/
 
 More information on (OData Top)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#odata-query-options]
 
-<a id="nestedatt--expand--expand--expand--top--expand"></a>
-### Nested Schema for `expand.expand.expand.top.expand`
+<a id="nestedatt--expand--expand--expand--expand--expand"></a>
+### Nested Schema for `expand.expand.expand.expand.expand`
 
 Required:
 
@@ -234,7 +234,7 @@ Optional:
 
 - `expand` (Attributes List) Expand the navigation property of the entity collection. 
 
-More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--top--expand--expand))
+More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--expand--expand--expand))
 - `filter` (String) Filter the data records. 
 
 More information on (OData Filter)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#filter-rows]
@@ -248,8 +248,8 @@ More information on (OData Select)[https://learn.microsoft.com/en-us/power-apps/
 
 More information on (OData Top)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#odata-query-options]
 
-<a id="nestedatt--expand--expand--expand--top--expand--expand"></a>
-### Nested Schema for `expand.expand.expand.top.expand.expand`
+<a id="nestedatt--expand--expand--expand--expand--expand--expand"></a>
+### Nested Schema for `expand.expand.expand.expand.expand.expand`
 
 Required:
 
@@ -261,7 +261,7 @@ Optional:
 
 - `expand` (Attributes List) Expand the navigation property of the entity collection. 
 
-More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--top--expand--top--expand))
+More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--expand--expand--expand--expand))
 - `filter` (String) Filter the data records. 
 
 More information on (OData Filter)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#filter-rows]
@@ -275,8 +275,8 @@ More information on (OData Select)[https://learn.microsoft.com/en-us/power-apps/
 
 More information on (OData Top)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#odata-query-options]
 
-<a id="nestedatt--expand--expand--expand--top--expand--top--expand"></a>
-### Nested Schema for `expand.expand.expand.top.expand.top.expand`
+<a id="nestedatt--expand--expand--expand--expand--expand--expand--expand"></a>
+### Nested Schema for `expand.expand.expand.expand.expand.expand.expand`
 
 Required:
 
@@ -288,7 +288,7 @@ Optional:
 
 - `expand` (Attributes List) Expand the navigation property of the entity collection. 
 
-More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--top--expand--top--top--expand))
+More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--expand--expand--expand--expand--expand))
 - `filter` (String) Filter the data records. 
 
 More information on (OData Filter)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#filter-rows]
@@ -302,8 +302,8 @@ More information on (OData Select)[https://learn.microsoft.com/en-us/power-apps/
 
 More information on (OData Top)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#odata-query-options]
 
-<a id="nestedatt--expand--expand--expand--top--expand--top--top--expand"></a>
-### Nested Schema for `expand.expand.expand.top.expand.top.top.expand`
+<a id="nestedatt--expand--expand--expand--expand--expand--expand--expand--expand"></a>
+### Nested Schema for `expand.expand.expand.expand.expand.expand.expand.expand`
 
 Required:
 
@@ -315,7 +315,7 @@ Optional:
 
 - `expand` (Attributes List) Expand the navigation property of the entity collection. 
 
-More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--top--expand--top--top--top--expand))
+More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--expand--expand--expand--expand--expand--expand))
 - `filter` (String) Filter the data records. 
 
 More information on (OData Filter)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#filter-rows]
@@ -329,8 +329,8 @@ More information on (OData Select)[https://learn.microsoft.com/en-us/power-apps/
 
 More information on (OData Top)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#odata-query-options]
 
-<a id="nestedatt--expand--expand--expand--top--expand--top--top--top--expand"></a>
-### Nested Schema for `expand.expand.expand.top.expand.top.top.top.expand`
+<a id="nestedatt--expand--expand--expand--expand--expand--expand--expand--expand--expand"></a>
+### Nested Schema for `expand.expand.expand.expand.expand.expand.expand.expand.expand`
 
 Required:
 
@@ -342,7 +342,7 @@ Optional:
 
 - `expand` (Attributes List) Expand the navigation property of the entity collection. 
 
-More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--top--expand--top--top--top--expand--expand))
+More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--expand--expand--expand--expand--expand--expand--expand))
 - `filter` (String) Filter the data records. 
 
 More information on (OData Filter)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#filter-rows]
@@ -356,8 +356,8 @@ More information on (OData Select)[https://learn.microsoft.com/en-us/power-apps/
 
 More information on (OData Top)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#odata-query-options]
 
-<a id="nestedatt--expand--expand--expand--top--expand--top--top--top--expand--expand"></a>
-### Nested Schema for `expand.expand.expand.top.expand.top.top.top.expand.expand`
+<a id="nestedatt--expand--expand--expand--expand--expand--expand--expand--expand--expand--expand"></a>
+### Nested Schema for `expand.expand.expand.expand.expand.expand.expand.expand.expand.expand`
 
 Required:
 
@@ -369,7 +369,7 @@ Optional:
 
 - `expand` (Attributes List) Expand the navigation property of the entity collection. 
 
-More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--top--expand--top--top--top--expand--top--expand))
+More information on (OData Expand)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#join-tables] (see [below for nested schema](#nestedatt--expand--expand--expand--expand--expand--expand--expand--expand--expand--expand--expand))
 - `filter` (String) Filter the data records. 
 
 More information on (OData Filter)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#filter-rows]
@@ -383,8 +383,8 @@ More information on (OData Select)[https://learn.microsoft.com/en-us/power-apps/
 
 More information on (OData Top)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#odata-query-options]
 
-<a id="nestedatt--expand--expand--expand--top--expand--top--top--top--expand--top--expand"></a>
-### Nested Schema for `expand.expand.expand.top.expand.top.top.top.expand.top.expand`
+<a id="nestedatt--expand--expand--expand--expand--expand--expand--expand--expand--expand--expand--expand"></a>
+### Nested Schema for `expand.expand.expand.expand.expand.expand.expand.expand.expand.expand.expand`
 
 Required:
 
