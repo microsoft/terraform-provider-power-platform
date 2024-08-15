@@ -482,7 +482,7 @@ func (client *EnvironmentClient) GetDefaultCurrencyForEnvironment(ctx context.Co
 		if err != nil {
 			return nil, err
 		} else {
-			if currencies.Value != nil && len(currencies.Value) >= 1 {
+			if len(currencies.Value) >= 1 {
 				return &currencies.Value[0], nil
 			} else {
 				return nil, fmt.Errorf("no default currency found for environment %s", environmentId)

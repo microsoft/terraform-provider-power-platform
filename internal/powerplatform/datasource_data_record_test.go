@@ -4,7 +4,6 @@
 package powerplatform
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -296,7 +295,7 @@ func TestUnitDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 	})
 
 	if !isOdataQueryRun {
-		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+		t.Errorf("Odata query should have been run in '%s' unit test", mock_helpers.TestName())
 	}
 }
 
@@ -419,7 +418,7 @@ func TestUnitDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing
 	})
 
 	if !isOdataQueryRun {
-		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+		t.Errorf("Odata query should have been run in '%s' unit test", mock_helpers.TestName())
 	}
 }
 
@@ -495,7 +494,7 @@ func TestUnitDataRecordDatasource_Validate_Top(t *testing.T) {
 	})
 
 	if !isOdataQueryRun {
-		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+		t.Errorf("Odata query should have been run in '%s' unit test", mock_helpers.TestName())
 	}
 }
 
@@ -570,7 +569,7 @@ func TestUnitDataRecordDatasource_Validate_Apply(t *testing.T) {
 	})
 
 	if !isOdataQueryRun {
-		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+		t.Errorf("Odata query should have been run in '%s' unit test", mock_helpers.TestName())
 	}
 }
 
@@ -646,7 +645,7 @@ func TestUnitDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 	})
 
 	if !isOdataQueryRun {
-		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+		t.Errorf("Odata query should have been run in '%s' unit test", mock_helpers.TestName())
 	}
 }
 
@@ -727,7 +726,7 @@ func TestUnitDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 	})
 
 	if !isOdataQueryRun {
-		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+		t.Errorf("Odata query should have been run in '%s' unit test", mock_helpers.TestName())
 	}
 }
 
@@ -814,7 +813,7 @@ func TestUnitDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 	})
 
 	if !isOdataQueryRun {
-		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+		t.Errorf("Odata query should have been run in '%s' unit test", mock_helpers.TestName())
 	}
 }
 
@@ -930,6 +929,6 @@ func TestUnitDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 	})
 
 	if !isOdataQueryRun {
-		t.Errorf(fmt.Sprintf("Odata query should have been run in '%s' unit test", mock_helpers.TestName()))
+		t.Errorf("Odata query should have been run in '%s' unit test", mock_helpers.TestName())
 	}
 }
