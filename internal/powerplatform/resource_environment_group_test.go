@@ -44,6 +44,20 @@ func TestUnitEnvirionmentGroupResource_Validate_Create(t *testing.T) {
 		},
 	)
 
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/environment_groups/test/resources/get_environment_group.json").String())
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("DELETE", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			return resp, nil
+		},
+	)
+
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
