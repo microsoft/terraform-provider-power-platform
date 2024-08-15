@@ -18,7 +18,7 @@ func TestAccEnvironmentGroupResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `
+				Config: TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment_group" "test_env_group" {
 					display_name = "test_env_group"
 					description = "test env group"
@@ -49,7 +49,7 @@ func TestUnitEnvirionmentGroupResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: `
+				Config: TestsUnitProviderConfig + `
 				resource "powerplatform_environment_group" "test_env_group" {
 					display_name = "test_env_group"
 					description = "test env group"
