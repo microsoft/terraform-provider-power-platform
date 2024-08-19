@@ -1,6 +1,6 @@
 {
     "id": "00000000-0000-0000-0000-000000000001",
-    "name": "payAsYouGoBillingPolicyExample1",
+    "name": "payAsYouGoBillingPolicyExample",
     "type": "TenantOwned",
     "status": "Enabled",
     "location": "europe",
