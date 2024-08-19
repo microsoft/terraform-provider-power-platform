@@ -41,7 +41,6 @@ func NewApiClientBase(config *config.ProviderConfig, baseAuth *Auth) *ApiClient 
 }
 
 func TryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (string, error) {
-	
 
 	switch {
 	case strings.LastIndex(url, cloudConfig.BapiUrl) != -1,
@@ -122,12 +121,18 @@ func (client *ApiClient) Execute(ctx context.Context, method, url string, header
 	return client.ExecuteForGivenScope(ctx, scope, method, url, headers, body, acceptableStatusCodes, responseObj)
 }
 
-func (client *ApiClient) Sleep(duration time.Duration) {
+func (client *ApiClient) SleepWithContext(ctx context.Context, duration time.Duration) error {
 	if client.Config.Credentials.TestMode {
 		//Don't sleep during testing
-		return
+		return nil
 	} else {
-		//lintignore:R018
-		time.Sleep(duration)
+		select {
+		case <-time.After(duration):
+			// Time has elapsed
+			return nil
+		case <-ctx.Done():
+			// Context was canceled
+			return ctx.Err()
+		}
 	}
 }
