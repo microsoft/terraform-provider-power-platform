@@ -289,6 +289,27 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 									boolplanmodifier.UseStateForUnknown(),
 								},
 							},
+							"environment_routing_all_makers": schema.BoolAttribute{
+								Description: "Select who can be routed to a new personal developer environment. (All Makers = true, New Makers = false)",
+								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"environment_routing_target_environment_group_id": schema.StringAttribute{
+								Description: "Assign newly created personal developer environments to a specific environment group",
+								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"environment_routing_target_security_group_id": schema.StringAttribute{
+								Description: "Restrict routing to members of the following security group. (00000000-0000-0000-0000-000000000000 allows all users)",
+								Optional:    true, Computed: true,
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
 							"policy": schema.SingleNestedAttribute{
 								Description: "Policy",
 								Optional:    true, Computed: true,

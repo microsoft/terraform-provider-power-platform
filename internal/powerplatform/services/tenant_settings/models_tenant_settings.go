@@ -62,6 +62,9 @@ type GovernanceSettingsDto struct {
 	DisableAdminDigest                                 *bool              `json:"disableAdminDigest,omitempty"`
 	DisableDeveloperEnvironmentCreationByNonAdminUsers *bool              `json:"disableDeveloperEnvironmentCreationByNonAdminUsers,omitempty"`
 	EnableDefaultEnvironmentRouting                    *bool              `json:"enableDefaultEnvironmentRouting,omitempty"`
+	EnvironmentRoutingAllMakers                        *bool              `json:"environmentRoutingAllMakers,omitempty"`
+	EnvironmentRoutingTargetEnvironmentGroupId         *string            `json:"environmentRoutingTargetEnvironmentGroupId,omitempty"`
+	EnvironmentRoutingTargetSecurityGroupId            *string            `json:"environmentRoutingTargetSecurityGroupId,omitempty"`
 	Policy                                             *PolicySettingsDto `json:"policy,omitempty"`
 }
 
@@ -270,6 +273,18 @@ func ConvertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 		if !governanceSettings.EnableDefaultEnvironmentRouting.IsNull() && !governanceSettings.EnableDefaultEnvironmentRouting.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.Governance.EnableDefaultEnvironmentRouting = governanceSettings.EnableDefaultEnvironmentRouting.ValueBoolPointer()
 		}
+		if !governanceSettings.EnvironmentRoutingAllMakers.IsNull() && !governanceSettings.EnvironmentRoutingAllMakers.IsUnknown() {
+			tenantSettingsDto.PowerPlatform.Governance.EnvironmentRoutingAllMakers = governanceSettings.EnvironmentRoutingAllMakers.ValueBoolPointer()
+		}
+
+		if !governanceSettings.EnvironmentRoutingTargetEnvironmentGroupId.IsNull() && !governanceSettings.EnvironmentRoutingTargetEnvironmentGroupId.IsUnknown() {
+			tenantSettingsDto.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId = governanceSettings.EnvironmentRoutingTargetEnvironmentGroupId.ValueStringPointer()
+		}
+
+		if !governanceSettings.EnvironmentRoutingTargetSecurityGroupId.IsNull() && !governanceSettings.EnvironmentRoutingTargetSecurityGroupId.IsUnknown() {
+			tenantSettingsDto.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId = governanceSettings.EnvironmentRoutingTargetSecurityGroupId.ValueStringPointer()
+		}
+
 		policyObject := governanceSettings.Policy
 		if !policyObject.IsNull() && !policyObject.IsUnknown() {
 			var policySettings PolicySettings
@@ -467,6 +482,9 @@ func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) TenantSet
 		"disable_admin_digest": types.BoolType,
 		"disable_developer_environment_creation_by_non_admin_users": types.BoolType,
 		"enable_default_environment_routing":                        types.BoolType,
+		"environment_routing_all_makers":                            types.BoolType,
+		"environment_routing_target_environment_group_id":           types.StringType,
+		"environment_routing_target_security_group_id":              types.StringType,
 		"policy": types.ObjectType{AttrTypes: map[string]attr.Type{
 			"enable_desktop_flow_data_policy_management": types.BoolType,
 		}},
@@ -476,6 +494,9 @@ func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) TenantSet
 		"disable_admin_digest": types.BoolValue(*tenantSettingsDto.PowerPlatform.Governance.DisableAdminDigest),
 		"disable_developer_environment_creation_by_non_admin_users": types.BoolValue(*tenantSettingsDto.PowerPlatform.Governance.DisableDeveloperEnvironmentCreationByNonAdminUsers),
 		"enable_default_environment_routing":                        types.BoolValue(*tenantSettingsDto.PowerPlatform.Governance.EnableDefaultEnvironmentRouting),
+		"environment_routing_all_makers":                            types.BoolValue(*tenantSettingsDto.PowerPlatform.Governance.EnvironmentRoutingAllMakers),
+		"environment_routing_target_environment_group_id":           types.StringValue(*tenantSettingsDto.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId),
+		"environment_routing_target_security_group_id":              types.StringValue(*tenantSettingsDto.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId),
 		"policy": types.ObjectValueMust(map[string]attr.Type{
 			"enable_desktop_flow_data_policy_management": types.BoolType,
 		}, map[string]attr.Value{

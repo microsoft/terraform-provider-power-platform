@@ -94,6 +94,9 @@ type GovernanceSettings struct {
 	DisableAdminDigest                                 types.Bool   `tfsdk:"disable_admin_digest"`
 	DisableDeveloperEnvironmentCreationByNonAdminUsers types.Bool   `tfsdk:"disable_developer_environment_creation_by_non_admin_users"`
 	EnableDefaultEnvironmentRouting                    types.Bool   `tfsdk:"enable_default_environment_routing"`
+	EnvironmentRoutingAllMakers                        types.Bool   `tfsdk:"environment_routing_all_makers"`
+	EnvironmentRoutingTargetEnvironmentGroupId         types.String `tfsdk:"environment_routing_target_environment_group_id"`
+	EnvironmentRoutingTargetSecurityGroupId            types.String `tfsdk:"environment_routing_target_security_group_id"`
 	Policy                                             types.Object `tfsdk:"policy"`
 }
 
@@ -329,6 +332,18 @@ func (d *TenantSettingsDataSource) Schema(_ context.Context, _ datasource.Schema
 							},
 							"enable_default_environment_routing": schema.BoolAttribute{
 								Description: "Enable Default Environment Routing",
+								Computed:    true,
+							},
+							"environment_routing_all_makers": schema.BoolAttribute{
+								Description: "Select who can be routed to a new personal developer environment. (All Makers = true, New Makers = false)",
+								Computed:    true,
+							},
+							"environment_routing_target_environment_group_id": schema.StringAttribute{
+								Description: "Assign newly created personal developer environments to a specific environment group",
+								Computed:    true,
+							},
+							"environment_routing_target_security_group_id": schema.StringAttribute{
+								Description: "Restrict routing to members of the following security group. (00000000-0000-0000-0000-000000000000 allows all users)",
 								Computed:    true,
 							},
 							"policy": schema.SingleNestedAttribute{
