@@ -74,7 +74,7 @@ func (client *EnvironmentGroupClient) UpdateEnvironmentGroup(ctx context.Context
 	apiUrl.RawQuery = values.Encode()
 
 	updatedEnvironmentGroup := EnvironmentGroupDto{}
-	_, err := client.Api.Execute(ctx, "PATCH", apiUrl.String(), nil, environmentGroup, []int{http.StatusOK}, &updatedEnvironmentGroup)
+	_, err := client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, environmentGroup, []int{http.StatusOK}, &updatedEnvironmentGroup)
 	if err != nil {
 		return nil, err
 	}
