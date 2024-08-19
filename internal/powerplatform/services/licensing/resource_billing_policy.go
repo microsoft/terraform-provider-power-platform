@@ -6,7 +6,9 @@ package powerplatform
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -42,6 +44,7 @@ type BillingPolicyResourceModel struct {
 	Location          types.String                   `tfsdk:"location"`
 	Status            types.String                   `tfsdk:"status"`
 	BillingInstrument BillingInstrumentResourceModel `tfsdk:"billing_instrument"`
+	Timeouts          timeouts.Value                 `tfsdk:"timeouts"`
 }
 
 type BillingInstrumentResourceModel struct {
@@ -122,6 +125,10 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 			},
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+			}),
 		},
 	}
 }
@@ -145,10 +152,9 @@ func (r *BillingPolicyResource) Configure(ctx context.Context, req resource.Conf
 }
 
 func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *BillingPolicyResourceModel
-
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
+	var plan *BillingPolicyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -168,6 +174,17 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 	} else {
 		billingPolicyToCreate.Status = plan.Status.ValueString()
 	}
+
+	// Create() is passed a default timeout to use if no value
+	// has been supplied in the Terraform configuration.
+	createTimeout, diags := plan.Timeouts.Create(ctx, 20*time.Minute)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, createTimeout)
+	defer cancel()
 
 	policy, err := r.LicensingClient.CreateBillingPolicy(ctx, billingPolicyToCreate)
 	if err != nil {
@@ -227,21 +244,30 @@ func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan *BillingPolicyResourceModel
-
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
 
+	var plan *BillingPolicyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	var state *BillingPolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	if plan.Name.ValueString() != state.Name.ValueString() ||
 		plan.Status.ValueString() != state.Status.ValueString() {
+
+		updateTimeout, diags := plan.Timeouts.Update(ctx, 20*time.Minute)
+		if diags != nil && diags.HasError() {
+			return
+		}
+
+		ctx, cancel := context.WithTimeout(ctx, updateTimeout)
+		defer cancel()
 
 		policyToUpdate := BillingPolicyUpdateDto{
 			Name:   plan.Name.ValueString(),
@@ -255,6 +281,12 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 		}
 
 		plan.Id = types.StringValue(policy.Id)
+		plan.Name = types.StringValue(policy.Name)
+		plan.Location = types.StringValue(policy.Location)
+		plan.Status = types.StringValue(policy.Status)
+		plan.BillingInstrument.Id = types.StringValue(policy.BillingInstrument.Id)
+		plan.BillingInstrument.ResourceGroup = types.StringValue(policy.BillingInstrument.ResourceGroup)
+		plan.BillingInstrument.SubscriptionId = types.StringValue(policy.BillingInstrument.SubscriptionId)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)

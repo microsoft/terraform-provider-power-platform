@@ -84,9 +84,6 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	stageSolutionRequestBody := StageSolutionImportDto{
 		CustomizationFile: base64.StdEncoding.EncodeToString(content),
 	}
-	if err != nil {
-		return nil, err
-	}
 
 	apiUrl := &url.URL{
 		Scheme: "https",
@@ -139,7 +136,10 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 
 	//pull for solution import completion
 	sleepDuration := 10 * time.Second
-	client.Api.Sleep(sleepDuration)
+	err = client.Api.SleepWithContext(ctx, sleepDuration)
+	if err != nil {
+		return nil, err
+	}
 
 	apiUrl = &url.URL{
 		Scheme: "https",
@@ -163,7 +163,10 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 			}
 			return solution, nil
 		}
-		client.Api.Sleep(sleepDuration)
+		err = client.Api.SleepWithContext(ctx, sleepDuration)
+		if err != nil {
+			return nil, err
+		}
 	}
 }
 

@@ -80,6 +80,9 @@ func (client *LicensingClient) CreateBillingPolicy(ctx context.Context, policyTo
 
 	policy := &BillingPolicyDto{}
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, policyToCreate, []int{http.StatusCreated}, policy)
+	if err != nil {
+		return nil, err
+	}
 
 	// If billing policy status is not Enabled or Disabled, wait for it to reach a terminal state
 	if policy.Status != "Enabled" && policy.Status != "Disabled" {
@@ -209,11 +212,7 @@ func (client *LicensingClient) RemoveEnvironmentsToBillingPolicy(ctx context.Con
 func (client *LicensingClient) DoWaitForFinalStatus(ctx context.Context, billingPolicyDto *BillingPolicyDto) (*BillingPolicyDto, error) {
 	billingId := billingPolicyDto.Id
 
-	retryAfter := time.Duration(5) * time.Second
-
-	timeout := time.Duration(3) * time.Minute
-
-	startTime := time.Now()
+	retryAfter := 5 * time.Second
 
 	for {
 		billingPolicy, err := client.GetBillingPolicy(ctx, billingId)
@@ -226,13 +225,10 @@ func (client *LicensingClient) DoWaitForFinalStatus(ctx context.Context, billing
 			return billingPolicy, nil
 		}
 
-		if time.Since(startTime) >= timeout {
-			tflog.Debug(ctx, "Timeout reached while waiting for billing policy to reach a terminal state (Enabled or Disabled)")
-			err := fmt.Errorf("timeout reached while waiting for billing policy to reach a terminal state (Enabled or Disabled)")
+		err = client.Api.SleepWithContext(ctx, retryAfter)
+		if err != nil {
 			return nil, err
 		}
-
-		client.Api.Sleep(retryAfter)
 
 		tflog.Debug(ctx, fmt.Sprintf("Billing Policy Operation State: '%s'", billingPolicy.Status))
 	}

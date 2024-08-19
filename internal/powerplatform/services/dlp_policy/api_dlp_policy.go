@@ -151,14 +151,14 @@ func convertPolicyModelToDlpPolicy(policy DlpPolicyModelDto) DlpPolicyDto {
 
 	for _, connGroups := range policy.ConnectorGroups {
 		for _, connector := range connGroups.Connectors {
-			if connector.ActionRules != nil && len(connector.ActionRules) > 0 {
+			if len(connector.ActionRules) > 0 {
 				connectorActionConfigurationsDto = append(connectorActionConfigurationsDto, DlpConnectorActionConfigurationsDto{
 					ConnectorId:                        connector.Id,
 					DefaultConnectorActionRuleBehavior: connector.DefaultActionRuleBehavior,
 					ActionRules:                        connector.ActionRules,
 				})
 			}
-			if connector.EndpointRules != nil && len(connector.EndpointRules) > 0 {
+			if len(connector.EndpointRules) > 0 {
 				endpointConfigurationsDto = append(endpointConfigurationsDto, DlpEndpointConfigurationsDto{
 					ConnectorId:   connector.Id,
 					EndpointRules: connector.EndpointRules,
