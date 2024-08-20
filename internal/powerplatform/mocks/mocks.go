@@ -45,7 +45,7 @@ func ActivateEnvironmentHttpMocks() {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("../../services/languages/tests/datasource/Validate_Read/get_languages.json").String()), nil
 		})
 
-	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`https://api\.bap.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/locations/(europe|unitedstates)/environmentCurrencies\?api-version=2023-06-01`),
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/locations/(europe|unitedstates)/environmentCurrencies\?api-version=2023-06-01`),
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("../../services/currencies/tests/datasource/Validate_Read/get_currencies.json").String()), nil
 		})
