@@ -154,10 +154,11 @@ jobs:
           cd deps
           sed -i "s|/go/bin|${GITHUB_WORKSPACE}/deps|g" terraform.rc
           cat terraform.rc
-          export TF_CLI_CONFIG_FILE="${GITHUB_WORKSPACE}/deps/terraform.rc"
+          
     
     - name: Run acceptance tests
       run: |
+        export TF_CLI_CONFIG_FILE="${GITHUB_WORKSPACE}/deps/terraform.rc"
         export TF_LOG=ERROR
         export TF_ACC=1
         export POWER_PLATFORM_USE_OIDC=true
