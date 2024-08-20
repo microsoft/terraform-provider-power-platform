@@ -32,7 +32,6 @@ func TestAccConnectionsShareDataSource_Validate_Read(t *testing.T) {
 				// }
 
 				provider "azuread" {
-					use_cli = true
 				}
 				  
 				data "azuread_domains" "aad_domains" {
