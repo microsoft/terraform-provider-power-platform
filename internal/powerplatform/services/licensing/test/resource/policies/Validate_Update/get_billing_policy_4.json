@@ -2,7 +2,7 @@
     "id": "00000000-0000-0000-0000-000000000001",
     "name": "payAsYouGoBillingPolicyExample1",
     "type": "TenantOwned",
-    "status": "Enabled",
+    "status": "Disabled",
     "location": "europe",
     "billingInstrument": {
         "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/resource_group_name/providers/Microsoft.PowerPlatform/accounts/payAsYouGoBillingPolicyExample",
