@@ -20,19 +20,7 @@ func TestAccConnectionsShareResource_Validate_Create(t *testing.T) {
 			{
 				//lintignore:AT004
 				Config: TestsAcceptanceProviderConfig + `
-				terraform {
-					required_providers {
-					  azuread = {
-						source = "hashicorp/azuread"
-					  }
-					  random = {
-						source = "hashicorp/random"
-					  }
-					}
-				}
-
 				provider "azuread" {
-					use_cli = true
 				}
 				  
 				data "azuread_domains" "aad_domains" {
