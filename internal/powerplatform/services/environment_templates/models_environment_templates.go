@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package environment_templates
 
 type EnvironmentTemplateItem struct {
 	ID         string `json:"id"`

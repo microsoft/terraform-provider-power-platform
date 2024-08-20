@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package dlp_policy
 
 import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"

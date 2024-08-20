@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package authorization
 
 import "github.com/hashicorp/terraform-plugin-framework/types"
 

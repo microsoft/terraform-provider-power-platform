@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package api
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ import (
 	"time"
 
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 type ProviderClient struct {
@@ -58,7 +58,7 @@ func TryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (stri
 
 func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
 	if !strings.HasPrefix(url, "http") {
-		return nil, powerplatform_helpers.WrapIntoProviderError(nil, powerplatform_helpers.ERROR_INCORRECT_URL_FORMAT, "when using scope, the calling url must be an absolute url, not a relative path")
+		return nil, helpers.WrapIntoProviderError(nil, helpers.ERROR_INCORRECT_URL_FORMAT, "when using scope, the calling url must be an absolute url, not a relative path")
 	}
 	token, err := client.BaseAuth.GetTokenForScopes(ctx, []string{scope})
 	if err != nil {
@@ -101,7 +101,7 @@ func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method
 	}
 
 	if !isStatusCodeValid {
-		return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE, fmt.Sprintf("expected status code: %d, recieved: [%d]", acceptableStatusCodes, apiResponse.Response.StatusCode))
+		return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE, fmt.Sprintf("expected status code: %d, recieved: [%d]", acceptableStatusCodes, apiResponse.Response.StatusCode))
 	}
 
 	if responseObj != nil {

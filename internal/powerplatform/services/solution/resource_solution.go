@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package solution
 
 import (
 	"context"
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 )
 
 var _ resource.Resource = &SolutionResource{}
@@ -64,7 +64,7 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description:         "Checksum of the solution file",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
-					powerplatform_modifiers.SyncAttributePlanModifier("solution_file"),
+					modifiers.SyncAttributePlanModifier("solution_file"),
 				},
 			},
 			"solution_file": schema.StringAttribute{
@@ -77,7 +77,7 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description:         "Checksum of the settings file",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
-					powerplatform_modifiers.SyncAttributePlanModifier("settings_file"),
+					modifiers.SyncAttributePlanModifier("settings_file"),
 				},
 			},
 			"settings_file": schema.StringAttribute{
@@ -114,7 +114,7 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description:         "Display name of the solution",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
-					powerplatform_modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
+					modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
 				},
 			},
 			"is_managed": schema.BoolAttribute{
@@ -122,7 +122,7 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description:         "Indicates whether the solution is managed or not",
 				Computed:            true,
 				PlanModifiers: []planmodifier.Bool{
-					powerplatform_modifiers.SetBoolValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
+					modifiers.SetBoolValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
 				},
 			},
 			"solution_version": schema.StringAttribute{
@@ -130,7 +130,7 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description:         "Version of the solution",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
-					powerplatform_modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
+					modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
 				},
 			},
 		},
@@ -181,7 +181,7 @@ func (r *SolutionResource) Create(ctx context.Context, req resource.CreateReques
 
 	plan.SettingsFileChecksum = types.StringNull()
 	if !plan.SettingsFile.IsNull() && !plan.SettingsFile.IsUnknown() {
-		value, err := powerplatform_helpers.CalculateMd5(plan.SettingsFile.ValueString())
+		value, err := helpers.CalculateMd5(plan.SettingsFile.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddWarning("Issue when calculating checksum for settings file", err.Error())
 		} else {
@@ -192,7 +192,7 @@ func (r *SolutionResource) Create(ctx context.Context, req resource.CreateReques
 
 	plan.SolutionFileChecksum = types.StringUnknown()
 	if !plan.SolutionFile.IsNull() && !plan.SolutionFile.IsUnknown() {
-		value, err := powerplatform_helpers.CalculateMd5(plan.SolutionFile.ValueString())
+		value, err := helpers.CalculateMd5(plan.SolutionFile.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddWarning("Issue when calculating checksum for solution file", err.Error())
 		} else {
@@ -218,7 +218,7 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	solutions, err := r.SolutionClient.GetSolutions(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		if powerplatform_helpers.Code(err) == powerplatform_helpers.ERROR_OBJECT_NOT_FOUND {
+		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
 		} else {
@@ -327,7 +327,7 @@ func (r *SolutionResource) Update(ctx context.Context, req resource.UpdateReques
 
 	plan.SettingsFileChecksum = types.StringNull()
 	if !plan.SettingsFile.IsNull() && !plan.SettingsFile.IsUnknown() {
-		value, err := powerplatform_helpers.CalculateMd5(plan.SettingsFile.ValueString())
+		value, err := helpers.CalculateMd5(plan.SettingsFile.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddWarning("Issue when calculating checksum for settings file", err.Error())
 		} else {
@@ -337,7 +337,7 @@ func (r *SolutionResource) Update(ctx context.Context, req resource.UpdateReques
 
 	plan.SolutionFileChecksum = types.StringUnknown()
 	if !plan.SolutionFile.IsNull() && !plan.SolutionFile.IsUnknown() {
-		value, err := powerplatform_helpers.CalculateMd5(plan.SolutionFile.ValueString())
+		value, err := helpers.CalculateMd5(plan.SolutionFile.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddWarning("Issue when calculating checksum for solution file", err.Error())
 		} else {

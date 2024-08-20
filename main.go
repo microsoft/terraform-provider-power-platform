@@ -9,7 +9,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
 // Generate the provider document.
@@ -27,7 +27,7 @@ func main() {
 		Address: "registry.terraform.io/microsoft/power-platform",
 	}
 
-	err := providerserver.Serve(ctx, powerplatform.NewPowerPlatformProvider(ctx), serveOpts)
+	err := providerserver.Serve(ctx, provider.NewPowerPlatformProvider(ctx), serveOpts)
 
 	if err != nil {
 		log.Fatalf("Error serving provider: %s", err)

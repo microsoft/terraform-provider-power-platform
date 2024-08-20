@@ -167,8 +167,8 @@ jobs:
         export ARM_USE_OIDC="true"
         export ARM_CLIENT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}'
         export ARM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
-        export
-        go test -v ./... -run "^TestAccEnvironmentsResource_Validate_Create" -coverprofile=acc-test-coverage.out -timeout 300m
+        go clean -testcache
+        go test -failfast -v ./... -run "^TestAccEnvironmentsResource_Validate_Create" -coverprofile=acc-test-coverage.out -timeout 300m
         go tool cover -html=acc-test-coverage.out -o acc-test-coverage.cov.html
 
     - name: Upload Coverage Artifacts

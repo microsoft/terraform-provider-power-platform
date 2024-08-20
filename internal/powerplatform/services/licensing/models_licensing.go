@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package licensing
 
 type BillingPolicyCreateDto struct {
 	Location          string               `json:"location"`

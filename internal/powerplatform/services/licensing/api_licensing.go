@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package licensing
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 type LicensingClient struct {
@@ -62,7 +62,7 @@ func (client *LicensingClient) GetBillingPolicy(ctx context.Context, billingId s
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 
 	if err != nil && strings.ContainsAny(err.Error(), "404") {
-		return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+		return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
 	}
 	return &policy, err
 }
@@ -153,7 +153,7 @@ func (client *LicensingClient) GetEnvironmentsForBillingPolicy(ctx context.Conte
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &billingPolicyEnvironments)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
-			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
 		}
 		return nil, err
 	}
