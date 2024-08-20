@@ -109,7 +109,7 @@ jobs:
     - name: Upload Coverage Artifacts
       uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
       with:
-        name: Test Coverage
+        name: Unit Test Coverage
         path: unit-test-coverage.cov.html
 
   acceptance_test:
@@ -175,5 +175,5 @@ jobs:
     - name: Upload Coverage Artifacts
       uses: actions/upload-artifact@834a144ee995460fba8ed112a2fc961b36a5ec5a # v4.3.6
       with:
-        name: Test Coverage
+        name: Acceptance Test Coverage
         path: acc-test-coverage.cov.html
