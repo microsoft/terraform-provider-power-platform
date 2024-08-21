@@ -30,7 +30,7 @@ resource "powerplatform_environment" "data_env" {
 	}
 }
 
-resource "null_resource" "wait_60_seconds" {
+resource "null_resource" "wait_120_seconds" {
 	provisioner "local-exec" {
 		command = "sleep 120"
 	}
@@ -59,8 +59,8 @@ resource "powerplatform_data_record" "contact1" {
   }
 
   depends_on = [
-    null_resource.wait_60_seconds
-]
+    null_resource.wait_120_seconds
+  ]
 }
 
 resource "powerplatform_data_record" "contact2" {
@@ -89,7 +89,7 @@ resource "powerplatform_data_record" "contact3" {
     lastname  = "contact3"
   }
   depends_on = [
-    null_resource.wait_60_seconds
+    null_resource.wait_120_seconds
   ]
 }
 
@@ -108,7 +108,7 @@ resource "powerplatform_data_record" "contact4" {
     ]
   }
   depends_on = [
-    null_resource.wait_60_seconds
+    null_resource.wait_120_seconds
   ]
 }
 
@@ -127,7 +127,7 @@ resource "powerplatform_data_record" "account1" {
   }
 
   depends_on = [
-    null_resource.wait_60_seconds
+    null_resource.wait_120_seconds
   ]
 }
 
@@ -141,7 +141,7 @@ resource "powerplatform_data_record" "contact5" {
   }
   
   depends_on = [
-    null_resource.wait_60_seconds
+    null_resource.wait_120_seconds
   ]
 }`
 }
@@ -772,21 +772,25 @@ func TestAccDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 						returnedtypecode = "contact"
 						layoutxml        = "<grid name=\"resultset\" object=\"2\" jump=\"fullname\" select=\"1\" icon=\"false\" preview=\"1\"><row name=\"result\" id=\"contactid\"><cell name=\"fullname\" width=\"300\"/><cell name=\"emailaddress1\" width=\"150\"/></row></grid>"
 					}
+
+					  depends_on = [
+						null_resource.wait_120_seconds
+					  ]
 				}
 				
 				data "powerplatform_data_records" "data_query" {
-				environment_id    = powerplatform_environment.data_env.id
-				entity_collection = "contacts"
-				user_query        = powerplatform_data_record.userquery.columns.userqueryid
-				select            = ["fullname", "firstname", "lastname"]
+					environment_id    = powerplatform_environment.data_env.id
+					entity_collection = "contacts"
+					user_query        = powerplatform_data_record.userquery.columns.userqueryid
+					select            = ["fullname", "firstname", "lastname"]
 
-				depends_on = [
-						powerplatform_data_record.contact1,
-						powerplatform_data_record.contact2,
-						powerplatform_data_record.contact3,
-						powerplatform_data_record.contact4,
-						powerplatform_data_record.contact5,
-					]
+					depends_on = [
+							powerplatform_data_record.contact1,
+							powerplatform_data_record.contact2,
+							powerplatform_data_record.contact3,
+							powerplatform_data_record.contact4,
+							powerplatform_data_record.contact5,
+						]
 				}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
