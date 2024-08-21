@@ -211,7 +211,6 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
 				}
-
 				
 				resource "null_resource" "wait_60_seconds" {
 					provisioner "local-exec" {
