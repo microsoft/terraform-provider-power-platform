@@ -32,7 +32,7 @@ resource "powerplatform_environment" "data_env" {
 
 resource "null_resource" "wait_60_seconds" {
 	provisioner "local-exec" {
-		command = "sleep 60"
+		command = "sleep 120"
 	}
 	depends_on = [powerplatform_environment.data_env]
 }

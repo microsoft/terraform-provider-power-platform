@@ -50,7 +50,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.language_code", "1033"),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.organization_id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", "00000000-0000-0000-0000-000000000000"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+domainName+".crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+domainName+".crm.dynamics.com/"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "unitedstates"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
 				),
