@@ -22,7 +22,7 @@ func TestAccSecurityDataSource_Validate_Read(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: provider.TestsAcceptanceProviderConfig + `
-				resource "powerplatform_environment" "env" {
+				r	resource "powerplatform_environment" "env" {
 					display_name      = "` + mocks.TestName() + `"
 					location          = "europe"
 					environment_type  = "Sandbox"
@@ -35,6 +35,10 @@ func TestAccSecurityDataSource_Validate_Read(t *testing.T) {
 
 				data "powerplatform_security_roles" "all" {
 					environment_id = powerplatform_environment.env.id
+
+					depends_on = [
+						powerplatform_environment.env
+					]
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
