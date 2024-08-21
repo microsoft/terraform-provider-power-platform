@@ -31,7 +31,7 @@ func TestAccEnvironmentPowerAppsDataSource_Basic(t *testing.T) {
 					// Verify the first power app to ensure all attributes are set
 					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.name", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.id", regexp.MustCompile(helpers.UrlValidStringRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.display_name", regexp.MustCompile(helpers.UrlValidStringRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.display_name", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.created_time", regexp.MustCompile(`^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$`)),
 				),
 			},
