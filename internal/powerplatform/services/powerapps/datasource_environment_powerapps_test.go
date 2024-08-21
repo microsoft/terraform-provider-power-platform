@@ -22,7 +22,16 @@ func TestAccEnvironmentPowerAppsDataSource_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: provider.TestsAcceptanceProviderConfig + `
-				data "powerplatform_environment_powerapps" "all" {}`,
+				resource "powerplatform_environment" "env" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "europe"
+					azure_region     = "northeurope"
+					environment_type = "Sandbox"
+				}
+
+				data "powerplatform_environment_powerapps" "all" {
+					depends_on = [powerplatform_environment.env]
+				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					//Verify placeholder id attribute
