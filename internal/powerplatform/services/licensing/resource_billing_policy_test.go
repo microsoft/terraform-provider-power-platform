@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -36,7 +37,7 @@ func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-					name     = "` + mocks.TestName() + `"
+					name     = "` + strings.ReplaceAll(mocks.TestName(), "_", "") + `"
 					location = "europe"
 					status   = "Enabled"
 					billing_instrument = {
@@ -47,7 +48,7 @@ func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_billing_policy.pay_as_you_go", "id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", mocks.TestName()),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", strings.ReplaceAll(mocks.TestName(), "_", "")),
 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "status", "Enabled"),
 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "billing_instrument.resource_group", "power-platform-billing-"+mocks.TestName()),
