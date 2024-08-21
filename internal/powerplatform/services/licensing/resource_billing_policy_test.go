@@ -54,16 +54,7 @@ func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 						subscription_id = data.azurerm_client_config.current.subscription_id
 					}
 				}
-  
-				resource "powerplatform_billing_policy" "pay_as_you_go" {
-					name     = "` + mocks.TestName() + `"
-					location = "europe"
-					status   = "Enabled"
-					billing_instrument = {
-					  resource_group  = "resource_group_name"
-					  subscription_id = "00000000-0000-0000-0000-000000000000"
-					}
-				}`,
+				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_billing_policy.pay_as_you_go", "id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", "pay-as-you-go-example-"+mocks.TestName()),
