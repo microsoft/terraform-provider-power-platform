@@ -34,6 +34,13 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					}
 				}
 				  
+				resource "null_resource" "wait_30_seconds" {
+					provisioner "local-exec" {
+						command = "sleep 60"
+					}
+					depends_on = [powerplatform_environment.example_environment_settings]
+				}
+			
 				resource "powerplatform_environment_settings" "settings" {
 					environment_id                         = powerplatform_environment.example_environment_settings.id
 					audit_and_logs = {
@@ -43,20 +50,22 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						  is_user_access_audit_enabled = true
 						  is_read_audit_enabled        = true
 						}
-					  }
-					  email = {
+					}
+					email = {
 						email_settings = {
 						  max_upload_file_size_in_bytes = 100
 						}
-					  }
-					  product = {
+					}
+					product = {
 						behavior_settings = {
 						  show_dashboard_cards_in_expanded_state = true
 						}
 						features = {
 						  power_apps_component_framework_for_canvas_apps = true
 						}
-					  }
+					}
+					
+					depends_on = [null_resource.wait_30_seconds]
 				  }`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

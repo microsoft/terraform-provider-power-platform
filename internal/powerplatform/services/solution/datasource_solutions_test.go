@@ -159,6 +159,10 @@ func TestAccSolutionsDataSource_Validate_Read(t *testing.T) {
 
 				data "powerplatform_solutions" "all" {
 					environment_id = powerplatform_environment.development.id
+
+					depends_on = [
+						powerplatform_environment.development
+					]	
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

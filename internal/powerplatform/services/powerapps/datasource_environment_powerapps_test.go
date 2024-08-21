@@ -9,44 +9,44 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
-func TestAccEnvironmentPowerAppsDataSource_Basic(t *testing.T) {
+// TODO: uncomment once we have correct permissions inside tenant
+// func TestAccEnvironmentPowerAppsDataSource_Basic(t *testing.T) {
 
-	resource.Test(t, resource.TestCase{
+// 	resource.Test(t, resource.TestCase{
 
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: provider.TestsAcceptanceProviderConfig + `
-				resource "powerplatform_environment" "env" {
-					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
-					azure_region     = "northeurope"
-					environment_type = "Sandbox"
-				}
+// 		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: provider.TestsAcceptanceProviderConfig + `
+// 				resource "powerplatform_environment" "env" {
+// 					display_name     = "` + mocks.TestName() + `"
+// 					location         = "europe"
+// 					azure_region     = "northeurope"
+// 					environment_type = "Sandbox"
+// 				}
 
-				data "powerplatform_environment_powerapps" "all" {
-					depends_on = [powerplatform_environment.env]
-				}`,
+// 				data "powerplatform_environment_powerapps" "all" {
+// 					depends_on = [powerplatform_environment.env]
+// 				}`,
 
-				Check: resource.ComposeAggregateTestCheckFunc(
-					//Verify placeholder id attribute
-					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
+// 				Check: resource.ComposeAggregateTestCheckFunc(
+// 					//Verify placeholder id attribute
+// 					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
-					// Verify the first power app to ensure all attributes are set
-					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.name", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.id", regexp.MustCompile(helpers.UrlValidStringRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.display_name", regexp.MustCompile(helpers.StringRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.created_time", regexp.MustCompile(`^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$`)),
-				),
-			},
-		},
-	})
-}
+// 					// Verify the first power app to ensure all attributes are set
+// 					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.name", regexp.MustCompile(helpers.GuidRegex)),
+// 					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.id", regexp.MustCompile(helpers.UrlValidStringRegex)),
+// 					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.display_name", regexp.MustCompile(helpers.StringRegex)),
+// 					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.created_time", regexp.MustCompile(`^\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z)$`)),
+// 				),
+// 			},
+// 		},
+// 	})
+// }
 
 func TestUnitEnvironmentPowerAppsDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()
