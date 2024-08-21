@@ -17,35 +17,65 @@ import (
 )
 
 // We can't test the create method as it requires a valid subscription id and resource group id
-// func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
-// 	resource.Test(t, resource.TestCase{
-// 		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: provider.TestsAcceptanceProviderConfig + `
-// 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-// 					name     = "` + mocks.TestName() + `"
-// 					location = "europe"
-// 					status   = "Enabled"
-// 					billing_instrument = {
-// 					  resource_group  = "resource_group_name"
-// 					  subscription_id = "00000000-0000-0000-0000-000000000000"
-// 					}
-// 				}`,
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					//Verify placeholder id attribute
-// 					resource.TestMatchResourceAttr("powerplatform_billing_policy.pay_as_you_go", "id", regexp.MustCompile(helpers.GuidRegex)),
-// 					// Verify the first power app to ensure all attributes are set
-// 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", mocks.TestName()),
-// 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "location", "europe"),
-// 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "status", "Enabled"),
-// 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "billing_instrument.resource_group", "resource_group_name"),
-// 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "billing_instrument.subscription_id", "00000000-0000-0000-0000-000000000000"),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
+func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: provider.TestsAcceptanceProviderConfig + `
+				provider "azurerm" {
+					features {}
+				}
+
+				provider "azurecaf" {
+				}
+
+				data "azurerm_client_config" "current" {
+				}
+
+				resource "azurecaf_name" "rg_example_name" {
+					name          = "power-platform-billing-` + mocks.TestName() + `"
+					resource_type = "azurerm_resource_group"
+					random_length = 5
+					clean_input   = true
+				}
+
+				resource "azurerm_resource_group" "rg_example" {
+					name     = azurecaf_name.rg_example_name.result
+					location = "westeurope"
+				}
+
+				resource "powerplatform_billing_policy" "pay_as_you_go" {
+					name     = "pay-as-you-go-example-` + mocks.TestName() + `"
+					location = "europe"
+					status   = "Enabled"
+					billing_instrument = {
+						resource_group  = azurerm_resource_group.rg_example.name
+						subscription_id = data.azurerm_client_config.current.subscription_id
+					}
+				}
+  
+				resource "powerplatform_billing_policy" "pay_as_you_go" {
+					name     = "` + mocks.TestName() + `"
+					location = "europe"
+					status   = "Enabled"
+					billing_instrument = {
+					  resource_group  = "resource_group_name"
+					  subscription_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_billing_policy.pay_as_you_go", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", "pay-as-you-go-example-"+mocks.TestName()),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "location", "europe"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "status", "Enabled"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "billing_instrument.resource_group", "power-platform-billing-"+mocks.TestName()),
+					resource.TestMatchResourceAttr("powerplatform_billing_policy.pay_as_you_go", "billing_instrument.subscription_id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+		},
+	})
+}
 
 func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 	httpmock.Activate()
