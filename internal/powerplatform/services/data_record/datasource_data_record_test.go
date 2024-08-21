@@ -28,7 +28,14 @@ resource "powerplatform_environment" "data_env" {
 	  currency_code     = "USD"
 	  security_group_id = "00000000-0000-0000-0000-000000000000"
 	}
-  }
+}
+
+resource "null_resource" "wait_30_seconds" {
+	provisioner "local-exec" {
+		command = "sleep 60"
+	}
+	depends_on = [powerplatform_environment.data_env]
+}
 
 resource "powerplatform_data_record" "contact1" {
   environment_id     = powerplatform_environment.data_env.id 
@@ -50,6 +57,10 @@ resource "powerplatform_data_record" "contact1" {
       }
     ]
   }
+
+  depends_on = [
+    null_resource.wait_30_seconds
+]
 }
 
 resource "powerplatform_data_record" "contact2" {
@@ -77,6 +88,9 @@ resource "powerplatform_data_record" "contact3" {
     firstname = "contact3"
     lastname  = "contact3"
   }
+  depends_on = [
+    null_resource.wait_30_seconds
+  ]
 }
 
 resource "powerplatform_data_record" "contact4" {
@@ -93,9 +107,10 @@ resource "powerplatform_data_record" "contact4" {
       }
     ]
   }
+  depends_on = [
+    null_resource.wait_30_seconds
+  ]
 }
-
-
 
 resource "powerplatform_data_record" "account1" {
   environment_id     = powerplatform_environment.data_env.id 
@@ -110,6 +125,10 @@ resource "powerplatform_data_record" "account1" {
       }
     ]
   }
+
+  depends_on = [
+    null_resource.wait_30_seconds
+  ]
 }
 
 resource "powerplatform_data_record" "contact5" {
@@ -120,6 +139,10 @@ resource "powerplatform_data_record" "contact5" {
     firstname = "contact5"
     lastname  = "contact5"
   }
+  
+  depends_on = [
+    null_resource.wait_30_seconds
+  ]
 }`
 }
 
