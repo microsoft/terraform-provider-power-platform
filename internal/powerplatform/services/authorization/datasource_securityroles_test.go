@@ -33,7 +33,7 @@ func TestAccSecurityDataSource_Validate_Read(t *testing.T) {
 					}
 				}
 				
-				resource "null_resource" "wait_30_seconds" {
+				resource "null_resource" "wait_60_seconds" {
 					provisioner "local-exec" {
 						command = "sleep 60"
 					}
@@ -44,7 +44,7 @@ func TestAccSecurityDataSource_Validate_Read(t *testing.T) {
 					environment_id = powerplatform_environment.env.id
 
 					depends_on = [
-						null_resource.wait_30_seconds
+						null_resource.wait_60_seconds
 					]
 				}`,
 

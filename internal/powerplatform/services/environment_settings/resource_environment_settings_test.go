@@ -34,7 +34,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					}
 				}
 				  
-				resource "null_resource" "wait_30_seconds" {
+				resource "null_resource" "wait_60_seconds" {
 					provisioner "local-exec" {
 						command = "sleep 60"
 					}
@@ -65,7 +65,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						}
 					}
 					
-					depends_on = [null_resource.wait_30_seconds]
+					depends_on = [null_resource.wait_60_seconds]
 				  }`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

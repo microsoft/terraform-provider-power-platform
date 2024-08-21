@@ -30,7 +30,7 @@ resource "powerplatform_environment" "data_env" {
 	}
 }
 
-resource "null_resource" "wait_30_seconds" {
+resource "null_resource" "wait_60_seconds" {
 	provisioner "local-exec" {
 		command = "sleep 60"
 	}
@@ -59,7 +59,7 @@ resource "powerplatform_data_record" "contact1" {
   }
 
   depends_on = [
-    null_resource.wait_30_seconds
+    null_resource.wait_60_seconds
 ]
 }
 
@@ -89,7 +89,7 @@ resource "powerplatform_data_record" "contact3" {
     lastname  = "contact3"
   }
   depends_on = [
-    null_resource.wait_30_seconds
+    null_resource.wait_60_seconds
   ]
 }
 
@@ -108,7 +108,7 @@ resource "powerplatform_data_record" "contact4" {
     ]
   }
   depends_on = [
-    null_resource.wait_30_seconds
+    null_resource.wait_60_seconds
   ]
 }
 
@@ -127,7 +127,7 @@ resource "powerplatform_data_record" "account1" {
   }
 
   depends_on = [
-    null_resource.wait_30_seconds
+    null_resource.wait_60_seconds
   ]
 }
 
@@ -141,7 +141,7 @@ resource "powerplatform_data_record" "contact5" {
   }
   
   depends_on = [
-    null_resource.wait_30_seconds
+    null_resource.wait_60_seconds
   ]
 }`
 }
