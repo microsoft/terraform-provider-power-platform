@@ -299,6 +299,7 @@ func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId, b
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &securityRoleArray)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
+			tflog.Debug(ctx, fmt.Sprintf("Error getting security roles: %s", err.Error()))
 			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, "security roles not found")
 		}
 		return nil, err
