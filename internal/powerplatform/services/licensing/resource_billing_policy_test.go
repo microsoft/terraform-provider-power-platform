@@ -27,21 +27,11 @@ func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 					features {}
 				}
 
-				provider "azurecaf" {
-				}
-
 				data "azurerm_client_config" "current" {
 				}
 
-				resource "azurecaf_name" "rg_example_name" {
-					name          = "power-platform-billing-` + mocks.TestName() + `"
-					resource_type = "azurerm_resource_group"
-					random_length = 5
-					clean_input   = true
-				}
-
 				resource "azurerm_resource_group" "rg_example" {
-					name     = azurecaf_name.rg_example_name.result
+					name     = "power-platform-billing-` + mocks.TestName() + `"
 					location = "westeurope"
 				}
 
