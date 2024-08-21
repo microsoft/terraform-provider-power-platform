@@ -22,7 +22,7 @@ func TestAccSecurityDataSource_Validate_Read(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: provider.TestsAcceptanceProviderConfig + `
-				r	resource "powerplatform_environment" "env" {
+				resource "powerplatform_environment" "env" {
 					display_name      = "` + mocks.TestName() + `"
 					location          = "europe"
 					environment_type  = "Sandbox"
