@@ -169,7 +169,7 @@ jobs:
         export ARM_CLIENT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}'
         export ARM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
         go clean -testcache
-        go test -failfast -v ./internal/powerplatform/services/application -run "^TestUnit" -coverprofile=acc-test-coverage.out -timeout 300m
+        go test -failfast -v ./internal/powerplatform/services/application -run "^TestAcc" -coverprofile=acc-test-coverage.out -timeout 300m
         go tool cover -html=acc-test-coverage.out -o acc-test-coverage.cov.html
 
     - name: Upload Coverage Artifacts
