@@ -32,12 +32,19 @@ func TestAccSecurityDataSource_Validate_Read(t *testing.T) {
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
 				}
+				
+				resource "null_resource" "wait_30_seconds" {
+					provisioner "local-exec" {
+						command = "sleep 60"
+					}
+					depends_on = [powerplatform_environment.env]
+				}
 
 				data "powerplatform_security_roles" "all" {
 					environment_id = powerplatform_environment.env.id
 
 					depends_on = [
-						powerplatform_environment.env
+						null_resource.wait_30_seconds
 					]
 				}`,
 
