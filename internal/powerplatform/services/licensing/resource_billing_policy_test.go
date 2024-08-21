@@ -37,7 +37,7 @@ func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "` + strings.ReplaceAll(mocks.TestName(), "_", "") + `"
-					location = "europe"
+					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
 						resource_group  = azurerm_resource_group.rg_example.name
@@ -48,7 +48,7 @@ func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_billing_policy.pay_as_you_go", "id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", strings.ReplaceAll(mocks.TestName(), "_", "")),
-					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "location", "europe"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "location", "unitedstates"),
 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "status", "Enabled"),
 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "billing_instrument.resource_group", "power-platform-billing-"+mocks.TestName()),
 					resource.TestMatchResourceAttr("powerplatform_billing_policy.pay_as_you_go", "billing_instrument.subscription_id", regexp.MustCompile(helpers.GuidRegex)),
@@ -121,7 +121,7 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 // 				Config: provider.TestsAcceptanceProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 // 					name     = "` + mocks.TestName() + `"
-// 					location = "europe"
+// 					location = "unitedstates"
 // 					status   = "Enabled"
 // 					billing_instrument = {
 // 						resource_group  = "resource_group_name"
@@ -136,7 +136,7 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 // 				Config: provider.TestsAcceptanceProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 // 					name     = "` + mocks.TestName() + `1"
-// 					location = "europe"
+// 					location = "unitedstates"
 // 					status   = "Enabled"
 // 					billing_instrument = {
 // 						resource_group  = "resource_group_name"
@@ -153,7 +153,7 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 // 				Config: provider.TestsAcceptanceProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 // 					name     = "` + mocks.TestName() + `1"
-// 					location = "europe"
+// 					location = "unitedstates"
 // 					status   = "Disabled"
 // 					billing_instrument = {
 // 						resource_group  = "resource_group_name"

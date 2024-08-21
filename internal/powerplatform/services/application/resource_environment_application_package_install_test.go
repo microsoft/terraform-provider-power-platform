@@ -25,7 +25,7 @@ func TestAccEnvironmentApplicationPackageInstallResource_Validate_Install(t *tes
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"
-					location                                  = "europe"
+					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					dataverse = {
 						language_code                             = "1033"

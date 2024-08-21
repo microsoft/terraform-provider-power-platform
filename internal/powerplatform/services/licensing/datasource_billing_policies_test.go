@@ -24,7 +24,7 @@ import (
 // 				Config: provider.TestsAcceptanceProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 // 					name     = "payAsYouGoBillingPolicyExample"
-// 					location = "europe"
+// 					location = "unitedstates"
 // 					status   = "Enabled"
 // 					billing_instrument = {
 // 						resource_group  = "terraform-state"

@@ -25,7 +25,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "example_environment_settings" {
 					display_name      = "` + mocks.TestName() + `"
-					location          = "europe" 
+					location          = "unitedstates" 
 					environment_type  = "Sandbox"
 					dataverse = {
 						language_code     = "1033"
@@ -91,7 +91,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T) 
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "example_environment_settings" {
 					display_name      = "` + mocks.TestName() + `"
-					location          = "europe" 
+					location          = "unitedstates" 
 					environment_type  = "Sandbox"
 				}
 				  

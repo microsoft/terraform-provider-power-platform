@@ -50,7 +50,7 @@ import (
 
 // 				resource "powerplatform_environment" "dataverse_user_example" {
 // 					display_name      = "` + mocks.TestName() + `"
-// 					location          = "europe"
+// 					location          = "unitedstates"
 // 					environment_type  = "Sandbox"
 // 					dataverse = {
 // 						language_code     = "1033"

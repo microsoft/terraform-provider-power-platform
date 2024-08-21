@@ -21,7 +21,7 @@ func BootstrapDataRecordTest(name string) string {
 	return `
 resource "powerplatform_environment" "data_env" {
 	display_name     = "` + name + `"
-	location         = "europe"
+	location         = "unitedstates"
 	environment_type = "Sandbox"
 	dataverse = {
 	  language_code     = "1033"

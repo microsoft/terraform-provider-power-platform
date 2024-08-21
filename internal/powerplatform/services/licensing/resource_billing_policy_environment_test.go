@@ -37,7 +37,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "` + strings.ReplaceAll(mocks.TestName(), "_", "") + `"
-					location = "europe"
+					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
 						resource_group  = azurerm_resource_group.rg_example.name
@@ -47,15 +47,13 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 
 				resource "powerplatform_environment" "env1" {
 					display_name     = "billing_policy_example_environment_1_` + mocks.TestName() + `"	
-					location         = "europe"
-					azure_region     = "northeurope"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 				}
 
 				resource "powerplatform_environment" "env2" {
 					display_name     = "billing_policy_example_environment_2_` + mocks.TestName() + `"
-					location         = "europe"
-					azure_region     = "northeurope"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 				}
 

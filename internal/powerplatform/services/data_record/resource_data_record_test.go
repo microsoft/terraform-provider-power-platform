@@ -28,7 +28,7 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 					  language_code     = "1033"
@@ -289,7 +289,7 @@ func TestAccDataRecordResource_Validate_Update(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 					  language_code     = "1033"
@@ -335,7 +335,7 @@ func TestAccDataRecordResource_Validate_Update(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 					  language_code     = "1033"
@@ -509,7 +509,7 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 					  language_code     = "1033"
@@ -571,7 +571,7 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 					  language_code     = "1033"
@@ -776,7 +776,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 					  language_code     = "1033"
@@ -861,7 +861,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 					  language_code     = "1033"
@@ -943,7 +943,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 					  language_code     = "1033"

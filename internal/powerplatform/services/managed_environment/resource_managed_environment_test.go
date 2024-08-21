@@ -25,7 +25,7 @@ func TestAccManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 						language_code    = "1033"
@@ -73,7 +73,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 						language_code    = "1033"
@@ -102,7 +102,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 						language_code    = "1033"
@@ -132,7 +132,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 						language_code    = "1033"
@@ -162,7 +162,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 						language_code    = "1033"
@@ -192,7 +192,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 						language_code    = "1033"
@@ -222,7 +222,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 						language_code    = "1033"
@@ -252,7 +252,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 						language_code    = "1033"
@@ -282,7 +282,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 						language_code    = "1033"
@@ -312,7 +312,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 					dataverse = {
 						language_code    = "1033"
@@ -586,7 +586,7 @@ func TestAccManagedEnvironmentsResource_Validate_No_Dataverse(t *testing.T) {
 				Config: provider.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 				}
 				

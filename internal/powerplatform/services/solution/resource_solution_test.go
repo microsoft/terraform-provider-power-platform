@@ -44,7 +44,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"
-					location                                  = "europe"
+					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					dataverse = {
 						language_code                             = "1033"
@@ -203,7 +203,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"
-					location                                  = "europe"
+					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					dataverse = {
 						language_code                         = "1033"
@@ -458,7 +458,7 @@ func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"
-					location                                  = "europe"
+					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 				}
 
