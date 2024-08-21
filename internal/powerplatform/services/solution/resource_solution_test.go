@@ -212,11 +212,21 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 					}
 				}
 
+				
+				resource "null_resource" "wait_60_seconds" {
+					provisioner "local-exec" {
+						command = "sleep 60"
+					}
+					depends_on = [powerplatform_environment.environment]
+				}
+
 				resource "powerplatform_solution" "solution" {
 					environment_id = powerplatform_environment.environment.id
 					solution_name    = "TerraformTestSolution"
 					solution_file    = "` + solutionFileName + `"
 					settings_file 	 = "` + solutionSettingsFileName + `"
+
+					depends_on = [null_resource.wait_60_seconds]
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

@@ -66,11 +66,20 @@ func TestAccDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
 					}
 				}
 
+				resource "null_resource" "wait_60_seconds" {
+					provisioner "local-exec" {
+						command = "sleep 60"
+					}
+					depends_on = [powerplatform_environment.env]
+				}
+
 				data "powerplatform_rest_query" "webapi_query" {
 					scope                = "${powerplatform_environment.env.dataverse.url}/.default"
 					url                  = "${powerplatform_environment.env.dataverse.url}api/data/v9.2/WhoAmI"
 					method               = "GET"
 					expected_http_status = [200]
+
+					depends_on = [null_resource.wait_60_seconds]
 				}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(

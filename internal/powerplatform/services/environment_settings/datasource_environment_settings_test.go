@@ -33,9 +33,18 @@ func TestAccTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
 				}
+
+				resource "null_resource" "wait_60_seconds" {
+					provisioner "local-exec" {
+						command = "sleep 60"
+					}
+					depends_on = [powerplatform_environment.example_environment_settings]
+				}
 				  
 				data "powerplatform_environment_settings" "settings" {
 					environment_id = powerplatform_environment.example_environment_settings.id
+
+					depends_on = [ null_resource.wait_60_seconds ]
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
