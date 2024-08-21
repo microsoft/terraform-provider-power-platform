@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -16,27 +17,63 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
-// We can't test the create method as it requires a valid subscription id and resource group id
-// func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
-// 	resource.Test(t, resource.TestCase{
-// 		PreCheck:                 func() { TestAccPreCheck(t) },
-// 		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: provider.TestsAcceptanceProviderConfig + `
-// 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
-// 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
-// 					environments      = ["00000000-0000-0000-0000-000000000001"]
-// 				}`,
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					resource.TestMatchResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "billing_policy_id", regexp.MustCompile(helpers.GuidRegex)),
-// 					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.#", "1"),
-// 					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.0", "00000000-0000-0000-0000-000000000001"),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
+func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: provider.TestsAcceptanceProviderConfig + `
+				provider "azurerm" {
+					features {}
+				}
+
+				data "azurerm_client_config" "current" {
+				}
+
+				resource "azurerm_resource_group" "rg_example" {
+					name     = "power-platform-billing-` + mocks.TestName() + `"
+					location = "westeurope"
+				}
+
+				resource "powerplatform_billing_policy" "pay_as_you_go" {
+					name     = "` + strings.ReplaceAll(mocks.TestName(), "_", "") + `"
+					location = "europe"
+					status   = "Enabled"
+					billing_instrument = {
+						resource_group  = azurerm_resource_group.rg_example.name
+						subscription_id = data.azurerm_client_config.current.subscription_id
+					}
+				}
+
+				resource "powerplatform_environment" "env1" {
+					display_name     = "billing_policy_example_environment_1_` + mocks.TestName() + `"	
+					location         = "europe"
+					azure_region     = "northeurope"
+					environment_type = "Sandbox"
+				}
+
+				resource "powerplatform_environment" "env2" {
+					display_name     = "billing_policy_example_environment_2_` + mocks.TestName() + `"
+					location         = "europe"
+					azure_region     = "northeurope"
+					environment_type = "Sandbox"
+				}
+
+				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
+					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
+					environments      = [powerplatform_environment.env1.id, powerplatform_environment.env2.id]
+				}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "billing_policy_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.#", "2"),
+					resource.TestMatchResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.0", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.1", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+		},
+	})
+}
 
 func TestUnitBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 	httpmock.Activate()
