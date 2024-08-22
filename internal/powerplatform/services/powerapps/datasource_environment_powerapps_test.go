@@ -26,8 +26,15 @@ func TestAccEnvironmentPowerAppsDataSource_Basic(t *testing.T) {
 					environment_type = "Sandbox"
 				}
 
-				data "powerplatform_environment_powerapps" "all" {
+				resource "null_resource" "wait_60_seconds" {
+					provisioner "local-exec" {
+						command = "sleep 60"
+					}
 					depends_on = [powerplatform_environment.env]
+				}
+
+				data "powerplatform_environment_powerapps" "all" {
+					depends_on = [null_resource.wait_60_seconds]
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

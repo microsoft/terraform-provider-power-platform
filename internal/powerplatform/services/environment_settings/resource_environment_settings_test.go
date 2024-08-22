@@ -94,6 +94,13 @@ func TestAccTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T) 
 					location          = "unitedstates" 
 					environment_type  = "Sandbox"
 				}
+
+				resource "null_resource" "wait_60_seconds" {
+					provisioner "local-exec" {
+						command = "sleep 60"
+					}
+					depends_on = [powerplatform_environment.example_environment_settings]
+				}
 				  
 				resource "powerplatform_environment_settings" "settings" {
 					environment_id                         = powerplatform_environment.example_environment_settings.id
@@ -118,6 +125,8 @@ func TestAccTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T) 
 						  power_apps_component_framework_for_canvas_apps = true
 						}
 					  }
+
+					depends_on = [null_resource.wait_60_seconds]
 				  }`,
 				ExpectError: regexp.MustCompile("No Dataverse exists in environment"),
 				Check:       resource.ComposeAggregateTestCheckFunc(),

@@ -30,6 +30,13 @@ func TestAccConnectionsDataSource_Validate_Read(t *testing.T) {
 					}
 				}
 
+				resource "null_resource" "wait_60_seconds" {
+					provisioner "local-exec" {
+						command = "sleep 60"
+					}
+					depends_on = [powerplatform_environment.env]
+				}
+
 				resource "powerplatform_connection" "azure_openai_connection" {
 					environment_id = powerplatform_environment.env.id
 					name           = "shared_azureopenai"
@@ -46,6 +53,8 @@ func TestAccConnectionsDataSource_Validate_Read(t *testing.T) {
 						connection_parameters
 						]
 					}
+
+					depends_on = [ null_resource.wait_60_seconds ]
 				}
 
 				data "powerplatform_connections" "all_connections" {

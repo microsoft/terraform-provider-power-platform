@@ -309,6 +309,13 @@ func TestAccDataRecordResource_Validate_Update(t *testing.T) {
 					}
 				}
 
+				resource "null_resource" "wait_60_seconds" {
+					provisioner "local-exec" {
+						command = "sleep 60"
+					}
+					depends_on = [powerplatform_environment.test_env]
+				}
+
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = powerplatform_environment.test_env.id
 					table_logical_name = "contact"
@@ -322,6 +329,8 @@ func TestAccDataRecordResource_Validate_Update(t *testing.T) {
 					  birthdate          = "2024-04-10"
 					  description        = "This is the description of the the terraform \n\nsample contact"
 					}
+
+					depends_on = [null_resource.wait_60_seconds]
 				}`,
 
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -529,6 +538,13 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 					}
 				}
 
+				resource "null_resource" "wait_60_seconds" {
+					provisioner "local-exec" {
+						command = "sleep 60"
+					}
+					depends_on = [powerplatform_environment.test_env]
+				}
+
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = powerplatform_environment.test_env.id
 					table_logical_name = "contact"
@@ -537,6 +553,8 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 					  lastname           = "Doe"
 					  emailaddress1      = "johndoe@contoso.com"
 					}
+
+					depends_on = [null_resource.wait_60_seconds]
 				}
 
 				resource "powerplatform_data_record" "data_record_account" {

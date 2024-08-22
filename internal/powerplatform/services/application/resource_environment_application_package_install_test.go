@@ -34,10 +34,19 @@ func TestAccEnvironmentApplicationPackageInstallResource_Validate_Install(t *tes
 					}
 				}
 
+				resource "null_resource" "wait_60_seconds" {
+					provisioner "local-exec" {
+						command = "sleep 60"
+					}
+					depends_on = [powerplatform_environment.environment]
+				}
+
 				data "powerplatform_environment_application_packages" "application_to_install" {
 					environment_id = powerplatform_environment.environment.id
 					name           = "Power Platform Pipelines"
 					publisher_name = "Microsoft Dynamics 365"
+
+					depends_on = [null_resource.wait_60_seconds]
 				}
 
 				resource "powerplatform_environment_application_package_install" "development" {
