@@ -16,7 +16,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
-// We can't test this until we don't have tenant with billing policies
 func TestAccBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
@@ -46,9 +45,8 @@ func TestAccBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					}
 				}
 
-				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
+				data "powerplatform_billing_policies_environments" "all_pay_as_you_go_policy_envs" {
 					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
-					environments = []
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
