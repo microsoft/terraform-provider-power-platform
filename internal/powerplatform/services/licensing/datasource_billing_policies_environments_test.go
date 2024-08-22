@@ -48,6 +48,7 @@ func TestAccBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.T) {
 
 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
 					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
+					environments = []
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
