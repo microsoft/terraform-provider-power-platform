@@ -197,7 +197,7 @@ func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_billing_policy.pay_as_you_go", "id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", mocks.TestName()+"1"),
+					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", strings.ReplaceAll(mocks.TestName(), "_", "")+"1"),
 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "status", "Disabled"),
 				),
 			},
