@@ -114,7 +114,6 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 	})
 }
 
-// We can't test the create method as it requires a valid subscription id and resource group id
 func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,

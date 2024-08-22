@@ -6,49 +6,61 @@ package licensing_test
 import (
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
-// We can't test the create method as it requires a valid subscription id and resource group id
-// func TestAccBillingPoliciesDataSource_Validate_Read(t *testing.T) {
+func TestAccBillingPoliciesDataSource_Validate_Read(t *testing.T) {
 
-// 	resource.Test(t, resource.TestCase{
-// 		PreCheck:                 func() { TestAccPreCheck(t) },
-// 		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: provider.TestsAcceptanceProviderConfig + `
-// 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-// 					name     = "payAsYouGoBillingPolicyExample"
-// 					location = "unitedstates"
-// 					status   = "Enabled"
-// 					billing_instrument = {
-// 						resource_group  = "terraform-state"
-// 						subscription_id = "2bc1f261-7e26-490c-9fd5-b7ca72032ad3"
-// 					}
-// 				}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: provider.TestsAcceptanceProviderConfig + `
+				provider "azurerm" {
+					features {}
+				}
 
-// 				data "powerplatform_billing_policies" "all" {
-// 					depends_on = [powerplatform_billing_policy.pay_as_you_go]
-// 				}`,
+				data "azurerm_client_config" "current" {
+				}
 
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
-// 					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.id", regexp.MustCompile(helpers.GuidRegex)),
-// 					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.name", regexp.MustCompile(helpers.StringRegex)),
-// 					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.location", regexp.MustCompile(helpers.StringRegex)),
-// 					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.status", regexp.MustCompile(`^(Enabled|Disabled|DisabledByLinkedResource)$`)),
-// 					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.billing_instrument.resource_group", regexp.MustCompile(helpers.StringRegex)),
-// 					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.billing_instrument.subscription_id", regexp.MustCompile(helpers.GuidRegex)),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
+				resource "azurerm_resource_group" "rg_example" {
+					name     = "power-platform-billing-` + mocks.TestName() + `"
+					location = "westeurope"
+				}
+
+				resource "powerplatform_billing_policy" "pay_as_you_go" {
+					name     = "` + strings.ReplaceAll(mocks.TestName(), "_", "") + `"
+					location = "unitedstates"
+					status   = "Enabled"
+					billing_instrument = {
+						resource_group  = azurerm_resource_group.rg_example.name
+						subscription_id = data.azurerm_client_config.current.subscription_id
+					}
+				}
+
+				data "powerplatform_billing_policies" "all" {
+					depends_on = [powerplatform_billing_policy.pay_as_you_go]
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
+					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.name", regexp.MustCompile(helpers.StringRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.location", regexp.MustCompile(helpers.StringRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.status", regexp.MustCompile(`^(Enabled|Disabled|DisabledByLinkedResource)$`)),
+					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.billing_instrument.resource_group", regexp.MustCompile(helpers.StringRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.billing_instrument.subscription_id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+		},
+	})
+}
 
 func TestUnitTestBillingPoliciesDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()
