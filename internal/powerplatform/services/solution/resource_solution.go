@@ -275,7 +275,6 @@ func (r *SolutionResource) importSolution(ctx context.Context, plan *SolutionRes
 	tflog.Debug(ctx, fmt.Sprintf("Current working directory: %s", cwd))
 
 	settingsContent := make([]byte, 0)
-	//todo check if settings file is not empty in .tf
 	if plan.SettingsFile.ValueString() != "" {
 		settingsContent, err = os.ReadFile(plan.SettingsFile.ValueString())
 		if err != nil {
