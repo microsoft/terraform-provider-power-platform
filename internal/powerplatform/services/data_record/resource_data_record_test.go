@@ -37,6 +37,13 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 					}
 				}
 
+				resource "null_resource" "wait_60_seconds" {
+					provisioner "local-exec" {
+						command = "sleep 60"
+					}
+					depends_on = [powerplatform_environment.test_env]
+				}
+
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = powerplatform_environment.test_env.id
 					table_logical_name = "contact"
@@ -50,6 +57,8 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 					  birthdate          = "2024-04-10"
 					  description        = "This is the description of the the terraform \n\nsample contact"
 					}
+
+					depends_on = [null_resource.wait_60_seconds]
 				}
 
 				resource "powerplatform_data_record" "data_record_account" {
@@ -75,6 +84,8 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 								}
 							]
 						}
+
+						depends_on = [null_resource.wait_60_seconds]
 					}
 				`,
 
