@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
@@ -104,156 +105,175 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 	})
 }
 
-// func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
-// 	t.Setenv("TF_ACC", "1")
+func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
+	t.Setenv("TF_ACC", "1")
 
-// 	resource.Test(t, resource.TestCase{
-// 		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: provider.TestsAcceptanceProviderConfig + `
-// 				data "powerplatform_connectors" "all_connectors" {}
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: provider.TestsAcceptanceProviderConfig + `
+				data "powerplatform_connectors" "all_connectors" {}
 
-// 				locals {
-// 					business_connectors = toset([
-// 					  {
-// 						action_rules = [
-// 						  {
-// 							action_id = "DeleteItem_V2"
-// 							behavior  = "Block"
-// 						  },
-// 						  {
-// 							action_id = "ExecutePassThroughNativeQuery_V2"
-// 							behavior  = "Block"
-// 						  },
-// 						]
-// 						default_action_rule_behavior = "Allow"
-// 						endpoint_rules = [
-// 						  {
-// 							behavior = "Allow"
-// 							endpoint = "contoso.com"
-// 							order    = 1
-// 						  },
-// 						  {
-// 							behavior = "Deny"
-// 							endpoint = "*"
-// 							order    = 2
-// 						  },
-// 						]
-// 						id = "/providers/Microsoft.PowerApps/apis/shared_sql"
-// 					  },
-// 					  {
-// 						action_rules                 = []
-// 						default_action_rule_behavior = ""
-// 						endpoint_rules               = []
-// 						id                           = "/providers/Microsoft.PowerApps/apis/shared_approvals"
-// 					  },
-// 					  {
-// 						action_rules                 = []
-// 						default_action_rule_behavior = ""
-// 						endpoint_rules               = []
-// 						id                           = "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"
-// 					  }
-// 					])
+				locals {
+					business_connectors = toset([
+					  {
+						action_rules = [
+						  {
+							action_id = "DeleteItem_V2"
+							behavior  = "Block"
+						  },
+						  {
+							action_id = "ExecutePassThroughNativeQuery_V2"
+							behavior  = "Block"
+						  },
+						]
+						default_action_rule_behavior = "Allow"
+						endpoint_rules = [
+						  {
+							behavior = "Allow"
+							endpoint = "contoso.com"
+							order    = 1
+						  },
+						  {
+							behavior = "Deny"
+							endpoint = "*"
+							order    = 2
+						  },
+						]
+						id = "/providers/Microsoft.PowerApps/apis/shared_sql"
+					  },
+					  {
+						action_rules                 = []
+						default_action_rule_behavior = ""
+						endpoint_rules               = []
+						id                           = "/providers/Microsoft.PowerApps/apis/shared_approvals"
+					  },
+					  {
+						action_rules                 = []
+						default_action_rule_behavior = ""
+						endpoint_rules               = []
+						id                           = "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"
+					  }
+					])
+				  
+					non_business_connectors = toset([for conn
+					  in data.powerplatform_connectors.all_connectors.connectors :
+					  {
+						id                           = conn.id
+						name                         = conn.name
+						default_action_rule_behavior = ""
+						action_rules                 = [],
+						endpoint_rules               = []
+					  }
+					  if conn.unblockable == true && !contains([for bus_conn in local.business_connectors : bus_conn.id], conn.id)
+					])
+				  
+					blocked_connectors = toset([for conn
+					  in data.powerplatform_connectors.all_connectors.connectors :
+					  {
+						id                           = conn.id
+						default_action_rule_behavior = ""
+						action_rules                 = [],
+						endpoint_rules               = []
+					  }
+					if conn.unblockable == false && !contains([for bus_conn in local.business_connectors : bus_conn.id], conn.id)])
+				  }
 
-// 					non_business_connectors = toset([for conn
-// 					  in data.powerplatform_connectors.all_connectors.connectors :
-// 					  {
-// 						id                           = conn.id
-// 						name                         = conn.name
-// 						default_action_rule_behavior = ""
-// 						action_rules                 = [],
-// 						endpoint_rules               = []
-// 					  }
-// 					  if conn.unblockable == true && !contains([for bus_conn in local.business_connectors : bus_conn.id], conn.id)
-// 					])
+				  resource "powerplatform_data_loss_prevention_policy" "my_policy" {
+					display_name                      = "` + mocks.TestName() + `"
+					default_connectors_classification = "Blocked"
+					environment_type                  = "AllEnvironments"
+					environments                      = []
+				  
+					business_connectors     = local.business_connectors
+					non_business_connectors = local.non_business_connectors
+					blocked_connectors      = local.blocked_connectors
+				  
+					custom_connectors_patterns = toset([
+					  {
+						order            = 1
+						host_url_pattern = "https://*.contoso.com"
+						data_group       = "Blocked"
+					  },
+					  {
+						order            = 2
+						host_url_pattern = "*"
+						data_group       = "Ignore"
+					  }
+					])
+				  }
+				
+				  data "powerplatform_data_loss_prevention_policies" "all" {
+				  	depends_on = [data.powerplatform_data_loss_prevention_policies.all]
+				  }
+				  `,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "3"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.default_connectors_classification", "Blocked"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.display_name", mocks.TestName()),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environment_type", "AllEnvironments"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environments.#", "0"),
 
-// 					blocked_connectors = toset([for conn
-// 					  in data.powerplatform_connectors.all_connectors.connectors :
-// 					  {
-// 						id                           = conn.id
-// 						default_action_rule_behavior = ""
-// 						action_rules                 = [],
-// 						endpoint_rules               = []
-// 					  }
-// 					if conn.unblockable == false && !contains([for bus_conn in local.business_connectors : bus_conn.id], conn.id)])
-// 				  }
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.#", "2"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.0.data_group", "Blocked"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.0.host_url_pattern", "https://*.contoso.com"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.0.order", "1"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.data_group", "Ignore"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.host_url_pattern", "*"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.order", "2"),
 
-// 				  resource "powerplatform_data_loss_prevention_policy" "my_policy" {
-// 					display_name                      = "` + mocks.TestName() + `"
-// 					default_connectors_classification = "Blocked"
-// 					environment_type                  = "AllEnvironments"
-// 					environments                      = []
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environments.#", "0"),
 
-// 					business_connectors     = local.business_connectors
-// 					non_business_connectors = local.non_business_connectors
-// 					blocked_connectors      = local.blocked_connectors
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "3"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.1.id", "/providers/Microsoft.PowerApps/apis/shared_approvals"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.2.id", "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.default_action_rule_behavior", "Allow"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.action_rules.#", "2"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.action_rules.0.action_id", "DeleteItem_V2"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.action_rules.0.behavior", "Block"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.action_rules.1.action_id", "ExecutePassThroughNativeQuery_V2"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.action_rules.1.behavior", "Block"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.#", "2"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.0.order", "1"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.0.behavior", "Allow"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.0.endpoint", "contoso.com"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.1.order", "2"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.1.behavior", "Deny"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.1.endpoint", "*"),
 
-// 					custom_connectors_patterns = toset([
-// 					  {
-// 						order            = 1
-// 						host_url_pattern = "https://*.contoso.com"
-// 						data_group       = "Blocked"
-// 					  },
-// 					  {
-// 						order            = 2
-// 						host_url_pattern = "*"
-// 						data_group       = "Ignore"
-// 					  }
-// 					])
-// 				  }
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.blocked_connectors.#", "0"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.non_business_connectors.#", "4"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.#", "2"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.1.id", "/providers/Microsoft.PowerApps/apis/shared_office365users"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.1.default_action_rule_behavior", ""),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.1.action_rules.#", "0"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.1.endpoint_rules.#", "0"),
 
-// 				  data "powerplatform_data_loss_prevention_policies" "all" {
-// 				  	depends_on = [powerplatform_data_loss_prevention_policy.my_policy]
-// 				  }
-// 				  `,
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "3"),
-// 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.non_business_connectors.#", "0"),
-// 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.default_connectors_classification", "Blocked"),
-// 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.display_name", mocks.TestName()),
-// 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environment_type", "AllEnvironments"),
-// 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environments.#", "0"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_azureblob"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.default_action_rule_behavior", "Block"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.action_rules.#", "13"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.action_rules.0.action_id", "CreateFile_V2"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.action_rules.0.behavior", "Allow"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.endpoint_rules.#", "1"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.endpoint_rules.0.behavior", "Deny"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.endpoint_rules.0.endpoint", "*"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.endpoint_rules.0.order", "1"),
 
-// 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.#", "2"),
-// 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.0.data_group", "Blocked"),
-// 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.0.host_url_pattern", "https://*.contoso.com"),
-// 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.0.order", "1"),
-// 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.data_group", "Ignore"),
-// 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.host_url_pattern", "*"),
-// 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.order", "2"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.created_by", "admin"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.created_time", "2023-10-02T07:38:56.6864176Z"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.default_connectors_classification", "General"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.id", "00000000-0000-0000-0000-000000000002"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.display_name", "a2"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.last_modified_by", "admin"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.last_modified_time", "2023-10-02T07:56:43.9700369Z"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environment_type", "ExceptEnvironments"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environments.#", "1"),
+					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environments.0", "be0eb809-e58a-ec1b-8fce-ea40b0e53442"),
 
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.blocked_connectors.#", "0"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.non_business_connectors.#", "4"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.#", "2"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.1.id", "/providers/Microsoft.PowerApps/apis/shared_office365users"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.1.default_action_rule_behavior", ""),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.1.action_rules.#", "0"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.1.endpoint_rules.#", "0"),
-
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_azureblob"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.default_action_rule_behavior", "Block"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.action_rules.#", "13"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.action_rules.0.action_id", "CreateFile_V2"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.action_rules.0.behavior", "Allow"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.endpoint_rules.#", "1"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.endpoint_rules.0.behavior", "Deny"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.endpoint_rules.0.endpoint", "*"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.endpoint_rules.0.order", "1"),
-
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.created_by", "admin"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.created_time", "2023-10-02T07:38:56.6864176Z"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.default_connectors_classification", "General"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.id", "00000000-0000-0000-0000-000000000002"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.display_name", "a2"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.last_modified_by", "admin"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.last_modified_time", "2023-10-02T07:56:43.9700369Z"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environment_type", "ExceptEnvironments"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environments.#", "1"),
-// 					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environments.0", "be0eb809-e58a-ec1b-8fce-ea40b0e53442"),
-
-// 				),
-// 			},
-// 		},
-// 	})
-// }
+				),
+			},
+		},
+	})
+}
