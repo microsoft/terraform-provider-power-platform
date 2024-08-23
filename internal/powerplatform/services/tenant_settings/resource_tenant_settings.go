@@ -5,21 +5,24 @@ package powerplatform
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 )
 
 var _ resource.Resource = &TenantSettingsResource{}
@@ -48,280 +51,288 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 		MarkdownDescription: "Manages Power Platform Tenant Settings. Power Platform Tenant Settings are configuration options that apply to the entire tenant. They control various aspects of Power Platform features and behaviors, such as security, data protection, licensing, and more. These settings apply to all environments within your tenant. See [Tenant Settings Overview](https://learn.microsoft.com/power-platform/admin/tenant-settings) for more details.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
-				Description:         "Id of the read operation",
-				MarkdownDescription: "Id of the read operation",
-				Computed:            true,
+				Description:         "Tenant ID",
+				MarkdownDescription: "Id of the Power Platform Tenant",
+				Computed:            true, Required: false, Optional: false,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"walk_me_opt_out": schema.BoolAttribute{
 				Description: "Walk Me Opt Out",
-				Optional:    true, Computed: true,
+				Optional:    true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
+					// boolplanmodifier.UseStateForUnknown(),
+					modifiers.RestoreOriginalBoolModifier(),
 				},
 			},
 			"disable_nps_comments_reachout": schema.BoolAttribute{
-				Description: "Disable NPS Comments Reachout",
-				Optional:    true, Computed: true,
+				Description:   "Disable NPS Comments Reachout",
+				Optional:      true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
+					// boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"disable_newsletter_sendout": schema.BoolAttribute{
-				Description: "Disable Newsletter Sendout",
-				Optional:    true, Computed: true,
+				Description:   "Disable Newsletter Sendout",
+				Optional:      true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
+					// boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"disable_environment_creation_by_non_admin_users": schema.BoolAttribute{
 				Description:         "Disable Environment Creation By Non Admin Users",
 				MarkdownDescription: "Disable Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.",
-				Optional:            true, Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
+				Optional:            true,
+				PlanModifiers:       []planmodifier.Bool{
+					// boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"disable_portals_creation_by_non_admin_users": schema.BoolAttribute{
-				Description: "Disable Portals Creation By Non Admin Users",
-				Optional:    true, Computed: true,
+				Description:   "Disable Portals Creation By Non Admin Users",
+				Optional:      true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
+					// boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"disable_survey_feedback": schema.BoolAttribute{
-				Description: "Disable Survey Feedback",
-				Optional:    true, Computed: true,
+				Description:   "Disable Survey Feedback",
+				Optional:      true,
 				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
+					// boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"disable_trial_environment_creation_by_non_admin_users": schema.BoolAttribute{
 				Description:         "Disable Trial Environment Creation By Non Admin Users",
 				MarkdownDescription: "Disable Trial Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.",
-				Optional:            true, Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
+				Optional:            true,
+				PlanModifiers:       []planmodifier.Bool{
+					// boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"disable_capacity_allocation_by_environment_admins": schema.BoolAttribute{
 				Description:         "Disable Capacity Allocation By Environment Admins",
 				MarkdownDescription: "Disable Capacity Allocation By Environment Admins. See [Add-on capacity management](https://learn.microsoft.com/power-platform/admin/capacity-add-on#control-who-can-allocate-add-on-capacity) for more details.",
-				Optional:            true, Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
+				Optional:            true,
+				PlanModifiers:       []planmodifier.Bool{
+					// boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"disable_support_tickets_visible_by_all_users": schema.BoolAttribute{
 				Description: "Disable Support Tickets Visible By All Users",
-				Optional:    true, Computed: true,
+				Optional:    true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"power_platform": schema.SingleNestedAttribute{
-				Description: "Power Platform",
-				Optional:    true, Computed: true,
+				Description:   "Power Platform",
+				Optional:      true,
 				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.UseStateForUnknown(),
+					// objectplanmodifier.UseStateForUnknown(),
 				},
 				Attributes: map[string]schema.Attribute{
 					"search": schema.SingleNestedAttribute{
-						Description: "Search",
-						Optional:    true, Computed: true,
+						Description:   "Search",
+						Optional:      true,
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.UseStateForUnknown(),
+							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
 							"disable_docs_search": schema.BoolAttribute{
-								Description: "Disable Docs Search",
-								Optional:    true, Computed: true,
+								Description:   "Disable Docs Search",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"disable_community_search": schema.BoolAttribute{
-								Description: "Disable Community Search",
-								Optional:    true, Computed: true,
+								Description:   "Disable Community Search",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"disable_bing_video_search": schema.BoolAttribute{
-								Description: "Disable Bing Video Search",
-								Optional:    true, Computed: true,
+								Description:   "Disable Bing Video Search",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 						},
 					},
 					"teams_integration": schema.SingleNestedAttribute{
-						Description: "Teams Integration",
-						Optional:    true, Computed: true,
+						Description:   "Teams Integration",
+						Optional:      true,
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.UseStateForUnknown(),
+							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
 							"share_with_colleagues_user_limit": schema.Int64Attribute{
-								Description: "Share With Colleagues User Limit",
-								Optional:    true, Computed: true,
+								Description:   "Share With Colleagues User Limit",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Int64{
-									int64planmodifier.UseStateForUnknown(),
+									// int64planmodifier.UseStateForUnknown(),
 								},
 							},
 						},
 					},
 					"power_apps": schema.SingleNestedAttribute{
-						Description: "Power Apps",
-						Optional:    true, Computed: true,
+						Description:   "Power Apps",
+						Optional:      true,
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.UseStateForUnknown(),
+							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
 							"disable_share_with_everyone": schema.BoolAttribute{
-								Description: "Disable Share With Everyone",
-								Optional:    true, Computed: true,
+								Description:   "Disable Share With Everyone",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"enable_guests_to_make": schema.BoolAttribute{
-								Description: "Enable Guests To Make",
-								Optional:    true, Computed: true,
+								Description:   "Enable Guests To Make",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"disable_maker_match": schema.BoolAttribute{
-								Description: "Disable Maker Match",
-								Optional:    true, Computed: true,
+								Description:   "Disable Maker Match",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"disable_unused_license_assignment": schema.BoolAttribute{
-								Description: "Disable Unused License Assignment",
-								Optional:    true, Computed: true,
+								Description:   "Disable Unused License Assignment",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"disable_create_from_image": schema.BoolAttribute{
-								Description: "Disable Create From Image",
-								Optional:    true, Computed: true,
+								Description:   "Disable Create From Image",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"disable_create_from_figma": schema.BoolAttribute{
-								Description: "Disable Create From Figma",
-								Optional:    true, Computed: true,
+								Description:   "Disable Create From Figma",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"disable_connection_sharing_with_everyone": schema.BoolAttribute{
-								Description: "Disable Connection Sharing With Everyone",
-								Optional:    true, Computed: true,
+								Description:   "Disable Connection Sharing With Everyone",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 						},
 					},
 					"power_automate": schema.SingleNestedAttribute{
-						Description: "Power Automate",
-						Optional:    true, Computed: true,
+						Description:   "Power Automate",
+						Optional:      true,
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.UseStateForUnknown(),
+							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
 							"disable_copilot": schema.BoolAttribute{
-								Description: "Disable Copilot",
-								Optional:    true, Computed: true,
+								Description:   "Disable Copilot",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 						},
 					},
 					"environments": schema.SingleNestedAttribute{
-						Description: "Environments",
-						Optional:    true, Computed: true,
+						Description:   "Environments",
+						Optional:      true,
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.UseStateForUnknown(),
+							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
 							"disable_preferred_data_location_for_teams_environment": schema.BoolAttribute{
-								Description: "Disable Preferred Data Location For Teams Environment",
-								Optional:    true, Computed: true,
+								Description:   "Disable Preferred Data Location For Teams Environment",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 						},
 					},
 					"governance": schema.SingleNestedAttribute{
-						Description: "Governance",
-						Optional:    true, Computed: true,
+						Description:   "Governance",
+						Optional:      true,
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.UseStateForUnknown(),
+							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
 							"disable_admin_digest": schema.BoolAttribute{
-								Description: "Disable Admin Digest",
-								Optional:    true, Computed: true,
+								Description:   "Disable Admin Digest",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"disable_developer_environment_creation_by_non_admin_users": schema.BoolAttribute{
-								Description: "Disable Developer Environment Creation By Non Admin Users",
-								Optional:    true, Computed: true,
+								Description:   "Disable Developer Environment Creation By Non Admin Users",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"enable_default_environment_routing": schema.BoolAttribute{
 								Description: "Enable Default Environment Routing",
-								Optional:    true, Computed: true,
+								Optional:    true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
+									modifiers.RestoreOriginalBoolModifier(),
 								},
 							},
 							"environment_routing_all_makers": schema.BoolAttribute{
 								Description: "Select who can be routed to a new personal developer environment. (All Makers = true, New Makers = false)",
-								Optional:    true, Computed: true,
+								Optional:    true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
+									modifiers.RestoreOriginalBoolModifier(),
 								},
 							},
 							"environment_routing_target_environment_group_id": schema.StringAttribute{
 								Description: "Assign newly created personal developer environments to a specific environment group",
-								Optional:    true, Computed: true,
+								Optional:    true,
 								PlanModifiers: []planmodifier.String{
-									stringplanmodifier.UseStateForUnknown(),
+									// stringplanmodifier.UseStateForUnknown(),
+									modifiers.SetValueOnDestroyStringModifier("00000000-0000-0000-0000-000000000000"),
 								},
 							},
 							"environment_routing_target_security_group_id": schema.StringAttribute{
 								Description: "Restrict routing to members of the following security group. (00000000-0000-0000-0000-000000000000 allows all users)",
-								Optional:    true, Computed: true,
+								Optional:    true,
 								PlanModifiers: []planmodifier.String{
-									stringplanmodifier.UseStateForUnknown(),
+									// stringplanmodifier.UseStateForUnknown(),
+									modifiers.SetValueOnDestroyStringModifier("00000000-0000-0000-0000-000000000000"),
 								},
 							},
 							"policy": schema.SingleNestedAttribute{
-								Description: "Policy",
-								Optional:    true, Computed: true,
+								Description:   "Policy",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Object{
-									objectplanmodifier.UseStateForUnknown(),
+									// objectplanmodifier.UseStateForUnknown(),
 								},
 								Attributes: map[string]schema.Attribute{
 									"enable_desktop_flow_data_policy_management": schema.BoolAttribute{
-										Description: "Enable Desktop Flow Data Policy Management",
-										Optional:    true, Computed: true,
+										Description:   "Enable Desktop Flow Data Policy Management",
+										Optional:      true,
 										PlanModifiers: []planmodifier.Bool{
-											boolplanmodifier.UseStateForUnknown(),
+											// boolplanmodifier.UseStateForUnknown(),
 										},
 									},
 								},
@@ -329,138 +340,138 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 						},
 					},
 					"licensing": schema.SingleNestedAttribute{
-						Description: "Licensing",
-						Optional:    true, Computed: true,
+						Description:   "Licensing",
+						Optional:      true,
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.UseStateForUnknown(),
+							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
 							"disable_billing_policy_creation_by_non_admin_users": schema.BoolAttribute{
-								Description: "Disable Billing Policy Creation By Non Admin Users",
-								Optional:    true, Computed: true,
+								Description:   "Disable Billing Policy Creation By Non Admin Users",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"enable_tenant_capacity_report_for_environment_admins": schema.BoolAttribute{
-								Description: "Enable Tenant Capacity Report For Environment Admins",
-								Optional:    true, Computed: true,
+								Description:   "Enable Tenant Capacity Report For Environment Admins",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"storage_capacity_consumption_warning_threshold": schema.Int64Attribute{
-								Description: "Storage Capacity Consumption Warning Threshold",
-								Optional:    true, Computed: true,
+								Description:   "Storage Capacity Consumption Warning Threshold",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Int64{
-									int64planmodifier.UseStateForUnknown(),
+									// int64planmodifier.UseStateForUnknown(),
 								},
 							},
 							"enable_tenant_licensing_report_for_environment_admins": schema.BoolAttribute{
-								Description: "Enable Tenant Licensing Report For Environment Admins",
-								Optional:    true, Computed: true,
+								Description:   "Enable Tenant Licensing Report For Environment Admins",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"disable_use_of_unassigned_ai_builder_credits": schema.BoolAttribute{
-								Description: "Disable Use Of Unassigned AI Builder Credits",
-								Optional:    true, Computed: true,
+								Description:   "Disable Use Of Unassigned AI Builder Credits",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 						},
 					},
 					"power_pages": schema.SingleNestedAttribute{
-						Description: "Power Pages",
-						Optional:    true, Computed: true,
+						Description:   "Power Pages",
+						Optional:      true,
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.UseStateForUnknown(),
+							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{},
 					},
 					"champions": schema.SingleNestedAttribute{
-						Description: "Champions",
-						Optional:    true, Computed: true,
+						Description:   "Champions",
+						Optional:      true,
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.UseStateForUnknown(),
+							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
 							"disable_champions_invitation_reachout": schema.BoolAttribute{
-								Description: "Disable Champions Invitation Reachout",
-								Optional:    true, Computed: true,
+								Description:   "Disable Champions Invitation Reachout",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"disable_skills_match_invitation_reachout": schema.BoolAttribute{
-								Description: "Disable Skills Match Invitation Reachout",
-								Optional:    true, Computed: true,
+								Description:   "Disable Skills Match Invitation Reachout",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 						},
 					},
 					"intelligence": schema.SingleNestedAttribute{
-						Description: "Intelligence",
-						Optional:    true, Computed: true,
+						Description:   "Intelligence",
+						Optional:      true,
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.UseStateForUnknown(),
+							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
 							"disable_copilot": schema.BoolAttribute{
-								Description: "Disable Copilot",
-								Optional:    true, Computed: true,
+								Description:   "Disable Copilot",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"enable_open_ai_bot_publishing": schema.BoolAttribute{
-								Description: "Enable Open AI Bot Publishing",
-								Optional:    true, Computed: true,
+								Description:   "Enable Open AI Bot Publishing",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 						},
 					},
 					"model_experimentation": schema.SingleNestedAttribute{
-						Description: "Model Experimentation",
-						Optional:    true, Computed: true,
+						Description:   "Model Experimentation",
+						Optional:      true,
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.UseStateForUnknown(),
+							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
 							"enable_model_data_sharing": schema.BoolAttribute{
-								Description: "Enable Model Data Sharing",
-								Optional:    true, Computed: true,
+								Description:   "Enable Model Data Sharing",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 							"disable_data_logging": schema.BoolAttribute{
-								Description: "Disable Data Logging",
-								Optional:    true, Computed: true,
+								Description:   "Disable Data Logging",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 						},
 					},
 					"catalog_settings": schema.SingleNestedAttribute{
-						Description: "Catalog Settings",
-						Optional:    true, Computed: true,
+						Description:   "Catalog Settings",
+						Optional:      true,
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.UseStateForUnknown(),
+							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
 							"power_catalog_audience_setting": schema.StringAttribute{
-								Description: "Power Catalog Audience Setting",
-								Optional:    true, Computed: true,
+								Description:   "Power Catalog Audience Setting",
+								Optional:      true,
 								PlanModifiers: []planmodifier.String{
-									stringplanmodifier.UseStateForUnknown(),
+									// stringplanmodifier.UseStateForUnknown(),
 								},
 								Validators: []validator.String{
 									stringvalidator.OneOf("SpecificAdmin", "All"),
@@ -469,17 +480,17 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 						},
 					},
 					"user_management_settings": schema.SingleNestedAttribute{
-						Description: "User Management Settings",
-						Optional:    true, Computed: true,
+						Description:   "User Management Settings",
+						Optional:      true,
 						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.UseStateForUnknown(),
+							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
 							"enable_delete_disabled_user_in_all_environments": schema.BoolAttribute{
-								Description: "Enable Delete Disabled User In All Environments",
-								Optional:    true, Computed: true,
+								Description:   "Enable Delete Disabled User In All Environments",
+								Optional:      true,
 								PlanModifiers: []planmodifier.Bool{
-									boolplanmodifier.UseStateForUnknown(),
+									// boolplanmodifier.UseStateForUnknown(),
 								},
 							},
 						},
@@ -514,15 +525,42 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	// Save the original tenant settings in private state
+	originalSettings, erro := r.TenantSettingClient.GetTenantSettings(ctx)
+	if erro != nil {
+		resp.Diagnostics.AddError(
+			"Error reading tenant settings", fmt.Sprintf("Error reading tenant settings: %s", erro.Error()),
+		)
+		return
+	}
 
+	jsonSettings, errj := json.Marshal(originalSettings)
+	if errj != nil {
+		resp.Diagnostics.AddError(
+			"Error marshalling tenant settings", fmt.Sprintf("Error marshalling tenant settings: %s", errj.Error()),
+		)
+		return
+	}
+	resp.Private.SetKey(ctx, "original_settings", jsonSettings)
+
+	// Get the plan
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tenantSettingsToCreate := ConvertFromTenantSettingsModel(ctx, plan)
+	// Get the tenant
+	tenant, errt := r.TenantSettingClient.GetTenant(ctx)
+	if errt != nil {
+		resp.Diagnostics.AddError(
+			"Error reading tenant", fmt.Sprintf("Error reading tenant: %s", errt.Error()),
+		)
+		return
+	}
 
-	tenantSettings, err := r.TenantSettingClient.UpdateTenantSettings(ctx, tenantSettingsToCreate)
+	// Update tenant settings via the API
+	tenantSettingsToCreate := ConvertFromTenantSettingsModel(ctx, plan)
+	tenantSettingsDto, err := r.TenantSettingClient.UpdateTenantSettings(ctx, tenantSettingsToCreate)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating tenant settings", fmt.Sprintf("Error creating tenant settings: %s", err.Error()),
@@ -530,16 +568,107 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	plan = ConvertFromTenantSettingsDto(*tenantSettings)
-	hash, err := tenantSettings.CalcObjectHash()
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())
-	}
-	plan.Id = types.StringValue(*hash)
+	stateDto := filterDto(tenantSettingsToCreate, *tenantSettingsDto).(*TenantSettingsDto)
+	state, _ := ConvertFromTenantSettingsDto(*stateDto)
+
+	state.Id = types.StringValue(tenant.TenantId)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+
+	//var rawAttrs map[string]tftypes.Value
+	//req.Plan.Raw.As(&rawAttrs)
+
+	// var stateAttrs map[string]tftypes.Value
+	// stateObj.As(ctx, &stateAttrs, basetypes.ObjectAsOptions{})
+
+	//removeUnconfiguredState(ctx, rawAttrs, req, resp, path.Empty())
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	//resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
+}
+
+func removeUnconfiguredState(ctx context.Context, attrs map[string]tftypes.Value, req resource.CreateRequest, resp *resource.CreateResponse, p path.Path) {
+	var val attr.Value
+
+	for attrName := range attrs {
+
+		pat := p.AtName(attrName)
+
+		// Get the configured value
+		diag := req.Plan.GetAttribute(ctx, pat, &val)
+		if diag.HasError() {
+			continue
+		}
+
+		terraformType := val.Type(ctx).TerraformType(ctx)
+
+		switch {
+		case terraformType.Is(tftypes.Object{}):
+			v, e := val.ToTerraformValue(ctx)
+			if e != nil {
+				continue
+			}
+
+			child := map[string]tftypes.Value{}
+			e = v.As(&child)
+			if e != nil {
+				continue
+			}
+
+			//call recursively
+			removeUnconfiguredState(ctx, child, req, resp, pat)
+
+			// check if we have state for this attribute
+			var pval interface{}
+			resp.State.GetAttribute(ctx, pat, &pval)
+
+			if val.IsNull() && pval != nil {
+				matches, err := resp.State.PathMatches(ctx, pat.Expression())
+				if err != nil {
+					continue
+				}
+				matches.String()
+
+				on := basetypes.NewObjectNull(pval.(*basetypes.ObjectType).AttrTypes)
+				//tftypes.NewValue(val.Type(ctx).TerraformType(ctx), nil)
+				d := resp.State.SetAttribute(ctx, pat, on)
+				if d.HasError() {
+					continue
+				}
+			}
+		case terraformType.Is(tftypes.String):
+			if val.IsNull() {
+				var testVal *string
+				resp.State.GetAttribute(ctx, pat, &testVal)
+				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %s", pat, testVal))
+				diag := resp.State.SetAttribute(ctx, pat, types.StringNull())
+				if diag.HasError() {
+					continue
+				}
+				resp.State.GetAttribute(ctx, pat, &testVal)
+				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %s", pat, testVal))
+			}
+		case terraformType.Is(tftypes.Bool):
+			if val.IsNull() {
+				var testVal *bool
+				resp.State.GetAttribute(ctx, pat, &testVal)
+				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %t", pat, testVal))
+				diag := resp.State.SetAttribute(ctx, pat, types.BoolNull())
+				if diag.HasError() {
+					continue
+				}
+				resp.State.GetAttribute(ctx, pat, &testVal)
+				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %t", pat, testVal))
+			}
+		case terraformType.Is(tftypes.Map{}):
+		case terraformType.Is(tftypes.List{}):
+		case terraformType.Is(tftypes.Number):
+		case terraformType.Is(tftypes.Tuple{}):
+		case terraformType.Is(tftypes.Set{}):
+		case terraformType.Is(tftypes.DynamicPseudoType):
+		default:
+		}
+	}
 }
 
 func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -553,6 +682,14 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
+	tenant, errt := r.TenantSettingClient.GetTenant(ctx)
+	if errt != nil {
+		resp.Diagnostics.AddError(
+			"Error reading tenant", fmt.Sprintf("Error reading tenant: %s", errt.Error()),
+		)
+		return
+	}
+
 	tenantSettings, err := r.TenantSettingClient.GetTenantSettings(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -561,14 +698,16 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	state = ConvertFromTenantSettingsDto(*tenantSettings)
-	hash, err := tenantSettings.CalcObjectHash()
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())
-	}
-	state.Id = types.StringValue(*hash)
+	var configuredSettings TenantSettingsSourceModel
+	req.State.Get(ctx, &configuredSettings)
+	state = ConvertFromTenantSettingsDtoIfConfigured(configuredSettings, *tenantSettings)
+	// hash, err := tenantSettings.CalcObjectHash()
+	// if err != nil {
+	// 	resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())
+	// }
+	state.Id = types.StringValue(tenant.TenantId)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s_tenant_settings with id %s", r.ProviderTypeName, state.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
@@ -585,6 +724,14 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
+	tenant, errt := r.TenantSettingClient.GetTenant(ctx)
+	if errt != nil {
+		resp.Diagnostics.AddError(
+			"Error reading tenant", fmt.Sprintf("Error reading tenant: %s", errt.Error()),
+		)
+		return
+	}
+
 	tenantSettingsToUpdate := ConvertFromTenantSettingsModel(ctx, plan)
 
 	tenantSettings, err := r.TenantSettingClient.UpdateTenantSettings(ctx, tenantSettingsToUpdate)
@@ -595,18 +742,22 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	plan = ConvertFromTenantSettingsDto(*tenantSettings)
-	hash, err := tenantSettings.CalcObjectHash()
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())
-	}
-	plan.Id = types.StringValue(*hash)
+	var configuredSettings TenantSettingsSourceModel
+	req.Config.Get(ctx, &configuredSettings)
+	plan = ConvertFromTenantSettingsDtoIfConfigured(configuredSettings, *tenantSettings)
+	// hash, err := tenantSettings.CalcObjectHash()
+	// if err != nil {
+	// 	resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())
+	// }
+	plan.Id = types.StringValue(tenant.TenantId)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	// todo: restore to previous state
+
 }
 
 func (r *TenantSettingsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
