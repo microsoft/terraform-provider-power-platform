@@ -65,22 +65,8 @@ func (client *EnvironmentClient) GetLocations(ctx context.Context) (*LocationArr
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	response, err := client.Api.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
-
-	if err != nil {
-		if response.Response.StatusCode == http.StatusGatewayTimeout {
-			tflog.Debug(ctx, "Gateway Timeout getting locations: "+err.Error())
-			return nil, helpers.WrapIntoProviderError(nil, helpers.ERROR_API_TIMEOUT, "API Timeout getting locations")
-		} else {
-			tflog.Debug(ctx, "Error getting locations: "+err.Error())
-			return nil, err
-		}
-	}
-
-	defer response.Response.Body.Close()
-
 	locationsArray := LocationArrayDto{}
-	err = json.Unmarshal(response.BodyAsBytes, &locationsArray)
+	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &locationsArray)
 	if err != nil {
 		return nil, err
 	}
@@ -88,32 +74,12 @@ func (client *EnvironmentClient) GetLocations(ctx context.Context) (*LocationArr
 }
 
 func (client *EnvironmentClient) LocationValidator(ctx context.Context, location, azureRegion string) error {
-	retryAfter := 5 * time.Second
-	locationsArray := LocationArrayDto{}
-	for {
-		//TODO have a global timeout to break this loop
-		locationsArray, err := client.GetLocations(ctx)
-		if err == nil {
-			if helpers.Code(err) == helpers.ERROR_API_TIMEOUT {
-				tflog.Debug(ctx, "API Timeout getting locations, waiting for next "+retryAfter.String())
-			} else {
-				return err
-			}
-		} else {
-			if locationsArray != nil {
-				break
-			} else {
-				tflog.Debug(ctx, "Locations Response is empty!")
-			}
-		}
-
-		err = client.Api.SleepWithContext(ctx, retryAfter)
-		if err != nil {
-			return err
-		}
+	locationsArray, err := client.GetLocations(ctx)
+	if err != nil {
+		return err
 	}
 
-	foundLocation, err := findLocation(locationsArray, location)
+	foundLocation, err := findLocation(*locationsArray, location)
 	if err != nil {
 		return err
 	}
@@ -369,57 +335,6 @@ func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, 
 			return &lifecycleEnv, errors.New("dataverse creation failed. provisioning state: " + lifecycleEnv.Properties.ProvisioningState)
 		}
 	}
-}
-
-func (client *EnvironmentClient) WaitForUserProvisioning(ctx context.Context, environmentId string) error {
-	retryAfter := 5 * time.Second
-	for {
-		resp, err := client.WhoAmI(ctx, environmentId)
-		if err == nil {
-			if helpers.Code(err) == helpers.ERROR_UNAUTHORIZED {
-				tflog.Debug(ctx, "Unauthorized getting WhoAmI response, waiting for next "+retryAfter.String())
-			} else {
-				return err
-			}
-		} else {
-			if resp != nil {
-				return nil
-			} else {
-				tflog.Debug(ctx, "WhoAmI Response is empty!")
-			}
-		}
-
-		err = client.Api.SleepWithContext(ctx, retryAfter)
-		if err != nil {
-			return err
-		}
-	}
-}
-
-func (client *EnvironmentClient) WhoAmI(ctx context.Context, environmentId string) (*WhoAmIDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
-	if err != nil {
-		return nil, err
-	}
-
-	apiUrl := &url.URL{
-		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
-		Path:   "/api/data/v9.2/WhoAmI",
-	}
-
-	whoAmIResponse := WhoAmIDto{}
-	r, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &whoAmIResponse)
-	if err != nil {
-		if r.Response.StatusCode == http.StatusUnauthorized {
-			tflog.Debug(ctx, "Unauthorized getting WhoAmI response: "+err.Error())
-			return nil, helpers.WrapIntoProviderError(nil, helpers.ERROR_UNAUTHORIZED, "User is not authorized to access the environment or the environment is not fully provisioned yet")
-		} else {
-			tflog.Debug(ctx, "WhoAmI Response: "+err.Error())
-			return nil, err
-		}
-	}
-	return &whoAmIResponse, nil
 }
 
 func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environmentToCreate EnvironmentCreateDto) (*EnvironmentDto, error) {

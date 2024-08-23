@@ -248,14 +248,6 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	if !IsDataverseEnvironmentEmpty(ctx, plan) {
-		err := r.EnvironmentClient.WaitForUserProvisioning(ctx, envDto.Name)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error when waiting for user provisioning for environment %s", envDto.Name), err.Error())
-			return
-		}
-	}
-
 	var currencyCode string
 	var templateMetadata *EnvironmentCreateTemplateMetadata = nil
 	var templates []string = nil
@@ -419,11 +411,6 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		_, err = r.EnvironmentClient.AddDataverseToEnvironment(ctx, plan.Id.ValueString(), *linkedMetadataDto)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Error when adding dataverse to environment %s", plan.Id.ValueString()), err.Error())
-			return
-		}
-		err = r.EnvironmentClient.WaitForUserProvisioning(ctx, plan.Id.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error when waiting for user provisioning for environment %s", plan.Id.ValueString()), err.Error())
 			return
 		}
 		currencyCode = linkedMetadataDto.Currency.Code

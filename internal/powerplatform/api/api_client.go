@@ -9,12 +9,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	neturl "net/url"
 	"reflect"
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
@@ -118,7 +120,28 @@ func (client *ApiClient) Execute(ctx context.Context, method, url string, header
 	if err != nil {
 		return nil, err
 	}
-	return client.ExecuteForGivenScope(ctx, scope, method, url, headers, body, acceptableStatusCodes, responseObj)
+
+	//TODO: once we add timeout logic to all resource/datasource operations, we use that timeout here
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Minute)
+	defer cancel()
+
+	var response *ApiHttpResponse = nil
+	random5to10sec := rand.Intn(5) + 5
+	retryAfter := time.Duration(random5to10sec) * time.Second
+	for {
+		response, err = client.ExecuteForGivenScope(ctx, scope, method, url, headers, body, acceptableStatusCodes, responseObj)
+		if response.Response.StatusCode != http.StatusUnauthorized &&
+			response.Response.StatusCode != http.StatusGatewayTimeout {
+			return response, err
+		}
+
+		tflog.Warn(ctx, fmt.Sprintf("Received status code %d for request %s, retrying after %s", response.Response.StatusCode, url, retryAfter))
+
+		err = client.SleepWithContext(ctx, retryAfter)
+		if err != nil {
+			return response, err
+		}
+	}
 }
 
 func (client *ApiClient) SleepWithContext(ctx context.Context, duration time.Duration) error {

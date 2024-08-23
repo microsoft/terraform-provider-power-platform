@@ -925,6 +925,13 @@ func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: provider.TestsAcceptanceProviderConfig + `
+				resource "powerplatform_environment" "env" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "europe"
+					azure_region     = "northeurope"
+					environment_type = "Sandbox"
+				}
+
 				data "powerplatform_connectors" "all_connectors" {}
 
 				locals {
@@ -995,8 +1002,8 @@ func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 				  resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "` + mocks.TestName() + `"
 					default_connectors_classification = "Blocked"
-					environment_type                  = "AllEnvironments"
-					environments                      = []
+					environment_type                  = "OnlyEnvironments"
+					environments                      = [powerplatform_environment.env.id]
 				  
 					business_connectors     = local.business_connectors
 					non_business_connectors = local.non_business_connectors
@@ -1019,7 +1026,7 @@ func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "display_name", mocks.TestName()),
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "default_connectors_classification", "Blocked"),
-					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environment_type", "AllEnvironments"),
+					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environment_type", "OnlyEnvironments"),
 
 					resource.TestCheckResourceAttr("powerplatform_data_loss_prevention_policy.my_policy", "environments.#", "0"),
 
