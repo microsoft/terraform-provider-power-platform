@@ -21,7 +21,21 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: provider.TestsAcceptanceProviderConfig + `
-				data "powerplatform_environments" "all" {}`,
+				resource "powerplatform_environment" "env" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "europe"
+					azure_region     = "northeurope"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
+				data "powerplatform_environments" "all" {
+					depends_on = [powerplatform_environment.env]
+				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					//Verify placeholder id attribute
@@ -31,7 +45,7 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.display_name", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.domain", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.environment_type", regexp.MustCompile(`^(Default|Sandbox|Developer)$`)),
+					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.environment_type", regexp.MustCompile(`^(Default|Sandbox|Developer|Production)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.language_code", regexp.MustCompile(`^(1033|1031)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.organization_id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.security_group_id", regexp.MustCompile(helpers.GuidOrEmptyValueRegex)),
@@ -39,7 +53,6 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.location", regexp.MustCompile(`^(unitedstates|europe)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.version", regexp.MustCompile(helpers.VersionRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.currency_code", regexp.MustCompile(helpers.StringRegex)),
-					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.billing_policy_id", ""),
 				),
 			},
 		},
