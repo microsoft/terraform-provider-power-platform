@@ -445,3 +445,9 @@ type LocationDto struct {
 		AzureRegions                           []string `json:"azureRegions"`
 	} `json:"properties"`
 }
+
+type WhoAmIDto struct {
+	BusinessUnitId string `json:"BusinessUnitId"`
+	UserId         string `json:"UserId"`
+	OrganizationId string `json:"OrganizationId"`
+}

@@ -222,7 +222,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		resp.Diagnostics.AddError("Error when converting source model to create environment dto", err.Error())
 	}
 
-	err = locationValidator(r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.AzureRegion)
+	err = r.EnvironmentClient.LocationValidator(ctx, envToCreate.Location, envToCreate.Properties.AzureRegion)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
@@ -246,6 +246,14 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
+	}
+
+	if !IsDataverseEnvironmentEmpty(ctx, plan) {
+		err := r.EnvironmentClient.WaitForUserProvisioning(ctx, envDto.Name)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error when waiting for user provisioning for environment %s", envDto.Name), err.Error())
+			return
+		}
 	}
 
 	var currencyCode string
@@ -411,6 +419,11 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		_, err = r.EnvironmentClient.AddDataverseToEnvironment(ctx, plan.Id.ValueString(), *linkedMetadataDto)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Error when adding dataverse to environment %s", plan.Id.ValueString()), err.Error())
+			return
+		}
+		err = r.EnvironmentClient.WaitForUserProvisioning(ctx, plan.Id.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error when waiting for user provisioning for environment %s", plan.Id.ValueString()), err.Error())
 			return
 		}
 		currencyCode = linkedMetadataDto.Currency.Code

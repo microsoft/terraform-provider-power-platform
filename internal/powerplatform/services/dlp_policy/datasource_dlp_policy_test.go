@@ -105,8 +105,6 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 }
 
 // func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
-// 	t.Setenv("TF_ACC", "1")
-
 // 	resource.Test(t, resource.TestCase{
 // 		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
 // 		Steps: []resource.TestStep{

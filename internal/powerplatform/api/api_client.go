@@ -101,7 +101,7 @@ func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method
 	}
 
 	if !isStatusCodeValid {
-		return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE, fmt.Sprintf("expected status code: %d, recieved: [%d]", acceptableStatusCodes, apiResponse.Response.StatusCode))
+		return apiResponse, helpers.WrapIntoProviderError(err, helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE, fmt.Sprintf("expected status code: %d, recieved: [%d]", acceptableStatusCodes, apiResponse.Response.StatusCode))
 	}
 
 	if responseObj != nil {
