@@ -9,7 +9,6 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -18,8 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
@@ -587,89 +584,89 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func removeUnconfiguredState(ctx context.Context, attrs map[string]tftypes.Value, req resource.CreateRequest, resp *resource.CreateResponse, p path.Path) {
-	var val attr.Value
+// func removeUnconfiguredState(ctx context.Context, attrs map[string]tftypes.Value, req resource.CreateRequest, resp *resource.CreateResponse, p path.Path) {
+// 	var val attr.Value
 
-	for attrName := range attrs {
+// 	for attrName := range attrs {
 
-		pat := p.AtName(attrName)
+// 		pat := p.AtName(attrName)
 
-		// Get the configured value
-		diag := req.Plan.GetAttribute(ctx, pat, &val)
-		if diag.HasError() {
-			continue
-		}
+// 		// Get the configured value
+// 		diag := req.Plan.GetAttribute(ctx, pat, &val)
+// 		if diag.HasError() {
+// 			continue
+// 		}
 
-		terraformType := val.Type(ctx).TerraformType(ctx)
+// 		terraformType := val.Type(ctx).TerraformType(ctx)
 
-		switch {
-		case terraformType.Is(tftypes.Object{}):
-			v, e := val.ToTerraformValue(ctx)
-			if e != nil {
-				continue
-			}
+// 		switch {
+// 		case terraformType.Is(tftypes.Object{}):
+// 			v, e := val.ToTerraformValue(ctx)
+// 			if e != nil {
+// 				continue
+// 			}
 
-			child := map[string]tftypes.Value{}
-			e = v.As(&child)
-			if e != nil {
-				continue
-			}
+// 			child := map[string]tftypes.Value{}
+// 			e = v.As(&child)
+// 			if e != nil {
+// 				continue
+// 			}
 
-			//call recursively
-			removeUnconfiguredState(ctx, child, req, resp, pat)
+// 			//call recursively
+// 			removeUnconfiguredState(ctx, child, req, resp, pat)
 
-			// check if we have state for this attribute
-			var pval interface{}
-			resp.State.GetAttribute(ctx, pat, &pval)
+// 			// check if we have state for this attribute
+// 			var pval interface{}
+// 			resp.State.GetAttribute(ctx, pat, &pval)
 
-			if val.IsNull() && pval != nil {
-				matches, err := resp.State.PathMatches(ctx, pat.Expression())
-				if err != nil {
-					continue
-				}
-				matches.String()
+// 			if val.IsNull() && pval != nil {
+// 				matches, err := resp.State.PathMatches(ctx, pat.Expression())
+// 				if err != nil {
+// 					continue
+// 				}
+// 				matches.String()
 
-				on := basetypes.NewObjectNull(pval.(*basetypes.ObjectType).AttrTypes)
-				//tftypes.NewValue(val.Type(ctx).TerraformType(ctx), nil)
-				d := resp.State.SetAttribute(ctx, pat, on)
-				if d.HasError() {
-					continue
-				}
-			}
-		case terraformType.Is(tftypes.String):
-			if val.IsNull() {
-				var testVal *string
-				resp.State.GetAttribute(ctx, pat, &testVal)
-				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %s", pat, testVal))
-				diag := resp.State.SetAttribute(ctx, pat, types.StringNull())
-				if diag.HasError() {
-					continue
-				}
-				resp.State.GetAttribute(ctx, pat, &testVal)
-				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %s", pat, testVal))
-			}
-		case terraformType.Is(tftypes.Bool):
-			if val.IsNull() {
-				var testVal *bool
-				resp.State.GetAttribute(ctx, pat, &testVal)
-				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %t", pat, testVal))
-				diag := resp.State.SetAttribute(ctx, pat, types.BoolNull())
-				if diag.HasError() {
-					continue
-				}
-				resp.State.GetAttribute(ctx, pat, &testVal)
-				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %t", pat, testVal))
-			}
-		case terraformType.Is(tftypes.Map{}):
-		case terraformType.Is(tftypes.List{}):
-		case terraformType.Is(tftypes.Number):
-		case terraformType.Is(tftypes.Tuple{}):
-		case terraformType.Is(tftypes.Set{}):
-		case terraformType.Is(tftypes.DynamicPseudoType):
-		default:
-		}
-	}
-}
+// 				on := basetypes.NewObjectNull(pval.(*basetypes.ObjectType).AttrTypes)
+// 				//tftypes.NewValue(val.Type(ctx).TerraformType(ctx), nil)
+// 				d := resp.State.SetAttribute(ctx, pat, on)
+// 				if d.HasError() {
+// 					continue
+// 				}
+// 			}
+// 		case terraformType.Is(tftypes.String):
+// 			if val.IsNull() {
+// 				var testVal *string
+// 				resp.State.GetAttribute(ctx, pat, &testVal)
+// 				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %s", pat, testVal))
+// 				diag := resp.State.SetAttribute(ctx, pat, types.StringNull())
+// 				if diag.HasError() {
+// 					continue
+// 				}
+// 				resp.State.GetAttribute(ctx, pat, &testVal)
+// 				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %s", pat, testVal))
+// 			}
+// 		case terraformType.Is(tftypes.Bool):
+// 			if val.IsNull() {
+// 				var testVal *bool
+// 				resp.State.GetAttribute(ctx, pat, &testVal)
+// 				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %t", pat, testVal))
+// 				diag := resp.State.SetAttribute(ctx, pat, types.BoolNull())
+// 				if diag.HasError() {
+// 					continue
+// 				}
+// 				resp.State.GetAttribute(ctx, pat, &testVal)
+// 				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %t", pat, testVal))
+// 			}
+// 		case terraformType.Is(tftypes.Map{}):
+// 		case terraformType.Is(tftypes.List{}):
+// 		case terraformType.Is(tftypes.Number):
+// 		case terraformType.Is(tftypes.Tuple{}):
+// 		case terraformType.Is(tftypes.Set{}):
+// 		case terraformType.Is(tftypes.DynamicPseudoType):
+// 		default:
+// 		}
+// 	}
+// }
 
 func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	var state TenantSettingsSourceModel
@@ -700,7 +697,7 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 
 	var configuredSettings TenantSettingsSourceModel
 	req.State.Get(ctx, &configuredSettings)
-	state = ConvertFromTenantSettingsDtoIfConfigured(configuredSettings, *tenantSettings)
+	state, _ = ConvertFromTenantSettingsDto(*tenantSettings)
 	// hash, err := tenantSettings.CalcObjectHash()
 	// if err != nil {
 	// 	resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())
@@ -744,7 +741,7 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 
 	var configuredSettings TenantSettingsSourceModel
 	req.Config.Get(ctx, &configuredSettings)
-	plan = ConvertFromTenantSettingsDtoIfConfigured(configuredSettings, *tenantSettings)
+	plan, _ = ConvertFromTenantSettingsDto(*tenantSettings)
 	// hash, err := tenantSettings.CalcObjectHash()
 	// if err != nil {
 	// 	resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())

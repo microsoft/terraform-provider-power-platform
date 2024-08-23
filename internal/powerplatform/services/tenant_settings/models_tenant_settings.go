@@ -458,36 +458,6 @@ func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) (TenantSe
 		DisableSupportTicketsVisibleByAllUsers:         types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
 	}
 
-	attrTypesSearchProperties, attrValuesSearchProperties := newFunction(tenantSettingsDto)
-
-	attrTypesTeamsIntegrationProperties := map[string]attr.Type{
-		"share_with_colleagues_user_limit": types.Int64Type,
-	}
-
-	attrValuesTeamsIntegrationProperties := map[string]attr.Value{
-		"share_with_colleagues_user_limit": types.Int64PointerValue(tenantSettingsDto.PowerPlatform.TeamsIntegration.ShareWithColleaguesUserLimit),
-	}
-
-	attrTypesPowerAppsProperties := map[string]attr.Type{
-		"disable_share_with_everyone":              types.BoolType,
-		"enable_guests_to_make":                    types.BoolType,
-		"disable_maker_match":                      types.BoolType,
-		"disable_unused_license_assignment":        types.BoolType,
-		"disable_create_from_image":                types.BoolType,
-		"disable_create_from_figma":                types.BoolType,
-		"disable_connection_sharing_with_everyone": types.BoolType,
-	}
-
-	attrValuesPowerAppsProperties := map[string]attr.Value{
-		"disable_share_with_everyone":              types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableShareWithEveryone),
-		"enable_guests_to_make":                    types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.EnableGuestsToMake),
-		"disable_maker_match":                      types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableMakerMatch),
-		"disable_unused_license_assignment":        types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableUnusedLicenseAssignment),
-		"disable_create_from_image":                types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableCreateFromImage),
-		"disable_create_from_figma":                types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableCreateFromFigma),
-		"disable_connection_sharing_with_everyone": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableConnectionSharingWithEveryone),
-	}
-
 	attrTypesPowerAutomateProperties := map[string]attr.Type{
 		"disable_copilot": types.BoolType,
 	}
@@ -596,10 +566,14 @@ func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) (TenantSe
 		"enable_delete_disabled_user_in_all_environments": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.UserManagementSettings.EnableDeleteDisabledUserinAllEnvironments),
 	}
 
+	searchSettingsObjectType, searchSettingsObjectValue := ConvertSearchSettings(tenantSettingsDto)
+	teamsIntegrationObjectType, teamsIntegrationObjectValue := ConvertTeamsIntegrationSettings(tenantSettingsDto)
+	powerAppsObjectType, powerAppsObjectValue := ConvertPowerAppsSettings(tenantSettingsDto)
+
 	attrTypesPowerPlatformObject := map[string]attr.Type{
-		"search":                   types.ObjectType{AttrTypes: attrTypesSearchProperties},
-		"teams_integration":        types.ObjectType{AttrTypes: attrTypesTeamsIntegrationProperties},
-		"power_apps":               types.ObjectType{AttrTypes: attrTypesPowerAppsProperties},
+		"search":                   searchSettingsObjectType,
+		"teams_integration":        teamsIntegrationObjectType,
+		"power_apps":               powerAppsObjectType,
 		"power_automate":           types.ObjectType{AttrTypes: attrTypesPowerAutomateProperties},
 		"environments":             types.ObjectType{AttrTypes: attrTypesEnvironmentsProperties},
 		"governance":               types.ObjectType{AttrTypes: attrTypesGovernanceProperties},
@@ -613,9 +587,9 @@ func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) (TenantSe
 	}
 
 	attrValuesPowerPlatformObject := map[string]attr.Value{
-		"search":                   types.ObjectValueMust(attrTypesSearchProperties, attrValuesSearchProperties),
-		"teams_integration":        types.ObjectValueMust(attrTypesTeamsIntegrationProperties, attrValuesTeamsIntegrationProperties),
-		"power_apps":               types.ObjectValueMust(attrTypesPowerAppsProperties, attrValuesPowerAppsProperties),
+		"search":                   searchSettingsObjectValue,
+		"teams_integration":        teamsIntegrationObjectValue,
+		"power_apps":               powerAppsObjectValue,
 		"power_automate":           types.ObjectValueMust(attrTypesPowerAutomateProperties, attrValuesPowerAutomateProperties),
 		"environments":             types.ObjectValueMust(attrTypesEnvironmentsProperties, attrValuesEnvironmentsProperties),
 		"governance":               types.ObjectValueMust(attrTypesGovernanceProperties, attrValuesGovernanceProperties),
@@ -661,7 +635,51 @@ func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) (TenantSe
 	return tenantSettings, objValue
 }
 
-func SearchSettings(tenantSettingsDto TenantSettingsDto) basetypes.ObjectValue {
+func ConvertPowerAppsSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+	attrTypesPowerAppsProperties := map[string]attr.Type{
+		"disable_share_with_everyone":              types.BoolType,
+		"enable_guests_to_make":                    types.BoolType,
+		"disable_maker_match":                      types.BoolType,
+		"disable_unused_license_assignment":        types.BoolType,
+		"disable_create_from_image":                types.BoolType,
+		"disable_create_from_figma":                types.BoolType,
+		"disable_connection_sharing_with_everyone": types.BoolType,
+	}
+
+	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.PowerApps == nil {
+		return types.ObjectType{AttrTypes: attrTypesPowerAppsProperties}, types.ObjectNull(attrTypesPowerAppsProperties)
+	} else {
+		attrValuesPowerAppsProperties := map[string]attr.Value{
+			"disable_share_with_everyone":              types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableShareWithEveryone),
+			"enable_guests_to_make":                    types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.EnableGuestsToMake),
+			"disable_maker_match":                      types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableMakerMatch),
+			"disable_unused_license_assignment":        types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableUnusedLicenseAssignment),
+			"disable_create_from_image":                types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableCreateFromImage),
+			"disable_create_from_figma":                types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableCreateFromFigma),
+			"disable_connection_sharing_with_everyone": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableConnectionSharingWithEveryone),
+		}
+		return types.ObjectType{AttrTypes: attrTypesPowerAppsProperties}, types.ObjectValueMust(attrTypesPowerAppsProperties, attrValuesPowerAppsProperties)
+	}
+}
+
+func ConvertTeamsIntegrationSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+	attrTypesTeamsIntegrationProperties := map[string]attr.Type{
+		"share_with_colleagues_user_limit": types.Int64Type,
+	}
+
+	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.TeamsIntegration == nil {
+		return types.ObjectType{AttrTypes: attrTypesTeamsIntegrationProperties}, types.ObjectNull(attrTypesTeamsIntegrationProperties)
+
+	} else {
+		attrValuesTeamsIntegrationProperties := map[string]attr.Value{
+			"share_with_colleagues_user_limit": types.Int64PointerValue(tenantSettingsDto.PowerPlatform.TeamsIntegration.ShareWithColleaguesUserLimit),
+		}
+		return types.ObjectType{AttrTypes: attrTypesTeamsIntegrationProperties}, types.ObjectValueMust(attrTypesTeamsIntegrationProperties, attrValuesTeamsIntegrationProperties)
+	}
+
+}
+
+func ConvertSearchSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesSearchProperties := map[string]attr.Type{
 		"disable_docs_search":       types.BoolType,
 		"disable_community_search":  types.BoolType,
@@ -669,7 +687,7 @@ func SearchSettings(tenantSettingsDto TenantSettingsDto) basetypes.ObjectValue {
 	}
 
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.Search == nil {
-		return types.ObjectNull(attrTypesSearchProperties)
+		return types.ObjectType{AttrTypes: attrTypesSearchProperties}, types.ObjectNull(attrTypesSearchProperties)
 	} else {
 		attrValuesSearchProperties := map[string]attr.Value{
 			"disable_docs_search":       types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Search.DisableDocsSearch),
@@ -677,7 +695,7 @@ func SearchSettings(tenantSettingsDto TenantSettingsDto) basetypes.ObjectValue {
 			"disable_bing_video_search": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Search.DisableBingVideoSearch),
 		}
 
-		return types.ObjectValueMust(attrTypesSearchProperties, attrValuesSearchProperties)
+		return types.ObjectType{AttrTypes: attrTypesSearchProperties}, types.ObjectValueMust(attrTypesSearchProperties, attrValuesSearchProperties)
 	}
 }
 
