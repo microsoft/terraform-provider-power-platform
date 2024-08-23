@@ -37,13 +37,6 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 					}
 				}
 
-				resource "null_resource" "wait_60_seconds" {
-					provisioner "local-exec" {
-						command = "sleep 60"
-					}
-					depends_on = [powerplatform_environment.test_env]
-				}
-
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = powerplatform_environment.test_env.id
 					table_logical_name = "contact"
@@ -57,8 +50,6 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 					  birthdate          = "2024-04-10"
 					  description        = "This is the description of the the terraform \n\nsample contact"
 					}
-
-					depends_on = [null_resource.wait_60_seconds]
 				}
 
 				resource "powerplatform_data_record" "data_record_account" {
@@ -84,8 +75,6 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 								}
 							]
 						}
-
-						depends_on = [null_resource.wait_60_seconds]
 					}
 				`,
 
@@ -309,13 +298,6 @@ func TestAccDataRecordResource_Validate_Update(t *testing.T) {
 					}
 				}
 
-				resource "null_resource" "wait_60_seconds" {
-					provisioner "local-exec" {
-						command = "sleep 60"
-					}
-					depends_on = [powerplatform_environment.test_env]
-				}
-
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = powerplatform_environment.test_env.id
 					table_logical_name = "contact"
@@ -329,8 +311,6 @@ func TestAccDataRecordResource_Validate_Update(t *testing.T) {
 					  birthdate          = "2024-04-10"
 					  description        = "This is the description of the the terraform \n\nsample contact"
 					}
-
-					depends_on = [null_resource.wait_60_seconds]
 				}`,
 
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -538,13 +518,6 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 					}
 				}
 
-				resource "null_resource" "wait_60_seconds" {
-					provisioner "local-exec" {
-						command = "sleep 60"
-					}
-					depends_on = [powerplatform_environment.test_env]
-				}
-
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = powerplatform_environment.test_env.id
 					table_logical_name = "contact"
@@ -553,8 +526,6 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 					  lastname           = "Doe"
 					  emailaddress1      = "johndoe@contoso.com"
 					}
-
-					depends_on = [null_resource.wait_60_seconds]
 				}
 
 				resource "powerplatform_data_record" "data_record_account" {
@@ -814,13 +785,6 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					}
 				}
 
-				resource "null_resource" "wait_60_seconds" {
-					provisioner "local-exec" {
-						command = "sleep 60"
-					}
-					depends_on = [powerplatform_environment.test_env]
-				}
-
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = powerplatform_environment.test_env.id
 					table_logical_name = "contact"
@@ -829,7 +793,6 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					  firstname          = "contact1"
 					}
 
-					depends_on = [null_resource.wait_60_seconds]
 				}
 
 				resource "powerplatform_data_record" "data_record_sample_contact2" {
@@ -840,7 +803,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					  firstname          = "contact2"
 					}
 
-					depends_on = [null_resource.wait_60_seconds, powerplatform_data_record.data_record_sample_contact1]
+					depends_on = [powerplatform_data_record.data_record_sample_contact1]
 				}
 
 				resource "powerplatform_data_record" "data_record_sample_contact3" {
@@ -851,7 +814,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					  firstname          = "contact3"
 					}
 
-					depends_on = [null_resource.wait_60_seconds, powerplatform_data_record.data_record_sample_contact2]
+					depends_on = [powerplatform_data_record.data_record_sample_contact2]
 				}
 
 				resource "powerplatform_data_record" "data_record_account" {
@@ -915,13 +878,6 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					}
 				}
 
-				resource "null_resource" "wait_60_seconds" {
-					provisioner "local-exec" {
-						command = "sleep 60"
-					}
-					depends_on = [powerplatform_environment.test_env]
-				}
-
 				resource "powerplatform_data_record" "data_record_sample_contact2" {
 					environment_id     = powerplatform_environment.test_env.id
 					table_logical_name = "contact"
@@ -930,7 +886,6 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					  firstname          = "contact2"
 					}
 
-					depends_on = [null_resource.wait_60_seconds]
 				}
 
 				resource "powerplatform_data_record" "data_record_sample_contact3" {
@@ -941,7 +896,6 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					  firstname          = "contact3"
 					}
 
-					depends_on = [null_resource.wait_60_seconds]
 				}
 
 				resource "powerplatform_data_record" "data_record_account" {
@@ -1002,13 +956,6 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					}
 				}
 
-				resource "null_resource" "wait_60_seconds" {
-					provisioner "local-exec" {
-						command = "sleep 60"
-					}
-					depends_on = [powerplatform_environment.test_env]
-				}
-
 				resource "powerplatform_data_record" "data_record_sample_contact2" {
 					environment_id     = powerplatform_environment.test_env.id
 					table_logical_name = "contact"
@@ -1016,8 +963,6 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					  contactid = "00000000-0000-0000-0000-000000000020"
 					  firstname          = "contact2"
 					}
-
-					depends_on = [null_resource.wait_60_seconds]
 				}
 
 				resource "powerplatform_data_record" "data_record_sample_contact3" {
@@ -1027,8 +972,6 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 					  contactid = "00000000-0000-0000-0000-000000000030"
 					  firstname          = "contact3"
 					}
-
-					depends_on = [null_resource.wait_60_seconds]
 				}
 
 				resource "powerplatform_data_record" "data_record_account" {

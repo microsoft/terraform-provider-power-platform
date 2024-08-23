@@ -157,19 +157,8 @@ func TestAccSolutionsDataSource_Validate_Read(t *testing.T) {
 					}
 				}
 
-				resource "null_resource" "wait_60_seconds" {
-					provisioner "local-exec" {
-						command = "sleep 60"
-					}
-					depends_on = [powerplatform_environment.development]
-				}
-
 				data "powerplatform_solutions" "all" {
 					environment_id = powerplatform_environment.development.id
-
-					depends_on = [
-						null_resource.wait_60_seconds
-					]	
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

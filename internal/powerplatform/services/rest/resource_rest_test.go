@@ -34,13 +34,6 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 					}
 				}
 
-				resource "null_resource" "wait_60_seconds" {
-					provisioner "local-exec" {
-						command = "sleep 60"
-					}
-					depends_on = [powerplatform_environment.env]
-				}
-
 				locals {
 					body = jsonencode({
 						"accountid" : "00000000-0000-0000-0000-000000000001",
@@ -96,8 +89,6 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 						url    = "${powerplatform_environment.env.dataverse.url}/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)"
 						method = "DELETE"
 					}
-
-					depends_on = [null_resource.wait_60_seconds]
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_rest.query", "output.body", regexp.MustCompile(beforeUpdateRegex)),

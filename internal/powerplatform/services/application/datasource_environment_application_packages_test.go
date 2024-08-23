@@ -32,17 +32,8 @@ func TestAccEnvironmentApplicationPackagesDataSource_Validate_Read(t *testing.T)
 					}
 				}
 
-				resource "null_resource" "wait_60_seconds" {
-					provisioner "local-exec" {
-						command = "sleep 60"
-					}
-					depends_on = [powerplatform_environment.env]
-				}
-
 				data "powerplatform_environment_application_packages" "all_applications" {
 					environment_id = powerplatform_environment.env.id
-
-					depends_on = [ null_resource.wait_60_seconds ]
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
