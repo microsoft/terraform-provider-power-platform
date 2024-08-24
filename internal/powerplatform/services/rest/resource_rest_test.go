@@ -91,6 +91,12 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 					}
 
 					depends_on = [powerplatform_environment.env]
+
+					lifecycle {
+						ignore_changes = [
+							output.body
+						]
+					}
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_rest.query", "output.body", regexp.MustCompile(beforeUpdateRegex)),
@@ -167,6 +173,12 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 					}
 
 					depends_on = [powerplatform_environment.env]
+
+					lifecycle {
+						ignore_changes = [
+							output.body
+						]
+					}
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_rest.query", "output.body", regexp.MustCompile(afterUpdateRegex)),
