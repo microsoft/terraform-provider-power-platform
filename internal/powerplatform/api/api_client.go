@@ -130,12 +130,16 @@ func (client *ApiClient) Execute(ctx context.Context, method, url string, header
 	retryAfter := time.Duration(random5to10sec) * time.Second
 	for {
 		response, err = client.ExecuteForGivenScope(ctx, scope, method, url, headers, body, acceptableStatusCodes, responseObj)
+		if response == nil || response.Response == nil {
+			return response, err
+		}
+
 		if response.Response.StatusCode != http.StatusUnauthorized &&
 			response.Response.StatusCode != http.StatusGatewayTimeout {
 			return response, err
 		}
 
-		tflog.Warn(ctx, fmt.Sprintf("Received status code %d for request %s, retrying after %s", response.Response.StatusCode, url, retryAfter))
+		tflog.Debug(ctx, fmt.Sprintf("Received status code %d for request %s, retrying after %s", response.Response.StatusCode, url, retryAfter))
 
 		err = client.SleepWithContext(ctx, retryAfter)
 		if err != nil {
