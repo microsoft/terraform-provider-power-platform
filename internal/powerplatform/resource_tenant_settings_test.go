@@ -560,7 +560,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/listTenantSettings?api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
 			listSettingsResponseCount++
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/tenant_settings/tests/resources/Validate_Update/post_update_tenant_settings_%d.json", listSettingsResponseCount)).String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/tenant_settings/tests/resources/Validate_Update/post_list_tenant_settings_%d.json", listSettingsResponseCount)).String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
