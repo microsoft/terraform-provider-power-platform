@@ -686,7 +686,7 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 	correctedDto := applyCorrections(stateDto, originalSettings)
 	if correctedDto == nil {
 		resp.Diagnostics.AddError(
-			"Error applying corrections", fmt.Sprintf("Error applying corrections"),
+			"Error applying corrections", "Error applying corrections",
 		)
 		return
 	}

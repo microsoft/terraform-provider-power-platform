@@ -97,6 +97,9 @@ Read-Only:
 - `disable_admin_digest` (Boolean) Disable Admin Digest
 - `disable_developer_environment_creation_by_non_admin_users` (Boolean) Disable Developer Environment Creation By Non Admin Users
 - `enable_default_environment_routing` (Boolean) Enable Default Environment Routing
+- `environment_routing_all_makers` (Boolean) Select who can be routed to a new personal developer environment. (All Makers = true, New Makers = false)
+- `environment_routing_target_environment_group_id` (String) Assign newly created personal developer environments to a specific environment group
+- `environment_routing_target_security_group_id` (String) Restrict routing to members of the following security group. (00000000-0000-0000-0000-000000000000 allows all users)
 - `policy` (Attributes) Policy (see [below for nested schema](#nestedatt--power_platform--governance--policy))
 
 <a id="nestedatt--power_platform--governance--policy"></a>
