@@ -19,11 +19,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/customtypes"
 	modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 )
 
 var _ resource.Resource = &TenantSettingsResource{}
 var _ resource.ResourceWithImportState = &TenantSettingsResource{}
+var _ resource.ResourceWithModifyPlan = &TenantSettingsResource{}
+
+const ZERO_UUID = "00000000-0000-0000-0000-000000000000"
 
 func NewTenantSettingsResource() resource.Resource {
 	return &TenantSettingsResource{
@@ -303,34 +307,24 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								},
 							},
 							"environment_routing_target_environment_group_id": schema.StringAttribute{
-								Description: "Assign newly created personal developer environments to a specific environment group",
-								Optional:    true,
-								PlanModifiers: []planmodifier.String{
-									// stringplanmodifier.UseStateForUnknown(),
-									modifiers.SetValueOnDestroyStringModifier("00000000-0000-0000-0000-000000000000"),
-								},
+								Description:   "Assign newly created personal developer environments to a specific environment group",
+								Optional:      true,
+								CustomType:    customtypes.UUIDType{},
+								PlanModifiers: []planmodifier.String{},
 							},
 							"environment_routing_target_security_group_id": schema.StringAttribute{
-								Description: "Restrict routing to members of the following security group. (00000000-0000-0000-0000-000000000000 allows all users)",
-								Optional:    true,
-								PlanModifiers: []planmodifier.String{
-									// stringplanmodifier.UseStateForUnknown(),
-									modifiers.SetValueOnDestroyStringModifier("00000000-0000-0000-0000-000000000000"),
-								},
+								Description:   "Restrict routing to members of the following security group. (00000000-0000-0000-0000-000000000000 allows all users)",
+								Optional:      true,
+								CustomType:    customtypes.UUIDType{},
+								PlanModifiers: []planmodifier.String{},
 							},
 							"policy": schema.SingleNestedAttribute{
-								Description:   "Policy",
-								Optional:      true,
-								PlanModifiers: []planmodifier.Object{
-									// objectplanmodifier.UseStateForUnknown(),
-								},
+								Description: "Policy",
+								Optional:    true,
 								Attributes: map[string]schema.Attribute{
 									"enable_desktop_flow_data_policy_management": schema.BoolAttribute{
-										Description:   "Enable Desktop Flow Data Policy Management",
-										Optional:      true,
-										PlanModifiers: []planmodifier.Bool{
-											// boolplanmodifier.UseStateForUnknown(),
-										},
+										Description: "Enable Desktop Flow Data Policy Management",
+										Optional:    true,
 									},
 								},
 							},
@@ -546,18 +540,9 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	// Get the tenant
-	tenant, errt := r.TenantSettingClient.GetTenant(ctx)
-	if errt != nil {
-		resp.Diagnostics.AddError(
-			"Error reading tenant", fmt.Sprintf("Error reading tenant: %s", errt.Error()),
-		)
-		return
-	}
-
 	// Update tenant settings via the API
-	tenantSettingsToCreate := ConvertFromTenantSettingsModel(ctx, plan)
-	tenantSettingsDto, err := r.TenantSettingClient.UpdateTenantSettings(ctx, tenantSettingsToCreate)
+	plannedSettingsDto := ConvertFromTenantSettingsModel(ctx, plan)
+	tenantSettingsDto, err := r.TenantSettingClient.UpdateTenantSettings(ctx, plannedSettingsDto)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating tenant settings", fmt.Sprintf("Error creating tenant settings: %s", err.Error()),
@@ -565,125 +550,20 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	stateDto := filterDto(tenantSettingsToCreate, *tenantSettingsDto).(*TenantSettingsDto)
-	state, _ := ConvertFromTenantSettingsDto(*stateDto)
+	stateDto := applyCorrections(plannedSettingsDto, *tenantSettingsDto)
 
-	state.Id = types.StringValue(tenant.TenantId)
+	state, _ := ConvertFromTenantSettingsDto(*stateDto)
+	state.Id = plan.Id
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
-	//var rawAttrs map[string]tftypes.Value
-	//req.Plan.Raw.As(&rawAttrs)
-
-	// var stateAttrs map[string]tftypes.Value
-	// stateObj.As(ctx, &stateAttrs, basetypes.ObjectAsOptions{})
-
-	//removeUnconfiguredState(ctx, rawAttrs, req, resp, path.Empty())
-
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
-	//resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-// func removeUnconfiguredState(ctx context.Context, attrs map[string]tftypes.Value, req resource.CreateRequest, resp *resource.CreateResponse, p path.Path) {
-// 	var val attr.Value
-
-// 	for attrName := range attrs {
-
-// 		pat := p.AtName(attrName)
-
-// 		// Get the configured value
-// 		diag := req.Plan.GetAttribute(ctx, pat, &val)
-// 		if diag.HasError() {
-// 			continue
-// 		}
-
-// 		terraformType := val.Type(ctx).TerraformType(ctx)
-
-// 		switch {
-// 		case terraformType.Is(tftypes.Object{}):
-// 			v, e := val.ToTerraformValue(ctx)
-// 			if e != nil {
-// 				continue
-// 			}
-
-// 			child := map[string]tftypes.Value{}
-// 			e = v.As(&child)
-// 			if e != nil {
-// 				continue
-// 			}
-
-// 			//call recursively
-// 			removeUnconfiguredState(ctx, child, req, resp, pat)
-
-// 			// check if we have state for this attribute
-// 			var pval interface{}
-// 			resp.State.GetAttribute(ctx, pat, &pval)
-
-// 			if val.IsNull() && pval != nil {
-// 				matches, err := resp.State.PathMatches(ctx, pat.Expression())
-// 				if err != nil {
-// 					continue
-// 				}
-// 				matches.String()
-
-// 				on := basetypes.NewObjectNull(pval.(*basetypes.ObjectType).AttrTypes)
-// 				//tftypes.NewValue(val.Type(ctx).TerraformType(ctx), nil)
-// 				d := resp.State.SetAttribute(ctx, pat, on)
-// 				if d.HasError() {
-// 					continue
-// 				}
-// 			}
-// 		case terraformType.Is(tftypes.String):
-// 			if val.IsNull() {
-// 				var testVal *string
-// 				resp.State.GetAttribute(ctx, pat, &testVal)
-// 				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %s", pat, testVal))
-// 				diag := resp.State.SetAttribute(ctx, pat, types.StringNull())
-// 				if diag.HasError() {
-// 					continue
-// 				}
-// 				resp.State.GetAttribute(ctx, pat, &testVal)
-// 				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %s", pat, testVal))
-// 			}
-// 		case terraformType.Is(tftypes.Bool):
-// 			if val.IsNull() {
-// 				var testVal *bool
-// 				resp.State.GetAttribute(ctx, pat, &testVal)
-// 				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %t", pat, testVal))
-// 				diag := resp.State.SetAttribute(ctx, pat, types.BoolNull())
-// 				if diag.HasError() {
-// 					continue
-// 				}
-// 				resp.State.GetAttribute(ctx, pat, &testVal)
-// 				tflog.Debug(ctx, fmt.Sprintf("Setting %s to %t", pat, testVal))
-// 			}
-// 		case terraformType.Is(tftypes.Map{}):
-// 		case terraformType.Is(tftypes.List{}):
-// 		case terraformType.Is(tftypes.Number):
-// 		case terraformType.Is(tftypes.Tuple{}):
-// 		case terraformType.Is(tftypes.Set{}):
-// 		case terraformType.Is(tftypes.DynamicPseudoType):
-// 		default:
-// 		}
-// 	}
-// }
-
 func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state TenantSettingsSourceModel
-
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.ProviderTypeName))
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
 	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	tenant, errt := r.TenantSettingClient.GetTenant(ctx)
-	if errt != nil {
-		resp.Diagnostics.AddError(
-			"Error reading tenant", fmt.Sprintf("Error reading tenant: %s", errt.Error()),
-		)
 		return
 	}
 
@@ -695,18 +575,24 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
+	tenant, errt := r.TenantSettingClient.GetTenant(ctx)
+	if errt != nil {
+		resp.Diagnostics.AddError(
+			"Error reading tenant", fmt.Sprintf("Error reading tenant: %s", errt.Error()),
+		)
+		return
+	}
+
 	var configuredSettings TenantSettingsSourceModel
-	req.State.Get(ctx, &configuredSettings)
-	state, _ = ConvertFromTenantSettingsDto(*tenantSettings)
-	// hash, err := tenantSettings.CalcObjectHash()
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())
-	// }
-	state.Id = types.StringValue(tenant.TenantId)
+	resp.Diagnostics.Append(req.State.Get(ctx, &configuredSettings)...)
+	oldStateDto := ConvertFromTenantSettingsModel(ctx, configuredSettings)
+	newStateDto := applyCorrections(oldStateDto, *tenantSettings)
+	newState, _ := ConvertFromTenantSettingsDto(*newStateDto)
+	newState.Id = types.StringValue(tenant.TenantId)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_tenant_settings with id %s", r.ProviderTypeName, state.Id.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s_tenant_settings with id %s", r.ProviderTypeName, newState.Id.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
@@ -716,22 +602,40 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	tenant, errt := r.TenantSettingClient.GetTenant(ctx)
-	if errt != nil {
-		resp.Diagnostics.AddError(
-			"Error reading tenant", fmt.Sprintf("Error reading tenant: %s", errt.Error()),
-		)
-		return
+	plannedDto := ConvertFromTenantSettingsModel(ctx, plan)
+
+	// Preprocessing updates is unfortunately needed because Terraform can not treat a zeroed UUID as a null value.
+	// This captures the case where a UUID is changed from known to zeroed/null.  Zeroed UUIDs come back as null from the API.
+	// The plannedDto remembers what the user intended, and the preprocessedDto is what we will send to the API.
+	preprocessedDto := ConvertFromTenantSettingsModel(ctx, plan)
+
+	needsProcessing := func(p path.Path) bool {
+		var attrPlan customtypes.UUID
+		var attrState customtypes.UUID
+
+		diag := req.State.GetAttribute(ctx, p, &attrState)
+		diag2 := req.Plan.GetAttribute(ctx, p, &attrPlan)
+		if !diag.HasError() && !diag2.HasError() {
+			return !attrState.IsNull() && attrPlan.IsNull()
+		}
+
+		return false
 	}
 
-	tenantSettingsToUpdate := ConvertFromTenantSettingsModel(ctx, plan)
+	if needsProcessing(path.Root("power_platform").AtName("governance").AtName("environment_routing_target_security_group_id")) {
+		preprocessedDto.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId = types.StringValue(ZERO_UUID).ValueStringPointer()
+	}
 
-	tenantSettings, err := r.TenantSettingClient.UpdateTenantSettings(ctx, tenantSettingsToUpdate)
+	if needsProcessing(path.Root("power_platform").AtName("governance").AtName("environment_routing_target_environment_group_id")) {
+		preprocessedDto.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId = types.StringValue(ZERO_UUID).ValueStringPointer()
+	}
+
+	// send preprocessedDto to the API
+	updatedSettingsDto, err := r.TenantSettingClient.UpdateTenantSettings(ctx, preprocessedDto)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating tenant settings", fmt.Sprintf("Error updating tenant settings: %s", err.Error()),
@@ -739,24 +643,82 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	var configuredSettings TenantSettingsSourceModel
-	req.Config.Get(ctx, &configuredSettings)
-	plan, _ = ConvertFromTenantSettingsDto(*tenantSettings)
-	// hash, err := tenantSettings.CalcObjectHash()
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())
-	// }
-	plan.Id = types.StringValue(tenant.TenantId)
+	// need to make corrections from what the API returns to match what terraform expects
+	filteredDto := applyCorrections(plannedDto, *updatedSettingsDto)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	newState, _ := ConvertFromTenantSettingsDto(*filteredDto)
+	newState.Id = plan.Id
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// todo: restore to previous state
+	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
 
+	resp.Diagnostics.AddWarning("Tenant Settings are not deleted", "Tenant Settings may not be deleted in Power Platform.  Deleting this resource will attempt to restore settings to their previous values and remove this configuration from Terraform state.")
+
+	var state TenantSettingsSourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	stateDto := ConvertFromTenantSettingsModel(ctx, state)
+
+	// restore to previous state
+	previousBytes, err := req.Private.GetKey(ctx, "original_settings")
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error reading original settings", fmt.Sprintf("Error reading original settings: %s", err.Errors()),
+		)
+		return
+	}
+
+	var originalSettings TenantSettingsDto
+	err2 := json.Unmarshal(previousBytes, &originalSettings)
+	if err2 != nil {
+		resp.Diagnostics.AddError(
+			"Error unmarshalling original settings", fmt.Sprintf("Error unmarshalling original settings: %s", err2.Error()),
+		)
+		return
+	}
+
+	correctedDto := applyCorrections(stateDto, originalSettings)
+	if correctedDto == nil {
+		resp.Diagnostics.AddError(
+			"Error applying corrections", fmt.Sprintf("Error applying corrections"),
+		)
+		return
+	}
+
+	_, e := r.TenantSettingClient.UpdateTenantSettings(ctx, *correctedDto)
+	if e != nil {
+		resp.Diagnostics.AddError(
+			"Error deleting tenant settings", fmt.Sprintf("Error deleting tenant settings: %s", e.Error()),
+		)
+		return
+	}
 }
 
 func (r *TenantSettingsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *TenantSettingsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	var plan TenantSettingsSourceModel
+	if !req.Plan.Raw.IsNull() {
+		//this is create
+		req.Plan.Get(ctx, &plan)
+		if plan.Id.IsUnknown() || plan.Id.IsNull() {
+			tenant, errt := r.TenantSettingClient.GetTenant(ctx)
+			if errt != nil {
+				resp.Diagnostics.AddError(
+					"Error reading tenant", fmt.Sprintf("Error reading tenant: %s", errt.Error()),
+				)
+				return
+			}
+			plan.Id = types.StringValue(tenant.TenantId)
+			resp.Plan.Set(ctx, &plan)
+		}
+	}
 }
