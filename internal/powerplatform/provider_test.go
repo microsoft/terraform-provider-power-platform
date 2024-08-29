@@ -33,6 +33,7 @@ import (
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	rest "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/rest"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
+	tenant "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
 	"github.com/stretchr/testify/require"
 )
@@ -86,6 +87,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		data_record.NewDataRecordDataSource(),
 		rest.NewDataverseWebApiDatasource(),
 		capacity.NewTenantCapcityDataSource(),
+		tenant.NewTenantDataSource(),
 	}
 	datasources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).DataSources(context.Background())
 

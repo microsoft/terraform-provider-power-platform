@@ -40,6 +40,7 @@ import (
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	rest "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/rest"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
+	tenant "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
 )
 
@@ -469,6 +470,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return connections.NewConnectionsDataSource() },
 		func() datasource.DataSource { return connection.NewConnectionSharesDataSource() },
 		func() datasource.DataSource { return capacity.NewTenantCapcityDataSource() },
+		func() datasource.DataSource { return tenant.NewTenantDataSource() },
 	}
 }
 

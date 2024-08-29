@@ -10,8 +10,10 @@ provider "powerplatform" {
   use_cli = true
 }
 
+data "powerplatform_client_config" "current" {}
+
 data "powerplatform_tenant_capacity" "capacity" {
-  tenant_id = "4481d6dc-0f72-4841-a3a9-0c8f9798d2d6"
+  tenant_id = data.powerplatform_client_config.current.tenant_id
 }
 
 output "tenant_capacity" {
