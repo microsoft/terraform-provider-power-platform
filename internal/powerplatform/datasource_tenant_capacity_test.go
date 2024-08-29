@@ -28,7 +28,8 @@ func TestUnitTestTenantCapacityDataSource_Validate_Read(t *testing.T) {
 			{
 				Config: TestsUnitProviderConfig + `
 				data "powerplatform_tenant_capacity" "capacity" {
-					tenant_id = "00000000-0000-0000-0000-000000000001"}`,
+					tenant_id = "00000000-0000-0000-0000-000000000001"
+					}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.powerplatform_tenant_capacity.capacity", "tenant_id"),
