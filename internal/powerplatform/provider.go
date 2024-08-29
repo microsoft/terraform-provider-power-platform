@@ -23,6 +23,7 @@ import (
 	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
+	capacity "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/capacity"
 	connection "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connection"
 	connections "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connection"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
@@ -460,6 +461,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return rest.NewDataverseWebApiDatasource() },
 		func() datasource.DataSource { return connections.NewConnectionsDataSource() },
 		func() datasource.DataSource { return connection.NewConnectionSharesDataSource() },
+		func() datasource.DataSource { return capacity.NewTenantCapcityDataSource() },
 	}
 }
 
