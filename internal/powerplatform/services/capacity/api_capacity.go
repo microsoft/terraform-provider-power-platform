@@ -27,7 +27,7 @@ const ()
 func (client *CapacityClient) GetTenantCapacity(ctx context.Context, tenantId string) (*TenantCapacityDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   "licensing.powerplatform.microsoft.com",
+		Host:   client.Api.GetConfig().Urls.LicensingUrl,
 		Path:   fmt.Sprintf("/v0.1-alpha/tenants/%s/TenantCapacity", tenantId),
 	}
 
