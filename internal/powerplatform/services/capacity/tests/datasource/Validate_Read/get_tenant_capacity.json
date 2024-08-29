@@ -1,0 +1,549 @@
+{
+    "tenantId": "00000000-0000-0000-0000-000000000001",
+    "licenseModelType": "StorageDriven",
+    "capacitySummary": {
+        "status": "Available",
+        "statusMessage": "You have available capacity across all storage types.",
+        "statusMessageCode": "AllCapacityAvailable",
+        "finOpsStatus": "None",
+        "finOpsStatusMessage": "Finance and Operations Storage Capacity Usage reporting is in preview and for information only.",
+        "finOpsStatusMessageCode": "FinOpsNotAvailable"
+    },
+    "tenantCapacities": [
+        {
+            "capacityType": "Database",
+            "capacityUnits": "MB",
+            "totalCapacity": 11264.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 2101.094,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "Available",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "Database",
+                    "capacitySubType": "DatabaseBase",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                },
+                {
+                    "capacityType": "Database",
+                    "capacitySubType": "DatabaseIncremental",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                },
+                {
+                    "capacityType": "Database",
+                    "capacitySubType": "DatabaseAddOn",
+                    "totalCapacity": 11264.0,
+                    "licenses": [
+                        {
+                            "entitlementCode": "CDS_DB_Capacity",
+                            "displayName": "Database capacity",
+                            "servicePlanId": "00000000-0000-0000-0000-000000000002",
+                            "skuId": "00000000-0000-0000-0000-000000000002",
+                            "paid": {
+                                "enabled": 11,
+                                "warning": 0,
+                                "suspended": 0
+                            },
+                            "trial": {
+                                "enabled": 0,
+                                "warning": 0,
+                                "suspended": 0
+                            },
+                            "totalCapacity": 11264.0,
+                            "capabilityStatus": "Enabled"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "capacityType": "File",
+            "capacityUnits": "MB",
+            "totalCapacity": 0.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 2646.107,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "Available",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "File",
+                    "capacitySubType": "FileBase",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                },
+                {
+                    "capacityType": "File",
+                    "capacitySubType": "FileIncremental",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                },
+                {
+                    "capacityType": "File",
+                    "capacitySubType": "FileAddOn",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        },
+        {
+            "capacityType": "Log",
+            "capacityUnits": "MB",
+            "totalCapacity": 0.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "Available",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "Log",
+                    "capacitySubType": "LogBase",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                },
+                {
+                    "capacityType": "Log",
+                    "capacitySubType": "LogAddOn",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        },
+        {
+            "capacityType": "TrialDatabase",
+            "capacityUnits": "MB",
+            "totalCapacity": 1024000.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "None",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "TrialDatabase",
+                    "capacitySubType": "TrialDatabaseBase",
+                    "totalCapacity": 1024000.0,
+                    "licenses": [
+                        {
+                            "entitlementCode": "D365_cds_Viral",
+                            "displayName": "",
+                            "servicePlanId": "00000000-0000-0000-0000-000000000002",
+                            "skuId": "00000000-0000-0000-0000-000000000002",
+                            "paid": {
+                                "enabled": 10000,
+                                "warning": 0,
+                                "suspended": 0
+                            },
+                            "trial": {
+                                "enabled": 0,
+                                "warning": 0,
+                                "suspended": 0
+                            },
+                            "totalCapacity": 1024000.0,
+                            "capabilityStatus": "Enabled"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "capacityType": "TrialFile",
+            "capacityUnits": "MB",
+            "totalCapacity": 0.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "Available",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "TrialFile",
+                    "capacitySubType": "TrialFileBase",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        },
+        {
+            "capacityType": "TrialLog",
+            "capacityUnits": "MB",
+            "totalCapacity": 0.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "Available",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "TrialLog",
+                    "capacitySubType": "TrialLogBase",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        },
+        {
+            "capacityType": "SubscriptionTrialDatabase",
+            "capacityUnits": "MB",
+            "totalCapacity": 0.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "None",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "SubscriptionTrialDatabase",
+                    "capacitySubType": "SubscriptionTrialDatabaseBase",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        },
+        {
+            "capacityType": "SubscriptionTrialFile",
+            "capacityUnits": "MB",
+            "totalCapacity": 0.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "Available",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "SubscriptionTrialFile",
+                    "capacitySubType": "SubscriptionTrialFileBase",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        },
+        {
+            "capacityType": "SubscriptionTrialLog",
+            "capacityUnits": "MB",
+            "totalCapacity": 0.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "Available",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "SubscriptionTrialDatabase",
+                    "capacitySubType": "SubscriptionTrialLogBase",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        },
+        {
+            "capacityType": "SubscriptionTrialEnvironmentCount",
+            "capacityUnits": "Unit",
+            "totalCapacity": 0.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "None",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "SubscriptionTrialEnvironmentCount",
+                    "capacitySubType": "SubscriptionTrialEnvironmentCountBase",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                },
+                {
+                    "capacityType": "SubscriptionTrialEnvironmentCount",
+                    "capacitySubType": "SubscriptionTrialEnvironmentCountIncremental",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        },
+        {
+            "capacityType": "M365Database",
+            "capacityUnits": "MB",
+            "totalCapacity": 10240.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "None",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "M365Database",
+                    "capacitySubType": "M365DatabaseBase",
+                    "totalCapacity": 10240.0,
+                    "maxNextLifecycleDate": "2025-08-16T00:00:00+00:00",
+                    "licenses": [
+                        {
+                            "entitlementCode": "CDS_O365_P3",
+                            "displayName": "Common Data Service Lite_P3",
+                            "servicePlanId": "00000000-0000-0000-0000-000000000002",
+                            "skuId": "00000000-0000-0000-0000-000000000002",
+                            "paid": {
+                                "enabled": 0,
+                                "warning": 0,
+                                "suspended": 0
+                            },
+                            "trial": {
+                                "enabled": 15,
+                                "warning": 0,
+                                "suspended": 0
+                            },
+                            "totalCapacity": 10240.0,
+                            "nextLifecycleDate": "2025-08-16T00:00:00+00:00",
+                            "capabilityStatus": "Enabled"
+                        }
+                    ]
+                },
+                {
+                    "capacityType": "M365Database",
+                    "capacitySubType": "M365DatabaseIncremental",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        },
+        {
+            "capacityType": "M365EnvironmentCount",
+            "capacityUnits": "Unit",
+            "totalCapacity": 5.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "None",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "M365EnvironmentCount",
+                    "capacitySubType": "M365EnvironmentCountBase",
+                    "totalCapacity": 5.0,
+                    "maxNextLifecycleDate": "2025-08-16T00:00:00+00:00",
+                    "licenses": [
+                        {
+                            "entitlementCode": "CDS_O365_P3",
+                            "displayName": "Common Data Service Lite_P3",
+                            "servicePlanId": "00000000-0000-0000-0000-000000000002",
+                            "skuId": "00000000-0000-0000-0000-000000000002",
+                            "paid": {
+                                "enabled": 0,
+                                "warning": 0,
+                                "suspended": 0
+                            },
+                            "trial": {
+                                "enabled": 15,
+                                "warning": 0,
+                                "suspended": 0
+                            },
+                            "totalCapacity": 5.0,
+                            "nextLifecycleDate": "2025-08-16T00:00:00+00:00",
+                            "capabilityStatus": "Enabled"
+                        }
+                    ]
+                },
+                {
+                    "capacityType": "M365EnvironmentCount",
+                    "capacitySubType": "M365EnvironmentCountIncremental",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        },
+        {
+            "capacityType": "CapacityPass",
+            "capacityUnits": "Unit",
+            "totalCapacity": 0.0,
+            "maxCapacity": 1.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "0001-01-01T00:00:00+00:00",
+                "ratedUpdatedOn": "0001-01-01T00:00:00+00:00"
+            },
+            "status": "None",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "CapacityPass",
+                    "capacitySubType": "CapacityPassBase",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        },
+        {
+            "capacityType": "ApiCallCount",
+            "capacityUnits": "None",
+            "totalCapacity": 25000.0,
+            "maxCapacity": 10000000.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "0001-01-01T00:00:00+00:00",
+                "ratedUpdatedOn": "0001-01-01T00:00:00+00:00"
+            },
+            "status": "Available",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "ApiCallCount",
+                    "capacitySubType": "ApiCallCountBase",
+                    "totalCapacity": 25000.0,
+                    "licenses": [
+                        {
+                            "entitlementCode": "D365_cds_Dev_Viral",
+                            "displayName": "",
+                            "servicePlanId": "00000000-0000-0000-0000-000000000002",
+                            "skuId": "00000000-0000-0000-0000-000000000002",
+                            "paid": {
+                                "enabled": 10000,
+                                "warning": 0,
+                                "suspended": 0
+                            },
+                            "trial": {
+                                "enabled": 0,
+                                "warning": 0,
+                                "suspended": 0
+                            },
+                            "totalCapacity": 25000.0,
+                            "capabilityStatus": "Enabled"
+                        },
+                        {
+                            "entitlementCode": "D365_cds_Viral",
+                            "displayName": "",
+                            "servicePlanId": "00000000-0000-0000-0000-000000000002",
+                            "skuId": "00000000-0000-0000-0000-000000000002",
+                            "paid": {
+                                "enabled": 10000,
+                                "warning": 0,
+                                "suspended": 0
+                            },
+                            "trial": {
+                                "enabled": 0,
+                                "warning": 0,
+                                "suspended": 0
+                            },
+                            "totalCapacity": 25000.0,
+                            "capabilityStatus": "Enabled"
+                        }
+                    ]
+                },
+                {
+                    "capacityType": "ApiCallCount",
+                    "capacitySubType": "ApiCallCountIncremental",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        },
+        {
+            "capacityType": "FinOpsDatabase",
+            "capacityUnits": "MB",
+            "totalCapacity": 0.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "Available",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "FinOpsDatabase",
+                    "capacitySubType": "FinOpsDatabaseBase",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                },
+                {
+                    "capacityType": "FinOpsDatabase",
+                    "capacitySubType": "FinOpsDatabaseIncremental",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        },
+        {
+            "capacityType": "FinOpsFile",
+            "capacityUnits": "MB",
+            "totalCapacity": 0.0,
+            "maxCapacity": 0.0,
+            "consumption": {
+                "actual": 0.0,
+                "rated": 0.0,
+                "actualUpdatedOn": "2024-08-28T18:55:26.0217309+00:00",
+                "ratedUpdatedOn": "2024-08-28T18:55:26.0217309+00:00"
+            },
+            "status": "Available",
+            "overflowCapacity": [],
+            "capacityEntitlements": [
+                {
+                    "capacityType": "FinOpsFile",
+                    "capacitySubType": "FinOpsFileBase",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                },
+                {
+                    "capacityType": "FinOpsFile",
+                    "capacitySubType": "FinOpsFileIncremental",
+                    "totalCapacity": 0.0,
+                    "licenses": []
+                }
+            ]
+        }
+    ]
+}
