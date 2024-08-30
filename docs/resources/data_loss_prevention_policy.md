@@ -238,3 +238,12 @@ Required:
 - `behavior` (String) Behavior of the endpoint rule ("Allow", "Deny")
 - `endpoint` (String) Endpoint of the endpoint rule
 - `order` (Number) Order of the endpoint rule
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# DLP Policies can be imported using the DLP policy id
+terraform import powerplatform_data_loss_prevention_policy.example_dlp 00000000-0000-0000-0000-000000000000
+```

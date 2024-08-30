@@ -20,8 +20,6 @@ A Power Platform environment is a space in which you can store, manage, and shar
 
 ## Example Usage
 
-
-
 ```terraform
 terraform {
   required_providers {
@@ -92,5 +90,11 @@ Read-Only:
 - `url` (String) Url of the environment
 - `version` (String) Version of the environment
 
+## Import
 
+Import is supported using the following syntax:
 
+```shell
+# Environment resource can be imported using the environment id id, e.g.
+terraform import powerplatform_environment.example 00000000-0000-0000-0000-000000000000
+```
