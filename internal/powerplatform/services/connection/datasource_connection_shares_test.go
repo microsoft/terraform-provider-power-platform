@@ -13,7 +13,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
-// TODO: turning off until we fix the testing tenant
 func TestAccConnectionsShareDataSource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
