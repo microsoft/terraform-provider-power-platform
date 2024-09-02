@@ -29,7 +29,8 @@ terraform {
       source = "microsoft/power-platform"
     }
     azurerm = {
-      source = "hashicorp/azurerm"
+      source  = "hashicorp/azurerm"
+      version = "4.0.1"
     }
     azurecaf = {
       source = "aztfmod/azurecaf"
