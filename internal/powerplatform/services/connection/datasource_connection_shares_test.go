@@ -9,98 +9,109 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
-//TODO: turning off until we fix the testing tenant
-// func TestAccConnectionsShareDataSource_Validate_Read(t *testing.T) {
-// 	resource.Test(t, resource.TestCase{
-// 		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				//lintignore:AT004
-// 				Config: provider.TestsAcceptanceProviderConfig + `
-// 				provider "azuread" {
-// 				}
+// TODO: turning off until we fix the testing tenant
+func TestAccConnectionsShareDataSource_Validate_Read(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				//lintignore:AT004
+				Config: provider.TestsAcceptanceProviderConfig + `
+				provider "azuread" {
+				}
 
-// 				data "azuread_domains" "aad_domains" {
-// 					only_initial = true
-// 				}
+				data "azuread_domains" "aad_domains" {
+					only_initial = true
+				}
 
-// 				locals {
-// 					domain_name = data.azuread_domains.aad_domains.domains[0].domain_name
-// 				}
+				data "azuread_group" "licensing_group" {
+					display_name     = "` + mocks.TestsEntraLicesingGroupName() + `"
+					security_enabled = true
+				}
 
-// 				resource "random_password" "passwords" {
-// 					length           = 16
-// 					special          = true
-// 					override_special = "_%@"
-// 				}
+				resource "azuread_group_member" "example" {
+					group_object_id  = data.azuread_group.licensing_group.object_id
+					member_object_id = azuread_user.test_user.object_id
+				}
 
-// 				resource "azuread_user" "test_user" {
-// 					user_principal_name = "` + mocks.TestName() + `@${local.domain_name}"
-// 					display_name        = "` + mocks.TestName() + `"
-// 					mail_nickname       = "` + mocks.TestName() + `"
-// 					password            = random_password.passwords.result
-// 					usage_location      = "US"
-// 				}
+				locals {
+					domain_name = data.azuread_domains.aad_domains.domains[0].domain_name
+				}
 
-// 				resource "powerplatform_environment" "env" {
-// 					display_name     = "` + mocks.TestName() + `"
-// 					location         = "unitedstates"
-// 					environment_type = "Sandbox"
-// 					dataverse = {
-// 					  language_code     = "1033"
-// 					  currency_code     = "USD"
-// 					  security_group_id = "00000000-0000-0000-0000-000000000000"
-// 					}
-// 				}
+				resource "random_password" "passwords" {
+					length           = 16
+					special          = true
+					override_special = "_%@"
+				}
 
-// 				resource "powerplatform_connection" "azure_openai_connection" {
-// 					environment_id = powerplatform_environment.env.id
-// 					name           = "shared_azureopenai"
-// 					display_name   = "OpenAI Connection ` + mocks.TestName() + `"
-// 					connection_parameters = jsonencode({
-// 					  "azureOpenAIResourceName" : "aaa",
-// 					  "azureOpenAIApiKey" : "bbb"
-// 					  "azureSearchEndpointUrl" : "ccc",
-// 					  "azureSearchApiKey" : "ddd"
-// 					})
+				resource "azuread_user" "test_user" {
+					user_principal_name = "` + mocks.TestName() + `@${local.domain_name}"
+					display_name        = "` + mocks.TestName() + `"
+					mail_nickname       = "` + mocks.TestName() + `"
+					password            = random_password.passwords.result
+					usage_location      = "US"
+				}
 
-// 					lifecycle {
-// 					  ignore_changes = [
-// 						connection_parameters
-// 					  ]
-// 					}
-// 				}
+				resource "powerplatform_environment" "env" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "unitedstates"
+					environment_type = "Sandbox"
+					dataverse = {
+					  language_code     = "1033"
+					  currency_code     = "USD"
+					  security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
 
-// 				resource "powerplatform_connection_share" "share_with_user1" {
-// 					environment_id = powerplatform_environment.env.id
-// 					connector_name = powerplatform_connection.azure_openai_connection.name
-// 					connection_id  = powerplatform_connection.azure_openai_connection.id
-// 					role_name      = "CanEdit"
-// 					principal = {
-// 					  entra_object_id = azuread_user.test_user.object_id
-// 					}
-// 				}
+				resource "powerplatform_connection" "azure_openai_connection" {
+					environment_id = powerplatform_environment.env.id
+					name           = "shared_azureopenai"
+					display_name   = "OpenAI Connection ` + mocks.TestName() + `"
+					connection_parameters = jsonencode({
+					  "azureOpenAIResourceName" : "aaa",
+					  "azureOpenAIApiKey" : "bbb"
+					  "azureSearchEndpointUrl" : "ccc",
+					  "azureSearchApiKey" : "ddd"
+					})
 
-// 				data "powerplatform_connection_shares" "all_shares" {
-// 					environment_id = powerplatform_environment.env.id
-// 					connector_name = "shared_azureopenai"
-// 					connection_id  = powerplatform_connection.azure_openai_connection.id
+					lifecycle {
+					  ignore_changes = [
+						connection_parameters
+					  ]
+					}
+				}
 
-// 					depends_on = [
-// 					  powerplatform_connection_share.share_with_user1
-// 					]
-// 				}
-// 				`,
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					resource.TestCheckResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.#", "2"),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
+				resource "powerplatform_connection_share" "share_with_user1" {
+					environment_id = powerplatform_environment.env.id
+					connector_name = powerplatform_connection.azure_openai_connection.name
+					connection_id  = powerplatform_connection.azure_openai_connection.id
+					role_name      = "CanEdit"
+					principal = {
+					  entra_object_id = azuread_user.test_user.object_id
+					}
+				}
+
+				data "powerplatform_connection_shares" "all_shares" {
+					environment_id = powerplatform_environment.env.id
+					connector_name = "shared_azureopenai"
+					connection_id  = powerplatform_connection.azure_openai_connection.id
+
+					depends_on = [
+					  powerplatform_connection_share.share_with_user1
+					]
+				}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.#", "2"),
+				),
+			},
+		},
+	})
+}
 
 func TestUnitConnectionsShareDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()

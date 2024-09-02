@@ -15,7 +15,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
-// TODO: turning off until we fix the testing tenant
 func TestAccUserResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 
@@ -36,6 +35,11 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 					security_enabled = true
 				}
 
+				resource "azuread_group_member" "example" {
+					group_object_id  = data.azuread_group.licensing_group.object_id
+					member_object_id = azuread_user.test_user.object_id
+				}
+
 				locals {
 					domain_name = data.azuread_domains.aad_domains.domains[0].domain_name
 				}
@@ -52,11 +56,6 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 					mail_nickname       = "` + mocks.TestName() + `"
 					password            = random_password.passwords.result
 					usage_location      = "US"
-				}
-
-				resource "azuread_group_member" "example" {
-					group_object_id  = data.azuread_group.licensing_group.object_id
-					member_object_id = azuread_user.test_user.object_id
 				}
 
 				resource "powerplatform_environment" "dataverse_user_example" {
