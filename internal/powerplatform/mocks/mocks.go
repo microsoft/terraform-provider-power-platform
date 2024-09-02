@@ -21,6 +21,10 @@ func TestName() string {
 	return name
 }
 
+func TestsEntraLicesingGroupName() string {
+	return "pptestusers"
+}
+
 func ActivateEnvironmentHttpMocks() {
 	httpmock.RegisterResponder("GET", `=~^https://([\d-]+)\.crm4\.dynamics\.com/api/data/v9\.2/transactioncurrencies\z`,
 		func(req *http.Request) (*http.Response, error) {
