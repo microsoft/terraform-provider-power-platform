@@ -11,6 +11,7 @@ import (
 	"reflect"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewTenantSettingsClient(api *api.ApiClient) TenantSettingsClient {
@@ -83,13 +84,13 @@ func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, te
 func applyCorrections(planned TenantSettingsDto, actual TenantSettingsDto) *TenantSettingsDto {
 	corrected := filterDto(planned, actual).(*TenantSettingsDto)
 	if planned.PowerPlatform != nil && planned.PowerPlatform.Governance != nil {
-		if planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId != nil && *planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == ZERO_UUID && corrected.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == nil {
-			zu := ZERO_UUID
+		if planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId != nil && *planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == helpers.ZERO_UUID && corrected.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == nil {
+			zu := helpers.ZERO_UUID
 			corrected.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId = &zu
 		}
 
-		if planned.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId != nil && *planned.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId == ZERO_UUID && corrected.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId == nil {
-			zu := ZERO_UUID
+		if planned.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId != nil && *planned.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId == helpers.ZERO_UUID && corrected.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId == nil {
+			zu := helpers.ZERO_UUID
 			corrected.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId = &zu
 		}
 	}
@@ -135,6 +136,8 @@ func filterDto(configuredSettings interface{}, backendSettings interface{}) inte
 				int64Value := backendFieldValue.Elem().Int()
 				newInt64 := int64(int64Value)
 				outputField.Set(reflect.ValueOf(&newInt64))
+			} else {
+				log.Default().Printf("Skipping unknown field type %s", configuredFieldValue.Kind())
 			}
 		}
 	}
