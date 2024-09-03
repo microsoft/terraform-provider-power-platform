@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	constants "github.com/microsoft/terraform-provider-power-platform/constants"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 func NewApplicationClient(api *api.ApiClient) ApplicationClient {

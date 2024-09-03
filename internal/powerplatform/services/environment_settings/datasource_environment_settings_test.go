@@ -12,7 +12,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 

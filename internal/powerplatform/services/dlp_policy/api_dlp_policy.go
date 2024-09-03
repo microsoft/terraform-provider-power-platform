@@ -10,8 +10,8 @@ import (
 	"net/url"
 	"strings"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewDlpPolicyClient(api *api.ApiClient) DlpPolicyClient {

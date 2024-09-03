@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"net/url"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 func NewTenantSettingsClient(api *api.ApiClient) TenantSettingsClient {

@@ -12,9 +12,9 @@ import (
 	"regexp"
 	"strings"
 
-	constants "github.com/microsoft/terraform-provider-power-platform/constants"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewDataRecordClient(api *api.ApiClient) DataRecordClient {

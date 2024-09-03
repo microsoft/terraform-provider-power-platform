@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"net/url"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 func NewLanguagesClient(api *api.ApiClient) LanguagesClient {
