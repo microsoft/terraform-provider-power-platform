@@ -17,9 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	settings "github.com/microsoft/terraform-provider-power-platform/constants"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 var _ resource.Resource = &BillingPolicyResource{}
@@ -176,7 +176,7 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 		billingPolicyToCreate.Status = plan.Status.ValueString()
 	}
 
-	timeout, diags := plan.Timeouts.Create(ctx, settings.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
 	if diags != nil {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -260,7 +260,7 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 	if plan.Name.ValueString() != state.Name.ValueString() ||
 		plan.Status.ValueString() != state.Status.ValueString() {
 
-		timeout, diags := plan.Timeouts.Update(ctx, settings.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+		timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
 		if diags != nil && diags.HasError() {
 			return
 		}
@@ -304,7 +304,7 @@ func (r *BillingPolicyResource) Delete(ctx context.Context, req resource.DeleteR
 		return
 	}
 
-	timeout, diags := state.Timeouts.Delete(ctx, settings.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
 	if diags != nil && diags.HasError() {
 		return
 	}
