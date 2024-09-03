@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	settings "github.com/microsoft/terraform-provider-power-platform/constants"
 	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
@@ -122,7 +123,7 @@ func (client *ApiClient) Execute(ctx context.Context, method, url string, header
 	}
 
 	//TODO: once we add timeout logic to all resource/datasource operations, we use that timeout here
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, settings.DEFAULT_REQUEST_TIMEOUT_IN_MINUTES)
 	defer cancel()
 
 	var response *ApiHttpResponse = nil

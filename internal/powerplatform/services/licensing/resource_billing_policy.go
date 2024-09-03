@@ -6,7 +6,6 @@ package licensing
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	settings "github.com/microsoft/terraform-provider-power-platform/constants"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
@@ -128,6 +128,7 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
+				Delete: true,
 			}),
 		},
 	}
@@ -175,15 +176,13 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 		billingPolicyToCreate.Status = plan.Status.ValueString()
 	}
 
-	// Create() is passed a default timeout to use if no value
-	// has been supplied in the Terraform configuration.
-	createTimeout, diags := plan.Timeouts.Create(ctx, 20*time.Minute)
+	timeout, diags := plan.Timeouts.Create(ctx, settings.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
 	if diags != nil {
 		resp.Diagnostics.Append(diags...)
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, createTimeout)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	policy, err := r.LicensingClient.CreateBillingPolicy(ctx, billingPolicyToCreate)
@@ -261,12 +260,12 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 	if plan.Name.ValueString() != state.Name.ValueString() ||
 		plan.Status.ValueString() != state.Status.ValueString() {
 
-		updateTimeout, diags := plan.Timeouts.Update(ctx, 20*time.Minute)
+		timeout, diags := plan.Timeouts.Update(ctx, settings.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
 		if diags != nil && diags.HasError() {
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(ctx, updateTimeout)
+		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
 		policyToUpdate := BillingPolicyUpdateDto{
@@ -304,6 +303,14 @@ func (r *BillingPolicyResource) Delete(ctx context.Context, req resource.DeleteR
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Delete(ctx, settings.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil && diags.HasError() {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	err := r.LicensingClient.DeleteBillingPolicy(ctx, state.Id.ValueString())
 	if err != nil {
