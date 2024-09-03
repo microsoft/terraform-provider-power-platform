@@ -50,9 +50,7 @@ resource "powerplatform_tenant_settings" "environment_routing" {
       enable_default_environment_routing              = false
       environment_routing_all_makers                  = false
       environment_routing_target_environment_group_id = powerplatform_environment_group.example_group.id
-      //environment_routing_target_environment_group_id = "00000000-0000-0000-0000-000000000000"
-      //environment_routing_target_security_group_id = "00000000-0000-0000-0000-000000000000"
-      environment_routing_target_security_group_id = azuread_group.environment_routing_target_security_group.id
+      environment_routing_target_security_group_id    = azuread_group.environment_routing_target_security_group.id
     }
   }
 
