@@ -141,7 +141,6 @@ type TenantSettingsDto struct {
 	PowerPlatform                                  *PowerPlatformSettingsDto `json:"powerPlatform,omitempty"`
 }
 
-//==============================================================================
 
 func ConvertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSettingsSourceModel) TenantSettingsDto {
 	tenantSettingsDto := TenantSettingsDto{}
