@@ -6,17 +6,19 @@ package environment_settings
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
 type EnvironmentSettingsSourceModel struct {
-	Id            types.String `tfsdk:"id"`
-	EnvironmentId types.String `tfsdk:"environment_id"`
-	AuditAndLogs  types.Object `tfsdk:"audit_and_logs"`
-	Email         types.Object `tfsdk:"email"`
-	Product       types.Object `tfsdk:"product"`
+	Timeouts      timeouts.Value `tfsdk:"timeouts"`
+	Id            types.String   `tfsdk:"id"`
+	EnvironmentId types.String   `tfsdk:"environment_id"`
+	AuditAndLogs  types.Object   `tfsdk:"audit_and_logs"`
+	Email         types.Object   `tfsdk:"email"`
+	Product       types.Object   `tfsdk:"product"`
 }
 
 type AuditAndLogsSourceModel struct {

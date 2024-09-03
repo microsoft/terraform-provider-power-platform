@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
+	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
@@ -40,13 +42,14 @@ type ConnectionResource struct {
 }
 
 type ConnectionResourceModel struct {
-	Id                      types.String `tfsdk:"id"`
-	Name                    types.String `tfsdk:"name"`
-	EnvironmentId           types.String `tfsdk:"environment_id"`
-	DisplayName             types.String `tfsdk:"display_name"`
-	Status                  types.Set    `tfsdk:"status"`
-	ConnectionParameters    types.String `tfsdk:"connection_parameters"`
-	ConnectionParametersSet types.String `tfsdk:"connection_parameters_set"`
+	Timeouts                timeouts.Value `tfsdk:"timeouts"`
+	Id                      types.String   `tfsdk:"id"`
+	Name                    types.String   `tfsdk:"name"`
+	EnvironmentId           types.String   `tfsdk:"environment_id"`
+	DisplayName             types.String   `tfsdk:"display_name"`
+	Status                  types.Set      `tfsdk:"status"`
+	ConnectionParameters    types.String   `tfsdk:"connection_parameters"`
+	ConnectionParametersSet types.String   `tfsdk:"connection_parameters_set"`
 }
 
 func (r *ConnectionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -57,6 +60,11 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages a [Connection](https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/add-manage-connections). A connection in Power Platform serves as a means to integrate external data sources and services with your Power Platform apps, flows, and other solutions. It acts as a bridge, facilitating secure communication between your solutions and various external systems.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique connection id",
 				Computed:            true,
@@ -177,6 +185,15 @@ func (r *ConnectionResource) Create(ctx context.Context, req resource.CreateRequ
 		connectionToCreate.Properties.ConnectionParametersSet = params
 	}
 
+	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	connection, err := r.ConnectionsClient.CreateConnection(ctx, plan.EnvironmentId.ValueString(), plan.Name.ValueString(), connectionToCreate)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to create connection", err.Error())
@@ -277,6 +294,15 @@ func (r *ConnectionResource) Update(ctx context.Context, req resource.UpdateRequ
 		}
 	}
 
+	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	connection, err := r.ConnectionsClient.UpdateConnection(ctx, plan.EnvironmentId.ValueString(), plan.Name.ValueString(), plan.Id.ValueString(), plan.DisplayName.ValueString(), connParams, connParamsSet)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
@@ -315,6 +341,15 @@ func (r *ConnectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	err := r.ConnectionsClient.DeleteConnection(ctx, state.EnvironmentId.ValueString(), state.Name.ValueString(), state.Id.ValueString())
 	if err != nil {

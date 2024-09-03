@@ -37,9 +37,9 @@ type BillingPolicyEnvironmentResource struct {
 }
 
 type BillingPolicyEnvironmentResourceModel struct {
+	Timeouts        timeouts.Value `tfsdk:"timeouts"`
 	BillingPolicyId string         `tfsdk:"billing_policy_id"`
 	Environments    []string       `tfsdk:"environments"`
-	Timeouts        timeouts.Value `tfsdk:"timeouts"`
 }
 
 func (r *BillingPolicyEnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -51,6 +51,11 @@ func (r *BillingPolicyEnvironmentResource) Schema(ctx context.Context, req resou
 		Description:         "This resource allows you to manage the environments associated with a Billing Policy",
 		MarkdownDescription: "This resource allows you to manage the environments associated with a [billing policy](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy). A billing policy is a set of rules that define how a tenant is billed for usage of Power Platform services. A billing policy is associated with a billing instrument, which is a subscription and resource group that is used to pay for usage of Power Platform services.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 			"billing_policy_id": schema.StringAttribute{
 				Required:            true,
 				Description:         "The id of the billing policy",
@@ -65,11 +70,6 @@ func (r *BillingPolicyEnvironmentResource) Schema(ctx context.Context, req resou
 				ElementType:         types.StringType,
 				Required:            true,
 			},
-			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }

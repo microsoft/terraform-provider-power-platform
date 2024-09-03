@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -188,12 +189,13 @@ type EnvironmentsListDataSourceModel struct {
 }
 
 type EnvironmentSourceModel struct {
-	Id              types.String `tfsdk:"id"`
-	Location        types.String `tfsdk:"location"`
-	AzureRegion     types.String `tfsdk:"azure_region"`
-	DisplayName     types.String `tfsdk:"display_name"`
-	EnvironmentType types.String `tfsdk:"environment_type"`
-	BillingPolicyId types.String `tfsdk:"billing_policy_id"`
+	Timeouts        timeouts.Value `tfsdk:"timeouts"`
+	Id              types.String   `tfsdk:"id"`
+	Location        types.String   `tfsdk:"location"`
+	AzureRegion     types.String   `tfsdk:"azure_region"`
+	DisplayName     types.String   `tfsdk:"display_name"`
+	EnvironmentType types.String   `tfsdk:"environment_type"`
+	BillingPolicyId types.String   `tfsdk:"billing_policy_id"`
 
 	Dataverse types.Object `tfsdk:"dataverse"`
 }

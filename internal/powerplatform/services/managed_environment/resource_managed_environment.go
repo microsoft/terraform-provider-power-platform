@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
@@ -40,15 +42,16 @@ type ManagedEnvironmentResource struct {
 }
 
 type ManagedEnvironmentResourceModel struct {
-	Id                       types.String `tfsdk:"id"`
-	EnvironmentId            types.String `tfsdk:"environment_id"`
-	ProtectionLevel          types.String `tfsdk:"protection_level"`
-	IsUsageInsightsDisabled  types.Bool   `tfsdk:"is_usage_insights_disabled"`
-	IsGroupSharingDisabled   types.Bool   `tfsdk:"is_group_sharing_disabled"`
-	MaxLimitUserSharing      types.Int64  `tfsdk:"max_limit_user_sharing"`
-	LimitSharingMode         types.String `tfsdk:"limit_sharing_mode"`
-	SolutionCheckerMode      types.String `tfsdk:"solution_checker_mode"`
-	SuppressValidationEmails types.Bool   `tfsdk:"suppress_validation_emails"`
+	Timeouts                 timeouts.Value `tfsdk:"timeouts"`
+	Id                       types.String   `tfsdk:"id"`
+	EnvironmentId            types.String   `tfsdk:"environment_id"`
+	ProtectionLevel          types.String   `tfsdk:"protection_level"`
+	IsUsageInsightsDisabled  types.Bool     `tfsdk:"is_usage_insights_disabled"`
+	IsGroupSharingDisabled   types.Bool     `tfsdk:"is_group_sharing_disabled"`
+	MaxLimitUserSharing      types.Int64    `tfsdk:"max_limit_user_sharing"`
+	LimitSharingMode         types.String   `tfsdk:"limit_sharing_mode"`
+	SolutionCheckerMode      types.String   `tfsdk:"solution_checker_mode"`
+	SuppressValidationEmails types.Bool     `tfsdk:"suppress_validation_emails"`
 	//SolutionCheckerRuleOverrides  types.String `tfsdk:"solution_checker_rule_overrides"`
 	MakerOnboardingUrl      types.String `tfsdk:"maker_onboarding_url"`
 	MakerOnboardingMarkdown types.String `tfsdk:"maker_onboarding_markdown"`
@@ -65,6 +68,11 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 		MarkdownDescription: "Manages a [Managed Environment](https://learn.microsoft.com/power-platform/admin/managed-environment-overview) and associated settings. A Power Platform Managed Environment is a suite of premium capabilities that allows administrators to manage Power Platform at scale with more control, less effort, and more insights. Once an environment is managed, it unlocks additional features across the Power Platform",
 
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique managed environment settings id (guid)",
 				Description:         "Unique managed environment settings id (guid)",
@@ -185,6 +193,15 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 		},
 	}
 
+	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
@@ -299,6 +316,15 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 		},
 	}
 
+	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
@@ -339,6 +365,15 @@ func (r *ManagedEnvironmentResource) Delete(ctx context.Context, req resource.De
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	err := r.ManagedEnvironmentClient.DisableManagedEnvironment(ctx, state.EnvironmentId.ValueString())
 	if err != nil {

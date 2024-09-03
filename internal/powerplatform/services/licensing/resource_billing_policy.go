@@ -39,12 +39,12 @@ type BillingPolicyResource struct {
 }
 
 type BillingPolicyResourceModel struct {
+	Timeouts          timeouts.Value                 `tfsdk:"timeouts"`
 	Id                types.String                   `tfsdk:"id"`
 	Name              types.String                   `tfsdk:"name"`
 	Location          types.String                   `tfsdk:"location"`
 	Status            types.String                   `tfsdk:"status"`
 	BillingInstrument BillingInstrumentResourceModel `tfsdk:"billing_instrument"`
-	Timeouts          timeouts.Value                 `tfsdk:"timeouts"`
 }
 
 type BillingInstrumentResourceModel struct {
@@ -53,17 +53,20 @@ type BillingInstrumentResourceModel struct {
 	SubscriptionId types.String `tfsdk:"subscription_id"`
 }
 
-// Metadata
 func (r *BillingPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-// Schema
 func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Manages a Power Platform Billing Policy",
 		MarkdownDescription: "Manages a Power Platform Billing Policy. \n\nA Power Platform billing policy is a mechanism that allows you to manage the costs associated with your Power Platform usage. It's linked to an Azure subscription and is used to set up pay-as-you-go billing for an environment.\n\nAdditional Resources:\n\n* [What is a billing policy](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy)\n* [Power Platform Billing Policy API](https://learn.microsoft.com/rest/api/power-platform/licensing/billing-policy/get-billing-policy)",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 			"id": schema.StringAttribute{
 				Computed:            true,
 				Description:         "The id of the billing policy",
@@ -125,11 +128,6 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 			},
-			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -33,17 +34,18 @@ type TenantSettingsDataSource struct {
 }
 
 type TenantSettingsSourceModel struct {
-	Id                                             types.String `tfsdk:"id"`
-	WalkMeOptOut                                   types.Bool   `tfsdk:"walk_me_opt_out"`
-	DisableNPSCommentsReachout                     types.Bool   `tfsdk:"disable_nps_comments_reachout"`
-	DisableNewsletterSendout                       types.Bool   `tfsdk:"disable_newsletter_sendout"`
-	DisableEnvironmentCreationByNonAdminUsers      types.Bool   `tfsdk:"disable_environment_creation_by_non_admin_users"`
-	DisablePortalsCreationByNonAdminUsers          types.Bool   `tfsdk:"disable_portals_creation_by_non_admin_users"`
-	DisableSurveyFeedback                          types.Bool   `tfsdk:"disable_survey_feedback"`
-	DisableTrialEnvironmentCreationByNonAdminUsers types.Bool   `tfsdk:"disable_trial_environment_creation_by_non_admin_users"`
-	DisableCapacityAllocationByEnvironmentAdmins   types.Bool   `tfsdk:"disable_capacity_allocation_by_environment_admins"`
-	DisableSupportTicketsVisibleByAllUsers         types.Bool   `tfsdk:"disable_support_tickets_visible_by_all_users"`
-	PowerPlatform                                  types.Object `tfsdk:"power_platform"`
+	Timeouts                                       timeouts.Value `tfsdk:"timeouts"`
+	Id                                             types.String   `tfsdk:"id"`
+	WalkMeOptOut                                   types.Bool     `tfsdk:"walk_me_opt_out"`
+	DisableNPSCommentsReachout                     types.Bool     `tfsdk:"disable_nps_comments_reachout"`
+	DisableNewsletterSendout                       types.Bool     `tfsdk:"disable_newsletter_sendout"`
+	DisableEnvironmentCreationByNonAdminUsers      types.Bool     `tfsdk:"disable_environment_creation_by_non_admin_users"`
+	DisablePortalsCreationByNonAdminUsers          types.Bool     `tfsdk:"disable_portals_creation_by_non_admin_users"`
+	DisableSurveyFeedback                          types.Bool     `tfsdk:"disable_survey_feedback"`
+	DisableTrialEnvironmentCreationByNonAdminUsers types.Bool     `tfsdk:"disable_trial_environment_creation_by_non_admin_users"`
+	DisableCapacityAllocationByEnvironmentAdmins   types.Bool     `tfsdk:"disable_capacity_allocation_by_environment_admins"`
+	DisableSupportTicketsVisibleByAllUsers         types.Bool     `tfsdk:"disable_support_tickets_visible_by_all_users"`
+	PowerPlatform                                  types.Object   `tfsdk:"power_platform"`
 }
 
 type PowerPlatformSettingsModel struct {

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
+	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
@@ -37,15 +39,16 @@ type UserResource struct {
 }
 
 type UserResourceModel struct {
-	Id                types.String `tfsdk:"id"`
-	EnvironmentId     types.String `tfsdk:"environment_id"`
-	AadId             types.String `tfsdk:"aad_id"`
-	BusinessUnitId    types.String `tfsdk:"business_unit_id"`
-	SecurityRoles     []string     `tfsdk:"security_roles"`
-	UserPrincipalName types.String `tfsdk:"user_principal_name"`
-	FirstName         types.String `tfsdk:"first_name"`
-	LastName          types.String `tfsdk:"last_name"`
-	DisableDelete     types.Bool   `tfsdk:"disable_delete"`
+	Timeouts          timeouts.Value `tfsdk:"timeouts"`
+	Id                types.String   `tfsdk:"id"`
+	EnvironmentId     types.String   `tfsdk:"environment_id"`
+	AadId             types.String   `tfsdk:"aad_id"`
+	BusinessUnitId    types.String   `tfsdk:"business_unit_id"`
+	SecurityRoles     []string       `tfsdk:"security_roles"`
+	UserPrincipalName types.String   `tfsdk:"user_principal_name"`
+	FirstName         types.String   `tfsdk:"first_name"`
+	LastName          types.String   `tfsdk:"last_name"`
+	DisableDelete     types.Bool     `tfsdk:"disable_delete"`
 }
 
 func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -59,6 +62,11 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 		Description:         "This resource associates a user to a Power Platform environment",
 
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique user id (guid)",
 				Description:         "Unique user id (guid)",
@@ -150,6 +158,15 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
+	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	userDto, err := r.UserClient.CreateUser(ctx, plan.EnvironmentId.ValueString(), plan.AadId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
@@ -234,6 +251,15 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
+	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	addedSecurityRoles, removedSecurityRoles := helpers.DiffArrays(plan.SecurityRoles, state.SecurityRoles)
 
 	user, err := r.UserClient.GetUserBySystemUserId(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString())
@@ -285,6 +311,15 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	if state.DisableDelete.ValueBool() {
 		err := r.UserClient.DeleteUser(ctx, state.EnvironmentId.ValueString(), state.Id.ValueString())
