@@ -22,7 +22,6 @@ func NewCapacityClient(api *api.ApiClient) CapacityClient {
 	}
 }
 
-const ()
 
 func (client *CapacityClient) GetTenantCapacity(ctx context.Context, tenantId string) (*TenantCapacityDto, error) {
 	apiUrl := &url.URL{
