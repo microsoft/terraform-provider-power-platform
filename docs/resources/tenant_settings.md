@@ -117,6 +117,7 @@ resource "powerplatform_tenant_settings" "settings" {
 - `disable_survey_feedback` (Boolean) Disable Survey Feedback
 - `disable_trial_environment_creation_by_non_admin_users` (Boolean) Disable Trial Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.
 - `power_platform` (Attributes) Power Platform (see [below for nested schema](#nestedatt--power_platform))
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 - `walk_me_opt_out` (Boolean) Walk Me Opt Out
 
 ### Read-Only
@@ -266,3 +267,13 @@ Optional:
 Optional:
 
 - `enable_delete_disabled_user_in_all_environments` (Boolean) Enable Delete Disabled User In All Environments
+
+
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+- `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
