@@ -39,7 +39,7 @@ const (
 	USGOV_POWERAPPS_SCOPE          = "https://service.powerapps.us/.default"
 	USGOV_POWERPLATFORM_API_DOMAIN = "api.gov.powerplatform.microsoft.us"
 	USGOV_POWERPLATFORM_API_SCOPE  = "https://api.gov.powerplatform.microsoft.us/.default"
-	USGOV_LICENSING_API_DOMAIN     = "licensing.gov.powerplatform.microsoft.us"
+	USGOV_LICENSING_API_DOMAIN     = "gov.licensing.powerplatform.microsoft.us"
 )
 
 const (
@@ -49,7 +49,7 @@ const (
 	USGOVHIGH_POWERAPPS_SCOPE          = "https://high.service.apps.appsplatform.us/.default"
 	USGOVHIGH_POWERPLATFORM_API_DOMAIN = "api.appsplatform.us"
 	USGOVHIGH_POWERPLATFORM_API_SCOPE  = "https://api.appsplatform.us/.default"
-	USGOVHIGH_LICENSING_API_DOMAIN     = "licensing.appsplatform.us"
+	USGOVHIGH_LICENSING_API_DOMAIN     = "high.licensing.powerplatform.microsoft.us"
 )
 
 const (
