@@ -43,7 +43,6 @@ func (d *restoreOriginalValueModifier) PlanModifyString(ctx context.Context, req
 		if !req.ConfigValue.IsNull() {
 			log.Default().Printf("Restoring original value for attribute %s", req.PathExpression.String())
 		}
-		//req.Plan.SetAttribute(ctx, req.Path, req.Private.GetKey(ctx, req.Path.String()))
 	}
 }
 
