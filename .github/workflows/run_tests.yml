@@ -5,20 +5,13 @@ on:
  pull_request:
     paths:
       - 'go.mod'
-    paths-ignore:
-      - 'README.md'
-      - 'SECURITY.md'
-      - 'SUPPORT.md'
-      - 'DEVELOPER.md'
  push:
     branches:
       - main
-    paths-ignore:
-      - 'README.md'
-      - 'SECURITY.md'
-      - 'SUPPORT.md'
-      - 'DEVELOPER.md'
- 
+    paths:
+      - '**.go'
+      - 'go.mod'
+
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
