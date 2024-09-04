@@ -5,10 +5,12 @@ package rest
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
@@ -60,6 +62,9 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 			"body": types.StringType,
 		}), err
 	}
+
+	tflog.Warn(ctx, fmt.Sprintf("AAA Response: %v", res.BodyAsBytes))
+	tflog.Warn(ctx, fmt.Sprintf("AAA STATUS Response: %v", res.Response.Status))
 
 	output := map[string]attr.Value{
 		"body": types.StringNull(),

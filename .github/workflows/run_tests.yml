@@ -160,7 +160,7 @@ jobs:
     - name: Run acceptance tests
       run: |
         export TF_CLI_CONFIG_FILE="${GITHUB_WORKSPACE}/deps/terraform.rc"
-        export TF_LOG=ERROR
+        export TF_LOG=WARN
         export TF_ACC=1
         export POWER_PLATFORM_USE_OIDC=true
         export POWER_PLATFORM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
