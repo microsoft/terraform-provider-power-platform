@@ -46,11 +46,7 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 
 	connectorSchema := schema.NestedAttributeObject{
 		Attributes: map[string]schema.Attribute{
-			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
+
 			"id": schema.StringAttribute{
 				MarkdownDescription: "ID of the connector",
 				Description:         "ID of the connector",
@@ -121,6 +117,11 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 		MarkdownDescription: "This resource manages a Data Loss Prevention Policy. See [Data Loss Prevention](https://learn.microsoft.com/power-platform/admin/prevent-data-loss) for more information.",
 		Description:         "This resource manages a Data Loss Prevention Policy",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique name of the policy",
 				Description:         "Unique name of the policy",

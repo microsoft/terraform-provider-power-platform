@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -39,7 +40,7 @@ func (d *DataLossPreventionPolicyDataSource) Metadata(_ context.Context, req dat
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *DataLossPreventionPolicyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataLossPreventionPolicyDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 
 	connectorSchema := schema.NestedAttributeObject{
 		Attributes: map[string]schema.Attribute{
@@ -113,6 +114,12 @@ func (d *DataLossPreventionPolicyDataSource) Schema(_ context.Context, _ datasou
 		Description:         "Fetches the list of Data Loss Prevention Policies in a Power Platform tenant",
 		MarkdownDescription: "Fetches the list of Data Loss Prevention Policies in a Power Platform tenant. See [Manage data loss prevention policies](https://learn.microsoft.com/power-platform/admin/prevent-data-loss) for more information.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: false,
+				Update: false,
+				Delete: false,
+				Read:   false,
+			}),
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",
@@ -262,7 +269,7 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 
 	for _, policy := range policies {
 
-		policyModel := DataLossPreventionPolicyResourceModel{}
+		policyModel := DataLossPreventionPolicyDatasourceModel{}
 		policyModel.Id = types.StringValue(policy.Name)
 		policyModel.DefaultConnectorsClassification = types.StringValue(policy.DefaultConnectorsClassification)
 		policyModel.DisplayName = types.StringValue(policy.DisplayName)

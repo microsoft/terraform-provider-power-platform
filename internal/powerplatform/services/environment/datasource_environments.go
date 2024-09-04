@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -37,7 +38,7 @@ func (d *EnvironmentsDataSource) Metadata(_ context.Context, req datasource.Meta
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of environments in a tenant",
 		MarkdownDescription: "Fetches the list of environments in a tenant.  See [Environments overview](https://learn.microsoft.com/power-platform/admin/environments-overview) for more information.",
@@ -53,6 +54,12 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
+						"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+							Create: false,
+							Update: false,
+							Delete: false,
+							Read:   false,
+						}),
 						"id": schema.StringAttribute{
 							MarkdownDescription: "Unique environment id (guid)",
 							Description:         "Unique environment id (guid)",
@@ -204,7 +211,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 			currencyCode = defaultCurrency.IsoCurrencyCode
 		}
 
-		env, err := ConvertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil)
+		env, err := ConvertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil, timeouts.Value{})
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Error when converting environment %s", env.DisplayName), err.Error())
 			return

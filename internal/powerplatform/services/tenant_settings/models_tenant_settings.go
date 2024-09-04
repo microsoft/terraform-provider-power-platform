@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -392,9 +393,10 @@ func ConvertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 	return tenantSettingsDto
 }
 
-func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) TenantSettingsSourceModel {
+func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto, timeouts timeouts.Value) TenantSettingsSourceModel {
 
 	tenantSettings := TenantSettingsSourceModel{
+		Timeouts:                   timeouts,
 		Id:                         types.StringValue(""),
 		WalkMeOptOut:               types.BoolValue(*tenantSettingsDto.WalkMeOptOut),
 		DisableNPSCommentsReachout: types.BoolValue(*tenantSettingsDto.DisableNPSCommentsReachout),

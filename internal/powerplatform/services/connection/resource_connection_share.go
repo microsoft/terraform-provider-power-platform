@@ -308,6 +308,7 @@ func (r *ConnectionShareResource) ImportState(ctx context.Context, req resource.
 
 func ConvertFromConnectionResourceSharesDto(oldPlan *ConnectionShareResourceModel, connection *ShareConnectionResponseDto) ConnectionShareResourceModel {
 	share := ConnectionShareResourceModel{
+		Timeouts:      oldPlan.Timeouts,
 		EnvironmentId: oldPlan.EnvironmentId,
 		ConnectorName: oldPlan.ConnectorName,
 		ConnectionId:  oldPlan.ConnectionId,

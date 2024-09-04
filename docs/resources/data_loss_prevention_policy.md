@@ -132,6 +132,7 @@ resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 ### Optional
 
 - `environments` (Set of String) Environment to which the policy is applied
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
@@ -150,7 +151,6 @@ Optional:
 - `default_action_rule_behavior` (String) Default action rule behavior for the connector ("Allow", "Block")
 - `endpoint_rules` (Attributes List) Endpoint rules for the connector (see [below for nested schema](#nestedatt--blocked_connectors--endpoint_rules))
 - `id` (String) ID of the connector
-- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--blocked_connectors--timeouts))
 
 <a id="nestedatt--blocked_connectors--action_rules"></a>
 ### Nested Schema for `blocked_connectors.action_rules`
@@ -171,16 +171,6 @@ Required:
 - `order` (Number) Order of the endpoint rule
 
 
-<a id="nestedatt--blocked_connectors--timeouts"></a>
-### Nested Schema for `blocked_connectors.timeouts`
-
-Optional:
-
-- `create` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
-- `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
-- `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
-
-
 
 <a id="nestedatt--business_connectors"></a>
 ### Nested Schema for `business_connectors`
@@ -191,7 +181,6 @@ Optional:
 - `default_action_rule_behavior` (String) Default action rule behavior for the connector ("Allow", "Block")
 - `endpoint_rules` (Attributes List) Endpoint rules for the connector (see [below for nested schema](#nestedatt--business_connectors--endpoint_rules))
 - `id` (String) ID of the connector
-- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--business_connectors--timeouts))
 
 <a id="nestedatt--business_connectors--action_rules"></a>
 ### Nested Schema for `business_connectors.action_rules`
@@ -210,16 +199,6 @@ Required:
 - `behavior` (String) Behavior of the endpoint rule ("Allow", "Deny")
 - `endpoint` (String) Endpoint of the endpoint rule
 - `order` (Number) Order of the endpoint rule
-
-
-<a id="nestedatt--business_connectors--timeouts"></a>
-### Nested Schema for `business_connectors.timeouts`
-
-Optional:
-
-- `create` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
-- `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
-- `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
 
 
 
@@ -242,7 +221,6 @@ Optional:
 - `default_action_rule_behavior` (String) Default action rule behavior for the connector ("Allow", "Block")
 - `endpoint_rules` (Attributes List) Endpoint rules for the connector (see [below for nested schema](#nestedatt--non_business_connectors--endpoint_rules))
 - `id` (String) ID of the connector
-- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--non_business_connectors--timeouts))
 
 <a id="nestedatt--non_business_connectors--action_rules"></a>
 ### Nested Schema for `non_business_connectors.action_rules`
@@ -263,8 +241,9 @@ Required:
 - `order` (Number) Order of the endpoint rule
 
 
-<a id="nestedatt--non_business_connectors--timeouts"></a>
-### Nested Schema for `non_business_connectors.timeouts`
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
 
 Optional:
 

@@ -118,8 +118,10 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 	return environmentSettingsDto
 }
 
-func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettingsDto) EnvironmentSettingsSourceModel {
-	environmentSettings := EnvironmentSettingsSourceModel{}
+func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettingsDto, timeouts timeouts.Value) EnvironmentSettingsSourceModel {
+	environmentSettings := EnvironmentSettingsSourceModel{
+		Timeouts: timeouts,
+	}
 
 	pluginTraceSettings := "Unknown"
 	if environmentSettingsDto.PluginTraceLogSetting != nil {

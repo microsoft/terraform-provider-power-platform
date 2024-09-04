@@ -252,7 +252,7 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	var state = ConvertFromEnvironmentSettingsDto(envSettings)
+	var state = ConvertFromEnvironmentSettingsDto(envSettings, plan.Timeouts)
 	state.Id = plan.EnvironmentId
 	state.EnvironmentId = plan.EnvironmentId
 
@@ -283,7 +283,7 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	var newState = ConvertFromEnvironmentSettingsDto(envSettings)
+	var newState = ConvertFromEnvironmentSettingsDto(envSettings, state.Timeouts)
 	newState.Id = state.EnvironmentId
 	newState.EnvironmentId = state.EnvironmentId
 
@@ -332,7 +332,7 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	plan = ConvertFromEnvironmentSettingsDto(environmentSettings)
+	plan = ConvertFromEnvironmentSettingsDto(environmentSettings, plan.Timeouts)
 	plan.Id = state.EnvironmentId
 	plan.EnvironmentId = state.EnvironmentId
 

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -80,7 +81,7 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	state = ConvertFromEnvironmentSettingsDto(envSettings)
+	state = ConvertFromEnvironmentSettingsDto(envSettings, state.Timeouts)
 	state.Id = state.EnvironmentId
 
 	diags := resp.State.Set(ctx, &state)
@@ -93,11 +94,17 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 	}
 }
 
-func (d *EnvironmentSettingsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Power Platform Environment Settings Data Source",
 		MarkdownDescription: "Power Platform Environment Settings Data Source. Power Platform Settings are configuration options that apply to a specific environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/power-platform/admin/admin-settings) for more details.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: false,
+				Update: false,
+				Delete: false,
+				Read:   false,
+			}),
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",

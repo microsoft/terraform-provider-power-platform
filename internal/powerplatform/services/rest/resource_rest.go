@@ -203,6 +203,7 @@ func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	state := DataverseWebApiResourceModel{}
+	state.Timeouts = plan.Timeouts
 	state.Create = plan.Create
 	state.Update = plan.Update
 	state.Destroy = plan.Destroy
@@ -253,6 +254,7 @@ func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	newState := DataverseWebApiResourceModel{}
+	newState.Timeouts = state.Timeouts
 	newState.Id = state.Id
 	newState.Create = state.Create
 	newState.Update = state.Update

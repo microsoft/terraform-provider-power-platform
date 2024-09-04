@@ -524,7 +524,7 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	plan = ConvertFromTenantSettingsDto(*tenantSettings)
+	plan = ConvertFromTenantSettingsDto(*tenantSettings, plan.Timeouts)
 	hash, err := tenantSettings.CalcObjectHash()
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())
@@ -555,7 +555,7 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	state = ConvertFromTenantSettingsDto(*tenantSettings)
+	state = ConvertFromTenantSettingsDto(*tenantSettings, state.Timeouts)
 	hash, err := tenantSettings.CalcObjectHash()
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())
@@ -598,7 +598,7 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	plan = ConvertFromTenantSettingsDto(*tenantSettings)
+	plan = ConvertFromTenantSettingsDto(*tenantSettings, plan.Timeouts)
 	hash, err := tenantSettings.CalcObjectHash()
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", r.ProviderTypeName), err.Error())

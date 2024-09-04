@@ -168,7 +168,7 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	state = ConvertFromTenantSettingsDto(*tenantSettings)
+	state = ConvertFromTenantSettingsDto(*tenantSettings, state.Timeouts)
 	hash, err := tenantSettings.CalcObjectHash()
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", d.ProviderTypeName), err.Error())
@@ -185,11 +185,17 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 }
 
-func (d *TenantSettingsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *TenantSettingsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Power Platform Tenant Settings Data Source",
 		MarkdownDescription: "Fetches Power Platform Tenant Settings.  See [Tenant Settings Overview](https://learn.microsoft.com/power-platform/admin/tenant-settings) for more information.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: false,
+				Update: false,
+				Delete: false,
+				Read:   false,
+			}),
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",

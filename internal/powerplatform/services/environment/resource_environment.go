@@ -22,8 +22,8 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
-	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
 )
 
 var _ resource.Resource = &EnvironmentResource{}
@@ -274,7 +274,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
 
-	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates)
+	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -339,7 +339,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 			templates = dv.Templates
 		}
 	}
-	newState, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates)
+	newState, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, state.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -484,7 +484,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		}
 	}
 
-	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates)
+	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return

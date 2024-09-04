@@ -39,6 +39,10 @@ data "powerplatform_environments" "all_environments" {}
 <a id="nestedatt--environments"></a>
 ### Nested Schema for `environments`
 
+Optional:
+
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--environments--timeouts))
+
 Read-Only:
 
 - `azure_region` (String) Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source.
@@ -48,6 +52,10 @@ Read-Only:
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
 - `id` (String) Unique environment id (guid)
 - `location` (String) Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source.
+
+<a id="nestedatt--environments--timeouts"></a>
+### Nested Schema for `environments.timeouts`
+
 
 <a id="nestedatt--environments--dataverse"></a>
 ### Nested Schema for `environments.dataverse`
