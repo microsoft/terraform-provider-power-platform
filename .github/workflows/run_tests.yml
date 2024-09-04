@@ -111,7 +111,7 @@ jobs:
   #   - name: Run unit tests
   #     run: |
   #       go clean -testcache
-  #       go test -p 4 -failfast -v ./... -run "^TestUnit" -coverprofile=unit-test-coverage.out
+  #       go test -p 16 -failfast -v ./... -run "^TestUnit" -coverprofile=unit-test-coverage.out
   #       go tool cover -html=unit-test-coverage.out -o unit-test-coverage.cov.html
 
   #   - name: Upload Coverage Artifacts
