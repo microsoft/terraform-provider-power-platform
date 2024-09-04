@@ -66,6 +66,7 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Create: true,
 				Update: true,
 				Delete: true,
+				Read:   true,
 			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique user id (guid)",
@@ -207,6 +208,15 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	userDto, err := r.UserClient.GetUserByAadObjectId(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString())
 	if err != nil {

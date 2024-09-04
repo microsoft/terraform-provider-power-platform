@@ -66,6 +66,7 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 				Create: true,
 				Update: true,
 				Delete: true,
+				Read:   true,
 			}),
 			"id": schema.StringAttribute{
 				Computed:            true,
@@ -214,6 +215,15 @@ func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	billing, err := r.LicensingClient.GetBillingPolicy(ctx, state.Id.ValueString())
 	if err != nil {

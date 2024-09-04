@@ -72,6 +72,7 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				Create: true,
 				Update: true,
 				Delete: true,
+				Read:   true,
 			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique managed environment settings id (guid)",
@@ -242,6 +243,15 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	env, err := r.ManagedEnvironmentClient.environmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
 	if err != nil {

@@ -52,6 +52,7 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
+				Read:   true,
 			}),
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",
@@ -546,6 +547,15 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	tenantSettings, err := r.TenantSettingClient.GetTenantSettings(ctx)
 	if err != nil {

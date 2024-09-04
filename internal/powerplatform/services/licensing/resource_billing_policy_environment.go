@@ -55,6 +55,7 @@ func (r *BillingPolicyEnvironmentResource) Schema(ctx context.Context, req resou
 				Create: true,
 				Update: true,
 				Delete: true,
+				Read:   true,
 			}),
 			"billing_policy_id": schema.StringAttribute{
 				Required:            true,
@@ -156,6 +157,15 @@ func (r *BillingPolicyEnvironmentResource) Read(ctx context.Context, req resourc
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	environments, err := r.LicensingClient.GetEnvironmentsForBillingPolicy(ctx, state.BillingPolicyId)
 	if err != nil {

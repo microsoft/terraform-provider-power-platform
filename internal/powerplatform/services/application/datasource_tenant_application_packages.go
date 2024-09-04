@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -34,6 +36,7 @@ type TenantApplicationPackagesDataSource struct {
 }
 
 type TenantApplicationPackagesListDataSourceModel struct {
+	Timeouts      timeouts.Value                            `tfsdk:"timeouts"`
 	Name          types.String                              `tfsdk:"name"`
 	PublisherName types.String                              `tfsdk:"publisher_name"`
 	Id            types.String                              `tfsdk:"id"`
@@ -68,11 +71,14 @@ func (d *TenantApplicationPackagesDataSource) Metadata(_ context.Context, req da
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *TenantApplicationPackagesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *TenantApplicationPackagesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dynamics 365 tenant level applications",
 		MarkdownDescription: "Fetches the list of Dynamics 365 tenant level applications",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"id": schema.StringAttribute{
 				Description: "Id of the read operation",
 				Optional:    true,
@@ -209,13 +215,22 @@ func (d *TenantApplicationPackagesDataSource) Configure(ctx context.Context, req
 }
 
 func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var plan TenantApplicationPackagesListDataSourceModel
-	resp.State.Get(ctx, &plan)
+	var state TenantApplicationPackagesListDataSourceModel
+	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT APPLICATION PACKAGES START: %s", d.ProviderTypeName))
 
-	plan.Name = types.StringValue(plan.Name.ValueString())
-	plan.PublisherName = types.StringValue(plan.PublisherName.ValueString())
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	state.Name = types.StringValue(state.Name.ValueString())
+	state.PublisherName = types.StringValue(state.PublisherName.ValueString())
 
 	applications, err := d.ApplicationClient.GetTenantApplications(ctx)
 	if err != nil {
@@ -223,11 +238,11 @@ func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req data
 		return
 	}
 
-	plan.Id = types.StringValue(strconv.Itoa(len(applications)))
+	state.Id = types.StringValue(strconv.Itoa(len(applications)))
 
 	for _, application := range applications {
-		if (plan.Name.ValueString() != "" && plan.Name.ValueString() != application.ApplicationName) ||
-			(plan.PublisherName.ValueString() != "" && plan.PublisherName.ValueString() != application.PublisherName) {
+		if (state.Name.ValueString() != "" && state.Name.ValueString() != application.ApplicationName) ||
+			(state.PublisherName.ValueString() != "" && state.PublisherName.ValueString() != application.PublisherName) {
 			continue
 		}
 		app := TenantApplicationPackageDataSourceModel{
@@ -253,10 +268,10 @@ func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req data
 				Type:       types.StringValue(application.LastError.Type),
 			})
 		}
-		plan.Applications = append(plan.Applications, app)
+		state.Applications = append(state.Applications, app)
 	}
 
-	diags := resp.State.Set(ctx, &plan)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT APPLICATION PACKAGES END: %s", d.ProviderTypeName))
 

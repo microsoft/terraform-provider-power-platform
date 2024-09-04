@@ -57,6 +57,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				Create: true,
 				Update: true,
 				Delete: true,
+				Read:   true,
 			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique environment id (guid)",
@@ -299,6 +300,15 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	envDto, err := r.EnvironmentClient.GetEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
 		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
@@ -354,12 +364,11 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 
 func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan *EnvironmentSourceModel
+	var state *EnvironmentSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
-	var state *EnvironmentSourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {

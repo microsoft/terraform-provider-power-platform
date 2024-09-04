@@ -7,10 +7,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -33,6 +35,7 @@ type EnvironmentApplicationPackagesDataSource struct {
 }
 
 type EnvironmentApplicationPackagesListDataSourceModel struct {
+	Timeouts      timeouts.Value                                 `tfsdk:"timeouts"`
 	EnvironmentId types.String                                   `tfsdk:"environment_id"`
 	Name          types.String                                   `tfsdk:"name"`
 	PublisherName types.String                                   `tfsdk:"publisher_name"`
@@ -57,11 +60,14 @@ func (d *EnvironmentApplicationPackagesDataSource) Metadata(_ context.Context, r
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *EnvironmentApplicationPackagesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentApplicationPackagesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dynamics 365 applications in a tenant",
 		MarkdownDescription: "Fetches the list of Dynamics 365 applications in a tenant.  The data source can be filtered by name and publisher name.\n\nThis is functionally equivalent to the [Environment-level view of apps](https://learn.microsoft.com/power-platform/admin/manage-apps#environment-level-view-of-apps) in the Power Platform Admin Center or the [`pac application list` command from Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/reference/application#pac-application-list).  This data source uses the [Get Environment Application Package](https://learn.microsoft.com/rest/api/power-platform/appmanagement/applications/get-environment-application-package) endpoint in the Power Platform API.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"id": schema.StringAttribute{
 				Description: "Id of the read operation",
 				Optional:    true,
@@ -158,37 +164,46 @@ func (d *EnvironmentApplicationPackagesDataSource) Configure(ctx context.Context
 }
 
 func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var plan EnvironmentApplicationPackagesListDataSourceModel
-	resp.State.Get(ctx, &plan)
+	var state EnvironmentApplicationPackagesListDataSourceModel
+	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES START: %s", d.ProviderTypeName))
 
-	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
-	plan.Name = types.StringValue(plan.Name.ValueString())
-	plan.PublisherName = types.StringValue(plan.PublisherName.ValueString())
-
-	dvExits, err := d.ApplicationClient.DataverseExists(ctx, plan.EnvironmentId.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when checking if Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), err.Error())
-	}
-
-	if !dvExits {
-		resp.Diagnostics.AddError(fmt.Sprintf("No Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), "")
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
 		return
 	}
 
-	applications, err := d.ApplicationClient.GetApplicationsByEnvironmentId(ctx, plan.EnvironmentId.ValueString())
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	state.EnvironmentId = types.StringValue(state.EnvironmentId.ValueString())
+	state.Name = types.StringValue(state.Name.ValueString())
+	state.PublisherName = types.StringValue(state.PublisherName.ValueString())
+
+	dvExits, err := d.ApplicationClient.DataverseExists(ctx, state.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when checking if Dataverse exists in environment '%s'", state.EnvironmentId.ValueString()), err.Error())
+	}
+
+	if !dvExits {
+		resp.Diagnostics.AddError(fmt.Sprintf("No Dataverse exists in environment '%s'", state.EnvironmentId.ValueString()), "")
+		return
+	}
+
+	applications, err := d.ApplicationClient.GetApplicationsByEnvironmentId(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
 
 	for _, application := range applications {
-		if (plan.Name.ValueString() != "" && plan.Name.ValueString() != application.Name) ||
-			(plan.PublisherName.ValueString() != "" && plan.PublisherName.ValueString() != application.PublisherName) {
+		if (state.Name.ValueString() != "" && state.Name.ValueString() != application.Name) ||
+			(state.PublisherName.ValueString() != "" && state.PublisherName.ValueString() != application.PublisherName) {
 			continue
 		}
-		plan.Applications = append(plan.Applications, EnvironmentApplicationPackageDataSourceModel{
+		state.Applications = append(state.Applications, EnvironmentApplicationPackageDataSourceModel{
 			ApplicationId:         types.StringValue(application.ApplicationId),
 			Name:                  types.StringValue(application.Name),
 			UniqueName:            types.StringValue(application.UniqueName),
@@ -202,8 +217,8 @@ func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req
 		})
 	}
 
-	plan.Id = types.StringValue(fmt.Sprintf("%s_%d", plan.EnvironmentId.ValueString(), len(applications)))
-	diags := resp.State.Set(ctx, &plan)
+	state.Id = types.StringValue(fmt.Sprintf("%s_%d", state.EnvironmentId.ValueString(), len(applications)))
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES END: %s", d.ProviderTypeName))
 

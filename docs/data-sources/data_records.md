@@ -98,6 +98,7 @@ More information on (Saved Query)[https://learn.microsoft.com/en-us/power-apps/d
 - `select` (List of String) List of columns to be selected from record(s) defined in entity collection. 
 
 More information on (OData Select)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#select-columns]
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 - `top` (Number) Number of records to be retrieved. 
 
 More information on (OData Top)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#odata-query-options]
@@ -406,3 +407,21 @@ More information on (OData Select)[https://learn.microsoft.com/en-us/power-apps/
 - `top` (Number) Number of records to be retrieved. 
 
 More information on (OData Top)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#odata-query-options]
+
+
+
+
+
+
+
+
+
+
+
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.

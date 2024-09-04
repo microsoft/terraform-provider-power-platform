@@ -96,18 +96,18 @@ func (r *EnvironmentApplicationPackageInstallResource) Configure(ctx context.Con
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan EnvironmentApplicationPackageInstallResourceModel
-	resp.State.Get(ctx, &plan)
+	var state EnvironmentApplicationPackageInstallResourceModel
+	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	timeout, diags := state.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
 	if diags != nil {
 		resp.Diagnostics.Append(diags...)
 		return
@@ -116,31 +116,31 @@ func (r *EnvironmentApplicationPackageInstallResource) Create(ctx context.Contex
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.EnvironmentId.ValueString(), strings.ReplaceAll(strings.ToLower(plan.UniqueName.ValueString()), " ", "_")))
-	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
-	plan.UniqueName = types.StringValue(plan.UniqueName.ValueString())
+	state.Id = types.StringValue(fmt.Sprintf("%s_%s", state.EnvironmentId.ValueString(), strings.ReplaceAll(strings.ToLower(state.UniqueName.ValueString()), " ", "_")))
+	state.EnvironmentId = types.StringValue(state.EnvironmentId.ValueString())
+	state.UniqueName = types.StringValue(state.UniqueName.ValueString())
 
-	dvExits, err := r.ApplicationClient.DataverseExists(ctx, plan.EnvironmentId.ValueString())
+	dvExits, err := r.ApplicationClient.DataverseExists(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when checking if Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when checking if Dataverse exists in environment '%s'", state.EnvironmentId.ValueString()), err.Error())
 	}
 
 	if !dvExits {
-		resp.Diagnostics.AddError(fmt.Sprintf("No Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), "")
+		resp.Diagnostics.AddError(fmt.Sprintf("No Dataverse exists in environment '%s'", state.EnvironmentId.ValueString()), "")
 		return
 	}
 
-	applicationId, err := r.ApplicationClient.InstallApplicationInEnvironment(ctx, plan.EnvironmentId.ValueString(), plan.UniqueName.ValueString())
+	applicationId, err := r.ApplicationClient.InstallApplicationInEnvironment(ctx, state.EnvironmentId.ValueString(), state.UniqueName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
 		return
 	}
 
-	plan.Id = types.StringValue(applicationId)
+	state.Id = types.StringValue(applicationId)
 
-	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.UniqueName.ValueString()))
+	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", state.UniqueName.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }

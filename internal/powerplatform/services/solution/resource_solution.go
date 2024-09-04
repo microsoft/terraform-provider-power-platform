@@ -66,6 +66,7 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Create: true,
 				Update: true,
 				Delete: true,
+				Read:   true,
 			}),
 			"solution_file_checksum": schema.StringAttribute{
 				MarkdownDescription: "Checksum of the solution file",
@@ -232,6 +233,15 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	solutions, err := r.SolutionClient.GetSolutions(ctx, state.EnvironmentId.ValueString())
 	if err != nil {

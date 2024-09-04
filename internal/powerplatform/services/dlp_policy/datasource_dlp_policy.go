@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -259,6 +260,20 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POLICIES START: %s_%s", d.ProviderTypeName, d.TypeName))
 
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	policies, err := d.DlpPolicyClient.GetPolicies(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", d.ProviderTypeName, d.TypeName), err.Error())
@@ -286,7 +301,7 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 		state.Policies = append(state.Policies, policyModel)
 	}
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POLICIES END: %s_%s", d.ProviderTypeName, d.TypeName))
 

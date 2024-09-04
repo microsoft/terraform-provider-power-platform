@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
@@ -43,6 +44,9 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, _ datasource.Schema
 		Description:         "Fetches the list of environments in a tenant",
 		MarkdownDescription: "Fetches the list of environments in a tenant.  See [Environments overview](https://learn.microsoft.com/power-platform/admin/environments-overview) for more information.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"id": schema.Int64Attribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",
@@ -193,6 +197,20 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENTS START: %s", d.ProviderTypeName))
 
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	envs, err := d.EnvironmentClient.GetEnvironments(ctx)
 
 	if err != nil {
@@ -220,7 +238,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 	state.Id = types.Int64Value(int64(len(envs)))
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENTS END: %s", d.ProviderTypeName))
 

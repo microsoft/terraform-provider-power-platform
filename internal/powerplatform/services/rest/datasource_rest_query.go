@@ -7,10 +7,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -28,6 +30,7 @@ type DataverseWebApiDatasource struct {
 }
 
 type DataverseWebApiDatasourceModel struct {
+	Timeouts           timeouts.Value                           `tfsdk:"timeouts"`
 	Scope              types.String                             `tfsdk:"scope"`
 	Method             types.String                             `tfsdk:"method"`
 	Url                types.String                             `tfsdk:"url"`
@@ -41,10 +44,13 @@ func (d *DataverseWebApiDatasource) Metadata(_ context.Context, req datasource.M
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *DataverseWebApiDatasource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataverseWebApiDatasource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Datasource to fetch api requests",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"scope": schema.StringAttribute{
 				MarkdownDescription: "Authentication scope for the request. See more: [Authentication Scopes](https://learn.microsoft.com/en-us/entra/identity-platform/scopes-oidc)",
 				Required:            true,
@@ -126,7 +132,19 @@ func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.Rea
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
 
-	resp.State.Get(ctx, &state)
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	outputObjectType, err := d.DataRecordClient.SendOperation(ctx, &DataverseWebApiOperation{
 		Scope:              state.Scope,
@@ -143,7 +161,7 @@ func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.Rea
 
 	state.Output = outputObjectType
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
 

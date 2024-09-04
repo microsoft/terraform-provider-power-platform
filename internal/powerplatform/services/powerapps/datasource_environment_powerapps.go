@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -34,6 +36,7 @@ type EnvironmentPowerAppsDataSource struct {
 }
 
 type EnvironmentPowerAppsListDataSourceModel struct {
+	Timeouts  timeouts.Value                        `tfsdk:"timeouts"`
 	Id        types.String                          `tfsdk:"id"`
 	PowerApps []EnvironmentPowerAppsDataSourceModel `tfsdk:"powerapps"`
 }
@@ -58,11 +61,14 @@ func (d *EnvironmentPowerAppsDataSource) Metadata(_ context.Context, req datasou
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *EnvironmentPowerAppsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentPowerAppsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Power Apps in an environment",
 		MarkdownDescription: "Fetches the list of Power Apps in an environment.  See [Manage Power Apps](https://learn.microsoft.com/power-platform/admin/admin-manage-apps) for more details about how this data is surfaced in Power Platform Admin Center.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",
@@ -123,7 +129,21 @@ func (d *EnvironmentPowerAppsDataSource) Configure(_ context.Context, req dataso
 func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state EnvironmentPowerAppsListDataSourceModel
 
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT POWERAPPS START: %s", d.ProviderTypeName))
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	apps, err := d.PowerAppssClient.GetPowerApps(ctx, "")
 	if err != nil {
@@ -138,7 +158,7 @@ func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasourc
 
 	state.Id = types.StringValue(strconv.Itoa(len(apps)))
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT POWERAPPS END: %s", d.ProviderTypeName))
 

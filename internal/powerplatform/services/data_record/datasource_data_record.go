@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -46,20 +48,21 @@ type ExpandModel struct {
 }
 
 type DataRecordListDataSourceModel struct {
-	EnvironmentId               types.String  `tfsdk:"environment_id"`
-	EntityCollection            types.String  `tfsdk:"entity_collection"`
-	Select                      []string      `tfsdk:"select"`
-	Filter                      types.String  `tfsdk:"filter"`
-	Apply                       types.String  `tfsdk:"apply"`
-	OrderBy                     types.String  `tfsdk:"order_by"`
-	Top                         types.Int64   `tfsdk:"top"`
-	ReturnTotalRowsCount        types.Bool    `tfsdk:"return_total_rows_count"`
-	TotalRowsCount              types.Int64   `tfsdk:"total_rows_count"`
-	TotalRowsCountLimitExceeded types.Bool    `tfsdk:"total_rows_count_limit_exceeded"`
-	SavedQuery                  types.String  `tfsdk:"saved_query"`
-	UserQuery                   types.String  `tfsdk:"user_query"`
-	Expand                      []ExpandModel `tfsdk:"expand"`
-	Rows                        types.Dynamic `tfsdk:"rows"`
+	Timeouts                    timeouts.Value `tfsdk:"timeouts"`
+	EnvironmentId               types.String   `tfsdk:"environment_id"`
+	EntityCollection            types.String   `tfsdk:"entity_collection"`
+	Select                      []string       `tfsdk:"select"`
+	Filter                      types.String   `tfsdk:"filter"`
+	Apply                       types.String   `tfsdk:"apply"`
+	OrderBy                     types.String   `tfsdk:"order_by"`
+	Top                         types.Int64    `tfsdk:"top"`
+	ReturnTotalRowsCount        types.Bool     `tfsdk:"return_total_rows_count"`
+	TotalRowsCount              types.Int64    `tfsdk:"total_rows_count"`
+	TotalRowsCountLimitExceeded types.Bool     `tfsdk:"total_rows_count_limit_exceeded"`
+	SavedQuery                  types.String   `tfsdk:"saved_query"`
+	UserQuery                   types.String   `tfsdk:"user_query"`
+	Expand                      []ExpandModel  `tfsdk:"expand"`
+	Rows                        types.Dynamic  `tfsdk:"rows"`
 }
 
 func (d *DataRecordDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -132,10 +135,13 @@ func returnExpandSchema(depth int) *schema.ListNestedAttribute {
 	}
 }
 
-func (d *DataRecordDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataRecordDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Resource for retrieving data records from Dataverse using (OData Query)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#page-results].",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "Id of the Power Platform environment",
 				Required:            true,
@@ -230,6 +236,15 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	query, headers, err := BuildODataQueryFromModel(&config)
 	tflog.Debug(ctx, fmt.Sprintf("Query: %s", query))
 	tflog.Debug(ctx, fmt.Sprintf("Headers: %v", headers))
@@ -251,16 +266,10 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 		state.TotalRowsCountLimitExceeded = types.BoolValue(*queryRespnse.TotalRecordLimitExceeded)
 	}
 
-	tableSingularName, err := d.DataRecordClient.GetTableSingularNameFromPlural(ctx, config.EnvironmentId.ValueString(), queryRespnse.TablePluralName)
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Faied to get table singular name from '%s'", queryRespnse.TablePluralName), err.Error())
-		return
-	}
-
 	var elements = []attr.Value{}
 	for _, record := range queryRespnse.Records {
 
-		columns, err := d.convertColumnsToState(ctx, &d.DataRecordClient, config.EnvironmentId.ValueString(), *tableSingularName, record)
+		columns, err := d.convertColumnsToState(record)
 		if err != nil {
 			resp.Diagnostics.AddError("Failed to convert columns to state", err.Error())
 			return
@@ -285,7 +294,7 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 }
 
-func (d *DataRecordDataSource) convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, environmentId, tableLogicalName string, columns map[string]interface{}) (*basetypes.DynamicValue, error) {
+func (d *DataRecordDataSource) convertColumnsToState(columns map[string]interface{}) (*basetypes.DynamicValue, error) {
 	if columns == nil {
 		return nil, nil
 	}

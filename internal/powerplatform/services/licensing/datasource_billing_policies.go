@@ -7,10 +7,12 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -33,6 +35,7 @@ type BillingPoliciesDataSource struct {
 }
 
 type BillingPoliciesListDataSourceModel struct {
+	Timeouts        timeouts.Value                 `tfsdk:"timeouts"`
 	BillingPolicies []BillingPolicyDataSourceModel `tfsdk:"billing_policies"`
 	Id              types.Int64                    `tfsdk:"id"`
 }
@@ -55,11 +58,14 @@ func (d *BillingPoliciesDataSource) Metadata(_ context.Context, req datasource.M
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *BillingPoliciesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *BillingPoliciesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of billing policies in a tenant",
 		MarkdownDescription: "Fetches the list of [billing policies](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy) in a tenant. A billing policy is a set of rules that define how a tenant is billed for usage of Power Platform services. A billing policy is associated with a billing instrument, which is a subscription and resource group that is used to pay for usage of Power Platform services.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"id": schema.Int64Attribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",
@@ -141,8 +147,21 @@ func (d *BillingPoliciesDataSource) Configure(_ context.Context, req datasource.
 
 func (d *BillingPoliciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state BillingPoliciesListDataSourceModel
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE BILLING POLICIES START: %s", d.ProviderTypeName))
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	policies, err := d.LicensingClient.GetBillingPolicies(ctx)
 
@@ -166,7 +185,7 @@ func (d *BillingPoliciesDataSource) Read(ctx context.Context, req datasource.Rea
 	}
 
 	state.Id = types.Int64Value(int64(len(policies)))
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE BILLING POLICIES END: %s", d.ProviderTypeName))
 

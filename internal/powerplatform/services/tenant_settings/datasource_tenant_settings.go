@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -159,8 +160,21 @@ func (d *TenantSettingsDataSource) Configure(ctx context.Context, req datasource
 
 func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state TenantSettingsSourceModel
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT SETTINGS START: %s", d.ProviderTypeName))
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	tenantSettings, err := d.TenantSettingsClient.GetTenantSettings(ctx)
 	if err != nil {
@@ -175,7 +189,7 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 	state.Id = types.StringValue(*hash)
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT SETTINGS END: %s", d.ProviderTypeName))
 

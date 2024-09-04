@@ -81,6 +81,7 @@ func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.Schem
 				Create: true,
 				Update: true,
 				Delete: true,
+				Read:   true,
 			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id (guid)",
@@ -252,6 +253,15 @@ func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	newState := DataverseWebApiResourceModel{}
 	newState.Timeouts = state.Timeouts

@@ -10,10 +10,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
@@ -36,6 +38,7 @@ type ConnectionsDataSource struct {
 }
 
 type ConnectionsListDataSourceModel struct {
+	Timeouts      timeouts.Value               `tfsdk:"timeouts"`
 	Id            types.String                 `tfsdk:"id"`
 	EnvironmentId types.String                 `tfsdk:"environment_id"`
 	Connections   []ConnectionsDataSourceModel `tfsdk:"connections"`
@@ -54,11 +57,14 @@ func (d *ConnectionsDataSource) Metadata(_ context.Context, req datasource.Metad
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *ConnectionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *ConnectionsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches a list of \"Connections\" for a given environment. Each connection represents an connection instance to an external data source or service.",
 		MarkdownDescription: "Fetches a list of [Connection](https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/add-manage-connections) for a given environment. Each connection represents an connection instance to an external data source or service.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -129,6 +135,15 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
 
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	connections, err := d.ConnectionsClient.GetConnections(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
@@ -141,7 +156,7 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 	state.Id = types.StringValue(strconv.Itoa(len(connections)))
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
 

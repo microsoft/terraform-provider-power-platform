@@ -64,6 +64,7 @@ func (r *ConnectionShareResource) Schema(ctx context.Context, req resource.Schem
 				Create: true,
 				Update: true,
 				Delete: true,
+				Read:   true,
 			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique identifier of the connection share",
@@ -195,6 +196,15 @@ func (r *ConnectionShareResource) Read(ctx context.Context, req resource.ReadReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	share, err := r.ConnectionsClient.GetConnectionShare(ctx, state.EnvironmentId.ValueString(), state.ConnectorName.ValueString(), state.ConnectionId.ValueString(), state.Principal.EntraObjectId.ValueString())
 	if err != nil {

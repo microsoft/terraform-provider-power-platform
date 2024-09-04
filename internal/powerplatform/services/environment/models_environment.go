@@ -184,6 +184,7 @@ type ValidateEnvironmentDetailsDto struct {
 }
 
 type EnvironmentsListDataSourceModel struct {
+	Timeouts     timeouts.Value           `tfsdk:"timeouts"`
 	Environments []EnvironmentSourceModel `tfsdk:"environments"`
 	Id           types.Int64              `tfsdk:"id"`
 }
