@@ -258,12 +258,13 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		state.SolutionFileChecksum = types.StringNull()
 
 		tflog.Debug(ctx, fmt.Sprintf("Solution %s not found", solutionId))
+		return
+	} else {
+		state.Id = types.StringValue(fmt.Sprintf("%s_%s", state.EnvironmentId.ValueString(), solution.Id))
+		state.SolutionVersion = types.StringValue(solution.Version)
+		state.IsManaged = types.BoolValue(solution.IsManaged)
+		state.DisplayName = types.StringValue(solution.DisplayName)
 	}
-
-	state.Id = types.StringValue(fmt.Sprintf("%s_%s", state.EnvironmentId.ValueString(), solution.Id))
-	state.SolutionVersion = types.StringValue(solution.Version)
-	state.IsManaged = types.BoolValue(solution.IsManaged)
-	state.DisplayName = types.StringValue(solution.DisplayName)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
