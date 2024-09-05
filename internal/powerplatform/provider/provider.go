@@ -14,9 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
-	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
@@ -516,28 +514,4 @@ func EnvDefaultFunc(k string, dv interface{}) string {
 	return ""
 }
 
-const (
-	// TestsUnitProviderConfig is a shared configuration to combine with the actual
-	// test configuration so the Power Platform client is properly configured.
-	// It is also possible to use the POWER_PLATFORM_ environment variables instead.
-	//lintignore:AT004
-	TestsUnitProviderConfig = `
-provider "powerplatform" {
-	use_cli = true
-}
-`
 
-	//to run acceptance tests locally use environemnt variables or add `usecli=true` in the provider block
-	TestsAcceptanceProviderConfig = `
-provider "powerplatform" {
-}
-`
-)
-
-var TestUnitTestProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider(context.Background(), true)()),
-}
-
-var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"powerplatform": providerserver.NewProtocol6WithError(NewPowerPlatformProvider(context.Background(), false)()),
-}

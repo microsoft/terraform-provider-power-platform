@@ -10,17 +10,17 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
 func TestAccConnectionsResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + `
+				Config: constants.TestsAcceptanceProviderConfig + `
 					resource "powerplatform_environment" "env" {
 						display_name                              = "` + mocks.TestName() + `"
 						location                                  = "unitedstates"
@@ -85,10 +85,10 @@ func TestUnitConnectionsResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 					resource "powerplatform_connection" "azure_openai_connection" {
 						environment_id = "00000000-0000-0000-0000-000000000000"
 						name           = "shared_azureopenai"

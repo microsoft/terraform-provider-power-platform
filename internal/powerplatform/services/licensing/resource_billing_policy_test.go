@@ -12,17 +12,17 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
 func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + `
+				Config: constants.TestsAcceptanceProviderConfig + `
 				provider "azurerm" {
 					features {}
 				}
@@ -81,10 +81,10 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "europe"
@@ -114,10 +114,10 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 
 func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + `
+				Config: constants.TestsAcceptanceProviderConfig + `
 				provider "azurerm" {
 					features {}
 				}
@@ -144,7 +144,7 @@ func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsAcceptanceProviderConfig + `
+				Config: constants.TestsAcceptanceProviderConfig + `
 				provider "azurerm" {
 					features {}
 				}
@@ -173,7 +173,7 @@ func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsAcceptanceProviderConfig + `
+				Config: constants.TestsAcceptanceProviderConfig + `
 				provider "azurerm" {
 					features {}
 				}
@@ -236,10 +236,10 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "europe"
@@ -254,7 +254,7 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample1"
 					location = "europe"
@@ -271,7 +271,7 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample1"
 					location = "europe"
@@ -294,10 +294,10 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 
 func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + `
+				Config: constants.TestsAcceptanceProviderConfig + `
 				provider "azurerm" {
 					features {}
 				}
@@ -324,7 +324,7 @@ func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsAcceptanceProviderConfig + `
+				Config: constants.TestsAcceptanceProviderConfig + `
 				provider "azurerm" {
 					features {}
 				}
@@ -352,7 +352,7 @@ func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsAcceptanceProviderConfig + `
+				Config: constants.TestsAcceptanceProviderConfig + `
 				provider "azurerm" {
 					features {}
 				}
@@ -411,10 +411,10 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "europe"
@@ -429,7 +429,7 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "switzerland"
@@ -445,7 +445,7 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "switzerland"
@@ -462,7 +462,7 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "switzerland"
@@ -506,10 +506,10 @@ func TestUnitTestBillingPolicy_Validate_Create_WithoutFinalStatusInPostResponse(
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "europe"
@@ -559,10 +559,10 @@ func TestUnitTestBillingPolicy_Validate_Create_WithoutFinalStatusInPostResponse(
 
 // 	resource.Test(t, resource.TestCase{
 // 		IsUnitTest:               true,
-// 		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+// 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 // 		Steps: []resource.TestStep{
 // 			{
-// 				Config: provider.TestsUnitProviderConfig + `
+// 				Config: constants.TestsUnitProviderConfig + `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 // 					name     = "payAsYouGoBillingPolicyExample"
 // 					location = "europe"

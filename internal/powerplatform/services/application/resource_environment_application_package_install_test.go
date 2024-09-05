@@ -11,18 +11,18 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
 func TestAccEnvironmentApplicationPackageInstallResource_Validate_Install(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + `
+				Config: constants.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -121,10 +121,10 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -148,7 +148,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 				),
 			},
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -234,10 +234,10 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_No_Dataverse(
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name     = "displayname"
 					location         = "europe"

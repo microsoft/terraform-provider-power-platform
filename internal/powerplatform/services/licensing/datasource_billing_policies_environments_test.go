@@ -11,18 +11,18 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
 func TestAccBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + `
+				Config: constants.TestsAcceptanceProviderConfig + `
 					provider "azurerm" {
 					features {}
 				}
@@ -69,10 +69,10 @@ func TestUnitTestBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				data "powerplatform_billing_policies_environments" "all_pay_as_you_go_policy_envs" {
 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
 				}`,

@@ -93,3 +93,21 @@ const (
 	HEADER_RETRY_AFTER        = "Retry-After"
 	HEADER_OPERATION_LOCATION = "Operation-Location"
 )
+
+const (
+	// TestsUnitProviderConfig is a shared configuration to combine with the actual
+	// test configuration so the Power Platform client is properly configured.
+	// It is also possible to use the POWER_PLATFORM_ environment variables instead.
+	//lintignore:AT004
+	TestsUnitProviderConfig = `
+provider "powerplatform" {
+	use_cli = true
+}
+`
+
+	//to run acceptance tests locally use environemnt variables or add `usecli=true` in the provider block
+	TestsAcceptanceProviderConfig = `
+provider "powerplatform" {
+}
+`
+)
