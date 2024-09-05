@@ -5,7 +5,6 @@ on:
  pull_request:
     paths:
       - 'go.mod'
-      - '**.go'
  push:
     branches:
       - main
