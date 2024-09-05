@@ -136,7 +136,7 @@ jobs:
         export ARM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
         export ARM_SUBSCRIPTION_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}'
         go clean -testcache
-        go test -p 10 -failfast -v ./... -run ^TestAccSolution -coverprofile=acc-test-coverage.out -timeout 300m
+        go test -p 10 -failfast -v ./... -run ^Test -coverprofile=acc-test-coverage.out -timeout 300m
         go tool cover -html=acc-test-coverage.out -o acc-test-coverage.cov.html
 
     - name: Upload Coverage Artifacts
