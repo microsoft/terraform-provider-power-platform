@@ -63,8 +63,10 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 		}), err
 	}
 
-	tflog.Warn(ctx, fmt.Sprintf("AAA Response: %v", res.BodyAsBytes))
-	tflog.Warn(ctx, fmt.Sprintf("AAA STATUS Response: %v", res.Response.Status))
+	if res != nil && res.Response != nil {
+		tflog.Debug(ctx, fmt.Sprintf("SendOperation Response: %v", res.BodyAsBytes))
+		tflog.Info(ctx, fmt.Sprintf("SendOperation Response Status: %v", res.Response.Status))
+	}
 
 	output := map[string]attr.Value{
 		"body": types.StringNull(),
