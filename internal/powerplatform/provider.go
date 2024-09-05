@@ -23,6 +23,7 @@ import (
 	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
+	capacity "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/capacity"
 	connection "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connection"
 	connections "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connection"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
@@ -39,6 +40,7 @@ import (
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	rest "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/rest"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
+	tenant "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
 )
 
@@ -349,6 +351,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Urls.PowerAppsScope = constants.PUBLIC_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.PUBLIC_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.PUBLIC_POWERPLATFORM_API_SCOPE
+		p.Config.Urls.LicensingUrl = constants.PUBLIC_LICENSING_API_DOMAIN
 		p.Config.Cloud = azcloud.AzurePublic
 	case "gcc":
 		p.Config.Urls.BapiUrl = constants.USGOV_BAPI_DOMAIN
@@ -356,6 +359,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Urls.PowerAppsScope = constants.USGOV_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.USGOV_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.USGOV_POWERPLATFORM_API_SCOPE
+		p.Config.Urls.LicensingUrl = constants.USGOV_LICENSING_API_DOMAIN
 		p.Config.Cloud = azcloud.AzurePublic //GCC uses public cloud for authentication
 	case "gcchigh":
 		p.Config.Urls.BapiUrl = constants.USGOVHIGH_BAPI_DOMAIN
@@ -363,6 +367,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Urls.PowerAppsScope = constants.USGOVHIGH_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.USGOVHIGH_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.USGOVHIGH_POWERPLATFORM_API_SCOPE
+		p.Config.Urls.LicensingUrl = constants.USGOVHIGH_LICENSING_API_DOMAIN
 		p.Config.Cloud = azcloud.AzureGovernment
 	case "dod":
 		p.Config.Urls.BapiUrl = constants.USDOD_BAPI_DOMAIN
@@ -370,6 +375,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Urls.PowerAppsScope = constants.USDOD_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.USDOD_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.USDOD_POWERPLATFORM_API_SCOPE
+		p.Config.Urls.LicensingUrl = constants.USDOD_LICENSING_API_DOMAIN
 		p.Config.Cloud = azcloud.AzureGovernment
 	case "china":
 		p.Config.Urls.BapiUrl = constants.CHINA_BAPI_DOMAIN
@@ -377,6 +383,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Urls.PowerAppsScope = constants.CHINA_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.CHINA_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.CHINA_POWERPLATFORM_API_SCOPE
+		p.Config.Urls.LicensingUrl = constants.CHINA_LICENSING_API_DOMAIN
 		p.Config.Cloud = azcloud.AzureChina
 	case "ex":
 		p.Config.Urls.BapiUrl = constants.EX_BAPI_DOMAIN
@@ -384,6 +391,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Urls.PowerAppsScope = constants.EX_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.EX_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.EX_POWERPLATFORM_API_SCOPE
+		p.Config.Urls.LicensingUrl = constants.EX_LICENSING_API_DOMAIN
 		p.Config.Cloud = azcloud.Configuration{
 			ActiveDirectoryAuthorityHost: constants.EX_AUTHORITY_HOST,
 			Services:                     map[azcloud.ServiceName]azcloud.ServiceConfiguration{},
@@ -394,6 +402,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Urls.PowerAppsScope = constants.RX_POWERAPPS_SCOPE
 		p.Config.Urls.PowerPlatformUrl = constants.RX_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.RX_POWERPLATFORM_API_SCOPE
+		p.Config.Urls.LicensingUrl = constants.RX_LICENSING_API_DOMAIN
 		p.Config.Cloud = azcloud.Configuration{
 			ActiveDirectoryAuthorityHost: constants.RX_AUTHORITY_HOST,
 			Services:                     map[azcloud.ServiceName]azcloud.ServiceConfiguration{},
@@ -460,6 +469,8 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return rest.NewDataverseWebApiDatasource() },
 		func() datasource.DataSource { return connections.NewConnectionsDataSource() },
 		func() datasource.DataSource { return connection.NewConnectionSharesDataSource() },
+		func() datasource.DataSource { return capacity.NewTenantCapcityDataSource() },
+		func() datasource.DataSource { return tenant.NewTenantDataSource() },
 	}
 }
 
