@@ -3,14 +3,16 @@ name: Terraform Provider E2E Test
 on:
  workflow_dispatch:
  pull_request:
-    paths-ignore:
-      - 'README.md'
+    paths:
+      - 'go.mod'
+      - '**.go'
  push:
     branches:
       - main
-    paths-ignore:
-      - 'README.md'
- 
+    paths:
+      - '**.go'
+      - 'go.mod'
+
 
 concurrency:
   group: ${{ github.head_ref || github.run_id }}
@@ -103,7 +105,7 @@ jobs:
   #   - name: Run unit tests
   #     run: |
   #       go clean -testcache
-  #       go test -p 4 -failfast -v ./... -run "^TestUnit" -coverprofile=unit-test-coverage.out
+  #       go test -p 16 -failfast -v ./... -run "^TestUnit" -coverprofile=unit-test-coverage.out
   #       go tool cover -html=unit-test-coverage.out -o unit-test-coverage.cov.html
 
   #   - name: Upload Coverage Artifacts

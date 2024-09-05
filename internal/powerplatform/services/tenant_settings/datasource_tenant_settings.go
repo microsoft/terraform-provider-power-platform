@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/customtypes"
 )
 
 var (
@@ -94,10 +95,13 @@ type EnvironmentsSettings struct {
 }
 
 type GovernanceSettings struct {
-	DisableAdminDigest                                 types.Bool   `tfsdk:"disable_admin_digest"`
-	DisableDeveloperEnvironmentCreationByNonAdminUsers types.Bool   `tfsdk:"disable_developer_environment_creation_by_non_admin_users"`
-	EnableDefaultEnvironmentRouting                    types.Bool   `tfsdk:"enable_default_environment_routing"`
-	Policy                                             types.Object `tfsdk:"policy"`
+	DisableAdminDigest                                 types.Bool       `tfsdk:"disable_admin_digest"`
+	DisableDeveloperEnvironmentCreationByNonAdminUsers types.Bool       `tfsdk:"disable_developer_environment_creation_by_non_admin_users"`
+	EnableDefaultEnvironmentRouting                    types.Bool       `tfsdk:"enable_default_environment_routing"`
+	EnvironmentRoutingAllMakers                        types.Bool       `tfsdk:"environment_routing_all_makers"`
+	EnvironmentRoutingTargetEnvironmentGroupId         customtypes.UUID `tfsdk:"environment_routing_target_environment_group_id"`
+	EnvironmentRoutingTargetSecurityGroupId            customtypes.UUID `tfsdk:"environment_routing_target_security_group_id"`
+	Policy                                             types.Object     `tfsdk:"policy"`
 }
 
 type PolicySettings struct {
@@ -182,7 +186,9 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	state = ConvertFromTenantSettingsDto(*tenantSettings, state.Timeouts)
+	var configuredSettings TenantSettingsSourceModel
+	req.Config.Get(ctx, &configuredSettings)
+	state, _ = ConvertFromTenantSettingsDto(*tenantSettings)
 	hash, err := tenantSettings.CalcObjectHash()
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", d.ProviderTypeName), err.Error())
@@ -352,6 +358,20 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, _ datasource.Sche
 							"enable_default_environment_routing": schema.BoolAttribute{
 								Description: "Enable Default Environment Routing",
 								Computed:    true,
+							},
+							"environment_routing_all_makers": schema.BoolAttribute{
+								Description: "Select who can be routed to a new personal developer environment. (All Makers = true, New Makers = false)",
+								Computed:    true,
+							},
+							"environment_routing_target_environment_group_id": schema.StringAttribute{
+								Description: "Assign newly created personal developer environments to a specific environment group",
+								Computed:    true,
+								CustomType:  customtypes.UUIDType{},
+							},
+							"environment_routing_target_security_group_id": schema.StringAttribute{
+								Description: "Restrict routing to members of the following security group. (00000000-0000-0000-0000-000000000000 allows all users)",
+								Computed:    true,
+								CustomType:  customtypes.UUIDType{},
 							},
 							"policy": schema.SingleNestedAttribute{
 								Description: "Policy",
