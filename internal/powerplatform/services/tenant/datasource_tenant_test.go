@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package tenant_test
 
 import (
 	"net/http"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
 func TestUnitTestTenantDataSource_Validate_Read(t *testing.T) {
@@ -18,15 +19,15 @@ func TestUnitTestTenantDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/tenant?api-version=2021-04-01`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/tenant/tests/datasource/Validate_Read/get_tenant.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/Validate_Read/get_tenant.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsUnitProviderConfig + `
+				Config: provider.TestsUnitProviderConfig + `
 				data "powerplatform_tenant" "tenant" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

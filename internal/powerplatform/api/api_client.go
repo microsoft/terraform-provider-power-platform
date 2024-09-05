@@ -17,8 +17,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 type ProviderClient struct {

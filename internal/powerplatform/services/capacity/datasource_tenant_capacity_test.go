@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package capacity_test
 
 import (
 	"net/http"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
 func TestUnitTestTenantCapacityDataSource_Validate_Read(t *testing.T) {
@@ -18,15 +19,15 @@ func TestUnitTestTenantCapacityDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", `https://licensing.powerplatform.microsoft.com/v0.1-alpha/tenants/00000000-0000-0000-0000-000000000001/TenantCapacity`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/capacity/tests/datasource/Validate_Read/get_tenant_capacity.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/Validate_Read/get_tenant_capacity.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: TestsUnitProviderConfig + `
+				Config: provider.TestsUnitProviderConfig + `
 				data "powerplatform_tenant_capacity" "capacity" {
 					tenant_id = "00000000-0000-0000-0000-000000000001"
 					}`,

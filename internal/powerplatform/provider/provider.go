@@ -18,32 +18,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	constants "github.com/microsoft/terraform-provider-power-platform/constants"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
-	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
-	capacity "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/capacity"
-	connection "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connection"
-	connections "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connection"
-	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
-	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
-	data_record "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/data_record"
-	dlp_policy "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
-	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
-	environment_groups "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_groups"
-	env_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_settings"
-	environment_templates "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_templates"
-	languages "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/languages"
-	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
-	locations "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
-	managed_environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
-	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
-	rest "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/rest"
-	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
-	tenant "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant"
-	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/capacity"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connection"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/data_record"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/dlp_policy"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_groups"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_settings"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment_templates"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/languages"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/locations"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/managed_environment"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/rest"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
 )
 
 var _ provider.Provider = &PowerPlatformProvider{}
@@ -440,13 +439,13 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return managed_environment.NewManagedEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
-		func() resource.Resource { return auth.NewUserResource() },
+		func() resource.Resource { return authorization.NewUserResource() },
 		func() resource.Resource { return data_record.NewDataRecordResource() },
 		func() resource.Resource { return environment_groups.NewEnvironmentGroupResource() },
-		func() resource.Resource { return env_settings.NewEnvironmentSettingsResource() },
+		func() resource.Resource { return environment_settings.NewEnvironmentSettingsResource() },
 		func() resource.Resource { return connection.NewConnectionResource() },
 		func() resource.Resource { return rest.NewDataverseWebApiResource() },
-		func() resource.Resource { return connections.NewConnectionShareResource() },
+		func() resource.Resource { return connection.NewConnectionShareResource() },
 	}
 }
 
@@ -462,15 +461,15 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return tenant_settings.NewTenantSettingsDataSource() },
 		func() datasource.DataSource { return licensing.NewBillingPoliciesDataSource() },
 		func() datasource.DataSource { return licensing.NewBillingPoliciesEnvironmetsDataSource() },
-		func() datasource.DataSource { return env_settings.NewEnvironmentSettingsDataSource() },
+		func() datasource.DataSource { return environment_settings.NewEnvironmentSettingsDataSource() },
 		func() datasource.DataSource { return locations.NewLocationsDataSource() },
 		func() datasource.DataSource { return languages.NewLanguagesDataSource() },
 		func() datasource.DataSource { return currencies.NewCurrenciesDataSource() },
-		func() datasource.DataSource { return auth.NewSecurityRolesDataSource() },
+		func() datasource.DataSource { return authorization.NewSecurityRolesDataSource() },
 		func() datasource.DataSource { return application.NewTenantApplicationPackagesDataSource() },
 		func() datasource.DataSource { return data_record.NewDataRecordDataSource() },
 		func() datasource.DataSource { return rest.NewDataverseWebApiDatasource() },
-		func() datasource.DataSource { return connections.NewConnectionsDataSource() },
+		func() datasource.DataSource { return connection.NewConnectionsDataSource() },
 		func() datasource.DataSource { return connection.NewConnectionSharesDataSource() },
 		func() datasource.DataSource { return capacity.NewTenantCapcityDataSource() },
 		func() datasource.DataSource { return tenant.NewTenantDataSource() },

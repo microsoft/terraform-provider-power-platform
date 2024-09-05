@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/customtypes"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 var _ resource.Resource = &TenantSettingsResource{}
@@ -463,11 +463,11 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	}
 
 	if needsProcessing(path.Root("power_platform").AtName("governance").AtName("environment_routing_target_security_group_id")) {
-		preprocessedDto.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId = types.StringValue(helpers.ZERO_UUID).ValueStringPointer()
+		preprocessedDto.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId = types.StringValue(constants.ZERO_UUID).ValueStringPointer()
 	}
 
 	if needsProcessing(path.Root("power_platform").AtName("governance").AtName("environment_routing_target_environment_group_id")) {
-		preprocessedDto.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId = types.StringValue(helpers.ZERO_UUID).ValueStringPointer()
+		preprocessedDto.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId = types.StringValue(constants.ZERO_UUID).ValueStringPointer()
 	}
 
 	// send preprocessedDto to the API

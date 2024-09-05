@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package capacity
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 var (

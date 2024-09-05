@@ -149,7 +149,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/tenant?api-version=2020-08-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/tenant_settings/tests/resources/Validate_Create/get_tenant.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resources/Validate_Create/get_tenant.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/updateTenantSettings?api-version=2023-06-01",
@@ -549,7 +549,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/tenant?api-version=2020-08-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("services/tenant_settings/tests/resources/Validate_Create/get_tenant.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resources/Validate_Create/get_tenant.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/updateTenantSettings?api-version=2023-06-01",
@@ -561,7 +561,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/listTenantSettings?api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
 			listSettingsResponseCount++
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/tenant_settings/tests/resources/Validate_Update/post_list_tenant_settings_%d.json", listSettingsResponseCount)).String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resources/Validate_Update/post_list_tenant_settings_%d.json", listSettingsResponseCount)).String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{

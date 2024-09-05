@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package environment_groups
 
 type EnvironmentGroupPrincipalDto struct {
 	Id   string `json:"id,omitempty"`

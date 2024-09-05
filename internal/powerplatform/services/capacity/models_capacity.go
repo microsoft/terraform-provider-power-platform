@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package capacity
 
 type TenantCapacityDto struct {
 	TenantId         string        `json:"tenantId"`

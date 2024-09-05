@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package settings
+package constants
 
 // Cloud	BAPI	Power Apps API	Power Platform API	OAuth Authority
 // public	api.bap.microsoft.com	api.powerapps.com	api.powerplatform.com	login.microsoftonline.com
@@ -11,6 +11,8 @@ package settings
 // ex	api.bap.eaglex.ic.gov	api.powerapps.eaglex.ic.gov	api.powerplatform.eaglex.ic.gov	login.microsoftonline.eaglex.ic.gov
 // rx	api.bap.microsoft.scloud	api.powerapps.microsoft.scloud	api.powerplatform.microsoft.scloud	login.microsoftonline.microsoft.scloud
 // china	api.bap.partner.microsoftonline.cn	api.powerapps.cn	api.powerplatform.partner.microsoftonline.cn	login.chinacloudapi.cn
+
+const ZERO_UUID = "00000000-0000-0000-0000-000000000000"
 
 const (
 	PUBLIC_OAUTH_AUTHORITY_URL      = "https://login.microsoftonline.com/"
