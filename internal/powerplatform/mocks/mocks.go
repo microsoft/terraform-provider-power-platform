@@ -4,13 +4,17 @@
 package mocks
 
 import (
+	"context"
 	"net/http"
 	"path/filepath"
 	"regexp"
 	"runtime"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
 func TestName() string {
@@ -23,6 +27,14 @@ func TestName() string {
 
 func TestsEntraLicesingGroupName() string {
 	return "pptestusers"
+}
+
+var TestUnitTestProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"powerplatform": providerserver.NewProtocol6WithError(provider.NewPowerPlatformProvider(context.Background(), true)()),
+}
+
+var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"powerplatform": providerserver.NewProtocol6WithError(provider.NewPowerPlatformProvider(context.Background(), false)()),
 }
 
 func ActivateEnvironmentHttpMocks() {

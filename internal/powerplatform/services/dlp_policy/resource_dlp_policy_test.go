@@ -10,8 +10,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
 func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
@@ -477,10 +477,10 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy"
 					default_connectors_classification = "Blocked"
@@ -507,7 +507,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "Blocked"
@@ -531,7 +531,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
@@ -558,7 +558,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
@@ -621,7 +621,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
@@ -700,7 +700,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy_1"
 					default_connectors_classification = "General"
@@ -800,10 +800,10 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "Block All Policy"
 					default_connectors_classification = "Blocked"
@@ -921,10 +921,10 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               false,
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + `
+				Config: constants.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "europe"

@@ -9,7 +9,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestUnitTenantCapacityDataSource_Validate_Read(t *testing.T) {
@@ -24,10 +25,10 @@ func TestUnitTenantCapacityDataSource_Validate_Read(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig + `
+				Config: constants.TestsUnitProviderConfig + `
 				data "powerplatform_tenant_capacity" "capacity" {
 					tenant_id = "00000000-0000-0000-0000-000000000001"
 					}`,
@@ -52,10 +53,10 @@ func TestUnitTenantCapacityDataSource_Validate_Read(t *testing.T) {
 
 func TestAccTenantCapacityDataSource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + `
+				Config: constants.TestsAcceptanceProviderConfig + `
 				data "powerplatform_tenant" "tenant" {}
 
 				data "powerplatform_tenant_capacity" "capacity" {
