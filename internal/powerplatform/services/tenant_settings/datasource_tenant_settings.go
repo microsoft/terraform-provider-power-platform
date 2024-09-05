@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/customtypes"
 )
 
@@ -188,7 +188,7 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 
 	var configuredSettings TenantSettingsSourceModel
 	req.Config.Get(ctx, &configuredSettings)
-	state, _ = ConvertFromTenantSettingsDto(*tenantSettings)
+	state, _ = ConvertFromTenantSettingsDto(*tenantSettings, state.Timeouts)
 	hash, err := tenantSettings.CalcObjectHash()
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", d.ProviderTypeName), err.Error())

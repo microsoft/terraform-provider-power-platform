@@ -157,7 +157,7 @@ jobs:
           cd deps
           sed -i "s|/go/bin|${GITHUB_WORKSPACE}/deps|g" terraform.rc
           cat terraform.rc
-          
+    
     
     - name: Run acceptance tests
       run: |

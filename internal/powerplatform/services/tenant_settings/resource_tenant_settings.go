@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/microsoft/terraform-provider-power-platform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/customtypes"
@@ -54,6 +53,7 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 				Create: true,
 				Update: true,
 				Read:   true,
+				Delete: true,
 			}),
 			"id": schema.StringAttribute{
 				Description:         "Tenant ID",
@@ -359,6 +359,20 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	// Save the original tenant settings in private state
 	originalSettings, erro := r.TenantSettingClient.GetTenantSettings(ctx)
 	if erro != nil {
@@ -393,9 +407,9 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	stateDto := applyCorrections(plannedSettingsDto, *tenantSettingsDto)
+	stateDto := applyCorrections(ctx, plannedSettingsDto, *tenantSettingsDto)
 
-	state, _ := ConvertFromTenantSettingsDto(*stateDto)
+	state, _ := ConvertFromTenantSettingsDto(*stateDto, plan.Timeouts)
 	state.Id = plan.Id
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
@@ -404,8 +418,10 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 }
 
 func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state TenantSettingsSourceModel
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.ProviderTypeName))
 
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -438,8 +454,8 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	var configuredSettings TenantSettingsSourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &configuredSettings)...)
 	oldStateDto := ConvertFromTenantSettingsModel(ctx, configuredSettings)
-	newStateDto := applyCorrections(oldStateDto, *tenantSettings)
-	newState, _ := ConvertFromTenantSettingsDto(*newStateDto)
+	newStateDto := applyCorrections(ctx, oldStateDto, *tenantSettings)
+	newState, _ := ConvertFromTenantSettingsDto(*newStateDto, state.Timeouts)
 	newState.Id = types.StringValue(tenant.TenantId)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_tenant_settings with id %s", r.ProviderTypeName, newState.Id.ValueString()))
@@ -457,6 +473,15 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	plannedDto := ConvertFromTenantSettingsModel(ctx, plan)
 
@@ -496,24 +521,33 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	}
 
 	// need to make corrections from what the API returns to match what terraform expects
-	filteredDto := applyCorrections(plannedDto, *updatedSettingsDto)
+	filteredDto := applyCorrections(ctx, plannedDto, *updatedSettingsDto)
 
-	newState, _ := ConvertFromTenantSettingsDto(*filteredDto)
+	newState, _ := ConvertFromTenantSettingsDto(*filteredDto, plan.Timeouts)
 	newState.Id = plan.Id
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state TenantSettingsSourceModel
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
 
-	resp.Diagnostics.AddWarning("Tenant Settings are not deleted", "Tenant Settings may not be deleted in Power Platform.  Deleting this resource will attempt to restore settings to their previous values and remove this configuration from Terraform state.")
-
-	var state TenantSettingsSourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	resp.Diagnostics.AddWarning("Tenant Settings are not deleted", "Tenant Settings may not be deleted in Power Platform.  Deleting this resource will attempt to restore settings to their previous values and remove this configuration from Terraform state.")
+
+	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	stateDto := ConvertFromTenantSettingsModel(ctx, state)
 
@@ -535,7 +569,7 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	correctedDto := applyCorrections(stateDto, originalSettings)
+	correctedDto := applyCorrections(ctx, stateDto, originalSettings)
 	if correctedDto == nil {
 		resp.Diagnostics.AddError(
 			"Error applying corrections", "Error applying corrections",

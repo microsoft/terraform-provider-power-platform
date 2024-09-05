@@ -3,6 +3,8 @@
 
 package constants
 
+import "time"
+
 // Cloud	BAPI	Power Apps API	Power Platform API	OAuth Authority
 // public	api.bap.microsoft.com	api.powerapps.com	api.powerplatform.com	login.microsoftonline.com
 // gcc	gov.api.bap.microsoft.us	gov.api.powerapps.us	api.gov.powerplatform.microsoft.us	login.microsoftonline.com
@@ -92,4 +94,9 @@ const (
 	HEADER_LOCATION           = "Location"
 	HEADER_RETRY_AFTER        = "Retry-After"
 	HEADER_OPERATION_LOCATION = "Operation-Location"
+)
+
+const (
+	DEFAULT_REQUEST_TIMEOUT_IN_MINUTES            = 30 * time.Minute
+	DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES = 20 * time.Minute
 )

@@ -142,7 +142,6 @@ type TenantSettingsDto struct {
 	PowerPlatform                                  *PowerPlatformSettingsDto `json:"powerPlatform,omitempty"`
 }
 
-
 func ConvertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSettingsSourceModel) TenantSettingsDto {
 	tenantSettingsDto := TenantSettingsDto{}
 
@@ -422,7 +421,7 @@ func ConvertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 	return tenantSettingsDto
 }
 
-func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) (TenantSettingsSourceModel, basetypes.ObjectValue) {
+func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto, timeouts timeouts.Value) (TenantSettingsSourceModel, basetypes.ObjectValue) {
 
 	objTypePowerPlatformSettings, objValuePowerPlatformSettings := ConvertPowerPlatformSettings(tenantSettingsDto)
 
