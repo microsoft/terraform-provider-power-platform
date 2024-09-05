@@ -109,7 +109,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	//import solution
-	solutionComponents, err := client.createSolutionComponentParameters(ctx, settings)
+	solutionComponents, err := client.createSolutionComponentParameters(settings)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func (client *SolutionClient) GetSolution(ctx context.Context, environmentId str
 	return nil, fmt.Errorf("solution %s not found in %s", solutionName, environmentId)
 }
 
-func (client *SolutionClient) createSolutionComponentParameters(ctx context.Context, settings []byte) ([]interface{}, error) {
+func (client *SolutionClient) createSolutionComponentParameters(settings []byte) ([]interface{}, error) {
 	if len(settings) == 0 {
 		return nil, nil
 	}
