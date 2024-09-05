@@ -21,6 +21,7 @@ type ProviderConfigUrls struct {
 	PowerAppsScope     string
 	PowerPlatformUrl   string
 	PowerPlatformScope string
+	LicensingUrl       string
 }
 
 type ProviderCredentials struct {

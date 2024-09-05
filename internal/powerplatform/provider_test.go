@@ -17,6 +17,7 @@ import (
 	mock_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 	application "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	auth "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
+	capacity "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/capacity"
 	connections "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connection"
 	connectors "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/connectors"
 	currencies "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/currencies"
@@ -33,6 +34,7 @@ import (
 	powerapps "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/powerapps"
 	rest "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/rest"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
+	tenant "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant"
 	tenant_settings "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/tenant_settings"
 	"github.com/stretchr/testify/require"
 )
@@ -85,6 +87,8 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		connections.NewConnectionSharesDataSource(),
 		data_record.NewDataRecordDataSource(),
 		rest.NewDataverseWebApiDatasource(),
+		capacity.NewTenantCapcityDataSource(),
+		tenant.NewTenantDataSource(),
 	}
 	datasources := NewPowerPlatformProvider(context.Background())().(*PowerPlatformProvider).DataSources(context.Background())
 
