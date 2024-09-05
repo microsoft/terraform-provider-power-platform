@@ -12,7 +12,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
-func TestUnitTestTenantDataSource_Validate_Read(t *testing.T) {
+func TestUnitTenantDataSource_Validate_Read(t *testing.T) {
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -28,6 +28,29 @@ func TestUnitTestTenantDataSource_Validate_Read(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: provider.TestsUnitProviderConfig + `
+				data "powerplatform_tenant" "tenant" {}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("data.powerplatform_tenant.tenant", "tenant_id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("data.powerplatform_tenant.tenant", "state", "Enabled"),
+					resource.TestCheckResourceAttr("data.powerplatform_tenant.tenant", "location", "unitedstates"),
+					resource.TestCheckResourceAttr("data.powerplatform_tenant.tenant", "aad_country_geo", "unitedstates"),
+					resource.TestCheckResourceAttr("data.powerplatform_tenant.tenant", "data_storage_geo", "unitedstates"),
+					resource.TestCheckResourceAttr("data.powerplatform_tenant.tenant", "default_environment_geo", "unitedstates"),
+					resource.TestCheckResourceAttr("data.powerplatform_tenant.tenant", "aad_data_boundary", "none"),
+					resource.TestCheckResourceAttr("data.powerplatform_tenant.tenant", "fed_ramp_high_certification_required", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccTenantDataSource_Validate_Read(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: provider.TestsAcceptanceProviderConfig + `
 				data "powerplatform_tenant" "tenant" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
