@@ -14,7 +14,7 @@ on:
 
 
 concurrency:
-  group: ${{ github.head_ref || github.run_id }}
+  group: acceptancetests
   cancel-in-progress: true
 
 permissions:
