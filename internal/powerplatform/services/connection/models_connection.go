@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package connection
 
 type ConnectionDtoArray struct {
 	Value []ConnectionDto `json:"value"`

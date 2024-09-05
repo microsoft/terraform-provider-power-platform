@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package api
 
 import (
 	"bytes"
@@ -39,13 +39,13 @@ func (client *ApiClient) doRequest(token *string, request *http.Request, headers
 	response, err := httpClient.Do(request)
 	apiHttpResponse.Response = response
 	if err != nil {
-		return nil, err
+		return apiHttpResponse, err
 	}
 
 	body, err := io.ReadAll(response.Body)
 	apiHttpResponse.BodyAsBytes = body
 	if err != nil {
-		return nil, err
+		return apiHttpResponse, err
 	}
 	defer response.Body.Close()
 
@@ -53,7 +53,7 @@ func (client *ApiClient) doRequest(token *string, request *http.Request, headers
 		if len(body) != 0 {
 			return apiHttpResponse, fmt.Errorf("status: %d, message: %s", response.StatusCode, string(body))
 		} else {
-			return nil, fmt.Errorf("status: %d", response.StatusCode)
+			return apiHttpResponse, fmt.Errorf("status: %d", response.StatusCode)
 		}
 	}
 	return apiHttpResponse, nil

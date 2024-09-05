@@ -1,16 +1,20 @@
-name: Terraform Provider E2E Test
+name: Terraform Provider Tests
 
 on:
  workflow_dispatch:
+ schedule:
+    # run at 4 AM UTC every day
+    - cron:  '0 4 * * *' 
+ pull_request:
+    paths:
+      - 'go.mod'
  push:
     branches:
       - main
-    paths-ignore:
-      - 'README.md'
- 
+    
 
 concurrency:
-  group: ${{ github.head_ref || github.run_id }}
+  group: acceptancetests
   cancel-in-progress: true
 
 permissions:
@@ -76,40 +80,8 @@ jobs:
       run: |
         go build -v .
 
-  unit_test:
-    name: Unit Test
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    
-    - name: Harden Runner
-      uses: step-security/harden-runner@5c7944e73c4c2a096b17a9cb74d65b6c2bbafbde # v2.9.1
-      with:
-        egress-policy: audit
-
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-
-    - name: Set up Go
-      uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
-      with:
-        cache: true
-        go-version-file: 'go.mod'
-        id: go
-
-    - name: Run unit tests
-      run: |
-        go test -v ./... -run "^TestUnit" -coverprofile=unit-test-coverage.out
-        go tool cover -html=unit-test-coverage.out -o unit-test-coverage.cov.html
-
-    - name: Upload Coverage Artifacts
-      uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
-      with:
-        name: Test Coverage
-        path: unit-test-coverage.cov.html
-
-  acceptance_test:
-    name: Acceptance Test
+  tests:
+    name: Running Test
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -133,19 +105,44 @@ jobs:
       run: |
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
         go mod download
-        
-    - name: Run acceptance tests
+    
+    - name: "Set up Terraform"
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Download Terraform Providers
       run: |
-        export TF_LOG=DEBUG
+          mkdir deps
+          cp .devcontainer/features/acceptance_test_dependencies/main.tf deps/main.tf
+          cd deps
+          terraform init
+          find .terraform/providers/ -type f -exec cp {} . \;
+          
+    - name: Setting up local provider install
+      run: |
+          cp .devcontainer/features/local_provider_dev/terraform.rc deps/terraform.rc
+          cd deps
+          sed -i "s|/go/bin|${GITHUB_WORKSPACE}/deps|g" terraform.rc
+          cat terraform.rc
+    
+    
+    - name: Run tests
+      run: |
+        export TF_CLI_CONFIG_FILE="${GITHUB_WORKSPACE}/deps/terraform.rc"
+        export TF_LOG=WARN
         export TF_ACC=1
         export POWER_PLATFORM_USE_OIDC=true
         export POWER_PLATFORM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
         export POWER_PLATFORM_CLIENT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}'
-        go test -v ./... -run "^TestAcc" -coverprofile=acc-test-coverage.out -timeout 240m
-        go tool cover -html=acc-test-coverage.out -o acc-test-coverage.cov.html
+        export ARM_USE_OIDC="true"
+        export ARM_CLIENT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}'
+        export ARM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
+        export ARM_SUBSCRIPTION_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}'
+        go clean -testcache
+        go test -p 10 -failfast -v ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m
+        go tool cover -html=test-coverage.out -o test-coverage.cov.html
 
     - name: Upload Coverage Artifacts
       uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
       with:
         name: Test Coverage
-        path: acc-test-coverage.cov.html
+        path: coverage.cov.html

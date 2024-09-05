@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform_modifiers
+package modifiers
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func SetStringValueToUnknownIfChecksumsChangeModifier(firstAttributePair, secondAttributePair []string) planmodifier.String {
@@ -60,7 +60,7 @@ func (d *setStringValueToUnknownIfChecksumsChangeModifier) hasChecksumChanged(ct
 	diags = req.State.GetAttribute(ctx, path.Root(checksumAttributeName), &attributeChecksum)
 	resp.Diagnostics.Append(diags...)
 
-	value, err := powerplatform_helpers.CalculateMd5(attribute.ValueString())
+	value, err := helpers.CalculateMd5(attribute.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating MD5 checksum for %s", attribute), err.Error())
 	}

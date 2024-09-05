@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package connection
 
 import (
 	"context"
@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 var _ resource.Resource = &ConnectionResource{}
@@ -218,7 +218,7 @@ func (r *ConnectionResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	connection, err := r.ConnectionsClient.GetConnection(ctx, state.EnvironmentId.ValueString(), state.Name.ValueString(), state.Id.ValueString())
 	if err != nil {
-		if powerplatform_helpers.Code(err) == powerplatform_helpers.ERROR_OBJECT_NOT_FOUND {
+		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
 		} else {

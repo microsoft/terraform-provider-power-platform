@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package currencies
 
 type CurrenciesDto struct {
 	Value []struct {

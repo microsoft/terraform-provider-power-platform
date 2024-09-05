@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package environment
 
 import (
 	"context"
@@ -20,8 +20,7 @@ import (
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
+	modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
 )
 
@@ -108,7 +107,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers: []planmodifier.Object{
-					powerplatform_modifiers.RequireReplaceObjectToEmptyModifier(),
+					modifiers.RequireReplaceObjectToEmptyModifier(),
 				},
 				Attributes: map[string]schema.Attribute{
 					"currency_code": schema.StringAttribute{
@@ -116,7 +115,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 						MarkdownDescription: "Unique currency name",
 						Required:            true,
 						PlanModifiers: []planmodifier.String{
-							powerplatform_modifiers.RequireReplaceStringFromNonEmptyPlanModifier(),
+							modifiers.RequireReplaceStringFromNonEmptyPlanModifier(),
 						},
 					},
 					"url": schema.StringAttribute{
@@ -148,7 +147,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 						MarkdownDescription: "Unique language LCID (integer)",
 						Required:            true,
 						PlanModifiers: []planmodifier.Int64{
-							powerplatform_modifiers.RequireReplaceIntAttributePlanModifier(),
+							modifiers.RequireReplaceIntAttributePlanModifier(),
 						},
 					},
 					"version": schema.StringAttribute{
@@ -223,7 +222,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		resp.Diagnostics.AddError("Error when converting source model to create environment dto", err.Error())
 	}
 
-	err = locationValidator(r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.AzureRegion)
+	err = r.EnvironmentClient.LocationValidator(ctx, envToCreate.Location, envToCreate.Properties.AzureRegion)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
@@ -287,7 +286,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 
 	envDto, err := r.EnvironmentClient.GetEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
-		if powerplatform_helpers.Code(err) == powerplatform_helpers.ERROR_OBJECT_NOT_FOUND {
+		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
 		} else {

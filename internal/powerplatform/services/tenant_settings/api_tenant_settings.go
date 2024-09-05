@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package tenant_settings
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"net/url"
 	"reflect"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 func NewTenantSettingsClient(api *api.ApiClient) TenantSettingsClient {
@@ -84,13 +84,13 @@ func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, te
 func applyCorrections(planned TenantSettingsDto, actual TenantSettingsDto) *TenantSettingsDto {
 	corrected := filterDto(planned, actual).(*TenantSettingsDto)
 	if planned.PowerPlatform != nil && planned.PowerPlatform.Governance != nil {
-		if planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId != nil && *planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == helpers.ZERO_UUID && corrected.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == nil {
-			zu := helpers.ZERO_UUID
+		if planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId != nil && *planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == constants.ZERO_UUID && corrected.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == nil {
+			zu := constants.ZERO_UUID
 			corrected.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId = &zu
 		}
 
-		if planned.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId != nil && *planned.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId == helpers.ZERO_UUID && corrected.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId == nil {
-			zu := helpers.ZERO_UUID
+		if planned.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId != nil && *planned.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId == constants.ZERO_UUID && corrected.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId == nil {
+			zu := constants.ZERO_UUID
 			corrected.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId = &zu
 		}
 	}
