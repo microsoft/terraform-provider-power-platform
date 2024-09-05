@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 package solution
-package solution
 
 import (
 	"context"
