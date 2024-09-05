@@ -59,6 +59,7 @@ data "powerplatform_rest_query" "webapi_query" {
 - `body` (String) Body of the request
 - `expected_http_status` (List of Number) Expected HTTP status code. If the response status code does not match any of the expected status codes, the operation will fail.
 - `headers` (Attributes List) Headers of the request (see [below for nested schema](#nestedatt--headers))
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
@@ -71,6 +72,14 @@ Required:
 
 - `name` (String) Header name
 - `value` (String) Header value
+
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
 
 
 <a id="nestedatt--output"></a>

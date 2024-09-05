@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -17,8 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 )
 
@@ -39,11 +41,12 @@ type SolutionResource struct {
 }
 
 type SolutionResourceModel struct {
-	Id                   types.String `tfsdk:"id"`
-	SolutionFileChecksum types.String `tfsdk:"solution_file_checksum"`
-	SettingsFileChecksum types.String `tfsdk:"settings_file_checksum"`
-	EnvironmentId        types.String `tfsdk:"environment_id"`
-	//SolutionName         types.String `tfsdk:"solution_name"`
+	Timeouts             timeouts.Value `tfsdk:"timeouts"`
+	Id                   types.String   `tfsdk:"id"`
+	SolutionFileChecksum types.String   `tfsdk:"solution_file_checksum"`
+	SettingsFileChecksum types.String   `tfsdk:"settings_file_checksum"`
+	EnvironmentId        types.String   `tfsdk:"environment_id"`
+	//SolutionName         types.String   `tfsdk:"solution_name"`
 	SolutionVersion types.String `tfsdk:"solution_version"`
 	SolutionFile    types.String `tfsdk:"solution_file"`
 	SettingsFile    types.String `tfsdk:"settings_file"`
@@ -60,6 +63,12 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 		Description:         "Resource for importing solutions in Power Platform environments",
 		MarkdownDescription: "Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the [`pac solution import`](https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-import) command in the Power Platform CLI.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+				Read:   true,
+			}),
 			"solution_file_checksum": schema.StringAttribute{
 				MarkdownDescription: "Checksum of the solution file",
 				Description:         "Checksum of the solution file",
@@ -94,14 +103,6 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			// "solution_name": schema.StringAttribute{
-			// 	MarkdownDescription: "Unique name of the solution",
-			// 	Description:         "Unique name of the solution",
-			// 	Computed:            true,
-			// 	PlanModifiers: []planmodifier.String{
-			// 		stringplanmodifier.UseStateForUnknown(),
-			// 	},
-			// },
 			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "Id of the environment where the solution is imported",
 				Description:         "Id of the environment where the solution is imported",
@@ -168,6 +169,15 @@ func (r *SolutionResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
+	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	solution := r.importSolution(ctx, plan, &resp.Diagnostics)
 
 	if resp.Diagnostics.HasError() {
@@ -218,8 +228,16 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	solutionId := strings.Split(state.Id.ValueString(), "_")[1]
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
 
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	solutionId := strings.Split(state.Id.ValueString(), "_")[1]
 	solution, err := r.SolutionClient.GetSolutionById(ctx, state.EnvironmentId.ValueString(), solutionId)
 	if err != nil {
 		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
@@ -306,6 +324,15 @@ func (r *SolutionResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	solution := r.importSolution(ctx, plan, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
@@ -351,6 +378,15 @@ func (r *SolutionResource) Delete(ctx context.Context, req resource.DeleteReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	if !state.EnvironmentId.IsNull() && !state.Id.IsNull() {
 		solutionId := strings.Split(state.Id.ValueString(), "_")[1]

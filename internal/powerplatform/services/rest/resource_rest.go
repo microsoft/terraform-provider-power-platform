@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -17,7 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	modifier "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
 )
 
@@ -35,12 +37,13 @@ type DataverseWebApiResource struct {
 }
 
 type DataverseWebApiResourceModel struct {
-	Id      types.String              `tfsdk:"id"`
-	Create  *DataverseWebApiOperation `tfsdk:"create"`
-	Update  *DataverseWebApiOperation `tfsdk:"update"`
-	Destroy *DataverseWebApiOperation `tfsdk:"destroy"`
-	Read    *DataverseWebApiOperation `tfsdk:"read"`
-	Output  types.Object              `tfsdk:"output"`
+	Timeouts timeouts.Value            `tfsdk:"timeouts"`
+	Id       types.String              `tfsdk:"id"`
+	Create   *DataverseWebApiOperation `tfsdk:"create"`
+	Update   *DataverseWebApiOperation `tfsdk:"update"`
+	Destroy  *DataverseWebApiOperation `tfsdk:"destroy"`
+	Read     *DataverseWebApiOperation `tfsdk:"read"`
+	Output   types.Object              `tfsdk:"output"`
 }
 
 type DataverseWebApiOperation struct {
@@ -74,6 +77,12 @@ func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.Schem
 		* lack of 'read' operation will result in no resource changes being tracked. That means that the 'update' operation will never be called
 		* lack of destroy will cause that the resource to not be deleted during 'terraform destroy'`,
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+				Read:   true,
+			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id (guid)",
 				Description:         "Unique id (guid)",
@@ -195,11 +204,21 @@ func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.Creat
 	}
 
 	state := DataverseWebApiResourceModel{}
+	state.Timeouts = plan.Timeouts
 	state.Create = plan.Create
 	state.Update = plan.Update
 	state.Destroy = plan.Destroy
 	state.Read = plan.Read
 	state.Output = plan.Output
+
+	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	state.Id = types.StringValue(strconv.Itoa(int(time.Now().UnixMilli())))
 	if plan.Create != nil {
@@ -235,7 +254,17 @@ func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	newState := DataverseWebApiResourceModel{}
+	newState.Timeouts = state.Timeouts
 	newState.Id = state.Id
 	newState.Create = state.Create
 	newState.Update = state.Update
@@ -273,6 +302,15 @@ func (r *DataverseWebApiResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	if plan.Update != nil {
 		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, plan.Update)
 		if err != nil {
@@ -305,6 +343,15 @@ func (r *DataverseWebApiResource) Delete(ctx context.Context, req resource.Delet
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	if state.Destroy != nil {
 		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, state.Destroy)

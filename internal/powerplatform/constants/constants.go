@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package settings
+package constants
+
+import "time"
 
 // Cloud	BAPI	Power Apps API	Power Platform API	OAuth Authority
 // public	api.bap.microsoft.com	api.powerapps.com	api.powerplatform.com	login.microsoftonline.com
@@ -12,6 +14,8 @@ package settings
 // rx	api.bap.microsoft.scloud	api.powerapps.microsoft.scloud	api.powerplatform.microsoft.scloud	login.microsoftonline.microsoft.scloud
 // china	api.bap.partner.microsoftonline.cn	api.powerapps.cn	api.powerplatform.partner.microsoftonline.cn	login.chinacloudapi.cn
 
+const ZERO_UUID = "00000000-0000-0000-0000-000000000000"
+
 const (
 	PUBLIC_OAUTH_AUTHORITY_URL      = "https://login.microsoftonline.com/"
 	PUBLIC_BAPI_DOMAIN              = "api.bap.microsoft.com"
@@ -19,6 +23,7 @@ const (
 	PUBLIC_POWERAPPS_SCOPE          = "https://service.powerapps.com/.default"
 	PUBLIC_POWERPLATFORM_API_DOMAIN = "api.powerplatform.com"
 	PUBLIC_POWERPLATFORM_API_SCOPE  = "https://api.powerplatform.com/.default"
+	PUBLIC_LICENSING_API_DOMAIN     = "licensing.powerplatform.microsoft.com"
 )
 
 const (
@@ -28,6 +33,7 @@ const (
 	USDOD_POWERAPPS_SCOPE          = "https://service.apps.appsplatform.us/.default"
 	USDOD_POWERPLATFORM_API_DOMAIN = "api.appsplatform.us"
 	USDOD_POWERPLATFORM_API_SCOPE  = "https://api.appsplatform.us/.default"
+	USDOD_LICENSING_API_DOMAIN     = "licensing.appsplatform.us"
 )
 
 const (
@@ -37,6 +43,7 @@ const (
 	USGOV_POWERAPPS_SCOPE          = "https://service.powerapps.us/.default"
 	USGOV_POWERPLATFORM_API_DOMAIN = "api.gov.powerplatform.microsoft.us"
 	USGOV_POWERPLATFORM_API_SCOPE  = "https://api.gov.powerplatform.microsoft.us/.default"
+	USGOV_LICENSING_API_DOMAIN     = "gov.licensing.powerplatform.microsoft.us"
 )
 
 const (
@@ -46,6 +53,7 @@ const (
 	USGOVHIGH_POWERAPPS_SCOPE          = "https://high.service.apps.appsplatform.us/.default"
 	USGOVHIGH_POWERPLATFORM_API_DOMAIN = "api.appsplatform.us"
 	USGOVHIGH_POWERPLATFORM_API_SCOPE  = "https://api.appsplatform.us/.default"
+	USGOVHIGH_LICENSING_API_DOMAIN     = "high.licensing.powerplatform.microsoft.us"
 )
 
 const (
@@ -55,6 +63,7 @@ const (
 	CHINA_POWERAPPS_SCOPE          = "https://service.powerapps.cn/.default"
 	CHINA_POWERPLATFORM_API_DOMAIN = "api.powerplatform.partner.microsoftonline.cn"
 	CHINA_POWERPLATFORM_API_SCOPE  = "https://api.powerplatform.partner.microsoftonline.cn/.default"
+	CHINA_LICENSING_API_DOMAIN     = "licensing.partner.microsoftonline.cn"
 )
 
 const (
@@ -65,6 +74,7 @@ const (
 	EX_POWERPLATFORM_API_DOMAIN = "api.powerplatform.eaglex.ic.gov"
 	EX_POWERPLATFORM_API_SCOPE  = "https://api.powerplatform.eaglex.ic.gov/.default"
 	EX_AUTHORITY_HOST           = "https://login.microsoftonline.eaglex.ic.gov/"
+	EX_LICENSING_API_DOMAIN     = "licensing.eaglex.ic.gov"
 )
 
 const (
@@ -75,6 +85,7 @@ const (
 	RX_POWERPLATFORM_API_DOMAIN = "api.powerplatform.microsoft.scloud"
 	RX_POWERPLATFORM_API_SCOPE  = "https://api.powerplatform.microsoft.scloud/.default"
 	RX_AUTHORITY_HOST           = "https://login.microsoftonline.microsoft.scloud/"
+	RX_LICENSING_API_DOMAIN     = "licensing.microsoft.scloud"
 )
 
 const (
@@ -83,4 +94,9 @@ const (
 	HEADER_LOCATION           = "Location"
 	HEADER_RETRY_AFTER        = "Retry-After"
 	HEADER_OPERATION_LOCATION = "Operation-Location"
+)
+
+const (
+	DEFAULT_REQUEST_TIMEOUT_IN_MINUTES            = 30 * time.Minute
+	DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES = 20 * time.Minute
 )

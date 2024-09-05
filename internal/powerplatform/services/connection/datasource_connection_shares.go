@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 var (
@@ -34,6 +36,7 @@ type ConnectionSharesDataSource struct {
 }
 
 type ConnectionSharesListDataSourceModel struct {
+	Timeouts      timeouts.Value                    `tfsdk:"timeouts"`
 	Id            types.String                      `tfsdk:"id"`
 	EnvironmentId types.String                      `tfsdk:"environment_id"`
 	ConnectorName types.String                      `tfsdk:"connector_name"`
@@ -56,10 +59,13 @@ func (d *ConnectionSharesDataSource) Metadata(_ context.Context, req datasource.
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *ConnectionSharesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *ConnectionSharesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -133,6 +139,15 @@ func (d *ConnectionSharesDataSource) Read(ctx context.Context, req datasource.Re
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
 
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	connectionsList, err := d.ConnectionsClient.GetConnectionShares(ctx, state.EnvironmentId.ValueString(), state.ConnectorName.ValueString(), state.ConnectionId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get connection shares", err.Error())
@@ -145,7 +160,7 @@ func (d *ConnectionSharesDataSource) Read(ctx context.Context, req datasource.Re
 	}
 	state.Id = types.StringValue(strconv.Itoa(len(connectionsList.Value)))
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
 

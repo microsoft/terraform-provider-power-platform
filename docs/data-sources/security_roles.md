@@ -23,10 +23,19 @@ Fetches the list of Dataverse security roles for a given environment and busines
 
 - `business_unit_id` (String) Id of the business unit to filter the security roles
 - `id` (String) Id of the read operation
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
 - `security_roles` (Attributes List) List of security roles (see [below for nested schema](#nestedatt--security_roles))
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
+
 
 <a id="nestedatt--security_roles"></a>
 ### Nested Schema for `security_roles`

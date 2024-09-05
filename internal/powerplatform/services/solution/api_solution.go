@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewSolutionClient(api *api.ApiClient) SolutionClient {
@@ -50,17 +50,21 @@ func (client *SolutionClient) GetSolutionUniqueName(ctx context.Context, environ
 	}
 	values := url.Values{}
 	values.Add("$expand", "publisherid")
-	values.Add("$filter", fmt.Sprintf("uniquename eq %s", name))
+	values.Add("$filter", fmt.Sprintf("uniquename eq '%s'", name))
 	apiUrl.RawQuery = values.Encode()
 
-	solution := SolutionDto{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solution)
+	solutions := SolutionDtoArray{}
+	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutions)
 	if err != nil {
 		return nil, err
 	}
-	solution.EnvironmentId = environmentId
+	if len(solutions.Value) == 0 {
+		return nil, fmt.Errorf("solution with unique name '%s' not found", name)
+	}
 
-	return &solution, nil
+	solutions.Value[0].EnvironmentId = environmentId
+
+	return &solutions.Value[0], nil
 }
 
 func (client *SolutionClient) GetSolutionById(ctx context.Context, environmentId, solutionId string) (*SolutionDto, error) {
@@ -79,14 +83,18 @@ func (client *SolutionClient) GetSolutionById(ctx context.Context, environmentId
 	values.Add("$filter", fmt.Sprintf("solutionid eq %s", solutionId))
 	apiUrl.RawQuery = values.Encode()
 
-	solution := SolutionDto{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solution)
+	solutions := SolutionDtoArray{}
+	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutions)
 	if err != nil {
 		return nil, err
 	}
-	solution.EnvironmentId = environmentId
+	if len(solutions.Value) == 0 {
+		return nil, fmt.Errorf("solution with id '%s' not found", solutionId)
+	}
 
-	return &solution, nil
+	solutions.Value[0].EnvironmentId = environmentId
+
+	return &solutions.Value[0], nil
 }
 
 func (client *SolutionClient) GetSolutions(ctx context.Context, environmentId string) ([]SolutionDto, error) {

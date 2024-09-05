@@ -42,10 +42,19 @@ data "powerplatform_environment_templates" "all_environment_templates_by_locatio
 ### Optional
 
 - `id` (Number) Id of the read operation
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
 - `environment_templates` (Attributes List) List of available environment templates (see [below for nested schema](#nestedatt--environment_templates))
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
+
 
 <a id="nestedatt--environment_templates"></a>
 ### Nested Schema for `environment_templates`
