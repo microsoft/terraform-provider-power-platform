@@ -2,12 +2,10 @@ name: Terraform Provider Tests
 
 on:
  workflow_dispatch:
- schedule:
-      # run at 4 AM UTC every day
-      - cron:  '0 4 * * *' 
  pull_request:
     paths:
       - 'go.mod'
+      - '**.go'
  push:
     branches:
       - main
