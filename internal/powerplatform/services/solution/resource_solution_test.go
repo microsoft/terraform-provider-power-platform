@@ -20,8 +20,7 @@ import (
 )
 
 func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
-	solutionName := "TerraformTestSolution"
-	solutionFileName := solutionName + "_Complex_1_1_0_0.zip"
+	solutionFileName := "TerraformTestSolution_Complex_1_1_0_0.zip"
 
 	solutionFileBytes, err := os.ReadFile(filepath.Join("../../../../examples/resources/powerplatform_solution", solutionFileName))
 	if err != nil {
@@ -55,14 +54,12 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = powerplatform_environment.environment.id
-					solution_name    = "` + solutionName + `"
 					solution_file    = "` + solutionFileName + `"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
 					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file"),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionName),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksum),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file", solutionFileName),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", "Terraform Test Solution"),
@@ -114,6 +111,16 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_With_Settings_File/get_solution.json").String()), nil
 		})
 
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=uniquename+eq+TerraformTestSolution",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_With_Settings_File/get_solution_terraformtestsolution.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=solutionid+eq+86928ed8-df37-4ce2-add5-47030a833bff",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_With_Settings_File/get_solution_terraformtestsolution.json").String()), nil
+		})
+
 	httpmock.RegisterResponder("DELETE", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions%2886928ed8-df37-4ce2-add5-47030a833bff%29",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("tests/resource/Validate_Create_With_Settings_File/get_solution.json").String()), nil
@@ -128,13 +135,11 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
-					solution_name    = "TerraformTestSolution"
 					solution_file    = "test_solution.zip"
 					settings_file 	 = "test_solution_settings.json"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", "1.1.0.0"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_checksum),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_checksum),
@@ -214,13 +219,11 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 				
 				resource "powerplatform_solution" "solution" {
 					environment_id = powerplatform_environment.environment.id
-					solution_name    = "TerraformTestSolution"
 					solution_file    = "` + solutionFileName + `"
 					settings_file 	 = "` + solutionSettingsFileName + `"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", solutionName),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksum),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settingsFileChecksum),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file", solutionSettingsFileName),
@@ -273,6 +276,16 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_No_Settings_File/get_solution.json").String()), nil
 		})
 
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=uniquename+eq+TerraformTestSolution",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_No_Settings_File/get_solution_terraformtestsolution.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=solutionid+eq+86928ed8-df37-4ce2-add5-47030a833bff",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_No_Settings_File/get_solution_terraformtestsolution.json").String()), nil
+		})
+
 	httpmock.RegisterResponder("DELETE", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions%2886928ed8-df37-4ce2-add5-47030a833bff%29",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("tests/resource/Validate_Create_No_Settings_File/get_solution.json").String()), nil
@@ -287,7 +300,6 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
-					solution_name    = "TerraformTestSolution"
 					solution_file    = "test_solution.zip"
 				}`,
 
@@ -295,7 +307,6 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
 					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_checksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", "1.1.0.0"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", "Terraform Test Solution"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", strconv.FormatBool(false)),
@@ -350,6 +361,16 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Force_Recreate/get_solution.json").String()), nil
 		})
 
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=uniquename+eq+TerraformTestSolution",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Force_Recreate/get_solution_terraformtestsolution.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=solutionid+eq+86928ed8-df37-4ce2-add5-47030a833bff",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Force_Recreate/get_solution_terraformtestsolution.json").String()), nil
+		})
+
 	httpmock.RegisterResponder("DELETE", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions%2886928ed8-df37-4ce2-add5-47030a833bff%29",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("tests/resource/Validate_Create_And_Force_Recreate/get_solution.json").String()), nil
@@ -364,12 +385,10 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 		
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
-					solution_name    = "TerraformTestSolution"
 					solution_file    = "test_solution_before.zip"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_before_checksum),
 					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
 				),
@@ -379,13 +398,11 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
-					solution_name    = "TerraformTestSolution"
 					solution_file    = "test_solution_before.zip"
 					settings_file 	 = "test_settings_before.json"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_before_checksum),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_before_checksum),
 				),
@@ -395,13 +412,11 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
-					solution_name    = "TerraformTestSolution"
 					solution_file    = "test_solution_after.zip"
 					settings_file 	 = "test_settings_before.json"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_after_checksum),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_before_checksum),
 				),
@@ -411,13 +426,11 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
-					solution_name    = "TerraformTestSolution"
 					solution_file    = "test_solution_after.zip"
 					settings_file 	 = "test_settings_after.json"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_name", "TerraformTestSolution"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_after_checksum),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_after_checksum),
 				),
@@ -427,8 +440,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 }
 
 func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
-	solutionName := "TerraformTestSolution"
-	solutionFileName := solutionName + "_Complex_1_1_0_0.zip"
+	solutionFileName := "TerraformTestSolution_Complex_1_1_0_0.zip"
 
 	solutionFileBytes, err := os.ReadFile(filepath.Join("../../../../examples/resources/powerplatform_solution", solutionFileName))
 	if err != nil {
@@ -455,7 +467,6 @@ func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 				
 				resource "powerplatform_solution" "solution" {
 					environment_id = powerplatform_environment.environment.id
-					solution_name    = "` + solutionName + `"
 					solution_file    = "` + solutionFileName + `"
 				}`,
 				ExpectError: regexp.MustCompile("No Dataverse exists in environment"),
@@ -551,7 +562,6 @@ func TestUnitSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = powerplatform_environment.env.id
-					solution_name    = "TerraformTestSolution"
 					solution_file    = "test_solution.zip"
 				}`,
 				ExpectError: regexp.MustCompile("No Dataverse exists in environment '00000000-0000-0000-0000-000000000001'"),

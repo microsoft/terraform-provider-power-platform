@@ -37,6 +37,58 @@ func (client *SolutionClient) DataverseExists(ctx context.Context, environmentId
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
+func (client *SolutionClient) GetSolutionUniqueName(ctx context.Context, environmentId, name string) (*SolutionDto, error) {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Path:   "/api/data/v9.2/solutions",
+	}
+	values := url.Values{}
+	values.Add("$expand", "publisherid")
+	values.Add("$filter", fmt.Sprintf("uniquename eq %s", name))
+	apiUrl.RawQuery = values.Encode()
+
+	solution := SolutionDto{}
+	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solution)
+	if err != nil {
+		return nil, err
+	}
+	solution.EnvironmentId = environmentId
+
+	return &solution, nil
+}
+
+func (client *SolutionClient) GetSolutionById(ctx context.Context, environmentId, solutionId string) (*SolutionDto, error) {
+	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := &url.URL{
+		Scheme: "https",
+		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Path:   "/api/data/v9.2/solutions",
+	}
+	values := url.Values{}
+	values.Add("$expand", "publisherid")
+	values.Add("$filter", fmt.Sprintf("solutionid eq %s", solutionId))
+	apiUrl.RawQuery = values.Encode()
+
+	solution := SolutionDto{}
+	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solution)
+	if err != nil {
+		return nil, err
+	}
+	solution.EnvironmentId = environmentId
+
+	return &solution, nil
+}
+
 func (client *SolutionClient) GetSolutions(ctx context.Context, environmentId string) ([]SolutionDto, error) {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
@@ -157,7 +209,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 			if err != nil {
 				return nil, err
 			}
-			solution, err := client.GetSolution(ctx, environmentId, stageSolutionResponse.StageSolutionResults.SolutionDetails.SolutionUniqueName)
+			solution, err := client.GetSolutionUniqueName(ctx, environmentId, stageSolutionResponse.StageSolutionResults.SolutionDetails.SolutionUniqueName)
 			if err != nil {
 				return nil, err
 			}
@@ -168,20 +220,6 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 			return nil, err
 		}
 	}
-}
-
-func (client *SolutionClient) GetSolution(ctx context.Context, environmentId string, solutionName string) (*SolutionDto, error) {
-	solutions, err := client.GetSolutions(ctx, environmentId)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, solution := range solutions {
-		if strings.EqualFold(solution.Name, solutionName) {
-			return &solution, nil
-		}
-	}
-	return nil, fmt.Errorf("solution %s not found in %s", solutionName, environmentId)
 }
 
 func (client *SolutionClient) createSolutionComponentParameters(ctx context.Context, settings []byte) ([]interface{}, error) {
@@ -242,12 +280,7 @@ func (client *SolutionClient) validateSolutionImportResult(ctx context.Context, 
 	return nil
 }
 
-func (client *SolutionClient) DeleteSolution(ctx context.Context, environmentId string, solutionName string) error {
-	solution, err := client.GetSolution(ctx, environmentId, solutionName)
-	if err != nil {
-		return err
-	}
-
+func (client *SolutionClient) DeleteSolution(ctx context.Context, environmentId, solutionId string) error {
 	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
 	if err != nil {
 		return err
@@ -255,7 +288,7 @@ func (client *SolutionClient) DeleteSolution(ctx context.Context, environmentId 
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   strings.TrimPrefix(environmentUrl, "https://"),
-		Path:   fmt.Sprintf("/api/data/v9.2/solutions(%s)", solution.Id),
+		Path:   fmt.Sprintf("/api/data/v9.2/solutions(%s)", solutionId),
 	}
 	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 	if err != nil {

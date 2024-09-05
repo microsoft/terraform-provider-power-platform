@@ -58,8 +58,7 @@ resource "powerplatform_environment" "environment" {
 
 resource "powerplatform_solution" "solution" {
   environment_id = powerplatform_environment.environment.id
-  solution_file  = "${path.module}/${var.solution_name}_Complex_1_1_0_0.zip"
-  solution_name  = var.solution_name
+  solution_file  = "${path.module}/TerraformTestSolution_Complex_1_1_0_0.zip"
   settings_file  = local_file.solution_settings_file.filename
   //settings_file  = "${path.module}/solution_settings_static.json"
 }

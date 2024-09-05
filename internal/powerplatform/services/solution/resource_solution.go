@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -42,12 +43,12 @@ type SolutionResourceModel struct {
 	SolutionFileChecksum types.String `tfsdk:"solution_file_checksum"`
 	SettingsFileChecksum types.String `tfsdk:"settings_file_checksum"`
 	EnvironmentId        types.String `tfsdk:"environment_id"`
-	SolutionName         types.String `tfsdk:"solution_name"`
-	SolutionVersion      types.String `tfsdk:"solution_version"`
-	SolutionFile         types.String `tfsdk:"solution_file"`
-	SettingsFile         types.String `tfsdk:"settings_file"`
-	IsManaged            types.Bool   `tfsdk:"is_managed"`
-	DisplayName          types.String `tfsdk:"display_name"`
+	//SolutionName         types.String `tfsdk:"solution_name"`
+	SolutionVersion types.String `tfsdk:"solution_version"`
+	SolutionFile    types.String `tfsdk:"solution_file"`
+	SettingsFile    types.String `tfsdk:"settings_file"`
+	IsManaged       types.Bool   `tfsdk:"is_managed"`
+	DisplayName     types.String `tfsdk:"display_name"`
 }
 
 func (r *SolutionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -93,14 +94,14 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"solution_name": schema.StringAttribute{
-				MarkdownDescription: "Unique name of the solution",
-				Description:         "Unique name of the solution",
-				Required:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			// "solution_name": schema.StringAttribute{
+			// 	MarkdownDescription: "Unique name of the solution",
+			// 	Description:         "Unique name of the solution",
+			// 	Computed:            true,
+			// 	PlanModifiers: []planmodifier.String{
+			// 		stringplanmodifier.UseStateForUnknown(),
+			// 	},
+			// },
 			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "Id of the environment where the solution is imported",
 				Description:         "Id of the environment where the solution is imported",
@@ -173,11 +174,9 @@ func (r *SolutionResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	plan.SolutionName = types.StringValue(solution.Name)
 	plan.SolutionVersion = types.StringValue(solution.Version)
 	plan.IsManaged = types.BoolValue(solution.IsManaged)
 	plan.DisplayName = types.StringValue(solution.DisplayName)
-	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.EnvironmentId.ValueString(), solution.Name))
 
 	plan.SettingsFileChecksum = types.StringNull()
 	if !plan.SettingsFile.IsNull() && !plan.SettingsFile.IsUnknown() {
@@ -200,6 +199,9 @@ func (r *SolutionResource) Create(ctx context.Context, req resource.CreateReques
 			tflog.Warn(ctx, fmt.Sprintf("CREATE Calculated md5 hash of solution file: %s", value))
 		}
 	}
+
+	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.EnvironmentId.ValueString(), solution.Id))
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
@@ -216,7 +218,9 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	solutions, err := r.SolutionClient.GetSolutions(ctx, state.EnvironmentId.ValueString())
+	solutionId := strings.Split(state.Id.ValueString(), "_")[1]
+
+	solution, err := r.SolutionClient.GetSolutionById(ctx, state.EnvironmentId.ValueString(), solutionId)
 	if err != nil {
 		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
@@ -227,31 +231,21 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		}
 	}
 
-	solutionFound := false
-	for _, solution := range solutions {
-		if solution.Name == state.SolutionName.ValueString() {
-			state.Id = types.StringValue(fmt.Sprintf("%s_%s", state.EnvironmentId.ValueString(), solution.Name))
-			state.SolutionName = types.StringValue(solution.Name)
-			state.SolutionVersion = types.StringValue(solution.Version)
-			state.IsManaged = types.BoolValue(solution.IsManaged)
-			state.DisplayName = types.StringValue(solution.DisplayName)
-			solutionFound = true
-			break
-		}
-	}
-
-	if !solutionFound {
-
+	if solution == nil {
 		state.Id = types.StringNull()
-		state.SolutionName = types.StringNull()
 		state.SolutionVersion = types.StringNull()
 		state.IsManaged = types.BoolNull()
 		state.DisplayName = types.StringNull()
 		state.SettingsFileChecksum = types.StringNull()
 		state.SolutionFileChecksum = types.StringNull()
 
-		tflog.Debug(ctx, fmt.Sprintf("Solution %s not found", state.SolutionName.ValueString()))
+		tflog.Debug(ctx, fmt.Sprintf("Solution %s not found", solutionId))
 	}
+
+	state.Id = types.StringValue(fmt.Sprintf("%s_%s", state.EnvironmentId.ValueString(), solution.Id))
+	state.SolutionVersion = types.StringValue(solution.Version)
+	state.IsManaged = types.BoolValue(solution.IsManaged)
+	state.DisplayName = types.StringValue(solution.DisplayName)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
@@ -317,9 +311,8 @@ func (r *SolutionResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.EnvironmentId.ValueString(), solution.Name))
+	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.EnvironmentId.ValueString(), solution.Id))
 
-	plan.SolutionName = types.StringValue(solution.Name)
 	plan.SolutionVersion = types.StringValue(solution.Version)
 	plan.IsManaged = types.BoolValue(solution.IsManaged)
 	plan.DisplayName = types.StringValue(solution.DisplayName)
@@ -359,8 +352,9 @@ func (r *SolutionResource) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
-	if !state.EnvironmentId.IsNull() && !state.SolutionName.IsNull() {
-		err := r.SolutionClient.DeleteSolution(ctx, state.EnvironmentId.ValueString(), state.SolutionName.ValueString())
+	if !state.EnvironmentId.IsNull() && !state.Id.IsNull() {
+		solutionId := strings.Split(state.Id.ValueString(), "_")[1]
+		err := r.SolutionClient.DeleteSolution(ctx, state.EnvironmentId.ValueString(), solutionId)
 
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
