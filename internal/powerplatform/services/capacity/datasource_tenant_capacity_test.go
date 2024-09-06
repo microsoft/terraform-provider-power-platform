@@ -53,10 +53,10 @@ func TestUnitTenantCapacityDataSource_Validate_Read(t *testing.T) {
 
 func TestAccTenantCapacityDataSource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + `
+				Config: constants.TestsAcceptanceProviderConfig + `
 				data "powerplatform_tenant" "tenant" {}
 
 				data "powerplatform_tenant_capacity" "capacity" {
