@@ -67,7 +67,7 @@ func (client *ApiClient) DoWaitForLifecycleOperationStatus(ctx context.Context, 
 	retryAfter, err := time.ParseDuration(retryHeader)
 
 	if err != nil {
-		retryAfter = time.Duration(5) * time.Second
+		retryAfter = client.RetryAfterDefault()
 	} else {
 		retryAfter = retryAfter * time.Second
 	}

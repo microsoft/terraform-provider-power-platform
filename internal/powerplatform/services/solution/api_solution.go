@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
@@ -135,8 +134,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	//pull for solution import completion
-	sleepDuration := 10 * time.Second
-	err = client.Api.SleepWithContext(ctx, sleepDuration)
+	err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +161,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 			}
 			return solution, nil
 		}
-		err = client.Api.SleepWithContext(ctx, sleepDuration)
+		err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
 		if err != nil {
 			return nil, err
 		}

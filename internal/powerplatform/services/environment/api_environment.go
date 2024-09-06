@@ -310,7 +310,7 @@ func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, 
 	tflog.Debug(ctx, "Retry Header: "+retryHeader)
 	retryAfter, err := time.ParseDuration(retryHeader)
 	if err != nil {
-		retryAfter = time.Duration(5) * time.Second
+		retryAfter = client.Api.RetryAfterDefault()
 	} else {
 		retryAfter = retryAfter * time.Second
 	}
@@ -422,7 +422,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 		return nil, err
 	}
 
-	err = client.Api.SleepWithContext(ctx, 10*time.Second)
+	err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
 	if err != nil {
 		return nil, err
 	}
@@ -440,7 +440,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 					return nil, err
 				}
 				tflog.Info(ctx, "Environment State: '"+createdEnv.Properties.States.Management.Id+"'")
-				err = client.Api.SleepWithContext(ctx, 3*time.Second)
+				err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
 				if err != nil {
 					return nil, err
 				}

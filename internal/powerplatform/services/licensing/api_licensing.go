@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
@@ -212,8 +211,6 @@ func (client *LicensingClient) RemoveEnvironmentsToBillingPolicy(ctx context.Con
 func (client *LicensingClient) DoWaitForFinalStatus(ctx context.Context, billingPolicyDto *BillingPolicyDto) (*BillingPolicyDto, error) {
 	billingId := billingPolicyDto.Id
 
-	retryAfter := 5 * time.Second
-
 	for {
 		billingPolicy, err := client.GetBillingPolicy(ctx, billingId)
 
@@ -225,7 +222,7 @@ func (client *LicensingClient) DoWaitForFinalStatus(ctx context.Context, billing
 			return billingPolicy, nil
 		}
 
-		err = client.Api.SleepWithContext(ctx, retryAfter)
+		err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
 		if err != nil {
 			return nil, err
 		}
