@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/jarcoal/httpmock"
 
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
 func BootstrapDataRecordTest(name string) string {
@@ -124,10 +124,10 @@ resource "powerplatform_data_record" "contact5" {
 func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
+				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -251,10 +251,10 @@ func TestUnitDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig +
+				Config: constants.TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
@@ -301,10 +301,10 @@ func TestUnitDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 func TestAccDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
+				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -391,10 +391,10 @@ func TestUnitDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig +
+				Config: constants.TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts(00000000-0000-0000-0000-000000000001)"
@@ -424,10 +424,10 @@ func TestUnitDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing
 func TestAccDataRecordDatasource_Validate_Top(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
+				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -478,10 +478,10 @@ func TestUnitDataRecordDatasource_Validate_Top(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig +
+				Config: constants.TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
@@ -500,10 +500,10 @@ func TestUnitDataRecordDatasource_Validate_Top(t *testing.T) {
 func TestAccDataRecordDatasource_Validate_Apply(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
+				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -553,10 +553,10 @@ func TestUnitDataRecordDatasource_Validate_Apply(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig +
+				Config: constants.TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
@@ -575,10 +575,10 @@ func TestUnitDataRecordDatasource_Validate_Apply(t *testing.T) {
 func TestAccDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
+				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -630,10 +630,10 @@ func TestUnitDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig +
+				Config: constants.TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
@@ -651,10 +651,10 @@ func TestUnitDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 func TestAccDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) + `
+				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) + `
 				data "powerplatform_data_records" "saved_view" {
 					environment_id    = powerplatform_environment.data_env.id
 					entity_collection = "savedqueries"
@@ -710,10 +710,10 @@ func TestUnitDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig +
+				Config: constants.TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
@@ -732,10 +732,10 @@ func TestUnitDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 func TestAccDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) + `
+				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) + `
 				resource "powerplatform_data_record" "userquery" {
 					environment_id     = powerplatform_environment.data_env.id
 					table_logical_name = "userquery"
@@ -795,10 +795,10 @@ func TestUnitDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig +
+				Config: constants.TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
@@ -819,10 +819,10 @@ func TestUnitDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 func TestAccDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 
-		ProtoV6ProviderFactories: provider.TestAccProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
+				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 					environment_id    = powerplatform_environment.data_env.id
@@ -902,10 +902,10 @@ func TestUnitDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: provider.TestsUnitProviderConfig +
+				Config: constants.TestsUnitProviderConfig +
 					`data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "accounts"

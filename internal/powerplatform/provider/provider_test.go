@@ -111,7 +111,7 @@ func TestUnitPowerPlatformProvider_Validate_Telementry_Optout_Is_False(t *testin
 
 	test.Test(t, test.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []test.TestStep{
 			{
 				//lintignore:AT004
@@ -138,7 +138,7 @@ func TestUnitPowerPlatformProvider_Validate_Telementry_Optout_Is_True(t *testing
 
 	test.Test(t, test.TestCase{
 		IsUnitTest:               true,
-		ProtoV6ProviderFactories: provider.TestUnitTestProtoV6ProviderFactories,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []test.TestStep{
 			{
 				//lintignore:AT004
