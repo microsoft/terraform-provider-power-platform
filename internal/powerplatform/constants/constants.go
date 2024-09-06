@@ -4,7 +4,6 @@
 package constants
 
 import (
-	"math/rand"
 	"time"
 )
 
@@ -100,11 +99,8 @@ const (
 )
 
 const (
-	DEFAULT_REQUEST_TIMEOUT_IN_MINUTES            = 30 * time.Minute
 	DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES = 20 * time.Minute
 )
-
-
 
 const (
 	// TestsUnitProviderConfig is a shared configuration to combine with the actual
