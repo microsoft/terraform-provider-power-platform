@@ -7,11 +7,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 var (
@@ -33,6 +35,7 @@ type LanguagesDataSource struct {
 }
 
 type LanguagesDataSourceModel struct {
+	Timeouts timeouts.Value      `tfsdk:"timeouts"`
 	Id       types.Int64         `tfsdk:"id"`
 	Location types.String        `tfsdk:"location"`
 	Value    []LanguageDataModel `tfsdk:"languages"`
@@ -51,11 +54,14 @@ func (d *LanguagesDataSource) Metadata(_ context.Context, req datasource.Metadat
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *LanguagesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *LanguagesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dynamics 365 languages",
 		MarkdownDescription: "Fetches the list of Dynamics 365 languages. For more information see [Power Platform Enable Languages](https://learn.microsoft.com/power-platform/admin/enable-languages)",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"id": schema.Int64Attribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",
@@ -119,22 +125,34 @@ func (d *LanguagesDataSource) Configure(ctx context.Context, req datasource.Conf
 }
 
 func (d *LanguagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var plan LanguagesDataSourceModel
-	resp.State.Get(ctx, &plan)
+	var state LanguagesDataSourceModel
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LANGUAGES START: %s", d.ProviderTypeName))
 
-	languages, err := d.LanguagesClient.GetLanguagesByLocation(ctx, plan.Location.ValueString())
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	languages, err := d.LanguagesClient.GetLanguagesByLocation(ctx, state.Location.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
 
-	plan.Id = types.Int64Value(int64(len(languages.Value)))
-	plan.Location = types.StringValue(plan.Location.ValueString())
+	state.Id = types.Int64Value(int64(len(languages.Value)))
+	state.Location = types.StringValue(state.Location.ValueString())
 
 	for _, language := range languages.Value {
-		plan.Value = append(plan.Value, LanguageDataModel{
+		state.Value = append(state.Value, LanguageDataModel{
 			ID:              language.ID,
 			Name:            language.Name,
 			DisplayName:     language.Properties.DisplayName,
@@ -144,7 +162,7 @@ func (d *LanguagesDataSource) Read(ctx context.Context, req datasource.ReadReque
 		})
 	}
 
-	diags := resp.State.Set(ctx, &plan)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LANGUAGES END: %s", d.ProviderTypeName))
 

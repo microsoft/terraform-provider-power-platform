@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -16,7 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 var _ resource.Resource = &ConnectionShareResource{}
@@ -36,6 +38,7 @@ type ConnectionShareResource struct {
 }
 
 type ConnectionShareResourceModel struct {
+	Timeouts      timeouts.Value                        `tfsdk:"timeouts"`
 	Id            types.String                          `tfsdk:"id"`
 	EnvironmentId types.String                          `tfsdk:"environment_id"`
 	ConnectorName types.String                          `tfsdk:"connector_name"`
@@ -57,6 +60,12 @@ func (r *ConnectionShareResource) Schema(ctx context.Context, req resource.Schem
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+				Read:   true,
+			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique identifier of the connection share",
 				Computed:            true,
@@ -146,6 +155,15 @@ func (r *ConnectionShareResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	err := r.ConnectionsClient.ShareConnection(ctx, plan.EnvironmentId.ValueString(), plan.ConnectorName.ValueString(), plan.ConnectionId.ValueString(), plan.RoleName.ValueString(), plan.Principal.EntraObjectId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error sharing connection", err.Error())
@@ -178,6 +196,15 @@ func (r *ConnectionShareResource) Read(ctx context.Context, req resource.ReadReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	share, err := r.ConnectionsClient.GetConnectionShare(ctx, state.EnvironmentId.ValueString(), state.ConnectorName.ValueString(), state.ConnectionId.ValueString(), state.Principal.EntraObjectId.ValueString())
 	if err != nil {
@@ -225,6 +252,16 @@ func (r *ConnectionShareResource) Update(ctx context.Context, req resource.Updat
 		},
 		Delete: []ShareConnectionRequestDeleteDto{},
 	}
+
+	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	err := r.ConnectionsClient.UpdateConnectionShare(ctx, plan.EnvironmentId.ValueString(), plan.ConnectorName.ValueString(), plan.ConnectionId.ValueString(), share)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating connection share", err.Error())
@@ -259,6 +296,15 @@ func (r *ConnectionShareResource) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
+	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	err := r.ConnectionsClient.DeleteConnectionShare(ctx, state.EnvironmentId.ValueString(), state.ConnectorName.ValueString(), state.ConnectionId.ValueString(), state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting connection share", err.Error())
@@ -272,6 +318,7 @@ func (r *ConnectionShareResource) ImportState(ctx context.Context, req resource.
 
 func ConvertFromConnectionResourceSharesDto(oldPlan *ConnectionShareResourceModel, connection *ShareConnectionResponseDto) ConnectionShareResourceModel {
 	share := ConnectionShareResourceModel{
+		Timeouts:      oldPlan.Timeouts,
 		EnvironmentId: oldPlan.EnvironmentId,
 		ConnectorName: oldPlan.ConnectorName,
 		ConnectionId:  oldPlan.ConnectionId,

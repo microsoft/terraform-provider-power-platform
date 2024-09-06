@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
-	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 const whoAmIResponseRegex = `^{"@odata.context":"https:\/\/[^"]+","BusinessUnitId":"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}","UserId":"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}","OrganizationId":"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"}$`

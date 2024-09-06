@@ -7,11 +7,13 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/customtypes"
 )
 
@@ -34,17 +36,18 @@ type TenantSettingsDataSource struct {
 }
 
 type TenantSettingsSourceModel struct {
-	Id                                             types.String `tfsdk:"id"`
-	WalkMeOptOut                                   types.Bool   `tfsdk:"walk_me_opt_out"`
-	DisableNPSCommentsReachout                     types.Bool   `tfsdk:"disable_nps_comments_reachout"`
-	DisableNewsletterSendout                       types.Bool   `tfsdk:"disable_newsletter_sendout"`
-	DisableEnvironmentCreationByNonAdminUsers      types.Bool   `tfsdk:"disable_environment_creation_by_non_admin_users"`
-	DisablePortalsCreationByNonAdminUsers          types.Bool   `tfsdk:"disable_portals_creation_by_non_admin_users"`
-	DisableSurveyFeedback                          types.Bool   `tfsdk:"disable_survey_feedback"`
-	DisableTrialEnvironmentCreationByNonAdminUsers types.Bool   `tfsdk:"disable_trial_environment_creation_by_non_admin_users"`
-	DisableCapacityAllocationByEnvironmentAdmins   types.Bool   `tfsdk:"disable_capacity_allocation_by_environment_admins"`
-	DisableSupportTicketsVisibleByAllUsers         types.Bool   `tfsdk:"disable_support_tickets_visible_by_all_users"`
-	PowerPlatform                                  types.Object `tfsdk:"power_platform"`
+	Timeouts                                       timeouts.Value `tfsdk:"timeouts"`
+	Id                                             types.String   `tfsdk:"id"`
+	WalkMeOptOut                                   types.Bool     `tfsdk:"walk_me_opt_out"`
+	DisableNPSCommentsReachout                     types.Bool     `tfsdk:"disable_nps_comments_reachout"`
+	DisableNewsletterSendout                       types.Bool     `tfsdk:"disable_newsletter_sendout"`
+	DisableEnvironmentCreationByNonAdminUsers      types.Bool     `tfsdk:"disable_environment_creation_by_non_admin_users"`
+	DisablePortalsCreationByNonAdminUsers          types.Bool     `tfsdk:"disable_portals_creation_by_non_admin_users"`
+	DisableSurveyFeedback                          types.Bool     `tfsdk:"disable_survey_feedback"`
+	DisableTrialEnvironmentCreationByNonAdminUsers types.Bool     `tfsdk:"disable_trial_environment_creation_by_non_admin_users"`
+	DisableCapacityAllocationByEnvironmentAdmins   types.Bool     `tfsdk:"disable_capacity_allocation_by_environment_admins"`
+	DisableSupportTicketsVisibleByAllUsers         types.Bool     `tfsdk:"disable_support_tickets_visible_by_all_users"`
+	PowerPlatform                                  types.Object   `tfsdk:"power_platform"`
 }
 
 type PowerPlatformSettingsModel struct {
@@ -161,8 +164,21 @@ func (d *TenantSettingsDataSource) Configure(ctx context.Context, req datasource
 
 func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state TenantSettingsSourceModel
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT SETTINGS START: %s", d.ProviderTypeName))
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	tenantSettings, err := d.TenantSettingsClient.GetTenantSettings(ctx)
 	if err != nil {
@@ -172,14 +188,14 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 
 	var configuredSettings TenantSettingsSourceModel
 	req.Config.Get(ctx, &configuredSettings)
-	state, _ = ConvertFromTenantSettingsDto(*tenantSettings)
+	state, _ = ConvertFromTenantSettingsDto(*tenantSettings, state.Timeouts)
 	hash, err := tenantSettings.CalcObjectHash()
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", d.ProviderTypeName), err.Error())
 	}
 	state.Id = types.StringValue(*hash)
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT SETTINGS END: %s", d.ProviderTypeName))
 
@@ -189,11 +205,17 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 }
 
-func (d *TenantSettingsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *TenantSettingsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Power Platform Tenant Settings Data Source",
 		MarkdownDescription: "Fetches Power Platform Tenant Settings.  See [Tenant Settings Overview](https://learn.microsoft.com/power-platform/admin/tenant-settings) for more information.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: false,
+				Update: false,
+				Delete: false,
+				Read:   false,
+			}),
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",

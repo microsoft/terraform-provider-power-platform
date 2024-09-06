@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -140,7 +141,6 @@ type TenantSettingsDto struct {
 	DisableSupportTicketsVisibleByAllUsers         *bool                     `json:"disableSupportTicketsVisibleByAllUsers,omitempty"`
 	PowerPlatform                                  *PowerPlatformSettingsDto `json:"powerPlatform,omitempty"`
 }
-
 
 func ConvertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSettingsSourceModel) TenantSettingsDto {
 	tenantSettingsDto := TenantSettingsDto{}
@@ -421,7 +421,7 @@ func ConvertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 	return tenantSettingsDto
 }
 
-func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) (TenantSettingsSourceModel, basetypes.ObjectValue) {
+func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto, timeouts timeouts.Value) (TenantSettingsSourceModel, basetypes.ObjectValue) {
 
 	objTypePowerPlatformSettings, objValuePowerPlatformSettings := ConvertPowerPlatformSettings(tenantSettingsDto)
 
@@ -454,6 +454,7 @@ func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto) (TenantSe
 	objValue := types.ObjectValueMust(tenantSettingsProperties, tenantSettingsValues)
 
 	tenantSettings := TenantSettingsSourceModel{
+		Timeouts:                   timeouts,
 		Id:                         types.StringValue(""),
 		WalkMeOptOut:               types.BoolPointerValue(tenantSettingsDto.WalkMeOptOut),
 		DisableNPSCommentsReachout: types.BoolPointerValue(tenantSettingsDto.DisableNPSCommentsReachout),

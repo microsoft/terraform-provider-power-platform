@@ -5,11 +5,12 @@ package tenant_settings
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
@@ -81,8 +82,8 @@ func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, te
 	return &backendSettings, nil
 }
 
-func applyCorrections(planned TenantSettingsDto, actual TenantSettingsDto) *TenantSettingsDto {
-	corrected := filterDto(planned, actual).(*TenantSettingsDto)
+func applyCorrections(ctx context.Context, planned TenantSettingsDto, actual TenantSettingsDto) *TenantSettingsDto {
+	corrected := filterDto(ctx, planned, actual).(*TenantSettingsDto)
 	if planned.PowerPlatform != nil && planned.PowerPlatform.Governance != nil {
 		if planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId != nil && *planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == constants.ZERO_UUID && corrected.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == nil {
 			zu := constants.ZERO_UUID
@@ -99,7 +100,7 @@ func applyCorrections(planned TenantSettingsDto, actual TenantSettingsDto) *Tena
 
 // This function is used to filter out the fields that are not opted in to configuration
 // The backend always returns all properties, but Terraform can only handle the properties that are opted in
-func filterDto(configuredSettings interface{}, backendSettings interface{}) interface{} {
+func filterDto(ctx context.Context, configuredSettings interface{}, backendSettings interface{}) interface{} {
 	configuredType := reflect.TypeOf(configuredSettings)
 	backendType := reflect.TypeOf(backendSettings)
 	if configuredType != backendType {
@@ -114,7 +115,7 @@ func filterDto(configuredSettings interface{}, backendSettings interface{}) inte
 	backendValue := reflect.ValueOf(backendSettings)
 
 	for fieldIndex, fieldInfo := range visibleFields {
-		log.Default().Printf("Field: %s", fieldInfo.Name)
+		tflog.Debug(ctx, fmt.Sprintf("Field: %s", fieldInfo.Name))
 
 		configuredFieldValue := configuredValue.Field(fieldIndex)
 		backendFieldValue := backendValue.Field(fieldIndex)
@@ -122,7 +123,7 @@ func filterDto(configuredSettings interface{}, backendSettings interface{}) inte
 
 		if !configuredFieldValue.IsNil() && !backendFieldValue.IsNil() && backendFieldValue.IsValid() && outputField.CanSet() {
 			if configuredFieldValue.Kind() == reflect.Pointer && configuredFieldValue.Elem().Kind() == reflect.Struct {
-				outputStruct := filterDto(configuredFieldValue.Elem().Interface(), backendFieldValue.Elem().Interface())
+				outputStruct := filterDto(ctx, configuredFieldValue.Elem().Interface(), backendFieldValue.Elem().Interface())
 				outputField.Set(reflect.ValueOf(outputStruct))
 			} else if configuredFieldValue.Kind() == reflect.Pointer && configuredFieldValue.Elem().Kind() == reflect.Bool {
 				boolValue := backendFieldValue.Elem().Bool()
@@ -137,7 +138,7 @@ func filterDto(configuredSettings interface{}, backendSettings interface{}) inte
 				newInt64 := int64(int64Value)
 				outputField.Set(reflect.ValueOf(&newInt64))
 			} else {
-				log.Default().Printf("Skipping unknown field type %s", configuredFieldValue.Kind())
+				tflog.Debug(ctx, fmt.Sprintf("Skipping unknown field type %s", configuredFieldValue.Kind()))
 			}
 		}
 	}

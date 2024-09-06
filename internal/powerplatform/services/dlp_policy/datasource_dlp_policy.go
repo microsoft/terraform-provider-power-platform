@@ -8,13 +8,15 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 var (
@@ -39,7 +41,7 @@ func (d *DataLossPreventionPolicyDataSource) Metadata(_ context.Context, req dat
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *DataLossPreventionPolicyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataLossPreventionPolicyDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 
 	connectorSchema := schema.NestedAttributeObject{
 		Attributes: map[string]schema.Attribute{
@@ -113,6 +115,12 @@ func (d *DataLossPreventionPolicyDataSource) Schema(_ context.Context, _ datasou
 		Description:         "Fetches the list of Data Loss Prevention Policies in a Power Platform tenant",
 		MarkdownDescription: "Fetches the list of Data Loss Prevention Policies in a Power Platform tenant. See [Manage data loss prevention policies](https://learn.microsoft.com/power-platform/admin/prevent-data-loss) for more information.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: false,
+				Update: false,
+				Delete: false,
+				Read:   false,
+			}),
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",
@@ -252,6 +260,20 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POLICIES START: %s_%s", d.ProviderTypeName, d.TypeName))
 
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	policies, err := d.DlpPolicyClient.GetPolicies(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", d.ProviderTypeName, d.TypeName), err.Error())
@@ -262,7 +284,7 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 
 	for _, policy := range policies {
 
-		policyModel := DataLossPreventionPolicyResourceModel{}
+		policyModel := DataLossPreventionPolicyDatasourceModel{}
 		policyModel.Id = types.StringValue(policy.Name)
 		policyModel.DefaultConnectorsClassification = types.StringValue(policy.DefaultConnectorsClassification)
 		policyModel.DisplayName = types.StringValue(policy.DisplayName)
@@ -279,7 +301,7 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 		state.Policies = append(state.Policies, policyModel)
 	}
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POLICIES END: %s_%s", d.ProviderTypeName, d.TypeName))
 

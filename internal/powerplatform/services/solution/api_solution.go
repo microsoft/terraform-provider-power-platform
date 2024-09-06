@@ -12,10 +12,9 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewSolutionClient(api *api.ApiClient) SolutionClient {
@@ -109,7 +108,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	//import solution
-	solutionComponents, err := client.createSolutionComponentParameters(ctx, settings)
+	solutionComponents, err := client.createSolutionComponentParameters(settings)
 	if err != nil {
 		return nil, err
 	}
@@ -135,8 +134,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	//pull for solution import completion
-	sleepDuration := 10 * time.Second
-	err = client.Api.SleepWithContext(ctx, sleepDuration)
+	err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
 	if err != nil {
 		return nil, err
 	}
@@ -163,7 +161,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 			}
 			return solution, nil
 		}
-		err = client.Api.SleepWithContext(ctx, sleepDuration)
+		err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
 		if err != nil {
 			return nil, err
 		}
@@ -184,7 +182,7 @@ func (client *SolutionClient) GetSolution(ctx context.Context, environmentId str
 	return nil, fmt.Errorf("solution %s not found in %s", solutionName, environmentId)
 }
 
-func (client *SolutionClient) createSolutionComponentParameters(ctx context.Context, settings []byte) ([]interface{}, error) {
+func (client *SolutionClient) createSolutionComponentParameters(settings []byte) ([]interface{}, error) {
 	if len(settings) == 0 {
 		return nil, nil
 	}

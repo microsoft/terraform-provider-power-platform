@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -183,17 +184,19 @@ type ValidateEnvironmentDetailsDto struct {
 }
 
 type EnvironmentsListDataSourceModel struct {
+	Timeouts     timeouts.Value           `tfsdk:"timeouts"`
 	Environments []EnvironmentSourceModel `tfsdk:"environments"`
 	Id           types.Int64              `tfsdk:"id"`
 }
 
 type EnvironmentSourceModel struct {
-	Id              types.String `tfsdk:"id"`
-	Location        types.String `tfsdk:"location"`
-	AzureRegion     types.String `tfsdk:"azure_region"`
-	DisplayName     types.String `tfsdk:"display_name"`
-	EnvironmentType types.String `tfsdk:"environment_type"`
-	BillingPolicyId types.String `tfsdk:"billing_policy_id"`
+	Timeouts        timeouts.Value `tfsdk:"timeouts"`
+	Id              types.String   `tfsdk:"id"`
+	Location        types.String   `tfsdk:"location"`
+	AzureRegion     types.String   `tfsdk:"azure_region"`
+	DisplayName     types.String   `tfsdk:"display_name"`
+	EnvironmentType types.String   `tfsdk:"environment_type"`
+	BillingPolicyId types.String   `tfsdk:"billing_policy_id"`
 
 	Dataverse types.Object `tfsdk:"dataverse"`
 }
@@ -323,8 +326,9 @@ func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 	return nil, fmt.Errorf("dataverse object is null or unknown")
 }
 
-func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode *string, templateMetadata *EnvironmentCreateTemplateMetadata, templates []string) (*EnvironmentSourceModel, error) {
+func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode *string, templateMetadata *EnvironmentCreateTemplateMetadata, templates []string, timeouts timeouts.Value) (*EnvironmentSourceModel, error) {
 	model := &EnvironmentSourceModel{
+		Timeouts:        timeouts,
 		Id:              types.StringValue(environmentDto.Name),
 		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
 		Location:        types.StringValue(environmentDto.Location),
@@ -444,4 +448,10 @@ type LocationDto struct {
 		CanProvisionCustomerEngagementDatabase bool     `json:"canProvisionCustomerEngagementDatabase"`
 		AzureRegions                           []string `json:"azureRegions"`
 	} `json:"properties"`
+}
+
+type WhoAmIDto struct {
+	BusinessUnitId string `json:"BusinessUnitId"`
+	UserId         string `json:"UserId"`
+	OrganizationId string `json:"OrganizationId"`
 }

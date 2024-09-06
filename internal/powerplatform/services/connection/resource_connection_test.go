@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
-	mocks "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccConnectionsResource_Validate_Create(t *testing.T) {

@@ -439,11 +439,11 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return licensing.NewBillingPolicyResource() },
 		func() resource.Resource { return authorization.NewUserResource() },
 		func() resource.Resource { return data_record.NewDataRecordResource() },
-		func() resource.Resource { return environment_groups.NewEnvironmentGroupResource() },
 		func() resource.Resource { return environment_settings.NewEnvironmentSettingsResource() },
 		func() resource.Resource { return connection.NewConnectionResource() },
 		func() resource.Resource { return rest.NewDataverseWebApiResource() },
 		func() resource.Resource { return connection.NewConnectionShareResource() },
+		func() resource.Resource { return environment_groups.NewEnvironmentGroupResource() },
 	}
 }
 
@@ -513,5 +513,3 @@ func EnvDefaultFunc(k string, dv interface{}) string {
 	}
 	return ""
 }
-
-

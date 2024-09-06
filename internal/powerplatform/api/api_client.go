@@ -121,13 +121,7 @@ func (client *ApiClient) Execute(ctx context.Context, method, url string, header
 		return nil, err
 	}
 
-	//TODO: once we add timeout logic to all resource/datasource operations, we use that timeout here
-	ctx, cancel := context.WithTimeout(ctx, 20*time.Minute)
-	defer cancel()
-
 	var response *ApiHttpResponse = nil
-	random5to10sec := rand.Intn(5) + 5
-	retryAfter := time.Duration(random5to10sec) * time.Second
 	for {
 		response, err = client.ExecuteForGivenScope(ctx, scope, method, url, headers, body, acceptableStatusCodes, responseObj)
 		if response == nil || response.Response == nil {
@@ -135,17 +129,26 @@ func (client *ApiClient) Execute(ctx context.Context, method, url string, header
 		}
 
 		if response.Response.StatusCode != http.StatusUnauthorized &&
-			response.Response.StatusCode != http.StatusGatewayTimeout {
+			response.Response.StatusCode != http.StatusGatewayTimeout &&
+			response.Response.StatusCode != http.StatusTooManyRequests &&
+			response.Response.StatusCode != http.StatusServiceUnavailable && 
+			response.Response.StatusCode != http.StatusBadGateway {
 			return response, err
 		}
 
-		tflog.Debug(ctx, fmt.Sprintf("Received status code %d for request %s, retrying after %s", response.Response.StatusCode, url, retryAfter))
+		defaultRetry := client.RetryAfterDefault()
+		tflog.Debug(ctx, fmt.Sprintf("Received status code %d for request %s, retrying after %s", response.Response.StatusCode, url, defaultRetry))
 
-		err = client.SleepWithContext(ctx, retryAfter)
+		err = client.SleepWithContext(ctx, defaultRetry)
 		if err != nil {
 			return response, err
 		}
 	}
+}
+
+func (client *ApiClient) RetryAfterDefault() time.Duration {
+	retryAfter5to10Seconds := time.Duration((rand.Intn(5) + 5)) * time.Second
+	return retryAfter5to10Seconds
 }
 
 func (client *ApiClient) SleepWithContext(ctx context.Context, duration time.Duration) error {

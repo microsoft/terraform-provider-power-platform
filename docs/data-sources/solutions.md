@@ -37,10 +37,22 @@ data "powerplatform_solutions" "all" {
 
 - `environment_id` (String) Unique environment id (guid)
 
+### Optional
+
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
+
 ### Read-Only
 
 - `id` (String) Id of the read operation
 - `solutions` (Attributes List) List of Solutions (see [below for nested schema](#nestedatt--solutions))
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
+
 
 <a id="nestedatt--solutions"></a>
 ### Nested Schema for `solutions`
