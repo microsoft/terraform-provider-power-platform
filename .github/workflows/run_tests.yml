@@ -2,10 +2,12 @@ name: Terraform Provider Tests
 
 on:
  workflow_dispatch:
+ schedule:
+    # run at 4 AM UTC every day
+    - cron:  '0 4 * * *' 
  pull_request:
     paths:
       - 'go.mod'
-      - '**.go'
  push:
     branches:
       - main
@@ -136,11 +138,11 @@ jobs:
         export ARM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
         export ARM_SUBSCRIPTION_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}'
         go clean -testcache
-        go test -p 10 -failfast -v ./... -run ^Test -coverprofile=acc-test-coverage.out -timeout 300m
-        go tool cover -html=acc-test-coverage.out -o acc-test-coverage.cov.html
+        go test -p 10 -failfast -v ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m
+        go tool cover -html=test-coverage.out -o test-coverage.cov.html
 
     - name: Upload Coverage Artifacts
       uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
       with:
         name: Test Coverage
-        path: test-coverage.cov.html
+        path: coverage.cov.html

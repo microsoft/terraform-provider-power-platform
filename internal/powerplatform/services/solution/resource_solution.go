@@ -46,12 +46,11 @@ type SolutionResourceModel struct {
 	SolutionFileChecksum types.String   `tfsdk:"solution_file_checksum"`
 	SettingsFileChecksum types.String   `tfsdk:"settings_file_checksum"`
 	EnvironmentId        types.String   `tfsdk:"environment_id"`
-	//SolutionName         types.String   `tfsdk:"solution_name"`
-	SolutionVersion types.String `tfsdk:"solution_version"`
-	SolutionFile    types.String `tfsdk:"solution_file"`
-	SettingsFile    types.String `tfsdk:"settings_file"`
-	IsManaged       types.Bool   `tfsdk:"is_managed"`
-	DisplayName     types.String `tfsdk:"display_name"`
+	SolutionVersion      types.String   `tfsdk:"solution_version"`
+	SolutionFile         types.String   `tfsdk:"solution_file"`
+	SettingsFile         types.String   `tfsdk:"settings_file"`
+	IsManaged            types.Bool     `tfsdk:"is_managed"`
+	DisplayName          types.String   `tfsdk:"display_name"`
 }
 
 func (r *SolutionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -75,6 +74,7 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					modifiers.SyncAttributePlanModifier("solution_file"),
+					modifiers.SyncAttributePlanModifier("solution_file"),
 				},
 			},
 			"solution_file": schema.StringAttribute{
@@ -87,6 +87,7 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description:         "Checksum of the settings file",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
+					modifiers.SyncAttributePlanModifier("settings_file"),
 					modifiers.SyncAttributePlanModifier("settings_file"),
 				},
 			},
@@ -117,6 +118,7 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
+					modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
 				},
 			},
 			"is_managed": schema.BoolAttribute{
@@ -125,6 +127,7 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Computed:            true,
 				PlanModifiers: []planmodifier.Bool{
 					modifiers.SetBoolValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
+					modifiers.SetBoolValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
 				},
 			},
 			"solution_version": schema.StringAttribute{
@@ -132,6 +135,7 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description:         "Version of the solution",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
+					modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
 					modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
 				},
 			},
@@ -272,7 +276,6 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *SolutionResource) importSolution(ctx context.Context, plan *SolutionResourceModel, diagnostics *diag.Diagnostics) *SolutionDto {
-
 	s := ImportSolutionDto{
 		PublishWorkflows:                 true,
 		OverwriteUnmanagedCustomizations: true,

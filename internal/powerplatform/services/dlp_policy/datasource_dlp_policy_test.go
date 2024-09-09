@@ -110,7 +110,7 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 // 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 // 		Steps: []resource.TestStep{
 // 			{
-// 				Config:  constants.TestsAcceptanceProviderConfig + `
+// 				Config: constants.TestsAcceptanceProviderConfig + `
 // 				data "powerplatform_connectors" "all_connectors" {}
 
 // 				locals {

@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
@@ -195,8 +194,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	//pull for solution import completion
-	sleepDuration := 10 * time.Second
-	err = client.Api.SleepWithContext(ctx, sleepDuration)
+	err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
 	if err != nil {
 		return nil, err
 	}
@@ -223,7 +221,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 			}
 			return solution, nil
 		}
-		err = client.Api.SleepWithContext(ctx, sleepDuration)
+		err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
 		if err != nil {
 			return nil, err
 		}
@@ -333,6 +331,7 @@ func (client *SolutionClient) GetEnvironmentUrlById(ctx context.Context, environ
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
 		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 	return environmentUrl, nil
 }
@@ -353,6 +352,7 @@ func (client *SolutionClient) getEnvironment(ctx context.Context, environmentId 
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
+			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
 			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
 		}
 		return nil, err
