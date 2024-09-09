@@ -75,6 +75,7 @@ resource "powerplatform_environment_settings" "settings" {
 - `audit_and_logs` (Attributes) Audit and Logs (see [below for nested schema](#nestedatt--audit_and_logs))
 - `email` (Attributes) Email (see [below for nested schema](#nestedatt--email))
 - `product` (Attributes) Product (see [below for nested schema](#nestedatt--product))
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
@@ -137,3 +138,13 @@ Optional:
 Optional:
 
 - `power_apps_component_framework_for_canvas_apps` (Boolean) Power Apps component framework for canvas apps
+
+
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+- `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).

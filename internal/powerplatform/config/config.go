@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform_config
+package config
 
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
@@ -21,6 +21,7 @@ type ProviderConfigUrls struct {
 	PowerAppsScope     string
 	PowerPlatformUrl   string
 	PowerPlatformScope string
+	LicensingUrl       string
 }
 
 type ProviderCredentials struct {

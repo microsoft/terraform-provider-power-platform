@@ -26,16 +26,14 @@ Additional Resources:
 terraform {
   required_providers {
     powerplatform = {
-      source  = "microsoft/power-platform"
-      version = "2.7.0-preview"
+      source = "microsoft/power-platform"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "4.0.1"
     }
     azurecaf = {
-      source  = "aztfmod/azurecaf"
-      version = "2.0.0-preview3"
+      source = "aztfmod/azurecaf"
     }
   }
 }
@@ -45,9 +43,7 @@ provider "powerplatform" {
 }
 
 provider "azurerm" {
-  features {
-
-  }
+  features {}
   use_cli = true
 }
 
@@ -117,6 +113,8 @@ Read-Only:
 Optional:
 
 - `create` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+- `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
+- `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
 - `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
 
 ## Import

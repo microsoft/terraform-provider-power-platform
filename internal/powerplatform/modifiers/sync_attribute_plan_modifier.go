@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform_modifiers
+package modifiers
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func SyncAttributePlanModifier(syncAttribute string) planmodifier.String {
@@ -45,7 +45,7 @@ func (d *syncAttributePlanModifier) PlanModifyString(ctx context.Context, req pl
 	} else if settingsFile.IsUnknown() {
 		resp.PlanValue = types.StringNull()
 	} else {
-		value, err := powerplatform_helpers.CalculateMd5(settingsFile.ValueString())
+		value, err := helpers.CalculateMd5(settingsFile.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Error calculating MD5 checksum for %s", d.syncAttribute), err.Error())
 			return

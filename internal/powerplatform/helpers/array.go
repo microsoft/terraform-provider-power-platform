@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform_helpers
+package helpers
 
 func DiffArrays(newArr, oldArr []string) ([]string, []string) {
 	added := make([]string, 0)

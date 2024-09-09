@@ -24,6 +24,7 @@ Power Platform Environment Settings Data Source. Power Platform Settings are con
 - `audit_and_logs` (Attributes) Audit and Logs (see [below for nested schema](#nestedatt--audit_and_logs))
 - `email` (Attributes) Email (see [below for nested schema](#nestedatt--email))
 - `product` (Attributes) Product (see [below for nested schema](#nestedatt--product))
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
@@ -86,3 +87,8 @@ Optional:
 Optional:
 
 - `power_apps_component_framework_for_canvas_apps` (Boolean) Power Apps component framework for canvas apps
+
+
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package api
 
 import (
 	"context"
@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	constants "github.com/microsoft/terraform-provider-power-platform/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 type LifecycleDto struct {
@@ -67,7 +67,7 @@ func (client *ApiClient) DoWaitForLifecycleOperationStatus(ctx context.Context, 
 	retryAfter, err := time.ParseDuration(retryHeader)
 
 	if err != nil {
-		retryAfter = time.Duration(5) * time.Second
+		retryAfter = client.RetryAfterDefault()
 	} else {
 		retryAfter = retryAfter * time.Second
 	}

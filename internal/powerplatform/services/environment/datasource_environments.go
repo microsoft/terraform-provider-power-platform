@@ -1,18 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package environment
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 var (
@@ -37,11 +39,14 @@ func (d *EnvironmentsDataSource) Metadata(_ context.Context, req datasource.Meta
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of environments in a tenant",
 		MarkdownDescription: "Fetches the list of environments in a tenant.  See [Environments overview](https://learn.microsoft.com/power-platform/admin/environments-overview) for more information.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"id": schema.Int64Attribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",
@@ -53,6 +58,12 @@ func (d *EnvironmentsDataSource) Schema(_ context.Context, _ datasource.SchemaRe
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
+						"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+							Create: false,
+							Update: false,
+							Delete: false,
+							Read:   false,
+						}),
 						"id": schema.StringAttribute{
 							MarkdownDescription: "Unique environment id (guid)",
 							Description:         "Unique environment id (guid)",
@@ -186,6 +197,20 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENTS START: %s", d.ProviderTypeName))
 
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	envs, err := d.EnvironmentClient.GetEnvironments(ctx)
 
 	if err != nil {
@@ -204,7 +229,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 			currencyCode = defaultCurrency.IsoCurrencyCode
 		}
 
-		env, err := ConvertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil)
+		env, err := ConvertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil, timeouts.Value{})
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Error when converting environment %s", env.DisplayName), err.Error())
 			return
@@ -213,7 +238,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 	state.Id = types.Int64Value(int64(len(envs)))
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENTS END: %s", d.ProviderTypeName))
 

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package data_record
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -18,8 +19,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewDataRecordResource() resource.Resource {
@@ -36,10 +38,11 @@ type DataRecordResource struct {
 }
 
 type DataRecordResourceModel struct {
-	Id               types.String  `tfsdk:"id"`
-	EnvironmentId    types.String  `tfsdk:"environment_id"`
-	TableLogicalName types.String  `tfsdk:"table_logical_name"`
-	Columns          types.Dynamic `tfsdk:"columns"`
+	Timeouts         timeouts.Value `tfsdk:"timeouts"`
+	Id               types.String   `tfsdk:"id"`
+	EnvironmentId    types.String   `tfsdk:"environment_id"`
+	TableLogicalName types.String   `tfsdk:"table_logical_name"`
+	Columns          types.Dynamic  `tfsdk:"columns"`
 }
 
 func (r *DataRecordResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -51,6 +54,12 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 		Description:         "The Power Platform Data Record Resource allows the management of configuration records that are stored in Dataverse as records. This resource is not recommended for managing business data or other data that may be changed by Dataverse users in the context of normal business activities.",
 		MarkdownDescription: "The Power Platform Data Record Resource allows the management of configuration records that are stored in Dataverse as records. This resource is not recommended for managing business data or other data that may be changed by Dataverse users in the context of normal business activities.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+				Read:   true,
+			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id (guid)",
 				Description:         "Unique id (guid)",
@@ -99,40 +108,47 @@ func (r *DataRecordResource) Configure(ctx context.Context, req resource.Configu
 }
 
 func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var state DataRecordResourceModel
-	resp.State.Get(ctx, &state)
-
+	var plan DataRecordResourceModel
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	state.Id = types.StringValue(state.Id.ValueString())
-	state.EnvironmentId = types.StringValue(state.EnvironmentId.ValueString())
-	state.TableLogicalName = types.StringValue(state.TableLogicalName.ValueString())
-	state.Columns = types.DynamicValue(state.Columns)
+	plan.Id = types.StringValue(plan.Id.ValueString())
+	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
+	plan.TableLogicalName = types.StringValue(plan.TableLogicalName.ValueString())
+	plan.Columns = types.DynamicValue(plan.Columns)
 
-	stateColumns := state.Columns.String()
+	stateColumns := plan.Columns.String()
 	mapColumns, err := convertResourceModelToMap(&stateColumns)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to map: %s", err.Error()), err.Error())
 		return
 	}
 
-	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
+	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, plan.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
 		return
 	}
 
-	state.Id = types.StringValue(dr.Id)
+	plan.Id = types.StringValue(dr.Id)
 
-	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", state.TableLogicalName.ValueString()))
+	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.TableLogicalName.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
@@ -148,9 +164,18 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	newColumns, err := r.DataRecordClient.GetDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString())
 	if err != nil {
-		if powerplatform_helpers.Code(err) == powerplatform_helpers.ERROR_OBJECT_NOT_FOUND {
+		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -200,6 +225,15 @@ func (r *DataRecordResource) Update(ctx context.Context, req resource.UpdateRequ
 		return
 	}
 
+	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
@@ -230,6 +264,15 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 		resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to map: %s", err.Error()), err.Error())
 		return
 	}
+
+	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	err = r.DataRecordClient.DeleteDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {

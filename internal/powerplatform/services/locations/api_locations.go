@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package locations
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 func NewLocationsClient(api *api.ApiClient) LocationsClient {

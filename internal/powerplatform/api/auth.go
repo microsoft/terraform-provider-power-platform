@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package api
 
 import (
 	"context"
@@ -20,8 +20,8 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/policy"
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 type TokenExpiredError struct {

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package dlp_policy
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"net/url"
 	"strings"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewDlpPolicyClient(api *api.ApiClient) DlpPolicyClient {
@@ -68,7 +68,7 @@ func (client *DlpPolicyClient) GetPolicy(ctx context.Context, name string) (*Dlp
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
-			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("DLP Policy '%s' not found", name))
+			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("DLP Policy '%s' not found", name))
 		}
 		return nil, err
 	}

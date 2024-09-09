@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package licensing
 
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -18,8 +17,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 var _ resource.Resource = &BillingPolicyResource{}
@@ -39,12 +39,12 @@ type BillingPolicyResource struct {
 }
 
 type BillingPolicyResourceModel struct {
+	Timeouts          timeouts.Value                 `tfsdk:"timeouts"`
 	Id                types.String                   `tfsdk:"id"`
 	Name              types.String                   `tfsdk:"name"`
 	Location          types.String                   `tfsdk:"location"`
 	Status            types.String                   `tfsdk:"status"`
 	BillingInstrument BillingInstrumentResourceModel `tfsdk:"billing_instrument"`
-	Timeouts          timeouts.Value                 `tfsdk:"timeouts"`
 }
 
 type BillingInstrumentResourceModel struct {
@@ -53,17 +53,21 @@ type BillingInstrumentResourceModel struct {
 	SubscriptionId types.String `tfsdk:"subscription_id"`
 }
 
-// Metadata
 func (r *BillingPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-// Schema
 func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Manages a Power Platform Billing Policy",
 		MarkdownDescription: "Manages a Power Platform Billing Policy. \n\nA Power Platform billing policy is a mechanism that allows you to manage the costs associated with your Power Platform usage. It's linked to an Azure subscription and is used to set up pay-as-you-go billing for an environment.\n\nAdditional Resources:\n\n* [What is a billing policy](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy)\n* [Power Platform Billing Policy API](https://learn.microsoft.com/rest/api/power-platform/licensing/billing-policy/get-billing-policy)",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+				Read:   true,
+			}),
 			"id": schema.StringAttribute{
 				Computed:            true,
 				Description:         "The id of the billing policy",
@@ -125,10 +129,6 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 					},
 				},
 			},
-			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-			}),
 		},
 	}
 }
@@ -175,15 +175,13 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 		billingPolicyToCreate.Status = plan.Status.ValueString()
 	}
 
-	// Create() is passed a default timeout to use if no value
-	// has been supplied in the Terraform configuration.
-	createTimeout, diags := plan.Timeouts.Create(ctx, 20*time.Minute)
+	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
 	if diags != nil {
 		resp.Diagnostics.Append(diags...)
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, createTimeout)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	policy, err := r.LicensingClient.CreateBillingPolicy(ctx, billingPolicyToCreate)
@@ -218,9 +216,18 @@ func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	billing, err := r.LicensingClient.GetBillingPolicy(ctx, state.Id.ValueString())
 	if err != nil {
-		if powerplatform_helpers.Code(err) == powerplatform_helpers.ERROR_OBJECT_NOT_FOUND {
+		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
 		} else {
@@ -261,12 +268,12 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 	if plan.Name.ValueString() != state.Name.ValueString() ||
 		plan.Status.ValueString() != state.Status.ValueString() {
 
-		updateTimeout, diags := plan.Timeouts.Update(ctx, 20*time.Minute)
+		timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
 		if diags != nil && diags.HasError() {
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(ctx, updateTimeout)
+		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
 		policyToUpdate := BillingPolicyUpdateDto{
@@ -304,6 +311,14 @@ func (r *BillingPolicyResource) Delete(ctx context.Context, req resource.DeleteR
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil && diags.HasError() {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	err := r.LicensingClient.DeleteBillingPolicy(ctx, state.Id.ValueString())
 	if err != nil {

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package environment_settings
 
 import (
 	"context"
@@ -10,8 +10,8 @@ import (
 	"net/url"
 	"strings"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewEnvironmentSettingsClient(api *api.ApiClient) EnvironmentSettingsClient {
@@ -85,7 +85,7 @@ func (client *EnvironmentSettingsClient) GetEnvironmentUrlById(ctx context.Conte
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
-		return "", powerplatform_helpers.WrapIntoProviderError(nil, powerplatform_helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 	return environmentUrl, nil
 }

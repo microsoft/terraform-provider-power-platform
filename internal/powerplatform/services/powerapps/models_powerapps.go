@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package powerapps
 
 type PowerAppBapi struct {
 	Name       string                 `json:"name"`

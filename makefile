@@ -25,19 +25,19 @@ unittest:
 	export TF_ACC=0
 	$(MAKE) clean
 	$(MAKE) install
-	go test -v ./... -run "^TestUnit"
+	go test -p=16 -v ./... -run "^TestUnit"
 
 acctest:
 	export TF_ACC=1
 	$(MAKE) clean
 	$(MAKE) install
-	go test -timeout 120m -v ./... -run "^TestAcc"
+	go test -p=10 -timeout 120m -v ./... -run "^TestAcc"
 
 test:
 	export TF_ACC=1
 	$(MAKE) clean
 	$(MAKE) install
-	go test -timeout 120m -v ./...
+	go test -p=10 -timeout 120m -v ./...
 
 lint:
 	golangci-lint run

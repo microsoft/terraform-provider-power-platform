@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package environment
 
 import (
 	"context"
@@ -14,9 +14,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	constants "github.com/microsoft/terraform-provider-power-platform/constants"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	solution "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/solution"
 )
 
@@ -55,32 +55,31 @@ func findAzureRegion(location *LocationDto, azureRegion string) (bool, error) {
 	return false, fmt.Errorf("region '%s' is not valid for location %s. valid regions are: %s", azureRegion, location.Name, strings.Join(location.Properties.AzureRegions, ", "))
 }
 
-func locationValidator(client *api.ApiClient, location, azureRegion string) error {
+func (client *EnvironmentClient) GetLocations(ctx context.Context) (*LocationArrayDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   client.GetConfig().Urls.BapiUrl,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/locations",
 	}
 	values := url.Values{}
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
-
-	if err != nil {
-		return err
-	}
-
-	defer response.Response.Body.Close()
-
 	locationsArray := LocationArrayDto{}
-	err = json.Unmarshal(response.BodyAsBytes, &locationsArray)
+	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &locationsArray)
+	if err != nil {
+		return nil, err
+	}
+	return &locationsArray, nil
+}
 
+func (client *EnvironmentClient) LocationValidator(ctx context.Context, location, azureRegion string) error {
+	locationsArray, err := client.GetLocations(ctx)
 	if err != nil {
 		return err
 	}
 
-	foundLocation, err := findLocation(locationsArray, location)
+	foundLocation, err := findLocation(*locationsArray, location)
 	if err != nil {
 		return err
 	}
@@ -221,7 +220,7 @@ func (client *EnvironmentClient) GetEnvironmentUrlById(ctx context.Context, envi
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
-		return "", powerplatform_helpers.WrapIntoProviderError(nil, powerplatform_helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 	return environmentUrl, nil
 }
@@ -241,7 +240,7 @@ func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environment
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
-			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment '%s' not found", environmentId))
+			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment '%s' not found", environmentId))
 		}
 		return nil, err
 	}
@@ -311,7 +310,7 @@ func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, 
 	tflog.Debug(ctx, "Retry Header: "+retryHeader)
 	retryAfter, err := time.ParseDuration(retryHeader)
 	if err != nil {
-		retryAfter = time.Duration(5) * time.Second
+		retryAfter = client.Api.RetryAfterDefault()
 	} else {
 		retryAfter = retryAfter * time.Second
 	}
@@ -423,7 +422,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 		return nil, err
 	}
 
-	err = client.Api.SleepWithContext(ctx, 10*time.Second)
+	err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
 	if err != nil {
 		return nil, err
 	}
@@ -441,7 +440,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 					return nil, err
 				}
 				tflog.Info(ctx, "Environment State: '"+createdEnv.Properties.States.Management.Id+"'")
-				err = client.Api.SleepWithContext(ctx, 3*time.Second)
+				err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
 				if err != nil {
 					return nil, err
 				}

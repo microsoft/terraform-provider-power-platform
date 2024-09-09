@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package managed_environment
 
 type OperationLifecycleDto struct {
 	Id                 string                           `json:"id"`

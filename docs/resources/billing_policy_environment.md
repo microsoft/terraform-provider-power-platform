@@ -18,6 +18,12 @@ terraform {
     powerplatform = {
       source = "microsoft/power-platform"
     }
+    azurerm = {
+      source = "hashicorp/azurerm"
+    }
+    azurecaf = {
+      source = "aztfmod/azurecaf"
+    }
   }
 }
 
@@ -25,9 +31,56 @@ provider "powerplatform" {
   use_cli = true
 }
 
+provider "azurerm" {
+  features {}
+  use_cli = true
+}
+
+provider "azurecaf" {
+}
+
+data "azurerm_client_config" "current" {
+}
+
+resource "azurecaf_name" "rg_example_name" {
+  name          = "power-platform-billing"
+  resource_type = "azurerm_resource_group"
+  random_length = 5
+  clean_input   = true
+}
+
+resource "azurerm_resource_group" "rg_example" {
+  name     = azurecaf_name.rg_example_name.result
+  location = "westeurope"
+}
+
+resource "powerplatform_billing_policy" "pay_as_you_go" {
+  name     = "payAsYouGoBillingPolicyExample"
+  location = "europe"
+  status   = "Enabled"
+  billing_instrument = {
+    resource_group  = azurerm_resource_group.rg_example.name
+    subscription_id = data.azurerm_client_config.current.subscription_id
+  }
+}
+
+resource "powerplatform_environment" "env1" {
+  display_name     = "billing_policy_example_environment_1"
+  location         = "europe"
+  azure_region     = "northeurope"
+  environment_type = "Sandbox"
+}
+
+resource "powerplatform_environment" "env2" {
+  display_name     = "billing_policy_example_environment_2"
+  location         = "europe"
+  azure_region     = "northeurope"
+  environment_type = "Sandbox"
+}
+
 resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
-  billing_policy_id = "00000000-0000-0000-0000-000000000000"
-  environments      = ["00000000-0000-0000-0000-000000000001", "00000000-0000-0000-0000-000000000002"]
+  billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
+  environments      = [powerplatform_environment.env1.id, powerplatform_environment.env2.id]
 }
 ```
 
@@ -38,3 +91,17 @@ resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" 
 
 - `billing_policy_id` (String) The id of the billing policy
 - `environments` (Set of String) The environments associated with the billing policy
+
+### Optional
+
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `create` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+- `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
+- `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
+- `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).

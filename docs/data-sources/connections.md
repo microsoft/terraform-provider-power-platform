@@ -39,10 +39,22 @@ data "powerplatform_connections" "all_connections" {
 
 - `environment_id` (String) Environment Id. The unique identifier of the environment that the connection are associated with.
 
+### Optional
+
+- `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
+
 ### Read-Only
 
 - `connections` (Attributes List) List of Connections (see [below for nested schema](#nestedatt--connections))
 - `id` (String) The ID of this resource.
+
+<a id="nestedatt--timeouts"></a>
+### Nested Schema for `timeouts`
+
+Optional:
+
+- `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
+
 
 <a id="nestedatt--connections"></a>
 ### Nested Schema for `connections`

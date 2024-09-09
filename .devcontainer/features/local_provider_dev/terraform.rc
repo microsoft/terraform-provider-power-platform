@@ -3,9 +3,11 @@ provider_installation {
   dev_overrides {
     "microsoft/power-platform" = "/go/bin"
     "hashicorp/azuread" = "/go/bin"
+    "hashicorp/azurerm" = "/go/bin"
     "hashicorp/random" = "/go/bin"
     "hashicorp/local" = "/go/bin"
     "hashicorp/null" = "/go/bin"
+    "aztfmod/azurecaf" = "/go/bin"
   }
 
   # For all other providers, install them directly from their origin provider

@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package api
 
 import (
 	"bytes"
@@ -9,14 +9,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	neturl "net/url"
 	"reflect"
 	"strings"
 	"time"
 
-	config "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 type ProviderClient struct {
@@ -58,7 +60,7 @@ func TryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (stri
 
 func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
 	if !strings.HasPrefix(url, "http") {
-		return nil, powerplatform_helpers.WrapIntoProviderError(nil, powerplatform_helpers.ERROR_INCORRECT_URL_FORMAT, "when using scope, the calling url must be an absolute url, not a relative path")
+		return nil, helpers.WrapIntoProviderError(nil, helpers.ERROR_INCORRECT_URL_FORMAT, "when using scope, the calling url must be an absolute url, not a relative path")
 	}
 	token, err := client.BaseAuth.GetTokenForScopes(ctx, []string{scope})
 	if err != nil {
@@ -101,7 +103,7 @@ func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method
 	}
 
 	if !isStatusCodeValid {
-		return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE, fmt.Sprintf("expected status code: %d, recieved: [%d]", acceptableStatusCodes, apiResponse.Response.StatusCode))
+		return apiResponse, helpers.WrapIntoProviderError(err, helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE, fmt.Sprintf("expected status code: %d, recieved: [%d]", acceptableStatusCodes, apiResponse.Response.StatusCode))
 	}
 
 	if responseObj != nil {
@@ -118,7 +120,35 @@ func (client *ApiClient) Execute(ctx context.Context, method, url string, header
 	if err != nil {
 		return nil, err
 	}
-	return client.ExecuteForGivenScope(ctx, scope, method, url, headers, body, acceptableStatusCodes, responseObj)
+
+	var response *ApiHttpResponse = nil
+	for {
+		response, err = client.ExecuteForGivenScope(ctx, scope, method, url, headers, body, acceptableStatusCodes, responseObj)
+		if response == nil || response.Response == nil {
+			return response, err
+		}
+
+		if response.Response.StatusCode != http.StatusUnauthorized &&
+			response.Response.StatusCode != http.StatusGatewayTimeout &&
+			response.Response.StatusCode != http.StatusTooManyRequests &&
+			response.Response.StatusCode != http.StatusServiceUnavailable && 
+			response.Response.StatusCode != http.StatusBadGateway {
+			return response, err
+		}
+
+		defaultRetry := client.RetryAfterDefault()
+		tflog.Debug(ctx, fmt.Sprintf("Received status code %d for request %s, retrying after %s", response.Response.StatusCode, url, defaultRetry))
+
+		err = client.SleepWithContext(ctx, defaultRetry)
+		if err != nil {
+			return response, err
+		}
+	}
+}
+
+func (client *ApiClient) RetryAfterDefault() time.Duration {
+	retryAfter5to10Seconds := time.Duration((rand.Intn(5) + 5)) * time.Second
+	return retryAfter5to10Seconds
 }
 
 func (client *ApiClient) SleepWithContext(ctx context.Context, duration time.Duration) error {

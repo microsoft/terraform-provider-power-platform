@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package connection
 
 import (
 	"context"
@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewConnectionsClient(api *api.ApiClient) ConnectionsClient {
@@ -100,7 +100,7 @@ func (client *ConnectionsClient) GetConnection(ctx context.Context, environmentI
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connection)
 	if err != nil {
 		if strings.Contains(err.Error(), "ConnectionNotFound") {
-			return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Connection '%s' not found", connectionId))
+			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Connection '%s' not found", connectionId))
 		}
 		return nil, err
 	}
@@ -218,7 +218,7 @@ func (client *ConnectionsClient) GetConnectionShare(ctx context.Context, environ
 			return &share, nil
 		}
 	}
-	return nil, powerplatform_helpers.WrapIntoProviderError(err, powerplatform_helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Share for principal '%s' not found", principalId))
+	return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Share for principal '%s' not found", principalId))
 }
 
 func (client *ConnectionsClient) UpdateConnectionShare(ctx context.Context, environmentId, connectorName, connectionId string, share ShareConnectionRequestDto) error {

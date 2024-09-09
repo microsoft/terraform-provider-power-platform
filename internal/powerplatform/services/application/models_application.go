@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-package powerplatform
+package application
 
 type TenantApplicationDto struct {
 	ApplicationDescription string                         `json:"applicationDescription"`

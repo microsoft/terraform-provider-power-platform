@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package environment
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -18,11 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	powerplatform_helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
-	powerplatform_modifiers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
-	licensing "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/modifiers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/licensing"
 )
 
 var _ resource.Resource = &EnvironmentResource{}
@@ -52,7 +53,12 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 		Description:         "This resource manages a PowerPlatform environment",
 
 		Attributes: map[string]schema.Attribute{
-
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+				Read:   true,
+			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique environment id (guid)",
 				Description:         "Unique environment id (guid)",
@@ -108,7 +114,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers: []planmodifier.Object{
-					powerplatform_modifiers.RequireReplaceObjectToEmptyModifier(),
+					modifiers.RequireReplaceObjectToEmptyModifier(),
 				},
 				Attributes: map[string]schema.Attribute{
 					"currency_code": schema.StringAttribute{
@@ -116,7 +122,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 						MarkdownDescription: "Unique currency name",
 						Required:            true,
 						PlanModifiers: []planmodifier.String{
-							powerplatform_modifiers.RequireReplaceStringFromNonEmptyPlanModifier(),
+							modifiers.RequireReplaceStringFromNonEmptyPlanModifier(),
 						},
 					},
 					"url": schema.StringAttribute{
@@ -148,7 +154,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 						MarkdownDescription: "Unique language LCID (integer)",
 						Required:            true,
 						PlanModifiers: []planmodifier.Int64{
-							powerplatform_modifiers.RequireReplaceIntAttributePlanModifier(),
+							modifiers.RequireReplaceIntAttributePlanModifier(),
 						},
 					},
 					"version": schema.StringAttribute{
@@ -223,7 +229,16 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		resp.Diagnostics.AddError("Error when converting source model to create environment dto", err.Error())
 	}
 
-	err = locationValidator(r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.AzureRegion)
+	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	err = r.EnvironmentClient.LocationValidator(ctx, envToCreate.Location, envToCreate.Properties.AzureRegion)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
@@ -260,7 +275,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
 
-	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates)
+	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -285,9 +300,18 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	envDto, err := r.EnvironmentClient.GetEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
-		if powerplatform_helpers.Code(err) == powerplatform_helpers.ERROR_OBJECT_NOT_FOUND {
+		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
 		} else {
@@ -325,7 +349,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 			templates = dv.Templates
 		}
 	}
-	newState, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates)
+	newState, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, state.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -340,12 +364,11 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 
 func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	var plan *EnvironmentSourceModel
+	var state *EnvironmentSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
-	var state *EnvironmentSourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -368,6 +391,15 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 			Id: plan.BillingPolicyId.ValueString(),
 		}
 	}
+
+	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	var currencyCode string
 	if !IsDataverseEnvironmentEmpty(ctx, state) && IsDataverseEnvironmentEmpty(ctx, plan) {
@@ -461,7 +493,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		}
 	}
 
-	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates)
+	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -482,6 +514,15 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	err := r.EnvironmentClient.DeleteEnvironment(ctx, state.Id.ValueString())
 	if err != nil {

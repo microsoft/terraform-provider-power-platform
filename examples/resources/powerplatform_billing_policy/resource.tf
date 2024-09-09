@@ -1,16 +1,14 @@
 terraform {
   required_providers {
     powerplatform = {
-      source  = "microsoft/power-platform"
-      version = "2.7.0-preview"
+      source = "microsoft/power-platform"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "4.0.1"
     }
     azurecaf = {
-      source  = "aztfmod/azurecaf"
-      version = "2.0.0-preview3"
+      source = "aztfmod/azurecaf"
     }
   }
 }
@@ -20,9 +18,7 @@ provider "powerplatform" {
 }
 
 provider "azurerm" {
-  features {
-
-  }
+  features {}
   use_cli = true
 }
 

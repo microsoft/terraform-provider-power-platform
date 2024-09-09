@@ -1,17 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package environment_templates
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 var (
@@ -33,6 +35,7 @@ type EnvironmentTemplatesDataSource struct {
 }
 
 type EnvironmentTemplatesDataSourceModel struct {
+	Timeouts  timeouts.Value                  `tfsdk:"timeouts"`
 	Id        types.Int64                     `tfsdk:"id"`
 	Location  types.String                    `tfsdk:"location"`
 	Templates []EnvironmentTemplatesDataModel `tfsdk:"environment_templates"`
@@ -55,11 +58,14 @@ func (d *EnvironmentTemplatesDataSource) Metadata(_ context.Context, req datasou
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *EnvironmentTemplatesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentTemplatesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dynamics 365 environment templates.",
 		MarkdownDescription: "Fetches the list of Dynamics 365 environment templates.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"id": schema.Int64Attribute{
 				Description: "Id of the read operation",
 				Optional:    true,
@@ -155,35 +161,48 @@ func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasourc
 		}
 	}
 
-	var plan EnvironmentTemplatesDataSourceModel
-	resp.State.Get(ctx, &plan)
+	var state EnvironmentTemplatesDataSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT TEMPLATES START: %s", d.ProviderTypeName))
 
-	environment_templates, err := d.EnvironmentTemplatesClient.GetEnvironmentTemplatesByLocation(ctx, plan.Location.ValueString())
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
+	environment_templates, err := d.EnvironmentTemplatesClient.GetEnvironmentTemplatesByLocation(ctx, state.Location.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
 
-	plan.Templates = make([]EnvironmentTemplatesDataModel, 0)
-	appendToList(environment_templates.Standard, "standard", &plan.Templates)
-	appendToList(environment_templates.Premium, "premium", &plan.Templates)
-	appendToList(environment_templates.Developer, "developer", &plan.Templates)
-	appendToList(environment_templates.Basic, "basic", &plan.Templates)
-	appendToList(environment_templates.Production, "production", &plan.Templates)
-	appendToList(environment_templates.Sandbox, "sandbox", &plan.Templates)
-	appendToList(environment_templates.Trial, "trial", &plan.Templates)
-	appendToList(environment_templates.Default, "default", &plan.Templates)
-	appendToList(environment_templates.Support, "support", &plan.Templates)
-	appendToList(environment_templates.SubscriptionBasedTrial, "subscriptionBasedTrial", &plan.Templates)
-	appendToList(environment_templates.Teams, "teams", &plan.Templates)
-	appendToList(environment_templates.Platform, "platform", &plan.Templates)
+	state.Templates = make([]EnvironmentTemplatesDataModel, 0)
+	appendToList(environment_templates.Standard, "standard", &state.Templates)
+	appendToList(environment_templates.Premium, "premium", &state.Templates)
+	appendToList(environment_templates.Developer, "developer", &state.Templates)
+	appendToList(environment_templates.Basic, "basic", &state.Templates)
+	appendToList(environment_templates.Production, "production", &state.Templates)
+	appendToList(environment_templates.Sandbox, "sandbox", &state.Templates)
+	appendToList(environment_templates.Trial, "trial", &state.Templates)
+	appendToList(environment_templates.Default, "default", &state.Templates)
+	appendToList(environment_templates.Support, "support", &state.Templates)
+	appendToList(environment_templates.SubscriptionBasedTrial, "subscriptionBasedTrial", &state.Templates)
+	appendToList(environment_templates.Teams, "teams", &state.Templates)
+	appendToList(environment_templates.Platform, "platform", &state.Templates)
 
-	plan.Id = types.Int64Value(int64(len(plan.Templates)))
-	plan.Location = types.StringValue(plan.Location.ValueString())
+	state.Id = types.Int64Value(int64(len(state.Templates)))
+	state.Location = types.StringValue(state.Location.ValueString())
 
-	diags := resp.State.Set(ctx, &plan)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT TEMPLATES END: %s", d.ProviderTypeName))
 

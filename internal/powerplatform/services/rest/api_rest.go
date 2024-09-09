@@ -1,16 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package rest
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
 func NewWebApiClient(api *api.ApiClient) WebApiClient {
@@ -59,6 +61,11 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 		return types.ObjectUnknown(map[string]attr.Type{
 			"body": types.StringType,
 		}), err
+	}
+
+	if res != nil && res.Response != nil {
+		tflog.Debug(ctx, fmt.Sprintf("SendOperation Response: %v", res.BodyAsBytes))
+		tflog.Info(ctx, fmt.Sprintf("SendOperation Response Status: %v", res.Response.Status))
 	}
 
 	output := map[string]attr.Value{

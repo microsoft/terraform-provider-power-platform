@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package managed_environment
 
 import (
 	"context"
@@ -10,7 +10,7 @@ import (
 	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/environment"
 )
 

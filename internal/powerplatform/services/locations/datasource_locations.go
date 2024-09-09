@@ -1,17 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package locations
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 var (
@@ -20,8 +22,9 @@ var (
 )
 
 type LocationsDataSourceModel struct {
-	Id    types.Int64         `tfsdk:"id"`
-	Value []LocationDataModel `tfsdk:"locations"`
+	Timeouts timeouts.Value      `tfsdk:"timeouts"`
+	Id       types.Int64         `tfsdk:"id"`
+	Value    []LocationDataModel `tfsdk:"locations"`
 }
 
 type LocationDataModel struct {
@@ -53,11 +56,14 @@ func (d *LocationsDataSource) Metadata(_ context.Context, req datasource.Metadat
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *LocationsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *LocationsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of available Dynamics 365 locations",
 		MarkdownDescription: "Fetches the list of available Dynamics 365 locations. For more information see [Power Platform Geos](https://learn.microsoft.com/power-platform/admin/regions-overview)",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"id": schema.Int64Attribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",
@@ -131,10 +137,24 @@ func (d *LocationsDataSource) Configure(ctx context.Context, req datasource.Conf
 }
 
 func (d *LocationsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var plan LocationsDataSourceModel
-	resp.State.Get(ctx, &plan)
+	var state LocationsDataSourceModel
+	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LOCATIONS START: %s", d.ProviderTypeName))
+
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	locations, err := d.LocationsClient.GetLocations(ctx)
 	if err != nil {
@@ -142,10 +162,10 @@ func (d *LocationsDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	plan.Id = types.Int64Value(int64(len(locations.Value)))
+	state.Id = types.Int64Value(int64(len(locations.Value)))
 
 	for _, location := range locations.Value {
-		plan.Value = append(plan.Value, LocationDataModel{
+		state.Value = append(state.Value, LocationDataModel{
 			ID:                                     location.ID,
 			Name:                                   location.Name,
 			DisplayName:                            location.Properties.DisplayName,
@@ -158,7 +178,7 @@ func (d *LocationsDataSource) Read(ctx context.Context, req datasource.ReadReque
 		})
 	}
 
-	diags := resp.State.Set(ctx, &plan)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LOCATIONS END: %s", d.ProviderTypeName))
 

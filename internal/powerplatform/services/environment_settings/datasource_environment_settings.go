@@ -1,18 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package environment_settings
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 var (
@@ -55,14 +57,27 @@ func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datas
 
 func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state EnvironmentSettingsSourceModel
-	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS START: %s", d.ProviderTypeName))
+
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	if state.EnvironmentId.ValueString() == "" {
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	dvExits, err := d.EnvironmentSettingsClient.DataverseExists(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
@@ -80,10 +95,10 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	state = ConvertFromEnvironmentSettingsDto(envSettings)
+	state = ConvertFromEnvironmentSettingsDto(envSettings, state.Timeouts)
 	state.Id = state.EnvironmentId
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS END: %s", d.ProviderTypeName))
 
@@ -93,11 +108,17 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 	}
 }
 
-func (d *EnvironmentSettingsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Power Platform Environment Settings Data Source",
 		MarkdownDescription: "Power Platform Environment Settings Data Source. Power Platform Settings are configuration options that apply to a specific environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/power-platform/admin/admin-settings) for more details.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: false,
+				Update: false,
+				Delete: false,
+				Read:   false,
+			}),
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",

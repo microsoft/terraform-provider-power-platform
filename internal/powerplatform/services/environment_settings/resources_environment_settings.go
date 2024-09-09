@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package environment_settings
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -18,7 +19,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 var _ resource.Resource = &EnvironmentSettingsResource{}
@@ -46,6 +48,10 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 		Description:         "Manages Power Platform Settings for a given environment.",
 		MarkdownDescription: "Manages Power Platform Settings for a given environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/power-platform/admin/admin-settings) for more details.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+			}),
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",
@@ -216,6 +222,15 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
+	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	settingsToUpdate := ConvertFromEnvironmentSettingsModel(ctx, plan)
 
 	dvExits, err := r.EnvironmentSettingClient.DataverseExists(ctx, plan.EnvironmentId.ValueString())
@@ -237,7 +252,7 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	var state = ConvertFromEnvironmentSettingsDto(envSettings)
+	var state = ConvertFromEnvironmentSettingsDto(envSettings, plan.Timeouts)
 	state.Id = plan.EnvironmentId
 	state.EnvironmentId = plan.EnvironmentId
 
@@ -262,13 +277,22 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	envSettings, err := r.EnvironmentSettingClient.GetEnvironmentSettings(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
 		return
 	}
 
-	var newState = ConvertFromEnvironmentSettingsDto(envSettings)
+	var newState = ConvertFromEnvironmentSettingsDto(envSettings, state.Timeouts)
 	newState.Id = state.EnvironmentId
 	newState.EnvironmentId = state.EnvironmentId
 
@@ -298,6 +322,15 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
+	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	envSettingsToUpdate := ConvertFromEnvironmentSettingsModel(ctx, plan)
 
 	environmentSettings, err := r.EnvironmentSettingClient.UpdateEnvironmentSettings(ctx, plan.EnvironmentId.ValueString(), envSettingsToUpdate)
@@ -308,7 +341,7 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	plan = ConvertFromEnvironmentSettingsDto(environmentSettings)
+	plan = ConvertFromEnvironmentSettingsDto(environmentSettings, plan.Timeouts)
 	plan.Id = state.EnvironmentId
 	plan.EnvironmentId = state.EnvironmentId
 

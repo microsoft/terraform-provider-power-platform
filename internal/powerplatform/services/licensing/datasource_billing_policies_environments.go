@@ -1,18 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package licensing
 
 import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 var (
@@ -34,19 +36,23 @@ type BillingPoliciesEnvironmetsDataSource struct {
 }
 
 type BillingPoliciesEnvironmetsListDataSourceModel struct {
-	BillingPolicyId string   `tfsdk:"billing_policy_id"`
-	Environments    []string `tfsdk:"environments"`
+	Timeouts        timeouts.Value `tfsdk:"timeouts"`
+	BillingPolicyId string         `tfsdk:"billing_policy_id"`
+	Environments    []string       `tfsdk:"environments"`
 }
 
 func (d *BillingPoliciesEnvironmetsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *BillingPoliciesEnvironmetsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *BillingPoliciesEnvironmetsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the environments associated with a billing policy",
 		MarkdownDescription: "Fetches the environments associated with a [billing policy](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy).\n\nThis data source uses the [List Billing Policy Environments](https://learn.microsoft.com/rest/api/power-platform/licensing/billing-policy-environment/list-billing-policy-environments) endpoint in the Power Platform API.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"billing_policy_id": schema.StringAttribute{
 				Required:            true,
 				Description:         "The id of the billing policy",
@@ -82,6 +88,7 @@ func (d *BillingPoliciesEnvironmetsDataSource) Configure(_ context.Context, req 
 
 func (d *BillingPoliciesEnvironmetsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state BillingPoliciesEnvironmetsListDataSourceModel
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
 
@@ -95,6 +102,15 @@ func (d *BillingPoliciesEnvironmetsDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	environments, err := d.LicensingClient.GetEnvironmentsForBillingPolicy(ctx, state.BillingPolicyId)
 
 	if err != nil {
@@ -104,7 +120,7 @@ func (d *BillingPoliciesEnvironmetsDataSource) Read(ctx context.Context, req dat
 
 	state.Environments = environments
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
 

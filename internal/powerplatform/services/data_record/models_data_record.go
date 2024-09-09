@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
-package powerplatform
+package data_record
 
 type DataRecordDto struct {
 	Id           string `json:"id"`

@@ -1,18 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform
+package solution
 
 import (
 	"context"
 	"fmt"
 	"strconv"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 var (
@@ -34,6 +36,7 @@ type SolutionsDataSource struct {
 }
 
 type SolutionListDataSourceModel struct {
+	Timeouts      timeouts.Value             `tfsdk:"timeouts"`
 	Id            types.String               `tfsdk:"id"`
 	EnvironmentId types.String               `tfsdk:"environment_id"`
 	Solutions     []SolutionsDataSourceModel `tfsdk:"solutions"`
@@ -69,11 +72,14 @@ func (d *SolutionsDataSource) Metadata(_ context.Context, req datasource.Metadat
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *SolutionsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *SolutionsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Solutions in an environment",
 		MarkdownDescription: "Fetches the list of Solutions in an environment.  This is the equivalent of the [`pac solution list`](https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-list) command in the Power Platform CLI.",
 		Attributes: map[string]schema.Attribute{
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Read: true,
+			}),
 			"id": schema.StringAttribute{
 				Description:         "Id of the read operation",
 				MarkdownDescription: "Id of the read operation",
@@ -163,9 +169,21 @@ func (d *SolutionsDataSource) Configure(_ context.Context, req datasource.Config
 
 func (d *SolutionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state SolutionListDataSourceModel
-	resp.State.Get(ctx, &state)
+	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SOLUTIONS START: %s", d.ProviderTypeName))
+
+	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+	if diags != nil {
+		resp.Diagnostics.Append(diags...)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 
 	dvExits, err := d.SolutionClient.DataverseExists(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
@@ -190,7 +208,7 @@ func (d *SolutionsDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	state.Id = types.StringValue(strconv.Itoa(len(solutions)))
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SOLUTIONS END: %s", d.ProviderTypeName))
 
