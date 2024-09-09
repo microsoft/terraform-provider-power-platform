@@ -51,6 +51,9 @@ locals {
 }
 
 resource "random_password" "passwords" {
+  min_upper        = 1
+  min_numeric      = 1
+  min_special      = 1
   length           = 16
   special          = true
   override_special = "_%@"
