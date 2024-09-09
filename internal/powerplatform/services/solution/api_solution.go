@@ -37,14 +37,14 @@ func (client *SolutionClient) DataverseExists(ctx context.Context, environmentId
 }
 
 func (client *SolutionClient) GetSolutionUniqueName(ctx context.Context, environmentId, name string) (*SolutionDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   "/api/data/v9.2/solutions",
 	}
 	values := url.Values{}
@@ -67,14 +67,14 @@ func (client *SolutionClient) GetSolutionUniqueName(ctx context.Context, environ
 }
 
 func (client *SolutionClient) GetSolutionById(ctx context.Context, environmentId, solutionId string) (*SolutionDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   "/api/data/v9.2/solutions",
 	}
 	values := url.Values{}
@@ -97,14 +97,14 @@ func (client *SolutionClient) GetSolutionById(ctx context.Context, environmentId
 }
 
 func (client *SolutionClient) GetSolutions(ctx context.Context, environmentId string) ([]SolutionDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   "/api/data/v9.2/solutions",
 	}
 	values := url.Values{}
@@ -130,7 +130,7 @@ func (client *SolutionClient) GetSolutions(ctx context.Context, environmentId st
 }
 
 func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId string, solutionToCreate ImportSolutionDto, content []byte, settings []byte) (*SolutionDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
@@ -146,7 +146,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   "/api/data/v9.2/StageSolution",
 	}
 
@@ -184,7 +184,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 
 	apiUrl = &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   "/api/data/v9.2/ImportSolutionAsync",
 	}
 	importSolutionResponse := ImportSolutionResponseDto{}
@@ -201,7 +201,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 
 	apiUrl = &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.2/asyncoperations(%s)", importSolutionResponse.AsyncOperationId),
 	}
 	for {
@@ -211,7 +211,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 			return nil, err
 		}
 		if asyncSolutionPullResponse.CompletedOn != "" {
-			err = client.validateSolutionImportResult(ctx, environmentUrl, importSolutionResponse.ImportJobKey)
+			err = client.validateSolutionImportResult(ctx, environmentHost, importSolutionResponse.ImportJobKey)
 			if err != nil {
 				return nil, err
 			}
@@ -268,10 +268,10 @@ func (client *SolutionClient) createSolutionComponentParameters(ctx context.Cont
 	return solutionComponents, nil
 }
 
-func (client *SolutionClient) validateSolutionImportResult(ctx context.Context, environmentUrl, ImportJobKey string) error {
+func (client *SolutionClient) validateSolutionImportResult(ctx context.Context, environmentHost, ImportJobKey string) error {
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.0/RetrieveSolutionImportResult(ImportJobId=%s)", ImportJobKey),
 	}
 
@@ -287,13 +287,13 @@ func (client *SolutionClient) validateSolutionImportResult(ctx context.Context, 
 }
 
 func (client *SolutionClient) DeleteSolution(ctx context.Context, environmentId, solutionId string) error {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return err
 	}
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.2/solutions(%s)", solutionId),
 	}
 	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
@@ -304,13 +304,13 @@ func (client *SolutionClient) DeleteSolution(ctx context.Context, environmentId,
 }
 
 func (client *SolutionClient) GetTableData(ctx context.Context, environmentId, tableName, odataQuery string, responseObj interface{}) error {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return err
 	}
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.2/%s", tableName),
 	}
 	if odataQuery != "" {
@@ -323,7 +323,7 @@ func (client *SolutionClient) GetTableData(ctx context.Context, environmentId, t
 	return nil
 }
 
-func (client *SolutionClient) GetEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {
+func (client *SolutionClient) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return "", err
@@ -332,7 +332,12 @@ func (client *SolutionClient) GetEnvironmentUrlById(ctx context.Context, environ
 	if environmentUrl == "" {
 		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
-	return environmentUrl, nil
+
+	url, err := url.Parse(environmentUrl)
+	if err != nil {
+		return "", err
+	}
+	return url.Host, nil
 }
 
 func (client *SolutionClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
