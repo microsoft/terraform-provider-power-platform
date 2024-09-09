@@ -89,6 +89,14 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, _ datasource.Schema
 							Description:         "Display name",
 							Computed:            true,
 						},
+						"description": schema.StringAttribute{
+							MarkdownDescription: "Description",
+							Computed:            true,
+						},
+						"cadence": schema.StringAttribute{
+							MarkdownDescription: "Cadence of updates for the environment (Frequent, Moderate)",
+							Computed:            true,
+						},
 						"billing_policy_id": &schema.StringAttribute{
 							Description:         "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 							MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
@@ -99,6 +107,14 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, _ datasource.Schema
 							Description:         "Dataverse environment details",
 							Computed:            true,
 							Attributes: map[string]schema.Attribute{
+								"administration_mode_enabled": schema.BoolAttribute{
+									MarkdownDescription: "Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
+									Computed:            true,
+								},
+								"background_operation_enabled": schema.BoolAttribute{
+									MarkdownDescription: "Background operation status for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
+									Computed:            true,
+								},
 								"url": schema.StringAttribute{
 									Description:         "Url of the environment",
 									MarkdownDescription: "Url of the environment",

@@ -31,14 +31,20 @@ type EnvironmentPropertiesDto struct {
 	AzureRegion               string                        `json:"azureRegion,omitempty"`
 	DatabaseType              string                        `json:"databaseType"`
 	DisplayName               string                        `json:"displayName"`
+	Description               string                        `json:"description,omitempty"`
 	EnvironmentSku            string                        `json:"environmentSku"`
 	LinkedAppMetadata         *LinkedAppMetadataDto         `json:"linkedAppMetadata,omitempty"`
 	LinkedEnvironmentMetadata *LinkedEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
-	States                    StatesEnvironmentDto          `json:"states"`
+	States                    *StatesEnvironmentDto         `json:"states"`
 	TenantID                  string                        `json:"tenantId"`
 	GovernanceConfiguration   GovernanceConfigurationDto    `json:"governanceConfiguration"`
 	BillingPolicy             *BillingPolicyDto             `json:"billingPolicy,omitempty"`
 	ProvisioningState         string                        `json:"provisioningState,omitempty"`
+	UpdateCadence             *UpdateCadenceDto             `json:"updateCadence,omitempty"`
+}
+
+type UpdateCadenceDto struct {
+	Id string `json:"id"`
 }
 
 type BillingPolicyDto struct {
@@ -70,14 +76,15 @@ type ExtendedSettingsDto struct {
 }
 
 type LinkedEnvironmentMetadataDto struct {
-	DomainName       string                             `json:"domainName,omitempty"`
-	InstanceURL      string                             `json:"instanceUrl"`
-	BaseLanguage     int                                `json:"baseLanguage"`
-	SecurityGroupId  string                             `json:"securityGroupId"`
-	ResourceId       string                             `json:"resourceId"`
-	Version          string                             `json:"version"`
-	Templates        []string                           `json:"template,omitempty"`
-	TemplateMetadata *EnvironmentCreateTemplateMetadata `json:"templateMetadata,omitempty"`
+	BackgroundOperationsState string                             `json:"backgroundOperationsState,omitempty"`
+	DomainName                string                             `json:"domainName,omitempty"`
+	InstanceURL               string                             `json:"instanceUrl"`
+	BaseLanguage              int                                `json:"baseLanguage"`
+	SecurityGroupId           string                             `json:"securityGroupId"`
+	ResourceId                string                             `json:"resourceId"`
+	Version                   string                             `json:"version"`
+	Templates                 []string                           `json:"template,omitempty"`
+	TemplateMetadata          *EnvironmentCreateTemplateMetadata `json:"templateMetadata,omitempty"`
 }
 
 type LinkedAppMetadataDto struct {
@@ -88,6 +95,11 @@ type LinkedAppMetadataDto struct {
 
 type StatesEnvironmentDto struct {
 	Management StatesManagementEnvironmentDto `json:"management"`
+	Runtime    *RuntimeEnvironmentDto         `json:"runtime,omitempty"`
+}
+
+type RuntimeEnvironmentDto struct {
+	Id string `json:"id"`
 }
 
 type StatesManagementEnvironmentDto struct {
@@ -197,23 +209,27 @@ type EnvironmentSourceModel struct {
 	DisplayName     types.String   `tfsdk:"display_name"`
 	EnvironmentType types.String   `tfsdk:"environment_type"`
 	BillingPolicyId types.String   `tfsdk:"billing_policy_id"`
+	Description     types.String   `tfsdk:"description"`
+	Cadence         types.String   `tfsdk:"cadence"`
 
 	Dataverse types.Object `tfsdk:"dataverse"`
 }
 
 type DataverseSourceModel struct {
-	Url              types.String `tfsdk:"url"`
-	Domain           types.String `tfsdk:"domain"`
-	OrganizationId   types.String `tfsdk:"organization_id"`
-	SecurityGroupId  types.String `tfsdk:"security_group_id"`
-	LanguageName     types.Int64  `tfsdk:"language_code"`
-	Version          types.String `tfsdk:"version"`
-	LinkedAppType    types.String `tfsdk:"linked_app_type"`
-	LinkedAppId      types.String `tfsdk:"linked_app_id"`
-	LinkedAppURL     types.String `tfsdk:"linked_app_url"`
-	CurrencyCode     types.String `tfsdk:"currency_code"`
-	Templates        []string     `tfsdk:"templates"`
-	TemplateMetadata types.String `tfsdk:"template_metadata"`
+	Url                 types.String `tfsdk:"url"`
+	Domain              types.String `tfsdk:"domain"`
+	OrganizationId      types.String `tfsdk:"organization_id"`
+	SecurityGroupId     types.String `tfsdk:"security_group_id"`
+	LanguageName        types.Int64  `tfsdk:"language_code"`
+	Version             types.String `tfsdk:"version"`
+	LinkedAppType       types.String `tfsdk:"linked_app_type"`
+	LinkedAppId         types.String `tfsdk:"linked_app_id"`
+	LinkedAppURL        types.String `tfsdk:"linked_app_url"`
+	CurrencyCode        types.String `tfsdk:"currency_code"`
+	Templates           []string     `tfsdk:"templates"`
+	TemplateMetadata    types.String `tfsdk:"template_metadata"`
+	AdministrationMode  types.Bool   `tfsdk:"administration_mode_enabled"`
+	BackgroundOperation types.Bool   `tfsdk:"background_operation_enabled"`
 }
 
 func ConvertUpdateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource EnvironmentSourceModel) (*EnvironmentDto, error) {
@@ -224,6 +240,7 @@ func ConvertUpdateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		Location: environmentSource.Location.ValueString(),
 		Properties: EnvironmentPropertiesDto{
 			DisplayName:    environmentSource.DisplayName.ValueString(),
+			Description:    environmentSource.Description.ValueString(),
 			EnvironmentSku: environmentSource.EnvironmentType.ValueString(),
 		},
 	}
@@ -329,11 +346,13 @@ func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode *string, templateMetadata *EnvironmentCreateTemplateMetadata, templates []string, timeouts timeouts.Value) (*EnvironmentSourceModel, error) {
 	model := &EnvironmentSourceModel{
 		Timeouts:        timeouts,
+		Description:     types.StringValue(environmentDto.Properties.Description),
 		Id:              types.StringValue(environmentDto.Name),
 		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
 		Location:        types.StringValue(environmentDto.Location),
 		AzureRegion:     types.StringValue(environmentDto.Properties.AzureRegion),
 		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),
+		Cadence:         types.StringValue(environmentDto.Properties.UpdateCadence.Id),
 	}
 
 	if environmentDto.Properties.BillingPolicy != nil {
@@ -343,22 +362,30 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 	}
 
 	attrTypesDataverseObject := map[string]attr.Type{
-		"url":               types.StringType,
-		"domain":            types.StringType,
-		"organization_id":   types.StringType,
-		"security_group_id": types.StringType,
-		"language_code":     types.Int64Type,
-		"version":           types.StringType,
-		"linked_app_type":   types.StringType,
-		"linked_app_id":     types.StringType,
-		"linked_app_url":    types.StringType,
-		"currency_code":     types.StringType,
-		"templates":         types.ListType{ElemType: types.StringType},
-		"template_metadata": types.StringType,
+		"url":                          types.StringType,
+		"domain":                       types.StringType,
+		"organization_id":              types.StringType,
+		"security_group_id":            types.StringType,
+		"language_code":                types.Int64Type,
+		"version":                      types.StringType,
+		"linked_app_type":              types.StringType,
+		"linked_app_id":                types.StringType,
+		"linked_app_url":               types.StringType,
+		"currency_code":                types.StringType,
+		"templates":                    types.ListType{ElemType: types.StringType},
+		"template_metadata":            types.StringType,
+		"administration_mode_enabled":  types.BoolType,
+		"background_operation_enabled": types.BoolType,
 	}
 
 	attrValuesProductProperties := map[string]attr.Value{}
 	model.Dataverse = types.ObjectNull(attrTypesDataverseObject)
+
+	if environmentDto.Properties.States != nil && environmentDto.Properties.States.Runtime != nil && environmentDto.Properties.States.Runtime.Id != "AdminMode" {
+		attrValuesProductProperties["administration_mode_enabled"] = types.BoolValue(true)
+	} else {
+		attrValuesProductProperties["administration_mode_enabled"] = types.BoolValue(false)
+	}
 
 	if environmentDto.Properties.LinkedAppMetadata != nil {
 		attrValuesProductProperties["linked_app_type"] = types.StringValue(environmentDto.Properties.LinkedAppMetadata.Type)
@@ -377,6 +404,12 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["security_group_id"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.SecurityGroupId)
 		attrValuesProductProperties["language_code"] = types.Int64Value(int64(environmentDto.Properties.LinkedEnvironmentMetadata.BaseLanguage))
 		attrValuesProductProperties["version"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.Version)
+		if environmentDto.Properties.LinkedEnvironmentMetadata.BackgroundOperationsState == "Enabled" {
+			attrValuesProductProperties["background_operation_enabled"] = types.BoolValue(true)
+		} else {
+			attrValuesProductProperties["background_operation_enabled"] = types.BoolValue(false)
+		}
+
 		if currencyCode != nil && *currencyCode != "" {
 			attrValuesProductProperties["currency_code"] = types.StringValue(*currencyCode)
 		} else {
@@ -426,6 +459,7 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["currency_code"] = types.StringNull()
 		attrValuesProductProperties["template_metadata"] = types.StringNull()
 		attrValuesProductProperties["templates"] = types.ListNull(types.StringType)
+		attrValuesProductProperties["background_operation_enabled"] = types.BoolValue(false)
 	}
 	model.Dataverse = types.ObjectValueMust(attrTypesDataverseObject, attrValuesProductProperties)
 	return model, nil
