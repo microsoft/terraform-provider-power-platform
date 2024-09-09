@@ -22,7 +22,7 @@ import (
 func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 	solutionFileName1 := "TerraformTestSolution_Complex_1_1_0_0.zip"
 
-	solutionFileBytes1, err := os.ReadFile(filepath.Join("tests/resource/TestAccSolutionResource_Uninstall_Multiple_Solutions", solutionFileName1))
+	solutionFileBytes1, err := os.ReadFile(filepath.Join("tests/resource/Uninstall_Multiple_Solutions", solutionFileName1))
 	if err != nil {
 		t.Fatalf("Failed to read solution file: %v", err)
 	}
@@ -34,7 +34,7 @@ func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 
 	solutionFileName2 := "TerraformSimpleTestSolution_1_0_0_1_managed.zip"
 
-	solutionFileBytes2, err := os.ReadFile(filepath.Join("tests/resource/TestAccSolutionResource_Uninstall_Multiple_Solutions", solutionFileName2))
+	solutionFileBytes2, err := os.ReadFile(filepath.Join("tests/resource/Uninstall_Multiple_Solutions", solutionFileName2))
 	if err != nil {
 		t.Fatalf("Failed to read solution file: %v", err)
 	}
