@@ -19,6 +19,65 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
+func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
+	solutionFileName1 := "TerraformTestSolution_Complex_1_1_0_0.zip"
+
+	solutionFileBytes1, err := os.ReadFile(filepath.Join("tests/resource/TestAccSolutionResource_Uninstall_Multiple_Solutions", solutionFileName1))
+	if err != nil {
+		t.Fatalf("Failed to read solution file: %v", err)
+	}
+
+	err = os.WriteFile(solutionFileName1, solutionFileBytes1, 0644)
+	if err != nil {
+		t.Fatalf("Failed to write solution file: %v", err)
+	}
+
+	solutionFileName2 := "TerraformSimpleTestSolution_1_0_0_1_managed.zip"
+
+	solutionFileBytes2, err := os.ReadFile(filepath.Join("tests/resource/TestAccSolutionResource_Uninstall_Multiple_Solutions", solutionFileName2))
+	if err != nil {
+		t.Fatalf("Failed to read solution file: %v", err)
+	}
+
+	err = os.WriteFile(solutionFileName2, solutionFileBytes2, 0644)
+	if err != nil {
+		t.Fatalf("Failed to write solution file: %v", err)
+	}
+
+	resource.Test(t, resource.TestCase{
+
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: constants.TestsAcceptanceProviderConfig + `
+
+				resource "powerplatform_environment" "environment" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                           = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
+				resource "powerplatform_solution" "solution1" {
+					environment_id = powerplatform_environment.environment.id
+					solution_file    = "` + solutionFileName1 + `"
+				}
+					
+				resource "powerplatform_solution" "solution2" {
+					environment_id = powerplatform_environment.environment.id
+					solution_file    = "` + solutionFileName2 + `"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(),
+			},
+		},
+	})
+}
+
 func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 	solutionFileName := "TerraformTestSolution_Complex_1_1_0_0.zip"
 
