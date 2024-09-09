@@ -14,7 +14,6 @@ import (
 )
 
 func TestUnitTenantDataSource_Validate_Read(t *testing.T) {
-
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
