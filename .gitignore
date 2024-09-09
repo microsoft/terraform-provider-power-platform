@@ -68,6 +68,7 @@ site
 test_solution*.zip
 test_settings*.json
 test_solution*.json
+**/solution/*.zip
 
 # Ignore all files generated during debugging
 *.log
