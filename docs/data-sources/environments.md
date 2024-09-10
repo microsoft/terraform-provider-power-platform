@@ -59,7 +59,9 @@ Read-Only:
 
 - `azure_region` (String) Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source.
 - `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
+- `cadence` (String) Cadence of updates for the environment (Frequent, Moderate)
 - `dataverse` (Attributes) Dataverse environment details (see [below for nested schema](#nestedatt--environments--dataverse))
+- `description` (String) Description
 - `display_name` (String) Display name
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
 - `id` (String) Unique environment id (guid)
@@ -74,6 +76,8 @@ Read-Only:
 
 Read-Only:
 
+- `administration_mode_enabled` (Boolean) Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information.
+- `background_operation_enabled` (Boolean) Background operation status for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information.
 - `currency_code` (String) Unique currency name (EUR, USE, GBP etc.)
 - `domain` (String) Domain name of the environment
 - `language_code` (Number) Unique language LCID (integer)

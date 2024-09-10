@@ -8,8 +8,10 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
@@ -96,6 +98,9 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, _ datasource.Schema
 						"cadence": schema.StringAttribute{
 							MarkdownDescription: "Cadence of updates for the environment (Frequent, Moderate)",
 							Computed:            true,
+							Validators: []validator.String{
+								stringvalidator.OneOf("Frequent", "Moderate"),
+							},
 						},
 						"billing_policy_id": &schema.StringAttribute{
 							Description:         "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",

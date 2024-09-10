@@ -28,6 +28,8 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				Config: constants.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
+					description                               = "aaaa"
+					cadence								   	  = "Moderate"
 					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					dataverse = {
@@ -43,6 +45,8 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
 
 					// Verify the first power app to ensure all attributes are set
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "aaaa"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "cadence", "Moderate"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", mocks.TestName()),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", domainName),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
@@ -59,6 +63,8 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				Config: constants.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
+					description                               = "bbbb"
+					cadence								      = "Frequent"
 					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					dataverse = {
@@ -70,6 +76,8 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "bbbb"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "cadence", "Frequent"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", newDomaimName),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+newDomaimName+".crm.dynamics.com/"),
 				),
@@ -864,6 +872,8 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 				Config: constants.TestsUnitProviderConfig + `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
+					description                               = "description"
+					cadence								      = "Frequent"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 				}`,
@@ -871,6 +881,8 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "displayname"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "description"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "cadence", "Frequent"),
 
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
@@ -950,8 +962,8 @@ func TestAccEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *te
 						location                                  = "unitedstates"
 						environment_type                          = "Sandbox"
 					}`,
-
-				Check: resource.ComposeTestCheckFunc(),
+				ExpectError: regexp.MustCompile("Cannot remove dataverse from environment"),
+				Check:       resource.ComposeTestCheckFunc(),
 			},
 		},
 	})
@@ -1033,8 +1045,8 @@ func TestUnitEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *t
 						location                                  = "europe"
 						environment_type                          = "Sandbox"
 					}`,
-
-				Check: resource.ComposeTestCheckFunc(),
+				ExpectError: regexp.MustCompile("Cannot remove dataverse from environment"),
+				Check:       resource.ComposeTestCheckFunc(),
 			},
 		},
 	})
@@ -1325,6 +1337,109 @@ func TestUnitEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "azure_region", "westeurope"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_Enable_Admin_Mode(t *testing.T) {
+
+	t.Setenv("TF_ACC", "1")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: constants.TestsAcceptanceProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_type", regexp.MustCompile(`^(Default|Sandbox|Developer)$`)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.language_code", "1033"),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.organization_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", regexp.MustCompile(helpers.GuidOrEmptyValueRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "unitedstates"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", mocks.TestName()),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.version", regexp.MustCompile(helpers.VersionRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
+				),
+			},
+			{
+				Config: constants.TestsAcceptanceProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+						administration_mode_enabled 			 = true
+						background_operation_enabled		     = false
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.administration_mode_enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.background_operation_enabled", "false"),
+				),
+			},
+			{
+				Config: constants.TestsAcceptanceProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+						administration_mode_enabled 			 = true
+						background_operation_enabled		     = true
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.administration_mode_enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.background_operation_enabled", "true"),
+				),
+			},
+			{
+				Config: constants.TestsAcceptanceProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+						administration_mode_enabled 			 = false
+						background_operation_enabled		     = true
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.administration_mode_enabled", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.background_operation_enabled", "true"),
 				),
 			},
 		},

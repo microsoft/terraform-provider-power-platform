@@ -25,7 +25,7 @@ func (d *requireReplaceObjectToEmptyModifier) MarkdownDescription(ctx context.Co
 }
 
 func (d *requireReplaceObjectToEmptyModifier) PlanModifyObject(ctx context.Context, req planmodifier.ObjectRequest, resp *planmodifier.ObjectResponse) {
-	if req.PlanValue.IsNull() || req.PlanValue.IsUnknown() {
+	if req.PlanValue.IsNull() {
 		resp.RequiresReplace = true
 	}
 }

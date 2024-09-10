@@ -23,9 +23,11 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 				Config: constants.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name     = "` + mocks.TestName() + `"
+					description      = "example description"
 					location         = "europe"
 					azure_region     = "northeurope"
 					environment_type = "Sandbox"
+					cadence = "Moderate"
 					dataverse = {
 						language_code     = "1033"
 						currency_code     = "USD"
@@ -42,6 +44,8 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
 					// Verify the first power app to ensure all attributes are set
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.cadence", "Moderate"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.description", "example description"),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.display_name", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.domain", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.id", regexp.MustCompile(helpers.GuidRegex)),
@@ -94,6 +98,8 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.#", "2"),
 
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.cadence", "Moderate"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.description", "aaa"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.display_name", "Admin AdminOnMicrosoft's Environment"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.domain", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.id", "00000000-0000-0000-0000-000000000001"),
@@ -113,6 +119,8 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.templates"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.template_metadata"),
 
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.cadence", "Frequent"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.description", "bbb"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.display_name", "displayname"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.id", "00000000-0000-0000-0000-000000000002"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.environment_type", "Sandbox"),
