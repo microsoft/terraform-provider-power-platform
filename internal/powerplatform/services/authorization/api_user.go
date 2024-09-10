@@ -36,13 +36,13 @@ func (client *UserClient) DataverseExists(ctx context.Context, environmentId str
 }
 
 func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([]UserDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers",
 	}
 	userArray := UserDtoArray{}
@@ -54,13 +54,13 @@ func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([
 }
 
 func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environmentId, systemUserId string) (*UserDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
 	}
 	values := url.Values{}
@@ -80,13 +80,13 @@ func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environment
 }
 
 func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentId, aadObjectId string) (*UserDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers",
 	}
 	values := url.Values{}
@@ -149,13 +149,13 @@ func (client *UserClient) CreateUser(ctx context.Context, environmentId, aadObje
 }
 
 func (client *UserClient) UpdateUser(ctx context.Context, environmentId, systemUserId string, userUpdate *UserDto) (*UserDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
 	}
 
@@ -172,13 +172,13 @@ func (client *UserClient) UpdateUser(ctx context.Context, environmentId, systemU
 }
 
 func (client *UserClient) DeleteUser(ctx context.Context, environmentId, systemUserId string) error {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return err
 	}
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
 	}
 
@@ -190,7 +190,7 @@ func (client *UserClient) DeleteUser(ctx context.Context, environmentId, systemU
 }
 
 func (client *UserClient) RemoveSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*UserDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
@@ -198,11 +198,11 @@ func (client *UserClient) RemoveSecurityRoles(ctx context.Context, environmentId
 	for _, roleId := range securityRolesIds {
 		apiUrl := &url.URL{
 			Scheme: "https",
-			Host:   strings.TrimPrefix(environmentUrl, "https://"),
+			Host:   environmentHost,
 			Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")/systemuserroles_association/$ref",
 		}
 		values := url.Values{}
-		values.Add("$id", fmt.Sprintf("%s/api/data/v9.2/roles(%s)", environmentUrl, roleId))
+		values.Add("$id", fmt.Sprintf("https://%s/api/data/v9.2/roles(%s)", environmentHost, roleId))
 		apiUrl.RawQuery = values.Encode()
 
 		_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
@@ -219,19 +219,19 @@ func (client *UserClient) RemoveSecurityRoles(ctx context.Context, environmentId
 }
 
 func (client *UserClient) AddSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*UserDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")/systemuserroles_association/$ref",
 	}
 
 	for _, roleId := range securityRolesIds {
 		roleToassociate := map[string]interface{}{
-			"@odata.id": fmt.Sprintf("%s/api/data/v9.2/roles(%s)", environmentUrl, roleId),
+			"@odata.id": fmt.Sprintf("https://%s/api/data/v9.2/roles(%s)", environmentHost, roleId),
 		}
 		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, roleToassociate, []int{http.StatusNoContent}, nil)
 		if err != nil {
@@ -245,7 +245,7 @@ func (client *UserClient) AddSecurityRoles(ctx context.Context, environmentId, s
 	return user, nil
 }
 
-func (client *UserClient) GetEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {
+func (client *UserClient) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return "", err
@@ -254,7 +254,11 @@ func (client *UserClient) GetEnvironmentUrlById(ctx context.Context, environment
 	if environmentUrl == "" {
 		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
-	return environmentUrl, nil
+	url, err := url.Parse(environmentUrl)
+	if err != nil {
+		return "", err
+	}
+	return url.Host, nil
 }
 
 func (client *UserClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
@@ -281,13 +285,13 @@ func (client *UserClient) getEnvironment(ctx context.Context, environmentId stri
 }
 
 func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId, businessUnitId string) ([]SecurityRoleDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   "/api/data/v9.2/roles",
 	}
 	if businessUnitId != "" {
