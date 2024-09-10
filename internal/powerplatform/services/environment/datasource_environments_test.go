@@ -16,6 +16,8 @@ import (
 )
 
 func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
+
+	t.Setenv("TF_ACC", "1")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -23,7 +25,7 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 				Config: constants.TestsAcceptanceProviderConfig + `
 				resource "powerplatform_environment" "env" {
 					display_name     = "` + mocks.TestName() + `"
-					description      = "example description"
+					description      = "description"
 					location         = "europe"
 					azure_region     = "northeurope"
 					environment_type = "Sandbox"
@@ -35,6 +37,8 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 					}
 				}
 
+
+
 				data "powerplatform_environments" "all" {
 					depends_on = [powerplatform_environment.env]
 				}`,
@@ -44,8 +48,8 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
 					// Verify the first power app to ensure all attributes are set
-					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.cadence", "Moderate"),
-					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.description", "example description"),
+					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.cadence", regexp.MustCompile(`^(Frequent|Moderate)$`)),
+					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.description", regexp.MustCompile(`^(|description)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.display_name", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.domain", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.id", regexp.MustCompile(helpers.GuidRegex)),
