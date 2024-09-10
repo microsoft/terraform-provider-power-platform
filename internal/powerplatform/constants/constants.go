@@ -114,7 +114,6 @@ provider "powerplatform" {
 	//to run acceptance tests locally use environemnt variables or add `usecli=true` in the provider block
 	TestsAcceptanceProviderConfig = `
 provider "powerplatform" {
-	use_cli = true
 }
 `
 )
