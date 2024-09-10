@@ -97,7 +97,6 @@ const (
 )
 
 const (
-	DEFAULT_REQUEST_TIMEOUT_IN_MINUTES            = 30 * time.Minute
 	DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES = 20 * time.Minute
 )
 
@@ -115,6 +114,7 @@ provider "powerplatform" {
 	//to run acceptance tests locally use environemnt variables or add `usecli=true` in the provider block
 	TestsAcceptanceProviderConfig = `
 provider "powerplatform" {
+	use_cli = true
 }
 `
 )

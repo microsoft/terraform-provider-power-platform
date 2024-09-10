@@ -58,7 +58,7 @@ func (client *SolutionClient) GetSolutionUniqueName(ctx context.Context, environ
 		return nil, err
 	}
 	if len(solutions.Value) == 0 {
-		return nil, fmt.Errorf("solution with unique name '%s' not found", name)
+		return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("solution with unique name '%s' not found", name))
 	}
 
 	solutions.Value[0].EnvironmentId = environmentId
@@ -88,7 +88,7 @@ func (client *SolutionClient) GetSolutionById(ctx context.Context, environmentId
 		return nil, err
 	}
 	if len(solutions.Value) == 0 {
-		return nil, fmt.Errorf("solution with id '%s' not found", solutionId)
+		return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("solution with id '%s' not found", solutionId))
 	}
 
 	solutions.Value[0].EnvironmentId = environmentId
@@ -168,7 +168,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	//import solution
-	solutionComponents, err := client.createSolutionComponentParameters(ctx, settings)
+	solutionComponents, err := client.createSolutionComponentParameters(settings)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 }
 
-func (client *SolutionClient) createSolutionComponentParameters(ctx context.Context, settings []byte) ([]interface{}, error) {
+func (client *SolutionClient) createSolutionComponentParameters(settings []byte) ([]interface{}, error) {
 	if len(settings) == 0 {
 		return nil, nil
 	}

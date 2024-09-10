@@ -118,7 +118,6 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
-					modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
 				},
 			},
 			"is_managed": schema.BoolAttribute{
@@ -127,7 +126,6 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Computed:            true,
 				PlanModifiers: []planmodifier.Bool{
 					modifiers.SetBoolValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
-					modifiers.SetBoolValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
 				},
 			},
 			"solution_version": schema.StringAttribute{
@@ -135,7 +133,6 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 				Description:         "Version of the solution",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
-					modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
 					modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
 				},
 			},
@@ -241,7 +238,7 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	solutionId := strings.Split(state.Id.ValueString(), "_")[1]
+	solutionId := getSolutionId(state.Id.ValueString())
 	solution, err := r.SolutionClient.GetSolutionById(ctx, state.EnvironmentId.ValueString(), solutionId)
 	if err != nil {
 		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
@@ -393,7 +390,7 @@ func (r *SolutionResource) Delete(ctx context.Context, req resource.DeleteReques
 	defer cancel()
 
 	if !state.EnvironmentId.IsNull() && !state.Id.IsNull() {
-		solutionId := strings.Split(state.Id.ValueString(), "_")[1]
+		solutionId := getSolutionId(state.Id.ValueString())
 		err := r.SolutionClient.DeleteSolution(ctx, state.EnvironmentId.ValueString(), solutionId)
 
 		if err != nil {
@@ -407,4 +404,9 @@ func (r *SolutionResource) Delete(ctx context.Context, req resource.DeleteReques
 
 func (r *SolutionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func getSolutionId(id string) string {
+	split := strings.Split(id, "_")
+	return split[len(split)-1]
 }
