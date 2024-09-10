@@ -74,6 +74,7 @@ func TestUnitEnvirionmentGroupResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_group.test_env_group", "display_name", "test_env_group"),
 					resource.TestCheckResourceAttr("powerplatform_environment_group.test_env_group", "description", "test env group"),
 					resource.TestCheckResourceAttrSet("powerplatform_environment_group.test_env_group", "id"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group.test_env_group", "id", "00000000-0000-0000-0000-000000000001"),
 				),
 			},
 		},
