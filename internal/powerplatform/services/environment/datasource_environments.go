@@ -112,6 +112,11 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, _ datasource.Schema
 							Description:         "Dataverse environment details",
 							Computed:            true,
 							Attributes: map[string]schema.Attribute{
+								"environment_group_id": schema.StringAttribute{
+									MarkdownDescription: "Unique environment group id (guid) that the environment belongs to. Empty value and `00000000-0000-0000-0000-000000000000` are considered as no environment group.",
+									Computed:            true,
+									Optional:            true,
+								},
 								"administration_mode_enabled": schema.BoolAttribute{
 									MarkdownDescription: "Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
 									Computed:            true,

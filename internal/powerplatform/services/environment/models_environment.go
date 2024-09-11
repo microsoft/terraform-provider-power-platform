@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 var (
@@ -41,6 +42,11 @@ type EnvironmentPropertiesDto struct {
 	ProvisioningState         string                        `json:"provisioningState,omitempty"`
 	Description               string                        `json:"description,omitempty"`
 	UpdateCadence             *UpdateCadenceDto             `json:"updateCadence,omitempty"`
+	ParentEnvironmentGroup    *ParentEnvironmentGroupDto    `json:"parentEnvironmentGroup,omitempty"`
+}
+
+type ParentEnvironmentGroupDto struct {
+	Id string `json:"id"`
 }
 
 type UpdateCadenceDto struct {
@@ -232,6 +238,7 @@ type DataverseSourceModel struct {
 	TemplateMetadata    types.String `tfsdk:"template_metadata"`
 	AdministrationMode  types.Bool   `tfsdk:"administration_mode_enabled"`
 	BackgroundOperation types.Bool   `tfsdk:"background_operation_enabled"`
+	EnvironmentGroupId  types.String `tfsdk:"environment_group_id"`
 }
 
 func ConvertUpdateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource EnvironmentSourceModel) (*EnvironmentDto, error) {
@@ -388,6 +395,7 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		"template_metadata":            types.StringType,
 		"administration_mode_enabled":  types.BoolType,
 		"background_operation_enabled": types.BoolType,
+		"environment_group_id":         types.StringType,
 	}
 
 	attrValuesProductProperties := map[string]attr.Value{}
@@ -419,6 +427,15 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 			attrValuesProductProperties["background_operation_enabled"] = types.BoolValue(true)
 		} else {
 			attrValuesProductProperties["background_operation_enabled"] = types.BoolValue(false)
+		}
+		if environmentDto.Properties.ParentEnvironmentGroup != nil {
+			if environmentDto.Properties.ParentEnvironmentGroup.Id == "" {
+				attrValuesProductProperties["environment_group_id"] = types.StringValue(constants.ZERO_UUID)
+			} else {
+				attrValuesProductProperties["environment_group_id"] = types.StringValue(environmentDto.Properties.ParentEnvironmentGroup.Id)
+			}
+		} else {
+			attrValuesProductProperties["environment_group_id"] = types.StringNull()
 		}
 
 		if currencyCode != nil && *currencyCode != "" {
@@ -473,6 +490,7 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["templates"] = types.ListNull(types.StringType)
 		attrValuesProductProperties["background_operation_enabled"] = types.BoolNull()
 		attrValuesProductProperties["administration_mode_enabled"] = types.BoolNull()
+		attrValuesProductProperties["environment_group_id"] = types.StringNull()
 	}
 	return model, nil
 }

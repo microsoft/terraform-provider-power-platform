@@ -122,6 +122,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.linked_app_url"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.templates"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.template_metadata"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.environment_group_id", "00000000-0000-0000-0000-000000000001"),
 
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.cadence", "Frequent"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.description", "bbb"),
@@ -138,6 +139,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.dataverse.url"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.dataverse.version"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.dataverse.currency_code"),
+					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.dataverse.environment_group_id"),
 				),
 			},
 		},

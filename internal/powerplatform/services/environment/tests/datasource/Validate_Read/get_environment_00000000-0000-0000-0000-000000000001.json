@@ -9,6 +9,9 @@
         "displayName": "displayname",
         "description": "aaa",
         "createdTime": "2023-09-27T07:08:27.6057592Z",
+        "parentEnvironmentGroup": {
+            "id": "00000000-0000-0000-0000-000000000001"
+        },
         "createdBy": {
             "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
             "displayName": "admin",

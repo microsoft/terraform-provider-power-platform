@@ -11,6 +11,9 @@
                 "displayName": "Admin AdminOnMicrosoft's Environment",
                 "description": "aaa",
                 "createdTime": "2023-02-15T08:02:36.1799125Z",
+                "parentEnvironmentGroup": {
+                    "id": "00000000-0000-0000-0000-000000000001"
+                },
                 "createdBy": {
                     "id": "SYSTEM",
                     "displayName": "SYSTEM",
