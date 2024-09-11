@@ -67,17 +67,17 @@ func TestUnitConnectionsResource_Validate_Create(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	httpmock.RegisterRegexpResponder("PUT", regexp.MustCompile(`https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1`),
+	httpmock.RegisterRegexpResponder("PUT", regexp.MustCompile(`^https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1$`),
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/connections/Validate_Create/put_connection.json").String()), nil
 		})
 
-	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1`),
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1$`),
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/connections/Validate_Create/put_connection.json").String()), nil
 		})
 
-	httpmock.RegisterRegexpResponder("DELETE", regexp.MustCompile(`https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1`),
+	httpmock.RegisterRegexpResponder("DELETE", regexp.MustCompile(`^https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1$`),
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})

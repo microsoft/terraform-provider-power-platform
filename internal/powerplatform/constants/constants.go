@@ -3,9 +3,7 @@
 
 package constants
 
-import (
-	"time"
-)
+import "time"
 
 // Cloud	BAPI	Power Apps API	Power Platform API	OAuth Authority
 // public	api.bap.microsoft.com	api.powerapps.com	api.powerplatform.com	login.microsoftonline.com

@@ -3,7 +3,7 @@
 The Power Platform Terraform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
 > [!WARNING]
-> This code is experimental and provided solely for evaluation purposes. It is **NOT** intended for production use and may contain bugs, incomplete features, or other issues. Use at your own risk, as it may undergo significant changes without notice, and no guarantees or support are provided. By using this code, you acknowledge and agree to these conditions. Consult the documentation or contact the maintainer if you have questions or concerns.
+> This code is made available as a public preview. Features are being actively developed and may have restricted or limited functionality. You can test and use this code in production environments and scenarios, and provide feedback. Future updates may introduce breaking changes, but we follow [Semantic Versioning](https://semver.org/) to help mitigate this. The software may contain bugs, errors, or other issues that could cause service interruption or data loss. We recommend backing up your data and testing in non-production environments before using this software in production. Your feedback is valuable to us, so please share any issues or suggestions you encounter via GitHub issues.
 
 ## Using the Provider
 
