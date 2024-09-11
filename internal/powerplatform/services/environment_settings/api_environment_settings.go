@@ -34,14 +34,14 @@ func (client *EnvironmentSettingsClient) DataverseExists(ctx context.Context, en
 }
 
 func (client *EnvironmentSettingsClient) GetEnvironmentSettings(ctx context.Context, environmentId string) (*EnvironmentSettingsDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   "/api/data/v9.0/organizations",
 	}
 
@@ -54,7 +54,7 @@ func (client *EnvironmentSettingsClient) GetEnvironmentSettings(ctx context.Cont
 }
 
 func (client *EnvironmentSettingsClient) UpdateEnvironmentSettings(ctx context.Context, environmentId string, environmentSettings EnvironmentSettingsDto) (*EnvironmentSettingsDto, error) {
-	environmentUrl, err := client.GetEnvironmentUrlById(ctx, environmentId)
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (client *EnvironmentSettingsClient) UpdateEnvironmentSettings(ctx context.C
 
 	apiUrl := &url.URL{
 		Scheme: "https",
-		Host:   strings.TrimPrefix(environmentUrl, "https://"),
+		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.0/organizations(%s)", *settings.OrganizationId),
 	}
 
@@ -78,7 +78,7 @@ func (client *EnvironmentSettingsClient) UpdateEnvironmentSettings(ctx context.C
 	return client.GetEnvironmentSettings(ctx, environmentId)
 }
 
-func (client *EnvironmentSettingsClient) GetEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {
+func (client *EnvironmentSettingsClient) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return "", err
@@ -87,11 +87,15 @@ func (client *EnvironmentSettingsClient) GetEnvironmentUrlById(ctx context.Conte
 	if environmentUrl == "" {
 		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
-	return environmentUrl, nil
+
+	url, err := url.Parse(environmentUrl)
+	if err != nil {
+		return "", err
+	}
+	return url.Host, nil
 }
 
 func (client *EnvironmentSettingsClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
-
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.Api.GetConfig().Urls.BapiUrl,

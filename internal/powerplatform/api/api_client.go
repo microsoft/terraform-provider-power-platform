@@ -131,7 +131,7 @@ func (client *ApiClient) Execute(ctx context.Context, method, url string, header
 		if response.Response.StatusCode != http.StatusUnauthorized &&
 			response.Response.StatusCode != http.StatusGatewayTimeout &&
 			response.Response.StatusCode != http.StatusTooManyRequests &&
-			response.Response.StatusCode != http.StatusServiceUnavailable && 
+			response.Response.StatusCode != http.StatusServiceUnavailable &&
 			response.Response.StatusCode != http.StatusBadGateway {
 			return response, err
 		}
