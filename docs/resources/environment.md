@@ -91,6 +91,8 @@ Read-Only:
 - `url` (String) Url of the environment
 - `version` (String) Version of the environment
 
+
+<a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`
 
 Optional:
@@ -105,6 +107,6 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
-# Environment resource can be imported using the environment id id, e.g.
+# Environment resource can be imported using the environment id (replace with a real environment guid)
 terraform import powerplatform_environment.example 00000000-0000-0000-0000-000000000000
 ```

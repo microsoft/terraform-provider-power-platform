@@ -240,6 +240,8 @@ Required:
 - `endpoint` (String) Endpoint of the endpoint rule
 - `order` (Number) Order of the endpoint rule
 
+
+
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`
 
@@ -255,6 +257,6 @@ Optional:
 Import is supported using the following syntax:
 
 ```shell
-# DLP Policies can be imported using the DLP policy id
+# DLP Policies can be imported using the DLP policy id (replace with a real DLP Policy guid)
 terraform import powerplatform_data_loss_prevention_policy.example_dlp 00000000-0000-0000-0000-000000000000
 ```

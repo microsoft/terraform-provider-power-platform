@@ -1,6 +1,6 @@
 ---
 page_title: "Importing existing Power Platform resources"
-subcategory: "Use Cases"
+subcategory: "Guides"
 description: |-
   <no value>
 ---
