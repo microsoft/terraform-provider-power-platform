@@ -1,5 +1,0 @@
-site_name: Power Platform Terraform Provider
-repo_url: https://github.com/microsoft/terraform-provider-power-platform
-theme:
-  name: readthedocs
-  highlightjs: true
