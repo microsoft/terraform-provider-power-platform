@@ -43,6 +43,10 @@ func TestAccConnectionsShareResource_Validate_Create(t *testing.T) {
 				}
 
 				resource "random_password" "passwords" {
+				 	min_lower = 1
+					min_upper        = 1
+					min_numeric      = 1
+					min_special      = 1
 					length           = 16
 					special          = true
 					override_special = "_%@"
