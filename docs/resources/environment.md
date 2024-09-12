@@ -20,8 +20,6 @@ A Power Platform environment is a space in which you can store, manage, and shar
 
 ## Example Usage
 
-
-
 ```terraform
 terraform {
   required_providers {
@@ -104,5 +102,11 @@ Optional:
 - `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
 - `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
 
+## Import
 
+Import is supported using the following syntax:
 
+```shell
+# Environment resource can be imported using the environment id (replace with a real environment guid)
+terraform import powerplatform_environment.example 00000000-0000-0000-0000-000000000000
+```
