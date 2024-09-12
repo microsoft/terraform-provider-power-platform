@@ -74,6 +74,10 @@ Read-Only:
 <a id="nestedatt--environments--dataverse"></a>
 ### Nested Schema for `environments.dataverse`
 
+Optional:
+
+- `environment_group_id` (String) Unique environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.
+
 Read-Only:
 
 - `administration_mode_enabled` (Boolean) Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information.

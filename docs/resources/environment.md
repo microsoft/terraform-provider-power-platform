@@ -43,10 +43,13 @@ resource "powerplatform_environment" "development" {
   environment_type = "Sandbox"
   cadence          = "Moderate"
   dataverse = {
-    language_code     = "1033"
-    currency_code     = "USD"
-    domain            = "mydomain"
-    security_group_id = "00000000-0000-0000-0000-000000000000"
+    language_code                = "1033"
+    currency_code                = "USD"
+    domain                       = "mydomain"
+    security_group_id            = "00000000-0000-0000-0000-000000000000"
+    environment_group_id         = "00000000-0000-0000-0000-000000000000"
+    administration_mode_enabled  = false
+    background_operation_enabled = true
   }
 }
 ```
@@ -87,6 +90,7 @@ Optional:
 - `administration_mode_enabled` (Boolean) Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information.
 - `background_operation_enabled` (Boolean) Indicates if background operation is enabled
 - `domain` (String) Domain name of the environment
+- `environment_group_id` (String) Unique environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.
 - `template_metadata` (String) Additional D365 environment template metadata (if any)
 - `templates` (List of String) The selected instance provisioning template (if any)
 
