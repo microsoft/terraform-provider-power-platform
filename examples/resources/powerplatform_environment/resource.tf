@@ -18,10 +18,13 @@ resource "powerplatform_environment" "development" {
   environment_type = "Sandbox"
   cadence          = "Moderate"
   dataverse = {
-    language_code     = "1033"
-    currency_code     = "USD"
-    domain            = "mydomain"
-    security_group_id = "00000000-0000-0000-0000-000000000000"
+    language_code                = "1033"
+    currency_code                = "USD"
+    domain                       = "mydomain"
+    security_group_id            = "00000000-0000-0000-0000-000000000000"
+    environment_group_id         = "00000000-0000-0000-0000-000000000000"
+    administration_mode_enabled  = false
+    background_operation_enabled = true
   }
 }
 

@@ -32,7 +32,6 @@ func (client *ConnectionsClient) BuildHostUri(environmentId string) string {
 	envId = envId[:len(envId)-2]
 
 	return fmt.Sprintf("%s.%s.environment.%s", envId, realm, client.Api.GetConfig().Urls.PowerPlatformUrl)
-
 }
 
 func (client *ConnectionsClient) CreateConnection(ctx context.Context, environmentId, connectorName string, connectionToCreate ConnectionToCreateDto) (*ConnectionDto, error) {

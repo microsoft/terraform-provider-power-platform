@@ -113,7 +113,7 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, _ datasource.Schema
 							Computed:            true,
 							Attributes: map[string]schema.Attribute{
 								"environment_group_id": schema.StringAttribute{
-									MarkdownDescription: "Unique environment group id (guid) that the environment belongs to. Empty value and `00000000-0000-0000-0000-000000000000` are considered as no environment group.",
+									MarkdownDescription: "Unique environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.",
 									Computed:            true,
 									Optional:            true,
 								},

@@ -128,6 +128,11 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 					modifiers.RequireReplaceObjectToEmptyModifier(),
 				},
 				Attributes: map[string]schema.Attribute{
+					"environment_group_id": schema.StringAttribute{
+						MarkdownDescription: "Unique environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.",
+						Computed:            true,
+						Optional:            true,
+					},
 					"administration_mode_enabled": schema.BoolAttribute{
 						MarkdownDescription: "Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
 						Optional:            true,
@@ -372,7 +377,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	var templateMetadata *EnvironmentCreateTemplateMetadata = nil
 	var templates []string = nil
 	if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
-		dv, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
+		dv, _, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
 		if err != nil {
 			resp.Diagnostics.AddError("Error when converting dataverse source model to create link environment metadata", err.Error())
 			return
@@ -381,6 +386,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 			templateMetadata = dv.TemplateMetadata
 			templates = dv.Templates
 		}
+
 	}
 	newState, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, state.Timeouts)
 	if err != nil {
@@ -486,6 +492,23 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 			}
 		}
 
+		if !dataverseSourcePlanModel.EnvironmentGroupId.IsNull() && !dataverseSourcePlanModel.EnvironmentGroupId.IsUnknown() {
+			envGroupId := constants.ZERO_UUID
+			if dataverseSourcePlanModel.EnvironmentGroupId.ValueString() != "" && dataverseSourcePlanModel.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
+				envGroupId = dataverseSourcePlanModel.EnvironmentGroupId.ValueString()
+			}
+			environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
+				Id: envGroupId,
+			}
+			///
+			// err := r.EnvironmentClient.AddEnvironmentToEnvironmentGroup(ctx, plan.Id.ValueString(), envGroupId)
+			// if err != nil {
+			// 	resp.Diagnostics.AddError(fmt.Sprintf("Error when adding environment %s to environment group %s", plan.Id.ValueString(), envGroupId), err.Error())
+			// 	return
+			// }
+			///
+		}
+
 		var dataverseSourceStateModel DataverseSourceModel
 		state.Dataverse.As(ctx, &dataverseSourceStateModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
@@ -505,7 +528,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		// trying to create dataverse environment
 	} else if IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
 
-		linkedMetadataDto, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, plan.Dataverse)
+		linkedMetadataDto, envGroup, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, plan.Dataverse)
 		if err != nil {
 			resp.Diagnostics.AddError("Error when converting dataverse source model to create link environment metadata dto", err.Error())
 			return
@@ -516,7 +539,19 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 			resp.Diagnostics.AddError(fmt.Sprintf("Error when adding dataverse to environment %s", plan.Id.ValueString()), err.Error())
 			return
 		}
+
+		// err = r.EnvironmentClient.AddEnvironmentToEnvironmentGroup(ctx, plan.Id.ValueString(), envGroup.Id)
+		// if err != nil {
+		// 	resp.Diagnostics.AddError(fmt.Sprintf("Error when adding environment %s to environment group %s", plan.Id.ValueString(), envGroup.Id), err.Error())
+		// 	return
+		// }
+		if envGroup != nil {
+			environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
+				Id: envGroup.Id,
+			}
+		}
 		currencyCode = linkedMetadataDto.Currency.Code
+
 	}
 
 	if !state.BillingPolicyId.IsNull() &&
@@ -552,7 +587,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	var templateMetadata *EnvironmentCreateTemplateMetadata = nil
 	var templates []string = nil
 	if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
-		dv, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
+		dv, _, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
 		if err != nil {
 			resp.Diagnostics.AddError("Error when converting dataverse source model to create link environment metadata", err.Error())
 			return
