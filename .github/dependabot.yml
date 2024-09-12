@@ -11,43 +11,19 @@ updates:
       interval: "daily"
   - package-ecosystem: "terraform" # See documentation for possible values
     directories: # Location of terraform modules
-    # Workaround for not having glob support yet.  Uncommment globs and remove individual paths when available. https://github.blog/changelog/2024-04-29-dependabot-multi-directory-configuration-public-beta-now-available/
-    # - "/examples/resources/*"
-    # - "/examples/data-sources/*"
-    - "/examples/resources/powerplatform_billing_policy" 
-    - "/examples/resources/powerplatform_billing_policy_environment"
-    - "/examples/resources/powerplatform_data_loss_prevention_policy"
-    - "/examples/resources/powerplatform_environment"
-    - "/examples/resources/powerplatform_environment_application_packages"
-    - "/examples/resources/powerplatform_environment_settings"
-    - "/examples/resources/powerplatform_managed_environment"
-    - "/examples/resources/powerplatform_solution"
-    - "/examples/resources/powerplatform_tenant_settings"
-    - "/examples/resources/powerplatform_user"
-    - "/examples/data-sources/powerplatform_billing_policies"
-    - "/examples/data-sources/powerplatform_billing_policies_environments"
-    - "/examples/data-sources/powerplatform_connectors"
-    - "/examples/data-sources/powerplatform_currencies"
-    - "/examples/data-sources/powerplatform_environment_application_packages"
-    - "/examples/data-sources/powerplatform_environment_powerapps"
-    - "/examples/data-sources/powerplatform_environment_settings"
-    - "/examples/data-sources/powerplatform_environment_templates"
-    - "/examples/data-sources/powerplatform_environments"
-    - "/examples/data-sources/powerplatform_languages"
-    - "/examples/data-sources/powerplatform_locations"
-    - "/examples/data-sources/powerplatform_policies"
-    - "/examples/data-sources/powerplatform_securityroles"
-    - "/examples/data-sources/powerplatform_solutions"
-    - "/examples/data-sources/powerplatform_tenant_application_packages"
-    - "/examples/data-sources/powerplatform_tenant_settings"
+    - "/examples/resources/*"
+    - "/examples/data-sources/*"
     schedule:
       interval: "daily"
+    groups:
+      all:
+        patterns: ["*"]
+
   - package-ecosystem: "github-actions" # See documentation for possible values
     directory: "/.github/workflows" # Location of package manifests
     schedule:
       interval: "daily"
-
-  - package-ecosystem: github-actions
-    directory: /
+  - package-ecosystem: "devcontainers" # See documentation for possible values
+    directory: "/"
     schedule:
-      interval: daily
+      interval: "daily"
