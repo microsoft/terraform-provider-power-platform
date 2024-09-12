@@ -962,8 +962,7 @@ func TestAccEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *te
 						location                                  = "unitedstates"
 						environment_type                          = "Sandbox"
 					}`,
-				ExpectError: regexp.MustCompile("Cannot remove dataverse from environment"),
-				Check:       resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(),
 			},
 		},
 	})
@@ -1045,8 +1044,7 @@ func TestUnitEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *t
 						location                                  = "europe"
 						environment_type                          = "Sandbox"
 					}`,
-				ExpectError: regexp.MustCompile("Cannot remove dataverse from environment"),
-				Check:       resource.ComposeTestCheckFunc(),
+				Check: resource.ComposeTestCheckFunc(),
 			},
 		},
 	})

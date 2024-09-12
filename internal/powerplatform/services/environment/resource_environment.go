@@ -451,12 +451,8 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	defer cancel()
 
 	var currencyCode string
-	// trying to delete dataverse environment
-	if !IsDataverseEnvironmentEmpty(ctx, state) && IsDataverseEnvironmentEmpty(ctx, plan) {
-		resp.Diagnostics.AddError("Cannot remove dataverse from environment", "Cannot remove dataverse from environment")
-		return
-		// trying to update dataverse environment
-	} else if !IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
+	// trying to update dataverse environment
+	if !IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
 
 		var dataverseSourcePlanModel DataverseSourceModel
 		plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
