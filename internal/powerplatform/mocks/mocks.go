@@ -17,14 +17,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
-var TestUnitTestProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"powerplatform": providerserver.NewProtocol6WithError(provider.NewPowerPlatformProvider(context.Background(), true)()),
-}
-
-var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"powerplatform": providerserver.NewProtocol6WithError(provider.NewPowerPlatformProvider(context.Background(), false)()),
-}
-
 func TestName() string {
 	pc, _, _, _ := runtime.Caller(1)
 	nameFull := runtime.FuncForPC(pc).Name()
@@ -35,6 +27,14 @@ func TestName() string {
 
 func TestsEntraLicesingGroupName() string {
 	return "pptestusers"
+}
+
+var TestUnitTestProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"powerplatform": providerserver.NewProtocol6WithError(provider.NewPowerPlatformProvider(context.Background(), true)()),
+}
+
+var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
+	"powerplatform": providerserver.NewProtocol6WithError(provider.NewPowerPlatformProvider(context.Background(), false)()),
 }
 
 func ActivateEnvironmentHttpMocks() {
@@ -56,12 +56,12 @@ func ActivateEnvironmentHttpMocks() {
 					}]}`), nil
 		})
 
-	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/locations/(europe|unitedstates)/environmentLanguages\?api-version=2023-06-01`),
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/locations/(europe|unitedstates)/environmentLanguages\?api-version=2023-06-01$`),
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("../../services/languages/tests/datasource/Validate_Read/get_languages.json").String()), nil
 		})
 
-	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/locations/(europe|unitedstates)/environmentCurrencies\?api-version=2023-06-01`),
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/locations/(europe|unitedstates)/environmentCurrencies\?api-version=2023-06-01$`),
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("../../services/currencies/tests/datasource/Validate_Read/get_currencies.json").String()), nil
 		})

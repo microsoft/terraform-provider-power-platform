@@ -213,7 +213,7 @@ func languageCodeValidator(client *api.ApiClient, location string, languageCode 
 	return nil
 }
 
-func (client *EnvironmentClient) GetEnvironmentUrlById(ctx context.Context, environmentId string) (string, error) {
+func (client *EnvironmentClient) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.GetEnvironment(ctx, environmentId)
 	if err != nil {
 		return "", err
@@ -222,7 +222,13 @@ func (client *EnvironmentClient) GetEnvironmentUrlById(ctx context.Context, envi
 	if environmentUrl == "" {
 		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
-	return environmentUrl, nil
+
+	url, err := url.Parse(environmentUrl)
+	if err != nil {
+		return "", err
+	}
+	return url.Host, nil
+
 }
 
 func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environmentId string) (*EnvironmentDto, error) {

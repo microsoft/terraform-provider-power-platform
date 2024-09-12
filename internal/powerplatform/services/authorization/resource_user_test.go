@@ -45,6 +45,10 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 				}
 
 				resource "random_password" "passwords" {
+				    min_lower = 1
+					min_upper        = 1
+					min_numeric      = 1
+					min_special      = 1
 					length           = 16
 					special          = true
 					override_special = "_%@"
@@ -222,7 +226,7 @@ func TestUnitUserResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 
 	mocks.ActivateEnvironmentHttpMocks()
 
-	httpmock.RegisterRegexpResponder("POST", regexp.MustCompile(`https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/(00000000-0000-0000-0000-000000000001|00000000-0000-0000-0000-000000000002)/addUser\?api-version=2023-06-01`),
+	httpmock.RegisterRegexpResponder("POST", regexp.MustCompile(`^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/(00000000-0000-0000-0000-000000000001|00000000-0000-0000-0000-000000000002)/addUser\?api-version=2023-06-01$`),
 		func(req *http.Request) (*http.Response, error) {
 			resp := httpmock.NewStringResponse(http.StatusOK, "")
 			return resp, nil
@@ -238,18 +242,18 @@ func TestUnitUserResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_And_Force_Recreate/get_environment_00000000-0000-0000-0000-000000000002.json").String()), nil
 		})
 
-	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`https://(00000000-0000-0000-0000-000000000001|00000000-0000-0000-0000-000000000002)\.crm4\.dynamics\.com/api/data/v9\.2/systemusers\?%24expand=systemuserroles_association%28%24select%3Droleid%2Cname%2Cismanaged%2C_businessunitid_value%29&%24filter=azureactivedirectoryobjectid\+eq\+00000000-0000-0000-0000-000000000002`),
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://(00000000-0000-0000-0000-000000000001|00000000-0000-0000-0000-000000000002)\.crm4\.dynamics\.com/api/data/v9\.2/systemusers\?%24expand=systemuserroles_association%28%24select%3Droleid%2Cname%2Cismanaged%2C_businessunitid_value%29&%24filter=azureactivedirectoryobjectid\+eq\+00000000-0000-0000-0000-000000000002$`),
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_And_Force_Recreate/get_systemusers.json").String()), nil
 		})
 
-	httpmock.RegisterRegexpResponder("POST", regexp.MustCompile(`https://(00000000-0000-0000-0000-000000000001|00000000-0000-0000-0000-000000000002)\.crm4\.dynamics\.com/api/data/v9\.2/systemusers%2800000000-0000-0000-0000-000000000002%29/systemuserroles_association/\$ref`),
+	httpmock.RegisterRegexpResponder("POST", regexp.MustCompile(`^https://(00000000-0000-0000-0000-000000000001|00000000-0000-0000-0000-000000000002)\.crm4\.dynamics\.com/api/data/v9\.2/systemusers%2800000000-0000-0000-0000-000000000002%29/systemuserroles_association/\$ref$`),
 		func(req *http.Request) (*http.Response, error) {
 			resp := httpmock.NewStringResponse(http.StatusNoContent, "")
 			return resp, nil
 		})
 
-	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`https://(00000000-0000-0000-0000-000000000001|00000000-0000-0000-0000-000000000002)\.crm4.dynamics\.com/api/data/v9\.2/systemusers%2800000000-0000-0000-0000-000000000002%29\?%24expand=systemuserroles_association%28%24select%3Droleid%2Cname%2Cismanaged%2C_businessunitid_value%29`),
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://(00000000-0000-0000-0000-000000000001|00000000-0000-0000-0000-000000000002)\.crm4.dynamics\.com/api/data/v9\.2/systemusers%2800000000-0000-0000-0000-000000000002%29\?%24expand=systemuserroles_association%28%24select%3Droleid%2Cname%2Cismanaged%2C_businessunitid_value%29$`),
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_And_Force_Recreate/get_systemuser_00000000-0000-0000-0000-000000000002.json").String()), nil
 		})
