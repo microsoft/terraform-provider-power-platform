@@ -1,63 +1,43 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/debian
 {
-	"name": "Power Platform Terraform Provider Development",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/base:ubuntu22.04",
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	"features": {
-		"ghcr.io/devcontainers/features/azure-cli:1": {
-			"version": "latest"
-		},
-		"ghcr.io/devcontainers/features/terraform:1": {
-			"installSentinel": true,
-			"installTFsec": true,
-			"installTerraformDocs": true,
-			"version": "latest",
-			"tflint": "latest",
-			"terragrunt": "latest"
-		},
-		"ghcr.io/devcontainers/features/go:1": {
-			"version": "1.22.3"
-		},
-		"./features/acceptance_test_dependencies": {},
-		"./features/local_provider_dev": {},
-		"./features/pac": {}
-	},
-	// You can configure your Git Hub account using the following git config commands:
-	//	"postCreateCommand": "git config --global --add safe.directory /workspaces/terraform-provider-power-platform && git config --global user.name 'Your Name' && git config --global user.email 'youremail@example.com'",
-	"postCreateCommand": "git config --global --add safe.directory /workspaces/terraform-provider-power-platform",
-	//	"postAttachCommand": "git config --global diff.tool vscode-diffmerge",
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-	// Configure tool-specific properties.
-	"customizations": {
-		// Configure properties specific to VS Code.
-		"vscode": {
-			// Set *default* container specific settings.json values on container create.
-			"settings": {
-				"editor.formatOnSave": true,
-				"files.insertFinalNewline": true,
-				"[makefile]": {
-					"editor.insertSpaces": false,
-					"editor.detectIndentation": false
-				}
-			},
-			// Add the IDs of extensions you want installed when the container is created.
-			"extensions": [
-				"hashicorp.terraform",
-				"ms-vscode.makefile-tools",
-				"GitHub.copilot",
-				"ms-azuretools.vscode-azureterraform",
-				"DavidAnson.vscode-markdownlint",
-				"GitHub.vscode-github-actions"
-			]
-		}
-	},
-	"runArgs": [
-		"--env-file",
-		".devcontainer/devcontainer.env"
-	]
-	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
-	//"remoteUser": "root"
+  "image": "mcr.microsoft.com/azterraform:latest",
+  "runArgs": [
+    "--cap-add=SYS_PTRACE",
+    "--security-opt",
+    "seccomp=unconfined",
+    "--init",
+    "--network=host"
+  ],
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ],
+  "features": {
+    "./features/local_provider_dev": {}
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "go.toolsManagement.checkForUpdates": "local",
+        "go.useLanguageServer": true,
+        "go.goroot": "/usr/local/go",
+        "editor.formatOnSave": true,
+        "files.insertFinalNewline": true,
+        "[makefile]": {
+          "editor.insertSpaces": false,
+          "editor.detectIndentation": false
+        }
+      },
+      "extensions": [
+        "hashicorp.terraform",
+        "golang.Go",
+        "GitHub.copilot",
+        "DavidAnson.vscode-markdownlint",
+        "GitHub.vscode-github-actions",
+        "ms-vscode.makefile-tools"
+      ]
+    }
+  },
+  "containerEnv": {
+    "TF_LOG": "ERROR",
+    "TF_CLI_CONFIG_FILE": "/workspaces/terraform-provider-power-platform/.terraformrc"
+  }
 }

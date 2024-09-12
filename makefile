@@ -15,11 +15,7 @@ clean:
 	rm -rf /go/bin/terraform-provider-power-platform
 
 userdocs:
-	tfplugindocs generate --provider-name powerplatform --rendered-provider-name "Power Platform"
-
-servedocs:
-	$(MAKE) userdocs
-	mkdocs serve
+	go generate
 
 unittest:
 	export TF_ACC=0
