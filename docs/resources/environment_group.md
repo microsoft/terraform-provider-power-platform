@@ -70,3 +70,12 @@ resource "powerplatform_tenant_settings" "environment_routing" {
 ### Read-Only
 
 - `id` (String) Unique id of the environment group
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# Environment Groups can be imported using the environment group id (replace with a real environment group guid)
+terraform import powerplatform_environment_group.example 00000000-0000-0000-0000-000000000000
+```

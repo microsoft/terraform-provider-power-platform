@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	EnvironmentTypes = []string{"Sandbox", "Production", "Trial", "Developer"}
+	EnvironmentTypes = []string{"Sandbox", "Production", "Trial", "Developer", "Default"}
 )
 
 type EnvironmentDto struct {
