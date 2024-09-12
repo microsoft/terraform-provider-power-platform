@@ -19,11 +19,11 @@ terraform import powerplatform_environment.example_env 00000000-0000-0000-0000-0
 
 ## Using import blocks
 
-Terraform allows the use of import blocks to import existing resources into your configuration.  This can be useful if you have pre-existing resources that you want to manage with Terraform.  The following is an example of an import block used to import the default Power Platform environment:
+Terraform allows the use of [import blocks](https://developer.hashicorp.com/terraform/language/import/) to import existing resources into your configuration.  This can be useful if you have pre-existing resources that you want to manage with Terraform.  The following is an example of an import block used to import the default Power Platform environment:
 
 ```terraform
 import {
-  to = powerplatform_environment.example_env
+  to = powerplatform_environment.default
   id = "00000000-0000-0000-0000-000000000001"
 }
 
