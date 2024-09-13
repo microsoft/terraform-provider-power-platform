@@ -46,8 +46,8 @@ func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
-						resource_group  = azapi_resource.example_resource_group.name
-						subscription_id = data.azapi_client_config.current.subscription_i
+						resource_group  = azapi_resource.rg_example.name
+						subscription_id = data.azapi_client_config.current.subscription_id
 					}
 				}
 				`,
