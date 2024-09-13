@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
@@ -21,7 +20,7 @@ func TestAccConnectorsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:  `
+				Config: `
 				data "powerplatform_connectors" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
