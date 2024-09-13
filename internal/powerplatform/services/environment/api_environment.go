@@ -291,39 +291,6 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 	return nil
 }
 
-
-// func (client *EnvironmentClient) BuildHostUri(environmentId string) string {
-// 	envId := strings.ReplaceAll(environmentId, "-", "")
-// 	realm := string(envId[len(envId)-2:])
-// 	envId = envId[:len(envId)-2]
-
-// 	return fmt.Sprintf("%s.%s.environment.%s", envId, realm, client.Api.GetConfig().Urls.PowerPlatformUrl)
-// }
-
-// func (client *EnvironmentClient) AddEnvironmentToEnvironmentGroup(ctx context.Context, environmentId, environmentGroupId string) error {
-// 	apiUrl := &url.URL{
-// 		Scheme: "https",
-// 		Host:   client.BuildHostUri(environmentId),
-// 		Path:   fmt.Sprintf("/environmentmanagement/environmentGroups/%s/addEnvironment/%s/", environmentGroupId, environmentId),
-// 	}
-// 	values := url.Values{}
-// 	values.Add("api-version", "1")
-// 	apiUrl.RawQuery = values.Encode()
-
-// 	envGroup := map[string]interface{}{
-// 		"properties": map[string]interface{}{
-// 			"parentEnvironmentGroup": map[string]interface{}{
-// 				"id": environmentGroupId,
-// 			},
-// 		},
-// 	}
-// 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, envGroup, []int{http.StatusAccepted}, nil)
-// 	if err != nil {
-// 		return err
-// 	}
-// 	return nil
-// }
-
 func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, environmentId string, environmentCreateLinkEnvironmentMetadata EnvironmentCreateLinkEnvironmentMetadataDto) (*EnvironmentDto, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",

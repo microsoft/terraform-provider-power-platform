@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 )
 
 var (
@@ -211,15 +210,16 @@ type EnvironmentsListDataSourceModel struct {
 }
 
 type EnvironmentSourceModel struct {
-	Timeouts        timeouts.Value `tfsdk:"timeouts"`
-	Id              types.String   `tfsdk:"id"`
-	Location        types.String   `tfsdk:"location"`
-	AzureRegion     types.String   `tfsdk:"azure_region"`
-	DisplayName     types.String   `tfsdk:"display_name"`
-	EnvironmentType types.String   `tfsdk:"environment_type"`
-	BillingPolicyId types.String   `tfsdk:"billing_policy_id"`
-	Description     types.String   `tfsdk:"description"`
-	Cadence         types.String   `tfsdk:"cadence"`
+	Timeouts           timeouts.Value `tfsdk:"timeouts"`
+	Id                 types.String   `tfsdk:"id"`
+	Location           types.String   `tfsdk:"location"`
+	AzureRegion        types.String   `tfsdk:"azure_region"`
+	DisplayName        types.String   `tfsdk:"display_name"`
+	EnvironmentType    types.String   `tfsdk:"environment_type"`
+	BillingPolicyId    types.String   `tfsdk:"billing_policy_id"`
+	Description        types.String   `tfsdk:"description"`
+	Cadence            types.String   `tfsdk:"cadence"`
+	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
 
 	Dataverse types.Object `tfsdk:"dataverse"`
 }
@@ -239,7 +239,6 @@ type DataverseSourceModel struct {
 	TemplateMetadata    types.String `tfsdk:"template_metadata"`
 	AdministrationMode  types.Bool   `tfsdk:"administration_mode_enabled"`
 	BackgroundOperation types.Bool   `tfsdk:"background_operation_enabled"`
-	EnvironmentGroupId  types.String `tfsdk:"environment_group_id"`
 }
 
 func ConvertUpdateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource EnvironmentSourceModel) (*EnvironmentDto, error) {
@@ -312,29 +311,25 @@ func ConvertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		}
 	}
 
+	if !environmentSource.EnvironmentGroupId.IsNull() && !environmentSource.EnvironmentGroupId.IsUnknown() {
+		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{Id: environmentSource.EnvironmentGroupId.ValueString()}
+	}
+
 	if !environmentSource.Dataverse.IsNull() && !environmentSource.Dataverse.IsUnknown() {
 		var dataverseSourceModel DataverseSourceModel
 		environmentSource.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		environmentDto.Properties.DataBaseType = "CommonDataService"
-		linkedMetadata, envGroup, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, environmentSource.Dataverse)
+		linkedMetadata, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, environmentSource.Dataverse)
 		if err != nil {
 			return nil, err
 		}
 		environmentDto.Properties.LinkedEnvironmentMetadata = linkedMetadata
-		environmentDto.Properties.ParentEnvironmentGroup = envGroup
-
-		// if !dataverseSourceModel.EnvironmentGroupId.IsNull() || dataverseSourceModel.EnvironmentGroupId.ValueString() != "" {
-		// 	environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
-		// 		Id: dataverseSourceModel.EnvironmentGroupId.ValueString(),
-		// 	}
-		// }
-
 	}
 	return environmentDto, nil
 }
 
-func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx context.Context, dataverse types.Object) (*EnvironmentCreateLinkEnvironmentMetadataDto, *ParentEnvironmentGroupDto, error) {
+func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx context.Context, dataverse types.Object) (*EnvironmentCreateLinkEnvironmentMetadataDto, error) {
 	if !dataverse.IsNull() && !dataverse.IsUnknown() {
 		var dataverseSourceModel DataverseSourceModel
 		dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
@@ -343,7 +338,7 @@ func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 		if dataverseSourceModel.TemplateMetadata.ValueString() != "" {
 			err := json.Unmarshal([]byte(dataverseSourceModel.TemplateMetadata.ValueString()), &templateMetadataObject)
 			if err != nil {
-				return nil, nil, fmt.Errorf("error when unmarshalling template metadata %s; internal error: %v", dataverseSourceModel.TemplateMetadata.ValueString(), err)
+				return nil, fmt.Errorf("error when unmarshalling template metadata %s; internal error: %v", dataverseSourceModel.TemplateMetadata.ValueString(), err)
 			}
 			if len(templateMetadataObject.PostProvisioningPackages) == 0 {
 				templateMetadataObject = nil
@@ -366,22 +361,9 @@ func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 			linkedEnvironmentMetadata.DomainName = ""
 		}
 
-		// parentEnvironmentGroupDto := &ParentEnvironmentGroupDto{
-		// 	Id: constants.ZERO_UUID,
-		// }
-		// if !dataverseSourceModel.EnvironmentGroupId.IsNull() && dataverseSourceModel.EnvironmentGroupId.IsUnknown() {
-		// 	if dataverseSourceModel.EnvironmentGroupId.ValueString() != "" && dataverseSourceModel.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
-		// 		parentEnvironmentGroupDto.Id = dataverseSourceModel.EnvironmentGroupId.ValueString()
-		// 	}
-		// }
-		if !dataverseSourceModel.EnvironmentGroupId.IsNull() && !dataverseSourceModel.EnvironmentGroupId.IsUnknown() {
-			return linkedEnvironmentMetadata, &ParentEnvironmentGroupDto{Id: dataverseSourceModel.EnvironmentGroupId.ValueString()}, nil
-		}
-
-		return linkedEnvironmentMetadata, nil, nil
-
+		return linkedEnvironmentMetadata, nil
 	}
-	return nil, nil, fmt.Errorf("dataverse object is null or unknown")
+	return nil, fmt.Errorf("dataverse object is null or unknown")
 }
 
 func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode *string, templateMetadata *EnvironmentCreateTemplateMetadata, templates []string, timeouts timeouts.Value) (*EnvironmentSourceModel, error) {
@@ -402,6 +384,12 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		model.BillingPolicyId = types.StringValue("")
 	}
 
+	if environmentDto.Properties.ParentEnvironmentGroup != nil {
+		model.EnvironmentGroupId = types.StringValue(environmentDto.Properties.ParentEnvironmentGroup.Id)
+	} else {
+		model.EnvironmentGroupId = types.StringValue("")
+	}
+
 	attrTypesDataverseObject := map[string]attr.Type{
 		"url":                          types.StringType,
 		"domain":                       types.StringType,
@@ -417,7 +405,6 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		"template_metadata":            types.StringType,
 		"administration_mode_enabled":  types.BoolType,
 		"background_operation_enabled": types.BoolType,
-		"environment_group_id":         types.StringType,
 	}
 
 	attrValuesProductProperties := map[string]attr.Value{}
@@ -449,21 +436,6 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 			attrValuesProductProperties["background_operation_enabled"] = types.BoolValue(true)
 		} else {
 			attrValuesProductProperties["background_operation_enabled"] = types.BoolValue(false)
-		}
-		// if environmentDto.Properties.ParentEnvironmentGroup != nil {
-		// 	if environmentDto.Properties.ParentEnvironmentGroup.Id == "" {
-		// 		attrValuesProductProperties["environment_group_id"] = types.StringValue(constants.ZERO_UUID)
-		// 	} else {
-		// 		attrValuesProductProperties["environment_group_id"] = types.StringValue(environmentDto.Properties.ParentEnvironmentGroup.Id)
-		// 	}
-		// } else {
-		// 	attrValuesProductProperties["environment_group_id"] = types.StringNull()
-		// }
-
-		if environmentDto.Properties.ParentEnvironmentGroup == nil || environmentDto.Properties.ParentEnvironmentGroup.Id == "" {
-			attrValuesProductProperties["environment_group_id"] = types.StringValue(constants.ZERO_UUID)
-		} else {
-			attrValuesProductProperties["environment_group_id"] = types.StringValue(environmentDto.Properties.ParentEnvironmentGroup.Id)
 		}
 
 		if currencyCode != nil && *currencyCode != "" {
