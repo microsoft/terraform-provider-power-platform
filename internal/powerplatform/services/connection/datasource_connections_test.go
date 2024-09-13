@@ -18,7 +18,7 @@ func TestAccConnectionsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"

@@ -22,7 +22,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "example_environment_settings" {
 					display_name      = "` + mocks.TestName() + `"
 					location          = "unitedstates" 
@@ -79,7 +79,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T) 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "example_environment_settings" {
 					display_name      = "` + mocks.TestName() + `"
 					location          = "unitedstates" 

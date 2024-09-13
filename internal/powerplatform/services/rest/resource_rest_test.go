@@ -21,7 +21,7 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 
 				resource "powerplatform_environment" "env" {
 					display_name     = "` + mocks.TestName() + `"
@@ -103,7 +103,7 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 
 			resource "powerplatform_environment" "env" {
 				display_name     = "` + mocks.TestName() + `"

@@ -21,7 +21,7 @@ func TestAccConnectorsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config:  `
 				data "powerplatform_connectors" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

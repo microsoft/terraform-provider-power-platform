@@ -22,7 +22,7 @@ func TestAccManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -70,7 +70,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -99,7 +99,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -129,7 +129,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -159,7 +159,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -189,7 +189,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -219,7 +219,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -249,7 +249,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -279,7 +279,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -309,7 +309,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -583,7 +583,7 @@ func TestAccManagedEnvironmentsResource_Validate_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"

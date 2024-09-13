@@ -20,7 +20,7 @@ func TestAccTenantApplicationPackagesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				data "powerplatform_tenant_application_packages" "all_applications" {
 				}`,
 

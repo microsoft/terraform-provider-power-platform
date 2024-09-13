@@ -21,7 +21,7 @@ func TestAccEnvironmentTemplatesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				data "powerplatform_environment_templates" "all_environment_templates_for_unitedstates" {
 					location = "unitedstates"
 				}`,

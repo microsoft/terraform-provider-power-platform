@@ -49,7 +49,7 @@ func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"
@@ -98,7 +98,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"
@@ -263,7 +263,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"
@@ -516,7 +516,7 @@ func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"

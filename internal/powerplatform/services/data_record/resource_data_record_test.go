@@ -25,7 +25,7 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -286,7 +286,7 @@ func TestAccDataRecordResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -332,7 +332,7 @@ func TestAccDataRecordResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -506,7 +506,7 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -568,7 +568,7 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -773,7 +773,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -866,7 +866,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -944,7 +944,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
