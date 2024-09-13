@@ -11,22 +11,24 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.T) {
-
+	//TODO: This will not work
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azurerm": {
+				VersionConstraint: ">= 4.2.0",
+				Source:            "hashicorp/azurerm",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
-					provider "azurerm" {
-					features {}
-				}
-
+				ResourceName: "powerplatform_billing_policies_environments.all_pay_as_you_go_policy_envs",
+				Config: `
 				data "azurerm_client_config" "current" {
 				}
 

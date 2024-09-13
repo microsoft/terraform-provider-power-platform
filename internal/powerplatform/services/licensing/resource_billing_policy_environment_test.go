@@ -12,21 +12,24 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
+	//TODO: This will not work
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azurerm": {
+				VersionConstraint: ">= 4.2.0",
+				Source:            "hashicorp/azurerm",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azurerm" {
-					features {}
-				}
-
+				ResourceName: "powerplatform_billing_policy_environment.pay_as_you_go_policy_envs",
+				Config: `
 				data "azurerm_client_config" "current" {
 				}
 
@@ -117,13 +120,16 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azurerm": {
+				VersionConstraint: ">= 4.2.0",
+				Source:            "hashicorp/azurerm",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azurerm" {
-					features {}
-				}
-
+				ResourceName: "powerplatform_billing_policy_environment.pay_as_you_go_policy_envs",
+				Config: `
 				data "azurerm_client_config" "current" {
 				}
 
@@ -170,11 +176,14 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azurerm" {
-					features {}
-				}
-
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"azurerm": {
+						VersionConstraint: ">= 4.2.0",
+						Source:            "hashicorp/azurerm",
+					},
+				},
+				ResourceName: "powerplatform_billing_policy_environment.pay_as_you_go_policy_envs",
+				Config: `
 				data "azurerm_client_config" "current" {
 				}
 
@@ -221,11 +230,14 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azurerm" {
-					features {}
-				}
-
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"azurerm": {
+						VersionConstraint: ">= 4.2.0",
+						Source:            "hashicorp/azurerm",
+					},
+				},
+				ResourceName: "powerplatform_billing_policy_environment.pay_as_you_go_policy_envs",
+				Config: `
 				data "azurerm_client_config" "current" {
 				}
 
