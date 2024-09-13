@@ -183,12 +183,6 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"azapi": {
-						VersionConstraint: ">= 1.15.0",
-						Source:            "azure/azapi",
-					},
-				},
 				ResourceName: "powerplatform_billing_policy_environment.pay_as_you_go_policy_envs",
 				Config: `
 				data "azapi_client_config" "current" {}
@@ -241,12 +235,6 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"azapi": {
-						VersionConstraint: ">= 1.15.0",
-						Source:            "azure/azapi",
-					},
-				},
 				ResourceName: "powerplatform_billing_policy_environment.pay_as_you_go_policy_envs",
 				Config: `
 				data "azapi_client_config" "current" {}

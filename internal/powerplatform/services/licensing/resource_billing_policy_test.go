@@ -157,12 +157,7 @@ func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"azapi": {
-						VersionConstraint: ">= 1.15.0",
-						Source:            "azure/azapi",
-					},
-				},
+
 				ResourceName: "powerplatform_billing_policy.pay_as_you_go",
 				Config: `
 				data "azapi_client_config" "current" {}
@@ -193,12 +188,7 @@ func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"azapi": {
-						VersionConstraint: ">= 1.15.0",
-						Source:            "azure/azapi",
-					},
-				},
+
 				ResourceName: "powerplatform_billing_policy.pay_as_you_go",
 				Config: `
 				data "azapi_client_config" "current" {}
@@ -357,12 +347,7 @@ func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"azapi": {
-						VersionConstraint: ">= 1.15.0",
-						Source:            "azure/azapi",
-					},
-				},
+
 				Config: `
 				data "azapi_client_config" "current" {}
 
@@ -391,12 +376,6 @@ func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"azapi": {
-						VersionConstraint: ">= 1.15.0",
-						Source:            "azure/azapi",
-					},
-				},
 				Config: `
 				data "azapi_client_config" "current" {}
 

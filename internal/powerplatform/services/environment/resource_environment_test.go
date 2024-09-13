@@ -1345,7 +1345,7 @@ func TestAccEnvironmentsResource_Validate_Enable_Admin_Mode(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -1372,7 +1372,7 @@ func TestAccEnvironmentsResource_Validate_Enable_Admin_Mode(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -1394,7 +1394,7 @@ func TestAccEnvironmentsResource_Validate_Enable_Admin_Mode(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -1416,7 +1416,7 @@ func TestAccEnvironmentsResource_Validate_Enable_Admin_Mode(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -1502,7 +1502,7 @@ func TestUnitEnvironmentsResource_Create_Environment_With_Env_Group(t *testing.T
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment_group" "env_group" {
 					display_name                              = "test_env_group"
 					description                               = "test env group"
@@ -1533,7 +1533,7 @@ func TestAccEnvironmentsResource_Create_Environment_With_Env_Group(t *testing.T)
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment_group" "env_group" {
 					display_name                              = "` + mocks.TestName() + `"
 					description                               = "` + mocks.TestName() + `"
@@ -1651,7 +1651,7 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -1668,7 +1668,7 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment_group" "env_group" {
 					display_name                              = "test_env_group"
 					description                               = "test env group"
@@ -1692,7 +1692,7 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment_group" "env_group" {
 					display_name                              = "test_env_group"
 					description                               = "test env group"
@@ -1721,7 +1721,7 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 					resource "powerplatform_environment_group" "env_group" {
 					display_name                              = "test_env_group"
 					description                               = "test env group"
@@ -1758,7 +1758,7 @@ func TestAccEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -1775,7 +1775,7 @@ func TestAccEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment_group" "env_group" {
 					display_name                              = "` + mocks.TestName() + `"
 					description                               = "` + mocks.TestName() + `"
@@ -1799,7 +1799,7 @@ func TestAccEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment_group" "env_group" {
 					display_name                              = "` + mocks.TestName() + `"
 					description                               = "` + mocks.TestName() + `"
@@ -1828,7 +1828,7 @@ func TestAccEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment_group" "env_group" {
 					display_name                              = "` + mocks.TestName() + `"
 					description                               = "` + mocks.TestName() + `"
@@ -1865,7 +1865,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_W
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -1877,7 +1877,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_W
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment_group" "env_group" {
 					display_name                              = "` + mocks.TestName() + `"
 					description                               = "` + mocks.TestName() + `"
@@ -1909,7 +1909,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_A
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -1921,7 +1921,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_A
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -1938,7 +1938,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_A
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment_group" "env_group" {
 					display_name                              = "` + mocks.TestName() + `"
 					description                               = "` + mocks.TestName() + `"
@@ -1962,7 +1962,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_A
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment_group" "env_group" {
 					display_name                              = "` + mocks.TestName() + `"
 					description                               = "` + mocks.TestName() + `"
@@ -1994,7 +1994,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Env_Group(t
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment_group" "env_group" {
 					display_name                              = "` + mocks.TestName() + `"
 					description                               = "` + mocks.TestName() + `"
