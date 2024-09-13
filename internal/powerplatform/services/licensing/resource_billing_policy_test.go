@@ -382,7 +382,7 @@ func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				resource "azapi_resource" "rg_example" {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
-					name      = "power-platform-billing-` + mocks.TestName() + `"
+					name      = "power-platform-billing-` + mocks.TestName() + `1"
 
 					body = jsonencode({
 						properties = {}
