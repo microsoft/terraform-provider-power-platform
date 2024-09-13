@@ -9,7 +9,11 @@
                 "tenantId": "00000000-0000-0000-0000-000000000002",
                 "azureRegion": "northeurope",
                 "displayName": "Admin AdminOnMicrosoft's Environment",
+                "description": "aaa",
                 "createdTime": "2023-02-15T08:02:36.1799125Z",
+                "parentEnvironmentGroup": {
+                    "id": "00000000-0000-0000-0000-000000000001"
+                },
                 "createdBy": {
                     "id": "SYSTEM",
                     "displayName": "SYSTEM",
@@ -115,7 +119,7 @@
                     }
                 },
                 "updateCadence": {
-                    "id": "Frequent"
+                    "id": "Moderate"
                 },
                 "retentionDetails": {
                     "retentionPeriod": "P7D",
@@ -155,6 +159,7 @@
                 "tenantId": "00000000-0000-0000-0000-000000000002",
                 "azureRegion": "westeurope",
                 "displayName": "displayname",
+                "description": "bbb",
                 "createdTime": "2023-09-27T07:08:27.6057592Z",
                 "createdBy": {
                     "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",

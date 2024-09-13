@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -67,6 +68,21 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"environment_group_id": schema.StringAttribute{
+				MarkdownDescription: "Unique environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information.",
+				Computed:            true,
+				Optional:            true,
+			},
+			"description": schema.StringAttribute{
+				MarkdownDescription: "Description of the environment",
+				Optional:            true,
+				Computed:            true,
+			},
+			"cadence": schema.StringAttribute{
+				MarkdownDescription: "Cadence of updates for the environment (Frequent, Moderate). For more information check [here](https://learn.microsoft.com/en-us/power-platform/admin/create-environment#setting-an-environment-refresh-cadence).",
+				Optional:            true,
+				Computed:            true,
+			},
 			"location": schema.StringAttribute{
 				Description:         "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source. The region of your Entra tenant may [limit the available locations for Power Platform](https://learn.microsoft.com/power-platform/admin/regions-overview#who-can-create-environments-in-these-regions). Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).",
 				MarkdownDescription: "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source. The region of your Entra tenant may [limit the available locations for Power Platform](https://learn.microsoft.com/power-platform/admin/regions-overview#who-can-create-environments-in-these-regions). Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).",
@@ -117,6 +133,17 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 					modifiers.RequireReplaceObjectToEmptyModifier(),
 				},
 				Attributes: map[string]schema.Attribute{
+
+					"administration_mode_enabled": schema.BoolAttribute{
+						MarkdownDescription: "Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
+						Computed:            true,
+						Optional:            true,
+					},
+					"background_operation_enabled": schema.BoolAttribute{
+						MarkdownDescription: "Indicates if background operation is enabled",
+						Optional:            true,
+						Computed:            true,
+					},
 					"currency_code": schema.StringAttribute{
 						Description:         "Unique currency code",
 						MarkdownDescription: "Unique currency name",
@@ -191,6 +218,18 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				},
 			},
 		},
+	}
+}
+
+func (d *EnvironmentResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+
+	path.Root("dataverse").AtName("administration_mode_enabled").Expression()
+
+	return []resource.ConfigValidator{
+		resourcevalidator.RequiredTogether(
+			path.Root("dataverse").AtName("administration_mode_enabled").Expression(),
+			path.Root("dataverse").AtName("background_operation_enabled").Expression(),
+		),
 	}
 }
 
@@ -348,6 +387,7 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 			templateMetadata = dv.TemplateMetadata
 			templates = dv.Templates
 		}
+
 	}
 	newState, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, state.Timeouts)
 	if err != nil {
@@ -386,6 +426,26 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		},
 	}
 
+	if !plan.Description.IsNull() && plan.Description.ValueString() != "" {
+		environmentDto.Properties.Description = plan.Description.ValueString()
+	}
+
+	if !plan.Cadence.IsNull() && plan.Cadence.ValueString() != "" {
+		environmentDto.Properties.UpdateCadence = &UpdateCadenceDto{
+			Id: plan.Cadence.ValueString(),
+		}
+	}
+
+	if !plan.EnvironmentGroupId.IsNull() && !plan.EnvironmentGroupId.IsUnknown() {
+		envGroupId := constants.ZERO_UUID
+		if plan.EnvironmentGroupId.ValueString() != "" && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
+			envGroupId = plan.EnvironmentGroupId.ValueString()
+		}
+		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
+			Id: envGroupId,
+		}
+	}
+
 	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
 		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
@@ -402,10 +462,8 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	defer cancel()
 
 	var currencyCode string
-	if !IsDataverseEnvironmentEmpty(ctx, state) && IsDataverseEnvironmentEmpty(ctx, plan) {
-		resp.Diagnostics.AddError("Cannot remove dataverse environment from environment", "Cannot remove dataverse environment from environment")
-		return
-	} else if !IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
+	// trying to update dataverse environment
+	if !IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
 
 		var dataverseSourcePlanModel DataverseSourceModel
 		plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
@@ -415,6 +473,30 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		environmentDto.Properties.LinkedEnvironmentMetadata = &LinkedEnvironmentMetadataDto{
 			SecurityGroupId: dataverseSourcePlanModel.SecurityGroupId.ValueString(),
 			DomainName:      dataverseSourcePlanModel.Domain.ValueString(),
+		}
+
+		if !dataverseSourcePlanModel.AdministrationMode.IsNull() && !dataverseSourcePlanModel.AdministrationMode.IsUnknown() {
+			if dataverseSourcePlanModel.AdministrationMode.ValueBool() {
+				environmentDto.Properties.States = &StatesEnvironmentDto{
+					Runtime: &RuntimeEnvironmentDto{
+						Id: "AdminMode",
+					},
+				}
+			} else {
+				environmentDto.Properties.States = &StatesEnvironmentDto{
+					Runtime: &RuntimeEnvironmentDto{
+						Id: "Enabled",
+					},
+				}
+			}
+		}
+
+		if !dataverseSourcePlanModel.BackgroundOperation.IsNull() && !dataverseSourcePlanModel.BackgroundOperation.IsUnknown() {
+			if dataverseSourcePlanModel.BackgroundOperation.ValueBool() {
+				environmentDto.Properties.LinkedEnvironmentMetadata.BackgroundOperationsState = "Enabled"
+			} else {
+				environmentDto.Properties.LinkedEnvironmentMetadata.BackgroundOperationsState = "Disabled"
+			}
 		}
 
 		var dataverseSourceStateModel DataverseSourceModel
@@ -433,7 +515,8 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		} else {
 			environmentDto.Properties.LinkedAppMetadata = nil
 		}
-	} else {
+		// trying to create dataverse environment
+	} else if IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
 
 		linkedMetadataDto, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, plan.Dataverse)
 		if err != nil {

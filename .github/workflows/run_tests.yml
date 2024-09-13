@@ -16,7 +16,7 @@ on:
 
 concurrency:
   group: acceptancetests
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   id-token: write # This is required for requesting the JWT
