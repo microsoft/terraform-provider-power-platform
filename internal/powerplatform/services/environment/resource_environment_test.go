@@ -1441,6 +1441,94 @@ func TestAccEnvironmentsResource_Validate_Enable_Admin_Mode(t *testing.T) {
 	})
 }
 
+func TestUnitEnvironmentsResource_Create_Environment_With_Env_Group(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_With_Env_Group/get_lifecycle_delete.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_With_Env_Group/get_environment_%s.json", id)).String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_With_Env_Group/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Create_Environment_With_Env_Group/get_environment_group.json").String())
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_With_Env_Group/get_environment_group.json").String())
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("DELETE", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			return resp, nil
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: constants.TestsUnitProviderConfig + `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "test_env_group"
+					description                               = "test env group"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group.id
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000001"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEnvironmentsResource_Create_Environment_With_Env_Group(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
@@ -1467,6 +1555,199 @@ func TestAccEnvironmentsResource_Create_Environment_With_Env_Group(t *testing.T)
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_group_id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing.T) {
+	postEnvGroupRequestInx := 0
+	getEnvironmentRequestInx := 0
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_And_Add_Env_Group/get_lifecycle_delete.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
+			getEnvironmentRequestInx++
+			if getEnvironmentRequestInx < 14 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_1.json", id)).String()), nil
+			} else if getEnvironmentRequestInx < 21 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_2.json", id)).String()), nil
+			} else {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_3.json", id)).String()), nil
+			}
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_And_Add_Env_Group/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			postEnvGroupRequestInx++
+			resp := httpmock.NewStringResponse(http.StatusCreated, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/post_environment_group_%d.json", postEnvGroupRequestInx)).String())
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_group_1.json").String())
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups/00000000-0000-0000-0000-000000000002?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_group_2.json").String())
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterRegexpResponder("DELETE", regexp.MustCompile(`^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/environmentGroups/00000000-0000-0000-0000-00000000000(1|2)\?api-version=2021-04-01$`),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2022-05-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusAccepted, ""), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_And_Add_Env_Group/get_environments_1.json").String())
+			return resp, nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: constants.TestsUnitProviderConfig + `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+			{
+				Config: constants.TestsUnitProviderConfig + `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "test_env_group"
+					description                               = "test env group"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group.id
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000001"),
+				),
+			},
+			{
+				Config: constants.TestsUnitProviderConfig + `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "test_env_group"
+					description                               = "test env group"
+				}
+
+				resource "powerplatform_environment_group" "env_group_new" {
+					display_name                              = "test_env_group_new"
+					description                               = "test env group new"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group_new.id
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000002"),
+				),
+			},
+			{
+				Config: constants.TestsUnitProviderConfig + `
+					resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "test_env_group"
+					description                               = "test env group"
+				}
+
+				resource "powerplatform_environment_group" "env_group_new" {
+					display_name                              = "test_env_group_new"
+					description                               = "test env group new"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = ""
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", ""),
 				),
 			},
 		},

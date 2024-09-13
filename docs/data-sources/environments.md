@@ -63,6 +63,7 @@ Read-Only:
 - `dataverse` (Attributes) Dataverse environment details (see [below for nested schema](#nestedatt--environments--dataverse))
 - `description` (String) Description
 - `display_name` (String) Display name
+- `environment_group_id` (String) Unique environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
 - `id` (String) Unique environment id (guid)
 - `location` (String) Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source.
@@ -73,10 +74,6 @@ Read-Only:
 
 <a id="nestedatt--environments--dataverse"></a>
 ### Nested Schema for `environments.dataverse`
-
-Optional:
-
-- `environment_group_id` (String) Unique environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.
 
 Read-Only:
 
