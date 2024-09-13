@@ -74,7 +74,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				Computed:            true,
 			},
 			"cadence": schema.StringAttribute{
-				MarkdownDescription: "Cadence of updates for the environment (Frequent, Moderate)",
+				MarkdownDescription: "Cadence of updates for the environment (Frequent, Moderate). For more information check [here](https://learn.microsoft.com/en-us/power-platform/admin/create-environment#setting-an-environment-refresh-cadence).",
 				Optional:            true,
 				Computed:            true,
 			},
@@ -129,14 +129,14 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 				},
 				Attributes: map[string]schema.Attribute{
 					"environment_group_id": schema.StringAttribute{
-						MarkdownDescription: "Unique environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.",
+						MarkdownDescription: "Unique environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information.",
 						Computed:            true,
 						Optional:            true,
 					},
 					"administration_mode_enabled": schema.BoolAttribute{
 						MarkdownDescription: "Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
-						Optional:            true,
 						Computed:            true,
+						Optional:            true,
 					},
 					"background_operation_enabled": schema.BoolAttribute{
 						MarkdownDescription: "Indicates if background operation is enabled",

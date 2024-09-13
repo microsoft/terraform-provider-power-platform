@@ -15,7 +15,7 @@ on:
 
 concurrency:
   group: acceptancetests
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   id-token: write # This is required for requesting the JWT
@@ -138,7 +138,7 @@ jobs:
         export ARM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
         export ARM_SUBSCRIPTION_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}'
         go clean -testcache
-        go test -p 10 -failfast -v ./... -run ^TestAccEnvironment -coverprofile=test-coverage.out -timeout 300m
+        go test -p 10 -failfast -v ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m
         go tool cover -html=test-coverage.out -o test-coverage.cov.html
 
     - name: Upload Coverage Artifacts

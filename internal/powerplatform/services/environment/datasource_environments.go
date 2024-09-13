@@ -115,7 +115,6 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, _ datasource.Schema
 								"environment_group_id": schema.StringAttribute{
 									MarkdownDescription: "Unique environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.",
 									Computed:            true,
-									Optional:            true,
 								},
 								"administration_mode_enabled": schema.BoolAttribute{
 									MarkdownDescription: "Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
@@ -155,12 +154,6 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, _ datasource.Schema
 									MarkdownDescription: "Version of the environment",
 									Computed:            true,
 								},
-								//Not available in BAPI as for now
-								// "currency_name": &schema.StringAttribute{
-								// 	Description:         "Unique currency name (EUR, USE, GBP etc.)",
-								// 	MarkdownDescription: "Unique currency name (EUR, USE, GBP etc.)",
-								// 	Computed:            true,
-								// },
 								"linked_app_type": schema.StringAttribute{
 									Description:         "Type of the linked app (Internal, External etc.)",
 									MarkdownDescription: "Type of the linked app (Internal, External etc.)",
