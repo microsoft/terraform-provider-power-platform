@@ -15,6 +15,7 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/admin_management_application"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/capacity"
@@ -89,6 +90,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		rest.NewDataverseWebApiResource(),
 		connection.NewConnectionResource(),
 		connection.NewConnectionShareResource(),
+		admin_management_application.NewAdminManagementApplicationResource(),
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
 
