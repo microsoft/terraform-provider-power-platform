@@ -59,7 +59,7 @@ func TestUnitTenantApplicationPackagesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_tenant_application_packages" "all_applications" {
 				}`,
 
@@ -104,7 +104,7 @@ func TestUnitTenantApplicationPackagesDataSource_Validate_Filter(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_tenant_application_packages" "all_applications" {
 					publisher_name = "Microsoft Dynamics SMB"
 				}`,
@@ -114,7 +114,7 @@ func TestUnitTenantApplicationPackagesDataSource_Validate_Filter(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_tenant_application_packages" "all_applications" {
 					name = "Healthcare Home Health"
 				}`,

@@ -129,7 +129,7 @@ func TestUnitConnectionsShareResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_connection_share" "share_with_user1" {
 					environment_id = "00000000-0000-0000-0000-000000000000"
 					connector_name = "shared_commondataserviceforapps"

@@ -72,7 +72,7 @@ func TestUnitTestBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_billing_policies_environments" "all_pay_as_you_go_policy_envs" {
 					billing_policy_id = "00000000-0000-0000-0000-000000000000"
 				}`,

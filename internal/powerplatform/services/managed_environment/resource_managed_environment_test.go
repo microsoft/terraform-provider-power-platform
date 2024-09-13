@@ -375,7 +375,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_managed_environment" "managed_development" {
 					environment_id             = "00000000-0000-0000-0000-000000000001"
 					is_usage_insights_disabled = true
@@ -441,7 +441,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 						resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -460,7 +460,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -479,7 +479,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -498,7 +498,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -517,7 +517,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -536,7 +536,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true
@@ -555,7 +555,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 					resource "powerplatform_managed_environment" "managed_development" {
 						environment_id             = "00000000-0000-0000-0000-000000000001"
 						is_usage_insights_disabled = true

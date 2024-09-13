@@ -103,7 +103,7 @@ func TestUnitEnvironmentApplicationPackagesDataSource_Validate_Read(t *testing.T
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -183,7 +183,7 @@ func TestUnitEnvironmentApplicationPackagesDataSource_Validate_No_Dataverse(t *t
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"

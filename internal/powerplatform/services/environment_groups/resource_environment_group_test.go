@@ -64,7 +64,7 @@ func TestUnitEnvirionmentGroupResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment_group" "test_env_group" {
 					display_name = "test_env_group"
 					description = "test env group"

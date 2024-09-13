@@ -84,7 +84,7 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "europe"
@@ -239,7 +239,7 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "europe"
@@ -254,7 +254,7 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample1"
 					location = "europe"
@@ -271,7 +271,7 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample1"
 					location = "europe"
@@ -414,7 +414,7 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "europe"
@@ -429,7 +429,7 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "switzerland"
@@ -445,7 +445,7 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "switzerland"
@@ -462,7 +462,7 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "switzerland"
@@ -509,7 +509,7 @@ func TestUnitTestBillingPolicy_Validate_Create_WithoutFinalStatusInPostResponse(
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "europe"
@@ -562,7 +562,7 @@ func TestUnitTestBillingPolicy_Validate_Create_WithoutFinalStatusInPostResponse(
 // 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 // 		Steps: []resource.TestStep{
 // 			{
-// 				Config: constants.TestsUnitProviderConfig + `
+// 				Config: `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 // 					name     = "payAsYouGoBillingPolicyExample"
 // 					location = "europe"

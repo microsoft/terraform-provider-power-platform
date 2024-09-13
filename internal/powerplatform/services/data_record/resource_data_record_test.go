@@ -194,7 +194,7 @@ func TestUnitDataRecordResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
@@ -426,7 +426,7 @@ func TestUnitDataRecordResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
@@ -462,7 +462,7 @@ func TestUnitDataRecordResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"
@@ -681,7 +681,7 @@ func TestUnitDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"
@@ -732,7 +732,7 @@ func TestUnitDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 
 				resource "powerplatform_data_record" "data_record_account" {
 						environment_id     = "00000000-0000-0000-0000-000000000001"
@@ -1153,7 +1153,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"
@@ -1227,7 +1227,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"
@@ -1297,7 +1297,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"

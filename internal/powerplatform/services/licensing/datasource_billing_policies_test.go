@@ -76,7 +76,7 @@ func TestUnitTestBillingPoliciesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_billing_policies" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

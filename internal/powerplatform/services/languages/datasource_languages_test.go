@@ -53,7 +53,7 @@ func TestUnitLanguagesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_languages" "all_languages_for_unitedstates" {
 					location = "unitedstates"
 				}`,

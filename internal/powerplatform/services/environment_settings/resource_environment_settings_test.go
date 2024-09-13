@@ -148,7 +148,7 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				  resource "powerplatform_environment_settings" "settings" {
 					environment_id                         = "00000000-0000-0000-0000-000000000001"
 					audit_and_logs = {
@@ -248,7 +248,7 @@ func TestUnitTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T)
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				  resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"

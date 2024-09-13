@@ -73,7 +73,7 @@ func TestUnitSecurityDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_security_roles" "all" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 				}`,
@@ -145,7 +145,7 @@ func TestUnitSecurityDataSource_Validate_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -183,7 +183,7 @@ func TestUnitSecurityDataSource_Validate_Read_Filter_BusinessUnit(t *testing.T) 
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_security_roles" "all" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					business_unit_id = "00000000-0000-0000-0000-000000000002"

@@ -88,7 +88,7 @@ func TestUnitConnectionsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 					resource "powerplatform_connection" "azure_openai_connection" {
 						environment_id = "00000000-0000-0000-0000-000000000000"
 						name           = "shared_azureopenai"

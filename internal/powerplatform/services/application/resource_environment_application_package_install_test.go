@@ -124,7 +124,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -148,7 +148,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -237,7 +237,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_No_Dataverse(
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "env" {
 					display_name     = "displayname"
 					location         = "europe"
