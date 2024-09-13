@@ -17,25 +17,28 @@ import (
 )
 
 func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
-	//TODO: This will not work
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
-			"azurerm": {
-				VersionConstraint: ">= 4.2.0",
-				Source:            "hashicorp/azurerm",
+			"azapi": {
+				VersionConstraint: ">= 1.15.0",
+				Source:            "azure/azapi",
 			},
 		},
 		Steps: []resource.TestStep{
 			{
 				ResourceName: "powerplatform_billing_policy_environment.pay_as_you_go_policy_envs",
 				Config: `
-				data "azurerm_client_config" "current" {
-				}
+				data "azapi_client_config" "current" {}
 
-				resource "azurerm_resource_group" "rg_example" {
-					name     = "power-platform-billing-` + mocks.TestName() + `"
-					location = "westeurope"
+				resource "azapi_resource" "rg_example" {
+					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+					location  = "East US"
+					name      = "power-platform-billing-` + mocks.TestName() + `"
+
+					body = jsonencode({
+						properties = {}
+					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -43,8 +46,8 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
-						resource_group  = azurerm_resource_group.rg_example.name
-						subscription_id = data.azurerm_client_config.current.subscription_id
+						resource_group  = azapi_resource.rg_example.name
+						subscription_id = data.azapi_client_config.current.subscription_id
 					}
 				}
 
@@ -121,21 +124,25 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
-			"azurerm": {
-				VersionConstraint: ">= 4.2.0",
-				Source:            "hashicorp/azurerm",
+			"azapi": {
+				VersionConstraint: ">= 1.15.0",
+				Source:            "azure/azapi",
 			},
 		},
 		Steps: []resource.TestStep{
 			{
 				ResourceName: "powerplatform_billing_policy_environment.pay_as_you_go_policy_envs",
 				Config: `
-				data "azurerm_client_config" "current" {
-				}
+				data "azapi_client_config" "current" {}
 
-				resource "azurerm_resource_group" "rg_example" {
-					name     = "power-platform-billing-` + mocks.TestName() + `"
-					location = "westeurope"
+				resource "azapi_resource" "rg_example" {
+					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+					location  = "East US"
+					name      = "power-platform-billing-` + mocks.TestName() + `"
+
+					body = jsonencode({
+						properties = {}
+					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -143,8 +150,8 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
-						resource_group  = azurerm_resource_group.rg_example.name
-						subscription_id = data.azurerm_client_config.current.subscription_id
+						resource_group  = azapi_resource.rg_example.name
+						subscription_id = data.azapi_client_config.current.subscription_id
 					}
 				}
 
@@ -177,19 +184,23 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 			},
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"azurerm": {
-						VersionConstraint: ">= 4.2.0",
-						Source:            "hashicorp/azurerm",
+					"azapi": {
+						VersionConstraint: ">= 1.15.0",
+						Source:            "azure/azapi",
 					},
 				},
 				ResourceName: "powerplatform_billing_policy_environment.pay_as_you_go_policy_envs",
 				Config: `
-				data "azurerm_client_config" "current" {
-				}
+				data "azapi_client_config" "current" {}
 
-				resource "azurerm_resource_group" "rg_example" {
-					name     = "power-platform-billing-` + mocks.TestName() + `"
-					location = "westeurope"
+				resource "azapi_resource" "rg_example" {
+					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+					location  = "East US"
+					name      = "power-platform-billing-` + mocks.TestName() + `"
+
+					body = jsonencode({
+						properties = {}
+					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -197,8 +208,8 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
-						resource_group  = azurerm_resource_group.rg_example.name
-						subscription_id = data.azurerm_client_config.current.subscription_id
+						resource_group  = azapi_resource.rg_example.name
+						subscription_id = data.azapi_client_config.current.subscription_id
 					}
 				}
 
@@ -231,19 +242,23 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 			},
 			{
 				ExternalProviders: map[string]resource.ExternalProvider{
-					"azurerm": {
-						VersionConstraint: ">= 4.2.0",
-						Source:            "hashicorp/azurerm",
+					"azapi": {
+						VersionConstraint: ">= 1.15.0",
+						Source:            "azure/azapi",
 					},
 				},
 				ResourceName: "powerplatform_billing_policy_environment.pay_as_you_go_policy_envs",
 				Config: `
-				data "azurerm_client_config" "current" {
-				}
+				data "azapi_client_config" "current" {}
 
-				resource "azurerm_resource_group" "rg_example" {
-					name     = "power-platform-billing-` + mocks.TestName() + `"
-					location = "westeurope"
+				resource "azapi_resource" "rg_example" {
+					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+					location  = "East US"
+					name      = "power-platform-billing-` + mocks.TestName() + `"
+
+					body = jsonencode({
+						properties = {}
+					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -251,8 +266,8 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
-						resource_group  = azurerm_resource_group.rg_example.name
-						subscription_id = data.azurerm_client_config.current.subscription_id
+						resource_group  = azapi_resource.rg_example.name
+						subscription_id = data.azapi_client_config.current.subscription_id
 					}
 				}
 
