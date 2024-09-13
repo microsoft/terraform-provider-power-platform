@@ -35,7 +35,7 @@ func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 					name      = "power-platform-billing-` + mocks.TestName() + `"
 
 					body = jsonencode({
-						location = "East US"
+						properties = {}
 					})
 				}
 
