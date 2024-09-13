@@ -22,13 +22,15 @@ func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azapi": {
 				VersionConstraint: ">= 1.15.0",
-				Source:            "Azure/azapi",
+				Source:            "azure/azapi",
 			},
 		},
 		Steps: []resource.TestStep{
 			{
 				ResourceName: "powerplatform_billing_policy.pay_as_you_go",
 				Config: `
+				data "azapi_client_config" "current" {}
+
 				resource "azapi_resource" "rg_example" {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
@@ -45,7 +47,7 @@ func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 					status   = "Enabled"
 					billing_instrument = {
 						resource_group  = azapi_resource.example_resource_group.name
-						subscription_id = data.azurerm_client_config.current.subscription_id
+						subscription_id = data.azapi_client_config.current.subscription_i
 					}
 				}
 				`,
