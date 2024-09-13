@@ -15,6 +15,7 @@ import "time"
 // china	api.bap.partner.microsoftonline.cn	api.powerapps.cn	api.powerplatform.partner.microsoftonline.cn	login.chinacloudapi.cn
 
 const ZERO_UUID = "00000000-0000-0000-0000-000000000000"
+const TEST_UUID = "00000000-0000-0000-0000-000000000001"
 
 const (
 	PUBLIC_OAUTH_AUTHORITY_URL      = "https://login.microsoftonline.com/"

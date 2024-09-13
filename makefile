@@ -20,12 +20,12 @@ userdocs:
 unittest:
 	$(MAKE) clean
 	$(MAKE) install
-	TF_ACC=0 go test -p 16 -timeout 10m -v ./... -run "^TestUnit"
+	TF_ACC=0 go test -p 16 -timeout 10m -v ./... -run "^TestUnit$(TEST)"
 
 acctest:
 	$(MAKE) clean
 	$(MAKE) install
-	TF_ACC=1 go test -p 10 -timeout 300m -v ./... -run "^TestAcc"
+	TF_ACC=1 go test -p 10 -timeout 300m -v ./... -run "^TestAcc$(TEST)"
 
 test:
 	$(MAKE) clean

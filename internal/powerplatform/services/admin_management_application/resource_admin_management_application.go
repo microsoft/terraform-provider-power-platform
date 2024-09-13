@@ -33,8 +33,8 @@ type AdminManagementApplicationResource struct {
 }
 
 type AdminManagementApplicationResourceModel struct {
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
-	Id       customtypes.UUIDValue   `tfsdk:"id"`
+	Timeouts timeouts.Value        `tfsdk:"timeouts"`
+	Id       customtypes.UUIDValue `tfsdk:"id"`
 }
 
 func (r *AdminManagementApplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -55,7 +55,7 @@ func (r *AdminManagementApplicationResource) Schema(ctx context.Context, req res
 				MarkdownDescription: "Client id for the service principal",
 				Description:         "Client id for the service principal",
 				Required:            true,
-				CustomType: 		customtypes.UUIDType{},
+				CustomType:          customtypes.UUIDType{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -71,12 +71,12 @@ func (r *AdminManagementApplicationResource) Configure(ctx context.Context, req 
 
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
 	if clientApi == nil {
-		resp.Diagnostics.AddError("Failed to configure AdminManagementApplicationResource", "Failed to configure AdminManagementApplicationResource")	
+		resp.Diagnostics.AddError("Failed to configure AdminManagementApplicationResource", "Failed to configure AdminManagementApplicationResource")
 		return
 	}
 
 	r.AdminManagementApplicationClient = NewAdminManagementApplicationClient(clientApi)
-} 
+}
 
 func (r *AdminManagementApplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
@@ -100,13 +100,13 @@ func (r *AdminManagementApplicationResource) Read(ctx context.Context, req resou
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	adminApp, err := r.AdminManagementApplicationClient.GetAdminApplication(ctx, state.Id.String())
+	adminApp, err := r.AdminManagementApplicationClient.GetAdminApplication(ctx, state.Id.ValueString())
 	if err != nil {
 		return
 	}
 
 	newState := AdminManagementApplicationResourceModel{
-		Id: customtypes.NewUUIDValue(adminApp.ClientId),
+		Id:       customtypes.NewUUIDValue(adminApp.ClientId),
 		Timeouts: state.Timeouts,
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
@@ -140,7 +140,7 @@ func (r *AdminManagementApplicationResource) Create(ctx context.Context, req res
 
 	resp.Diagnostics.Append(
 		resp.State.Set(ctx, &AdminManagementApplicationResourceModel{
-			Id: customtypes.NewUUIDValue(adminApp.ClientId),
+			Id:       customtypes.NewUUIDValue(adminApp.ClientId),
 			Timeouts: plan.Timeouts,
 		})...)
 
@@ -165,7 +165,7 @@ func (r *AdminManagementApplicationResource) Delete(ctx context.Context, req res
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	_, err := r.AdminManagementApplicationClient.UnregisterAdminApplication(ctx, state.Id.String())
+	err := r.AdminManagementApplicationClient.UnregisterAdminApplication(ctx, state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to unregister admin application", fmt.Sprintf("Failed to unregister admin application: %v", err))
 		return

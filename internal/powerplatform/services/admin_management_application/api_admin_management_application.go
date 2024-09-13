@@ -55,7 +55,7 @@ func (client *AdminManagementApplicationClient) RegisterAdminApplication(ctx con
 	return &adminApp, err
 }
 
-func (client *AdminManagementApplicationClient) UnregisterAdminApplication(ctx context.Context, clientId string) (*AdminManagementApplicationDto, error) {
+func (client *AdminManagementApplicationClient) UnregisterAdminApplication(ctx context.Context, clientId string) (error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -65,8 +65,7 @@ func (client *AdminManagementApplicationClient) UnregisterAdminApplication(ctx c
 		}.Encode(),
 	}
 
-	var adminApp AdminManagementApplicationDto
-	_, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
-
-	return &adminApp, err
+	_, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+	
+	return err
 }
