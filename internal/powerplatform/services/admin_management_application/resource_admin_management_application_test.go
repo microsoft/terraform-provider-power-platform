@@ -4,12 +4,14 @@
 package admin_management_application_test
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
+	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
@@ -50,23 +52,33 @@ func TestUnitAdminManagementApplicationResource_Validate_Create(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
+	client_id, _ := uuid.NewRandom()
 	
-	// zerod guid
-	httpmock.RegisterResponder(http.MethodPut, "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/adminApplications/00000000-0000-0000-0000-000000000001?api-version=2020-10-01", httpmock.NewStringResponder(http.StatusOK, "{ \"applicationId\": \"00000000-0000-0000-0000-000000000001\" }"))
-	httpmock.RegisterResponder(http.MethodGet, "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/adminApplications/00000000-0000-0000-0000-000000000001?api-version=2020-10-01", httpmock.NewStringResponder(http.StatusOK, "{ \"applicationId\": \"00000000-0000-0000-0000-000000000001\" }"))
-	httpmock.RegisterResponder(http.MethodDelete, "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/adminApplications/00000000-0000-0000-0000-000000000001?api-version=2020-10-01", httpmock.NewStringResponder(http.StatusNoContent, ""))
+	url := fmt.Sprintf("https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/adminApplications/%s?api-version=2020-10-01", client_id.String())
+	body := fmt.Sprintf("{ \"applicationId\": \"%s\" }", client_id.String())
+
+	httpmock.RegisterResponder(http.MethodPut, url, httpmock.NewStringResponder(http.StatusOK, body))
+	httpmock.RegisterResponder(http.MethodGet, url, httpmock.NewStringResponder(http.StatusOK, body))
+	httpmock.RegisterResponder(http.MethodDelete, url, httpmock.NewStringResponder(http.StatusNoContent, ""))
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
+				ConfigVariables: config.Variables {
+					"client_id": config.StringVariable(client_id.String()),
+				},
 				Config: `
+				variable "client_id" {
+					type = string
+				}
+					
 				resource "powerplatform_admin_management_application" "example_registration" {
-					id = "00000000-0000-0000-0000-000000000001"
+					id = var.client_id
 				}`,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_admin_management_application.example_registration", "id", constants.TEST_UUID),
+					resource.TestCheckResourceAttr("powerplatform_admin_management_application.example_registration", "id", client_id.String()),
 				),
 			},
 		},
