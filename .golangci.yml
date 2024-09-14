@@ -1,0 +1,23 @@
+linters:
+  enable:
+    - revive
+    - staticcheck
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - unused
+    - godot
+linters-settings:
+  revive:
+    enable-all-rules: true
+    rules:
+      - name: var-naming
+        disabled: true
+      - name: line-length-limit
+        disabled: true
+  errcheck:
+    # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.
+    # Such cases aren't reported by default.
+    # Default: false
+    check-type-assertions: true
