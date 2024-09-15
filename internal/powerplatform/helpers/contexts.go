@@ -46,21 +46,22 @@ const (
 // The returned closure should be deferred at the start of the function
 // The closure will log the end of the request scope
 // The context is updated with the request context so that it can be accessed in lower level functions
-func EnterRequestScope(ctx *context.Context, name string, req any) func() {
+func EnterRequestScope(ctx context.Context, typ TypeInfo, req any) (context.Context, func()) {
 	reqId := uuid.New().String()
 	objType, reqType := getRequestType(req)
+	name:= typ.FullTypeName()
 
-	tflog.Debug(*ctx, fmt.Sprintf("%s %s START: %s", reqType, objType, name), map[string]any{
+	tflog.Debug(ctx, fmt.Sprintf("%s %s START: %s", reqType, objType, name), map[string]any{
 		"requestId":       reqId,
 		"providerVersion": common.ProviderVersion,
 	})
 
 	// Add the request context to the context so that we can access it in lower level functions
-	*ctx = context.WithValue(*ctx, REQUEST_CONTEXT_KEY, RequestContextValue{ObjectType: objType, RequestType: reqType, ObjectName: name, RequestId: reqId})
+	ctx = context.WithValue(ctx, REQUEST_CONTEXT_KEY, RequestContextValue{ObjectType: objType, RequestType: reqType, ObjectName: name, RequestId: reqId})
 
 	// This returns a closure that can be used to defer the exit of the request scope
-	return func() {
-		tflog.Debug(*ctx, fmt.Sprintf("%s %s END: %s", reqType, objType, name))
+	return ctx, func() {
+		tflog.Debug(ctx, fmt.Sprintf("%s %s END: %s", reqType, objType, name))
 	}
 }
 
