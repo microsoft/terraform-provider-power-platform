@@ -46,7 +46,7 @@ const (
 // The returned closure should be deferred at the start of the function
 // The closure will log the end of the request scope
 // The context is updated with the request context so that it can be accessed in lower level functions
-func EnterRequestScope(ctx context.Context, typ TypeInfo, req any) (context.Context, func()) {
+func EnterRequestContext(ctx context.Context, typ TypeInfo, req any) (context.Context, func()) {
 	reqId := uuid.New().String()
 	objType, reqType := getRequestType(req)
 	name:= typ.FullTypeName()
