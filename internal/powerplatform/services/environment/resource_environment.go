@@ -214,6 +214,9 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 }
 
 func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	exitScope := helpers.EnterRequestScope(&ctx, r.ProviderTypeName + r.TypeName, req)
+	defer exitScope()
+
 	var plan *EnvironmentSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
@@ -284,16 +287,13 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
-
 }
 
 func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	exitScope := helpers.EnterRequestScope(&ctx, r.ProviderTypeName + r.TypeName, req)
+	defer exitScope()
+
 	var state *EnvironmentSourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.ProviderTypeName))
-
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -358,15 +358,14 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	exitScope := helpers.EnterRequestScope(&ctx, r.ProviderTypeName + r.TypeName, req)
+	defer exitScope()
+
 	var plan *EnvironmentSourceModel
 	var state *EnvironmentSourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

@@ -8,8 +8,10 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 
 	azcloud "github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -60,8 +62,11 @@ func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func
 			PowerAppsScope:     constants.PUBLIC_POWERAPPS_SCOPE,
 			PowerPlatformUrl:   constants.PUBLIC_POWERPLATFORM_API_DOMAIN,
 			PowerPlatformScope: constants.PUBLIC_POWERPLATFORM_API_SCOPE,
+			LicensingUrl:       constants.PUBLIC_LICENSING_API_DOMAIN,
 		},
 		Cloud: azcloud.AzurePublic,
+		TerraformVersion: "unknown",
+		TelemetryOptout: false,
 	}
 
 	if len(testModeEnabled) > 0 && testModeEnabled[0] {
@@ -80,13 +85,20 @@ func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func
 
 func (p *PowerPlatformProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "powerplatform"
+	resp.Version = constants.ProviderVersion
+
+	tflog.Debug(ctx, "Provider Metadata request received", map[string]any{
+		"version": resp.Version,
+		"typeName": resp.TypeName,
+		"branch": constants.Branch,
+		"commit": constants.Commit,
+	})
 }
 
 func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
 	tflog.Debug(ctx, "Schema request received")
 
 	resp.Schema = schema.Schema{
-
 		Description:         "The Power Platform Terraform Provider allows managing environments and other resources within Power Platform",
 		MarkdownDescription: "The Power Platform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/)",
 		Attributes: map[string]schema.Attribute{
@@ -416,6 +428,8 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	p.Config.TelemetryOptout = config.TelemetryOptout.ValueBool()
+	p.Config.TerraformVersion = req.TerraformVersion
+	p.Config.TraceId = strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	providerClient := api.ProviderClient{
 		Config: p.Config,

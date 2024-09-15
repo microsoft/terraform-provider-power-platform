@@ -3,7 +3,7 @@ deps:
 
 build:
 	$(MAKE) deps
-	go build -o ./bin/
+	go build -o ./bin/ -ldflags "-X github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants.Branch=$(shell git rev-parse --abbrev-ref HEAD)"
 
 install:
 	$(MAKE) build

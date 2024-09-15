@@ -1,5 +1,5 @@
-# Visit https://goreleaser.com for documentation on how to customize this
-# behavior.
+# Visit https://goreleaser.com for documentation on how to customize this file
+version: 2
 before:
   hooks:
     # this is just an example and not a requirement for provider building/publishing
@@ -14,7 +14,8 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - "-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}"
+      - '-s -w -X github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants.ProviderVersion={{ .Version }} -X github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants.Commit={{.Commit}}' -X github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants.Branch=$(git rev-parse --abbrev-ref HEAD)'
+      
     goos:
       - freebsd
       - windows
