@@ -14,7 +14,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - '-s -w -X github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants.ProviderVersion={{ .Version }} -X github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants.Commit={{.Commit}}' -X github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants.Branch=$(git rev-parse --abbrev-ref HEAD)'
+      - '-s -w -X github.com/microsoft/terraform-provider-power-platform/common.ProviderVersion={{ .Version }} -X github.com/microsoft/terraform-provider-power-platform/common.Commit={{.Commit}}' -X github.com/microsoft/terraform-provider-power-platform/common.Branch=$(git rev-parse --abbrev-ref HEAD)'
       
     goos:
       - freebsd

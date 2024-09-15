@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
+	"github.com/microsoft/terraform-provider-power-platform/common"
 )
 
 type ContextKey string
@@ -47,7 +47,7 @@ func EnterRequestScope(ctx *context.Context, name string, req any) func () {
 	
 	tflog.Debug(*ctx, fmt.Sprintf("%s %s START: %s", reqType, objType, name), map[string]any{
 		"requestId": reqId,
-		"providerVersion": constants.ProviderVersion,
+		"providerVersion": common.ProviderVersion,
 	})
 
 	// Add the request context to the context so that we can access it in lower level functions

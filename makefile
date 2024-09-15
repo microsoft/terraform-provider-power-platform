@@ -1,12 +1,14 @@
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+
 deps:
 	go mod tidy
 
 build:
 	$(MAKE) deps
-	go build -o ./bin/ -ldflags "-X github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants.Branch=$(shell git rev-parse --abbrev-ref HEAD)"
+	go build -o ./bin/
 
 install:
-	$(MAKE) build
+	$(MAKE) deps
 	go install
 
 clean:

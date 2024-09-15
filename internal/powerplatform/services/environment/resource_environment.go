@@ -44,10 +44,18 @@ type EnvironmentResource struct {
 }
 
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	r.ProviderTypeName = req.ProviderTypeName
+
+	exitScope := helpers.EnterRequestScope(&ctx, r.ProviderTypeName + r.TypeName, req)
+	defer exitScope()
+
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
 func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	exitScope := helpers.EnterRequestScope(&ctx, r.ProviderTypeName + r.TypeName, req)
+	defer exitScope()
+	
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "This resource manages a PowerPlatform environment",
 		Description:         "This resource manages a PowerPlatform environment",
@@ -499,14 +507,13 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *EnvironmentSourceModel
+	exitScope := helpers.EnterRequestScope(&ctx, r.ProviderTypeName + r.TypeName, req)
+	defer exitScope()
 
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
+	var state *EnvironmentSourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
@@ -533,5 +540,8 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 }
 
 func (r *EnvironmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	exitScope := helpers.EnterRequestScope(&ctx, r.ProviderTypeName + r.TypeName, req)
+	defer exitScope()
+
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

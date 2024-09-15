@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/common"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
@@ -85,13 +86,13 @@ func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func
 
 func (p *PowerPlatformProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "powerplatform"
-	resp.Version = constants.ProviderVersion
+	resp.Version = common.ProviderVersion
 
 	tflog.Debug(ctx, "Provider Metadata request received", map[string]any{
 		"version": resp.Version,
 		"typeName": resp.TypeName,
-		"branch": constants.Branch,
-		"commit": constants.Commit,
+		"branch": common.Branch,
+		"commit": common.Commit,
 	})
 }
 
