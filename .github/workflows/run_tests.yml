@@ -1,15 +1,16 @@
 name: Terraform Provider Tests
 
 on:
- workflow_dispatch:
- schedule:
-    # run at 4 AM UTC every day
-    - cron:  '0 4 * * *' 
- pull_request:
- push:
-    branches:
-      - main
-    
+  workflow_dispatch:
+  schedule:
+     # run at 4 AM UTC every day
+     - cron:  '0 4 * * *' 
+  pull_request:
+     paths:
+       - 'go.mod'
+  push:
+     branches:
+       - main
 
 concurrency:
   group: acceptancetests
@@ -120,7 +121,7 @@ jobs:
         ARM_SUBSCRIPTION_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}
       run: |
         go clean -testcache
-        go test -p 10 -v ./... -run ^TestAccBilling -coverprofile=test-coverage.out -timeout 301m
+        go test -p 10 -v ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m
         go tool cover -html=test-coverage.out -o test-coverage.cov.html
 
     - name: Upload Coverage Artifacts
