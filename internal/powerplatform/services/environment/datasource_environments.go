@@ -8,8 +8,10 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
@@ -89,9 +91,24 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, _ datasource.Schema
 							Description:         "Display name",
 							Computed:            true,
 						},
+						"description": schema.StringAttribute{
+							MarkdownDescription: "Description",
+							Computed:            true,
+						},
+						"cadence": schema.StringAttribute{
+							MarkdownDescription: "Cadence of updates for the environment (Frequent, Moderate)",
+							Computed:            true,
+							Validators: []validator.String{
+								stringvalidator.OneOf("Frequent", "Moderate"),
+							},
+						},
 						"billing_policy_id": &schema.StringAttribute{
 							Description:         "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 							MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
+							Computed:            true,
+						},
+						"environment_group_id": schema.StringAttribute{
+							MarkdownDescription: "Unique environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.",
 							Computed:            true,
 						},
 						"dataverse": schema.SingleNestedAttribute{
@@ -99,6 +116,14 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, _ datasource.Schema
 							Description:         "Dataverse environment details",
 							Computed:            true,
 							Attributes: map[string]schema.Attribute{
+								"administration_mode_enabled": schema.BoolAttribute{
+									MarkdownDescription: "Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
+									Computed:            true,
+								},
+								"background_operation_enabled": schema.BoolAttribute{
+									MarkdownDescription: "Background operation status for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
+									Computed:            true,
+								},
 								"url": schema.StringAttribute{
 									Description:         "Url of the environment",
 									MarkdownDescription: "Url of the environment",
@@ -129,12 +154,6 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, _ datasource.Schema
 									MarkdownDescription: "Version of the environment",
 									Computed:            true,
 								},
-								//Not available in BAPI as for now
-								// "currency_name": &schema.StringAttribute{
-								// 	Description:         "Unique currency name (EUR, USE, GBP etc.)",
-								// 	MarkdownDescription: "Unique currency name (EUR, USE, GBP etc.)",
-								// 	Computed:            true,
-								// },
 								"linked_app_type": schema.StringAttribute{
 									Description:         "Type of the linked app (Internal, External etc.)",
 									MarkdownDescription: "Type of the linked app (Internal, External etc.)",
