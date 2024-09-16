@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
@@ -20,7 +19,7 @@ func TestAccTenantApplicationPackagesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				data "powerplatform_tenant_application_packages" "all_applications" {
 				}`,
 
@@ -59,7 +58,7 @@ func TestUnitTenantApplicationPackagesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_tenant_application_packages" "all_applications" {
 				}`,
 
@@ -104,7 +103,7 @@ func TestUnitTenantApplicationPackagesDataSource_Validate_Filter(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_tenant_application_packages" "all_applications" {
 					publisher_name = "Microsoft Dynamics SMB"
 				}`,
@@ -114,7 +113,7 @@ func TestUnitTenantApplicationPackagesDataSource_Validate_Filter(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_tenant_application_packages" "all_applications" {
 					name = "Healthcare Home Health"
 				}`,

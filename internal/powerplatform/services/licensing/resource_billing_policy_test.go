@@ -12,7 +12,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
@@ -20,19 +19,26 @@ import (
 func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azapi": {
+				VersionConstraint: ">= 1.15.0",
+				Source:            "azure/azapi",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azurerm" {
-					features {}
-				}
+				ResourceName: "powerplatform_billing_policy.pay_as_you_go",
+				Config: `
+				data "azapi_client_config" "current" {}
 
-				data "azurerm_client_config" "current" {
-				}
+				resource "azapi_resource" "rg_example" {
+					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+					location  = "East US"
+					name      = "power-platform-billing-` + mocks.TestName() + `"
 
-				resource "azurerm_resource_group" "rg_example" {
-					name     = "power-platform-billing-` + mocks.TestName() + `"
-					location = "westeurope"
+					body = jsonencode({
+						properties = {}
+					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -40,8 +46,8 @@ func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
-						resource_group  = azurerm_resource_group.rg_example.name
-						subscription_id = data.azurerm_client_config.current.subscription_id
+						resource_group  = azapi_resource.rg_example.name
+						subscription_id = data.azapi_client_config.current.subscription_id
 					}
 				}
 				`,
@@ -84,7 +90,7 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "europe"
@@ -115,19 +121,26 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azapi": {
+				VersionConstraint: ">= 1.15.0",
+				Source:            "azure/azapi",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azurerm" {
-					features {}
-				}
+				ResourceName: "powerplatform_billing_policy.pay_as_you_go",
+				Config: `
+				data "azapi_client_config" "current" {}
 
-				data "azurerm_client_config" "current" {
-				}
+				resource "azapi_resource" "rg_example" {
+					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+					location  = "East US"
+					name      = "power-platform-billing-` + mocks.TestName() + `"
 
-				resource "azurerm_resource_group" "rg_example" {
-					name     = "power-platform-billing-` + mocks.TestName() + `"
-					location = "westeurope"
+					body = jsonencode({
+						properties = {}
+					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -135,8 +148,8 @@ func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
-						resource_group  = azurerm_resource_group.rg_example.name
-						subscription_id = data.azurerm_client_config.current.subscription_id
+						resource_group  = azapi_resource.rg_example.name
+						subscription_id = data.azapi_client_config.current.subscription_id
 					}
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -144,17 +157,19 @@ func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azurerm" {
-					features {}
-				}
 
-				data "azurerm_client_config" "current" {
-				}
+				ResourceName: "powerplatform_billing_policy.pay_as_you_go",
+				Config: `
+				data "azapi_client_config" "current" {}
 
-				resource "azurerm_resource_group" "rg_example" {
-					name     = "power-platform-billing-` + mocks.TestName() + `"
-					location = "westeurope"
+				resource "azapi_resource" "rg_example" {
+					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+					location  = "East US"
+					name      = "power-platform-billing-` + mocks.TestName() + `"
+
+					body = jsonencode({
+						properties = {}
+					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -162,8 +177,8 @@ func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
-						resource_group  = azurerm_resource_group.rg_example.name
-						subscription_id = data.azurerm_client_config.current.subscription_id
+						resource_group  = azapi_resource.rg_example.name
+						subscription_id = data.azapi_client_config.current.subscription_id
 					}
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -173,17 +188,19 @@ func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azurerm" {
-					features {}
-				}
 
-				data "azurerm_client_config" "current" {
-				}
+				ResourceName: "powerplatform_billing_policy.pay_as_you_go",
+				Config: `
+				data "azapi_client_config" "current" {}
 
-				resource "azurerm_resource_group" "rg_example" {
-					name     = "power-platform-billing-` + mocks.TestName() + `"
-					location = "westeurope"
+				resource "azapi_resource" "rg_example" {
+					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+					location  = "East US"
+					name      = "power-platform-billing-` + mocks.TestName() + `"
+
+					body = jsonencode({
+						properties = {}
+					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -191,8 +208,8 @@ func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 					location = "unitedstates"
 					status   = "Disabled"
 					billing_instrument = {
-						resource_group  = azurerm_resource_group.rg_example.name
-						subscription_id = data.azurerm_client_config.current.subscription_id
+						resource_group  = azapi_resource.rg_example.name
+						subscription_id = data.azapi_client_config.current.subscription_id
 					}
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -239,7 +256,7 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "europe"
@@ -254,7 +271,7 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample1"
 					location = "europe"
@@ -271,7 +288,7 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample1"
 					location = "europe"
@@ -295,19 +312,25 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azapi": {
+				VersionConstraint: ">= 1.15.0",
+				Source:            "azure/azapi",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azurerm" {
-					features {}
-				}
+				Config: `
+				data "azapi_client_config" "current" {}
 
-				data "azurerm_client_config" "current" {
-				}
+				resource "azapi_resource" "rg_example" {
+					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+					location  = "East US"
+					name      = "power-platform-billing-` + mocks.TestName() + `"
 
-				resource "azurerm_resource_group" "rg_example" {
-					name     = "power-platform-billing-` + mocks.TestName() + `"
-					location = "westeurope"
+					body = jsonencode({
+						properties = {}
+					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -315,8 +338,8 @@ func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 					location = "europe"
 					status   = "Enabled"
 					billing_instrument = {
-						resource_group  = azurerm_resource_group.rg_example.name
-						subscription_id = data.azurerm_client_config.current.subscription_id
+						resource_group  = azapi_resource.rg_example.name
+						subscription_id = data.azapi_client_config.current.subscription_id
 					}
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -324,17 +347,18 @@ func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azurerm" {
-					features {}
-				}
 
-				data "azurerm_client_config" "current" {
-				}
+				Config: `
+				data "azapi_client_config" "current" {}
 
-				resource "azurerm_resource_group" "rg_example" {
-					name     = "power-platform-billing-` + mocks.TestName() + `"
-					location = "westeurope"
+				resource "azapi_resource" "rg_example" {
+					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+					location  = "East US"
+					name      = "power-platform-billing-` + mocks.TestName() + `"
+
+					body = jsonencode({
+						properties = {}
+					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -342,8 +366,8 @@ func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 					location = "switzerland"
 					status   = "Enabled"
 					billing_instrument = {
-						resource_group  = azurerm_resource_group.rg_example.name
-						subscription_id = data.azurerm_client_config.current.subscription_id
+						resource_group  = azapi_resource.rg_example.name
+						subscription_id = data.azapi_client_config.current.subscription_id
 					}
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -352,17 +376,17 @@ func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azurerm" {
-					features {}
-				}
+				Config: `
+				data "azapi_client_config" "current" {}
 
-				data "azurerm_client_config" "current" {
-				}
+				resource "azapi_resource" "rg_example" {
+					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+					location  = "East US"
+					name      = "power-platform-billing-` + mocks.TestName() + `1"
 
-				resource "azurerm_resource_group" "rg_example" {
-					name     = "power-platform-billing-` + mocks.TestName() + `1"
-					location = "westeurope"
+					body = jsonencode({
+						properties = {}
+					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -370,8 +394,8 @@ func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 					location = "switzerland"
 					status   = "Enabled"
 					billing_instrument = {
-						resource_group  = azurerm_resource_group.rg_example.name
-						subscription_id = data.azurerm_client_config.current.subscription_id
+						resource_group  = azapi_resource.rg_example.name
+						subscription_id = data.azapi_client_config.current.subscription_id
 					}
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -414,7 +438,7 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "europe"
@@ -429,7 +453,7 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "switzerland"
@@ -445,7 +469,7 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "switzerland"
@@ -462,7 +486,7 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "switzerland"
@@ -509,7 +533,7 @@ func TestUnitTestBillingPolicy_Validate_Create_WithoutFinalStatusInPostResponse(
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 					name     = "payAsYouGoBillingPolicyExample"
 					location = "europe"
@@ -562,7 +586,7 @@ func TestUnitTestBillingPolicy_Validate_Create_WithoutFinalStatusInPostResponse(
 // 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 // 		Steps: []resource.TestStep{
 // 			{
-// 				Config: constants.TestsUnitProviderConfig + `
+// 				Config: `
 // 				resource "powerplatform_billing_policy" "pay_as_you_go" {
 // 					name     = "payAsYouGoBillingPolicyExample"
 // 					location = "europe"

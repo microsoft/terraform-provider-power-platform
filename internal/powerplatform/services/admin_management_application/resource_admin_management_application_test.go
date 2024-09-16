@@ -49,8 +49,6 @@ func TestAccAdminManagementApplicationResource_Validate_Create(t *testing.T) {
 }
 
 func TestUnitAdminManagementApplicationResource_Validate_Create(t *testing.T) {
-	t.Setenv("POWER_PLATFORM_USE_CLI", "true")
-
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 

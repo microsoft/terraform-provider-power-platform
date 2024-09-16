@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/jarcoal/httpmock"
 
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
@@ -127,7 +126,7 @@ func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
+				Config: BootstrapDataRecordTest(mocks.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -254,8 +253,7 @@ func TestUnitDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig +
-					`data "powerplatform_data_records" "data_query" {
+				Config: `data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
 						filter            = "firstname eq 'contact1'"
@@ -304,7 +302,7 @@ func TestAccDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
+				Config: BootstrapDataRecordTest(mocks.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -394,8 +392,7 @@ func TestUnitDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig +
-					`data "powerplatform_data_records" "data_query" {
+				Config: `data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts(00000000-0000-0000-0000-000000000001)"
 						select            = ["fullname","firstname","lastname"]
@@ -427,7 +424,7 @@ func TestAccDataRecordDatasource_Validate_Top(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
+				Config: BootstrapDataRecordTest(mocks.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -481,8 +478,7 @@ func TestUnitDataRecordDatasource_Validate_Top(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig +
-					`data "powerplatform_data_records" "data_query" {
+				Config: `data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
 						select            = ["fullname","firstname","lastname"]
@@ -503,7 +499,7 @@ func TestAccDataRecordDatasource_Validate_Apply(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
+				Config: BootstrapDataRecordTest(mocks.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -556,8 +552,7 @@ func TestUnitDataRecordDatasource_Validate_Apply(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig +
-					`data "powerplatform_data_records" "data_query" {
+				Config: `data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
 						apply             = "groupby((statuscode),aggregate($count as count))"
@@ -578,7 +573,7 @@ func TestAccDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
+				Config: BootstrapDataRecordTest(mocks.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 						environment_id    = powerplatform_environment.data_env.id
@@ -633,8 +628,7 @@ func TestUnitDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig +
-					`data "powerplatform_data_records" "data_query" {
+				Config: `data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
 						order_by             = "firstname desc, lastname desc"
@@ -654,7 +648,7 @@ func TestAccDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) + `
+				Config: BootstrapDataRecordTest(mocks.TestName()) + `
 				data "powerplatform_data_records" "saved_view" {
 					environment_id    = powerplatform_environment.data_env.id
 					entity_collection = "savedqueries"
@@ -713,8 +707,7 @@ func TestUnitDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig +
-					`data "powerplatform_data_records" "data_query" {
+				Config: `data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
 						saved_query       = "00000000-0000-0000-0000-000000000002"
@@ -735,7 +728,7 @@ func TestAccDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) + `
+				Config: BootstrapDataRecordTest(mocks.TestName()) + `
 				resource "powerplatform_data_record" "userquery" {
 					environment_id     = powerplatform_environment.data_env.id
 					table_logical_name = "userquery"
@@ -798,8 +791,7 @@ func TestUnitDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig +
-					`data "powerplatform_data_records" "data_query" {
+				Config: `data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "contacts"
 						user_query        = "00000000-0000-0000-0000-000000000002"
@@ -822,7 +814,7 @@ func TestAccDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + BootstrapDataRecordTest(mocks.TestName()) +
+				Config: BootstrapDataRecordTest(mocks.TestName()) +
 					`
 					data "powerplatform_data_records" "data_query" {
 					environment_id    = powerplatform_environment.data_env.id
@@ -905,8 +897,7 @@ func TestUnitDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig +
-					`data "powerplatform_data_records" "data_query" {
+				Config: `data "powerplatform_data_records" "data_query" {
 						environment_id    = "00000000-0000-0000-0000-000000000001"
 						entity_collection = "accounts"
 						filter            = "accountid eq 00000000-0000-0000-0000-000000000010"
