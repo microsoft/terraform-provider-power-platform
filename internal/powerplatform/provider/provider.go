@@ -303,7 +303,9 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token_file_path")
 
-	if useCli {
+	if p.Config.Credentials.TestMode {
+		tflog.Info(ctx, "Test mode enabled. Authentication requests will not be sent to the backend APIs.")
+	} else if useCli {
 		tflog.Info(ctx, "Using CLI for authentication")
 		p.Config.Credentials.UseCli = true
 	} else if useOidc {

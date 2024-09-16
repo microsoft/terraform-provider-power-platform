@@ -131,7 +131,6 @@ jobs:
         
     - name: Run unit tests
       run: |
-        export POWER_PLATFORM_USE_CLI="true"
         go clean -testcache
         go test -failfast -v ./... -run "^TestUnit" -coverprofile=coverage.out
         go tool cover -html=coverage.out -o coverage.cov.html
