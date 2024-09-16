@@ -9,20 +9,26 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccConnectionsShareDataSource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: ">= 2.53.1",
+				Source:            "hashicorp/azuread",
+			},
+			"random": {
+				VersionConstraint: ">= 3.6.3",
+				Source:            "hashicorp/random",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
-				//lintignore:AT004
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azuread" {
-				}
-
+				ResourceName: "powerplatform_connection_shares.all_shares",
+				Config: `
 				data "azuread_domains" "aad_domains" {
 					only_initial = true
 				}
@@ -131,7 +137,7 @@ func TestUnitConnectionsShareDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_connection_shares" "all_shares" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					connector_name = "shared_commondataserviceforapps"

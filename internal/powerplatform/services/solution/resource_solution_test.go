@@ -14,7 +14,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
@@ -49,7 +48,7 @@ func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"
@@ -98,7 +97,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"
@@ -190,7 +189,7 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -263,7 +262,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"
@@ -355,7 +354,7 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -440,7 +439,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 		
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -453,7 +452,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -467,7 +466,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -481,7 +480,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
@@ -516,7 +515,7 @@ func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"
@@ -611,7 +610,7 @@ func TestUnitSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"

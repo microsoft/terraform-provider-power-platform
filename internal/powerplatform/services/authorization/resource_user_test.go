@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
@@ -19,14 +18,20 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: ">= 2.53.1",
+				Source:            "hashicorp/azuread",
+			},
+			"random": {
+				VersionConstraint: ">= 3.6.3",
+				Source:            "hashicorp/random",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
-				//lintignore:AT004
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azuread" {
-				}
-
-				data "azuread_domains" "aad_domains" {
+				ResourceName: "powerplatform_user.new_user",
+				Config: `data "azuread_domains" "aad_domains" {
 					only_initial = true
 				}
 
@@ -136,7 +141,7 @@ func TestUnitUserResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					security_roles = [
@@ -203,7 +208,7 @@ func TestUnitUserResource_Validate_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					security_roles = [
@@ -263,7 +268,7 @@ func TestUnitUserResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					security_roles = [
@@ -277,7 +282,7 @@ func TestUnitUserResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000002"
 					security_roles = [
@@ -347,7 +352,7 @@ func TestUnitUserResource_Validate_Create_And_Force_Update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					security_roles = [
@@ -364,7 +369,7 @@ func TestUnitUserResource_Validate_Create_And_Force_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					security_roles = [
@@ -429,7 +434,7 @@ func TestUnitUserResource_Validate_Disable_Delete(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_user" "new_user" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					security_roles = [

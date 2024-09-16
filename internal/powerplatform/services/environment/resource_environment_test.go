@@ -12,7 +12,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
@@ -25,9 +24,11 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
+					description                               = "aaaa"
+					cadence								   	  = "Moderate"
 					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					dataverse = {
@@ -43,6 +44,8 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
 
 					// Verify the first power app to ensure all attributes are set
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "aaaa"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "cadence", "Moderate"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", mocks.TestName()),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", domainName),
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
@@ -56,9 +59,11 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
+					description                               = "bbbb"
+					cadence								      = "Frequent"
 					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					dataverse = {
@@ -70,6 +75,8 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "bbbb"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "cadence", "Frequent"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", newDomaimName),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+newDomaimName+".crm.dynamics.com/"),
 				),
@@ -85,7 +92,7 @@ func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -185,7 +192,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -205,7 +212,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "unitedstates"
@@ -224,7 +231,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "unitedstates"
@@ -242,7 +249,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "unitedstates"
@@ -261,7 +268,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "unitedstates"
@@ -338,7 +345,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "europe"
@@ -359,7 +366,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example123"
 					location                                  = "europe"
@@ -424,7 +431,7 @@ func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -497,7 +504,7 @@ func TestUnitEnvironmentsResource_Validate_Create_With_Billing_Policy(t *testing
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -602,7 +609,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -621,7 +628,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -641,7 +648,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -661,7 +668,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -734,7 +741,7 @@ func TestUnitEnvironmentsResource_Validate_Create_With_D365_Template(t *testing.
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -755,7 +762,7 @@ func TestUnitEnvironmentsResource_Validate_Create_With_D365_Template(t *testing.
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -801,7 +808,7 @@ func TestUnitEnvironmentsResource_Validate_Taken_Domain_Name(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ExpectError: regexp.MustCompile(".*InvalidDomainName.*"),
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -861,9 +868,11 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
+					description                               = "description"
+					cadence								      = "Frequent"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 				}`,
@@ -871,6 +880,8 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "displayname"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "description"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "cadence", "Frequent"),
 
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
@@ -894,7 +905,7 @@ func TestAccEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "europe"
@@ -923,7 +934,7 @@ func TestAccEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *te
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -944,13 +955,12 @@ func TestAccEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *te
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + mocks.TestName() + `"
 						location                                  = "unitedstates"
 						environment_type                          = "Sandbox"
 					}`,
-
 				Check: resource.ComposeTestCheckFunc(),
 			},
 		},
@@ -999,7 +1009,7 @@ func TestUnitEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *t
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -1027,13 +1037,12 @@ func TestUnitEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *t
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "displayname"
 						location                                  = "europe"
 						environment_type                          = "Sandbox"
 					}`,
-
 				Check: resource.ComposeTestCheckFunc(),
 			},
 		},
@@ -1104,7 +1113,7 @@ func TestUnitEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *t
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -1128,7 +1137,7 @@ func TestUnitEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *t
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -1165,7 +1174,7 @@ func TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *te
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -1188,7 +1197,7 @@ func TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *te
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -1220,7 +1229,7 @@ func TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testing
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions"
 					location                                  = "foo"
@@ -1229,7 +1238,7 @@ func TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testing
 				ExpectError: regexp.MustCompile(".*location 'foo' is not valid.*"),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions"
 					location                                  = "europe"
@@ -1239,7 +1248,7 @@ func TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testing
 				ExpectError: regexp.MustCompile(".*region 'bar' is not valid for location europe.*"),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions"
 					location                                  = "europe"
@@ -1296,7 +1305,7 @@ func TestUnitEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testin
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "foo"
@@ -1305,7 +1314,7 @@ func TestUnitEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testin
 				ExpectError: regexp.MustCompile(".*location 'foo' is not valid.*"),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -1315,7 +1324,7 @@ func TestUnitEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testin
 				ExpectError: regexp.MustCompile(".*region 'bar' is not valid for location europe.*"),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -1326,6 +1335,679 @@ func TestUnitEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testin
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "azure_region", "westeurope"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_Enable_Admin_Mode(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_type", regexp.MustCompile(`^(Default|Sandbox|Developer)$`)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.language_code", "1033"),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.organization_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", regexp.MustCompile(helpers.GuidOrEmptyValueRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "unitedstates"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", mocks.TestName()),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "dataverse.version", regexp.MustCompile(helpers.VersionRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+						administration_mode_enabled 			 = true
+						background_operation_enabled		     = false
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.administration_mode_enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.background_operation_enabled", "false"),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+						administration_mode_enabled 			 = true
+						background_operation_enabled		     = true
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.administration_mode_enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.background_operation_enabled", "true"),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+						administration_mode_enabled 			 = false
+						background_operation_enabled		     = true
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.administration_mode_enabled", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.background_operation_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Create_Environment_With_Env_Group(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_With_Env_Group/get_lifecycle_delete.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_With_Env_Group/get_environment_%s.json", id)).String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_With_Env_Group/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Create_Environment_With_Env_Group/get_environment_group.json").String())
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_With_Env_Group/get_environment_group.json").String())
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("DELETE", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			return resp, nil
+		},
+	)
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "test_env_group"
+					description                               = "test env group"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group.id
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000001"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Create_Environment_With_Env_Group(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "` + mocks.TestName() + `"
+					description                               = "` + mocks.TestName() + `"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group.id
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_group_id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing.T) {
+	postEnvGroupRequestInx := 0
+	getEnvironmentRequestInx := 0
+
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_And_Add_Env_Group/get_lifecycle_delete.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
+			getEnvironmentRequestInx++
+			if getEnvironmentRequestInx < 14 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_1.json", id)).String()), nil
+			} else if getEnvironmentRequestInx < 21 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_2.json", id)).String()), nil
+			} else {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_3.json", id)).String()), nil
+			}
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_And_Add_Env_Group/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			postEnvGroupRequestInx++
+			resp := httpmock.NewStringResponse(http.StatusCreated, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/post_environment_group_%d.json", postEnvGroupRequestInx)).String())
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_group_1.json").String())
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups/00000000-0000-0000-0000-000000000002?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_group_2.json").String())
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterRegexpResponder("DELETE", regexp.MustCompile(`^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/environmentGroups/00000000-0000-0000-0000-00000000000(1|2)\?api-version=2021-04-01$`),
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			return resp, nil
+		},
+	)
+
+	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2022-05-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusAccepted, ""), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_And_Add_Env_Group/get_environments_1.json").String())
+			return resp, nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "test_env_group"
+					description                               = "test env group"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group.id
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000001"),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "test_env_group"
+					description                               = "test env group"
+				}
+
+				resource "powerplatform_environment_group" "env_group_new" {
+					display_name                              = "test_env_group_new"
+					description                               = "test env group new"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group_new.id
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000002"),
+				),
+			},
+			{
+				Config: `
+					resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "test_env_group"
+					description                               = "test env group"
+				}
+
+				resource "powerplatform_environment_group" "env_group_new" {
+					display_name                              = "test_env_group_new"
+					description                               = "test env group new"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = ""
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "` + mocks.TestName() + `"
+					description                               = "` + mocks.TestName() + `"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group.id
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_group_id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "` + mocks.TestName() + `"
+					description                               = "` + mocks.TestName() + `"
+				}
+
+				resource "powerplatform_environment_group" "env_group_new" {
+					display_name                              = "` + mocks.TestName() + `_new"
+					description                               = "` + mocks.TestName() + `_new"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group_new.id
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_group_id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "` + mocks.TestName() + `"
+					description                               = "` + mocks.TestName() + `"
+				}
+
+				resource "powerplatform_environment_group" "env_group_new" {
+					display_name                              = "` + mocks.TestName() + `_new"
+					description                               = "` + mocks.TestName() + `_new"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = ""
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_With_Env_Group(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "` + mocks.TestName() + `"
+					description                               = "` + mocks.TestName() + `"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group.id
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_group_id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_And_Add_Env_Group(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "` + mocks.TestName() + `"
+					description                               = "` + mocks.TestName() + `"
+				}
+					
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group.id
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+						
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_group_id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "` + mocks.TestName() + `"
+					description                               = "` + mocks.TestName() + `"
+				}
+					
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = ""
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+						
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Env_Group(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "` + mocks.TestName() + `"
+					description                               = "` + mocks.TestName() + `"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "unitedstates"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group.id
+				}`,
+				ExpectError: regexp.MustCompile(".*UnlinkedEnvironmentWithGroupId.*"),
+				Check:       resource.ComposeAggregateTestCheckFunc(),
 			},
 		},
 	})

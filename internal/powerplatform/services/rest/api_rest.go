@@ -64,8 +64,8 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 	}
 
 	if res != nil && res.Response != nil {
-		tflog.Debug(ctx, fmt.Sprintf("SendOperation Response: %v", res.BodyAsBytes))
-		tflog.Info(ctx, fmt.Sprintf("SendOperation Response Status: %v", res.Response.Status))
+		tflog.Trace(ctx, fmt.Sprintf("SendOperation Response: %v", res.BodyAsBytes))
+		tflog.Trace(ctx, fmt.Sprintf("SendOperation Response Status: %v", res.Response.Status))
 	}
 
 	output := map[string]attr.Value{

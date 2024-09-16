@@ -4,14 +4,13 @@
     "location": "europe",
     "name": "00000000-0000-0000-0000-000000000001",
     "properties": {
+        "parentEnvironmentGroup": {
+            "id": "00000000-0000-0000-0000-000000000002"
+        },
         "tenantId": "123",
         "azureRegion": "westeurope",
         "displayName": "displayname",
-        "description": "aaa",
         "createdTime": "2023-09-27T07:08:27.6057592Z",
-        "parentEnvironmentGroup": {
-            "id": "00000000-0000-0000-0000-000000000001"
-        },
         "createdBy": {
             "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
             "displayName": "admin",
@@ -21,48 +20,7 @@
             "userPrincipalName": "admin"
         },
         "billingPolicy": {
-            "id": "00000000-0000-0000-0000-000000000001",
-            "name": "name",
-            "type": "TenantOwned",
-            "status": "Enabled",
-            "location": "switzerland",
-            "powerAutomatePolicy": {
-                "cloudFlowRunsPayAsYouGoState": "Enabled",
-                "desktopFlowUnattendedRunsPayAsYouGoState": "Enabled",
-                "desktopFlowAttendedRunsPayAsYouGoState": "Enabled"
-            },
-            "powerAppsPolicy": {
-                "payAsYouGoState": "Enabled"
-            },
-            "storagePolicy": {
-                "payAsYouGoState": "Enabled"
-            },
-            "powerPlatformRequestsPolicy": {
-                "payAsYouGoState": "Enabled"
-            },
-            "powerPagesPolicy": {
-                "payAsYouGoState": "Enabled"
-            },
-            "powerVirtualAgentPolicy": {
-                "payAsYouGoState": "Enabled"
-            },
-            "billingInstrument": {
-                "subscriptionId": "00000000-0000-0000-0000-000000000000",
-                "resourceGroup": "rg-terraform",
-                "location": "switzerland",
-                "id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-terraform/providers/Microsoft.PowerPlatform/accounts/name",
-                "provisioningStatus": "Succeeded"
-            },
-            "createdOn": "2023-12-07T13:08:24Z",
-            "createdBy": {
-                "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
-                "type": "User"
-            },
-            "lastModifiedOn": "2023-12-07T13:08:24Z",
-            "lastModifiedBy": {
-                "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
-                "type": "User"
-            }
+            "id": ""
         },
         "lastModifiedTime": "2023-09-27T07:08:34.9205145Z",
         "provisioningState": "Succeeded",
@@ -157,7 +115,7 @@
             }
         },
         "updateCadence": {
-            "id": "Moderate"
+            "id": "Frequent"
         },
         "retentionDetails": {
             "retentionPeriod": "P7D",
