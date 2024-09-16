@@ -96,7 +96,8 @@ func (p *PowerPlatformProvider) Metadata(ctx context.Context, req provider.Metad
 }
 
 func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
-	tflog.Debug(ctx, "Schema request received")
+	_, exitContext := helpers.EnterProviderContext(ctx, req)
+	defer exitContext()
 
 	resp.Schema = schema.Schema{
 		Description:         "The Power Platform Terraform Provider allows managing environments and other resources within Power Platform",
@@ -173,10 +174,10 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 }
 
 func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	_, exitContext := helpers.EnterProviderContext(ctx, req)
+	defer exitContext()
+
 	var config config.ProviderCredentialsModel
-
-	tflog.Debug(ctx, "Configure request received")
-
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
@@ -438,8 +439,6 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	}
 	resp.DataSourceData = &providerClient
 	resp.ResourceData = &providerClient
-
-	tflog.Info(ctx, "Configured API client", map[string]any{"success": true})
 }
 
 func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource.Resource {
