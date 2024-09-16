@@ -85,7 +85,7 @@ func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method
 	if err != nil {
 		return nil, err
 	}
-	apiResponse, err := client.doRequest(token, request, headers)
+	apiResponse, err := client.doRequest(ctx, token, request, headers)
 	if err != nil {
 		return apiResponse, err
 	}

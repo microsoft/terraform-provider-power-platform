@@ -5,14 +5,49 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
+	"runtime"
+	"strings"
+
+	"github.com/microsoft/terraform-provider-power-platform/common"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 )
 
-func (client *ApiClient) doRequest(token *string, request *http.Request, headers http.Header) (*ApiHttpResponse, error) {
+func (client *ApiClient) BuildCorrelationHeaders(ctx context.Context) (string, string) {
+	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
+	if ok {
+		cc := strings.Join([]string{
+			"objectType=" + requestContext.ObjectType,
+			"objectName=" + requestContext.ObjectName,
+			"requestType=" + requestContext.RequestType,
+		}, ",")
+
+		rid := "|" + requestContext.RequestId + "." + fmt.Sprintf("%016x", rand.Uint64()) + "."
+
+		return rid, cc
+	}
+
+	return "", ""
+}
+
+func (client *ApiClient) buildUserAgent(ctx context.Context) string {
+	userAgent := fmt.Sprintf("terraform-provider-power-platform/%s (%s; %s) terraform/%s go/%s", common.ProviderVersion, runtime.GOOS, runtime.GOARCH, client.Config.TerraformVersion, runtime.Version())
+
+	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
+	if ok {
+		userAgent += fmt.Sprintf(" %s %s %s", requestContext.ObjectType, requestContext.ObjectName, requestContext.RequestType)
+	}
+
+	return userAgent
+}
+
+func (client *ApiClient) doRequest(ctx context.Context, token *string, request *http.Request, headers http.Header) (*ApiHttpResponse, error) {
 	apiHttpResponse := &ApiHttpResponse{}
 	if headers != nil {
 		request.Header = headers
@@ -33,7 +68,12 @@ func (client *ApiClient) doRequest(token *string, request *http.Request, headers
 	}
 
 	if !client.GetConfig().TelemetryOptout {
-		request.Header.Set("User-Agent", "terraform-provider-power-platform")
+		ua := client.buildUserAgent(ctx)
+		request.Header.Set("User-Agent", ua)
+
+		rid, cc := client.BuildCorrelationHeaders(ctx)
+		request.Header.Set("Request-Id", rid)
+		request.Header.Set("Correlation-Context", cc)
 	}
 
 	response, err := httpClient.Do(request)

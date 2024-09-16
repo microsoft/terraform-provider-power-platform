@@ -9,10 +9,11 @@ import (
 )
 
 type ProviderConfig struct {
-	Credentials     *ProviderCredentials
-	Urls            ProviderConfigUrls
-	TelemetryOptout bool
-	Cloud           cloud.Configuration
+	Credentials      *ProviderCredentials
+	Urls             ProviderConfigUrls
+	TelemetryOptout  bool
+	Cloud            cloud.Configuration
+	TerraformVersion string
 }
 
 type ProviderConfigUrls struct {

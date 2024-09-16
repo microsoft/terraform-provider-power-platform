@@ -9,15 +9,17 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
+	"github.com/microsoft/terraform-provider-power-platform/common"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
 )
 
 // Generate the provider document.
+//
 //go:generate tfplugindocs generate --provider-name powerplatform --rendered-provider-name "Power Platform"
-
 func main() {
-	var debug bool
+	log.Printf("[INFO] Starting the Power Platform Terraform Provider %s %s", common.ProviderVersion, common.Branch)
 
+	var debug bool
 	flag.BoolVar(&debug, "debug", false, "set to true to run the provider with support for debuggers like delve")
 	flag.Parse()
 	ctx := context.Background()
