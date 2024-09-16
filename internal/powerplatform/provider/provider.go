@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-
+	
 	azcloud "github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/common"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
@@ -61,8 +62,11 @@ func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func
 			PowerAppsScope:     constants.PUBLIC_POWERAPPS_SCOPE,
 			PowerPlatformUrl:   constants.PUBLIC_POWERPLATFORM_API_DOMAIN,
 			PowerPlatformScope: constants.PUBLIC_POWERPLATFORM_API_SCOPE,
+			LicensingUrl:       constants.PUBLIC_LICENSING_API_DOMAIN,
 		},
 		Cloud: azcloud.AzurePublic,
+		TerraformVersion: "unknown",
+		TelemetryOptout: false,
 	}
 
 	if len(testModeEnabled) > 0 && testModeEnabled[0] {
@@ -81,13 +85,21 @@ func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func
 
 func (p *PowerPlatformProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "powerplatform"
+	resp.Version = common.ProviderVersion
+
+	tflog.Debug(ctx, "Provider Metadata request received", map[string]any{
+		"version": resp.Version,
+		"typeName": resp.TypeName,
+		"branch": common.Branch,
+		"commit": common.Commit,
+	})
 }
 
 func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
-	tflog.Debug(ctx, "Schema request received")
+	_, exitContext := helpers.EnterProviderContext(ctx, req)
+	defer exitContext()
 
 	resp.Schema = schema.Schema{
-
 		Description:         "The Power Platform Terraform Provider allows managing environments and other resources within Power Platform",
 		MarkdownDescription: "The Power Platform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/)",
 		Attributes: map[string]schema.Attribute{
@@ -162,10 +174,10 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 }
 
 func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
+	_, exitContext := helpers.EnterProviderContext(ctx, req)
+	defer exitContext()
+
 	var config config.ProviderCredentialsModel
-
-	tflog.Debug(ctx, "Configure request received")
-
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 
 	if resp.Diagnostics.HasError() {
@@ -419,6 +431,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	p.Config.TelemetryOptout = config.TelemetryOptout.ValueBool()
+	p.Config.TerraformVersion = req.TerraformVersion
 
 	providerClient := api.ProviderClient{
 		Config: p.Config,
@@ -426,8 +439,6 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	}
 	resp.DataSourceData = &providerClient
 	resp.ResourceData = &providerClient
-
-	tflog.Info(ctx, "Configured API client", map[string]any{"success": true})
 }
 
 func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource.Resource {

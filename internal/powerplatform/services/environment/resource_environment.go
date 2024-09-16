@@ -32,23 +32,35 @@ var _ resource.ResourceWithImportState = &EnvironmentResource{}
 
 func NewEnvironmentResource() resource.Resource {
 	return &EnvironmentResource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_environment",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "environment",
+		},
 	}
 }
 
 type EnvironmentResource struct {
+	helpers.TypeInfo
 	EnvironmentClient EnvironmentClient
 	LicensingClient   licensing.LicensingClient
-	ProviderTypeName  string
-	TypeName          string
 }
 
+// Metadata returns the full name of the resource type.
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + r.TypeName
+	// update our own internal storage of the provider type name
+	r.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename
+	resp.TypeName = r.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
 func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "This resource manages a PowerPlatform environment",
 		Description:         "This resource manages a PowerPlatform environment",
@@ -234,12 +246,15 @@ func (d *EnvironmentResource) ConfigValidators(ctx context.Context) []resource.C
 }
 
 func (r *EnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
+		// TODO: Should we add a warning here?
 		return
 	}
 
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
-
 	if clientApi == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
@@ -248,17 +263,19 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 
 		return
 	}
+
 	r.EnvironmentClient = NewEnvironmentClient(clientApi)
 	r.LicensingClient = licensing.NewLicensingClient(clientApi)
+	tflog.Debug(ctx, "Successfully created clients")
 }
 
 func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	var plan *EnvironmentSourceModel
 
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
-
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -309,7 +326,7 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
 		currencyCode = envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code
 
-		//because BAPI does not retrieve template info after create, we have to rewrite it
+		// because BAPI does not retrieve template info after create, we have to rewrite it
 		templateMetadata = envToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
 		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
@@ -323,16 +340,14 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
-
 }
 
+// Read reads the resource state from the remote system. If the resource does not exist, the state should be removed from the state store.
 func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	var state *EnvironmentSourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.ProviderTypeName))
-
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -398,15 +413,14 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	var plan *EnvironmentSourceModel
 	var state *EnvironmentSourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -583,14 +597,13 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *EnvironmentSourceModel
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
+	var state *EnvironmentSourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
@@ -612,10 +625,11 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
-
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *EnvironmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
