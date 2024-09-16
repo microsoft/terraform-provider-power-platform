@@ -21,7 +21,7 @@ func TestAccAdminManagementApplicationResource_Validate_Create(t *testing.T) {
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azuread": {
 				VersionConstraint: ">= 2.53.1",
-				Source: 		 "hashicorp/azuread",
+				Source:            "hashicorp/azuread",
 			},
 		},
 		Steps: []resource.TestStep{
@@ -49,11 +49,13 @@ func TestAccAdminManagementApplicationResource_Validate_Create(t *testing.T) {
 }
 
 func TestUnitAdminManagementApplicationResource_Validate_Create(t *testing.T) {
+	t.Setenv("POWER_PLATFORM_USE_CLI", "true")
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
 	client_id, _ := uuid.NewRandom()
-	
+
 	url := fmt.Sprintf("https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/adminApplications/%s?api-version=2020-10-01", client_id.String())
 	body := fmt.Sprintf("{ \"applicationId\": \"%s\" }", client_id.String())
 
@@ -66,7 +68,8 @@ func TestUnitAdminManagementApplicationResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigVariables: config.Variables {
+
+				ConfigVariables: config.Variables{
 					"client_id": config.StringVariable(client_id.String()),
 				},
 				Config: `
