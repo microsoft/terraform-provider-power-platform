@@ -20,6 +20,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/admin_management_application"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/capacity"
@@ -444,6 +445,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return rest.NewDataverseWebApiResource() },
 		func() resource.Resource { return connection.NewConnectionShareResource() },
 		func() resource.Resource { return environment_groups.NewEnvironmentGroupResource() },
+		func() resource.Resource { return admin_management_application.NewAdminManagementApplicationResource() },
 	}
 }
 
