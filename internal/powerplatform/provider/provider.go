@@ -8,10 +8,8 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
-
+	
 	azcloud "github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
-	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -433,7 +431,6 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 
 	p.Config.TelemetryOptout = config.TelemetryOptout.ValueBool()
 	p.Config.TerraformVersion = req.TerraformVersion
-	p.Config.TraceId = strings.ReplaceAll(uuid.New().String(), "-", "")
 
 	providerClient := api.ProviderClient{
 		Config: p.Config,

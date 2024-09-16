@@ -14,7 +14,6 @@ type ProviderConfig struct {
 	TelemetryOptout  bool
 	Cloud            cloud.Configuration
 	TerraformVersion string
-	TraceId          string
 }
 
 type ProviderConfigUrls struct {
