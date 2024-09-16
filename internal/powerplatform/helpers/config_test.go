@@ -13,33 +13,6 @@ import (
 
 const TEST_ENV_VARIRONMENT_VARIABLE_NAME = "TEST_ENV_VAR"
 
-// func TestGetConfigString_ConfigValueIsNotNull(t *testing.T) {
-// 	expectedValue := "expectedValue"
-// 	t.Setenv(TEST_ENV_VARIRONMENT_VARIABLE_NAME, "environmentVariableValue")
-// 	ctx := context.Background()
-// 	configValue := basetypes.NewStringValue(expectedValue)
-// 	defaultValue := "defaultValue"
-
-// 	result := helpers.GetConfigString(ctx, configValue, TEST_ENV_VARIRONMENT_VARIABLE_NAME, defaultValue)
-
-// 	if result != expectedValue {
-// 		t.Errorf("Expected '%s', got %s", expectedValue, result)
-// 	}
-// }
-
-// func TestGetConfigString_EnvironmentVariableIsSet(t *testing.T) {
-// 	ctx := context.Background()
-// 	configValue := basetypes.NewStringNull()
-// 	defaultValue := "defaultValue"
-// 	os.Setenv(TEST_ENV_VARIRONMENT_VARIABLE_NAME, "environmentVariableValue")
-
-// 	result := helpers.GetConfigString(ctx, configValue, TEST_ENV_VARIRONMENT_VARIABLE_NAME, defaultValue)
-
-// 	if result != "environmentVariableValue" {
-// 		t.Errorf("Expected 'environmentVariableValue', got %s", result)
-// 	}
-// }
-
 func TestUnitGetConfigString_Matrix(t *testing.T) {
 	type testData struct{
 		name string
@@ -100,6 +73,122 @@ func TestUnitGetConfigString_Matrix(t *testing.T) {
 		
 			if result != testCase.expectedValue {
 				t.Errorf("Expected '%s', got '%s'", testCase.expectedValue, result)
+			}
+		})
+	}
+}
+
+
+func TestUnitGetConfigBool_Matrix(t *testing.T) {
+	type testData struct{
+		name string
+		configValue *bool
+		environmentValue *string
+		defaultValue bool
+		expectedValue bool
+	}
+
+	trueValue1 := "TRUE"
+	trueValue2 := "true"
+	trueValue3 := "1"
+	falseValue1 := "FALSE"
+	falseValue2 := "false"
+	falseValue3 := "0"
+
+	trueValue := true
+	//falseValue := false
+
+	for _, testCase := range []testData {
+		{
+			name : "default false",
+			configValue : nil,
+			environmentValue : nil,
+			defaultValue : false,
+			expectedValue : false,
+		},
+		{
+			name : "default true",
+			configValue : nil,
+			environmentValue : nil,
+			defaultValue : true,
+			expectedValue : true,
+		},
+		{
+			name : "environment set to true 1",
+			configValue : nil,
+			environmentValue : &trueValue1,
+			defaultValue : false,
+			expectedValue : true,
+		},
+		{
+			name : "environment set to true 2",
+			configValue : nil,
+			environmentValue : &trueValue2,
+			defaultValue : false,
+			expectedValue : true,
+		},
+		{
+			name : "environment set to true 3",
+			configValue : nil,
+			environmentValue : &trueValue3,
+			defaultValue : false,
+			expectedValue : true,
+		},
+		{
+			name : "environment set to false 1",
+			configValue : nil,
+			environmentValue : &falseValue1,
+			defaultValue : true,
+			expectedValue : false,
+		},
+		{
+			name : "environment set to false 2",
+			configValue : nil,
+			environmentValue : &falseValue2,
+			defaultValue : true,
+			expectedValue : false,
+		},
+		{
+			name : "environment set to false 3",
+			configValue : nil,
+			environmentValue : &falseValue3,
+			defaultValue : true,
+			expectedValue : false,
+		},
+		{
+			name : "config and environment set",
+			configValue : &trueValue,
+			environmentValue : &falseValue1,
+			defaultValue : false,
+			expectedValue : true,
+		},
+		{
+			name : "config set",
+			configValue : &trueValue,
+			environmentValue : nil,
+			defaultValue : false,
+			expectedValue : true,
+		},
+	} {
+		t.Run(testCase.name, func(t *testing.T){
+			var configValue basetypes.BoolValue
+
+			if(testCase.environmentValue != nil) {
+				t.Setenv(TEST_ENV_VARIRONMENT_VARIABLE_NAME, *testCase.environmentValue)
+			}
+
+			if( testCase.configValue != nil) {
+				configValue = basetypes.NewBoolValue(*testCase.configValue)
+			} else {
+				configValue = basetypes.NewBoolNull()
+			}
+			
+			ctx := context.Background()
+		
+			result := helpers.GetConfigBool(ctx, configValue, TEST_ENV_VARIRONMENT_VARIABLE_NAME, testCase.defaultValue)
+		
+			if result != testCase.expectedValue {
+				t.Errorf("Expected '%t', got '%t'", testCase.expectedValue, result)
 			}
 		})
 	}
