@@ -6,6 +6,7 @@ package helpers
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -47,7 +48,7 @@ const (
 // The closure will log the end of the request scope
 // The context is updated with the request context so that it can be accessed in lower level functions
 func EnterRequestContext(ctx context.Context, typ TypeInfo, req any) (context.Context, func()) {
-	reqId := uuid.New().String()
+	reqId := strings.ReplaceAll(uuid.New().String(), "-", "")
 	objType, reqType := getRequestType(req)
 	name:= typ.FullTypeName()
 
@@ -62,6 +63,21 @@ func EnterRequestContext(ctx context.Context, typ TypeInfo, req any) (context.Co
 	// This returns a closure that can be used to defer the exit of the request scope
 	return ctx, func() {
 		tflog.Debug(ctx, fmt.Sprintf("%s %s END: %s", reqType, objType, name))
+	}
+}
+
+func EnterProviderContext(ctx context.Context, req any) (context.Context, func()) {
+	objType, reqType := getRequestType(req)
+
+	tflog.Debug(ctx, fmt.Sprintf("%s %s START", reqType, objType), map[string]any{
+		"providerVersion": common.ProviderVersion,
+	})
+
+	// This returns a closure that can be used to defer the exit of the provider scope
+	return ctx, func() {
+		tflog.Debug(ctx, fmt.Sprintf("%s %s END", reqType, objType), map[string]any{
+			"providerVersion": common.ProviderVersion,
+		})
 	}
 }
 

@@ -37,7 +37,7 @@ func (client *ApiClient) BuildCorrelationHeaders(ctx context.Context) (string, s
 }
 
 func (client *ApiClient) buildUserAgent(ctx context.Context) string {
-	userAgent := fmt.Sprintf("terraform-provider-power-platform/%s (%s; %s) terraform/%s", common.ProviderVersion, runtime.GOOS, runtime.GOARCH, client.Config.TerraformVersion)
+	userAgent := fmt.Sprintf("terraform-provider-power-platform/%s (%s; %s) terraform/%s go/%s", common.ProviderVersion, runtime.GOOS, runtime.GOARCH, client.Config.TerraformVersion, runtime.Version())
 
 	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
 	if ok {
