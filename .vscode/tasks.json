@@ -1,0 +1,27 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "install",
+			"type": "shell",
+			"command": "make",
+			"args": [
+				"install"
+			],
+			"presentation": {
+				"echo": true,
+				"reveal": "never",
+				"focus": true,
+				"panel": "new",
+				"showReuseMessage": false,
+				"clear": false,
+				"close": true,
+				"revealProblems": "onProblem"
+			},
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+		}
+	]
+}
