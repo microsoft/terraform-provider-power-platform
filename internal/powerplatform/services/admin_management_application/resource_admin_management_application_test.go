@@ -49,10 +49,7 @@ func TestAccAdminManagementApplicationResource_Validate_Create(t *testing.T) {
 }
 
 func TestUnitAdminManagementApplicationResource_Validate_Create(t *testing.T) {
-
-	t.Setenv("client_id", "00000000-0000-0000-0000-000000000000")
-	t.Setenv("client_secret", "00000000-0000-0000-0000-000000000000")
-	t.Setenv("tenant_id", "00000000-0000-0000-0000-000000000000")
+	t.Setenv("POWER_PLATFORM_USE_CLI", "true")
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
