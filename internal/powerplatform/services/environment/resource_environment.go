@@ -266,7 +266,7 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 
 	r.EnvironmentClient = NewEnvironmentClient(clientApi)
 	r.LicensingClient = licensing.NewLicensingClient(clientApi)
-	tflog.Debug(ctx, fmt.Sprintf("Successfully created clients"))
+	tflog.Debug(ctx, "Successfully created clients")
 }
 
 func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

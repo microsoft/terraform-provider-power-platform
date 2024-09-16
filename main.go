@@ -14,6 +14,7 @@ import (
 )
 
 // Generate the provider document.
+//
 //go:generate tfplugindocs generate --provider-name powerplatform --rendered-provider-name "Power Platform"
 func main() {
 	log.Printf("[INFO] Starting the Power Platform Terraform Provider %s %s", common.ProviderVersion, common.Branch)
