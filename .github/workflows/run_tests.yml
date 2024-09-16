@@ -99,7 +99,7 @@ jobs:
       with:
         cache: true
         go-version-file: 'go.mod'
-        id: go
+      id: go
 
     - name: Get dependencies
       run: |
@@ -107,36 +107,21 @@ jobs:
         go mod download
     
     - name: "Set up Terraform"
-      uses: hashicorp/setup-terraform@v3
-
-    - name: Download Terraform Providers
-      run: |
-          mkdir deps
-          cp .devcontainer/features/acceptance_test_dependencies/main.tf deps/main.tf
-          cd deps
-          terraform init
-          find .terraform/providers/ -type f -exec cp {} . \;
-          
-    - name: Setting up local provider install
-      run: |
-          cp .devcontainer/features/local_provider_dev/terraform.rc deps/terraform.rc
-          cd deps
-          sed -i "s|/go/bin|${GITHUB_WORKSPACE}/deps|g" terraform.rc
-          cat terraform.rc
-    
+      uses: hashicorp/setup-terraform@v3  
     
     - name: Run tests
+      env: 
+        TF_CLI_CONFIG_FILE: ${{ github.workspace }}/.terraformrc
+        TF_LOG: WARN
+        TF_ACC: 1
+        POWER_PLATFORM_USE_OIDC: true
+        POWER_PLATFORM_TENANT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}
+        POWER_PLATFORM_CLIENT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
+        ARM_USE_OIDC: true
+        ARM_CLIENT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
+        ARM_TENANT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}
+        ARM_SUBSCRIPTION_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}
       run: |
-        export TF_CLI_CONFIG_FILE="${GITHUB_WORKSPACE}/deps/terraform.rc"
-        export TF_LOG=WARN
-        export TF_ACC=1
-        export POWER_PLATFORM_USE_OIDC=true
-        export POWER_PLATFORM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
-        export POWER_PLATFORM_CLIENT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}'
-        export ARM_USE_OIDC="true"
-        export ARM_CLIENT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}'
-        export ARM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
-        export ARM_SUBSCRIPTION_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}'
         go clean -testcache
         go test -p 10 -failfast -v ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m
         go tool cover -html=test-coverage.out -o test-coverage.cov.html

@@ -8,7 +8,5 @@
     "containerEnv": {},
     "customizations": {},
     "installsAfter": [
-        "ghcr.io/devcontainers/features/go",
-        "ghcr.io/devcontainers/features/terraform"
     ]
 }
