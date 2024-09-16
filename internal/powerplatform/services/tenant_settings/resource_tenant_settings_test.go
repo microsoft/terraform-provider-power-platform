@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
@@ -21,7 +20,7 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = false
 					disable_support_tickets_visible_by_all_users          = false
@@ -168,7 +167,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = false
 					disable_support_tickets_visible_by_all_users          = false
@@ -298,7 +297,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = true
 					disable_support_tickets_visible_by_all_users          = true
@@ -418,7 +417,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = false
 					disable_support_tickets_visible_by_all_users          = false
@@ -570,7 +569,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = true
 					disable_support_tickets_visible_by_all_users          = true
@@ -690,7 +689,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_tenant_settings" "settings" {
 					walk_me_opt_out                                       = false
 					disable_support_tickets_visible_by_all_users          = false

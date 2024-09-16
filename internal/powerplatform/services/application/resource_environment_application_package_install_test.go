@@ -11,7 +11,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
@@ -22,7 +21,7 @@ func TestAccEnvironmentApplicationPackageInstallResource_Validate_Install(t *tes
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "environment" {
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
@@ -124,7 +123,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -148,7 +147,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"
@@ -237,7 +236,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_No_Dataverse(
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "env" {
 					display_name     = "displayname"
 					location         = "europe"

@@ -1,21 +1,20 @@
 name: Terraform Provider Tests
 
 on:
- workflow_dispatch:
- schedule:
-    # run at 4 AM UTC every day
-    - cron:  '0 4 * * *' 
- pull_request:
-    paths:
-      - 'go.mod'
- push:
-    branches:
-      - main
-    
+  workflow_dispatch:
+  schedule:
+     # run at 4 AM UTC every day
+     - cron:  '0 4 * * *' 
+  pull_request:
+     paths:
+       - 'go.mod'
+  push:
+     branches:
+       - main
 
 concurrency:
   group: acceptancetests
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   id-token: write # This is required for requesting the JWT
@@ -111,7 +110,6 @@ jobs:
     
     - name: Run tests
       env: 
-        TF_CLI_CONFIG_FILE: ${{ github.workspace }}/.terraformrc
         TF_LOG: WARN
         TF_ACC: 1
         POWER_PLATFORM_USE_OIDC: true
@@ -123,7 +121,7 @@ jobs:
         ARM_SUBSCRIPTION_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}
       run: |
         go clean -testcache
-        go test -p 10 -failfast -v ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m
+        go test -p 10 -v ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m
         go tool cover -html=test-coverage.out -o test-coverage.cov.html
 
     - name: Upload Coverage Artifacts

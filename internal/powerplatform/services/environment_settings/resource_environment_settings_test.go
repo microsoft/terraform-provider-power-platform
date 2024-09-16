@@ -12,7 +12,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
@@ -22,7 +21,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "example_environment_settings" {
 					display_name      = "` + mocks.TestName() + `"
 					location          = "unitedstates" 
@@ -79,7 +78,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T) 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "example_environment_settings" {
 					display_name      = "` + mocks.TestName() + `"
 					location          = "unitedstates" 
@@ -148,7 +147,7 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				  resource "powerplatform_environment_settings" "settings" {
 					environment_id                         = "00000000-0000-0000-0000-000000000001"
 					audit_and_logs = {
@@ -248,7 +247,7 @@ func TestUnitTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T)
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				  resource "powerplatform_environment" "env" {
 					display_name                              = "displayname"
 					location                                  = "europe"

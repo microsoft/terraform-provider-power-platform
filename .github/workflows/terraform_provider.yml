@@ -2,13 +2,9 @@ name: Terraform Provider Checks
 
 on:
   pull_request:
-    paths-ignore:
-      - 'README.md'
   push:
     branches:
       - main
-    paths-ignore:
-      - 'README.md'
 
 jobs:
   # ensure go.mod and go.sum are updated
@@ -132,7 +128,7 @@ jobs:
     - name: Run unit tests
       run: |
         go clean -testcache
-        go test -failfast -v ./... -run "^TestUnit" -coverprofile=coverage.out
+        go test -v ./... -run "^TestUnit" -coverprofile=coverage.out
         go tool cover -html=coverage.out -o coverage.cov.html
 
     - name: Upload Coverage Artifacts
@@ -140,44 +136,6 @@ jobs:
       with:
         name: Test Coverage
         path: coverage.cov.html
-
-  # run acceptance tests and linter
-  # acceptance_test_and_lint:
-  #   name: Acceptance Test and Lint
-  #   needs: build
-  #   runs-on: ubuntu-latest
-  #   steps:
-
-  #   - name: Check out code into the Go module directory
-  #     uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-
-  #   - name: Set up Go
-  #     uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
-  #     with:
-  #       cache: true
-  #       go-version-file: 'go.mod'
-  #     id: go
-
-  #   - name: Get dependencies
-  #     run: |
-  #       go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
-  #       go mod download
-        
-  #   - name: Run acceptance tests and linter
-  #     run: |
-  #       export POWER_PLATFORM_TENANT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}'
-  #       export POWER_PLATFORM_CLIENT_ID='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}'
-  #       export POWER_PLATFORM_SECRET='${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_SECRET }}'
-  #       export TF_ACC=1
-  #       go clean -testcache
-  #       go test -failfast -v ./... -run "^TestAcc" -coverprofile=acc_coverage.out
-  #       go tool cover -html=acc_coverage.out -o acc_coverage.cov.html
-
-  #   - name: Upload Coverage Artifacts
-  #     uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4.4.0
-  #     with:
-  #       name: Acceptance Test Coverage
-  #       path: acc_coverage.cov.html
 
   # ensure docs are generated
   gencheck:

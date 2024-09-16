@@ -23,6 +23,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/admin_management_application"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/application"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/authorization"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/services/capacity"
@@ -315,7 +316,9 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token")
 	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token_file_path")
 
-	if useCli {
+	if p.Config.Credentials.TestMode {
+		tflog.Info(ctx, "Test mode enabled. Authentication requests will not be sent to the backend APIs.")
+	} else if useCli {
 		tflog.Info(ctx, "Using CLI for authentication")
 		p.Config.Credentials.UseCli = true
 	} else if useOidc {
@@ -459,6 +462,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return rest.NewDataverseWebApiResource() },
 		func() resource.Resource { return connection.NewConnectionShareResource() },
 		func() resource.Resource { return environment_groups.NewEnvironmentGroupResource() },
+		func() resource.Resource { return admin_management_application.NewAdminManagementApplicationResource() },
 	}
 }
 

@@ -252,7 +252,11 @@ func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environment
 	}
 
 	if env.Properties.LinkedEnvironmentMetadata != nil && env.Properties.LinkedEnvironmentMetadata.SecurityGroupId == "" {
-		env.Properties.LinkedEnvironmentMetadata.SecurityGroupId = "00000000-0000-0000-0000-000000000000"
+		env.Properties.LinkedEnvironmentMetadata.SecurityGroupId = constants.ZERO_UUID
+	}
+
+	if env.Properties.ParentEnvironmentGroup != nil && env.Properties.ParentEnvironmentGroup.Id == "" {
+		env.Properties.ParentEnvironmentGroup.Id = constants.ZERO_UUID
 	}
 
 	return &env, nil

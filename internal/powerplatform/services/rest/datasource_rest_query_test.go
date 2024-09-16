@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
@@ -34,7 +33,7 @@ func TestUnitDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_rest_query" "webapi_query" {
 					scope 		   = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/.default"
 					url            = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/whoami"
@@ -54,7 +53,7 @@ func TestAccDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"

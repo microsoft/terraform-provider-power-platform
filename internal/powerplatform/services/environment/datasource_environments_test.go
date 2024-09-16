@@ -10,7 +10,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
@@ -20,18 +19,22 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "env" {
 					display_name     = "` + mocks.TestName() + `"
+					description      = "description"
 					location         = "europe"
 					azure_region     = "northeurope"
 					environment_type = "Sandbox"
+					cadence = "Moderate"
 					dataverse = {
 						language_code     = "1033"
 						currency_code     = "USD"
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
 				}
+
+
 
 				data "powerplatform_environments" "all" {
 					depends_on = [powerplatform_environment.env]
@@ -42,6 +45,8 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
 					// Verify the first power app to ensure all attributes are set
+					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.cadence", regexp.MustCompile(`^(Frequent|Moderate)$`)),
+					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.description", regexp.MustCompile(`^(|description)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.display_name", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.domain", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.id", regexp.MustCompile(helpers.GuidRegex)),
@@ -86,7 +91,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_environments" "all" {}`,
 
 				Check: resource.ComposeTestCheckFunc(
@@ -94,6 +99,8 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.#", "2"),
 
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.cadence", "Moderate"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.description", "aaa"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.display_name", "Admin AdminOnMicrosoft's Environment"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.domain", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.id", "00000000-0000-0000-0000-000000000001"),
@@ -112,13 +119,17 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.linked_app_url"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.templates"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.template_metadata"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.environment_group_id", "00000000-0000-0000-0000-000000000001"),
 
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.cadence", "Frequent"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.description", "bbb"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.display_name", "displayname"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.id", "00000000-0000-0000-0000-000000000002"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.environment_type", "Sandbox"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.location", "europe"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.azure_region", "westeurope"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.billing_policy_id", ""),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.environment_group_id", ""),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.dataverse.domain"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.dataverse.language_code"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.dataverse.organization_id"),

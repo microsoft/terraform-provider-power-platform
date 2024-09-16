@@ -11,28 +11,33 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
 
 func TestAccBillingPoliciesDataSource_Validate_Read(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azapi": {
+				VersionConstraint: ">= 1.15.0",
+				Source:            "azure/azapi",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
-				provider "azurerm" {
-					features {}
-				}
+				ResourceName: "powerplatform_billing_policies.all",
+				Config: `
+				data "azapi_client_config" "current" {}
 
-				data "azurerm_client_config" "current" {
-				}
+				resource "azapi_resource" "rg_example" {
+					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
+					location  = "East US"
+					name      = "power-platform-billing-` + mocks.TestName() + `"
 
-				resource "azurerm_resource_group" "rg_example" {
-					name     = "power-platform-billing-` + mocks.TestName() + `"
-					location = "westeurope"
+					body = jsonencode({
+						properties = {}
+					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -40,8 +45,8 @@ func TestAccBillingPoliciesDataSource_Validate_Read(t *testing.T) {
 					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
-						resource_group  = azurerm_resource_group.rg_example.name
-						subscription_id = data.azurerm_client_config.current.subscription_id
+						resource_group  = azapi_resource.rg_example.name
+						subscription_id = data.azapi_client_config.current.subscription_id
 					}
 				}
 
@@ -76,7 +81,7 @@ func TestUnitTestBillingPoliciesDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				data "powerplatform_billing_policies" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

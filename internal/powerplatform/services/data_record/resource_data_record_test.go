@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/jarcoal/httpmock"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/mocks"
 )
@@ -25,7 +24,7 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -194,7 +193,7 @@ func TestUnitDataRecordResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
@@ -286,7 +285,7 @@ func TestAccDataRecordResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -332,7 +331,7 @@ func TestAccDataRecordResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -426,7 +425,7 @@ func TestUnitDataRecordResource_Validate_Update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
@@ -462,7 +461,7 @@ func TestUnitDataRecordResource_Validate_Update(t *testing.T) {
 				),
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"
@@ -506,7 +505,7 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -568,7 +567,7 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -681,7 +680,7 @@ func TestUnitDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"
@@ -732,7 +731,7 @@ func TestUnitDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 
 				resource "powerplatform_data_record" "data_record_account" {
 						environment_id     = "00000000-0000-0000-0000-000000000001"
@@ -773,7 +772,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -866,7 +865,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -944,7 +943,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: constants.TestsAcceptanceProviderConfig + `
+				Config: `
 				resource "powerplatform_environment" "test_env" {
 					display_name     = "` + mocks.TestName() + `"
 					location         = "unitedstates"
@@ -1153,7 +1152,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"
@@ -1227,7 +1226,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"
@@ -1297,7 +1296,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				},
 			},
 			{
-				Config: constants.TestsUnitProviderConfig + `
+				Config: `
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
 					environment_id     = "00000000-0000-0000-0000-000000000001"
 					table_logical_name = "contact"
