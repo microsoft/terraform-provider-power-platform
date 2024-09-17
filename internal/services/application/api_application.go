@@ -16,9 +16,9 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewApplicationClient(api *api.Client) ApplicationClient {
+func NewApplicationClient(apiClient *api.Client) ApplicationClient {
 	return ApplicationClient{
-		Api: api,
+		Api: apiClient,
 	}
 }
 

@@ -134,21 +134,28 @@ func (client *DataRecordClient) GetDataRecordsByODataQuery(ctx context.Context, 
 		return nil, err
 	}
 
-	var totalRecords *int64 = nil
+	var totalRecords *int64
 	if response["@Microsoft.Dynamics.CRM.totalrecordcount"] != nil {
 		count := int64(response["@Microsoft.Dynamics.CRM.totalrecordcount"].(float64))
 		totalRecords = &count
 	}
-	var totalRecordsCountLimitExceeded *bool = nil
+	var totalRecordsCountLimitExceeded *bool
 	if val, ok := response["@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded"].(bool); ok {
 		isLimitExceeded := val
 		totalRecordsCountLimitExceeded = &isLimitExceeded
 	}
 
-	records := []map[string]interface{}{}
+	records := []map[string]any{}
 	if response["value"] != nil {
-		for _, item := range response["value"].([]interface{}) {
-			value := item.(map[string]interface{})
+		valueSlice, ok := response["value"].([]any)
+		if !ok {
+			return nil, fmt.Errorf("value field is not of type []any")
+		}
+		for _, item := range valueSlice {
+			value, ok := item.(map[string]any)
+			if !ok {
+				return nil, fmt.Errorf("item is not of type map[string]any")
+			}
 			records = append(records, value)
 		}
 	} else {
@@ -307,50 +314,83 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 		return constants.EMPTY, err
 	}
 
-	oneToMany, ok := mapResponse["OneToManyRelationships"].([]interface{})
+	oneToMany, ok := mapResponse["OneToManyRelationships"].([]any)
 	if !ok {
-		return constants.EMPTY, fmt.Errorf("OneToManyRelationships field is not of type []interface{}")
+		return constants.EMPTY, fmt.Errorf("OneToManyRelationships field is not of type []any")
 	}
 	for _, list := range oneToMany {
-		item := list.(map[string]interface{})
+		item, ok := list.(map[string]any)
+		if !ok {
+			return constants.EMPTY, fmt.Errorf("item is not of type map[string]any")
+		}
 		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName && item["Entity1LogicalName"] != entityLogicalName {
-			tableName = item["ReferencedEntity"].(string)
+			var ok bool
+			tableName, ok = item["ReferencedEntity"].(string)
+			if !ok {
+				return constants.EMPTY, fmt.Errorf("ReferencedEntity field is not of type string")
+			}
 			break
 		}
 		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName && item["Entity2LogicalName"] != entityLogicalName {
-			tableName = item["ReferencingEntity"].(string)
+			var ok bool
+			tableName, ok = item["ReferencingEntity"].(string)
+			if !ok {
+				return constants.EMPTY, fmt.Errorf("ReferencedEntity field is not of type string")
+			}
 			break
 		}
 	}
 
-	manyToOne, ok := mapResponse["ManyToOneRelationships"].([]interface{})
+	manyToOne, ok := mapResponse["ManyToOneRelationships"].([]any)
 	if !ok {
-		return constants.EMPTY, fmt.Errorf("ManyToOneRelationships field is not of type []interface{}")
+		return constants.EMPTY, fmt.Errorf("ManyToOneRelationships field is not of type []any")
 	}
 	for _, list := range manyToOne {
-		item := list.(map[string]interface{})
+		item, ok := list.(map[string]any)
+		if !ok {
+			return constants.EMPTY, fmt.Errorf("item is not of type map[string]any")
+		}
 		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
-			tableName = item["ReferencedEntity"].(string)
+			var ok bool
+			tableName, ok = item["ReferencedEntity"].(string)
+			if !ok {
+				return constants.EMPTY, fmt.Errorf("ReferencedEntity field is not of type string")
+			}
 			break
 		}
 		if item["ReferencedEntityNavigationPropertyName"] == relationLogicalName {
-			tableName = item["ReferencingEntity"].(string)
+			var ok bool
+			tableName, ok = item["ReferencingEntity"].(string)
+			if !ok {
+				return constants.EMPTY, fmt.Errorf("ReferencedEntity field is not of type string")
+			}
 			break
 		}
 	}
 
-	manyToMany, ok := mapResponse["ManyToManyRelationships"].([]interface{})
+	manyToMany, ok := mapResponse["ManyToManyRelationships"].([]any)
 	if !ok {
-		return constants.EMPTY, fmt.Errorf("ManyToManyRelationships field is not of type []interface{}")
+		return constants.EMPTY, fmt.Errorf("ManyToManyRelationships field is not of type []any")
 	}
 	for _, list := range manyToMany {
-		item := list.(map[string]interface{})
+		item, ok := list.(map[string]any)
+		if !ok {
+			return constants.EMPTY, fmt.Errorf("item is not of type map[string]any")
+		}
 		if item["Entity1NavigationPropertyName"] == relationLogicalName && item["Entity1LogicalName"] != entityLogicalName {
-			tableName = item["Entity1LogicalName"].(string)
+			var ok bool
+			tableName, ok = item["Entity1LogicalName"].(string)
+			if !ok {
+				return constants.EMPTY, fmt.Errorf("Entity1LogicalName field is not of type string")
+			}
 			break
 		}
 		if item["Entity2NavigationPropertyName"] == relationLogicalName && item["Entity2LogicalName"] != entityLogicalName {
-			tableName = item["Entity2LogicalName"].(string)
+			var ok bool
+			tableName, ok = item["Entity2LogicalName"].(string)
+			if !ok {
+				return constants.EMPTY, fmt.Errorf("Entity2LogicalName field is not of type string")
+			}
 			break
 		}
 	}
@@ -454,14 +494,17 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 	}
 
 	for key, value := range columns {
-		if _, ok := value.(map[string]interface{}); ok {
+		if _, ok := value.(map[string]any); ok {
 			delete(columns, key)
 		}
-		if nestedMapList, ok := value.([]interface{}); ok {
+		if nestedMapList, ok := value.([]any); ok {
 			delete(columns, key)
 
 			for _, nestedItem := range nestedMapList {
-				nestedMap := nestedItem.(map[string]interface{})
+				nestedMap, ok := nestedItem.(map[string]any)
+				if !ok {
+					return fmt.Errorf("nestedItem is not of type map[string]any")
+				}
 
 				dataRecordId, ok := nestedMap["data_record_id"].(string)
 				if !ok {
@@ -505,7 +548,7 @@ func getTableLogicalNameAndDataRecordIdFromMap(nestedMap map[string]interface{})
 	return tableLogicalName, dataRecordId, nil
 }
 
-func applyRelations(ctx context.Context, client *DataRecordClient, relations map[string]interface{}, environmentId string, parentRecordId string, entityDefinition *EntityDefinitionsDto) error {
+func applyRelations(ctx context.Context, client *DataRecordClient, relations map[string]any, environmentId string, parentRecordId string, entityDefinition *EntityDefinitionsDto) error {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return err
@@ -532,12 +575,15 @@ func applyRelations(ctx context.Context, client *DataRecordClient, relations map
 				return err
 			}
 
-			var toBeDeleted []RelationApiBody = make([]RelationApiBody, 0)
+			var toBeDeleted = make([]RelationApiBody, 0)
 
 			for _, existingRelation := range existingRelationsResponse.Value {
-				delete := true
+				shouldDelete := true
 				for _, nestedItem := range nestedMapList {
-					nestedMap := nestedItem.(map[string]interface{})
+					nestedMap, ok := nestedItem.(map[string]any)
+					if !ok {
+						return fmt.Errorf("nestedItem is not of type map[string]any")
+					}
 
 					tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
 					if err != nil {
@@ -549,11 +595,11 @@ func applyRelations(ctx context.Context, client *DataRecordClient, relations map
 						return err
 					}
 					if existingRelation.OdataID == fmt.Sprintf("https://%s/api/data/%s/%s(%s)", environmentHost, constants.DATAVERSE_API_VERSION, relationEntityDefinition.LogicalCollectionName, dataRecordId) {
-						delete = false
+						shouldDelete = false
 						break
 					}
 				}
-				if delete {
+				if shouldDelete {
 					toBeDeleted = append(toBeDeleted, existingRelation)
 				}
 			}
@@ -566,7 +612,10 @@ func applyRelations(ctx context.Context, client *DataRecordClient, relations map
 			}
 
 			for _, nestedItem := range nestedMapList {
-				nestedMap := nestedItem.(map[string]interface{})
+				nestedMap, ok := nestedItem.(map[string]any)
+				if !ok {
+					return fmt.Errorf("nestedItem is not of type map[string]any")
+				}
 
 				tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
 				if err != nil {

@@ -273,7 +273,7 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 	apiUrl.RawQuery = values.Encode()
 
 	environmentDelete := EnvironmentDeleteDto{
-		Code:    "7", //Application
+		Code:    "7", // Application.
 		Message: "Deleted using Power Platform Terraform Provider",
 	}
 

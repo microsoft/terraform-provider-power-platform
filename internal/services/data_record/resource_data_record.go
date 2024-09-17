@@ -385,7 +385,10 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 			}
 
 			for _, rawItem := range relationMap {
-				item := rawItem.(map[string]interface{})
+				item, ok := rawItem.(map[string]any)
+				if !ok {
+					return nil, fmt.Errorf("error asserting rawItem to map[string]any")
+				}
 
 				relationTableLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
 				if err != nil {
@@ -396,7 +399,10 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 					return nil, fmt.Errorf("error getting entity definition: %s", err.Error())
 				}
 
-				dataRecordId := item[entDefinition.PrimaryIDAttribute].(string)
+				dataRecordId, ok := item[entDefinition.PrimaryIDAttribute].(string)
+				if !ok {
+					return nil, fmt.Errorf("error asserting dataRecordId to string")
+				}
 
 				v, _ := types.ObjectValue(objectType, map[string]attr.Value{
 					"table_logical_name": types.StringValue(relationTableLogicalName),

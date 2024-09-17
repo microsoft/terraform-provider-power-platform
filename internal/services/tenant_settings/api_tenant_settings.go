@@ -83,7 +83,13 @@ func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, te
 }
 
 func applyCorrections(ctx context.Context, planned TenantSettingsDto, actual TenantSettingsDto) *TenantSettingsDto {
-	corrected := filterDto(ctx, planned, actual).(*TenantSettingsDto)
+	correctedFilter := filterDto(ctx, planned, actual)
+	corrected, ok := correctedFilter.(*TenantSettingsDto)
+	if !ok {
+		tflog.Error(ctx, "Type assertion to failed in applyCorrections")
+		return nil
+	}
+
 	if planned.PowerPlatform != nil && planned.PowerPlatform.Governance != nil {
 		if planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId != nil && *planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == constants.ZERO_UUID && corrected.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == nil {
 			zu := constants.ZERO_UUID

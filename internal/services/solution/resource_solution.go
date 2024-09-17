@@ -21,7 +21,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
-	modifiers "github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
 var _ resource.Resource = &SolutionResource{}

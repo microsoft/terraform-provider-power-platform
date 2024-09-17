@@ -231,7 +231,11 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	settingsToUpdate := ConvertFromEnvironmentSettingsModel(ctx, plan)
+	settingsToUpdate, err := ConvertFromEnvironmentSettingsModel(ctx, plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting environment settings model", err.Error())
+		return
+	}
 
 	dvExits, err := r.EnvironmentSettingClient.DataverseExists(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
@@ -244,7 +248,7 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	envSettings, err := r.EnvironmentSettingClient.UpdateEnvironmentSettings(ctx, plan.EnvironmentId.ValueString(), settingsToUpdate)
+	envSettings, err := r.EnvironmentSettingClient.UpdateEnvironmentSettings(ctx, plan.EnvironmentId.ValueString(), *settingsToUpdate)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating environment settings", fmt.Sprintf("Error creating environment settings: %s", err.Error()),
@@ -331,9 +335,13 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	envSettingsToUpdate := ConvertFromEnvironmentSettingsModel(ctx, plan)
+	envSettingsToUpdate, err := ConvertFromEnvironmentSettingsModel(ctx, plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting environment settings model", err.Error())
+		return
+	}
 
-	environmentSettings, err := r.EnvironmentSettingClient.UpdateEnvironmentSettings(ctx, plan.EnvironmentId.ValueString(), envSettingsToUpdate)
+	environmentSettings, err := r.EnvironmentSettingClient.UpdateEnvironmentSettings(ctx, plan.EnvironmentId.ValueString(), *envSettingsToUpdate)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating environment settings", fmt.Sprintf("Error updating environment settings: %s", err.Error()),

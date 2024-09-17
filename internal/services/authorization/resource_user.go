@@ -336,7 +336,6 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 			return
 		}
-
 	} else {
 		tflog.Debug(ctx, fmt.Sprintf("Disable delete is set to false. Skipping delete of systemuser with id %s", state.Id.ValueString()))
 	}

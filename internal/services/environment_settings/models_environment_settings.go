@@ -5,6 +5,7 @@ package environment_settings
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -53,8 +54,8 @@ type FeaturesSourceModel struct {
 	PowerAppsComponentFrameworkForCanvasApps types.Bool `tfsdk:"power_apps_component_framework_for_canvas_apps"`
 }
 
-func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel) EnvironmentSettingsDto {
-	environmentSettingsDto := EnvironmentSettingsDto{}
+func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel) (*EnvironmentSettingsDto, error) {
+	environmentSettingsDto := &EnvironmentSettingsDto{}
 	auditSettingsObject := environmentSettings.AuditAndLogs.Attributes()["audit_settings"]
 	if auditSettingsObject != nil && !auditSettingsObject.IsNull() && !auditSettingsObject.IsUnknown() {
 		var auditAndLogsSourceModel AuditSettingsSourceModel
@@ -72,14 +73,17 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 
 		pluginSettings := environmentSettings.AuditAndLogs.Attributes()["plugin_trace_log_setting"]
 		if pluginSettings != nil && !pluginSettings.IsNull() && !pluginSettings.IsUnknown() {
-			pluginSettings := pluginSettings.(basetypes.StringValue)
+			pluginSettingsValue, ok := pluginSettings.(basetypes.StringValue)
+			if !ok {
+				return nil, fmt.Errorf("pluginSettings is not of type basetypes.StringValue")
+			}
 			var v int64 = 0
-			if pluginSettings.ValueString() == "Off" {
+			if pluginSettingsValue.ValueString() == "Off" {
 				environmentSettingsDto.PluginTraceLogSetting = &v
-			} else if pluginSettings.ValueString() == "Exception" {
+			} else if pluginSettingsValue.ValueString() == "Exception" {
 				v = 1
 				environmentSettingsDto.PluginTraceLogSetting = &v
-			} else if pluginSettings.ValueString() == "All" {
+			} else if pluginSettingsValue.ValueString() == "All" {
 				v = 2
 				environmentSettingsDto.PluginTraceLogSetting = &v
 			}
@@ -115,7 +119,7 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 		}
 	}
 
-	return environmentSettingsDto
+	return environmentSettingsDto, nil
 }
 
 func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettingsDto, timeouts timeouts.Value) EnvironmentSettingsSourceModel {

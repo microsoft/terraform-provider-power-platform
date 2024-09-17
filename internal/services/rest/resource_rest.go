@@ -177,18 +177,15 @@ func (r *DataverseWebApiResource) Configure(ctx context.Context, req resource.Co
 	if req.ProviderData == nil {
 		return
 	}
-
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
 	if clientApi == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 	r.DataRecordClient = NewWebApiClient(clientApi)
-
 }
 
 func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

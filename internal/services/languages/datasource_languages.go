@@ -29,7 +29,7 @@ func NewLanguagesDataSource() datasource.DataSource {
 }
 
 type LanguagesDataSource struct {
-	LanguagesClient  LanguagesClient
+	LanguagesClient  Client
 	ProviderTypeName string
 	TypeName         string
 }

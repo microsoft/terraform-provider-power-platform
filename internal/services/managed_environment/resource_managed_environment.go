@@ -22,7 +22,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
-	environment "github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
 var _ resource.Resource = &ManagedEnvironmentResource{}
@@ -52,9 +52,8 @@ type ManagedEnvironmentResourceModel struct {
 	LimitSharingMode         types.String   `tfsdk:"limit_sharing_mode"`
 	SolutionCheckerMode      types.String   `tfsdk:"solution_checker_mode"`
 	SuppressValidationEmails types.Bool     `tfsdk:"suppress_validation_emails"`
-	//SolutionCheckerRuleOverrides  types.String `tfsdk:"solution_checker_rule_overrides"`
-	MakerOnboardingUrl      types.String `tfsdk:"maker_onboarding_url"`
-	MakerOnboardingMarkdown types.String `tfsdk:"maker_onboarding_markdown"`
+	MakerOnboardingUrl       types.String   `tfsdk:"maker_onboarding_url"`
+	MakerOnboardingMarkdown  types.String   `tfsdk:"maker_onboarding_markdown"`
 }
 
 func (r *ManagedEnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -258,10 +257,9 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
-		} else {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-			return
 		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
 	}
 
 	state.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)

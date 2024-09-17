@@ -179,7 +179,7 @@ func (r *EnvironmentGroupResource) Update(ctx context.Context, req resource.Upda
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.TypeName))
 }
 
-// Delete function
+// Delete function.
 func (r *EnvironmentGroupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.TypeName))
 
@@ -198,7 +198,7 @@ func (r *EnvironmentGroupResource) Delete(ctx context.Context, req resource.Dele
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.TypeName))
 }
 
-// ImportState function
+// ImportState function.
 func (r *EnvironmentGroupResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("IMPORT STATE RESOURCE START: %s", r.TypeName))
 

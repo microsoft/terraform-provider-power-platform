@@ -11,13 +11,13 @@ import (
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	environment "github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
-func NewPowerAppssClient(api *api.Client) PowerAppssClient {
+func NewPowerAppssClient(apiClient *api.Client) PowerAppssClient {
 	return PowerAppssClient{
-		Api:               api,
-		environmentClient: environment.NewEnvironmentClient(api),
+		Api:               apiClient,
+		environmentClient: environment.NewEnvironmentClient(apiClient),
 	}
 }
 
