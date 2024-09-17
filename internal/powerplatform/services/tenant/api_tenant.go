@@ -8,20 +8,20 @@ import (
 	"net/http"
 	"net/url"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
-func NewTenantClient(api *api.ApiClient) TenantClient {
-	return TenantClient{
-		Api: api,
+func NewTenantClient(apiClient *api.ApiClient) ClientTenant {
+	return ClientTenant{
+		Api: apiClient,
 	}
 }
 
-type TenantClient struct {
+type ClientTenant struct {
 	Api *api.ApiClient
 }
 
-func (client *TenantClient) GetTenant(ctx context.Context) (*TenantDto, error) {
+func (client *ClientTenant) GetTenant(ctx context.Context) (*DtoTenant, error) {
 	apiUrl := &url.URL{
 		Scheme: "https",
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -32,7 +32,7 @@ func (client *TenantClient) GetTenant(ctx context.Context) (*TenantDto, error) {
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	var dto TenantDto
+	var dto DtoTenant
 
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &dto)
 	if err != nil {

@@ -11,21 +11,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/api"
 )
 
 var (
-	_ datasource.DataSource              = &TenantDataSource{}
-	_ datasource.DataSourceWithConfigure = &TenantDataSource{}
+	_ datasource.DataSource              = &DataSourceTenant{}
+	_ datasource.DataSourceWithConfigure = &DataSourceTenant{}
 )
 
-type TenantDataSource struct {
-	TenantClient     TenantClient
+type DataSourceTenant struct {
+	TenantClient     ClientTenant
 	ProviderTypeName string
 	TypeName         string
 }
 
-type TenantDataSourceModel struct {
+type ModelTenantDataSource struct {
 	TenantId                         types.String `tfsdk:"tenant_id"`
 	State                            types.String `tfsdk:"state"`
 	Location                         types.String `tfsdk:"location"`
@@ -37,17 +37,17 @@ type TenantDataSourceModel struct {
 }
 
 func NewTenantDataSource() datasource.DataSource {
-	return &TenantDataSource{
+	return &DataSourceTenant{
 		ProviderTypeName: "powerplatform",
 		TypeName:         "_tenant",
 	}
 }
 
-func (d *TenantDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSourceTenant) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *TenantDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (_ *DataSourceTenant) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the client configuration for the given tenant.",
 		MarkdownDescription: "Fetches the client configuration for the given tenant.",
@@ -96,15 +96,14 @@ func (d *TenantDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 	}
 }
 
-func (d *TenantDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-
+func (d *DataSourceTenant) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	dto, err := d.TenantClient.GetTenant(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to fetch tenant", fmt.Sprintf("Failed to fetch tenant: %v", err))
 		return
 	}
 
-	state := TenantDataSourceModel{
+	state := ModelTenantDataSource{
 		TenantId:                         types.StringValue(dto.TenantId),
 		State:                            types.StringValue(dto.State),
 		Location:                         types.StringValue(dto.Location),
@@ -118,7 +117,7 @@ func (d *TenantDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	resp.State.Set(ctx, &state)
 }
 
-func (d *TenantDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSourceTenant) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

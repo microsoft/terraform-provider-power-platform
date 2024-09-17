@@ -51,7 +51,7 @@ type UserResourceModel struct {
 	DisableDelete     types.Bool     `tfsdk:"disable_delete"`
 }
 
-func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *UserResource) Metadata(cctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
