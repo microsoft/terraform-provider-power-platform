@@ -10,7 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/microsoft/terraform-provider-power-platform/common"
-	"github.com/microsoft/terraform-provider-power-platform/internal/powerplatform/provider"
+	"github.com/microsoft/terraform-provider-power-platform/internal/provider"
 )
 
 // Generate the provider document.
