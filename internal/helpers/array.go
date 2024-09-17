@@ -3,6 +3,8 @@
 
 package helpers
 
+// DiffArrays returns the added and removed items between two string arrays.
+// This can be useful for comparing plan vs state arrays.
 func DiffArrays(newArr, oldArr []string) ([]string, []string) {
 	added := make([]string, 0)
 	removed := make([]string, 0)
