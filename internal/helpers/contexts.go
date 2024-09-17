@@ -104,18 +104,11 @@ type AllowedRequestTypes interface {
 	datasource.ValidateConfigRequest
 }
 
+// AllowedProviderRequestTypes is an interface that defines the allowed request types for the EnterProviderContext function
 type AllowedProviderRequestTypes interface {
 	provider.ConfigureRequest |
 	provider.MetaSchemaRequest |
 	provider.MetadataRequest |
 	provider.SchemaRequest |
 	provider.ValidateConfigRequest
-}
-
-// getRequestTypeName returns the type name for a given request.
-// This function should only be used for logging purposes.
-// The function only accepts resource, data source, and provider request types.
-// The full list of allowed request types is defined in the AllowedRequestTypes interface.
-func GetRequestTypeName[T AllowedRequestTypes](req T) string {
-	return reflect.TypeOf(req).String()
 }
