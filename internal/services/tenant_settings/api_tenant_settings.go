@@ -83,7 +83,7 @@ func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, te
 }
 
 func applyCorrections(ctx context.Context, planned TenantSettingsDto, actual TenantSettingsDto) *TenantSettingsDto {
-	corrected := filterDto(ctx, &planned, &actual).(*TenantSettingsDto)
+	corrected := filterDto(ctx, planned, actual).(*TenantSettingsDto)
 	if planned.PowerPlatform != nil && planned.PowerPlatform.Governance != nil {
 		if planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId != nil && *planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == constants.ZERO_UUID && corrected.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == nil {
 			zu := constants.ZERO_UUID
