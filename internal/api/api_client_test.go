@@ -16,7 +16,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func TestApiClient_GetConfig(t *testing.T) {
+func TestUnitApiClient_GetConfig(t *testing.T) {
 	t.Parallel()
 
 	ctx := context.Background()
