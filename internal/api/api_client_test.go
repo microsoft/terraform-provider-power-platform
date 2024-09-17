@@ -48,7 +48,7 @@ func TestUnitSleepWithContext_TimeoutError(t *testing.T) {
 	a := api.NewApiClientBase(&config.ProviderConfig{}, api.NewAuthBase(&config.ProviderConfig{}))
 
 	ctx := context.Background()
-	ctx, _ = context.WithTimeout(ctx, time.Duration(1)*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(1)*time.Second)
 	err := a.SleepWithContext(ctx, time.Duration(5)*time.Second)
 	if err == nil {
 		t.Error("Expected an error but got nil error")
@@ -57,6 +57,8 @@ func TestUnitSleepWithContext_TimeoutError(t *testing.T) {
 	if err.Error() != "context deadline exceeded" {
 		t.Errorf("Expected error message %s but got %s", "context deadline exceeded", err.Error())
 	}
+
+	cancel()
 }
 
 func TestUnitSleepWithContext_HappyPath(t *testing.T) {
@@ -65,9 +67,11 @@ func TestUnitSleepWithContext_HappyPath(t *testing.T) {
 	a := api.NewApiClientBase(&config.ProviderConfig{}, api.NewAuthBase(&config.ProviderConfig{}))
 
 	ctx := context.Background()
-	ctx, _ = context.WithTimeout(ctx, time.Duration(5)*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(5)*time.Second)
 	err := a.SleepWithContext(ctx, time.Duration(1)*time.Second)
 	if err != nil {
 		t.Error("Expected to complete without error but got an error")
 	}
+
+	cancel()
 }
