@@ -57,7 +57,7 @@ func (r *ShareResource) Metadata(_ context.Context, req resource.MetadataRequest
 }
 
 //nolint:unused-receiver
-func (r *ShareResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "",
 		Attributes: map[string]schema.Attribute{
