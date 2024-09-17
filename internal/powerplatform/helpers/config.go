@@ -17,18 +17,34 @@ import (
 func GetConfigString(ctx context.Context, configValue basetypes.StringValue, environmentVariableName string, defaultValue string) string {
 	if !configValue.IsNull() {
 		return configValue.ValueString()
-	} else if value, ok := os.LookupEnv(environmentVariableName); ok {
+	} else if value, ok := os.LookupEnv(environmentVariableName); ok && value != "" {
 		return value
 	} else {
 		return defaultValue
 	}
 }
 
+// GetConfigMultiString returns the value of the configValue if it is not null, otherwise it returns the value of the
+// first environment variable that is set, otherwise it returns the defaultValue.
+func GetConfigMultiString(ctx context.Context, configValue basetypes.StringValue, environmentVariableNames []string, defaultValue string) string {
+	if !configValue.IsNull() {
+		return configValue.ValueString()
+	} 
+	
+	for _, k := range environmentVariableNames {
+		if value, ok := os.LookupEnv(k); ok && value != "" {
+			return value
+		}
+	}
+
+	return defaultValue
+}
+
 // GetConfigBool returns the value of the configValue if it is not null, otherwise it returns the value of the default value.
 func GetConfigBool(ctx context.Context, configValue basetypes.BoolValue, environmentVariableName string, defaultValue bool) bool {
 	if !configValue.IsNull() {
 		return configValue.ValueBool()
-	} else if value, ok := os.LookupEnv(environmentVariableName); ok {
+	} else if value, ok := os.LookupEnv(environmentVariableName); ok && value != "" {
 		envValue, err := strconv.ParseBool(value)
 		if err == nil {
 			return envValue

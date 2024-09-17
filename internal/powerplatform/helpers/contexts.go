@@ -59,6 +59,8 @@ func EnterRequestContext(ctx context.Context, typ TypeInfo, req any) (context.Co
 
 	// Add the request context to the context so that we can access it in lower level functions
 	ctx = context.WithValue(ctx, REQUEST_CONTEXT_KEY, RequestContextValue{ObjectType: objType, RequestType: reqType, ObjectName: name, RequestId: reqId})
+	ctx = tflog.SetField(ctx, "request_id", reqId)
+	ctx = tflog.SetField(ctx, "request_type", reqType)
 
 	// This returns a closure that can be used to defer the exit of the request scope
 	return ctx, func() {
@@ -66,6 +68,7 @@ func EnterRequestContext(ctx context.Context, typ TypeInfo, req any) (context.Co
 	}
 }
 
+// EnterProviderScope is a helper function that logs the start of a provider scope and returns a closure that can be used to defer the loging of the exit of the provider scope
 func EnterProviderContext(ctx context.Context, req any) (context.Context, func()) {
 	objType, reqType := getRequestType(req)
 
