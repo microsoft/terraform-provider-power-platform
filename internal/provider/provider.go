@@ -7,8 +7,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
-	
+
 	azcloud "github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -62,9 +61,9 @@ func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func
 			PowerPlatformScope: constants.PUBLIC_POWERPLATFORM_API_SCOPE,
 			LicensingUrl:       constants.PUBLIC_LICENSING_API_DOMAIN,
 		},
-		Cloud: azcloud.AzurePublic,
+		Cloud:            azcloud.AzurePublic,
 		TerraformVersion: "unknown",
-		TelemetryOptout: false,
+		TelemetryOptout:  false,
 	}
 
 	if len(testModeEnabled) > 0 && testModeEnabled[0] {
@@ -86,10 +85,10 @@ func (p *PowerPlatformProvider) Metadata(ctx context.Context, req provider.Metad
 	resp.Version = common.ProviderVersion
 
 	tflog.Debug(ctx, "Provider Metadata request received", map[string]any{
-		"version": resp.Version,
+		"version":  resp.Version,
 		"typeName": resp.TypeName,
-		"branch": common.Branch,
-		"commit": common.Commit,
+		"branch":   common.Branch,
+		"commit":   common.Commit,
 	})
 }
 
@@ -175,143 +174,34 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	_, exitContext := helpers.EnterProviderContext(ctx, req)
 	defer exitContext()
 
+	// Get Provider Configuration from the provider block in the configuration.
 	var config config.ProviderConfigModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	cloud := "public"
-	envCloud := os.Getenv("POWER_PLATFORM_CLOUD")
-	if config.Cloud.IsNull() && envCloud != "" {
-		cloud = envCloud
-	} else if !config.Cloud.IsNull() {
-		cloud = config.Cloud.ValueString()
-	}
+	// Get Provider Configuration from the configuration, environment variables, or defaults
+	cloud := helpers.GetConfigString(ctx, config.Cloud, "POWER_PLATFORM_CLOUD", "public")
+	tenantId := helpers.GetConfigString(ctx, config.TenantId, "POWER_PLATFORM_TENANT_ID", "")
+	clientId := helpers.GetConfigString(ctx, config.ClientId, "POWER_PLATFORM_CLIENT_ID", "")
+	clientSecret := helpers.GetConfigString(ctx, config.ClientSecret, "POWER_PLATFORM_CLIENT_SECRET", "")
+	useOidc := helpers.GetConfigBool(ctx, config.UseOidc, "POWER_PLATFORM_USE_OIDC", false)
+	useCli := helpers.GetConfigBool(ctx, config.UseCli, "POWER_PLATFORM_USE_CLI", false)
+	clientCertificate := helpers.GetConfigString(ctx, config.ClientCertificate, "POWER_PLATFORM_CLIENT_CERTIFICATE", "")
+	clientCertificateFilePath := helpers.GetConfigString(ctx, config.ClientCertificateFilePath, "POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH", "")
+	clientCertificatePassword := helpers.GetConfigString(ctx, config.ClientCertificatePassword, "POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD", "")
 
-	tenantId := ""
-	envTenantId := os.Getenv("POWER_PLATFORM_TENANT_ID")
-	if config.TenantId.IsNull() {
-		tenantId = envTenantId
-	} else {
-		tenantId = config.TenantId.ValueString()
-	}
+	// Check for AzDO and GitHub environment variables
+	oidcRequestUrl := helpers.GetConfigMultiString(ctx, config.OidcRequestUrl, []string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"}, "")
+	oidcRequestToken := helpers.GetConfigMultiString(ctx, config.OidcRequestToken, []string{"ARM_OIDC_REQUEST_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN"}, "")
+	oidcToken := helpers.GetConfigString(ctx, config.OidcToken, "ARM_OIDC_TOKEN", "")
+	oidcTokenFilePath := helpers.GetConfigString(ctx, config.OidcTokenFilePath, "ARM_OIDC_TOKEN_FILE_PATH", "")
 
-	clientId := ""
-	envClientId := os.Getenv("POWER_PLATFORM_CLIENT_ID")
-	if config.ClientId.IsNull() {
-		clientId = envClientId
-	} else {
-		clientId = config.ClientId.ValueString()
-	}
+	// Check for telemetry opt out
+	telemetryOptOut := helpers.GetConfigBool(ctx, config.TelemetryOptout, "POWER_PLATFORM_TELEMETRY_OPTOUT", false)
 
-	clientSecret := ""
-	envSecret := os.Getenv("POWER_PLATFORM_CLIENT_SECRET")
-	if config.ClientSecret.IsNull() {
-		clientSecret = envSecret
-	} else {
-		clientSecret = config.ClientSecret.ValueString()
-	}
-
-	useOidc := false
-	_, envUseOidc := os.LookupEnv("POWER_PLATFORM_USE_OIDC")
-	tflog.Debug(ctx, fmt.Sprintf("Use OIDC env value: %v", envUseOidc))
-	if config.UseOidc.IsNull() {
-		tflog.Debug(ctx, fmt.Sprintf("Use OIDC is null. Using env value: %v", envUseOidc))
-		useOidc = envUseOidc
-	} else {
-		tflog.Debug(ctx, fmt.Sprintf("Use OIDC is not null. Using config value: %v", config.UseOidc.ValueBool()))
-		useOidc = config.UseOidc.ValueBool()
-	}
-
-	useCli := false
-	_, envUseCli := os.LookupEnv("POWER_PLATFORM_USE_CLI")
-	if config.UseCli.IsNull() {
-		useCli = envUseCli
-	} else {
-		useCli = config.UseCli.ValueBool()
-	}
-
-	clientCertificate := ""
-	envClientCertificate := os.Getenv("POWER_PLATFORM_CLIENT_CERTIFICATE")
-	if config.ClientCertificate.IsNull() {
-		clientCertificate = envClientCertificate
-	} else {
-		clientCertificate = config.ClientCertificate.ValueString()
-	}
-
-	clientCertificateFilePath := ""
-	envClientCertificateFilePath := os.Getenv("POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH")
-	if config.ClientCertificateFilePath.IsNull() {
-		clientCertificateFilePath = envClientCertificateFilePath
-	} else {
-		clientCertificateFilePath = config.ClientCertificateFilePath.ValueString()
-	}
-
-	clientCertificatePassword := ""
-	envClientCertificatePassword := os.Getenv("POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD")
-	if config.ClientCertificatePassword.IsNull() {
-		clientCertificatePassword = envClientCertificatePassword
-	} else {
-		clientCertificatePassword = config.ClientCertificatePassword.ValueString()
-	}
-
-	//Check for AzDO and GitHub environment variables
-	oidcRequestUrl := ""
-	envOidcRequestUrl := MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"})
-	if config.OidcRequestUrl.IsNull() {
-		oidcRequestUrl = envOidcRequestUrl
-	} else {
-		oidcRequestUrl = config.OidcRequestUrl.ValueString()
-	}
-
-	oidcRequestToken := ""
-	envOidcRequestToken := MultiEnvDefaultFunc([]string{"ARM_OIDC_REQUEST_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN"})
-	if config.OidcRequestToken.IsNull() {
-		oidcRequestToken = envOidcRequestToken
-	} else {
-		oidcRequestToken = config.OidcRequestToken.ValueString()
-	}
-
-	oidcToken := ""
-	envOidcToken := EnvDefaultFunc("ARM_OIDC_TOKEN", "")
-	if config.OidcToken.IsNull() {
-		oidcToken = envOidcToken
-	} else {
-		oidcToken = config.OidcToken.ValueString()
-	}
-
-	oidcTokenFilePath := ""
-	envOidcTokenFilePath := EnvDefaultFunc("ARM_OIDC_TOKEN_FILE_PATH", "")
-	if config.OidcTokenFilePath.IsNull() {
-		oidcTokenFilePath = envOidcTokenFilePath
-	} else {
-		oidcTokenFilePath = config.OidcTokenFilePath.ValueString()
-	}
-
-	ctx = tflog.SetField(ctx, "telemetry_optout", config.TelemetryOptout.ValueBool())
-	ctx = tflog.SetField(ctx, "use_oidc", useOidc)
-	ctx = tflog.SetField(ctx, "use_cli", useCli)
-	ctx = tflog.SetField(ctx, "cloud", cloud)
-
-	ctx = tflog.SetField(ctx, "power_platform_tenant_id", tenantId)
-	ctx = tflog.SetField(ctx, "power_platform_client_id", clientId)
-	ctx = tflog.SetField(ctx, "power_platform_client_secret", clientSecret)
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "power_platform_client_secret\n")
-
-	ctx = tflog.SetField(ctx, "client_certificate_file_path", clientCertificateFilePath)
-	ctx = tflog.SetField(ctx, "client_certificate", clientCertificate)
-	ctx = tflog.SetField(ctx, "client_certificate_password", clientCertificatePassword)
-	ctx = tflog.MaskAllFieldValuesRegexes(ctx, regexp.MustCompile(`(?i)client_certificate`))
-
-	ctx = tflog.SetField(ctx, "oidc_request_url", oidcRequestUrl)
-	ctx = tflog.SetField(ctx, "oidc_request_token", oidcRequestToken)
-	ctx = tflog.SetField(ctx, "oidc_token", oidcToken)
-	ctx = tflog.SetField(ctx, "oidc_token_file_path", oidcTokenFilePath)
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_request_token")
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token")
-	ctx = tflog.MaskFieldValuesWithFieldKeys(ctx, "oidc_token_file_path")
+	// Set the configuration values
 
 	if p.Config.TestMode {
 		tflog.Info(ctx, "Test mode enabled. Authentication requests will not be sent to the backend APIs.")
@@ -428,7 +318,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		)
 	}
 
-	p.Config.TelemetryOptout = config.TelemetryOptout.ValueBool()
+	p.Config.TelemetryOptout = telemetryOptOut
 	p.Config.TerraformVersion = req.TerraformVersion
 
 	providerClient := api.ProviderClient{
@@ -516,13 +406,3 @@ func MultiEnvDefaultFunc(ks []string) string {
 	return ""
 }
 
-// EnvDefaultFunc is a helper function that returns the value of the
-// given environment variable, if one exists, or the default value
-// otherwise.
-func EnvDefaultFunc(k string, dv interface{}) string {
-
-	if v := os.Getenv(k); v != "" {
-		return v
-	}
-	return ""
-}
