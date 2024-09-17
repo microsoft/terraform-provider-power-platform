@@ -31,7 +31,6 @@ func (client *Client) BuildCorrelationHeaders(ctx context.Context) (string, stri
 	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
 	if ok {
 		cc := strings.Join([]string{
-			"objectType=" + requestContext.ObjectType,
 			"objectName=" + requestContext.ObjectName,
 			"requestType=" + requestContext.RequestType,
 		}, ",")
@@ -49,7 +48,7 @@ func (client *Client) buildUserAgent(ctx context.Context) string {
 
 	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
 	if ok {
-		userAgent += fmt.Sprintf(" %s %s %s", requestContext.ObjectType, requestContext.ObjectName, requestContext.RequestType)
+		userAgent += fmt.Sprintf(" %s %s", requestContext.ObjectName, requestContext.RequestType)
 	}
 
 	return userAgent
