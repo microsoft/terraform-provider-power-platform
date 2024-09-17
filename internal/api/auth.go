@@ -62,14 +62,14 @@ func NewAuthBase(config *config.ProviderConfig) *Auth {
 
 func (client *Auth) AuthenticateClientCertificate(ctx context.Context, scopes []string) (string, time.Time, error) {
 
-	cert, key, err := helpers.ConvertBase64ToCert(client.config.Credentials.ClientCertificateRaw, client.config.Credentials.ClientCertificatePassword)
+	cert, key, err := helpers.ConvertBase64ToCert(client.config.ClientCertificateRaw, client.config.ClientCertificatePassword)
 	if err != nil {
 		return "", time.Time{}, err
 	}
 
 	azureCertCredentials, err := azidentity.NewClientCertificateCredential(
-		client.config.Credentials.TenantId,
-		client.config.Credentials.ClientId,
+		client.config.TenantId,
+		client.config.ClientId,
 		cert,
 		key,
 		&azidentity.ClientCertificateCredentialOptions{
@@ -108,9 +108,9 @@ func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string) (
 
 func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []string) (string, time.Time, error) {
 	clientSecretCredential, err := azidentity.NewClientSecretCredential(
-		client.config.Credentials.TenantId,
-		client.config.Credentials.ClientId,
-		client.config.Credentials.ClientSecret, &azidentity.ClientSecretCredentialOptions{
+		client.config.TenantId,
+		client.config.ClientId,
+		client.config.ClientSecret, &azidentity.ClientSecretCredentialOptions{
 			ClientOptions: azcore.ClientOptions{
 				Cloud: client.config.Cloud,
 			},
@@ -121,7 +121,7 @@ func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []strin
 
 	accessToken, err := clientSecretCredential.GetToken(ctx, policy.TokenRequestOptions{
 		Scopes:   scopes,
-		TenantID: client.config.Credentials.TenantId,
+		TenantID: client.config.TenantId,
 	})
 
 	if err != nil {
@@ -176,12 +176,12 @@ func (client *Auth) AuthenticateOIDC(ctx context.Context, scopes []string) (stri
 		ClientOptions: azcore.ClientOptions{
 			Cloud: client.config.Cloud,
 		},
-		TenantID:      client.config.Credentials.TenantId,
-		ClientID:      client.config.Credentials.ClientId,
-		RequestToken:  client.config.Credentials.OidcRequestToken,
-		RequestUrl:    client.config.Credentials.OidcRequestUrl,
-		Token:         client.config.Credentials.OidcToken,
-		TokenFilePath: client.config.Credentials.OidcTokenFilePath,
+		TenantID:      client.config.TenantId,
+		ClientID:      client.config.ClientId,
+		RequestToken:  client.config.OidcRequestToken,
+		RequestUrl:    client.config.OidcRequestUrl,
+		Token:         client.config.OidcToken,
+		TokenFilePath: client.config.OidcTokenFilePath,
 	})
 
 	if err == nil {
@@ -270,7 +270,7 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*string, error) {
 	tflog.Debug(ctx, fmt.Sprintf("[GetTokenForScope] Getting token for scope: '%s'", strings.Join(scopes, ",")))
 
-	if client.config.Credentials.TestMode {
+	if client.config.TestMode {
 		token := "test_mode_mock_token_value"
 		return &token, nil
 	}
@@ -280,13 +280,13 @@ func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*st
 	var err error
 
 	switch {
-	case client.config.Credentials.IsClientSecretCredentialsProvided():
+	case client.config.IsClientSecretCredentialsProvided():
 		token, tokenExpiry, err = client.AuthenticateClientSecret(ctx, scopes)
-	case client.config.Credentials.IsCliProvided():
+	case client.config.IsCliProvided():
 		token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes)
-	case client.config.Credentials.IsOidcProvided():
+	case client.config.IsOidcProvided():
 		token, tokenExpiry, err = client.AuthenticateOIDC(ctx, scopes)
-	case client.config.Credentials.IsClientCertificateCredentialsProvided():
+	case client.config.IsClientCertificateCredentialsProvided():
 		token, tokenExpiry, err = client.AuthenticateClientCertificate(ctx, scopes)
 	default:
 		return nil, errors.New("no credentials provided")

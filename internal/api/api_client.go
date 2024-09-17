@@ -152,7 +152,7 @@ func (client *ApiClient) RetryAfterDefault() time.Duration {
 }
 
 func (client *ApiClient) SleepWithContext(ctx context.Context, duration time.Duration) error {
-	if client.Config.Credentials.TestMode {
+	if client.Config.TestMode {
 		//Don't sleep during testing
 		return nil
 	} else {
