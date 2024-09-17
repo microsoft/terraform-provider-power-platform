@@ -11,22 +11,23 @@ import (
 	"strings"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewDlpPolicyClient(api *api.ApiClient) DlpPolicyClient {
+func NewDlpPolicyClient(api *api.Client) DlpPolicyClient {
 	return DlpPolicyClient{
 		Api: api,
 	}
 }
 
 type DlpPolicyClient struct {
-	Api *api.ApiClient
+	Api *api.Client
 }
 
 func (client *DlpPolicyClient) GetPolicies(ctx context.Context) ([]DlpPolicyModelDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "providers/PowerPlatform.Governance/v2/policies",
 	}
@@ -40,7 +41,7 @@ func (client *DlpPolicyClient) GetPolicies(ctx context.Context) ([]DlpPolicyMode
 	for _, policy := range policiesArray.Value {
 
 		apiUrl := &url.URL{
-			Scheme: "https",
+			Scheme: constants.HTTPS,
 			Host:   client.Api.GetConfig().Urls.BapiUrl,
 			Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", policy.PolicyDefinition.Name),
 		}
@@ -60,7 +61,7 @@ func (client *DlpPolicyClient) GetPolicies(ctx context.Context) ([]DlpPolicyMode
 
 func (client *DlpPolicyClient) GetPolicy(ctx context.Context, name string) (*DlpPolicyModelDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", name),
 	}
@@ -77,7 +78,7 @@ func (client *DlpPolicyClient) GetPolicy(ctx context.Context, name string) (*Dlp
 
 func (client *DlpPolicyClient) DeletePolicy(ctx context.Context, name string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v1/policies/%s", name),
 	}
@@ -92,7 +93,7 @@ func (client *DlpPolicyClient) UpdatePolicy(ctx context.Context, name string, po
 	policyToCreate := convertPolicyModelToDlpPolicy(policy)
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", policy.Name),
 	}
@@ -245,7 +246,7 @@ func (client *DlpPolicyClient) CreatePolicy(ctx context.Context, policy DlpPolic
 	policyToCreate := convertPolicyModelToDlpPolicy(policy)
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v2/policies",
 	}

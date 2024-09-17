@@ -10,22 +10,22 @@ import (
 	"net/url"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-type CapacityClient struct {
-	Api *api.ApiClient
+type Client struct {
+	Api *api.Client
 }
 
-func NewCapacityClient(api *api.ApiClient) CapacityClient {
-	return CapacityClient{
-		Api: api,
+func NewCapacityClient(clientApi *api.Client) Client {
+	return Client{
+		Api: clientApi,
 	}
 }
 
-
-func (client *CapacityClient) GetTenantCapacity(ctx context.Context, tenantId string) (*TenantCapacityDto, error) {
+func (client *Client) GetTenantCapacity(ctx context.Context, tenantId string) (*TenantCapacityDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.LicensingUrl,
 		Path:   fmt.Sprintf("/v0.1-alpha/tenants/%s/TenantCapacity", tenantId),
 	}

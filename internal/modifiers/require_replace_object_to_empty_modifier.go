@@ -29,7 +29,7 @@ func (d *requireReplaceObjectToEmptyModifier) PlanModifyObject(ctx context.Conte
 		return
 	}
 
-	//we only replace is object was created and is being set to empty/nil now
+	// we only replace is object was created and is being set to empty/nil now.
 	if !req.StateValue.IsNull() && (req.PlanValue.Attributes() == nil || len(req.PlanValue.Attributes()) == 0) {
 		resp.RequiresReplace = true
 	}

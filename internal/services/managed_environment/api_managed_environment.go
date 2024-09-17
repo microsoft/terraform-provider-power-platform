@@ -11,10 +11,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	environment "github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
-func NewManagedEnvironmentClient(api *api.ApiClient) ManagedEnvironmentClient {
+func NewManagedEnvironmentClient(api *api.Client) ManagedEnvironmentClient {
 	return ManagedEnvironmentClient{
 		Api:               api,
 		environmentClient: environment.NewEnvironmentClient(api),
@@ -22,7 +23,7 @@ func NewManagedEnvironmentClient(api *api.ApiClient) ManagedEnvironmentClient {
 }
 
 type ManagedEnvironmentClient struct {
-	Api               *api.ApiClient
+	Api               *api.Client
 	environmentClient environment.EnvironmentClient
 }
 
@@ -37,7 +38,7 @@ func (client *ManagedEnvironmentClient) GetManagedEnvironmentSettings(ctx contex
 
 func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Context, managedEnvSettings environment.GovernanceConfigurationDto, environmentId string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/governanceConfiguration", environmentId),
 	}
@@ -62,7 +63,7 @@ func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Con
 
 func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Context, environmentId string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/governanceConfiguration", environmentId),
 	}

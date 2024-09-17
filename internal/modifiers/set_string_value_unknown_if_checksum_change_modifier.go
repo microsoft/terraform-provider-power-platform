@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 func SetStringValueToUnknownIfChecksumsChangeModifier(firstAttributePair, secondAttributePair []string) planmodifier.String {
@@ -35,7 +35,6 @@ func (d *setStringValueToUnknownIfChecksumsChangeModifier) MarkdownDescription(c
 }
 
 func (d *setStringValueToUnknownIfChecksumsChangeModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-
 	firstAttributeHasChanged := d.hasChecksumChanged(ctx, req, resp, d.firstAttributePair[0], d.firstAttributePair[1])
 	if resp.Diagnostics.HasError() {
 		return

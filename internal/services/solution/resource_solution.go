@@ -288,7 +288,7 @@ func (r *SolutionResource) importSolution(ctx context.Context, plan *SolutionRes
 	tflog.Debug(ctx, fmt.Sprintf("Current working directory: %s", cwd))
 
 	settingsContent := make([]byte, 0)
-	if plan.SettingsFile.ValueString() != "" {
+	if plan.SettingsFile.ValueString() != constants.EMPTY {
 		settingsContent, err = os.ReadFile(plan.SettingsFile.ValueString())
 		if err != nil {
 			diagnostics.AddError(fmt.Sprintf("Client error when reading settings file %s", plan.SettingsFile.ValueString()), err.Error())

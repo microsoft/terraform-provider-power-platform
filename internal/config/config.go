@@ -6,6 +6,7 @@ package config
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
 type ProviderConfig struct {
@@ -43,12 +44,16 @@ type ProviderCredentials struct {
 	OidcTokenFilePath string
 }
 
+const (
+	EMPTY_STRING = ""
+)
+
 func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {
-	return model.ClientId != "" && model.ClientSecret != "" && model.TenantId != ""
+	return model.ClientId != EMPTY_STRING && model.ClientSecret != EMPTY_STRING && model.TenantId != EMPTY_STRING
 }
 
 func (model *ProviderCredentials) IsClientCertificateCredentialsProvided() bool {
-	return model.ClientCertificateRaw != ""
+	return model.ClientCertificateRaw != constants.EMPTY
 }
 
 func (model *ProviderCredentials) IsCliProvided() bool {

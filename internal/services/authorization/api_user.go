@@ -13,26 +13,26 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewUserClient(api *api.ApiClient) UserClient {
+func NewUserClient(apiClient *api.Client) UserClient {
 	return UserClient{
-		Api: api,
+		Api: apiClient,
 	}
 }
 
 type UserClient struct {
-	Api *api.ApiClient
+	Api *api.Client
 }
 
 func (client *UserClient) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
-
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return false, err
 	}
-	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
+	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != constants.EMPTY, nil
 }
 
 func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([]UserDto, error) {
@@ -41,7 +41,7 @@ func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([
 		return nil, err
 	}
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers",
 	}
@@ -59,7 +59,7 @@ func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environment
 		return nil, err
 	}
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
 	}
@@ -85,7 +85,7 @@ func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentI
 		return nil, err
 	}
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers",
 	}
@@ -108,7 +108,7 @@ func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentI
 
 func (client *UserClient) CreateUser(ctx context.Context, environmentId, aadObjectId string) (*UserDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/addUser", environmentId),
 	}
@@ -116,15 +116,16 @@ func (client *UserClient) CreateUser(ctx context.Context, environmentId, aadObje
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	userToCreate := map[string]interface{}{
+	userToCreate := map[string]any{
 		"objectId": aadObjectId,
 	}
 
-	retryCount := 6 * 9 // 9 minutes of retries
+	// 9 minutes of retries.
+	retryCount := 6 * 9
 	err := fmt.Errorf("")
 	for retryCount > 0 {
 		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, userToCreate, []int{http.StatusOK}, nil)
-		//the license assignment in Entra is async, so we need to wait for that to happen if a user is created in the same terraform run
+		// the license assignment in Entra is async, so we need to wait for that to happen if a user is created in the same terraform run.
 		if err == nil || !strings.Contains(err.Error(), "userNotLicensed") {
 			break
 		}
@@ -154,7 +155,7 @@ func (client *UserClient) UpdateUser(ctx context.Context, environmentId, systemU
 		return nil, err
 	}
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
 	}
@@ -177,7 +178,7 @@ func (client *UserClient) DeleteUser(ctx context.Context, environmentId, systemU
 		return err
 	}
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
 	}
@@ -197,7 +198,7 @@ func (client *UserClient) RemoveSecurityRoles(ctx context.Context, environmentId
 
 	for _, roleId := range securityRolesIds {
 		apiUrl := &url.URL{
-			Scheme: "https",
+			Scheme: constants.HTTPS,
 			Host:   environmentHost,
 			Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")/systemuserroles_association/$ref",
 		}
@@ -224,13 +225,13 @@ func (client *UserClient) AddSecurityRoles(ctx context.Context, environmentId, s
 		return nil, err
 	}
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")/systemuserroles_association/$ref",
 	}
 
 	for _, roleId := range securityRolesIds {
-		roleToassociate := map[string]interface{}{
+		roleToassociate := map[string]any{
 			"@odata.id": fmt.Sprintf("https://%s/api/data/v9.2/roles(%s)", environmentHost, roleId),
 		}
 		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, roleToassociate, []int{http.StatusNoContent}, nil)
@@ -248,22 +249,22 @@ func (client *UserClient) AddSecurityRoles(ctx context.Context, environmentId, s
 func (client *UserClient) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
-		return "", err
+		return constants.EMPTY, err
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
-	if environmentUrl == "" {
-		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+	if environmentUrl == constants.EMPTY {
+		return constants.EMPTY, helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
-	url, err := url.Parse(environmentUrl)
+	envUrl, err := url.Parse(environmentUrl)
 	if err != nil {
-		return "", err
+		return constants.EMPTY, err
 	}
-	return url.Host, nil
+	return envUrl.Host, nil
 }
 
 func (client *UserClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
@@ -290,11 +291,11 @@ func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId, b
 		return nil, err
 	}
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/roles",
 	}
-	if businessUnitId != "" {
+	if businessUnitId != constants.EMPTY {
 		var values = url.Values{}
 		values.Add("$filter", fmt.Sprintf("_businessunitid_value eq %s", businessUnitId))
 		apiUrl.RawQuery = values.Encode()

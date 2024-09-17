@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
 func covertDlpPolicyToPolicyModelDto(policy DlpPolicyDto) (*DlpPolicyModelDto, error) {
@@ -186,7 +187,7 @@ func convertToDlpConnectorGroup(ctx context.Context, diag diag.Diagnostics, clas
 	for _, connector := range connectors {
 		defaultAction := "Allow"
 
-		if connector.DefaultActionRuleBehavior.ValueString() != "" {
+		if connector.DefaultActionRuleBehavior.ValueString() != constants.EMPTY {
 			defaultAction = connector.DefaultActionRuleBehavior.ValueString()
 		}
 

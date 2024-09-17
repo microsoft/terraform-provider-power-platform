@@ -50,7 +50,7 @@ func NewSecurityRolesDataSource() datasource.DataSource {
 	}
 }
 
-func (d *SecurityRolesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (_ *SecurityRolesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dataverse security roles for a given environment and business unit",
 		MarkdownDescription: "Fetches the list of Dataverse security roles for a given environment and business unit.  For more information see [About security roles and privileges](https://learn.microsoft.com/power-platform/admin/security-roles-privileges)",
@@ -105,7 +105,7 @@ func (d *SecurityRolesDataSource) Schema(ctx context.Context, _ datasource.Schem
 	}
 }
 
-func (d *SecurityRolesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *SecurityRolesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -125,13 +125,13 @@ func (d *SecurityRolesDataSource) Metadata(_ context.Context, req datasource.Met
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *SecurityRolesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state SecurityRolesListDataSourceModel
 	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SECURITY ROLES START: %s", d.ProviderTypeName))
 
-	if state.EnvironmentId.ValueString() == "" {
+	if state.EnvironmentId.ValueString() == constants.EMPTY {
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}

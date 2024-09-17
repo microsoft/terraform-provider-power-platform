@@ -34,6 +34,7 @@ type UUIDValue struct {
 	basetypes.StringValue
 }
 
+//nolint:unused-receiver
 func (v UUIDValue) Type(_ context.Context) attr.Type {
 	return UUIDType{}
 }

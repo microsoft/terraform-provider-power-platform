@@ -11,21 +11,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 )
 
 var (
-	_ datasource.DataSource              = &TenantDataSource{}
-	_ datasource.DataSourceWithConfigure = &TenantDataSource{}
+	_ datasource.DataSource              = &DataSource{}
+	_ datasource.DataSourceWithConfigure = &DataSource{}
 )
 
-type TenantDataSource struct {
-	TenantClient     TenantClient
+type DataSource struct {
+	TenantClient     Client
 	ProviderTypeName string
 	TypeName         string
 }
 
-type TenantDataSourceModel struct {
+type DataSourceModel struct {
 	TenantId                         types.String `tfsdk:"tenant_id"`
 	State                            types.String `tfsdk:"state"`
 	Location                         types.String `tfsdk:"location"`
@@ -37,17 +37,17 @@ type TenantDataSourceModel struct {
 }
 
 func NewTenantDataSource() datasource.DataSource {
-	return &TenantDataSource{
+	return &DataSource{
 		ProviderTypeName: "powerplatform",
 		TypeName:         "_tenant",
 	}
 }
 
-func (d *TenantDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *TenantDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the client configuration for the given tenant.",
 		MarkdownDescription: "Fetches the client configuration for the given tenant.",
@@ -96,29 +96,28 @@ func (d *TenantDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 	}
 }
 
-func (d *TenantDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-
-	dto, err := d.TenantClient.GetTenant(ctx)
+func (d *DataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
+	tenant, err := d.TenantClient.GetTenant(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to fetch tenant", fmt.Sprintf("Failed to fetch tenant: %v", err))
 		return
 	}
 
-	state := TenantDataSourceModel{
-		TenantId:                         types.StringValue(dto.TenantId),
-		State:                            types.StringValue(dto.State),
-		Location:                         types.StringValue(dto.Location),
-		AadCountryGeo:                    types.StringValue(dto.AadCountryGeo),
-		DataStorageGeo:                   types.StringValue(dto.DataStorageGeo),
-		DefaultEnvironmentGeo:            types.StringValue(dto.DefaultEnvironmentGeo),
-		AadDataBoundary:                  types.StringValue(dto.AadDataBoundary),
-		FedRAMPHighCertificationRequired: types.BoolValue(dto.FedRAMPHighCertificationRequired),
+	state := DataSourceModel{
+		TenantId:                         types.StringValue(tenant.TenantId),
+		State:                            types.StringValue(tenant.State),
+		Location:                         types.StringValue(tenant.Location),
+		AadCountryGeo:                    types.StringValue(tenant.AadCountryGeo),
+		DataStorageGeo:                   types.StringValue(tenant.DataStorageGeo),
+		DefaultEnvironmentGeo:            types.StringValue(tenant.DefaultEnvironmentGeo),
+		AadDataBoundary:                  types.StringValue(tenant.AadDataBoundary),
+		FedRAMPHighCertificationRequired: types.BoolValue(tenant.FedRAMPHighCertificationRequired),
 	}
 
 	resp.State.Set(ctx, &state)
 }
 
-func (d *TenantDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

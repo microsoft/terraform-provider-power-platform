@@ -3,11 +3,11 @@
 
 package connection
 
-type ConnectionDtoArray struct {
-	Value []ConnectionDto `json:"value"`
+type DtoArray struct {
+	Value []Dto `json:"value"`
 }
 
-type ConnectionDto struct {
+type Dto struct {
 	Name       string        `json:"name"`
 	Id         string        `json:"id"`
 	Type       string        `json:"type"`
@@ -15,22 +15,22 @@ type ConnectionDto struct {
 }
 
 type PropertiesDto struct {
-	ApiId                   string                 `json:"apiId"`
-	DisplayName             string                 `json:"displayName"`
-	IconUri                 string                 `json:"iconUri"`
-	Statuses                []StatusDto            `json:"statuses"`
-	ConnectionParametersSet map[string]interface{} `json:"connectionParametersSet,omitempty"`
-	ConnectionParameters    map[string]interface{} `json:"connectionParameters,omitempty"`
-	KeywordsRemaining       int                    `json:"keywordsRemaining"`
-	CreatedBy               CreatedByDto           `json:"createdBy"`
-	CreatedTime             string                 `json:"createdTime"`
-	LastModifiedTime        string                 `json:"lastModifiedTime"`
-	ExpirationTime          string                 `json:"expirationTime"`
-	TestLinks               []TestLinkDto          `json:"testLinks"`
-	Environment             EnvironmentDto         `json:"environment"`
-	Permissions             []PermissionDto        `json:"permissions"`
-	AccountName             string                 `json:"accountName"`
-	AllowSharing            bool                   `json:"allowSharing"`
+	ApiId                   string          `json:"apiId"`
+	DisplayName             string          `json:"displayName"`
+	IconUri                 string          `json:"iconUri"`
+	Statuses                []StatusDto     `json:"statuses"`
+	ConnectionParametersSet map[string]any  `json:"connectionParametersSet,omitempty"`
+	ConnectionParameters    map[string]any  `json:"connectionParameters,omitempty"`
+	KeywordsRemaining       int             `json:"keywordsRemaining"`
+	CreatedBy               CreatedByDto    `json:"createdBy"`
+	CreatedTime             string          `json:"createdTime"`
+	LastModifiedTime        string          `json:"lastModifiedTime"`
+	ExpirationTime          string          `json:"expirationTime"`
+	TestLinks               []TestLinkDto   `json:"testLinks"`
+	Environment             EnvironmentDto  `json:"environment"`
+	Permissions             []PermissionDto `json:"permissions"`
+	AccountName             string          `json:"accountName"`
+	AllowSharing            bool            `json:"allowSharing"`
 }
 
 type StatusDto struct {
@@ -76,37 +76,39 @@ type PrincipalDto struct {
 	TenantId string `json:"tenantId"`
 }
 
-type ConnectionToCreateDto struct {
-	Properties ConnectionToCreatePropertiesDto `json:"properties"`
+type CreateDto struct {
+	Properties CreatePropertiesDto `json:"properties"`
 }
 
-type ConnectionToCreatePropertiesDto struct {
-	DisplayName             string                           `json:"displayName"`
-	ConnectionParametersSet map[string]interface{}           `json:"connectionParametersSet,omitempty"`
-	ConnectionParameters    map[string]interface{}           `json:"connectionParameters,omitempty"`
-	Environment             ConnectionToCreateEnvironmentDto `json:"environment"`
+type CreatePropertiesDto struct {
+	DisplayName             string                 `json:"displayName"`
+	ConnectionParametersSet map[string]interface{} `json:"connectionParametersSet,omitempty"`
+	ConnectionParameters    map[string]interface{} `json:"connectionParameters,omitempty"`
+	Environment             CreateEnvironmentDto   `json:"environment"`
 }
 
-type ConnectionToCreateEnvironmentDto struct {
+type CreateEnvironmentDto struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }
 
 type ConnectorDefinition struct {
-	Name       string `json:"name"`
-	Id         string `json:"id"`
-	Type       string `json:"type"`
-	Properties struct {
-		DisplayName             string          `json:"displayName"`
-		IconUri                 string          `json:"iconUri"`
-		IconBrandColor          string          `json:"iconBrandColor"`
-		ApiEnvironment          string          `json:"apiEnvironment"`
-		IsCustomApi             bool            `json:"isCustomApi"`
-		BlobUrisAreProxied      bool            `json:"blobUrisAreProxied"`
-		ConnectionParameters    *map[string]any `json:"connectionParameters,omitempty"`
-		ConnectionParameterSets *map[string]any `json:"connectionParameterSets,omitempty"`
-		Swagger                 *map[string]any `json:"swagger,omitempty"`
-	} `json:"properties"`
+	Name       string                        `json:"name"`
+	Id         string                        `json:"id"`
+	Type       string                        `json:"type"`
+	Properties ConnectorDefinitionProperties `json:"properties"`
+}
+
+type ConnectorDefinitionProperties struct {
+	DisplayName             string          `json:"displayName"`
+	IconUri                 string          `json:"iconUri"`
+	IconBrandColor          string          `json:"iconBrandColor"`
+	ApiEnvironment          string          `json:"apiEnvironment"`
+	IsCustomApi             bool            `json:"isCustomApi"`
+	BlobUrisAreProxied      bool            `json:"blobUrisAreProxied"`
+	ConnectionParameters    *map[string]any `json:"connectionParameters,omitempty"`
+	ConnectionParameterSets *map[string]any `json:"connectionParameterSets,omitempty"`
+	Swagger                 *map[string]any `json:"swagger,omitempty"`
 }
 
 type ShareConnectionRequestDto struct {
@@ -147,11 +149,10 @@ type ShareConnectionResponseDto struct {
 }
 
 type ShareConnectionResponsePropertiesDto struct {
-	RoleName string `json:"roleName"`
-	//Principal               ShareConnectionResponsePropertiesPrincipalDto `json:"princpal"`
-	Principal               map[string]interface{} `json:"principal"`
-	NotifyShareTargetOption string                 `json:"NotifyShareTargetOption"`
-	InviteGuestToTenant     bool                   `json:"inviteGuestToTenant"`
+	RoleName                string         `json:"roleName"`
+	Principal               map[string]any `json:"principal"`
+	NotifyShareTargetOption string         `json:"NotifyShareTargetOption"`
+	InviteGuestToTenant     bool           `json:"inviteGuestToTenant"`
 }
 
 type ShareConnectionResponsePropertiesPrincipalDto struct {

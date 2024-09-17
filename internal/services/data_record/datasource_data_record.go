@@ -135,6 +135,7 @@ func returnExpandSchema(depth int) *schema.ListNestedAttribute {
 	}
 }
 
+//nolint:unused-receiver
 func (d *DataRecordDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Resource for retrieving data records from Dataverse using (OData Query)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#page-results].",
@@ -195,6 +196,7 @@ func (d *DataRecordDataSource) Schema(ctx context.Context, _ datasource.SchemaRe
 	}
 }
 
+//nolint:unused-receiver
 func (d *DataRecordDataSource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.Conflicting(

@@ -119,12 +119,12 @@ type UserManagementSettingsDto struct {
 }
 
 func (tenantSettings *TenantSettingsDto) CalcObjectHash() (*string, error) {
-	json, err := json.Marshal(tenantSettings)
+	jsonObject, err := json.Marshal(tenantSettings)
 	if err != nil {
 		return nil, err
 	}
 
-	hash := md5.Sum(json)
+	hash := md5.Sum(jsonObject)
 	hashString := hex.EncodeToString(hash[:])
 	return &hashString, nil
 }
@@ -421,7 +421,7 @@ func ConvertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 	return tenantSettingsDto
 }
 
-func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto, timeouts timeouts.Value) (TenantSettingsSourceModel, basetypes.ObjectValue) {
+func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto, timeout timeouts.Value) (TenantSettingsSourceModel, basetypes.ObjectValue) {
 
 	objTypePowerPlatformSettings, objValuePowerPlatformSettings := ConvertPowerPlatformSettings(tenantSettingsDto)
 
@@ -454,7 +454,7 @@ func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto, timeouts 
 	objValue := types.ObjectValueMust(tenantSettingsProperties, tenantSettingsValues)
 
 	tenantSettings := TenantSettingsSourceModel{
-		Timeouts:                   timeouts,
+		Timeouts:                   timeout,
 		Id:                         types.StringValue(""),
 		WalkMeOptOut:               types.BoolPointerValue(tenantSettingsDto.WalkMeOptOut),
 		DisableNPSCommentsReachout: types.BoolPointerValue(tenantSettingsDto.DisableNPSCommentsReachout),

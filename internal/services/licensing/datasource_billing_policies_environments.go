@@ -30,7 +30,7 @@ func NewBillingPoliciesEnvironmetsDataSource() datasource.DataSource {
 }
 
 type BillingPoliciesEnvironmetsDataSource struct {
-	LicensingClient  LicensingClient
+	LicensingClient  Client
 	ProviderTypeName string
 	TypeName         string
 }

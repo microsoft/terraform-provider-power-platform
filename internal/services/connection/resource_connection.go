@@ -157,17 +157,17 @@ func (r *ConnectionResource) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	connectionToCreate := ConnectionToCreateDto{
-		Properties: ConnectionToCreatePropertiesDto{
+	connectionToCreate := CreateDto{
+		Properties: CreatePropertiesDto{
 			DisplayName: plan.DisplayName.ValueString(),
-			Environment: ConnectionToCreateEnvironmentDto{
+			Environment: CreateEnvironmentDto{
 				Name: plan.EnvironmentId.ValueString(),
 				Id:   fmt.Sprintf("/providers/Microsoft.PowerApps/environments/%s", plan.EnvironmentId.ValueString()),
 			},
 		},
 	}
 
-	if !plan.ConnectionParameters.IsNull() && plan.ConnectionParameters.ValueString() != "" {
+	if !plan.ConnectionParameters.IsNull() && plan.ConnectionParameters.ValueString() != constants.EMPTY {
 		var params map[string]interface{} = nil
 		err := json.Unmarshal([]byte(plan.ConnectionParameters.ValueString()), &params)
 		if err != nil {
@@ -176,7 +176,7 @@ func (r *ConnectionResource) Create(ctx context.Context, req resource.CreateRequ
 		}
 		connectionToCreate.Properties.ConnectionParameters = params
 	}
-	if !plan.ConnectionParametersSet.IsNull() && plan.ConnectionParametersSet.ValueString() != "" {
+	if !plan.ConnectionParametersSet.IsNull() && plan.ConnectionParametersSet.ValueString() != constants.EMPTY {
 		var params map[string]interface{} = nil
 		err := json.Unmarshal([]byte(plan.ConnectionParametersSet.ValueString()), &params)
 		if err != nil {
@@ -285,8 +285,7 @@ func (r *ConnectionResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	var connParams map[string]interface{} = nil
-	if !plan.ConnectionParameters.IsNull() && plan.ConnectionParameters.ValueString() != "" {
-
+	if !plan.ConnectionParameters.IsNull() && plan.ConnectionParameters.ValueString() != constants.EMPTY {
 		err := json.Unmarshal([]byte(plan.ConnectionParameters.ValueString()), &connParams)
 		if err != nil {
 			resp.Diagnostics.AddError("Failed to convert connection parameters", err.Error())
@@ -295,7 +294,7 @@ func (r *ConnectionResource) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	var connParamsSet map[string]interface{} = nil
-	if !plan.ConnectionParametersSet.IsNull() && plan.ConnectionParametersSet.ValueString() != "" {
+	if !plan.ConnectionParametersSet.IsNull() && plan.ConnectionParametersSet.ValueString() != constants.EMPTY {
 
 		err := json.Unmarshal([]byte(plan.ConnectionParametersSet.ValueString()), &connParamsSet)
 		if err != nil {

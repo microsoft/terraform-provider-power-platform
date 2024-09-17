@@ -84,7 +84,7 @@ func (r *EnvironmentGroupResource) Configure(ctx context.Context, req resource.C
 	r.EnvironmentGroupClient = NewEnvironmentGroupClient(client)
 }
 
-// Read function
+// Read function.
 func (r *EnvironmentGroupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.TypeName))
 
@@ -113,7 +113,7 @@ func (r *EnvironmentGroupResource) Read(ctx context.Context, req resource.ReadRe
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.TypeName))
 }
 
-// Create function
+// Create function.
 func (r *EnvironmentGroupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.TypeName))
 
@@ -143,7 +143,7 @@ func (r *EnvironmentGroupResource) Create(ctx context.Context, req resource.Crea
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.TypeName))
 }
 
-// Update function
+// Update function.
 func (r *EnvironmentGroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.TypeName))
 

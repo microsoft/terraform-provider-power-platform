@@ -10,21 +10,22 @@ import (
 	"strings"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewConnectorsClient(api *api.ApiClient) ConnectorsClient {
+func NewConnectorsClient(api *api.Client) ConnectorsClient {
 	return ConnectorsClient{
 		Api: api,
 	}
 }
 
 type ConnectorsClient struct {
-	Api *api.ApiClient
+	Api *api.Client
 }
 
 func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerAppsUrl,
 		Path:   "/providers/Microsoft.PowerApps/apis",
 	}
@@ -43,7 +44,7 @@ func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorD
 	}
 
 	apiUrl = &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/unblockable",
 	}
@@ -62,7 +63,7 @@ func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorD
 	}
 
 	apiUrl = &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/virtual",
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
 var (
@@ -254,7 +255,7 @@ func ConvertUpdateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		},
 	}
 
-	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != "" {
+	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != constants.EMPTY {
 		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
 			Id: environmentSource.BillingPolicyId.ValueString(),
 		}
@@ -279,7 +280,7 @@ func IsDataverseEnvironmentEmpty(ctx context.Context, environment *EnvironmentSo
 	var dataverseSourceModel DataverseSourceModel
 	environment.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
-	return dataverseSourceModel.CurrencyCode.IsNull() || dataverseSourceModel.CurrencyCode.ValueString() == ""
+	return dataverseSourceModel.CurrencyCode.IsNull() || dataverseSourceModel.CurrencyCode.ValueString() == constants.EMPTY
 }
 
 func ConvertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource EnvironmentSourceModel) (*EnvironmentCreateDto, error) {
@@ -291,21 +292,21 @@ func ConvertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		},
 	}
 
-	if !environmentSource.Description.IsNull() && environmentSource.Description.ValueString() != "" {
+	if !environmentSource.Description.IsNull() && environmentSource.Description.ValueString() != constants.EMPTY {
 		environmentDto.Properties.Description = environmentSource.Description.ValueString()
 	}
 
-	if !environmentSource.Cadence.IsNull() && environmentSource.Cadence.ValueString() != "" {
+	if !environmentSource.Cadence.IsNull() && environmentSource.Cadence.ValueString() != constants.EMPTY {
 		environmentDto.Properties.UpdateCadence = &UpdateCadenceDto{
 			Id: environmentSource.Cadence.ValueString(),
 		}
 	}
 
-	if !environmentSource.AzureRegion.IsNull() && environmentSource.AzureRegion.ValueString() != "" {
+	if !environmentSource.AzureRegion.IsNull() && environmentSource.AzureRegion.ValueString() != constants.EMPTY {
 		environmentDto.Properties.AzureRegion = environmentSource.AzureRegion.ValueString()
 	}
 
-	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != "" {
+	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != constants.EMPTY {
 		environmentDto.Properties.BillingPolicy = BillingPolicyDto{
 			Id: environmentSource.BillingPolicyId.ValueString(),
 		}
@@ -335,7 +336,7 @@ func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 		dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		var templateMetadataObject *EnvironmentCreateTemplateMetadata
-		if dataverseSourceModel.TemplateMetadata.ValueString() != "" {
+		if dataverseSourceModel.TemplateMetadata.ValueString() != constants.EMPTY {
 			err := json.Unmarshal([]byte(dataverseSourceModel.TemplateMetadata.ValueString()), &templateMetadataObject)
 			if err != nil {
 				return nil, fmt.Errorf("error when unmarshalling template metadata %s; internal error: %v", dataverseSourceModel.TemplateMetadata.ValueString(), err)
@@ -355,7 +356,7 @@ func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 			TemplateMetadata: templateMetadataObject,
 		}
 
-		if !dataverseSourceModel.Domain.IsNull() && dataverseSourceModel.Domain.ValueString() != "" {
+		if !dataverseSourceModel.Domain.IsNull() && dataverseSourceModel.Domain.ValueString() != constants.EMPTY {
 			linkedEnvironmentMetadata.DomainName = dataverseSourceModel.Domain.ValueString()
 		} else {
 			linkedEnvironmentMetadata.DomainName = ""
@@ -438,7 +439,7 @@ func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 			attrValuesProductProperties["background_operation_enabled"] = types.BoolValue(false)
 		}
 
-		if currencyCode != nil && *currencyCode != "" {
+		if currencyCode != nil && *currencyCode != constants.EMPTY {
 			attrValuesProductProperties["currency_code"] = types.StringValue(*currencyCode)
 		} else {
 			attrValuesProductProperties["currency_code"] = types.StringNull()

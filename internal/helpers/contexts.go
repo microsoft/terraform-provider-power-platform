@@ -16,8 +16,8 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/common"
 )
 
-// ContextKey is a custom type for context keys
-// A custom type is needed to avoid collisions with other packages that use the same key
+// ContextKey is a custom type for context keys.
+// A custom type is needed to avoid collisions with other packages that use the same key.
 type ContextKey string
 
 type ExecutionContextValue struct {
@@ -27,8 +27,8 @@ type ExecutionContextValue struct {
 	GoVersion       string
 }
 
-// RequestContextValue is a struct that holds the object type, request type, object name and request id for a given request
-// This struct is used to store the request context in the context so that it can be accessed in lower level functions
+// RequestContextValue is a struct that holds the object type, request type, object name and request id for a given request.
+// This struct is used to store the request context in the context so that it can be accessed in lower level functions.
 type RequestContextValue struct {
 	ObjectName  string
 	ObjectType  string
@@ -36,7 +36,7 @@ type RequestContextValue struct {
 	RequestId   string
 }
 
-// Context keys for the execution and request context
+// Context keys for the execution and request context.
 const (
 	EXECUTION_CONTEXT_KEY ContextKey = "executionContext"
 	REQUEST_CONTEXT_KEY   ContextKey = "requestContext"
@@ -46,21 +46,21 @@ const (
 // This function should be called at the start of a resource or data source request function
 // The returned closure should be deferred at the start of the function
 // The closure will log the end of the request scope
-// The context is updated with the request context so that it can be accessed in lower level functions
+// The context is updated with the request context so that it can be accessed in lower level functions.
 func EnterRequestContext(ctx context.Context, typ TypeInfo, req any) (context.Context, func()) {
 	reqId := strings.ReplaceAll(uuid.New().String(), "-", "")
 	objType, reqType := getRequestType(req)
-	name:= typ.FullTypeName()
+	name := typ.FullTypeName()
 
 	tflog.Debug(ctx, fmt.Sprintf("%s %s START: %s", reqType, objType, name), map[string]any{
 		"requestId":       reqId,
 		"providerVersion": common.ProviderVersion,
 	})
 
-	// Add the request context to the context so that we can access it in lower level functions
+	// Add the request context to the context so that we can access it in lower level functions.
 	ctx = context.WithValue(ctx, REQUEST_CONTEXT_KEY, RequestContextValue{ObjectType: objType, RequestType: reqType, ObjectName: name, RequestId: reqId})
 
-	// This returns a closure that can be used to defer the exit of the request scope
+	// This returns a closure that can be used to defer the exit of the request scope.
 	return ctx, func() {
 		tflog.Debug(ctx, fmt.Sprintf("%s %s END: %s", reqType, objType, name))
 	}
@@ -73,7 +73,7 @@ func EnterProviderContext(ctx context.Context, req any) (context.Context, func()
 		"providerVersion": common.ProviderVersion,
 	})
 
-	// This returns a closure that can be used to defer the exit of the provider scope
+	// This returns a closure that can be used to defer the exit of the provider scope.
 	return ctx, func() {
 		tflog.Debug(ctx, fmt.Sprintf("%s %s END", reqType, objType), map[string]any{
 			"providerVersion": common.ProviderVersion,
@@ -81,7 +81,7 @@ func EnterProviderContext(ctx context.Context, req any) (context.Context, func()
 	}
 }
 
-// getRequestType returns the object type and request type for a given request
+// getRequestType returns the object type and request type for a given request.
 func getRequestType(req any) (string, string) {
 	switch req.(type) {
 	case resource.CreateRequest:

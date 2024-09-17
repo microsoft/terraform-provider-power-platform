@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
 func RequireReplaceStringFromNonEmptyPlanModifier() planmodifier.String {
@@ -25,7 +26,7 @@ func (d *requireReplaceStringFromNonEmptyPlanModifier) MarkdownDescription(ctx c
 }
 
 func (d *requireReplaceStringFromNonEmptyPlanModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-	if req.PlanValue != req.StateValue && (!req.StateValue.IsNull() && !req.StateValue.IsUnknown() && req.StateValue.ValueString() != "") {
+	if req.PlanValue != req.StateValue && (!req.StateValue.IsNull() && !req.StateValue.IsUnknown() && req.StateValue.ValueString() != constants.EMPTY) {
 		resp.RequiresReplace = true
 	}
 }

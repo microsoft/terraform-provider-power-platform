@@ -94,6 +94,9 @@ const (
 	HEADER_LOCATION           = "Location"
 	HEADER_RETRY_AFTER        = "Retry-After"
 	HEADER_OPERATION_LOCATION = "Operation-Location"
+	HTTPS                     = "https"
+	API_VERSION_PARAM         = "api-version"
+	EMPTY                     = ""
 )
 
 const (

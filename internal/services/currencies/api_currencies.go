@@ -11,21 +11,22 @@ import (
 	"net/url"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewCurrenciesClient(api *api.ApiClient) CurrenciesClient {
-	return CurrenciesClient{
-		Api: api,
+func NewCurrenciesClient(apiClient *api.Client) Client {
+	return Client{
+		Api: apiClient,
 	}
 }
 
-type CurrenciesClient struct {
-	Api *api.ApiClient
+type Client struct {
+	Api *api.Client
 }
 
-func (client *CurrenciesClient) GetCurrenciesByLocation(ctx context.Context, location string) (CurrenciesDto, error) {
+func (client *Client) GetCurrenciesByLocation(ctx context.Context, location string) (Dto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentCurrencies", location),
 	}
@@ -33,7 +34,7 @@ func (client *CurrenciesClient) GetCurrenciesByLocation(ctx context.Context, loc
 		"api-version": []string{"2023-06-01"},
 	}.Encode()
 
-	currencies := CurrenciesDto{}
+	currencies := Dto{}
 
 	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {

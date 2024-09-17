@@ -17,17 +17,17 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &LocationsDataSource{}
-	_ datasource.DataSourceWithConfigure = &LocationsDataSource{}
+	_ datasource.DataSource              = &DataSource{}
+	_ datasource.DataSourceWithConfigure = &DataSource{}
 )
 
-type LocationsDataSourceModel struct {
-	Timeouts timeouts.Value      `tfsdk:"timeouts"`
-	Id       types.Int64         `tfsdk:"id"`
-	Value    []LocationDataModel `tfsdk:"locations"`
+type DataSourceModel struct {
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	Id       types.Int64    `tfsdk:"id"`
+	Value    []DataModel    `tfsdk:"locations"`
 }
 
-type LocationDataModel struct {
+type DataModel struct {
 	ID                                     string   `tfsdk:"id"`
 	Name                                   string   `tfsdk:"name"`
 	DisplayName                            string   `tfsdk:"display_name"`
@@ -40,23 +40,23 @@ type LocationDataModel struct {
 }
 
 func NewLocationsDataSource() datasource.DataSource {
-	return &LocationsDataSource{
+	return &DataSource{
 		ProviderTypeName: "powerplatform",
 		TypeName:         "_locations",
 	}
 }
 
-type LocationsDataSource struct {
+type DataSource struct {
 	LocationsClient  LocationsClient
 	ProviderTypeName string
 	TypeName         string
 }
 
-func (d *LocationsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *LocationsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of available Dynamics 365 locations",
 		MarkdownDescription: "Fetches the list of available Dynamics 365 locations. For more information see [Power Platform Geos](https://learn.microsoft.com/power-platform/admin/regions-overview)",
@@ -120,7 +120,7 @@ func (d *LocationsDataSource) Schema(ctx context.Context, _ datasource.SchemaReq
 	}
 }
 
-func (d *LocationsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -136,8 +136,8 @@ func (d *LocationsDataSource) Configure(ctx context.Context, req datasource.Conf
 	d.LocationsClient = NewLocationsClient(clientApi)
 }
 
-func (d *LocationsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state LocationsDataSourceModel
+func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state DataSourceModel
 	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LOCATIONS START: %s", d.ProviderTypeName))
@@ -165,7 +165,7 @@ func (d *LocationsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	state.Id = types.Int64Value(int64(len(locations.Value)))
 
 	for _, location := range locations.Value {
-		state.Value = append(state.Value, LocationDataModel{
+		state.Value = append(state.Value, DataModel{
 			ID:                                     location.ID,
 			Name:                                   location.Name,
 			DisplayName:                            location.Properties.DisplayName,

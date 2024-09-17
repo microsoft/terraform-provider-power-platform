@@ -11,21 +11,22 @@ import (
 	"net/url"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewEnvironmentTemplatesClient(api *api.ApiClient) EnvironmentTemplatesClient {
+func NewEnvironmentTemplatesClient(api *api.Client) EnvironmentTemplatesClient {
 	return EnvironmentTemplatesClient{
 		Api: api,
 	}
 }
 
 type EnvironmentTemplatesClient struct {
-	Api *api.ApiClient
+	Api *api.Client
 }
 
 func (client *EnvironmentTemplatesClient) GetEnvironmentTemplatesByLocation(ctx context.Context, location string) (EnvironmentTemplatesDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/templates", location),
 	}

@@ -21,42 +21,43 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-var _ resource.Resource = &ConnectionShareResource{}
-var _ resource.ResourceWithImportState = &ConnectionShareResource{}
+var _ resource.Resource = &ShareResource{}
+var _ resource.ResourceWithImportState = &ShareResource{}
 
 func NewConnectionShareResource() resource.Resource {
-	return &ConnectionShareResource{
+	return &ShareResource{
 		ProviderTypeName: "powerplatform",
 		TypeName:         "_connection_share",
 	}
 }
 
-type ConnectionShareResource struct {
+type ShareResource struct {
 	ConnectionsClient ConnectionsClient
 	ProviderTypeName  string
 	TypeName          string
 }
 
-type ConnectionShareResourceModel struct {
-	Timeouts      timeouts.Value                        `tfsdk:"timeouts"`
-	Id            types.String                          `tfsdk:"id"`
-	EnvironmentId types.String                          `tfsdk:"environment_id"`
-	ConnectorName types.String                          `tfsdk:"connector_name"`
-	ConnectionId  types.String                          `tfsdk:"connection_id"`
-	RoleName      types.String                          `tfsdk:"role_name"`
-	Principal     ConnectionSharePrincipalResourceModel `tfsdk:"principal"`
+type ShareResourceModel struct {
+	Timeouts      timeouts.Value              `tfsdk:"timeouts"`
+	Id            types.String                `tfsdk:"id"`
+	EnvironmentId types.String                `tfsdk:"environment_id"`
+	ConnectorName types.String                `tfsdk:"connector_name"`
+	ConnectionId  types.String                `tfsdk:"connection_id"`
+	RoleName      types.String                `tfsdk:"role_name"`
+	Principal     SharePrincipalResourceModel `tfsdk:"principal"`
 }
 
-type ConnectionSharePrincipalResourceModel struct {
+type SharePrincipalResourceModel struct {
 	EntraObjectId types.String `tfsdk:"entra_object_id"`
 	DisplayName   types.String `tfsdk:"display_name"`
 }
 
-func (r *ConnectionShareResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *ShareResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-func (r *ConnectionShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+//nolint:unused-receiver
+func (r *ShareResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "",
 		Attributes: map[string]schema.Attribute{
@@ -126,7 +127,7 @@ func (r *ConnectionShareResource) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *ConnectionShareResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *ShareResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -144,8 +145,8 @@ func (r *ConnectionShareResource) Configure(ctx context.Context, req resource.Co
 	r.ConnectionsClient = NewConnectionsClient(clientApi)
 }
 
-func (r *ConnectionShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *ConnectionShareResourceModel
+func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan *ShareResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
@@ -186,8 +187,8 @@ func (r *ConnectionShareResource) Create(ctx context.Context, req resource.Creat
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *ConnectionShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *ConnectionShareResourceModel
+func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state *ShareResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.TypeName))
 
@@ -221,14 +222,14 @@ func (r *ConnectionShareResource) Read(ctx context.Context, req resource.ReadReq
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.TypeName))
 }
 
-func (r *ConnectionShareResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan *ConnectionShareResourceModel
+func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan *ShareResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
-	var state *ConnectionShareResourceModel
+	var state *ShareResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -285,8 +286,8 @@ func (r *ConnectionShareResource) Update(ctx context.Context, req resource.Updat
 
 }
 
-func (r *ConnectionShareResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *ConnectionShareResourceModel
+func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state *ShareResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
 
@@ -312,19 +313,19 @@ func (r *ConnectionShareResource) Delete(ctx context.Context, req resource.Delet
 	}
 }
 
-func (r *ConnectionShareResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *ShareResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func ConvertFromConnectionResourceSharesDto(oldPlan *ConnectionShareResourceModel, connection *ShareConnectionResponseDto) ConnectionShareResourceModel {
-	share := ConnectionShareResourceModel{
+func ConvertFromConnectionResourceSharesDto(oldPlan *ShareResourceModel, connection *ShareConnectionResponseDto) ShareResourceModel {
+	share := ShareResourceModel{
 		Timeouts:      oldPlan.Timeouts,
 		EnvironmentId: oldPlan.EnvironmentId,
 		ConnectorName: oldPlan.ConnectorName,
 		ConnectionId:  oldPlan.ConnectionId,
 		Id:            types.StringValue(connection.Name),
 		RoleName:      types.StringValue(connection.Properties.RoleName),
-		Principal: ConnectionSharePrincipalResourceModel{
+		Principal: SharePrincipalResourceModel{
 			EntraObjectId: types.StringValue(connection.Properties.Principal["id"].(string)),
 			DisplayName:   types.StringValue(connection.Properties.Principal["displayName"].(string)),
 		},

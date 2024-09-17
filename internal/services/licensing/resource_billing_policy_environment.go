@@ -31,7 +31,7 @@ func NewBillingPolicyEnvironmentResource() resource.Resource {
 }
 
 type BillingPolicyEnvironmentResource struct {
-	LicensingClient  LicensingClient
+	LicensingClient  Client
 	ProviderTypeName string
 	TypeName         string
 }
@@ -42,11 +42,12 @@ type BillingPolicyEnvironmentResourceModel struct {
 	Environments    []string       `tfsdk:"environments"`
 }
 
-func (r *BillingPolicyEnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *BillingPolicyEnvironmentResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-func (r *BillingPolicyEnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+//nolint:unused-receiver
+func (r *BillingPolicyEnvironmentResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "This resource allows you to manage the environments associated with a Billing Policy",
 		MarkdownDescription: "This resource allows you to manage the environments associated with a [billing policy](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy). A billing policy is a set of rules that define how a tenant is billed for usage of Power Platform services. A billing policy is associated with a billing instrument, which is a subscription and resource group that is used to pay for usage of Power Platform services.",
@@ -75,7 +76,7 @@ func (r *BillingPolicyEnvironmentResource) Schema(ctx context.Context, req resou
 	}
 }
 
-func (r *BillingPolicyEnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *BillingPolicyEnvironmentResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -172,10 +173,9 @@ func (r *BillingPolicyEnvironmentResource) Read(ctx context.Context, req resourc
 		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
-		} else {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-			return
 		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
 	}
 
 	state.Environments = environments
@@ -272,6 +272,7 @@ func (r *BillingPolicyEnvironmentResource) Delete(ctx context.Context, req resou
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 
+//nolint:unused-receiver
 func (r *BillingPolicyEnvironmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("billing_policy_id"), req, resp)
 }

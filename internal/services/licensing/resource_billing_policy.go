@@ -33,7 +33,7 @@ func NewBillingPolicyResource() resource.Resource {
 }
 
 type BillingPolicyResource struct {
-	LicensingClient  LicensingClient
+	LicensingClient  Client
 	ProviderTypeName string
 	TypeName         string
 }
@@ -53,11 +53,12 @@ type BillingInstrumentResourceModel struct {
 	SubscriptionId types.String `tfsdk:"subscription_id"`
 }
 
-func (r *BillingPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *BillingPolicyResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+//nolint:unused-receiver
+func (r *BillingPolicyResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Manages a Power Platform Billing Policy",
 		MarkdownDescription: "Manages a Power Platform Billing Policy. \n\nA Power Platform billing policy is a mechanism that allows you to manage the costs associated with your Power Platform usage. It's linked to an Azure subscription and is used to set up pay-as-you-go billing for an environment.\n\nAdditional Resources:\n\n* [What is a billing policy](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy)\n* [Power Platform Billing Policy API](https://learn.microsoft.com/rest/api/power-platform/licensing/billing-policy/get-billing-policy)",
@@ -133,7 +134,7 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 
-func (r *BillingPolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *BillingPolicyResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -230,10 +231,9 @@ func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadReque
 		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
-		} else {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-			return
 		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
 	}
 
 	state.Id = types.StringValue(billing.Id)
@@ -267,7 +267,6 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 
 	if plan.Name.ValueString() != state.Name.ValueString() ||
 		plan.Status.ValueString() != state.Status.ValueString() {
-
 		timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
 		if diags != nil && diags.HasError() {
 			return
@@ -329,6 +328,7 @@ func (r *BillingPolicyResource) Delete(ctx context.Context, req resource.DeleteR
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 
+//nolint:unused-receiver
 func (r *BillingPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -23,21 +23,21 @@ import (
 
 type ProviderClient struct {
 	Config *config.ProviderConfig
-	Api    *ApiClient
+	Api    *Client
 }
 
-func (client *ApiClient) GetConfig() *config.ProviderConfig {
+func (client *Client) GetConfig() *config.ProviderConfig {
 	return client.Config
 }
 
-type ApiClient struct {
+type Client struct {
 	Config   *config.ProviderConfig
 	BaseAuth *Auth
 }
 
-func NewApiClientBase(config *config.ProviderConfig, baseAuth *Auth) *ApiClient {
-	return &ApiClient{
-		Config:   config,
+func NewApiClientBase(configValue *config.ProviderConfig, baseAuth *Auth) *Client {
+	return &Client{
+		Config:   configValue,
 		BaseAuth: baseAuth,
 	}
 }
@@ -58,7 +58,7 @@ func TryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (stri
 	}
 }
 
-func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+func (client *Client) ExecuteForGivenScope(ctx context.Context, scope, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*HttpResponse, error) {
 	if !strings.HasPrefix(url, "http") {
 		return nil, helpers.WrapIntoProviderError(nil, helpers.ERROR_INCORRECT_URL_FORMAT, "when using scope, the calling url must be an absolute url, not a relative path")
 	}
@@ -67,10 +67,9 @@ func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method
 		return nil, err
 	}
 
-	var bodyBuffer io.Reader = nil
+	var bodyBuffer io.Reader
 	if body != nil && (reflect.ValueOf(body).Kind() != reflect.Ptr || !reflect.ValueOf(body).IsNil()) {
-		if reflect.ValueOf(body).Kind() == reflect.Ptr && reflect.ValueOf(body).Elem().Kind() == reflect.String {
-			strp, _ := body.(*string)
+		if strp, ok := body.(*string); ok {
 			bodyBuffer = strings.NewReader(*strp)
 		} else {
 			bodyBytes, err := json.Marshal(body)
@@ -115,13 +114,13 @@ func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method
 	return apiResponse, nil
 }
 
-func (client *ApiClient) Execute(ctx context.Context, method, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+func (client *Client) Execute(ctx context.Context, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*HttpResponse, error) {
 	scope, err := TryGetScopeFromURL(url, client.Config.Urls)
 	if err != nil {
 		return nil, err
 	}
 
-	var response *ApiHttpResponse = nil
+	var response *HttpResponse
 	for {
 		response, err = client.ExecuteForGivenScope(ctx, scope, method, url, headers, body, acceptableStatusCodes, responseObj)
 		if response == nil || response.Response == nil {
@@ -146,23 +145,24 @@ func (client *ApiClient) Execute(ctx context.Context, method, url string, header
 	}
 }
 
-func (client *ApiClient) RetryAfterDefault() time.Duration {
+//nolint:unused-receiver
+func (client *Client) RetryAfterDefault() time.Duration {
 	retryAfter5to10Seconds := time.Duration((rand.Intn(5) + 5)) * time.Second
 	return retryAfter5to10Seconds
 }
 
-func (client *ApiClient) SleepWithContext(ctx context.Context, duration time.Duration) error {
+func (client *Client) SleepWithContext(ctx context.Context, duration time.Duration) error {
 	if client.Config.Credentials.TestMode {
-		//Don't sleep during testing
+		// Don't sleep during testing.
 		return nil
-	} else {
-		select {
-		case <-time.After(duration):
-			// Time has elapsed
-			return nil
-		case <-ctx.Done():
-			// Context was canceled
-			return ctx.Err()
-		}
 	}
+	select {
+	case <-time.After(duration):
+		// Time has elapsed.
+		return nil
+	case <-ctx.Done():
+		// Context was canceled.
+		return ctx.Err()
+	}
+
 }

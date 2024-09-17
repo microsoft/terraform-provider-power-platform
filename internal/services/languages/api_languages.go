@@ -11,21 +11,22 @@ import (
 	"net/url"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewLanguagesClient(api *api.ApiClient) LanguagesClient {
+func NewLanguagesClient(api *api.Client) LanguagesClient {
 	return LanguagesClient{
 		Api: api,
 	}
 }
 
 type LanguagesClient struct {
-	Api *api.ApiClient
+	Api *api.Client
 }
 
 func (client *LanguagesClient) GetLanguagesByLocation(ctx context.Context, location string) (LanguagesDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentLanguages", location),
 	}

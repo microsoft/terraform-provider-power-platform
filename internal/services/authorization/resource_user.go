@@ -51,7 +51,7 @@ type UserResourceModel struct {
 	DisableDelete     types.Bool     `tfsdk:"disable_delete"`
 }
 
-func (r *UserResource) Metadata(cctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *UserResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
@@ -130,7 +130,7 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 }
 
-func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *UserResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -223,10 +223,9 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
-		} else {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-			return
 		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
 	}
 
 	model := ConvertFromUserDto(userDto, state.DisableDelete.ValueBool())
@@ -344,6 +343,7 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 
+//nolint:unused-receiver
 func (r *UserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -12,22 +12,23 @@ import (
 	"os"
 	"strings"
 
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	pkcs12 "software.sslmate.com/src/go-pkcs12"
 )
 
 func GetCertificateRawFromCertOrFilePath(certificate, certificateFilePath string) (string, error) {
-	if certificate != "" {
+	if certificate != constants.EMPTY {
 		return strings.TrimSpace(certificate), nil
 	}
-	if certificateFilePath != "" {
+	if certificateFilePath != constants.EMPTY {
 		pfx, err := os.ReadFile(certificateFilePath)
 		if err != nil {
-			return "", err
+			return constants.EMPTY, err
 		}
 		certAsBase64 := base64.StdEncoding.EncodeToString(pfx)
 		return strings.TrimSpace(certAsBase64), nil
 	}
-	return "", errors.New("either client_certificate base64 or certificate_file_path must be provided")
+	return constants.EMPTY, errors.New("either client_certificate base64 or certificate_file_path must be provided")
 }
 
 func ConvertBase64ToCert(b64, password string) ([]*x509.Certificate, crypto.PrivateKey, error) {
@@ -45,7 +46,7 @@ func ConvertBase64ToCert(b64, password string) ([]*x509.Certificate, crypto.Priv
 }
 
 func convertBase64ToByte(b64 string) ([]byte, error) {
-	if b64 == "" {
+	if b64 == constants.EMPTY {
 		return nil, errors.New("got empty base64 certificate data")
 	}
 

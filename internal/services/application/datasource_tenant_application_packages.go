@@ -241,8 +241,8 @@ func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req data
 	state.Id = types.StringValue(strconv.Itoa(len(applications)))
 
 	for _, application := range applications {
-		if (state.Name.ValueString() != "" && state.Name.ValueString() != application.ApplicationName) ||
-			(state.PublisherName.ValueString() != "" && state.PublisherName.ValueString() != application.PublisherName) {
+		if (state.Name.ValueString() != constants.EMPTY && state.Name.ValueString() != application.ApplicationName) ||
+			(state.PublisherName.ValueString() != constants.EMPTY && state.PublisherName.ValueString() != application.PublisherName) {
 			continue
 		}
 		app := TenantApplicationPackageDataSourceModel{

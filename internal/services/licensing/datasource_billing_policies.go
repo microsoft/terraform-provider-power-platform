@@ -29,7 +29,7 @@ func NewBillingPoliciesDataSource() datasource.DataSource {
 }
 
 type BillingPoliciesDataSource struct {
-	LicensingClient  LicensingClient
+	LicensingClient  Client
 	ProviderTypeName string
 	TypeName         string
 }
@@ -58,6 +58,7 @@ func (d *BillingPoliciesDataSource) Metadata(_ context.Context, req datasource.M
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
+//nolint:unused-receiver
 func (d *BillingPoliciesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of billing policies in a tenant",
@@ -145,7 +146,7 @@ func (d *BillingPoliciesDataSource) Configure(_ context.Context, req datasource.
 	d.LicensingClient = NewLicensingClient(clientApi)
 }
 
-func (d *BillingPoliciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *BillingPoliciesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state BillingPoliciesListDataSourceModel
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {

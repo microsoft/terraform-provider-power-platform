@@ -15,14 +15,14 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewWebApiClient(api *api.ApiClient) WebApiClient {
+func NewWebApiClient(api *api.Client) WebApiClient {
 	return WebApiClient{
 		Api: api,
 	}
 }
 
 type WebApiClient struct {
-	Api *api.ApiClient
+	Api *api.Client
 }
 
 type EnvironmentIdDto struct {
@@ -86,7 +86,7 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 
 }
 
-func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, scope *string, url, method string, body *string, headers map[string]string, expectedStatusCodes []int64) (*api.ApiHttpResponse, error) {
+func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, scope *string, url, method string, body *string, headers map[string]string, expectedStatusCodes []int64) (*api.HttpResponse, error) {
 
 	h := http.Header{}
 	for k, v := range headers {

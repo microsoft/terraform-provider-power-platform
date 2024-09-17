@@ -9,21 +9,22 @@ import (
 	"net/url"
 
 	api "github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewEnvironmentGroupClient(api *api.ApiClient) EnvironmentGroupClient {
+func NewEnvironmentGroupClient(api *api.Client) EnvironmentGroupClient {
 	return EnvironmentGroupClient{
 		Api: api,
 	}
 }
 
 type EnvironmentGroupClient struct {
-	Api *api.ApiClient
+	Api *api.Client
 }
 
 func (client *EnvironmentGroupClient) CreateEnvironmentGroup(ctx context.Context, environmentGroup EnvironmentGroupDto) (*EnvironmentGroupDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/environmentGroups",
 	}
@@ -41,10 +42,10 @@ func (client *EnvironmentGroupClient) CreateEnvironmentGroup(ctx context.Context
 	return &newEnvironmentGroup, nil
 }
 
-// DeleteEnvironmentGroup deletes an environment group
+// DeleteEnvironmentGroup deletes an environment group.
 func (client *EnvironmentGroupClient) DeleteEnvironmentGroup(ctx context.Context, environmentGroupId string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/environmentGroups/" + environmentGroupId,
 	}
@@ -61,10 +62,10 @@ func (client *EnvironmentGroupClient) DeleteEnvironmentGroup(ctx context.Context
 	return nil
 }
 
-// updateEnvironmentGroup updates an environment group
+// updateEnvironmentGroup updates an environment group.
 func (client *EnvironmentGroupClient) UpdateEnvironmentGroup(ctx context.Context, environmentGroupId string, environmentGroup EnvironmentGroupDto) (*EnvironmentGroupDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/environmentGroups/" + environmentGroupId,
 	}
@@ -82,10 +83,10 @@ func (client *EnvironmentGroupClient) UpdateEnvironmentGroup(ctx context.Context
 	return &updatedEnvironmentGroup, nil
 }
 
-// GetEnvironmentGroup gets an environment group
+// GetEnvironmentGroup gets an environment group.
 func (client *EnvironmentGroupClient) GetEnvironmentGroup(ctx context.Context, environmentGroupId string) (*EnvironmentGroupDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/environmentGroups/" + environmentGroupId,
 	}

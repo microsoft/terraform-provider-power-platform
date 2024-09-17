@@ -3,7 +3,7 @@
 
 package tenant
 
-type DtoTenant struct {
+type Dto struct {
 	TenantId                         string `json:"tenantId"`
 	State                            string `json:"state"`
 	Location                         string `json:"location"`

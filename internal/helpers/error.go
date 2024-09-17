@@ -46,7 +46,7 @@ func Code(err error) ErrorCode {
 	return ""
 }
 
-func NewProviderError(errorCode ErrorCode, format string, args ...interface{}) error {
+func NewProviderError(errorCode ErrorCode, format string, args ...any) error {
 	return providerError{
 		error:     fmt.Errorf(format, args...),
 		errorCode: errorCode,
@@ -59,10 +59,9 @@ func WrapIntoProviderError(err error, errorCode ErrorCode, msg string) error {
 			error:     fmt.Errorf("%s", msg),
 			errorCode: errorCode,
 		}
-	} else {
-		return providerError{
-			error:     fmt.Errorf("%s: [%w]", msg, err),
-			errorCode: errorCode,
-		}
+	}
+	return providerError{
+		error:     fmt.Errorf("%s: [%w]", msg, err),
+		errorCode: errorCode,
 	}
 }

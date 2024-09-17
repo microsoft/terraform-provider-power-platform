@@ -27,7 +27,7 @@ func NewTenantCapcityDataSource() datasource.DataSource {
 }
 
 type TenantCapacityDataSource struct {
-	CapacityClient   CapacityClient
+	CapacityClient   Client
 	ProviderTypeName string
 	TypeName         string
 }

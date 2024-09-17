@@ -586,6 +586,7 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
+//nolint:unused-receiver
 func (r *TenantSettingsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
@@ -593,7 +594,7 @@ func (r *TenantSettingsResource) ImportState(ctx context.Context, req resource.I
 func (r *TenantSettingsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	var plan TenantSettingsSourceModel
 	if !req.Plan.Raw.IsNull() {
-		//this is create
+		// this is create
 		req.Plan.Get(ctx, &plan)
 		if plan.Id.IsUnknown() || plan.Id.IsNull() {
 			tenant, errt := r.TenantSettingClient.GetTenant(ctx)

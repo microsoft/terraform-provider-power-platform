@@ -16,10 +16,18 @@ import (
 	"strings"
 
 	"github.com/microsoft/terraform-provider-power-platform/common"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func (client *ApiClient) BuildCorrelationHeaders(ctx context.Context) (string, string) {
+const (
+	EMPTY_BODY   = 0
+	RESPONSE_200 = 200
+	RESPONSE_300 = 300
+)
+
+//nolint:unused-receiver
+func (client *Client) BuildCorrelationHeaders(ctx context.Context) (string, string) {
 	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
 	if ok {
 		cc := strings.Join([]string{
@@ -33,10 +41,10 @@ func (client *ApiClient) BuildCorrelationHeaders(ctx context.Context) (string, s
 		return rid, cc
 	}
 
-	return "", ""
+	return constants.EMPTY, ""
 }
 
-func (client *ApiClient) buildUserAgent(ctx context.Context) string {
+func (client *Client) buildUserAgent(ctx context.Context) string {
 	userAgent := fmt.Sprintf("terraform-provider-power-platform/%s (%s; %s) terraform/%s go/%s", common.ProviderVersion, runtime.GOOS, runtime.GOARCH, client.Config.TerraformVersion, runtime.Version())
 
 	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
@@ -47,17 +55,17 @@ func (client *ApiClient) buildUserAgent(ctx context.Context) string {
 	return userAgent
 }
 
-func (client *ApiClient) doRequest(ctx context.Context, token *string, request *http.Request, headers http.Header) (*ApiHttpResponse, error) {
-	apiHttpResponse := &ApiHttpResponse{}
+func (client *Client) doRequest(ctx context.Context, token *string, request *http.Request, headers http.Header) (*HttpResponse, error) {
+	apiHttpResponse := &HttpResponse{}
 	if headers != nil {
 		request.Header = headers
 	}
 
-	if token == nil || *token == "" {
+	if token == nil || *token == constants.EMPTY {
 		return nil, errors.New("token is empty")
 	}
 
-	if request.Header.Get("Content-Type") == "" {
+	if request.Header.Get("Content-Type") == constants.EMPTY {
 		request.Header.Set("Content-Type", "application/json")
 	}
 
@@ -89,22 +97,21 @@ func (client *ApiClient) doRequest(ctx context.Context, token *string, request *
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		if len(body) != 0 {
+	if response.StatusCode < RESPONSE_200 || response.StatusCode >= RESPONSE_300 {
+		if len(body) != EMPTY_BODY {
 			return apiHttpResponse, fmt.Errorf("status: %d, message: %s", response.StatusCode, string(body))
-		} else {
-			return apiHttpResponse, fmt.Errorf("status: %d", response.StatusCode)
 		}
+		return apiHttpResponse, fmt.Errorf("status: %d", response.StatusCode)
 	}
 	return apiHttpResponse, nil
 }
 
-type ApiHttpResponse struct {
+type HttpResponse struct {
 	Response    *http.Response
 	BodyAsBytes []byte
 }
 
-func (apiResponse *ApiHttpResponse) MarshallTo(obj interface{}) error {
+func (apiResponse *HttpResponse) MarshallTo(obj any) error {
 	err := json.NewDecoder(bytes.NewReader(apiResponse.BodyAsBytes)).Decode(&obj)
 	if err != nil {
 		return err
@@ -112,13 +119,13 @@ func (apiResponse *ApiHttpResponse) MarshallTo(obj interface{}) error {
 	return nil
 }
 
-func (apiResponse *ApiHttpResponse) GetHeader(name string) string {
+func (apiResponse *HttpResponse) GetHeader(name string) string {
 	return apiResponse.Response.Header.Get(name)
 }
 
-func (ApiHttpResponse *ApiHttpResponse) ValidateStatusCode(expectedStatusCode int) error {
-	if ApiHttpResponse.Response.StatusCode != expectedStatusCode {
-		return fmt.Errorf("expected status code: %d, recieved: %d", expectedStatusCode, ApiHttpResponse.Response.StatusCode)
+func (apiResponse *HttpResponse) ValidateStatusCode(expectedStatusCode int) error {
+	if apiResponse.Response.StatusCode != expectedStatusCode {
+		return fmt.Errorf("expected status code: %d, recieved: %d", expectedStatusCode, apiResponse.Response.StatusCode)
 	}
 	return nil
 }

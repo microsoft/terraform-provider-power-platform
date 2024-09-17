@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	
+
 	azcloud "github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -49,7 +49,7 @@ var _ provider.Provider = &PowerPlatformProvider{}
 
 type PowerPlatformProvider struct {
 	Config *config.ProviderConfig
-	Api    *api.ApiClient
+	Api    *api.Client
 }
 
 func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func() provider.Provider {
@@ -64,9 +64,9 @@ func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func
 			PowerPlatformScope: constants.PUBLIC_POWERPLATFORM_API_SCOPE,
 			LicensingUrl:       constants.PUBLIC_LICENSING_API_DOMAIN,
 		},
-		Cloud: azcloud.AzurePublic,
+		Cloud:            azcloud.AzurePublic,
 		TerraformVersion: "unknown",
-		TelemetryOptout: false,
+		TelemetryOptout:  false,
 	}
 
 	if len(testModeEnabled) > 0 && testModeEnabled[0] {
@@ -88,10 +88,10 @@ func (p *PowerPlatformProvider) Metadata(ctx context.Context, req provider.Metad
 	resp.Version = common.ProviderVersion
 
 	tflog.Debug(ctx, "Provider Metadata request received", map[string]any{
-		"version": resp.Version,
+		"version":  resp.Version,
 		"typeName": resp.TypeName,
-		"branch": common.Branch,
-		"commit": common.Commit,
+		"branch":   common.Branch,
+		"commit":   common.Commit,
 	})
 }
 
@@ -186,7 +186,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 
 	cloud := "public"
 	envCloud := os.Getenv("POWER_PLATFORM_CLOUD")
-	if config.Cloud.IsNull() && envCloud != "" {
+	if config.Cloud.IsNull() && envCloud != constants.EMPTY {
 		cloud = envCloud
 	} else if !config.Cloud.IsNull() {
 		cloud = config.Cloud.ValueString()
@@ -332,7 +332,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Credentials.OidcRequestUrl = oidcRequestUrl
 		p.Config.Credentials.OidcToken = oidcToken
 		p.Config.Credentials.OidcTokenFilePath = oidcTokenFilePath
-	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
+	} else if clientCertificatePassword != constants.EMPTY && (clientCertificate != constants.EMPTY || clientCertificateFilePath != constants.EMPTY) {
 		tflog.Info(ctx, "Using client certificate for authentication")
 		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
 		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
@@ -347,7 +347,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Credentials.ClientId = clientId
 	} else {
 		tflog.Info(ctx, "Using client id and secret for authentication")
-		if tenantId != "" && clientId != "" && clientSecret != "" {
+		if tenantId != constants.EMPTY && clientId != constants.EMPTY && clientSecret != constants.EMPTY {
 			p.Config.Credentials.TenantId = tenantId
 			p.Config.Credentials.ClientId = clientId
 			p.Config.Credentials.ClientSecret = clientSecret
@@ -492,11 +492,11 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 func ValidateProviderAttribute(resp *provider.ConfigureResponse, path path.Path, name, value string, environmentVariableName string) {
 
 	environmentVariableText := "Target apply the source of the value first, set the value statically in the configuration."
-	if environmentVariableName != "" {
+	if environmentVariableName != constants.EMPTY {
 		environmentVariableText = fmt.Sprintf("Either target apply the source of the value first, set the value statically in the configuration, or use the %s environment variable.", environmentVariableName)
 	}
 
-	if value == "" {
+	if value == constants.EMPTY {
 		resp.Diagnostics.AddAttributeError(
 			path,
 			fmt.Sprintf("Unknown %s", name),
@@ -511,7 +511,7 @@ func ValidateProviderAttribute(resp *provider.ConfigureResponse, path path.Path,
 func MultiEnvDefaultFunc(ks []string) string {
 
 	for _, k := range ks {
-		if v := os.Getenv(k); v != "" {
+		if v := os.Getenv(k); v != constants.EMPTY {
 			return v
 		}
 	}
@@ -523,7 +523,7 @@ func MultiEnvDefaultFunc(ks []string) string {
 // otherwise.
 func EnvDefaultFunc(k string, dv interface{}) string {
 
-	if v := os.Getenv(k); v != "" {
+	if v := os.Getenv(k); v != constants.EMPTY {
 		return v
 	}
 	return ""

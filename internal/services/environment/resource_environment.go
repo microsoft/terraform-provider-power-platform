@@ -41,18 +41,18 @@ func NewEnvironmentResource() resource.Resource {
 type EnvironmentResource struct {
 	helpers.TypeInfo
 	EnvironmentClient EnvironmentClient
-	LicensingClient   licensing.LicensingClient
+	LicensingClient   licensing.Client
 }
 
 // Metadata returns the full name of the resource type.
 func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	// update our own internal storage of the provider type name
+	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName
 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	// Set the type name for the resource to providername_resourcename
+	// Set the type name for the resource to providername_resourcename.
 	resp.TypeName = r.FullTypeName()
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
@@ -440,11 +440,11 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		},
 	}
 
-	if !plan.Description.IsNull() && plan.Description.ValueString() != "" {
+	if !plan.Description.IsNull() && plan.Description.ValueString() != constants.EMPTY {
 		environmentDto.Properties.Description = plan.Description.ValueString()
 	}
 
-	if !plan.Cadence.IsNull() && plan.Cadence.ValueString() != "" {
+	if !plan.Cadence.IsNull() && plan.Cadence.ValueString() != constants.EMPTY {
 		environmentDto.Properties.UpdateCadence = &UpdateCadenceDto{
 			Id: plan.Cadence.ValueString(),
 		}
@@ -452,7 +452,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 
 	if !plan.EnvironmentGroupId.IsNull() && !plan.EnvironmentGroupId.IsUnknown() {
 		envGroupId := constants.ZERO_UUID
-		if plan.EnvironmentGroupId.ValueString() != "" && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
+		if plan.EnvironmentGroupId.ValueString() != constants.EMPTY && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
 			envGroupId = plan.EnvironmentGroupId.ValueString()
 		}
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
@@ -460,7 +460,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		}
 	}
 
-	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
+	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != constants.EMPTY {
 		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
 		}
@@ -516,11 +516,11 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		var dataverseSourceStateModel DataverseSourceModel
 		state.Dataverse.As(ctx, &dataverseSourceStateModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
-		if dataverseSourceStateModel.Domain.ValueString() != dataverseSourcePlanModel.Domain.ValueString() && !dataverseSourcePlanModel.Domain.IsNull() && dataverseSourcePlanModel.Domain.ValueString() != "" {
+		if dataverseSourceStateModel.Domain.ValueString() != dataverseSourcePlanModel.Domain.ValueString() && !dataverseSourcePlanModel.Domain.IsNull() && dataverseSourcePlanModel.Domain.ValueString() != constants.EMPTY {
 			environmentDto.Properties.LinkedEnvironmentMetadata.DomainName = dataverseSourcePlanModel.Domain.ValueString()
 		}
 
-		if !dataverseSourcePlanModel.LinkedAppId.IsNull() && dataverseSourcePlanModel.LinkedAppId.ValueString() != "" {
+		if !dataverseSourcePlanModel.LinkedAppId.IsNull() && dataverseSourcePlanModel.LinkedAppId.ValueString() != constants.EMPTY {
 			environmentDto.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
 				Type: dataverseSourcePlanModel.LinkedAppType.ValueString(),
 				Id:   dataverseSourcePlanModel.LinkedAppId.ValueString(),
@@ -548,7 +548,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 
 	if !state.BillingPolicyId.IsNull() &&
 		!state.BillingPolicyId.IsUnknown() &&
-		state.BillingPolicyId.ValueString() != "" {
+		state.BillingPolicyId.ValueString() != constants.EMPTY {
 
 		tflog.Debug(ctx, fmt.Sprintf("Removing environment %s from billing policy %s", state.Id.ValueString(), state.BillingPolicyId.ValueString()))
 		err := r.LicensingClient.RemoveEnvironmentsToBillingPolicy(ctx, state.BillingPolicyId.ValueString(), []string{state.Id.ValueString()})
@@ -560,7 +560,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 
 	if !plan.BillingPolicyId.IsNull() &&
 		!plan.BillingPolicyId.IsUnknown() &&
-		plan.BillingPolicyId.ValueString() != "" {
+		plan.BillingPolicyId.ValueString() != constants.EMPTY {
 
 		tflog.Debug(ctx, fmt.Sprintf("Adding environment %s to billing policy %s", plan.Id.ValueString(), plan.BillingPolicyId.ValueString()))
 		err := r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId.ValueString(), []string{plan.Id.ValueString()})

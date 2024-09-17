@@ -65,7 +65,7 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	if state.EnvironmentId.ValueString() == "" {
+	if state.EnvironmentId.ValueString() == constants.EMPTY {
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}

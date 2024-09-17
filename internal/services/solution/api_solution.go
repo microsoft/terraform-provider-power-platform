@@ -14,17 +14,18 @@ import (
 	"strings"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewSolutionClient(api *api.ApiClient) SolutionClient {
+func NewSolutionClient(api *api.Client) SolutionClient {
 	return SolutionClient{
 		Api: api,
 	}
 }
 
 type SolutionClient struct {
-	Api *api.ApiClient
+	Api *api.Client
 }
 
 func (client *SolutionClient) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
@@ -33,7 +34,7 @@ func (client *SolutionClient) DataverseExists(ctx context.Context, environmentId
 	if err != nil {
 		return false, err
 	}
-	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
+	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != constants.EMPTY, nil
 }
 
 func (client *SolutionClient) GetSolutionUniqueName(ctx context.Context, environmentId, name string) (*SolutionDto, error) {
@@ -43,7 +44,7 @@ func (client *SolutionClient) GetSolutionUniqueName(ctx context.Context, environ
 	}
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/solutions",
 	}
@@ -73,7 +74,7 @@ func (client *SolutionClient) GetSolutionById(ctx context.Context, environmentId
 	}
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/solutions",
 	}
@@ -103,7 +104,7 @@ func (client *SolutionClient) GetSolutions(ctx context.Context, environmentId st
 	}
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/solutions",
 	}
@@ -145,7 +146,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/StageSolution",
 	}
@@ -183,7 +184,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	apiUrl = &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/ImportSolutionAsync",
 	}
@@ -200,7 +201,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	apiUrl = &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.2/asyncoperations(%s)", importSolutionResponse.AsyncOperationId),
 	}
@@ -210,7 +211,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 		if err != nil {
 			return nil, err
 		}
-		if asyncSolutionPullResponse.CompletedOn != "" {
+		if asyncSolutionPullResponse.CompletedOn != constants.EMPTY {
 			err = client.validateSolutionImportResult(ctx, environmentHost, importSolutionResponse.ImportJobKey)
 			if err != nil {
 				return nil, err
@@ -253,7 +254,7 @@ func (client *SolutionClient) createSolutionComponentParameters(settings []byte)
 		})
 	}
 	for _, envVariableComponent := range solutionSettings.EnvironmentVariables {
-		if envVariableComponent.Value != "" {
+		if envVariableComponent.Value != constants.EMPTY {
 			solutionComponents = append(solutionComponents, ImportSolutionEnvironmentVariablesDto{
 				Type:       "Microsoft.Dynamics.CRM.environmentvariablevalue",
 				SchemaName: envVariableComponent.SchemaName,
@@ -270,7 +271,7 @@ func (client *SolutionClient) createSolutionComponentParameters(settings []byte)
 
 func (client *SolutionClient) validateSolutionImportResult(ctx context.Context, environmentHost, ImportJobKey string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.0/RetrieveSolutionImportResult(ImportJobId=%s)", ImportJobKey),
 	}
@@ -292,7 +293,7 @@ func (client *SolutionClient) DeleteSolution(ctx context.Context, environmentId,
 		return err
 	}
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.2/solutions(%s)", solutionId),
 	}
@@ -309,11 +310,11 @@ func (client *SolutionClient) GetTableData(ctx context.Context, environmentId, t
 		return err
 	}
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.2/%s", tableName),
 	}
-	if odataQuery != "" {
+	if odataQuery != constants.EMPTY {
 		apiUrl.RawQuery = odataQuery
 	}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &responseObj)
@@ -326,16 +327,16 @@ func (client *SolutionClient) GetTableData(ctx context.Context, environmentId, t
 func (client *SolutionClient) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
-		return "", err
+		return constants.EMPTY, err
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
-	if environmentUrl == "" {
-		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+	if environmentUrl == constants.EMPTY {
+		return constants.EMPTY, helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 
 	url, err := url.Parse(environmentUrl)
 	if err != nil {
-		return "", err
+		return constants.EMPTY, err
 	}
 	return url.Host, nil
 }
@@ -343,7 +344,7 @@ func (client *SolutionClient) GetEnvironmentHostById(ctx context.Context, enviro
 func (client *SolutionClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
