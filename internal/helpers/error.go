@@ -17,17 +17,17 @@ const (
 	ERROR_ENVIRONMENT_URL_NOT_FOUND   ErrorCode = "ENVIRONMENT_URL_NOT_FOUND"
 )
 
-type providerError struct {
+type ProviderError struct {
 	error
-	errorCode ErrorCode
+	ErrorCode ErrorCode
 }
 
-func (e providerError) Error() string {
-	return fmt.Sprintf("%s: %s", e.errorCode, e.error.Error())
+func (e ProviderError) Error() string {
+	return fmt.Sprintf("%s: %s", e.ErrorCode, e.error.Error())
 }
 
 func Unwrap(err error) error {
-	if e, ok := err.(providerError); ok {
+	if e, ok := err.(ProviderError); ok {
 		return errors.Unwrap(e.error)
 	}
 
@@ -39,30 +39,30 @@ func Code(err error) ErrorCode {
 		return ""
 	}
 
-	if e, ok := err.(providerError); ok {
-		return e.errorCode
+	if e, ok := err.(ProviderError); ok {
+		return e.ErrorCode
 	}
 
 	return ""
 }
 
 func NewProviderError(errorCode ErrorCode, format string, args ...interface{}) error {
-	return providerError{
+	return ProviderError{
 		error:     fmt.Errorf(format, args...),
-		errorCode: errorCode,
+		ErrorCode: errorCode,
 	}
 }
 
 func WrapIntoProviderError(err error, errorCode ErrorCode, msg string) error {
 	if err == nil {
-		return providerError{
+		return ProviderError{
 			error:     fmt.Errorf("%s", msg),
-			errorCode: errorCode,
+			ErrorCode: errorCode,
 		}
 	} else {
-		return providerError{
+		return ProviderError{
 			error:     fmt.Errorf("%s: [%w]", msg, err),
-			errorCode: errorCode,
+			ErrorCode: errorCode,
 		}
 	}
 }
