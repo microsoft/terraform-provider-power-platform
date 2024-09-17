@@ -9,7 +9,23 @@ import (
 )
 
 type ProviderConfig struct {
-	Credentials      *ProviderCredentials
+	UseCli  bool
+	UseOidc bool
+
+	TenantId     string
+	ClientId     string
+	ClientSecret string
+
+	ClientCertificatePassword string
+	ClientCertificateRaw      string
+
+	OidcRequestToken  string
+	OidcRequestUrl    string
+	OidcToken         string
+	OidcTokenFilePath string
+
+	// internal runtime configuration values
+	TestMode         bool
 	Urls             ProviderConfigUrls
 	TelemetryOptout  bool
 	Cloud            cloud.Configuration
@@ -25,41 +41,25 @@ type ProviderConfigUrls struct {
 	LicensingUrl       string
 }
 
-type ProviderCredentials struct {
-	TestMode bool
-	UseCli   bool
-	UseOidc  bool
-
-	TenantId     string
-	ClientId     string
-	ClientSecret string
-
-	ClientCertificatePassword string
-	ClientCertificateRaw      string
-
-	OidcRequestToken  string
-	OidcRequestUrl    string
-	OidcToken         string
-	OidcTokenFilePath string
-}
-
-func (model *ProviderCredentials) IsClientSecretCredentialsProvided() bool {
+// IsClientSecretCredentialsProvided returns true if all the required cred 
+func (model *ProviderConfig) IsClientSecretCredentialsProvided() bool {
 	return model.ClientId != "" && model.ClientSecret != "" && model.TenantId != ""
 }
 
-func (model *ProviderCredentials) IsClientCertificateCredentialsProvided() bool {
+func (model *ProviderConfig) IsClientCertificateCredentialsProvided() bool {
 	return model.ClientCertificateRaw != ""
 }
 
-func (model *ProviderCredentials) IsCliProvided() bool {
+func (model *ProviderConfig) IsCliProvided() bool {
 	return model.UseCli
 }
 
-func (model *ProviderCredentials) IsOidcProvided() bool {
+func (model *ProviderConfig) IsOidcProvided() bool {
 	return model.UseOidc
 }
 
-type ProviderCredentialsModel struct {
+// ProviderConfigModel is a model for the provider configuration.
+type ProviderConfigModel struct {
 	UseCli  types.Bool `tfsdk:"use_cli"`
 	UseOidc types.Bool `tfsdk:"use_oidc"`
 

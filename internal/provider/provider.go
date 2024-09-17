@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/common"
-	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/admin_management_application"
@@ -52,9 +52,7 @@ type PowerPlatformProvider struct {
 }
 
 func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func() provider.Provider {
-	cred := config.ProviderCredentials{}
 	config := config.ProviderConfig{
-		Credentials: &cred,
 		Urls: config.ProviderConfigUrls{
 			BapiUrl:            constants.PUBLIC_BAPI_DOMAIN,
 			PowerAppsUrl:       constants.PUBLIC_POWERAPPS_API_DOMAIN,
@@ -70,7 +68,7 @@ func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func
 
 	if len(testModeEnabled) > 0 && testModeEnabled[0] {
 		tflog.Warn(ctx, "Test mode enabled. Authentication requests will not be sent to the backend APIs.")
-		config.Credentials.TestMode = true
+		config.TestMode = true
 	}
 
 	return func() provider.Provider {
@@ -176,8 +174,8 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	_, exitContext := helpers.EnterProviderContext(ctx, req)
 	defer exitContext()
 
-	// Get Provider Configuration from the provider block in the configuration
-	var config config.ProviderCredentialsModel
+	// Get Provider Configuration from the provider block in the configuration.
+	var config config.ProviderConfigModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -205,23 +203,23 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 
 	// Set the configuration values
 
-	if p.Config.Credentials.TestMode {
+	if p.Config.TestMode {
 		tflog.Info(ctx, "Test mode enabled. Authentication requests will not be sent to the backend APIs.")
 	} else if useCli {
 		tflog.Info(ctx, "Using CLI for authentication")
-		p.Config.Credentials.UseCli = true
+		p.Config.UseCli = true
 	} else if useOidc {
 		tflog.Info(ctx, "Using OpenID Connect for authentication")
 		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
 		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
 
-		p.Config.Credentials.UseOidc = true
-		p.Config.Credentials.TenantId = tenantId
-		p.Config.Credentials.ClientId = clientId
-		p.Config.Credentials.OidcRequestToken = oidcRequestToken
-		p.Config.Credentials.OidcRequestUrl = oidcRequestUrl
-		p.Config.Credentials.OidcToken = oidcToken
-		p.Config.Credentials.OidcTokenFilePath = oidcTokenFilePath
+		p.Config.UseOidc = true
+		p.Config.TenantId = tenantId
+		p.Config.ClientId = clientId
+		p.Config.OidcRequestToken = oidcRequestToken
+		p.Config.OidcRequestUrl = oidcRequestUrl
+		p.Config.OidcToken = oidcToken
+		p.Config.OidcTokenFilePath = oidcTokenFilePath
 	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
 		tflog.Info(ctx, "Using client certificate for authentication")
 		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
@@ -231,16 +229,16 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		if err != nil {
 			resp.Diagnostics.AddAttributeError(path.Root("client_certificate"), "Error getting certificate", err.Error())
 		}
-		p.Config.Credentials.ClientCertificateRaw = cert
-		p.Config.Credentials.ClientCertificatePassword = clientCertificatePassword
-		p.Config.Credentials.TenantId = tenantId
-		p.Config.Credentials.ClientId = clientId
+		p.Config.ClientCertificateRaw = cert
+		p.Config.ClientCertificatePassword = clientCertificatePassword
+		p.Config.TenantId = tenantId
+		p.Config.ClientId = clientId
 	} else {
 		tflog.Info(ctx, "Using client id and secret for authentication")
 		if tenantId != "" && clientId != "" && clientSecret != "" {
-			p.Config.Credentials.TenantId = tenantId
-			p.Config.Credentials.ClientId = clientId
-			p.Config.Credentials.ClientSecret = clientSecret
+			p.Config.TenantId = tenantId
+			p.Config.ClientId = clientId
+			p.Config.ClientSecret = clientSecret
 		} else {
 			ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
 			ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
