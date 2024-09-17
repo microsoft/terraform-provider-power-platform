@@ -1,3 +1,5 @@
+BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
+
 deps:
 	go mod tidy
 
@@ -6,7 +8,7 @@ build:
 	go build -o ./bin/
 
 install:
-	$(MAKE) build
+	$(MAKE) deps
 	go install
 
 clean:

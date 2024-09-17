@@ -147,11 +147,11 @@ sudo chown -R vscode /go/pkg
 
 ## Writing Tests
 
-All the test for a given resource/datasource are located in `/internal/powerplatform/<resource/datasource_name>_test.go` file. When writing a new feature you should try to create [happy path](https://en.wikipedia.org/wiki/Happy_path) test(s) for you feature covering create, read and deletion of your new feature. For updates you should cover not only update of all properties but situation when a force recreate of a resource is requried (if you have such propeties in you resource).
+All the test for a given resource/datasource are located in `/internal/<resource/datasource_name>_test.go` file. When writing a new feature you should try to create [happy path](https://en.wikipedia.org/wiki/Happy_path) test(s) for you feature covering create, read and deletion of your new feature. For updates you should cover not only update of all properties but situation when a force recreate of a resource is requried (if you have such propeties in you resource).
 
 ### Writing Unit Tests
 
-Unit test are created by mocking HTTP request, some of the often used HTTP mocks encapsulated in `ActivateEnvironmentHttpMocks` function, so that you don't have to write them for every test. When implementing new mocks, the mokcked response json files should be located in `/internal/powerplatform/services/<your_service_name>/test/<resource_or_datasource>/<name_of_the_unit_test>` folder
+Unit test are created by mocking HTTP request, some of the often used HTTP mocks encapsulated in `ActivateEnvironmentHttpMocks` function, so that you don't have to write them for every test. When implementing new mocks, the mokcked response json files should be located in `/internal/services/<your_service_name>/test/<resource_or_datasource>/<name_of_the_unit_test>` folder
 
 > [!TIP]
 > When creating mocked json responses you can resuse the exising one by **duplicating** then into you `<name_of_the_unit_test>` folder.
@@ -231,7 +231,7 @@ Once you decide to contribute back to this reposity by fixing a bug or adding a 
 
 1. Fork this repository and open in locally
 1. Start working in devcontainer on your changes. (commands: `make install`, `terraform plan`, `terraform apply`)
-    - Completly new feature should be located in a new `/internal/powerplatform/services/<new_service_name>` folder.
+    - Completly new feature should be located in a new `/internal/services/<new_service_name>` folder.
 1. Add and/or update unit and accaptance tests. Tests for new feature should be created in new resource/datasource_test.go file (commands: `make unittest`, `make acctest`)
     - When working on a bug remember to add a new unit and acceptance test(s) covering your use case if that test does not exist yet.
     - When working on a new feature add unit and acceptance tests covering [happy path](https://en.wikipedia.org/wiki/Happy_path) for your feature, ideally also some edge cases. If you feature enhances existing resource/datasource, add/change validation of your new properties in all tests that use that resource/datasource
