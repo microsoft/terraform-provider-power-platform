@@ -152,7 +152,7 @@ func (client *Client) RetryAfterDefault() time.Duration {
 }
 
 func (client *Client) SleepWithContext(ctx context.Context, duration time.Duration) error {
-	if client.Config.Credentials.TestMode {
+	if client.Config.TestMode {
 		// Don't sleep during testing.
 		return nil
 	}
