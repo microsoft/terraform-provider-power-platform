@@ -28,19 +28,19 @@ type ProviderClient struct {
 }
 
 // GetConfig returns the provider configuration.
-func (client *ApiClient) GetConfig() *config.ProviderConfig {
+func (client *Client) GetConfig() *config.ProviderConfig {
 	return client.Config
 }
 
-// ApiClient is a base client for specific API clients implmented in services.
-type ApiClient struct {
+// Client is a base client for specific API clients implmented in services.
+type Client struct {
 	Config   *config.ProviderConfig
 	BaseAuth *Auth
 }
 
 // ApiHttpResponse is a wrapper around http.Response that provides additional helper methods.
-func NewApiClientBase(config *config.ProviderConfig, baseAuth *Auth) *ApiClient {
-	return &ApiClient{
+func NewApiClientBase(config *config.ProviderConfig, baseAuth *Auth) *Client {
+	return &Client{
 		Config:   config,
 		BaseAuth: baseAuth,
 	}
@@ -69,7 +69,7 @@ func TryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (stri
 // The responseObj is used to unmarshal the response body from json.
 // If the responseObj is nil, the response body is not unmarshalled.
 // If the response status code is not in the acceptableStatusCodes, an error is returned.
-func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+func (client *Client) ExecuteForGivenScope(ctx context.Context, scope, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*HttpResponse, error) {
 	if u, e := neturl.Parse(url); e != nil || !u.IsAbs() {
 		return nil, helpers.WrapIntoProviderError(e, helpers.ERROR_INCORRECT_URL_FORMAT, "when using scope, the calling url must be an absolute url, not a relative path")
 	}
@@ -127,7 +127,7 @@ func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method
 }
 
 // Execute executes an HTTP request with the given method, url, headers, and body.
-func (client *ApiClient) Execute(ctx context.Context, method, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+func (client *Client) Execute(ctx context.Context, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*HttpResponse, error) {
 	scope, err := TryGetScopeFromURL(url, client.Config.Urls)
 	if err != nil {
 		return nil, err
@@ -159,13 +159,13 @@ func (client *ApiClient) Execute(ctx context.Context, method, url string, header
 }
 
 // RetryAfterDefault returns a random duration between 5 and 10 seconds.
-func (client *ApiClient) RetryAfterDefault() time.Duration {
+func (client *Client) RetryAfterDefault() time.Duration {
 	retryAfter5to10Seconds := time.Duration((rand.Intn(5) + 5)) * time.Second
 	return retryAfter5to10Seconds
 }
 
 // SleepWithContext sleeps for the given duration or until the context is canceled.
-func (client *ApiClient) SleepWithContext(ctx context.Context, duration time.Duration) error {
+func (client *Client) SleepWithContext(ctx context.Context, duration time.Duration) error {
 	if client.Config.TestMode {
 		// Don't sleep during testing.
 		return nil

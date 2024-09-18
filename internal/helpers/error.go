@@ -46,7 +46,7 @@ func Code(err error) ErrorCode {
 	return ""
 }
 
-func NewProviderError(errorCode ErrorCode, format string, args ...interface{}) error {
+func NewProviderError(errorCode ErrorCode, format string, args ...any) error {
 	return ProviderError{
 		error:     fmt.Errorf(format, args...),
 		ErrorCode: errorCode,
