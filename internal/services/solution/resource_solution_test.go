@@ -20,10 +20,10 @@ import (
 
 const (
 	SOLUTION_1_NAME          = "TerraformTestSolution_Complex_1_1_0_0.zip"
-	SOLUTION_1_RELATIVE_PATH = "test/resource/Test_Files/" + SOLUTION_1_NAME
+	SOLUTION_1_RELATIVE_PATH = "tests/resource/Test_Files/" + SOLUTION_1_NAME
 
 	SOLUTION_2_NAME          = "TerraformSimpleTestSolution_1_0_0_1_managed.zip"
-	SOLUTION_2_RELATIVE_PATH = "test/resource/Test_Files/" + SOLUTION_2_NAME
+	SOLUTION_2_RELATIVE_PATH = "tests/resource/Test_Files/" + SOLUTION_2_NAME
 )
 
 func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
