@@ -18,27 +18,32 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
-func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
-	solutionFileName1 := "TerraformTestSolution_Complex_1_1_0_0.zip"
+const (
+	SOLUTION_1_NAME          = "TerraformTestSolution_Complex_1_1_0_0.zip"
+	SOLUTION_1_RELATIVE_PATH = "test/resource/Test_Files/" + SOLUTION_1_NAME
 
-	solutionFileBytes1, err := os.ReadFile(filepath.Join("tests/resource/Uninstall_Multiple_Solutions", solutionFileName1))
+	SOLUTION_2_NAME          = "TerraformSimpleTestSolution_1_0_0_1_managed.zip"
+	SOLUTION_2_RELATIVE_PATH = "test/resource/Test_Files/" + SOLUTION_2_NAME
+)
+
+func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
+
+	solutionFileBytes1, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
 	if err != nil {
 		t.Fatalf("Failed to read solution file: %v", err)
 	}
 
-	err = os.WriteFile(solutionFileName1, solutionFileBytes1, 0644)
+	err = os.WriteFile(SOLUTION_1_NAME, solutionFileBytes1, 0644)
 	if err != nil {
 		t.Fatalf("Failed to write solution file: %v", err)
 	}
 
-	solutionFileName2 := "TerraformSimpleTestSolution_1_0_0_1_managed.zip"
-
-	solutionFileBytes2, err := os.ReadFile(filepath.Join("tests/resource/Uninstall_Multiple_Solutions", solutionFileName2))
+	solutionFileBytes2, err := os.ReadFile(filepath.Join(SOLUTION_2_RELATIVE_PATH))
 	if err != nil {
 		t.Fatalf("Failed to read solution file: %v", err)
 	}
 
-	err = os.WriteFile(solutionFileName2, solutionFileBytes2, 0644)
+	err = os.WriteFile(SOLUTION_2_NAME, solutionFileBytes2, 0644)
 	if err != nil {
 		t.Fatalf("Failed to write solution file: %v", err)
 	}
@@ -63,12 +68,12 @@ func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 
 				resource "powerplatform_solution" "solution1" {
 					environment_id = powerplatform_environment.environment.id
-					solution_file    = "` + solutionFileName1 + `"
+					solution_file    = "` + SOLUTION_1_NAME + `"
 				}
 					
 				resource "powerplatform_solution" "solution2" {
 					environment_id = powerplatform_environment.environment.id
-					solution_file    = "` + solutionFileName2 + `"
+					solution_file    = "` + SOLUTION_2_NAME + `"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(),
@@ -78,19 +83,17 @@ func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 }
 
 func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
-	solutionFileName := "TerraformTestSolution_Complex_1_1_0_0.zip"
-
-	solutionFileBytes, err := os.ReadFile(filepath.Join("../../../../examples/resources/powerplatform_solution", solutionFileName))
+	solutionFileBytes, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
 	if err != nil {
 		t.Fatalf("Failed to read solution file: %v", err)
 	}
 
-	err = os.WriteFile(solutionFileName, solutionFileBytes, 0644)
+	err = os.WriteFile(SOLUTION_1_NAME, solutionFileBytes, 0644)
 	if err != nil {
 		t.Fatalf("Failed to write solution file: %v", err)
 	}
 
-	solutionFileChecksum, _ := helpers.CalculateMd5(solutionFileName)
+	solutionFileChecksum, _ := helpers.CalculateMd5(SOLUTION_1_NAME)
 
 	resource.Test(t, resource.TestCase{
 
@@ -112,14 +115,14 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = powerplatform_environment.environment.id
-					solution_file    = "` + solutionFileName + `"
+					solution_file    = "` + SOLUTION_1_NAME + `"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
 					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file", solutionFileName),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file", SOLUTION_1_NAME),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", "Terraform Test Solution"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", "false"),
 					resource.TestMatchResourceAttr("powerplatform_solution.solution", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
@@ -210,17 +213,14 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 }
 
 func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
-
-	solutionName := "TerraformTestSolution"
-	solutionFileName := solutionName + "_Complex_1_1_0_0.zip"
 	solutionSettingsFileName := "test_solution_settings.json"
 
-	solutionFileBytes, err := os.ReadFile(filepath.Join("../../../../examples/resources/powerplatform_solution", solutionFileName))
+	solutionFileBytes, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
 	if err != nil {
 		t.Fatalf("Failed to read solution file: %v", err)
 	}
 
-	err = os.WriteFile(solutionFileName, solutionFileBytes, 0644)
+	err = os.WriteFile(SOLUTION_1_NAME, solutionFileBytes, 0644)
 	if err != nil {
 		t.Fatalf("Failed to write solution file: %v", err)
 	}
@@ -254,7 +254,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		t.Fatalf("Failed to write settings file: %v", err)
 	}
 
-	solutionFileChecksum, _ := helpers.CalculateMd5(solutionFileName)
+	solutionFileChecksum, _ := helpers.CalculateMd5(SOLUTION_1_NAME)
 	settingsFileChecksum, _ := helpers.CalculateMd5(solutionSettingsFileName)
 
 	resource.Test(t, resource.TestCase{
@@ -277,7 +277,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 				
 				resource "powerplatform_solution" "solution" {
 					environment_id = powerplatform_environment.environment.id
-					solution_file    = "` + solutionFileName + `"
+					solution_file    = "` + SOLUTION_1_NAME + `"
 					settings_file 	 = "` + solutionSettingsFileName + `"
 				}`,
 
@@ -285,7 +285,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksum),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settingsFileChecksum),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file", solutionSettingsFileName),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file", solutionFileName),
+					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file", SOLUTION_1_NAME),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", "Terraform Test Solution"),
 					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", "false"),
 					resource.TestMatchResourceAttr("powerplatform_solution.solution", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
@@ -498,14 +498,13 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 }
 
 func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
-	solutionFileName := "TerraformTestSolution_Complex_1_1_0_0.zip"
 
-	solutionFileBytes, err := os.ReadFile(filepath.Join("../../../../examples/resources/powerplatform_solution", solutionFileName))
+	solutionFileBytes, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
 	if err != nil {
 		t.Fatalf("Failed to read solution file: %v", err)
 	}
 
-	err = os.WriteFile(solutionFileName, solutionFileBytes, 0644)
+	err = os.WriteFile(SOLUTION_1_NAME, solutionFileBytes, 0644)
 	if err != nil {
 		t.Fatalf("Failed to write solution file: %v", err)
 	}
@@ -525,7 +524,7 @@ func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 				
 				resource "powerplatform_solution" "solution" {
 					environment_id = powerplatform_environment.environment.id
-					solution_file    = "` + solutionFileName + `"
+					solution_file    = "` + SOLUTION_1_NAME + `"
 				}`,
 				ExpectError: regexp.MustCompile("No Dataverse exists in environment"),
 				Check:       resource.ComposeAggregateTestCheckFunc(),
