@@ -21,27 +21,32 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
+// ProviderClient is a wrapper around the API client that provides additional helper methods.
 type ProviderClient struct {
 	Config *config.ProviderConfig
 	Api    *Client
 }
 
-func (client *Client) GetConfig() *config.ProviderConfig {
+// GetConfig returns the provider configuration.
+func (client *ApiClient) GetConfig() *config.ProviderConfig {
 	return client.Config
 }
 
-type Client struct {
+// ApiClient is a base client for specific API clients implmented in services.
+type ApiClient struct {
 	Config   *config.ProviderConfig
 	BaseAuth *Auth
 }
 
-func NewApiClientBase(configValue *config.ProviderConfig, baseAuth *Auth) *Client {
-	return &Client{
-		Config:   configValue,
+// ApiHttpResponse is a wrapper around http.Response that provides additional helper methods.
+func NewApiClientBase(config *config.ProviderConfig, baseAuth *Auth) *ApiClient {
+	return &ApiClient{
+		Config:   config,
 		BaseAuth: baseAuth,
 	}
 }
 
+// TryGetScopeFromURL returns the authorization scope for the given API URL.
 func TryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (string, error) {
 	switch {
 	case strings.LastIndex(url, cloudConfig.BapiUrl) != -1,
@@ -57,10 +62,18 @@ func TryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (stri
 	}
 }
 
-func (client *Client) ExecuteForGivenScope(ctx context.Context, scope, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*HttpResponse, error) {
-	if !strings.HasPrefix(url, "http") {
-		return nil, helpers.WrapIntoProviderError(nil, helpers.ERROR_INCORRECT_URL_FORMAT, "when using scope, the calling url must be an absolute url, not a relative path")
+// ExecuteForGivenScope executes an HTTP request with the given scope.
+// The scope is used to obtain an access token for the request.
+// The method, url, headers, and body are used to construct the request.
+// The acceptableStatusCodes are used to validate the response status code.
+// The responseObj is used to unmarshal the response body from json.
+// If the responseObj is nil, the response body is not unmarshalled.
+// If the response status code is not in the acceptableStatusCodes, an error is returned.
+func (client *ApiClient) ExecuteForGivenScope(ctx context.Context, scope, method, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
+	if u, e := neturl.Parse(url); e != nil || !u.IsAbs() {
+		return nil, helpers.WrapIntoProviderError(e, helpers.ERROR_INCORRECT_URL_FORMAT, "when using scope, the calling url must be an absolute url, not a relative path")
 	}
+
 	token, err := client.BaseAuth.GetTokenForScopes(ctx, []string{scope})
 	if err != nil {
 		return nil, err
@@ -113,7 +126,8 @@ func (client *Client) ExecuteForGivenScope(ctx context.Context, scope, method, u
 	return apiResponse, nil
 }
 
-func (client *Client) Execute(ctx context.Context, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*HttpResponse, error) {
+// Execute executes an HTTP request with the given method, url, headers, and body.
+func (client *ApiClient) Execute(ctx context.Context, method, url string, headers http.Header, body interface{}, acceptableStatusCodes []int, responseObj interface{}) (*ApiHttpResponse, error) {
 	scope, err := TryGetScopeFromURL(url, client.Config.Urls)
 	if err != nil {
 		return nil, err
@@ -144,12 +158,14 @@ func (client *Client) Execute(ctx context.Context, method, url string, headers h
 	}
 }
 
-func (client *Client) RetryAfterDefault() time.Duration {
+// RetryAfterDefault returns a random duration between 5 and 10 seconds.
+func (client *ApiClient) RetryAfterDefault() time.Duration {
 	retryAfter5to10Seconds := time.Duration((rand.Intn(5) + 5)) * time.Second
 	return retryAfter5to10Seconds
 }
 
-func (client *Client) SleepWithContext(ctx context.Context, duration time.Duration) error {
+// SleepWithContext sleeps for the given duration or until the context is canceled.
+func (client *ApiClient) SleepWithContext(ctx context.Context, duration time.Duration) error {
 	if client.Config.TestMode {
 		// Don't sleep during testing.
 		return nil
