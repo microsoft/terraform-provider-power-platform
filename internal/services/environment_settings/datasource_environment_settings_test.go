@@ -52,7 +52,6 @@ func TestAccTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 }
 
 func TestUnitTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
-
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -91,7 +90,6 @@ func TestUnitTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 }
 
 func TestUnitTestEnvironmentSettingsDataSource_Validate_No_Dataverse(t *testing.T) {
-
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 

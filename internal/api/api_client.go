@@ -39,9 +39,9 @@ type Client struct {
 }
 
 // ApiHttpResponse is a wrapper around http.Response that provides additional helper methods.
-func NewApiClientBase(config *config.ProviderConfig, baseAuth *Auth) *Client {
+func NewApiClientBase(providerConfig *config.ProviderConfig, baseAuth *Auth) *Client {
 	return &Client{
-		Config:   config,
+		Config:   providerConfig,
 		BaseAuth: baseAuth,
 	}
 }

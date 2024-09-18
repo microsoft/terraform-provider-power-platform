@@ -73,7 +73,6 @@ func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
 }
 
 func TestUnitTestTenantSettingsDataSource_Validate_Read(t *testing.T) {
-
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 

@@ -59,10 +59,9 @@ func WrapIntoProviderError(err error, errorCode ErrorCode, msg string) error {
 			error:     fmt.Errorf("%s", msg),
 			ErrorCode: errorCode,
 		}
-	} else {
-		return ProviderError{
-			error:     fmt.Errorf("%s: [%w]", msg, err),
-			ErrorCode: errorCode,
-		}
+	}
+	return ProviderError{
+		error:     fmt.Errorf("%s: [%w]", msg, err),
+		ErrorCode: errorCode,
 	}
 }
