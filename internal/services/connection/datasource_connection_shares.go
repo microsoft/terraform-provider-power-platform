@@ -59,7 +59,6 @@ func (d *SharesDataSource) Metadata(_ context.Context, req datasource.MetadataRe
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-//nolint:unused-receiver
 func (d *SharesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "",

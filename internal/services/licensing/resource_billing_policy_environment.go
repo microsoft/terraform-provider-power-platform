@@ -46,7 +46,6 @@ func (r *BillingPolicyEnvironmentResource) Metadata(_ context.Context, req resou
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-//nolint:unused-receiver
 func (r *BillingPolicyEnvironmentResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "This resource allows you to manage the environments associated with a Billing Policy",
@@ -272,7 +271,6 @@ func (r *BillingPolicyEnvironmentResource) Delete(ctx context.Context, req resou
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-//nolint:unused-receiver
 func (r *BillingPolicyEnvironmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("billing_policy_id"), req, resp)
 }

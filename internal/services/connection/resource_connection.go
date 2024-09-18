@@ -25,23 +25,23 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-var _ resource.Resource = &ConnectionResource{}
-var _ resource.ResourceWithImportState = &ConnectionResource{}
+var _ resource.Resource = &Resource{}
+var _ resource.ResourceWithImportState = &Resource{}
 
 func NewConnectionResource() resource.Resource {
-	return &ConnectionResource{
+	return &Resource{
 		ProviderTypeName: "powerplatform",
 		TypeName:         "_connection",
 	}
 }
 
-type ConnectionResource struct {
+type Resource struct {
 	ConnectionsClient ConnectionsClient
 	ProviderTypeName  string
 	TypeName          string
 }
 
-type ConnectionResourceModel struct {
+type ResourceModel struct {
 	Timeouts                timeouts.Value `tfsdk:"timeouts"`
 	Id                      types.String   `tfsdk:"id"`
 	Name                    types.String   `tfsdk:"name"`
@@ -52,11 +52,11 @@ type ConnectionResourceModel struct {
 	ConnectionParametersSet types.String   `tfsdk:"connection_parameters_set"`
 }
 
-func (r *ConnectionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages a [Connection](https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/add-manage-connections). A connection in Power Platform serves as a means to integrate external data sources and services with your Power Platform apps, flows, and other solutions. It acts as a bridge, facilitating secure communication between your solutions and various external systems.",
 		Attributes: map[string]schema.Attribute{
@@ -119,7 +119,7 @@ func (r *ConnectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func (d *ConnectionResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+func (d *Resource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.Conflicting(
 			path.MatchRoot("connection_parameters"),
@@ -128,7 +128,7 @@ func (d *ConnectionResource) ConfigValidators(ctx context.Context) []resource.Co
 	}
 }
 
-func (r *ConnectionResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -146,8 +146,8 @@ func (r *ConnectionResource) Configure(ctx context.Context, req resource.Configu
 	r.ConnectionsClient = NewConnectionsClient(clientApi)
 }
 
-func (r *ConnectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *ConnectionResourceModel
+func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan *ResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
@@ -167,8 +167,8 @@ func (r *ConnectionResource) Create(ctx context.Context, req resource.CreateRequ
 		},
 	}
 
-	if !plan.ConnectionParameters.IsNull() && plan.ConnectionParameters.ValueString() != constants.EMPTY {
-		var params map[string]interface{} = nil
+	if !plan.ConnectionParameters.IsNull() && plan.ConnectionParameters.ValueString() != "" {
+		var params map[string]any
 		err := json.Unmarshal([]byte(plan.ConnectionParameters.ValueString()), &params)
 		if err != nil {
 			resp.Diagnostics.AddError("Failed to convert connection parameters", err.Error())
@@ -176,8 +176,8 @@ func (r *ConnectionResource) Create(ctx context.Context, req resource.CreateRequ
 		}
 		connectionToCreate.Properties.ConnectionParameters = params
 	}
-	if !plan.ConnectionParametersSet.IsNull() && plan.ConnectionParametersSet.ValueString() != constants.EMPTY {
-		var params map[string]interface{} = nil
+	if !plan.ConnectionParametersSet.IsNull() && plan.ConnectionParametersSet.ValueString() != "" {
+		var params map[string]any
 		err := json.Unmarshal([]byte(plan.ConnectionParametersSet.ValueString()), &params)
 		if err != nil {
 			resp.Diagnostics.AddError("Failed to convert connection parameters set", err.Error())
@@ -223,8 +223,8 @@ func (r *ConnectionResource) Create(ctx context.Context, req resource.CreateRequ
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *ConnectionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *ConnectionResourceModel
+func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state *ResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.TypeName))
 
@@ -248,10 +248,9 @@ func (r *ConnectionResource) Read(ctx context.Context, req resource.ReadRequest,
 		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
-		} else {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-			return
 		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
 	}
 
 	conectionState := ConvertFromConnectionDto(*connection)
@@ -270,22 +269,22 @@ func (r *ConnectionResource) Read(ctx context.Context, req resource.ReadRequest,
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.TypeName))
 }
 
-func (r *ConnectionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan *ConnectionResourceModel
+func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan *ResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
-	var state *ConnectionResourceModel
+	var state *ResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	var connParams map[string]interface{} = nil
-	if !plan.ConnectionParameters.IsNull() && plan.ConnectionParameters.ValueString() != constants.EMPTY {
+	var connParams map[string]any
+	if !plan.ConnectionParameters.IsNull() && plan.ConnectionParameters.ValueString() != "" {
 		err := json.Unmarshal([]byte(plan.ConnectionParameters.ValueString()), &connParams)
 		if err != nil {
 			resp.Diagnostics.AddError("Failed to convert connection parameters", err.Error())
@@ -293,9 +292,8 @@ func (r *ConnectionResource) Update(ctx context.Context, req resource.UpdateRequ
 		}
 	}
 
-	var connParamsSet map[string]interface{} = nil
-	if !plan.ConnectionParametersSet.IsNull() && plan.ConnectionParametersSet.ValueString() != constants.EMPTY {
-
+	var connParamsSet map[string]any
+	if !plan.ConnectionParametersSet.IsNull() && plan.ConnectionParametersSet.ValueString() != "" {
 		err := json.Unmarshal([]byte(plan.ConnectionParametersSet.ValueString()), &connParamsSet)
 		if err != nil {
 			resp.Diagnostics.AddError("Failed to convert connection parameters set", err.Error())
@@ -340,8 +338,8 @@ func (r *ConnectionResource) Update(ctx context.Context, req resource.UpdateRequ
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *ConnectionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *ConnectionResourceModel
+func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state *ResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
 
@@ -369,6 +367,6 @@ func (r *ConnectionResource) Delete(ctx context.Context, req resource.DeleteRequ
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *ConnectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

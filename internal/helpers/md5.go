@@ -8,19 +8,17 @@ import (
 	"encoding/hex"
 	"io"
 	"os"
-
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
 func CalculateMd5(filePath string) (string, error) {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		// we return empty Md5 value if the file does not exist yet.
-		return constants.EMPTY, nil
+		return "", nil
 	}
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		return constants.EMPTY, err
+		return "", err
 	}
 
 	defer file.Close()
@@ -29,7 +27,7 @@ func CalculateMd5(filePath string) (string, error) {
 	_, err = io.Copy(hash, file)
 
 	if err != nil {
-		return constants.EMPTY, err
+		return "", err
 	}
 	return hex.EncodeToString(hash.Sum(nil)), nil
 }

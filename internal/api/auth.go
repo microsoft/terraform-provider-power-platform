@@ -21,7 +21,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -62,10 +61,9 @@ func NewAuthBase(configValue *config.ProviderConfig) *Auth {
 }
 
 func (client *Auth) AuthenticateClientCertificate(ctx context.Context, scopes []string) (string, time.Time, error) {
-
 	cert, key, err := helpers.ConvertBase64ToCert(client.config.ClientCertificateRaw, client.config.ClientCertificatePassword)
 	if err != nil {
-		return constants.EMPTY, time.Time{}, err
+		return "", time.Time{}, err
 	}
 
 	azureCertCredentials, err := azidentity.NewClientCertificateCredential(
@@ -80,29 +78,28 @@ func (client *Auth) AuthenticateClientCertificate(ctx context.Context, scopes []
 		},
 	)
 	if err != nil {
-		return constants.EMPTY, time.Time{}, err
+		return "", time.Time{}, err
 	}
 	accessToken, err := azureCertCredentials.GetToken(ctx, policy.TokenRequestOptions{
 		Scopes: scopes,
 	})
 	if err != nil {
-		return constants.EMPTY, time.Time{}, err
+		return "", time.Time{}, err
 	}
 	return accessToken.Token, accessToken.ExpiresOn, nil
 }
 
-//nolint:unused-receiver
 func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string) (string, time.Time, error) {
 	azureCLICredentials, err := azidentity.NewAzureCLICredential(nil)
 	if err != nil {
-		return constants.EMPTY, time.Time{}, err
+		return "", time.Time{}, err
 	}
 
 	accessToken, err := azureCLICredentials.GetToken(ctx, policy.TokenRequestOptions{
 		Scopes: scopes,
 	})
 	if err != nil {
-		return constants.EMPTY, time.Time{}, err
+		return "", time.Time{}, err
 	}
 
 	return accessToken.Token, accessToken.ExpiresOn, nil
@@ -118,7 +115,7 @@ func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []strin
 			},
 		})
 	if err != nil {
-		return constants.EMPTY, time.Time{}, err
+		return "", time.Time{}, err
 	}
 
 	accessToken, err := clientSecretCredential.GetToken(ctx, policy.TokenRequestOptions{
@@ -127,11 +124,9 @@ func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []strin
 	})
 
 	if err != nil {
-		return constants.EMPTY, time.Time{}, err
+		return "", time.Time{}, err
 	}
-
 	return accessToken.Token, accessToken.ExpiresOn, nil
-
 }
 
 func NewOidcCredential(options *OidcCredentialOptions) (*OidcCredential, error) {
@@ -142,16 +137,16 @@ func NewOidcCredential(options *OidcCredentialOptions) (*OidcCredential, error) 
 		tokenFilePath: options.TokenFilePath,
 	}
 
-	if c.requestToken == constants.EMPTY {
+	if c.requestToken == "" {
 		return nil, fmt.Errorf("request Token is required for OIDC credential")
 	}
-	if c.requestUrl == constants.EMPTY {
+	if c.requestUrl == "" {
 		return nil, fmt.Errorf("request URL is required for OIDC credential")
 	}
-	if options.TenantID == constants.EMPTY {
+	if options.TenantID == "" {
 		return nil, fmt.Errorf("tenant is required for OIDC credential")
 	}
-	if options.ClientID == constants.EMPTY {
+	if options.ClientID == "" {
 		return nil, fmt.Errorf("client is required for OIDC credential")
 	}
 
@@ -193,44 +188,44 @@ func (client *Auth) AuthenticateOIDC(ctx context.Context, scopes []string) (stri
 	}
 	chain, err := azidentity.NewChainedTokenCredential(creds, nil)
 	if err != nil {
-		return constants.EMPTY, time.Time{}, err
+		return "", time.Time{}, err
 	}
 
 	accessToken, err := chain.GetToken(ctx, policy.TokenRequestOptions{
 		Scopes: scopes,
 	})
 	if err != nil {
-		return constants.EMPTY, time.Time{}, err
+		return "", time.Time{}, err
 	}
 
 	return accessToken.Token, accessToken.ExpiresOn, nil
 }
 
 func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
-	if w.token != constants.EMPTY {
+	if w.token != "" {
 		return w.token, nil
 	}
 
-	if w.tokenFilePath != constants.EMPTY {
+	if w.tokenFilePath != "" {
 		idTokenData, err := os.ReadFile(w.tokenFilePath)
 		if err != nil {
-			return constants.EMPTY, fmt.Errorf("reading token file: %v", err)
+			return "", fmt.Errorf("reading token file: %v", err)
 		}
 
 		return string(idTokenData), nil
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, w.requestUrl, http.NoBody)
+	req, err := http.NewRequestWithContext(ctx, "GET", w.requestUrl, http.NoBody)
 	if err != nil {
-		return constants.EMPTY, fmt.Errorf("getAssertion: failed to build request")
+		return "", fmt.Errorf("getAssertion: failed to build request")
 	}
 
 	query, err := url.ParseQuery(req.URL.RawQuery)
 	if err != nil {
-		return constants.EMPTY, fmt.Errorf("getAssertion: cannot parse URL query")
+		return "", fmt.Errorf("getAssertion: cannot parse URL query")
 	}
 
-	if query.Get("audience") == constants.EMPTY {
+	if query.Get("audience") == "" {
 		query.Set("audience", "api://AzureADTokenExchange")
 		req.URL.RawQuery = query.Encode()
 	}
@@ -241,17 +236,17 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return constants.EMPTY, fmt.Errorf("getAssertion: cannot request token: %v", err)
+		return "", fmt.Errorf("getAssertion: cannot request token: %v", err)
 	}
 
 	defer resp.Body.Close()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return constants.EMPTY, fmt.Errorf("getAssertion: cannot parse response: %v", err)
+		return "", fmt.Errorf("getAssertion: cannot parse response: %v", err)
 	}
 
 	if statusCode := resp.StatusCode; statusCode < RESPONSE_200 || statusCode >= RESPONSE_300 {
-		return constants.EMPTY, fmt.Errorf("getAssertion: received HTTP status %d with response: %s", resp.StatusCode, body)
+		return "", fmt.Errorf("getAssertion: received HTTP status %d with response: %s", resp.StatusCode, body)
 	}
 
 	var tokenRes struct {
@@ -259,11 +254,11 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 		Value *string `json:"value"`
 	}
 	if err := json.Unmarshal(body, &tokenRes); err != nil {
-		return constants.EMPTY, fmt.Errorf("getAssertion: cannot unmarshal response: %v", err)
+		return "", fmt.Errorf("getAssertion: cannot unmarshal response: %v", err)
 	}
 
 	if tokenRes.Value == nil {
-		return constants.EMPTY, fmt.Errorf("getAssertion: nil JWT assertion received from OIDC provider")
+		return "", fmt.Errorf("getAssertion: nil JWT assertion received from OIDC provider")
 	}
 
 	return *tokenRes.Value, nil

@@ -43,7 +43,6 @@ func NewApiClientBase(configValue *config.ProviderConfig, baseAuth *Auth) *Clien
 }
 
 func TryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (string, error) {
-
 	switch {
 	case strings.LastIndex(url, cloudConfig.BapiUrl) != -1,
 		strings.LastIndex(url, cloudConfig.PowerAppsUrl) != -1:
@@ -145,7 +144,6 @@ func (client *Client) Execute(ctx context.Context, method, url string, headers h
 	}
 }
 
-//nolint:unused-receiver
 func (client *Client) RetryAfterDefault() time.Duration {
 	retryAfter5to10Seconds := time.Duration((rand.Intn(5) + 5)) * time.Second
 	return retryAfter5to10Seconds
@@ -164,5 +162,4 @@ func (client *Client) SleepWithContext(ctx context.Context, duration time.Durati
 		// Context was canceled.
 		return ctx.Err()
 	}
-
 }

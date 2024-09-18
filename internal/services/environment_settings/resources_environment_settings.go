@@ -276,7 +276,7 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	if state.EnvironmentId.ValueString() == constants.EMPTY {
+	if state.EnvironmentId.ValueString() == "" {
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}
@@ -321,7 +321,7 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	if plan.EnvironmentId.ValueString() == constants.EMPTY {
+	if plan.EnvironmentId.ValueString() == "" {
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}

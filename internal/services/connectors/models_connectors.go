@@ -3,7 +3,7 @@
 
 package connectors
 
-type ConnectorDto struct {
+type Dto struct {
 	Name       string                 `json:"name"`
 	Id         string                 `json:"id"`
 	Type       string                 `json:"type"`
@@ -19,7 +19,7 @@ type ConnectorPropertiesDto struct {
 }
 
 type ConnectorDtoArray struct {
-	Value []ConnectorDto `json:"value"`
+	Value []Dto `json:"value"`
 }
 
 type UnblockableConnectorDto struct {

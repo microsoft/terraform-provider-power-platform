@@ -27,25 +27,25 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 )
 
-var _ resource.Resource = &EnvironmentResource{}
-var _ resource.ResourceWithImportState = &EnvironmentResource{}
+var _ resource.Resource = &Resource{}
+var _ resource.ResourceWithImportState = &Resource{}
 
 func NewEnvironmentResource() resource.Resource {
-	return &EnvironmentResource{
+	return &Resource{
 		TypeInfo: helpers.TypeInfo{
 			TypeName: "environment",
 		},
 	}
 }
 
-type EnvironmentResource struct {
+type Resource struct {
 	helpers.TypeInfo
-	EnvironmentClient EnvironmentClient
+	EnvironmentClient Client
 	LicensingClient   licensing.Client
 }
 
 // Metadata returns the full name of the resource type.
-func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName
 
@@ -57,7 +57,7 @@ func (r *EnvironmentResource) Metadata(ctx context.Context, req resource.Metadat
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
@@ -233,8 +233,7 @@ func (r *EnvironmentResource) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (d *EnvironmentResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
-
+func (d *Resource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
 	path.Root("dataverse").AtName("administration_mode_enabled").Expression()
 
 	return []resource.ConfigValidator{
@@ -245,7 +244,7 @@ func (d *EnvironmentResource) ConfigValidators(ctx context.Context) []resource.C
 	}
 }
 
-func (r *EnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
@@ -269,11 +268,11 @@ func (r *EnvironmentResource) Configure(ctx context.Context, req resource.Config
 	tflog.Debug(ctx, "Successfully created clients")
 }
 
-func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan *EnvironmentSourceModel
+	var plan *SourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -321,8 +320,8 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	var currencyCode string
-	var templateMetadata *EnvironmentCreateTemplateMetadata = nil
-	var templates []string = nil
+	var templateMetadata *CreateTemplateMetadata
+	var templates []string
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
 		currencyCode = envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code
 
@@ -343,11 +342,11 @@ func (r *EnvironmentResource) Create(ctx context.Context, req resource.CreateReq
 }
 
 // Read reads the resource state from the remote system. If the resource does not exist, the state should be removed from the state store.
-func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state *EnvironmentSourceModel
+	var state *SourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -368,10 +367,9 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
-		} else {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-			return
 		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
 	}
 
 	currencyCode := ""
@@ -390,8 +388,8 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 		currencyCode = defaultCurrency.IsoCurrencyCode
 	}
 
-	var templateMetadata *EnvironmentCreateTemplateMetadata = nil
-	var templates []string = nil
+	var templateMetadata *CreateTemplateMetadata
+	var templates []string
 	if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
 		dv, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
 		if err != nil {
@@ -402,7 +400,6 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 			templateMetadata = dv.TemplateMetadata
 			templates = dv.Templates
 		}
-
 	}
 	newState, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, state.Timeouts)
 	if err != nil {
@@ -415,12 +412,12 @@ func (r *EnvironmentResource) Read(ctx context.Context, req resource.ReadRequest
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
-func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan *EnvironmentSourceModel
-	var state *EnvironmentSourceModel
+	var plan *SourceModel
+	var state *SourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -429,22 +426,22 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	environmentDto := EnvironmentDto{
+	environmentDto := Dto{
 		Id:       plan.Id.ValueString(),
 		Name:     plan.DisplayName.ValueString(),
 		Type:     plan.EnvironmentType.ValueString(),
 		Location: plan.Location.ValueString(),
-		Properties: EnvironmentPropertiesDto{
+		Properties: PropertiesDto{
 			DisplayName:    plan.DisplayName.ValueString(),
 			EnvironmentSku: plan.EnvironmentType.ValueString(),
 		},
 	}
 
-	if !plan.Description.IsNull() && plan.Description.ValueString() != constants.EMPTY {
+	if !plan.Description.IsNull() && plan.Description.ValueString() != "" {
 		environmentDto.Properties.Description = plan.Description.ValueString()
 	}
 
-	if !plan.Cadence.IsNull() && plan.Cadence.ValueString() != constants.EMPTY {
+	if !plan.Cadence.IsNull() && plan.Cadence.ValueString() != "" {
 		environmentDto.Properties.UpdateCadence = &UpdateCadenceDto{
 			Id: plan.Cadence.ValueString(),
 		}
@@ -452,7 +449,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 
 	if !plan.EnvironmentGroupId.IsNull() && !plan.EnvironmentGroupId.IsUnknown() {
 		envGroupId := constants.ZERO_UUID
-		if plan.EnvironmentGroupId.ValueString() != constants.EMPTY && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
+		if plan.EnvironmentGroupId.ValueString() != "" && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
 			envGroupId = plan.EnvironmentGroupId.ValueString()
 		}
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
@@ -460,7 +457,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		}
 	}
 
-	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != constants.EMPTY {
+	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
 		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
 		}
@@ -478,7 +475,6 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	var currencyCode string
 	// trying to update dataverse environment
 	if !IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
-
 		var dataverseSourcePlanModel DataverseSourceModel
 		plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
@@ -516,11 +512,11 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		var dataverseSourceStateModel DataverseSourceModel
 		state.Dataverse.As(ctx, &dataverseSourceStateModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
-		if dataverseSourceStateModel.Domain.ValueString() != dataverseSourcePlanModel.Domain.ValueString() && !dataverseSourcePlanModel.Domain.IsNull() && dataverseSourcePlanModel.Domain.ValueString() != constants.EMPTY {
+		if dataverseSourceStateModel.Domain.ValueString() != dataverseSourcePlanModel.Domain.ValueString() && !dataverseSourcePlanModel.Domain.IsNull() && dataverseSourcePlanModel.Domain.ValueString() != "" {
 			environmentDto.Properties.LinkedEnvironmentMetadata.DomainName = dataverseSourcePlanModel.Domain.ValueString()
 		}
 
-		if !dataverseSourcePlanModel.LinkedAppId.IsNull() && dataverseSourcePlanModel.LinkedAppId.ValueString() != constants.EMPTY {
+		if !dataverseSourcePlanModel.LinkedAppId.IsNull() && dataverseSourcePlanModel.LinkedAppId.ValueString() != "" {
 			environmentDto.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
 				Type: dataverseSourcePlanModel.LinkedAppType.ValueString(),
 				Id:   dataverseSourcePlanModel.LinkedAppId.ValueString(),
@@ -529,9 +525,8 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		} else {
 			environmentDto.Properties.LinkedAppMetadata = nil
 		}
-		// trying to create dataverse environment
+		// trying to create dataverse environment.
 	} else if IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
-
 		linkedMetadataDto, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, plan.Dataverse)
 		if err != nil {
 			resp.Diagnostics.AddError("Error when converting dataverse source model to create link environment metadata dto", err.Error())
@@ -546,10 +541,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		currencyCode = linkedMetadataDto.Currency.Code
 	}
 
-	if !state.BillingPolicyId.IsNull() &&
-		!state.BillingPolicyId.IsUnknown() &&
-		state.BillingPolicyId.ValueString() != constants.EMPTY {
-
+	if !state.BillingPolicyId.IsNull() && !state.BillingPolicyId.IsUnknown() && state.BillingPolicyId.ValueString() != "" {
 		tflog.Debug(ctx, fmt.Sprintf("Removing environment %s from billing policy %s", state.Id.ValueString(), state.BillingPolicyId.ValueString()))
 		err := r.LicensingClient.RemoveEnvironmentsToBillingPolicy(ctx, state.BillingPolicyId.ValueString(), []string{state.Id.ValueString()})
 		if err != nil {
@@ -558,10 +550,7 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		}
 	}
 
-	if !plan.BillingPolicyId.IsNull() &&
-		!plan.BillingPolicyId.IsUnknown() &&
-		plan.BillingPolicyId.ValueString() != constants.EMPTY {
-
+	if !plan.BillingPolicyId.IsNull() && !plan.BillingPolicyId.IsUnknown() && plan.BillingPolicyId.ValueString() != "" {
 		tflog.Debug(ctx, fmt.Sprintf("Adding environment %s to billing policy %s", plan.Id.ValueString(), plan.BillingPolicyId.ValueString()))
 		err := r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId.ValueString(), []string{plan.Id.ValueString()})
 		if err != nil {
@@ -576,8 +565,8 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	var templateMetadata *EnvironmentCreateTemplateMetadata = nil
-	var templates []string = nil
+	var templateMetadata *CreateTemplateMetadata
+	var templates []string
 	if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
 		dv, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
 		if err != nil {
@@ -599,11 +588,11 @@ func (r *EnvironmentResource) Update(ctx context.Context, req resource.UpdateReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
 }
 
-func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state *EnvironmentSourceModel
+	var state *SourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
@@ -627,7 +616,7 @@ func (r *EnvironmentResource) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *EnvironmentResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 

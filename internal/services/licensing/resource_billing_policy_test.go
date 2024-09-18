@@ -102,10 +102,10 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					//Verify placeholder id attribute
+					// Verify placeholder id attribute.
 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "id", "00000000-0000-0000-0000-000000000001"),
 
-					// Verify the first power app to ensure all attributes are set
+					// Verify the first power app to ensure all attributes are set.
 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "name", "payAsYouGoBillingPolicyExample"),
 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_billing_policy.pay_as_you_go", "status", "Enabled"),

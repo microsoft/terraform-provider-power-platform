@@ -57,7 +57,6 @@ func (r *BillingPolicyResource) Metadata(_ context.Context, req resource.Metadat
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-//nolint:unused-receiver
 func (r *BillingPolicyResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Manages a Power Platform Billing Policy",
@@ -328,7 +327,6 @@ func (r *BillingPolicyResource) Delete(ctx context.Context, req resource.DeleteR
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-//nolint:unused-receiver
 func (r *BillingPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

@@ -61,7 +61,6 @@ func (r *ManagedEnvironmentResource) Metadata(ctx context.Context, req resource.
 }
 
 func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-
 	resp.Schema = schema.Schema{
 		Description:         "Manages a \"Managed Environment\" and associated settings",
 		MarkdownDescription: "Manages a [Managed Environment](https://learn.microsoft.com/power-platform/admin/managed-environment-overview) and associated settings. A Power Platform Managed Environment is a suite of premium capabilities that allows administrators to manage Power Platform at scale with more control, less effort, and more insights. Once an environment is managed, it unlocks additional features across the Power Platform",
@@ -174,7 +173,7 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	managedEnvironmentDto := environment.GovernanceConfigurationDto{
-		ProtectionLevel: "Standard", //plan.ProtectionLevel.ValueString(),
+		ProtectionLevel: "Standard",
 		Settings: &environment.SettingsDto{
 			ExtendedSettings: environment.ExtendedSettingsDto{
 				ExcludeEnvironmentFromAnalysis: strconv.FormatBool(plan.IsUsageInsightsDisabled.ValueBool()),
@@ -185,10 +184,8 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 				LimitSharingMode:               strings.ToLower(plan.LimitSharingMode.ValueString()[:1]) + plan.LimitSharingMode.ValueString()[1:],
 				SolutionCheckerMode:            strings.ToLower(plan.SolutionCheckerMode.ValueString()),
 				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
-				//SolutionCheckerRuleOverrides:   "",
-				MakerOnboardingUrl: plan.MakerOnboardingUrl.ValueString(),
-				//MakerOnboardingTimestamp:       nil
-				MakerOnboardingMarkdown: plan.MakerOnboardingMarkdown.ValueString(),
+				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
+				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
 			},
 		},
 	}
@@ -223,7 +220,6 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 	plan.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
 	plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
 	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
-	//plan.SolutionCheckerRuleOverrides = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides)
 	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
 
@@ -273,7 +269,6 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		state.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
 		state.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
 		state.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
-		//state.SolutionCheckerRuleOverrides = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides)
 		state.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 		state.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
 	} else {
@@ -283,7 +278,6 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		state.LimitSharingMode = types.StringUnknown()
 		state.SolutionCheckerMode = types.StringUnknown()
 		state.SuppressValidationEmails = types.BoolUnknown()
-		//state.SolutionCheckerRuleOverrides = types.StringUnknown()
 		state.MakerOnboardingUrl = types.StringUnknown()
 		state.MakerOnboardingMarkdown = types.StringUnknown()
 	}
@@ -305,7 +299,7 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 	}
 
 	managedEnvironmentDto := environment.GovernanceConfigurationDto{
-		ProtectionLevel: "Standard", //plan.ProtectionLevel.ValueString(),
+		ProtectionLevel: "Standard",
 		Settings: &environment.SettingsDto{
 			ExtendedSettings: environment.ExtendedSettingsDto{
 				ExcludeEnvironmentFromAnalysis: strconv.FormatBool(plan.IsUsageInsightsDisabled.ValueBool()),
@@ -316,10 +310,8 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 				LimitSharingMode:               strings.ToLower(plan.LimitSharingMode.ValueString()[:1]) + plan.LimitSharingMode.ValueString()[1:],
 				SolutionCheckerMode:            strings.ToLower(plan.SolutionCheckerMode.ValueString()),
 				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
-				//SolutionCheckerRuleOverrides:   "",
-				MakerOnboardingUrl: plan.MakerOnboardingUrl.ValueString(),
-				//MakerOnboardingTimestamp:       nil
-				MakerOnboardingMarkdown: plan.MakerOnboardingMarkdown.ValueString(),
+				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
+				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
 			},
 		},
 	}
@@ -354,7 +346,6 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 	plan.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
 	plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
 	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
-	//plan.SolutionCheckerRuleOverrides = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides)
 	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
 

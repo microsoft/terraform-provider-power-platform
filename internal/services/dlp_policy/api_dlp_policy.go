@@ -15,9 +15,9 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewDlpPolicyClient(api *api.Client) DlpPolicyClient {
+func NewDlpPolicyClient(apiClient *api.Client) DlpPolicyClient {
 	return DlpPolicyClient{
-		Api: api,
+		Api: apiClient,
 	}
 }
 
@@ -39,7 +39,6 @@ func (client *DlpPolicyClient) GetPolicies(ctx context.Context) ([]DlpPolicyMode
 
 	policies := make([]DlpPolicyModelDto, 0)
 	for _, policy := range policiesArray.Value {
-
 		apiUrl := &url.URL{
 			Scheme: constants.HTTPS,
 			Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -184,7 +183,6 @@ func convertPolicyModelToDlpPolicy(policy DlpPolicyModelDto) DlpPolicyDto {
 }
 
 func covertDlpPolicyToPolicyModel(policy DlpPolicyDto) (*DlpPolicyModelDto, error) {
-
 	policyModel := DlpPolicyModelDto{
 		Name:                                 policy.PolicyDefinition.Name,
 		DisplayName:                          policy.PolicyDefinition.DisplayName,
@@ -227,7 +225,6 @@ func covertDlpPolicyToPolicyModel(policy DlpPolicyDto) (*DlpPolicyModelDto, erro
 				}
 			}
 			connGroupModel.Connectors = append(connGroupModel.Connectors, m)
-
 		}
 		policyModel.ConnectorGroups = append(policyModel.ConnectorGroups, connGroupModel)
 	}
@@ -242,7 +239,6 @@ func covertDlpPolicyToPolicyModel(policy DlpPolicyDto) (*DlpPolicyModelDto, erro
 }
 
 func (client *DlpPolicyClient) CreatePolicy(ctx context.Context, policy DlpPolicyModelDto) (*DlpPolicyModelDto, error) {
-
 	policyToCreate := convertPolicyModelToDlpPolicy(policy)
 
 	apiUrl := &url.URL{

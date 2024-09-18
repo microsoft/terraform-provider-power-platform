@@ -13,17 +13,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewConnectorsClient(api *api.Client) ConnectorsClient {
-	return ConnectorsClient{
-		Api: api,
+func NewConnectorsClient(apiClient *api.Client) Client {
+	return Client{
+		Api: apiClient,
 	}
 }
 
-type ConnectorsClient struct {
+type Client struct {
 	Api *api.Client
 }
 
-func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorDto, error) {
+func (client *Client) GetConnectors(ctx context.Context) ([]Dto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerAppsUrl,
@@ -73,7 +73,7 @@ func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorD
 		return nil, err
 	}
 	for _, virutualConnector := range virtualConnectorArray {
-		connectorArray.Value = append(connectorArray.Value, ConnectorDto{
+		connectorArray.Value = append(connectorArray.Value, Dto{
 			Id:   virutualConnector.Id,
 			Name: virutualConnector.Metadata.Name,
 			Type: virutualConnector.Metadata.Type,

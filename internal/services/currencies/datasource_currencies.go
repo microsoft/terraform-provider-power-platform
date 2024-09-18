@@ -54,7 +54,6 @@ func (d *DataSource) Metadata(_ context.Context, req datasource.MetadataRequest,
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-//nolint:unused-receiver
 func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of available Dynamics 365 currencies",

@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/common"
-	"github.com/microsoft/terraform-provider-power-platform/internal/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/admin_management_application"
@@ -52,7 +52,7 @@ type PowerPlatformProvider struct {
 }
 
 func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func() provider.Provider {
-	config := config.ProviderConfig{
+	providerConfig := config.ProviderConfig{
 		Urls: config.ProviderConfigUrls{
 			BapiUrl:            constants.PUBLIC_BAPI_DOMAIN,
 			PowerAppsUrl:       constants.PUBLIC_POWERAPPS_API_DOMAIN,
@@ -68,13 +68,13 @@ func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func
 
 	if len(testModeEnabled) > 0 && testModeEnabled[0] {
 		tflog.Warn(ctx, "Test mode enabled. Authentication requests will not be sent to the backend APIs.")
-		config.TestMode = true
+		providerConfig.TestMode = true
 	}
 
 	return func() provider.Provider {
 		p := &PowerPlatformProvider{
-			Config: &config,
-			Api:    api.NewApiClientBase(&config, api.NewAuthBase(&config)),
+			Config: &providerConfig,
+			Api:    api.NewApiClientBase(&providerConfig, api.NewAuthBase(&providerConfig)),
 		}
 		return p
 	}
@@ -175,32 +175,31 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	defer exitContext()
 
 	// Get Provider Configuration from the provider block in the configuration.
-	var config config.ProviderConfigModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	var configValue config.ProviderConfigModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &configValue)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-
 	// Get Provider Configuration from the configuration, environment variables, or defaults.
-	cloud := helpers.GetConfigString(ctx, config.Cloud, "POWER_PLATFORM_CLOUD", "public")
-	tenantId := helpers.GetConfigString(ctx, config.TenantId, "POWER_PLATFORM_TENANT_ID", "")
-	clientId := helpers.GetConfigString(ctx, config.ClientId, "POWER_PLATFORM_CLIENT_ID", "")
-	clientSecret := helpers.GetConfigString(ctx, config.ClientSecret, "POWER_PLATFORM_CLIENT_SECRET", "")
-	useOidc := helpers.GetConfigBool(ctx, config.UseOidc, "POWER_PLATFORM_USE_OIDC", false)
-	useCli := helpers.GetConfigBool(ctx, config.UseCli, "POWER_PLATFORM_USE_CLI", false)
-	clientCertificate := helpers.GetConfigString(ctx, config.ClientCertificate, "POWER_PLATFORM_CLIENT_CERTIFICATE", "")
-	clientCertificateFilePath := helpers.GetConfigString(ctx, config.ClientCertificateFilePath, "POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH", "")
-	clientCertificatePassword := helpers.GetConfigString(ctx, config.ClientCertificatePassword, "POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD", "")
+	cloud := helpers.GetConfigString(ctx, configValue.Cloud, "POWER_PLATFORM_CLOUD", "public")
+	tenantId := helpers.GetConfigString(ctx, configValue.TenantId, "POWER_PLATFORM_TENANT_ID", "")
+	clientId := helpers.GetConfigString(ctx, configValue.ClientId, "POWER_PLATFORM_CLIENT_ID", "")
+	clientSecret := helpers.GetConfigString(ctx, configValue.ClientSecret, "POWER_PLATFORM_CLIENT_SECRET", "")
+	useOidc := helpers.GetConfigBool(ctx, configValue.UseOidc, "POWER_PLATFORM_USE_OIDC", false)
+	useCli := helpers.GetConfigBool(ctx, configValue.UseCli, "POWER_PLATFORM_USE_CLI", false)
+	clientCertificate := helpers.GetConfigString(ctx, configValue.ClientCertificate, "POWER_PLATFORM_CLIENT_CERTIFICATE", "")
+	clientCertificateFilePath := helpers.GetConfigString(ctx, configValue.ClientCertificateFilePath, "POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH", "")
+	clientCertificatePassword := helpers.GetConfigString(ctx, configValue.ClientCertificatePassword, "POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD", "")
 
 	// Check for AzDO and GitHub environment variables
-	oidcRequestUrl := helpers.GetConfigMultiString(ctx, config.OidcRequestUrl, []string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"}, "")
-	oidcRequestToken := helpers.GetConfigMultiString(ctx, config.OidcRequestToken, []string{"ARM_OIDC_REQUEST_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN"}, "")
-	oidcToken := helpers.GetConfigString(ctx, config.OidcToken, "ARM_OIDC_TOKEN", "")
-	oidcTokenFilePath := helpers.GetConfigString(ctx, config.OidcTokenFilePath, "ARM_OIDC_TOKEN_FILE_PATH", "")
+	oidcRequestUrl := helpers.GetConfigMultiString(ctx, configValue.OidcRequestUrl, []string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"}, "")
+	oidcRequestToken := helpers.GetConfigMultiString(ctx, configValue.OidcRequestToken, []string{"ARM_OIDC_REQUEST_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN"}, "")
+	oidcToken := helpers.GetConfigString(ctx, configValue.OidcToken, "ARM_OIDC_TOKEN", "")
+	oidcTokenFilePath := helpers.GetConfigString(ctx, configValue.OidcTokenFilePath, "ARM_OIDC_TOKEN_FILE_PATH", "")
 
 	// Check for telemetry opt out
-	telemetryOptOut := helpers.GetConfigBool(ctx, config.TelemetryOptout, "POWER_PLATFORM_TELEMETRY_OPTOUT", false)
+	telemetryOptOut := helpers.GetConfigBool(ctx, configValue.TelemetryOptout, "POWER_PLATFORM_TELEMETRY_OPTOUT", false)
 
 	// Set the configuration values
 
@@ -263,7 +262,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.Urls.PowerPlatformUrl = constants.USGOV_POWERPLATFORM_API_DOMAIN
 		p.Config.Urls.PowerPlatformScope = constants.USGOV_POWERPLATFORM_API_SCOPE
 		p.Config.Urls.LicensingUrl = constants.USGOV_LICENSING_API_DOMAIN
-		p.Config.Cloud = azcloud.AzurePublic //GCC uses public cloud for authentication
+		p.Config.Cloud = azcloud.AzurePublic // GCC uses public cloud for authentication.
 	case "gcchigh":
 		p.Config.Urls.BapiUrl = constants.USGOVHIGH_BAPI_DOMAIN
 		p.Config.Urls.PowerAppsUrl = constants.USGOVHIGH_POWERAPPS_API_DOMAIN
@@ -378,16 +377,15 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 	}
 }
 
-func ValidateProviderAttribute(resp *provider.ConfigureResponse, path path.Path, name, value string, environmentVariableName string) {
-
+func ValidateProviderAttribute(resp *provider.ConfigureResponse, attrPath path.Path, name, value string, environmentVariableName string) {
 	environmentVariableText := "Target apply the source of the value first, set the value statically in the configuration."
-	if environmentVariableName != constants.EMPTY {
+	if environmentVariableName != "" {
 		environmentVariableText = fmt.Sprintf("Either target apply the source of the value first, set the value statically in the configuration, or use the %s environment variable.", environmentVariableName)
 	}
 
-	if value == constants.EMPTY {
+	if value == "" {
 		resp.Diagnostics.AddAttributeError(
-			path,
+			attrPath,
 			fmt.Sprintf("Unknown %s", name),
 			fmt.Sprintf("The provider cannot create the API client as there is an unknown configuration value for %s. %s", name, environmentVariableText))
 	}
@@ -398,9 +396,8 @@ func ValidateProviderAttribute(resp *provider.ConfigureResponse, path path.Path,
 // none of the environment variables return a value, the default value is
 // returned.
 func MultiEnvDefaultFunc(ks []string) string {
-
 	for _, k := range ks {
-		if v := os.Getenv(k); v != constants.EMPTY {
+		if v := os.Getenv(k); v != "" {
 			return v
 		}
 	}

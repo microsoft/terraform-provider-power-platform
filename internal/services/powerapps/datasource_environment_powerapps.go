@@ -166,5 +166,4 @@ func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasourc
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 }

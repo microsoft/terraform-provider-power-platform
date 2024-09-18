@@ -15,9 +15,9 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewWebApiClient(api *api.Client) WebApiClient {
+func NewWebApiClient(apiClient *api.Client) WebApiClient {
 	return WebApiClient{
-		Api: api,
+		Api: apiClient,
 	}
 }
 
@@ -40,11 +40,10 @@ type LinkedEnvironmentIdMetadataDto struct {
 }
 
 func (client *WebApiClient) SendOperation(ctx context.Context, operation *DataverseWebApiOperation) (types.Object, error) {
-
 	url := operation.Url.ValueString()
 	method := operation.Method.ValueString()
-	var body *string = nil
-	var headers map[string]string = nil
+	var body *string
+	var headers map[string]string
 	if operation.Body.ValueStringPointer() != nil {
 		b := operation.Body.ValueString()
 		body = &b
@@ -83,11 +82,9 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 		"body": types.StringType,
 	}, output)
 	return o, nil
-
 }
 
 func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, scope *string, url, method string, body *string, headers map[string]string, expectedStatusCodes []int64) (*api.HttpResponse, error) {
-
 	h := http.Header{}
 	for k, v := range headers {
 		h.Add(k, v)
@@ -100,7 +97,6 @@ func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, scope *string
 
 	if scope != nil {
 		return client.Api.ExecuteForGivenScope(ctx, *scope, method, url, h, body, codes, nil)
-	} else {
-		panic("scope or evironment_id must be provided")
 	}
+	panic("scope or evironment_id must be provided")
 }

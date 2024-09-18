@@ -49,7 +49,6 @@ func (r *DataRecordResource) Metadata(_ context.Context, req resource.MetadataRe
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-//nolint:unused-receiver
 func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "The Power Platform Data Record Resource allows the management of configuration records that are stored in Dataverse as records. This resource is not recommended for managing business data or other data that may be changed by Dataverse users in the context of normal business activities.",
@@ -284,12 +283,11 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-//nolint:unused-receiver
 func (r *DataRecordResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func convertResourceModelToMap(columnsAsString *string) (mapColumns map[string]interface{}, err error) {
+func convertResourceModelToMap(columnsAsString *string) (mapColumns map[string]any, err error) {
 	if columnsAsString == nil {
 		return nil, nil
 	}
@@ -309,7 +307,7 @@ func convertResourceModelToMap(columnsAsString *string) (mapColumns map[string]i
 	return mapColumns, nil
 }
 
-func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, environmentId, tableLogicalName string, recordid, recordColumns *string, columns map[string]interface{}) (*basetypes.DynamicValue, error) {
+func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, environmentId, tableLogicalName string, recordid, recordColumns *string, columns map[string]any) (*basetypes.DynamicValue, error) {
 	var objectType = map[string]attr.Type{
 		"table_logical_name": types.StringType,
 		"data_record_id":     types.StringType,
@@ -349,7 +347,7 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 				attributeTypes[key] = types.StringType
 				attributes[key] = types.StringValue(v)
 			}
-		case map[string]interface{}:
+		case map[string]any:
 			v, ok := columns[fmt.Sprintf("_%s_value", key)].(string)
 			if ok {
 				entityLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
@@ -372,7 +370,7 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 				attributeTypes[key] = nestedObjectType
 				attributes[key] = nestedObjectValue
 			}
-		case []interface{}:
+		case []any:
 			var listTypes []attr.Type
 			var listValues []attr.Value
 			tupleElementType := types.ObjectType{

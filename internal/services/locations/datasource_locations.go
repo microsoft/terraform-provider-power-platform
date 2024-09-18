@@ -47,7 +47,7 @@ func NewLocationsDataSource() datasource.DataSource {
 }
 
 type DataSource struct {
-	LocationsClient  LocationsClient
+	LocationsClient  Client
 	ProviderTypeName string
 	TypeName         string
 }

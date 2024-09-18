@@ -56,7 +56,6 @@ func (r *UserResource) Metadata(_ context.Context, req resource.MetadataRequest,
 }
 
 func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "This resource associates a user to a Power Platform environment. Additional Resources:\n\n* [Add users to an environment](https://learn.microsoft.com/power-platform/admin/add-users-to-environment)\n\n* [Overview of User Security](https://learn.microsoft.com/power-platform/admin/grant-users-access)",
 		Description:         "This resource associates a user to a Power Platform environment",
@@ -342,7 +341,6 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-//nolint:unused-receiver
 func (r *UserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

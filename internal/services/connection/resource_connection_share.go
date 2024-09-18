@@ -56,7 +56,6 @@ func (r *ShareResource) Metadata(_ context.Context, req resource.MetadataRequest
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-//nolint:unused-receiver
 func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "",
@@ -241,7 +240,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			{
 				Properties: ShareConnectionRequestPutPropertiesDto{
 					RoleName:     plan.RoleName.ValueString(),
-					Capabilities: []interface{}{},
+					Capabilities: []any{},
 					Principal: ShareConnectionRequestPutPropertiesPrincipalDto{
 						Id:       plan.Principal.EntraObjectId.ValueString(),
 						Type:     "ServicePrincipal",
@@ -283,7 +282,6 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
-
 }
 
 func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

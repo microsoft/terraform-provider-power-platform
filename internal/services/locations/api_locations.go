@@ -13,17 +13,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewLocationsClient(apiClient *api.Client) LocationsClient {
-	return LocationsClient{
+func NewLocationsClient(apiClient *api.Client) Client {
+	return Client{
 		Api: apiClient,
 	}
 }
 
-type LocationsClient struct {
+type Client struct {
 	Api *api.Client
 }
 
-func (client *LocationsClient) GetLocations(ctx context.Context) (Dto, error) {
+func (client *Client) GetLocations(ctx context.Context) (Dto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,

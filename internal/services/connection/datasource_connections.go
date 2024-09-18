@@ -57,7 +57,6 @@ func (d *ConnectionsDataSource) Metadata(_ context.Context, req datasource.Metad
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-//nolint:unused-receiver
 func (d *ConnectionsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches a list of \"Connections\" for a given environment. Each connection represents an connection instance to an external data source or service.",
@@ -165,7 +164,6 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 }
 
 func ConvertFromConnectionDto(connection Dto) ConnectionsDataSourceModel {

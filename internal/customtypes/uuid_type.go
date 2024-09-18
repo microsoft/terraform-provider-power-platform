@@ -28,12 +28,10 @@ func (t UUIDType) Equal(o attr.Type) bool {
 	return t.StringType.Equal(other.StringType)
 }
 
-//nolint:unused-receiver
 func (t UUIDType) String() string {
 	return "UUIDType"
 }
 
-//nolint:unused-receiver
 func (t UUIDType) ValueFromString(_ context.Context, in basetypes.StringValue) (basetypes.StringValuable, diag.Diagnostics) {
 	value := UUIDValue{
 		StringValue: in,

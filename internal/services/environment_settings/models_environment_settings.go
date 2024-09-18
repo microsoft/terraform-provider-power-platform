@@ -77,7 +77,7 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 			if !ok {
 				return nil, fmt.Errorf("pluginSettings is not of type basetypes.StringValue")
 			}
-			var v int64 = 0
+			var v int64
 			if pluginSettingsValue.ValueString() == "Off" {
 				environmentSettingsDto.PluginTraceLogSetting = &v
 			} else if pluginSettingsValue.ValueString() == "Exception" {
@@ -97,7 +97,6 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 		if !emailSourceModel.MaxUploadFileSize.IsNull() && !emailSourceModel.MaxUploadFileSize.IsUnknown() {
 			environmentSettingsDto.MaxUploadFileSize = emailSourceModel.MaxUploadFileSize.ValueInt64Pointer()
 		}
-
 	}
 
 	behaviorSettings := environmentSettings.Product.Attributes()["behavior_settings"]
@@ -122,9 +121,9 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 	return environmentSettingsDto, nil
 }
 
-func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettingsDto, timeouts timeouts.Value) EnvironmentSettingsSourceModel {
+func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettingsDto, timeout timeouts.Value) EnvironmentSettingsSourceModel {
 	environmentSettings := EnvironmentSettingsSourceModel{
-		Timeouts: timeouts,
+		Timeouts: timeout,
 	}
 
 	pluginTraceSettings := "Unknown"

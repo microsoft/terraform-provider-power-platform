@@ -42,7 +42,6 @@ func (d *DataLossPreventionPolicyDataSource) Metadata(_ context.Context, req dat
 }
 
 func (d *DataLossPreventionPolicyDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-
 	connectorSchema := schema.NestedAttributeObject{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -283,7 +282,6 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 	state.Id = types.StringValue(strconv.Itoa(len(policies)))
 
 	for _, policy := range policies {
-
 		policyModel := DataLossPreventionPolicyDatasourceModel{}
 		policyModel.Id = types.StringValue(policy.Name)
 		policyModel.DefaultConnectorsClassification = types.StringValue(policy.DefaultConnectorsClassification)

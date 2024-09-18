@@ -41,10 +41,10 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					//Verify placeholder id attribute
+					// Verify placeholder id attribute.
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
-					// Verify the first power app to ensure all attributes are set
+					// Verify the first power app to ensure all attributes are set.
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.cadence", regexp.MustCompile(`^(Frequent|Moderate)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.description", regexp.MustCompile(`^(|description)$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.display_name", regexp.MustCompile(helpers.StringRegex)),
@@ -65,7 +65,6 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 }
 
 func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
-
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 

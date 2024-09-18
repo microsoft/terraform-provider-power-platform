@@ -131,7 +131,7 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, _ datasource.ReadReq
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SECURITY ROLES START: %s", d.ProviderTypeName))
 
-	if state.EnvironmentId.ValueString() == constants.EMPTY {
+	if state.EnvironmentId.ValueString() == "" {
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}
@@ -171,7 +171,6 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, _ datasource.ReadReq
 			IsManaged:      types.BoolValue(role.IsManaged),
 			BusinessUnitId: types.StringValue(role.BusinessUnitId),
 		})
-
 	}
 
 	diags = resp.State.Set(ctx, &state)

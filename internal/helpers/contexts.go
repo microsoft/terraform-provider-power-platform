@@ -68,7 +68,7 @@ func EnterRequestContext[T AllowedRequestTypes](ctx context.Context, typ TypeInf
 	}
 }
 
-// EnterProviderScope is a helper function that logs the start of a provider scope and returns a closure that can be used to defer the loging of the exit of the provider scope
+// EnterProviderScope is a helper function that logs the start of a provider scope and returns a closure that can be used to defer the loging of the exit of the provider scope.
 func EnterProviderContext[T AllowedProviderRequestTypes](ctx context.Context, req T) (context.Context, func()) {
 	reqType := reflect.TypeOf(req).String()
 
@@ -86,29 +86,29 @@ func EnterProviderContext[T AllowedProviderRequestTypes](ctx context.Context, re
 
 // AllowedRequestTypes is an interface that defines the allowed request types for the getRequestTypeName function.
 type AllowedRequestTypes interface {
-    resource.CreateRequest | 
-	resource.MetadataRequest |
-	resource.ReadRequest |
-	resource.UpdateRequest |
-	resource.DeleteRequest |
-	resource.SchemaRequest |
-	resource.ConfigureRequest |
-	resource.ModifyPlanRequest |
-	resource.ImportStateRequest |
-	resource.UpgradeStateRequest |
-	resource.ValidateConfigRequest |
-	datasource.ReadRequest |
-	datasource.SchemaRequest |
-	datasource.ConfigureRequest |
-	datasource.MetadataRequest |
-	datasource.ValidateConfigRequest
+	resource.CreateRequest |
+		resource.MetadataRequest |
+		resource.ReadRequest |
+		resource.UpdateRequest |
+		resource.DeleteRequest |
+		resource.SchemaRequest |
+		resource.ConfigureRequest |
+		resource.ModifyPlanRequest |
+		resource.ImportStateRequest |
+		resource.UpgradeStateRequest |
+		resource.ValidateConfigRequest |
+		datasource.ReadRequest |
+		datasource.SchemaRequest |
+		datasource.ConfigureRequest |
+		datasource.MetadataRequest |
+		datasource.ValidateConfigRequest
 }
 
 // AllowedProviderRequestTypes is an interface that defines the allowed request types for the EnterProviderContext function.
 type AllowedProviderRequestTypes interface {
 	provider.ConfigureRequest |
-	provider.MetaSchemaRequest |
-	provider.MetadataRequest |
-	provider.SchemaRequest |
-	provider.ValidateConfigRequest
+		provider.MetaSchemaRequest |
+		provider.MetadataRequest |
+		provider.SchemaRequest |
+		provider.ValidateConfigRequest
 }

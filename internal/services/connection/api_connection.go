@@ -55,8 +55,7 @@ func (client *ConnectionsClient) CreateConnection(ctx context.Context, environme
 	return &connection, nil
 }
 
-func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environmentId, connectorName, connectionId, displayName string, connParams, connParamsSet map[string]interface{}) (*Dto, error) {
-
+func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environmentId, connectorName, connectionId, displayName string, connParams, connParamsSet map[string]any) (*Dto, error) {
 	conn, err := client.GetConnection(ctx, environmentId, connectorName, connectionId)
 	if err != nil {
 		return nil, err
@@ -161,7 +160,7 @@ func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmen
 			{
 				Properties: ShareConnectionRequestPutPropertiesDto{
 					RoleName:     roleName,
-					Capabilities: []interface{}{},
+					Capabilities: []any{},
 					Principal: ShareConnectionRequestPutPropertiesPrincipalDto{
 						Id:       entraUserObjectId,
 						Type:     "ServicePrincipal",
@@ -176,7 +175,6 @@ func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmen
 
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
-		//todo: check if permissions does not exists
 		return err
 	}
 	return nil
@@ -214,7 +212,7 @@ func (client *ConnectionsClient) GetConnectionShare(ctx context.Context, environ
 	}
 
 	for _, share := range shares.Value {
-		if share.Properties.Principal["id"].(string) == principalId {
+		if id, ok := share.Properties.Principal["id"].(string); ok && id == principalId {
 			return &share, nil
 		}
 	}
@@ -234,7 +232,6 @@ func (client *ConnectionsClient) UpdateConnectionShare(ctx context.Context, envi
 
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
-		//todo: check if permissions does not exists
 		return err
 	}
 	return nil
@@ -262,7 +259,6 @@ func (client *ConnectionsClient) DeleteConnectionShare(ctx context.Context, envi
 
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
-		//todo: check if permissions does not exists
 		return err
 	}
 	return nil

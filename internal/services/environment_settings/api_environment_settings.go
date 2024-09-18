@@ -15,9 +15,9 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewEnvironmentSettingsClient(api *api.Client) EnvironmentSettingsClient {
+func NewEnvironmentSettingsClient(apiClient *api.Client) EnvironmentSettingsClient {
 	return EnvironmentSettingsClient{
-		Api: api,
+		Api: apiClient,
 	}
 }
 
@@ -26,12 +26,11 @@ type EnvironmentSettingsClient struct {
 }
 
 func (client *EnvironmentSettingsClient) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
-
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return false, err
 	}
-	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != constants.EMPTY, nil
+	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
 func (client *EnvironmentSettingsClient) GetEnvironmentSettings(ctx context.Context, environmentId string) (*EnvironmentSettingsDto, error) {
@@ -82,18 +81,18 @@ func (client *EnvironmentSettingsClient) UpdateEnvironmentSettings(ctx context.C
 func (client *EnvironmentSettingsClient) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
-		return constants.EMPTY, err
+		return "", err
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
-	if environmentUrl == constants.EMPTY {
-		return constants.EMPTY, helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+	if environmentUrl == "" {
+		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 
-	url, err := url.Parse(environmentUrl)
+	envUrl, err := url.Parse(environmentUrl)
 	if err != nil {
-		return constants.EMPTY, err
+		return "", err
 	}
-	return url.Host, nil
+	return envUrl.Host, nil
 }
 
 func (client *EnvironmentSettingsClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {

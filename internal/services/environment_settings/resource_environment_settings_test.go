@@ -127,14 +127,12 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resources/Validate_Read/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
-
 		})
 
 	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations`,
 		func(req *http.Request) (*http.Response, error) {
 			getOrgInx++
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resources/Validate_Read/get_organisations_%d.json", getOrgInx)).String()), nil
-
 		})
 
 	httpmock.RegisterResponder("PATCH", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations%2843f51247-aee6-ee11-9048-000d3a688755%29`,

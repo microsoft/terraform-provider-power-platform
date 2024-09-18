@@ -3,23 +3,23 @@
 
 package solution
 
-type SolutionSettings struct {
-	EnvironmentVariables []SolutionSettingsEnvironmentVariable  `json:"environmentvariables"`
-	ConnectionReferences []SolutionSettingsConnectionReferences `json:"connectionreferences"`
+type Settings struct {
+	EnvironmentVariables []SettingsEnvironmentVariable  `json:"environmentvariables"`
+	ConnectionReferences []SettingsConnectionReferences `json:"connectionreferences"`
 }
 
-type SolutionSettingsEnvironmentVariable struct {
+type SettingsEnvironmentVariable struct {
 	SchemaName string `json:"schemaname"`
 	Value      string `json:"value"`
 }
 
-type SolutionSettingsConnectionReferences struct {
+type SettingsConnectionReferences struct {
 	LogicalName  string `json:"logicalname"`
 	ConnectionId string `json:"connectionid"`
 	ConnectorId  string `json:"connectorid"`
 }
 
-type SolutionDto struct {
+type Dto struct {
 	Id            string `json:"solutionid"`
 	EnvironmentId string `json:"environment_id"`
 	Name          string `json:"uniquename"`
@@ -31,8 +31,8 @@ type SolutionDto struct {
 	InstallTime   string `json:"installedon"`
 }
 
-type SolutionDtoArray struct {
-	Value []SolutionDto `json:"value"`
+type DtoArray struct {
+	Value []Dto `json:"value"`
 }
 
 type StageSolutionImportDto struct {
@@ -46,12 +46,12 @@ type StageSolutionImportResponseDto struct {
 type StageSolutionImportResultResponseDto struct {
 	StageSolutionUploadId     string                          `json:"StageSolutionUploadId"`
 	StageSolutionStatus       string                          `json:"StageSolutionStatus"`
-	SolutionValidationResults []SolutionValidationResults     `json:"SolutionValidationResults"`
+	SolutionValidationResults []ValidationResults             `json:"SolutionValidationResults"`
 	MissingDependencies       []MissingDependenciesDto        `json:"MissingDependencies"`
 	SolutionDetails           StageSolutionSolutionDetailsDto `json:"SolutionDetails"`
 }
 
-type SolutionValidationResults struct {
+type ValidationResults struct {
 	SolutionValidationResultType string `json:"SolutionValidationResultType"`
 	ErrorCode                    int    `json:"ErrorCode"`
 	AdditionalInfo               string `json:"AdditionalInfo"`
@@ -84,7 +84,7 @@ type StageSolutionSolutionDetailsDto struct {
 type ImportSolutionDto struct {
 	PublishWorkflows                 bool                                `json:"PublishWorkflows"`
 	OverwriteUnmanagedCustomizations bool                                `json:"OverwriteUnmanagedCustomizations"`
-	ComponentParameters              []interface{}                       `json:"ComponentParameters"`
+	ComponentParameters              []any                               `json:"ComponentParameters"`
 	SolutionParameters               ImportSolutionSolutionParametersDto `json:"SolutionParameters"`
 }
 
@@ -123,9 +123,9 @@ type ValidateSolutionImportResponseDto struct {
 }
 
 type ValidateSolutionImportResponseSolutionOperationResultDto struct {
-	Status          string        `json:"Status"`
-	WarningMessages []interface{} `json:"WarningMessages"`
-	ErrorMessages   []interface{} `json:"ErrorMessages"`
+	Status          string `json:"Status"`
+	WarningMessages []any  `json:"WarningMessages"`
+	ErrorMessages   []any  `json:"ErrorMessages"`
 }
 
 type EnvironmentIdDto struct {

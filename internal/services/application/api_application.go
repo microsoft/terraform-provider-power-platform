@@ -16,27 +16,25 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewApplicationClient(apiClient *api.Client) ApplicationClient {
-	return ApplicationClient{
+func NewApplicationClient(apiClient *api.Client) Client {
+	return Client{
 		Api: apiClient,
 	}
 }
 
-type ApplicationClient struct {
+type Client struct {
 	Api *api.Client
 }
 
-func (client *ApplicationClient) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
-
+func (client *Client) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return false, err
 	}
-	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != constants.EMPTY, nil
+	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
-func (client *ApplicationClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
-
+func (client *Client) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -55,7 +53,7 @@ func (client *ApplicationClient) getEnvironment(ctx context.Context, environment
 	return &env, nil
 }
 
-func (client *ApplicationClient) GetTenantApplications(ctx context.Context) ([]TenantApplicationDto, error) {
+func (client *Client) GetTenantApplications(ctx context.Context) ([]TenantApplicationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -76,7 +74,7 @@ func (client *ApplicationClient) GetTenantApplications(ctx context.Context) ([]T
 	return application.Value, nil
 }
 
-func (client *ApplicationClient) GetApplicationsByEnvironmentId(ctx context.Context, environmentId string) ([]EnvironmentApplicationDto, error) {
+func (client *Client) GetApplicationsByEnvironmentId(ctx context.Context, environmentId string) ([]EnvironmentApplicationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -97,7 +95,7 @@ func (client *ApplicationClient) GetApplicationsByEnvironmentId(ctx context.Cont
 	return application.Value, nil
 }
 
-func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Context, environmentId string, uniqueName string) (string, error) {
+func (client *Client) InstallApplicationInEnvironment(ctx context.Context, environmentId string, uniqueName string) (string, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -110,7 +108,7 @@ func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Con
 
 	response, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, nil, []int{http.StatusAccepted}, nil)
 	if err != nil {
-		return constants.EMPTY, err
+		return "", err
 	}
 
 	applicationId := ""
@@ -127,30 +125,29 @@ func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Con
 			lifecycleResponse := EnvironmentApplicationLifecycleDto{}
 			_, err = client.Api.Execute(ctx, "GET", operationLocationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
 			if err != nil {
-				return constants.EMPTY, err
+				return "", err
 			}
 
 			if lifecycleResponse.Status == "Succeeded" {
 				parts := strings.Split(lifecycleResponse.CreatedDateTime, "/")
-				if len(parts) > 0 {
-					applicationId = parts[len(parts)-1]
-				} else {
-					return constants.EMPTY, errors.New("can't parse application id from response " + lifecycleResponse.CreatedDateTime)
+				if len(parts) == 0 {
+					return "", errors.New("can't parse application id from response " + lifecycleResponse.CreatedDateTime)
 				}
+				applicationId = parts[len(parts)-1]
 				tflog.Debug(ctx, "Created Application Id: "+applicationId)
 				break
 			} else if lifecycleResponse.Status == "Failed" {
-				return constants.EMPTY, errors.New("application installation failed. status message: " + lifecycleResponse.Error.Message)
+				return "", errors.New("application installation failed. status message: " + lifecycleResponse.Error.Message)
 			}
 		}
 	} else if response.Response.StatusCode == http.StatusCreated {
 		appCreatedResponse := EnvironmentApplicationLifecycleCreatedDto{}
 		err = response.MarshallTo(&appCreatedResponse)
 		if err != nil {
-			return constants.EMPTY, err
+			return "", err
 		}
 		if appCreatedResponse.Properties.ProvisioningState != "Succeeded" {
-			return constants.EMPTY, errors.New("application installation failed. provisioning state: " + appCreatedResponse.Properties.ProvisioningState)
+			return "", errors.New("application installation failed. provisioning state: " + appCreatedResponse.Properties.ProvisioningState)
 		}
 		applicationId = appCreatedResponse.Name
 	}

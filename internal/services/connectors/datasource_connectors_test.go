@@ -24,10 +24,10 @@ func TestAccConnectorsDataSource_Validate_Read(t *testing.T) {
 				data "powerplatform_connectors" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					//Verify placeholder id attribute
+					// Verify placeholder id attribute.
 					resource.TestMatchResourceAttr("data.powerplatform_connectors.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
-					// Verify the first power app to ensure all attributes are set
+					// Verify the first power app to ensure all attributes are set.
 					resource.TestMatchResourceAttr("data.powerplatform_connectors.all", "connectors.0.description", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_connectors.all", "connectors.0.display_name", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_connectors.all", "connectors.0.id", regexp.MustCompile(helpers.ApiIdRegex)),
@@ -70,10 +70,10 @@ func TestUnitConnectorsDataSource_Validate_Read(t *testing.T) {
 				data "powerplatform_connectors" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					//Verify placeholder id attribute
+					// Verify placeholder id attribute.
 					resource.TestMatchResourceAttr("data.powerplatform_connectors.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
-					//Verify returned count
+					// Verify returned count.
 					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.#", "4"),
 
 					// // Verify the first power app to ensure all attributes are set

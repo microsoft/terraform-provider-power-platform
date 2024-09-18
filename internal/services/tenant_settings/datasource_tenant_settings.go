@@ -154,12 +154,9 @@ func (d *TenantSettingsDataSource) Configure(ctx context.Context, req datasource
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
-
 	d.TenantSettingsClient = NewTenantSettingsClient(client)
-
 }
 
 func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

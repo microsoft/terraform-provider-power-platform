@@ -19,9 +19,8 @@ func GetConfigString(ctx context.Context, configValue basetypes.StringValue, env
 		return configValue.ValueString()
 	} else if value, ok := os.LookupEnv(environmentVariableName); ok && value != "" {
 		return value
-	} else {
-		return defaultValue
 	}
+	return defaultValue
 }
 
 // GetConfigMultiString returns the value of the configValue if it is not null, otherwise it returns the value of the
@@ -29,8 +28,8 @@ func GetConfigString(ctx context.Context, configValue basetypes.StringValue, env
 func GetConfigMultiString(ctx context.Context, configValue basetypes.StringValue, environmentVariableNames []string, defaultValue string) string {
 	if !configValue.IsNull() {
 		return configValue.ValueString()
-	} 
-	
+	}
+
 	for _, k := range environmentVariableNames {
 		if value, ok := os.LookupEnv(k); ok && value != "" {
 			return value
@@ -48,11 +47,9 @@ func GetConfigBool(ctx context.Context, configValue basetypes.BoolValue, environ
 		envValue, err := strconv.ParseBool(value)
 		if err == nil {
 			return envValue
-		} else {
-			tflog.Warn(ctx, "Failed to parse environment variable value as a boolean. Using default value instead.", map[string]interface{}{environmentVariableName:value})
-			return defaultValue
 		}
-	} else {
+		tflog.Warn(ctx, "Failed to parse environment variable value as a boolean. Using default value instead.", map[string]any{environmentVariableName: value})
 		return defaultValue
 	}
+	return defaultValue
 }

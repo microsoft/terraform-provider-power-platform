@@ -29,7 +29,7 @@ func NewEnvironmentApplicationPackagesDataSource() datasource.DataSource {
 }
 
 type EnvironmentApplicationPackagesDataSource struct {
-	ApplicationClient ApplicationClient
+	ApplicationClient Client
 	ProviderTypeName  string
 	TypeName          string
 }
@@ -199,8 +199,8 @@ func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req
 	}
 
 	for _, application := range applications {
-		if (state.Name.ValueString() != constants.EMPTY && state.Name.ValueString() != application.Name) ||
-			(state.PublisherName.ValueString() != constants.EMPTY && state.PublisherName.ValueString() != application.PublisherName) {
+		if (state.Name.ValueString() != "" && state.Name.ValueString() != application.Name) ||
+			(state.PublisherName.ValueString() != "" && state.PublisherName.ValueString() != application.PublisherName) {
 			continue
 		}
 		state.Applications = append(state.Applications, EnvironmentApplicationPackageDataSourceModel{

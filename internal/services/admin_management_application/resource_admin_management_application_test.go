@@ -58,7 +58,7 @@ func TestUnitAdminManagementApplicationResource_Validate_Create(t *testing.T) {
 	body := fmt.Sprintf("{ \"applicationId\": \"%s\" }", client_id.String())
 
 	httpmock.RegisterResponder(http.MethodPut, url, httpmock.NewStringResponder(http.StatusOK, body))
-	httpmock.RegisterResponder(http.MethodGet, url, httpmock.NewStringResponder(http.StatusOK, body))
+	httpmock.RegisterResponder("GET", url, httpmock.NewStringResponder(http.StatusOK, body))
 	httpmock.RegisterResponder(http.MethodDelete, url, httpmock.NewStringResponder(http.StatusNoContent, ""))
 
 	resource.Test(t, resource.TestCase{

@@ -58,7 +58,6 @@ func (d *BillingPoliciesDataSource) Metadata(_ context.Context, req datasource.M
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-//nolint:unused-receiver
 func (d *BillingPoliciesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of billing policies in a tenant",

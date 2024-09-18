@@ -23,7 +23,7 @@ func NewPowerAppssClient(apiClient *api.Client) PowerAppssClient {
 
 type PowerAppssClient struct {
 	Api               *api.Client
-	environmentClient environment.EnvironmentClient
+	environmentClient environment.Client
 }
 
 func (client *PowerAppssClient) GetPowerApps(ctx context.Context, environmentId string) ([]PowerAppBapi, error) {
@@ -48,7 +48,6 @@ func (client *PowerAppssClient) GetPowerApps(ctx context.Context, environmentId 
 			return nil, err
 		}
 		apps = append(apps, appsArray.Value...)
-
 	}
 	return apps, nil
 }

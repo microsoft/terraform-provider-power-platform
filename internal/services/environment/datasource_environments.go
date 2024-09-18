@@ -32,7 +32,7 @@ func NewEnvironmentsDataSource() datasource.DataSource {
 }
 
 type EnvironmentsDataSource struct {
-	EnvironmentClient EnvironmentClient
+	EnvironmentClient Client
 	ProviderTypeName  string
 	TypeName          string
 }
@@ -212,7 +212,7 @@ func (d *EnvironmentsDataSource) Configure(_ context.Context, req datasource.Con
 }
 
 func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state EnvironmentsListDataSourceModel
+	var state ListDataSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENTS START: %s", d.ProviderTypeName))
 

@@ -11,8 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 func SyncAttributePlanModifier(syncAttribute string) planmodifier.String {
@@ -52,7 +51,7 @@ func (d *syncAttributePlanModifier) PlanModifyString(ctx context.Context, req pl
 			return
 		}
 
-		if value == constants.EMPTY {
+		if value == "" {
 			resp.PlanValue = types.StringUnknown()
 		} else {
 			resp.PlanValue = types.StringValue(value)

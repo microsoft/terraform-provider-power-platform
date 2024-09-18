@@ -18,26 +18,50 @@ linters-settings:
         disabled: true
       - name: cyclomatic
         disabled: true
+      - name: add-constant
+        disabled: true
+      - name: function-length
+        disabled: true
+      - name: unused-parameter
+        disabled: true
+      - name: cognitive-complexity
+        disabled: true
+      - name: unused-receiver
+        disabled: true
+      - name: max-public-structs
+        disabled: true
+      - name: receiver-naming
+        disabled: true
   errcheck:
     # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.
     # Such cases aren't reported by default.
     # Default: false
     check-type-assertions: true
-  issues:
-    exclude:
-      - "method receiver '(d|r)' is not referenced in method's body, consider removing or renaming it as _"
-      - "parameter 'ctx' seems to be unused, consider removing or renaming it as _"
-      - "avoid magic numbers like '0'"
-      - "string literal \"(solution_file|settings_file|CONFIGURE|PROVIDER)\" appears, at least.*"
-    # exclude-rules:
-    #   - linters:
-    #       - revive
-    #     text: "parameter 'ctx' seems to be unused, consider removing or renaming it as _"
-    #   # - linters:
-      #     - revive
-      #   text: "avoid magic numbers like '0'"
-      # - linters:
-      #     - revive
-      #   text: "string literal \"solution_file\" appears"
-
-
+    issues:
+      max-issues-per-linter: 0
+      max-same-issues: 0
+  #   exclude-rules:
+  #     - linters:
+  #         - revive
+  #       text: "parameter '(ctx|req|resp)' seems to be unused, consider removing or renaming it as _"
+  #     - linters:
+  #         - revive
+  #       text: "add-constant: avoid magic numbers like '(0644|1|10)', create a named constant for it"
+  #     - linters:
+  #         - revive
+  #       text: "string literal \"Entity1LogicalName\" appears, at least, 3 times, create a named constant for it"
+  #     - linters:
+  #         - revive
+  #       text: "string literal \"(api-version|$filter))\" appears, at least, 3 times, create a named constant for it"
+  #   exclude:
+  #     - "maximum number of lines per function exceeded; (.+)"
+  #     - "method receiver 'r' is not referenced in method's body, consider removing or renaming it as _"
+  #     - "method receiver 'd' is not referenced in method's body, consider removing or renaming it as _"
+  #     - "add-constant: string literal \"Failed to read solution file: %v\" appears, at least, 3 times, create a named constant for it"
+  #     - "add-constant: string literal \"(Entity2LogicalName|Entity1LogicalName|power_automate|teams_integration|power_apps|environments)\" appears, at least, 3 times, create a named constant for it"
+  #     - "unused-parameter: parameter 'ctx' seems to be unused, consider removing or renaming it as _"
+  #     - "unused-parameter: parameter 'req' seems to be unused, consider removing or renaming it as _"
+  #     - "string literal \"solution_file\" appears, at least, 3 times, create a named constant for it"
+  #     - "add-constant: avoid magic numbers like '(0|0644|1|10)', create a named constant for it"
+  #     - "string literal \"(solution_file|settings_file|CONFIGURE|PROVIDER)\" appears, at least.*"
+   

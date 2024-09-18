@@ -7,8 +7,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
 func BuildODataQueryFromModel(model *DataRecordListDataSourceModel) (string, map[string]string, error) {
@@ -54,7 +52,6 @@ func buildExpandODataQueryPart(model []ExpandModel) *string {
 			expandQueryStrings = append(expandQueryStrings, fmt.Sprintf("%s(%s)", m.NavigationProperty.ValueString(), *expandQueryFilterString))
 		} else {
 			expandQueryStrings = append(expandQueryStrings, m.NavigationProperty.ValueString())
-
 		}
 	}
 
@@ -84,7 +81,6 @@ func buildExpandFilterQueryPart(model *ExpandModel, subExpandValueString *string
 	if orderByString != nil {
 		if len(resultQuery) > 0 {
 			resultQuery += ";"
-
 		}
 		resultQuery = strings.Join([]string{resultQuery, *orderByString}, "")
 	}
@@ -102,7 +98,7 @@ func buildExpandFilterQueryPart(model *ExpandModel, subExpandValueString *string
 		}
 		resultQuery = strings.Join([]string{resultQuery, *subExpandValueString}, "")
 	}
-	if resultQuery == constants.EMPTY {
+	if resultQuery == "" {
 		return nil
 	}
 	return &resultQuery
@@ -122,7 +118,7 @@ func buildODataSelectPart(selectPart []string) *string {
 	if len(selectPart) > 0 {
 		resultQuery = "$select=" + url.QueryEscape(strings.Join(selectPart, ","))
 	}
-	if resultQuery == constants.EMPTY {
+	if resultQuery == "" {
 		return nil
 	}
 	return &resultQuery
@@ -151,7 +147,7 @@ func buildODataFilterPart(filter *string) *string {
 	if filter != nil {
 		resultQuery = "$filter=" + url.QueryEscape(*filter)
 	}
-	if resultQuery == constants.EMPTY {
+	if resultQuery == "" {
 		return nil
 	}
 	return &resultQuery
@@ -162,7 +158,7 @@ func buildODataOrderByPart(orderBy *string) *string {
 	if orderBy != nil {
 		resultQuery = "$orderby=" + url.QueryEscape(*orderBy)
 	}
-	if resultQuery == constants.EMPTY {
+	if resultQuery == "" {
 		return nil
 	}
 	return &resultQuery
@@ -173,7 +169,7 @@ func buildODataTopPart(top *int64) *string {
 	if top != nil {
 		resultQuery = "$top=" + url.QueryEscape(strconv.Itoa(int(*top)))
 	}
-	if resultQuery == constants.EMPTY {
+	if resultQuery == "" {
 		return nil
 	}
 	return &resultQuery
@@ -184,7 +180,7 @@ func buildOdataApplyPart(apply *string) *string {
 	if apply != nil {
 		resultQuery = "$apply=" + url.QueryEscape(*apply)
 	}
-	if resultQuery == constants.EMPTY {
+	if resultQuery == "" {
 		return nil
 	}
 	return &resultQuery

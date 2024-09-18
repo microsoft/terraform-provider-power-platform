@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"net/url"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
@@ -23,14 +23,14 @@ func NewCapacityClient(clientApi *api.Client) Client {
 	}
 }
 
-func (client *Client) GetTenantCapacity(ctx context.Context, tenantId string) (*TenantCapacityDto, error) {
+func (client *Client) GetTenantCapacity(ctx context.Context, tenantId string) (*Dto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.LicensingUrl,
 		Path:   fmt.Sprintf("/v0.1-alpha/tenants/%s/TenantCapacity", tenantId),
 	}
 
-	var dto TenantCapacityDto
+	var dto Dto
 
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &dto)
 	if err != nil {

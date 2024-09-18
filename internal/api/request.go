@@ -16,7 +16,6 @@ import (
 	"strings"
 
 	"github.com/microsoft/terraform-provider-power-platform/common"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -26,8 +25,7 @@ const (
 	RESPONSE_300 = 300
 )
 
-//nolint:unused-receiver
-func (client *Client) BuildCorrelationHeaders(ctx context.Context) (string, string) {
+func (client *Client) BuildCorrelationHeaders(ctx context.Context) (requestId string, correlationContext string) {
 	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
 	if ok {
 		cc := strings.Join([]string{
@@ -39,8 +37,7 @@ func (client *Client) BuildCorrelationHeaders(ctx context.Context) (string, stri
 
 		return rid, cc
 	}
-
-	return constants.EMPTY, ""
+	return "", ""
 }
 
 func (client *Client) buildUserAgent(ctx context.Context) string {
@@ -60,11 +57,11 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 		request.Header = headers
 	}
 
-	if token == nil || *token == constants.EMPTY {
+	if token == nil || *token == "" {
 		return nil, errors.New("token is empty")
 	}
 
-	if request.Header.Get("Content-Type") == constants.EMPTY {
+	if request.Header.Get("Content-Type") == "" {
 		request.Header.Set("Content-Type", "application/json")
 	}
 

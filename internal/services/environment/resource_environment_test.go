@@ -40,10 +40,10 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					//Verify placeholder id attribute
+					// Verify placeholder id attribute.
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
 
-					// Verify the first power app to ensure all attributes are set
+					// Verify the first power app to ensure all attributes are set.
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "aaaa"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "cadence", "Moderate"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", mocks.TestName()),
@@ -1582,9 +1582,8 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_1.json", id)).String()), nil
 			} else if getEnvironmentRequestInx < 21 {
 				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_2.json", id)).String()), nil
-			} else {
-				return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_3.json", id)).String()), nil
 			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Create_Environment_And_Add_Env_Group/get_environment_%s_3.json", id)).String()), nil
 		})
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,

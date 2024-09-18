@@ -12,23 +12,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	environment "github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
-func NewManagedEnvironmentClient(api *api.Client) ManagedEnvironmentClient {
+func NewManagedEnvironmentClient(apiClient *api.Client) ManagedEnvironmentClient {
 	return ManagedEnvironmentClient{
-		Api:               api,
-		environmentClient: environment.NewEnvironmentClient(api),
+		Api:               apiClient,
+		environmentClient: environment.NewEnvironmentClient(apiClient),
 	}
 }
 
 type ManagedEnvironmentClient struct {
 	Api               *api.Client
-	environmentClient environment.EnvironmentClient
+	environmentClient environment.Client
 }
 
 func (client *ManagedEnvironmentClient) GetManagedEnvironmentSettings(ctx context.Context, environmentId string) (*environment.GovernanceConfigurationDto, error) {
-
 	managedEnvSettings, err := client.environmentClient.GetEnvironment(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -88,5 +87,4 @@ func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Co
 		return err
 	}
 	return nil
-
 }

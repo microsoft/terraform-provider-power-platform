@@ -18,31 +18,31 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &SolutionsDataSource{}
-	_ datasource.DataSourceWithConfigure = &SolutionsDataSource{}
+	_ datasource.DataSource              = &DataSource{}
+	_ datasource.DataSourceWithConfigure = &DataSource{}
 )
 
 func NewSolutionsDataSource() datasource.DataSource {
-	return &SolutionsDataSource{
+	return &DataSource{
 		ProviderTypeName: "powerplatform",
 		TypeName:         "_solutions",
 	}
 }
 
-type SolutionsDataSource struct {
-	SolutionClient   SolutionClient
+type DataSource struct {
+	SolutionClient   Client
 	ProviderTypeName string
 	TypeName         string
 }
 
-type SolutionListDataSourceModel struct {
-	Timeouts      timeouts.Value             `tfsdk:"timeouts"`
-	Id            types.String               `tfsdk:"id"`
-	EnvironmentId types.String               `tfsdk:"environment_id"`
-	Solutions     []SolutionsDataSourceModel `tfsdk:"solutions"`
+type ListDataSourceModel struct {
+	Timeouts      timeouts.Value    `tfsdk:"timeouts"`
+	Id            types.String      `tfsdk:"id"`
+	EnvironmentId types.String      `tfsdk:"environment_id"`
+	Solutions     []DataSourceModel `tfsdk:"solutions"`
 }
 
-type SolutionsDataSourceModel struct {
+type DataSourceModel struct {
 	EnvironmentId types.String `tfsdk:"environment_id"`
 	DisplayName   types.String `tfsdk:"display_name"`
 	Name          types.String `tfsdk:"name"`
@@ -54,8 +54,8 @@ type SolutionsDataSourceModel struct {
 	IsManaged     types.Bool   `tfsdk:"is_managed"`
 }
 
-func ConvertFromSolutionDto(solutionDto SolutionDto) SolutionsDataSourceModel {
-	return SolutionsDataSourceModel{
+func ConvertFromSolutionDto(solutionDto Dto) DataSourceModel {
+	return DataSourceModel{
 		EnvironmentId: types.StringValue(solutionDto.EnvironmentId),
 		DisplayName:   types.StringValue(solutionDto.DisplayName),
 		Name:          types.StringValue(solutionDto.Name),
@@ -68,11 +68,11 @@ func ConvertFromSolutionDto(solutionDto SolutionDto) SolutionsDataSourceModel {
 	}
 }
 
-func (d *SolutionsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *SolutionsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Solutions in an environment",
 		MarkdownDescription: "Fetches the list of Solutions in an environment.  This is the equivalent of the [`pac solution list`](https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-list) command in the Power Platform CLI.",
@@ -148,7 +148,7 @@ func (d *SolutionsDataSource) Schema(ctx context.Context, _ datasource.SchemaReq
 	}
 }
 
-func (d *SolutionsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -167,8 +167,8 @@ func (d *SolutionsDataSource) Configure(_ context.Context, req datasource.Config
 	d.SolutionClient = NewSolutionClient(clientApi)
 }
 
-func (d *SolutionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state SolutionListDataSourceModel
+func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state ListDataSourceModel
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -216,5 +216,4 @@ func (d *SolutionsDataSource) Read(ctx context.Context, req datasource.ReadReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 }

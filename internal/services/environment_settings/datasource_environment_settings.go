@@ -47,12 +47,9 @@ func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datas
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
-
 	d.EnvironmentSettingsClient = NewEnvironmentSettingsClient(client)
-
 }
 
 func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -65,7 +62,7 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	if state.EnvironmentId.ValueString() == constants.EMPTY {
+	if state.EnvironmentId.ValueString() == "" {
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}

@@ -53,7 +53,6 @@ type LifecycleRequestedByDto struct {
 }
 
 func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, response *HttpResponse) (*LifecycleDto, error) {
-
 	locationHeader := response.GetHeader(constants.HEADER_LOCATION)
 	tflog.Debug(ctx, "Location Header: "+locationHeader)
 

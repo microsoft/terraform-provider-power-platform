@@ -80,7 +80,6 @@ func TestUnitEnvironmentApplicationPackagesDataSource_Validate_Read(t *testing.T
 
 	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
-
 			id := httpmock.MustGetSubmatch(req, 1)
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/datasource/environment_application_packages/Validate_Read/get_environment_%s.json", id)).String()), nil
 		})
@@ -160,7 +159,6 @@ func TestUnitEnvironmentApplicationPackagesDataSource_Validate_No_Dataverse(t *t
 
 	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
-
 			id := httpmock.MustGetSubmatch(req, 1)
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/datasource/environment_application_packages/Validate_No_Dataverse/get_environment_%s.json", id)).String()), nil
 		})

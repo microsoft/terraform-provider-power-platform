@@ -210,7 +210,6 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 }
 
 func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
-
 	solutionName := "TerraformTestSolution"
 	solutionFileName := solutionName + "_Complex_1_1_0_0.zip"
 	solutionSettingsFileName := "test_solution_settings.json"

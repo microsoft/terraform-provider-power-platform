@@ -116,26 +116,24 @@ func returnExpandSchema(depth int) *schema.ListNestedAttribute {
 				},
 			},
 		}
-	} else {
-		return &schema.ListNestedAttribute{
-			MarkdownDescription: description,
-			Optional:            true,
-			Required:            false,
-			NestedObject: schema.NestedAttributeObject{
-				Attributes: map[string]schema.Attribute{
-					"navigation_property": navigationPropertySchema,
-					"select":              selectListAttributeSchema,
-					"filter":              filterSchema,
-					"order_by":            orderbySchema,
-					"top":                 topSchema,
-					"expand":              returnExpandSchema(depth - 1),
-				},
+	}
+	return &schema.ListNestedAttribute{
+		MarkdownDescription: description,
+		Optional:            true,
+		Required:            false,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: map[string]schema.Attribute{
+				"navigation_property": navigationPropertySchema,
+				"select":              selectListAttributeSchema,
+				"filter":              filterSchema,
+				"order_by":            orderbySchema,
+				"top":                 topSchema,
+				"expand":              returnExpandSchema(depth - 1),
 			},
-		}
+		},
 	}
 }
 
-//nolint:unused-receiver
 func (d *DataRecordDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Resource for retrieving data records from Dataverse using (OData Query)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#page-results].",
@@ -196,7 +194,6 @@ func (d *DataRecordDataSource) Schema(ctx context.Context, _ datasource.SchemaRe
 	}
 }
 
-//nolint:unused-receiver
 func (d *DataRecordDataSource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.Conflicting(
@@ -270,7 +267,6 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	var elements = []attr.Value{}
 	for _, record := range queryRespnse.Records {
-
 		columns, err := d.convertColumnsToState(record)
 		if err != nil {
 			resp.Diagnostics.AddError("Failed to convert columns to state", err.Error())
@@ -296,7 +292,7 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 }
 
-func (d *DataRecordDataSource) convertColumnsToState(columns map[string]interface{}) (*basetypes.DynamicValue, error) {
+func (d *DataRecordDataSource) convertColumnsToState(columns map[string]any) (*basetypes.DynamicValue, error) {
 	if columns == nil {
 		return nil, nil
 	}
@@ -329,16 +325,16 @@ func (d *DataRecordDataSource) convertColumnsToState(columns map[string]interfac
 				attributeTypes[key] = types.StringType
 				attributes[key] = types.StringValue(v)
 			}
-		case map[string]interface{}:
-			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]interface{}))
+		case map[string]any:
+			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]any))
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
 			v, _ := types.ObjectValue(typ, val)
 			attributes[key] = v
 			attributeTypes[key] = tupleElementType
-		case []interface{}:
-			typeObj, valObj := d.buildExpandObject(columns[key].([]interface{}))
+		case []any:
+			typeObj, valObj := d.buildExpandObject(columns[key].([]any))
 			attributeTypes[key] = typeObj
 			attributes[key] = valObj
 		}
@@ -349,8 +345,7 @@ func (d *DataRecordDataSource) convertColumnsToState(columns map[string]interfac
 	return &result, nil
 }
 
-func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]interface{}) (map[string]attr.Type, map[string]attr.Value, error) {
-
+func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]any) (map[string]attr.Type, map[string]attr.Value, error) {
 	knownObjectType := map[string]attr.Type{}
 	knownObjectValue := map[string]attr.Value{}
 
@@ -380,16 +375,16 @@ func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]interfac
 				knownObjectType[key] = types.StringType
 				knownObjectValue[key] = types.StringValue(v)
 			}
-		case map[string]interface{}:
-			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]interface{}))
+		case map[string]any:
+			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]any))
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
 			v, _ := types.ObjectValue(typ, val)
 			knownObjectValue[key] = v
 			knownObjectType[key] = tupleElementType
-		case []interface{}:
-			typeObj, valObj := d.buildExpandObject(columns[key].([]interface{}))
+		case []any:
+			typeObj, valObj := d.buildExpandObject(columns[key].([]any))
 			knownObjectValue[key] = valObj
 			knownObjectType[key] = typeObj
 		}
@@ -397,19 +392,17 @@ func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]interfac
 	return knownObjectType, knownObjectValue, nil
 }
 
-func (d *DataRecordDataSource) buildExpandObject(items []interface{}) (basetypes.TupleType, basetypes.TupleValue) {
+func (d *DataRecordDataSource) buildExpandObject(items []any) (basetypes.TupleType, basetypes.TupleValue) {
 	var listTypes []attr.Type
 	var listValues []attr.Value
 	for _, item := range items {
-
-		typ, val, _ := d.buildObjectValueFromX(item.(map[string]interface{}))
+		typ, val, _ := d.buildObjectValueFromX(item.(map[string]any))
 		tupleElementType := types.ObjectType{
 			AttrTypes: typ,
 		}
 		v, _ := types.ObjectValue(typ, val)
 		listValues = append(listValues, v)
 		listTypes = append(listTypes, tupleElementType)
-
 	}
 	nestedObjectType := types.TupleType{
 		ElemTypes: listTypes,

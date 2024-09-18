@@ -32,7 +32,7 @@ func (client *UserClient) DataverseExists(ctx context.Context, environmentId str
 	if err != nil {
 		return false, err
 	}
-	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != constants.EMPTY, nil
+	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
 func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([]UserDto, error) {
@@ -76,7 +76,6 @@ func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environment
 		return nil, err
 	}
 	return &user, nil
-
 }
 
 func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentId, aadObjectId string) (*UserDto, error) {
@@ -249,15 +248,15 @@ func (client *UserClient) AddSecurityRoles(ctx context.Context, environmentId, s
 func (client *UserClient) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
-		return constants.EMPTY, err
+		return "", err
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
-	if environmentUrl == constants.EMPTY {
-		return constants.EMPTY, helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+	if environmentUrl == "" {
+		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 	envUrl, err := url.Parse(environmentUrl)
 	if err != nil {
-		return constants.EMPTY, err
+		return "", err
 	}
 	return envUrl.Host, nil
 }
@@ -295,7 +294,7 @@ func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId, b
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/roles",
 	}
-	if businessUnitId != constants.EMPTY {
+	if businessUnitId != "" {
 		var values = url.Values{}
 		values.Add("$filter", fmt.Sprintf("_businessunitid_value eq %s", businessUnitId))
 		apiUrl.RawQuery = values.Encode()

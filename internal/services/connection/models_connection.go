@@ -81,10 +81,10 @@ type CreateDto struct {
 }
 
 type CreatePropertiesDto struct {
-	DisplayName             string                 `json:"displayName"`
-	ConnectionParametersSet map[string]interface{} `json:"connectionParametersSet,omitempty"`
-	ConnectionParameters    map[string]interface{} `json:"connectionParameters,omitempty"`
-	Environment             CreateEnvironmentDto   `json:"environment"`
+	DisplayName             string               `json:"displayName"`
+	ConnectionParametersSet map[string]any       `json:"connectionParametersSet,omitempty"`
+	ConnectionParameters    map[string]any       `json:"connectionParameters,omitempty"`
+	Environment             CreateEnvironmentDto `json:"environment"`
 }
 
 type CreateEnvironmentDto struct {

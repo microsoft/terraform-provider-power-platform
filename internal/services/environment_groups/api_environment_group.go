@@ -8,13 +8,13 @@ import (
 	"net/http"
 	"net/url"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewEnvironmentGroupClient(api *api.Client) EnvironmentGroupClient {
+func NewEnvironmentGroupClient(apiClient *api.Client) EnvironmentGroupClient {
 	return EnvironmentGroupClient{
-		Api: api,
+		Api: apiClient,
 	}
 }
 

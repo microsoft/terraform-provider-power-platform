@@ -6,7 +6,6 @@ package config
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
 type ProviderConfig struct {
@@ -42,7 +41,7 @@ type ProviderConfigUrls struct {
 	LicensingUrl       string
 }
 
-// IsClientSecretCredentialsProvided returns true if all the required cred 
+// IsClientSecretCredentialsProvided returns true if all the required cred.
 const (
 	EMPTY_STRING = ""
 )
@@ -52,7 +51,7 @@ func (model *ProviderConfig) IsClientSecretCredentialsProvided() bool {
 }
 
 func (model *ProviderConfig) IsClientCertificateCredentialsProvided() bool {
-	return model.ClientCertificateRaw != constants.EMPTY
+	return model.ClientCertificateRaw != ""
 }
 
 func (model *ProviderConfig) IsCliProvided() bool {
