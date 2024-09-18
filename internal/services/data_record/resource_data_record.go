@@ -307,6 +307,108 @@ func convertResourceModelToMap(columnsAsString *string) (mapColumns map[string]a
 	return mapColumns, nil
 }
 
+func caseBool(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
+	value, ok := columnValue.(bool)
+	if ok {
+		attrValue[key] = types.BoolValue(value)
+		attrType[key] = types.BoolType
+	}
+}
+
+func caseInt64(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
+	value, ok := columnValue.(int64)
+	if ok {
+		attrValue[key] = types.Int64Value(value)
+		attrType[key] = types.Int64Type
+	}
+}
+
+func caseFloat64(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
+	value, ok := columnValue.(float64)
+	if ok {
+		attrValue[key] = types.Float64Value(value)
+		attrType[key] = types.Float64Type
+	}
+}
+
+func caseString(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
+	value, ok := columnValue.(string)
+	if ok {
+		attrValue[key] = types.StringValue(value)
+		attrType[key] = types.StringType
+	}
+}
+
+func caseMapStringOfAny(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key, entityLogicalName string, objectType map[string]attr.Type) {
+	value, ok := columnValue.(string)
+	if ok {
+		dataRecordId := value
+		nestedObjectType := types.ObjectType{
+			AttrTypes: objectType,
+		}
+		nestedObjectValue, _ := types.ObjectValue(
+			objectType,
+			map[string]attr.Value{
+				"table_logical_name": types.StringValue(entityLogicalName),
+				"data_record_id":     types.StringValue(dataRecordId),
+			},
+		)
+		attrType[key] = nestedObjectType
+		attrValue[key] = nestedObjectValue
+	}
+}
+
+func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrType map[string]attr.Type,
+	apiClient *DataRecordClient, objectType map[string]attr.Type, key, environmentId, tableLogicalName, recordid string) error {
+	var listTypes []attr.Type
+	var listValues []attr.Value
+	tupleElementType := types.ObjectType{
+		AttrTypes: objectType,
+	}
+
+	relationMap, err := apiClient.GetRelationData(ctx, environmentId, tableLogicalName, recordid, key)
+	if err != nil {
+		return fmt.Errorf("error getting relation data: %s", err.Error())
+	}
+
+	for _, rawItem := range relationMap {
+		item, ok := rawItem.(map[string]any)
+		if !ok {
+			return fmt.Errorf("error asserting rawItem to map[string]any")
+		}
+
+		relationTableLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
+		if err != nil {
+			return fmt.Errorf("error getting entity relation definition info: %s", err.Error())
+		}
+		entDefinition, err := GetEntityDefinition(ctx, apiClient, environmentId, relationTableLogicalName)
+		if err != nil {
+			return fmt.Errorf("error getting entity definition: %s", err.Error())
+		}
+
+		dataRecordId, ok := item[entDefinition.PrimaryIDAttribute].(string)
+		if !ok {
+			return fmt.Errorf("error asserting dataRecordId to string")
+		}
+
+		v, _ := types.ObjectValue(objectType, map[string]attr.Value{
+			"table_logical_name": types.StringValue(relationTableLogicalName),
+			"data_record_id":     types.StringValue(dataRecordId),
+		})
+		listValues = append(listValues, v)
+		listTypes = append(listTypes, tupleElementType)
+	}
+
+	nestedObjectType := types.TupleType{
+		ElemTypes: listTypes,
+	}
+	nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
+
+	attrValue[key] = nestedObjectValue
+	attrType[key] = nestedObjectType
+	return nil
+}
+
 func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, environmentId, tableLogicalName string, recordid, recordColumns *string, columns map[string]any) (*basetypes.DynamicValue, error) {
 	var objectType = map[string]attr.Type{
 		"table_logical_name": types.StringType,
@@ -324,102 +426,26 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 	for key, value := range mapColumns {
 		switch value.(type) {
 		case bool:
-			v, ok := columns[key].(bool)
-			if ok {
-				attributeTypes[key] = types.BoolType
-				attributes[key] = types.BoolValue(v)
-			}
+			caseBool(columns[key], attributes, attributeTypes, key)
 		case int64:
-			v, ok := columns[key].(int64)
-			if ok {
-				attributeTypes[key] = types.Int64Type
-				attributes[key] = types.Int64Value(v)
-			}
+			caseInt64(columns[key], attributes, attributeTypes, key)
 		case float64:
-			v, ok := columns[key].(float64)
-			if ok {
-				attributeTypes[key] = types.Float64Type
-				attributes[key] = types.Float64Value(v)
-			}
+			caseFloat64(columns[key], attributes, attributeTypes, key)
 		case string:
-			v, ok := columns[key].(string)
-			if ok {
-				attributeTypes[key] = types.StringType
-				attributes[key] = types.StringValue(v)
-			}
+			caseString(columns[key], attributes, attributeTypes, key)
 		case map[string]any:
-			v, ok := columns[fmt.Sprintf("_%s_value", key)].(string)
-			if ok {
-				entityLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
-				if err != nil {
-					return nil, fmt.Errorf("error getting entity relation definition info: %s", err.Error())
-				}
-				dataRecordId := v
-
-				nestedObjectType := types.ObjectType{
-					AttrTypes: objectType,
-				}
-				nestedObjectValue, _ := types.ObjectValue(
-					objectType,
-					map[string]attr.Value{
-						"table_logical_name": types.StringValue(entityLogicalName),
-						"data_record_id":     types.StringValue(dataRecordId),
-					},
-				)
-
-				attributeTypes[key] = nestedObjectType
-				attributes[key] = nestedObjectValue
-			}
-		case []any:
-			var listTypes []attr.Type
-			var listValues []attr.Value
-			tupleElementType := types.ObjectType{
-				AttrTypes: objectType,
-			}
-
-			relationMap, err := apiClient.GetRelationData(ctx, environmentId, tableLogicalName, *recordid, key)
+			entityLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
 			if err != nil {
-				return nil, fmt.Errorf("error getting relation data: %s", err.Error())
+				return nil, fmt.Errorf("error getting entity relation definition info: %s", err.Error())
 			}
-
-			for _, rawItem := range relationMap {
-				item, ok := rawItem.(map[string]any)
-				if !ok {
-					return nil, fmt.Errorf("error asserting rawItem to map[string]any")
-				}
-
-				relationTableLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
-				if err != nil {
-					return nil, fmt.Errorf("error getting entity relation definition info: %s", err.Error())
-				}
-				entDefinition, err := GetEntityDefinition(ctx, apiClient, environmentId, relationTableLogicalName)
-				if err != nil {
-					return nil, fmt.Errorf("error getting entity definition: %s", err.Error())
-				}
-
-				dataRecordId, ok := item[entDefinition.PrimaryIDAttribute].(string)
-				if !ok {
-					return nil, fmt.Errorf("error asserting dataRecordId to string")
-				}
-
-				v, _ := types.ObjectValue(objectType, map[string]attr.Value{
-					"table_logical_name": types.StringValue(relationTableLogicalName),
-					"data_record_id":     types.StringValue(dataRecordId),
-				})
-				listValues = append(listValues, v)
-				listTypes = append(listTypes, tupleElementType)
+			caseMapStringOfAny(columns[fmt.Sprintf("_%s_value", key)], attributes, attributeTypes, key, entityLogicalName, objectType)
+		case []any:
+			err := caseArrayOfAny(ctx, attributes, attributeTypes, apiClient, objectType, key, environmentId, tableLogicalName, *recordid)
+			if err != nil {
+				return nil, err
 			}
-
-			nestedObjectType := types.TupleType{
-				ElemTypes: listTypes,
-			}
-			nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
-
-			attributes[key] = nestedObjectValue
-			attributeTypes[key] = nestedObjectType
 		}
 	}
-
 	columnField, _ := types.ObjectValue(attributeTypes, attributes)
 	result := types.DynamicValue(columnField)
 	return &result, nil

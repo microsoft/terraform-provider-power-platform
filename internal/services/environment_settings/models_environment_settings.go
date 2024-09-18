@@ -89,6 +89,13 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 			}
 		}
 	}
+	convertFromEnvironmentEmailSettings(ctx, environmentSettings, environmentSettingsDto)
+	convertFromEnvironmentBehaviorSettings(ctx, environmentSettings, environmentSettingsDto)
+	convertFromEnvironmentFeatureSettings(ctx, environmentSettings, environmentSettingsDto)
+	return environmentSettingsDto, nil
+}
+
+func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *EnvironmentSettingsDto) {
 	emailSettingsObject := environmentSettings.Email.Attributes()["email_settings"]
 	if emailSettingsObject != nil && !emailSettingsObject.IsNull() && !emailSettingsObject.IsUnknown() {
 		var emailSourceModel EmailSettingsSourceModel
@@ -98,7 +105,9 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 			environmentSettingsDto.MaxUploadFileSize = emailSourceModel.MaxUploadFileSize.ValueInt64Pointer()
 		}
 	}
+}
 
+func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *EnvironmentSettingsDto) {
 	behaviorSettings := environmentSettings.Product.Attributes()["behavior_settings"]
 	if behaviorSettings != nil && !behaviorSettings.IsNull() && !behaviorSettings.IsUnknown() {
 		var behaviorSettingsSourceModel BehaviorSettingsSourceModel
@@ -108,6 +117,9 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 			environmentSettingsDto.BoundDashboardDefaultCardExpanded = behaviorSettingsSourceModel.ShowDashboardCardsInExpandedState.ValueBoolPointer()
 		}
 	}
+}
+
+func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *EnvironmentSettingsDto) {
 	features := environmentSettings.Product.Attributes()["features"]
 	if features != nil && !features.IsNull() && !features.IsUnknown() {
 		var featuresSourceModel FeaturesSourceModel
@@ -117,8 +129,6 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 			environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps = featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.ValueBoolPointer()
 		}
 	}
-
-	return environmentSettingsDto, nil
 }
 
 func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettingsDto, timeout timeouts.Value) EnvironmentSettingsSourceModel {

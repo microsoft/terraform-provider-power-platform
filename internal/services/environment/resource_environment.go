@@ -473,72 +473,15 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	defer cancel()
 
 	var currencyCode string
-	// trying to update dataverse environment
 	if !IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
-		var dataverseSourcePlanModel DataverseSourceModel
-		plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
-
-		currencyCode = dataverseSourcePlanModel.CurrencyCode.ValueString()
-
-		environmentDto.Properties.LinkedEnvironmentMetadata = &LinkedEnvironmentMetadataDto{
-			SecurityGroupId: dataverseSourcePlanModel.SecurityGroupId.ValueString(),
-			DomainName:      dataverseSourcePlanModel.Domain.ValueString(),
-		}
-
-		if !dataverseSourcePlanModel.AdministrationMode.IsNull() && !dataverseSourcePlanModel.AdministrationMode.IsUnknown() {
-			if dataverseSourcePlanModel.AdministrationMode.ValueBool() {
-				environmentDto.Properties.States = &StatesEnvironmentDto{
-					Runtime: &RuntimeEnvironmentDto{
-						Id: "AdminMode",
-					},
-				}
-			} else {
-				environmentDto.Properties.States = &StatesEnvironmentDto{
-					Runtime: &RuntimeEnvironmentDto{
-						Id: "Enabled",
-					},
-				}
-			}
-		}
-
-		if !dataverseSourcePlanModel.BackgroundOperation.IsNull() && !dataverseSourcePlanModel.BackgroundOperation.IsUnknown() {
-			if dataverseSourcePlanModel.BackgroundOperation.ValueBool() {
-				environmentDto.Properties.LinkedEnvironmentMetadata.BackgroundOperationsState = "Enabled"
-			} else {
-				environmentDto.Properties.LinkedEnvironmentMetadata.BackgroundOperationsState = "Disabled"
-			}
-		}
-
-		var dataverseSourceStateModel DataverseSourceModel
-		state.Dataverse.As(ctx, &dataverseSourceStateModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
-
-		if dataverseSourceStateModel.Domain.ValueString() != dataverseSourcePlanModel.Domain.ValueString() && !dataverseSourcePlanModel.Domain.IsNull() && dataverseSourcePlanModel.Domain.ValueString() != "" {
-			environmentDto.Properties.LinkedEnvironmentMetadata.DomainName = dataverseSourcePlanModel.Domain.ValueString()
-		}
-
-		if !dataverseSourcePlanModel.LinkedAppId.IsNull() && dataverseSourcePlanModel.LinkedAppId.ValueString() != "" {
-			environmentDto.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
-				Type: dataverseSourcePlanModel.LinkedAppType.ValueString(),
-				Id:   dataverseSourcePlanModel.LinkedAppId.ValueString(),
-				Url:  dataverseSourcePlanModel.LinkedAppURL.ValueString(),
-			}
-		} else {
-			environmentDto.Properties.LinkedAppMetadata = nil
-		}
-		// trying to create dataverse environment.
+		currencyCode = updateExistingDataverse(ctx, plan, environmentDto, state)
 	} else if IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
-		linkedMetadataDto, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, plan.Dataverse)
+		code, err := addDataverse(ctx, plan, resp, r)
 		if err != nil {
-			resp.Diagnostics.AddError("Error when converting dataverse source model to create link environment metadata dto", err.Error())
+			resp.Diagnostics.AddError("Error when creating new dataverse environment", err.Error())
 			return
 		}
-
-		_, err = r.EnvironmentClient.AddDataverseToEnvironment(ctx, plan.Id.ValueString(), *linkedMetadataDto)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error when adding dataverse to environment %s", plan.Id.ValueString()), err.Error())
-			return
-		}
-		currencyCode = linkedMetadataDto.Currency.Code
+		currencyCode = code
 	}
 
 	if !state.BillingPolicyId.IsNull() && !state.BillingPolicyId.IsUnknown() && state.BillingPolicyId.ValueString() != "" {
@@ -586,6 +529,72 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
+}
+
+func addDataverse(ctx context.Context, plan *SourceModel, resp *resource.UpdateResponse, r *Resource) (string, error) {
+	linkedMetadataDto, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, plan.Dataverse)
+	if err != nil {
+		return "", fmt.Errorf("Error when converting dataverse source model to create link environment metadata dto: %s", err.Error())
+	}
+
+	_, err = r.EnvironmentClient.AddDataverseToEnvironment(ctx, plan.Id.ValueString(), *linkedMetadataDto)
+	if err != nil {
+		return "", fmt.Errorf("Error when adding dataverse to environment %s: %s", plan.Id.ValueString(), err.Error())
+	}
+	return linkedMetadataDto.Currency.Code, nil
+}
+
+func updateExistingDataverse(ctx context.Context, plan *SourceModel, environmentDto Dto, state *SourceModel) string {
+	var dataverseSourcePlanModel DataverseSourceModel
+	plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+
+	environmentDto.Properties.LinkedEnvironmentMetadata = &LinkedEnvironmentMetadataDto{
+		SecurityGroupId: dataverseSourcePlanModel.SecurityGroupId.ValueString(),
+		DomainName:      dataverseSourcePlanModel.Domain.ValueString(),
+	}
+
+	if !dataverseSourcePlanModel.AdministrationMode.IsNull() && !dataverseSourcePlanModel.AdministrationMode.IsUnknown() {
+		if dataverseSourcePlanModel.AdministrationMode.ValueBool() {
+			environmentDto.Properties.States = &StatesEnvironmentDto{
+				Runtime: &RuntimeEnvironmentDto{
+					Id: "AdminMode",
+				},
+			}
+		} else {
+			environmentDto.Properties.States = &StatesEnvironmentDto{
+				Runtime: &RuntimeEnvironmentDto{
+					Id: "Enabled",
+				},
+			}
+		}
+	}
+
+	if !dataverseSourcePlanModel.BackgroundOperation.IsNull() && !dataverseSourcePlanModel.BackgroundOperation.IsUnknown() {
+		if dataverseSourcePlanModel.BackgroundOperation.ValueBool() {
+			environmentDto.Properties.LinkedEnvironmentMetadata.BackgroundOperationsState = "Enabled"
+		} else {
+			environmentDto.Properties.LinkedEnvironmentMetadata.BackgroundOperationsState = "Disabled"
+		}
+	}
+
+	var dataverseSourceStateModel DataverseSourceModel
+	state.Dataverse.As(ctx, &dataverseSourceStateModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+
+	if dataverseSourceStateModel.Domain.ValueString() != dataverseSourcePlanModel.Domain.ValueString() && !dataverseSourcePlanModel.Domain.IsNull() && dataverseSourcePlanModel.Domain.ValueString() != "" {
+		environmentDto.Properties.LinkedEnvironmentMetadata.DomainName = dataverseSourcePlanModel.Domain.ValueString()
+	}
+
+	if !dataverseSourcePlanModel.LinkedAppId.IsNull() && dataverseSourcePlanModel.LinkedAppId.ValueString() != "" {
+		environmentDto.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
+			Type: dataverseSourcePlanModel.LinkedAppType.ValueString(),
+			Id:   dataverseSourcePlanModel.LinkedAppId.ValueString(),
+			Url:  dataverseSourcePlanModel.LinkedAppURL.ValueString(),
+		}
+	} else {
+		environmentDto.Properties.LinkedAppMetadata = nil
+	}
+
+	return dataverseSourcePlanModel.CurrencyCode.ValueString()
 }
 
 func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

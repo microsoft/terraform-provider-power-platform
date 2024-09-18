@@ -19,12 +19,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-const (
-	EMPTY_BODY   = 0
-	RESPONSE_200 = 200
-	RESPONSE_300 = 300
-)
-
 func (client *Client) BuildCorrelationHeaders(ctx context.Context) (requestId string, correlationContext string) {
 	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
 	if ok {
@@ -93,8 +87,8 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode < RESPONSE_200 || response.StatusCode >= RESPONSE_300 {
-		if len(body) != EMPTY_BODY {
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		if len(body) != 0 {
 			return apiHttpResponse, fmt.Errorf("status: %d, message: %s", response.StatusCode, string(body))
 		}
 		return apiHttpResponse, fmt.Errorf("status: %d", response.StatusCode)

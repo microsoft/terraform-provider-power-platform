@@ -245,7 +245,7 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("getAssertion: cannot parse response: %v", err)
 	}
 
-	if statusCode := resp.StatusCode; statusCode < RESPONSE_200 || statusCode >= RESPONSE_300 {
+	if statusCode := resp.StatusCode; statusCode < http.StatusOK || statusCode >= http.StatusMultipleChoices {
 		return "", fmt.Errorf("getAssertion: received HTTP status %d with response: %s", resp.StatusCode, body)
 	}
 

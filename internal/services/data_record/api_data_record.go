@@ -295,29 +295,8 @@ func (client *DataRecordClient) GetTableSingularNameFromPlural(ctx context.Conte
 	return &result, nil
 }
 
-func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string, err error) {
-	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
-	if err != nil {
-		return "", err
-	}
-
-	apiUrl := fmt.Sprintf("https://%s/api/data/%s/EntityDefinitions(LogicalName='%s')?$expand=OneToManyRelationships,ManyToManyRelationships,ManyToOneRelationships", environmentHost, constants.DATAVERSE_API_VERSION, entityLogicalName)
-
-	response, err := client.Api.Execute(ctx, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
-	if err != nil {
-		return "", err
-	}
-
-	var mapResponse map[string]any
-	err = json.Unmarshal(response.BodyAsBytes, &mapResponse)
-	if err != nil {
-		return "", err
-	}
-
-	oneToMany, ok := mapResponse["OneToManyRelationships"].([]any)
-	if !ok {
-		return "", fmt.Errorf("OneToManyRelationships field is not of type []any")
-	}
+func getEntityRelationDefinitionOneToMany(oneToMany []any, entityLogicalName, relationLogicalName string) (string, error) {
+	var tableName string
 	for _, list := range oneToMany {
 		item, ok := list.(map[string]any)
 		if !ok {
@@ -340,7 +319,11 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 			break
 		}
 	}
+	return tableName, nil
+}
 
+func getEntityRelationDefinitionManyToOne(mapResponse map[string]any, relationLogicalName string) (string, error) {
+	var tableName string
 	manyToOne, ok := mapResponse["ManyToOneRelationships"].([]any)
 	if !ok {
 		return "", fmt.Errorf("ManyToOneRelationships field is not of type []any")
@@ -367,7 +350,11 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 			break
 		}
 	}
+	return tableName, nil
+}
 
+func getEntityRelationDefinitionManyToMany(mapResponse map[string]any, entityLogicalName, relationLogicalName string) (string, error) {
+	var tableName string
 	manyToMany, ok := mapResponse["ManyToManyRelationships"].([]any)
 	if !ok {
 		return "", fmt.Errorf("ManyToManyRelationships field is not of type []any")
@@ -378,7 +365,6 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 			return "", fmt.Errorf("item is not of type map[string]any")
 		}
 		if item["Entity1NavigationPropertyName"] == relationLogicalName && item["Entity1LogicalName"] != entityLogicalName {
-			var ok bool
 			tableName, ok = item["Entity1LogicalName"].(string)
 			if !ok {
 				return "", fmt.Errorf("Entity1LogicalName field is not of type string")
@@ -386,7 +372,6 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 			break
 		}
 		if item["Entity2NavigationPropertyName"] == relationLogicalName && item["Entity2LogicalName"] != entityLogicalName {
-			var ok bool
 			tableName, ok = item["Entity2LogicalName"].(string)
 			if !ok {
 				return "", fmt.Errorf("Entity2LogicalName field is not of type string")
@@ -394,6 +379,48 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 			break
 		}
 	}
+	return tableName, nil
+}
+
+func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string, err error) {
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return "", err
+	}
+
+	apiUrl := fmt.Sprintf("https://%s/api/data/%s/EntityDefinitions(LogicalName='%s')?$expand=OneToManyRelationships,ManyToManyRelationships,ManyToOneRelationships", environmentHost, constants.DATAVERSE_API_VERSION, entityLogicalName)
+
+	response, err := client.Api.Execute(ctx, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
+	if err != nil {
+		return "", err
+	}
+
+	var mapResponse map[string]any
+	err = json.Unmarshal(response.BodyAsBytes, &mapResponse)
+	if err != nil {
+		return "", err
+	}
+
+	oneToMany, ok := mapResponse["OneToManyRelationships"].([]any)
+	if !ok {
+		return "", fmt.Errorf("OneToManyRelationships field is not of type []any")
+	}
+
+	tableName, err = getEntityRelationDefinitionOneToMany(oneToMany, entityLogicalName, relationLogicalName)
+	if err != nil {
+		return "", err
+	}
+
+	tableName, err = getEntityRelationDefinitionManyToOne(mapResponse, relationLogicalName)
+	if err != nil {
+		return "", err
+	}
+
+	tableName, err = getEntityRelationDefinitionManyToMany(mapResponse, entityLogicalName, relationLogicalName)
+	if err != nil {
+		return "", err
+	}
+
 	return tableName, nil
 }
 
@@ -555,84 +582,92 @@ func applyRelations(ctx context.Context, client *DataRecordClient, relations map
 
 	for key, value := range relations {
 		if nestedMapList, ok := value.([]any); ok {
-			apiUrl := &url.URL{
-				Scheme: constants.HTTPS,
-				Host:   environmentHost,
-				Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s/$ref", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, parentRecordId, key),
+			err := applyRelation(ctx, environmentHost, entityDefinition, parentRecordId, key, client, nestedMapList, environmentId)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
+func applyRelation(ctx context.Context, environmentHost string, entityDefinition *EntityDefinitionsDto, parentRecordId string, key string, client *DataRecordClient, nestedMapList []any, environmentId string) error {
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s/$ref", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, parentRecordId, key),
+	}
+
+	existingRelationsResponse := RelationApiResponse{}
+
+	apiResponse, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(apiResponse.BodyAsBytes, &existingRelationsResponse)
+	if err != nil {
+		return err
+	}
+
+	var toBeDeleted = make([]RelationApiBody, 0)
+
+	for _, existingRelation := range existingRelationsResponse.Value {
+		shouldDelete := true
+		for _, nestedItem := range nestedMapList {
+			nestedMap, ok := nestedItem.(map[string]any)
+			if !ok {
+				return fmt.Errorf("nestedItem is not of type map[string]any")
 			}
 
-			existingRelationsResponse := RelationApiResponse{}
-
-			apiResponse, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+			tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
 			if err != nil {
 				return err
 			}
 
-			err = json.Unmarshal(apiResponse.BodyAsBytes, &existingRelationsResponse)
+			relationEntityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableLogicalName)
 			if err != nil {
 				return err
 			}
-
-			var toBeDeleted = make([]RelationApiBody, 0)
-
-			for _, existingRelation := range existingRelationsResponse.Value {
-				shouldDelete := true
-				for _, nestedItem := range nestedMapList {
-					nestedMap, ok := nestedItem.(map[string]any)
-					if !ok {
-						return fmt.Errorf("nestedItem is not of type map[string]any")
-					}
-
-					tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
-					if err != nil {
-						return err
-					}
-
-					relationEntityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableLogicalName)
-					if err != nil {
-						return err
-					}
-					if existingRelation.OdataID == fmt.Sprintf("https://%s/api/data/%s/%s(%s)", environmentHost, constants.DATAVERSE_API_VERSION, relationEntityDefinition.LogicalCollectionName, dataRecordId) {
-						shouldDelete = false
-						break
-					}
-				}
-				if shouldDelete {
-					toBeDeleted = append(toBeDeleted, existingRelation)
-				}
+			if existingRelation.OdataID == fmt.Sprintf("https://%s/api/data/%s/%s(%s)", environmentHost, constants.DATAVERSE_API_VERSION, relationEntityDefinition.LogicalCollectionName, dataRecordId) {
+				shouldDelete = false
+				break
 			}
+		}
+		if shouldDelete {
+			toBeDeleted = append(toBeDeleted, existingRelation)
+		}
+	}
 
-			for _, relation := range toBeDeleted {
-				_, err = client.Api.Execute(ctx, "DELETE", relation.OdataID, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
-				if err != nil {
-					return err
-				}
-			}
+	for _, relation := range toBeDeleted {
+		_, err = client.Api.Execute(ctx, "DELETE", relation.OdataID, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+		if err != nil {
+			return err
+		}
+	}
 
-			for _, nestedItem := range nestedMapList {
-				nestedMap, ok := nestedItem.(map[string]any)
-				if !ok {
-					return fmt.Errorf("nestedItem is not of type map[string]any")
-				}
+	for _, nestedItem := range nestedMapList {
+		nestedMap, ok := nestedItem.(map[string]any)
+		if !ok {
+			return fmt.Errorf("nestedItem is not of type map[string]any")
+		}
 
-				tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
-				if err != nil {
-					return err
-				}
+		tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
+		if err != nil {
+			return err
+		}
 
-				entityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableLogicalName)
-				if err != nil {
-					return err
-				}
+		entityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableLogicalName)
+		if err != nil {
+			return err
+		}
 
-				relation := RelationApiBody{
-					OdataID: fmt.Sprintf("https://%s/api/data/%s/%s(%s)", environmentHost, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId),
-				}
-				_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
-				if err != nil {
-					return err
-				}
-			}
+		relation := RelationApiBody{
+			OdataID: fmt.Sprintf("https://%s/api/data/%s/%s(%s)", environmentHost, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId),
+		}
+		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
+		if err != nil {
+			return err
 		}
 	}
 	return nil

@@ -302,29 +302,13 @@ func (d *DataRecordDataSource) convertColumnsToState(columns map[string]any) (*b
 	for key, value := range columns {
 		switch value.(type) {
 		case bool:
-			v, ok := columns[key].(bool)
-			if ok {
-				attributeTypes[key] = types.BoolType
-				attributes[key] = types.BoolValue(v)
-			}
+			caseBool(columns[key].(bool), attributes, attributeTypes, key)
 		case int64:
-			v, ok := columns[key].(int64)
-			if ok {
-				attributeTypes[key] = types.Int64Type
-				attributes[key] = types.Int64Value(v)
-			}
+			caseInt64(columns[key].(int64), attributes, attributeTypes, key)
 		case float64:
-			v, ok := columns[key].(float64)
-			if ok {
-				attributeTypes[key] = types.Float64Type
-				attributes[key] = types.Float64Value(v)
-			}
+			caseFloat64(columns[key].(float64), attributes, attributeTypes, key)
 		case string:
-			v, ok := columns[key].(string)
-			if ok {
-				attributeTypes[key] = types.StringType
-				attributes[key] = types.StringValue(v)
-			}
+			caseString(columns[key].(string), attributes, attributeTypes, key)
 		case map[string]any:
 			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]any))
 			tupleElementType := types.ObjectType{
@@ -352,29 +336,13 @@ func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]any) (ma
 	for key, value := range columns {
 		switch value.(type) {
 		case bool:
-			v, ok := columns[key].(bool)
-			if ok {
-				knownObjectType[key] = types.BoolType
-				knownObjectValue[key] = types.BoolValue(v)
-			}
+			caseBool(columns[key].(bool), knownObjectValue, knownObjectType, key)
 		case int64:
-			v, ok := columns[key].(int64)
-			if ok {
-				knownObjectType[key] = types.Int64Type
-				knownObjectValue[key] = types.Int64Value(v)
-			}
+			caseInt64(columns[key].(int64), knownObjectValue, knownObjectType, key)
 		case float64:
-			v, ok := columns[key].(float64)
-			if ok {
-				knownObjectType[key] = types.Float64Type
-				knownObjectValue[key] = types.Float64Value(v)
-			}
+			caseFloat64(columns[key].(float64), knownObjectValue, knownObjectType, key)
 		case string:
-			v, ok := columns[key].(string)
-			if ok {
-				knownObjectType[key] = types.StringType
-				knownObjectValue[key] = types.StringValue(v)
-			}
+			caseString(columns[key].(string), knownObjectValue, knownObjectType, key)
 		case map[string]any:
 			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]any))
 			tupleElementType := types.ObjectType{
