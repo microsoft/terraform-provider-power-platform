@@ -41,13 +41,8 @@ type ProviderConfigUrls struct {
 	LicensingUrl       string
 }
 
-// IsClientSecretCredentialsProvided returns true if all the required cred.
-const (
-	EMPTY_STRING = ""
-)
-
 func (model *ProviderConfig) IsClientSecretCredentialsProvided() bool {
-	return model.ClientId != EMPTY_STRING && model.ClientSecret != EMPTY_STRING && model.TenantId != EMPTY_STRING
+	return model.ClientId != "" && model.ClientSecret != "" && model.TenantId != ""
 }
 
 func (model *ProviderConfig) IsClientCertificateCredentialsProvided() bool {
