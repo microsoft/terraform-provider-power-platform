@@ -56,17 +56,17 @@ The Power Platform provider can use the [Azure CLI](https://learn.microsoft.com/
 1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
 1. Login using the scope as the "expose API" you configured when creating the app registration
 
-```bash
-az login --allow-no-subscriptions --scope api://powerplatform_provider_terraform/.default
-```
+    ```bash
+    az login --allow-no-subscriptions --scope api://powerplatform_provider_terraform/.default
+    ```
 
-Configure the provider to use the Azure CLI with the following code:
+    Configure the provider to use the Azure CLI with the following code:
 
-```terraform
-provider "powerplatform" {
-  use_cli = true
-}
-```
+    ```terraform
+    provider "powerplatform" {
+      use_cli = true
+    }
+    ```
 
 ### Authenticating to Power Platform using a Service Principal with OIDC
 
