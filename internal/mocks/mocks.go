@@ -75,4 +75,14 @@ func ActivateEnvironmentHttpMocks() {
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
+
+	httpmock.RegisterResponder("GET", `=~^https://([a-z\d-]+)\.(crm[\d]*)\.dynamics\.com/api/data/v9\.2/WhoAmI\z`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+    "@odata.context": "https://org000001.crm.dynamics.com/api/data/v9.2/$metadata#Microsoft.Dynamics.CRM.WhoAmIResponse",
+    "BusinessUnitId": "00000000-0000-0000-0000-000000000002",
+    "UserId": "00000000-0000-0000-0000-000000000001",
+    "OrganizationId": "00000000-0000-0000-0000-000000000003"
+}`), nil
+		})
 }

@@ -427,7 +427,46 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 		env.Properties.LinkedEnvironmentMetadata.Templates = environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates
 		env.Properties.LinkedEnvironmentMetadata.TemplateMetadata = environmentToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
 	}
+
+	err = client.doWaitForAccess(ctx, env)
+	if err != nil {
+		return &Dto{}, err
+	}
+
 	return env, err
+}
+
+func (client *Client) doWaitForAccess(ctx context.Context, env *Dto) error {
+	if env.Properties.LinkedEnvironmentMetadata != nil && env.Properties.LinkedEnvironmentMetadata.InstanceURL != "" {
+		envUrl, err := url.Parse(env.Properties.LinkedEnvironmentMetadata.InstanceURL)
+		if err != nil {
+			return err
+		}
+
+		whoAmIUrl := &url.URL{
+			Scheme: constants.HTTPS,
+			Host:   envUrl.Host,
+			Path:   "/api/data/v9.2/WhoAmI",
+		}
+
+		for {
+			resp, _ := client.Api.Execute(ctx, http.MethodGet, whoAmIUrl.String(), http.Header{}, nil, []int{http.StatusOK, http.StatusUnauthorized}, nil)
+			if resp != nil && resp.Response != nil && resp.Response.StatusCode == http.StatusOK {
+				break
+			}
+
+			if resp != nil && resp.Response != nil && resp.Response.StatusCode != http.StatusUnauthorized {
+				return fmt.Errorf("unexpected status code %d. %s", resp.Response.StatusCode, whoAmIUrl.String())
+			}
+
+			err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (client *Client) UpdateEnvironment(ctx context.Context, environmentId string, environment Dto) (*Dto, error) {

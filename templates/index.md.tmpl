@@ -8,7 +8,7 @@ description: |-
 
 The Power Platform provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
-!> This code is made available as a public preview. Features are being actively developed and may have restricted or limited functionality. You can test and use this code in production environments and scenarios, and provide feedback. Future updates may introduce breaking changes, but we follow [Semantic Versioning](https://semver.org/) to help mitigate this. The software may contain bugs, errors, or other issues that could cause service interruption or data loss. We recommend backing up your data and testing in non-production environments before using this software in production. Your feedback is valuable to us, so please share any issues or suggestions you encounter via GitHub issues.
+!> This code is made available as a public preview. Features are being actively developed and may have restricted or limited functionality. Future updates may introduce breaking changes, but we follow [Semantic Versioning](https://semver.org/) to help mitigate this. The software may contain bugs, errors, or other issues that could cause service interruption or data loss. We recommend backing up your data and testing in non-production environments before using this software in production. Your feedback is valuable to us, so please share any issues or suggestions you encounter via GitHub issues.
 
 ## Requirements
 
@@ -56,17 +56,17 @@ The Power Platform provider can use the [Azure CLI](https://learn.microsoft.com/
 1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
 1. Login using the scope as the "expose API" you configured when creating the app registration
 
-```bash
-az login --allow-no-subscriptions --scope api://powerplatform_provider_terraform/.default
-```
+    ```bash
+    az login --allow-no-subscriptions --scope api://powerplatform_provider_terraform/.default
+    ```
 
-Configure the provider to use the Azure CLI with the following code:
+    Configure the provider to use the Azure CLI with the following code:
 
-```terraform
-provider "powerplatform" {
-  use_cli = true
-}
-```
+    ```terraform
+    provider "powerplatform" {
+      use_cli = true
+    }
+    ```
 
 ### Authenticating to Power Platform using a Service Principal with OIDC
 
@@ -102,42 +102,42 @@ The Power Platform provider can use a Service Principal with Client Secret to au
 1. [Register your app registration with Power Platform](https://learn.microsoft.com/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
 1. Generate a certificate using openssl or other tools
 
-```bash
-openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 365
-```
+    ```bash
+    openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 365
+    ```
 
-4. Merge public and private part of the certificate files together
+1. Merge public and private part of the certificate files together
 
-Using linux shell
+    Using linux shell
 
-```bash
-cat *.pem > cert+key.pem
-```
+    ```bash
+    cat *.pem > cert+key.pem
+    ```
 
-Using Powershell
+    Using Powershell
 
-```powershell
-Get-Content .\cert.pem, .\key.pem | Set-Content cert+key.pem
-```
+    ```powershell
+    Get-Content .\cert.pem, .\key.pem | Set-Content cert+key.pem
+    ```
 
-5. Generate pkcs12 file
+1. Generate pkcs12 file
 
-```bash
-openssl pkcs12 -export -out cert.pkcs12 -in cert+key.pem
-```
+    ```bash
+    openssl pkcs12 -export -out cert.pkcs12 -in cert+key.pem
+    ```
 
-6. Add public part of the certificate (`cert.pem` file) to the app registration
-7. Store your key.pem and the password used to generate in a safe place
-8. Configure the provider to use certificate with the following code:
+1. Add public part of the certificate (`cert.pem` file) to the app registration
+1. Store your key.pem and the password used to generate in a safe place
+1. Configure the provider to use certificate with the following code:
 
-```terraform
-provider "powerplatform" {
-  client_id     = var.client_id
-  tenant_id     = var.tenant_id
-  client_certificate_file_path = "${path.cwd}/cert.pkcs12"
-  client_certificate_password  = var.cert_pass
-}
-```
+    ```terraform
+    provider "powerplatform" {
+      client_id     = var.client_id
+      tenant_id     = var.tenant_id
+      client_certificate_file_path = "${path.cwd}/cert.pkcs12"
+      client_certificate_password  = var.cert_pass
+    }
+    ```
 
 #### Using Environment Variables
 
