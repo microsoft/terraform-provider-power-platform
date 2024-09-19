@@ -66,7 +66,7 @@ func EnterRequestContext[T AllowedRequestTypes](ctx context.Context, typ TypeInf
 	ctx = tflog.SetField(ctx, "request_type", reqType)
 
 	ctx, cancel := enterTimeoutContext(ctx, req)
-
+  
 	// This returns a closure that can be used to defer the exit of the request scope.
 	return ctx, func() {
 		tflog.Debug(ctx, fmt.Sprintf("%s END: %s", reqType, name))
