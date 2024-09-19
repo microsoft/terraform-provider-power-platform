@@ -211,5 +211,13 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, _ datasource
 }
 
 func (d *EnvironmentSettingsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + d.TypeName
+	// update our own internal storage of the provider type name.
+	d.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = d.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }

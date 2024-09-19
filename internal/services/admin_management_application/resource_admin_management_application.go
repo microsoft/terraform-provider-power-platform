@@ -30,8 +30,6 @@ func NewAdminManagementApplicationResource() resource.Resource {
 type AdminManagementApplicationResource struct {
 	helpers.TypeInfo
 	AdminManagementApplicationClient AdminManagementApplicationClient
-	ProviderTypeName                 string
-	TypeName                         string
 }
 
 type AdminManagementApplicationResourceModel struct {
