@@ -14,7 +14,6 @@ import (
 )
 
 func covertDlpPolicyToPolicyModelDto(policy DlpPolicyDto) (*DlpPolicyModelDto, error) {
-
 	policyModel := DlpPolicyModelDto{
 		Name:                                 policy.PolicyDefinition.Name,
 		DisplayName:                          policy.PolicyDefinition.DisplayName,
@@ -61,7 +60,6 @@ func covertDlpPolicyToPolicyModelDto(policy DlpPolicyDto) (*DlpPolicyModelDto, e
 				}
 			}
 			connGroupModel.Connectors = append(connGroupModel.Connectors, m)
-
 		}
 		policyModel.ConnectorGroups = append(policyModel.ConnectorGroups, connGroupModel)
 	}
@@ -71,7 +69,6 @@ func covertDlpPolicyToPolicyModelDto(policy DlpPolicyDto) (*DlpPolicyModelDto, e
 			Rules: append([]DlpConnectorUrlPatternsRuleDto{}, rule),
 		})
 	}
-
 	return &policyModel, nil
 }
 
@@ -84,9 +81,8 @@ func convertConnectorRuleClassificationValues(value string) string {
 		return "Business"
 	} else if value == "Confidential" {
 		return "NonBusiness"
-	} else {
-		return value
 	}
+	return value
 }
 
 func convertToAttrValueConnectorsGroup(classification string, connectorsGroup []DlpConnectorGroupsModelDto) basetypes.SetValue {
@@ -119,28 +115,25 @@ func convertToAttrValueCustomConnectorUrlPatternsDefinition(urlPatterns []DlpCon
 	}
 	if len(urlPatterns) == 0 {
 		return types.SetValueMust(customConnectorPatternSetObjectType, []attr.Value{})
-	} else {
-		return types.SetValueMust(customConnectorPatternSetObjectType, connUrlPattern)
 	}
+	return types.SetValueMust(customConnectorPatternSetObjectType, connUrlPattern)
 }
 
 func convertToAttrValueEnvironments(environments []DlpEnvironmentDto) []string {
 	if len(environments) == 0 {
 		return []string{}
-	} else {
-		var env []string
-		for _, environment := range environments {
-			env = append(env, environment.Name)
-		}
-		return env
 	}
+	var env []string
+	for _, environment := range environments {
+		env = append(env, environment.Name)
+	}
+	return env
 }
 
 func convertToAttrValueConnectors(connectorsGroup DlpConnectorGroupsModelDto, connectors []attr.Value) []attr.Value {
 	for _, connector := range connectorsGroup.Connectors {
 		connectors = append(connectors, types.ObjectValueMust(
 			map[string]attr.Type{
-				//"name":                         types.StringType,
 				"id":                           types.StringType,
 				"default_action_rule_behavior": types.StringType,
 				"action_rules": types.ListType{
@@ -160,7 +153,7 @@ func convertToAttrValueConnectors(connectorsGroup DlpConnectorGroupsModelDto, co
 					}},
 			},
 			map[string]attr.Value{
-				//"name":                         types.StringValue(connector.Name),
+				// "name":                         types.StringValue(connector.Name),
 				"id":                           types.StringValue(connector.Id),
 				"default_action_rule_behavior": types.StringValue(connector.DefaultActionRuleBehavior),
 				"action_rules":                 types.ListValueMust(actionRuleListObjectType, convertToAtrValueActionRule(connector)),
@@ -171,11 +164,11 @@ func convertToAttrValueConnectors(connectorsGroup DlpConnectorGroupsModelDto, co
 	return connectors
 }
 
-func convertToDlpConnectorGroup(ctx context.Context, diag diag.Diagnostics, classification string, connectorsAttr basetypes.SetValue) DlpConnectorGroupsModelDto {
+func convertToDlpConnectorGroup(ctx context.Context, diags diag.Diagnostics, classification string, connectorsAttr basetypes.SetValue) DlpConnectorGroupsModelDto {
 	var connectors []DataLossPreventionPolicyResourceConnectorModel
 	err := connectorsAttr.ElementsAs(ctx, &connectors, true)
 	if err != nil {
-		diag.AddError("Client error when converting DlpConnectorGroups", "")
+		diags.AddError("Client error when converting DlpConnectorGroups", "")
 	}
 
 	connectorGroup := DlpConnectorGroupsModelDto{
@@ -202,7 +195,7 @@ func convertToDlpConnectorGroup(ctx context.Context, diag diag.Diagnostics, clas
 	return connectorGroup
 }
 
-func convertToDlpEnvironment(ctx context.Context, diag diag.Diagnostics, environmentsInPolicy []string) []DlpEnvironmentDto {
+func convertToDlpEnvironment(ctx context.Context, diags diag.Diagnostics, environmentsInPolicy []string) []DlpEnvironmentDto {
 	environments := make([]DlpEnvironmentDto, 0)
 	for _, environment := range environmentsInPolicy {
 		environments = append(environments, DlpEnvironmentDto{
@@ -214,11 +207,11 @@ func convertToDlpEnvironment(ctx context.Context, diag diag.Diagnostics, environ
 	return environments
 }
 
-func convertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diag diag.Diagnostics, connectorPatternsAttr basetypes.SetValue) []DlpConnectorUrlPatternsDefinitionDto {
+func convertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diags diag.Diagnostics, connectorPatternsAttr basetypes.SetValue) []DlpConnectorUrlPatternsDefinitionDto {
 	var customConnectorsPatterns []DataLossPreventionPolicyResourceCustomConnectorPattern
 	err := connectorPatternsAttr.ElementsAs(ctx, &customConnectorsPatterns, true)
 	if err != nil {
-		diag.AddError("Client error when converting DlpCustomConnectorUrlPatternsDefinition", "")
+		diags.AddError("Client error when converting DlpCustomConnectorUrlPatternsDefinition", "")
 	}
 
 	customConnectorUrlPatternsDefinition := make([]DlpConnectorUrlPatternsDefinitionDto, 0)

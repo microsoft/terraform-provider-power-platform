@@ -13,17 +13,18 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewConnectionsClient(api *api.ApiClient) ConnectionsClient {
+func NewConnectionsClient(apiClient *api.Client) ConnectionsClient {
 	return ConnectionsClient{
-		Api: api,
+		Api: apiClient,
 	}
 }
 
 type ConnectionsClient struct {
-	Api *api.ApiClient
+	Api *api.Client
 }
 
 func (client *ConnectionsClient) BuildHostUri(environmentId string) string {
@@ -34,9 +35,9 @@ func (client *ConnectionsClient) BuildHostUri(environmentId string) string {
 	return fmt.Sprintf("%s.%s.environment.%s", envId, realm, client.Api.GetConfig().Urls.PowerPlatformUrl)
 }
 
-func (client *ConnectionsClient) CreateConnection(ctx context.Context, environmentId, connectorName string, connectionToCreate ConnectionToCreateDto) (*ConnectionDto, error) {
+func (client *ConnectionsClient) CreateConnection(ctx context.Context, environmentId, connectorName string, connectionToCreate CreateDto) (*Dto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, strings.ReplaceAll(uuid.New().String(), "-", "")),
 	}
@@ -45,7 +46,7 @@ func (client *ConnectionsClient) CreateConnection(ctx context.Context, environme
 	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
 	apiUrl.RawQuery = values.Encode()
 
-	connection := ConnectionDto{}
+	connection := Dto{}
 	_, err := client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, connectionToCreate, []int{http.StatusCreated}, &connection)
 	if err != nil {
 		return nil, err
@@ -54,15 +55,14 @@ func (client *ConnectionsClient) CreateConnection(ctx context.Context, environme
 	return &connection, nil
 }
 
-func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environmentId, connectorName, connectionId, displayName string, connParams, connParamsSet map[string]interface{}) (*ConnectionDto, error) {
-
+func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environmentId, connectorName, connectionId, displayName string, connParams, connParamsSet map[string]any) (*Dto, error) {
 	conn, err := client.GetConnection(ctx, environmentId, connectorName, connectionId)
 	if err != nil {
 		return nil, err
 	}
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, connectionId),
 	}
@@ -75,7 +75,7 @@ func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environme
 	conn.Properties.ConnectionParametersSet = connParamsSet
 	conn.Properties.ConnectionParameters = connParams
 
-	updatedConnection := ConnectionDto{}
+	updatedConnection := Dto{}
 	_, err = client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, conn, []int{http.StatusOK}, &updatedConnection)
 	if err != nil {
 		return nil, err
@@ -84,9 +84,9 @@ func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environme
 	return &updatedConnection, nil
 }
 
-func (client *ConnectionsClient) GetConnection(ctx context.Context, environmentId, connectorName, connectionId string) (*ConnectionDto, error) {
+func (client *ConnectionsClient) GetConnection(ctx context.Context, environmentId, connectorName, connectionId string) (*Dto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, connectionId),
 	}
@@ -95,7 +95,7 @@ func (client *ConnectionsClient) GetConnection(ctx context.Context, environmentI
 	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
 	apiUrl.RawQuery = values.Encode()
 
-	connection := ConnectionDto{}
+	connection := Dto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connection)
 	if err != nil {
 		if strings.Contains(err.Error(), "ConnectionNotFound") {
@@ -106,9 +106,9 @@ func (client *ConnectionsClient) GetConnection(ctx context.Context, environmentI
 	return &connection, nil
 }
 
-func (client *ConnectionsClient) GetConnections(ctx context.Context, environmentId string) ([]ConnectionDto, error) {
+func (client *ConnectionsClient) GetConnections(ctx context.Context, environmentId string) ([]Dto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
 		Path:   "/connectivity/connections",
 	}
@@ -117,7 +117,7 @@ func (client *ConnectionsClient) GetConnections(ctx context.Context, environment
 	values.Add("api-version", "1")
 	apiUrl.RawQuery = values.Encode()
 
-	connetionsArray := ConnectionDtoArray{}
+	connetionsArray := DtoArray{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connetionsArray)
 	if err != nil {
 		return nil, err
@@ -128,7 +128,7 @@ func (client *ConnectionsClient) GetConnections(ctx context.Context, environment
 
 func (client *ConnectionsClient) DeleteConnection(ctx context.Context, environmentId, connectorName, connectionId string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, connectionId),
 	}
@@ -146,7 +146,7 @@ func (client *ConnectionsClient) DeleteConnection(ctx context.Context, environme
 
 func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmentId, connectorName, connectionId, roleName, entraUserObjectId string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/modifyPermissions", connectorName, connectionId),
 	}
@@ -160,7 +160,7 @@ func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmen
 			{
 				Properties: ShareConnectionRequestPutPropertiesDto{
 					RoleName:     roleName,
-					Capabilities: []interface{}{},
+					Capabilities: []any{},
 					Principal: ShareConnectionRequestPutPropertiesPrincipalDto{
 						Id:       entraUserObjectId,
 						Type:     "ServicePrincipal",
@@ -175,7 +175,6 @@ func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmen
 
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
-		//todo: check if permissions does not exists
 		return err
 	}
 	return nil
@@ -183,7 +182,7 @@ func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmen
 
 func (client *ConnectionsClient) GetConnectionShares(ctx context.Context, environmentId, connectorName, connectionId string) (*ShareConnectionResponseArrayDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/permissions", connectorName, connectionId),
 	}
@@ -213,7 +212,7 @@ func (client *ConnectionsClient) GetConnectionShare(ctx context.Context, environ
 	}
 
 	for _, share := range shares.Value {
-		if share.Properties.Principal["id"].(string) == principalId {
+		if id, ok := share.Properties.Principal["id"].(string); ok && id == principalId {
 			return &share, nil
 		}
 	}
@@ -222,7 +221,7 @@ func (client *ConnectionsClient) GetConnectionShare(ctx context.Context, environ
 
 func (client *ConnectionsClient) UpdateConnectionShare(ctx context.Context, environmentId, connectorName, connectionId string, share ShareConnectionRequestDto) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/modifyPermissions", connectorName, connectionId),
 	}
@@ -233,7 +232,6 @@ func (client *ConnectionsClient) UpdateConnectionShare(ctx context.Context, envi
 
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
-		//todo: check if permissions does not exists
 		return err
 	}
 	return nil
@@ -241,7 +239,7 @@ func (client *ConnectionsClient) UpdateConnectionShare(ctx context.Context, envi
 
 func (client *ConnectionsClient) DeleteConnectionShare(ctx context.Context, environmentId, connectorName, connectionId, shareId string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/modifyPermissions", connectorName, connectionId),
 	}
@@ -261,7 +259,6 @@ func (client *ConnectionsClient) DeleteConnectionShare(ctx context.Context, envi
 
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
-		//todo: check if permissions does not exists
 		return err
 	}
 	return nil

@@ -65,7 +65,7 @@ type DataRecordListDataSourceModel struct {
 	Rows                        types.Dynamic  `tfsdk:"rows"`
 }
 
-func (d *DataRecordDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataRecordDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
@@ -116,22 +116,21 @@ func returnExpandSchema(depth int) *schema.ListNestedAttribute {
 				},
 			},
 		}
-	} else {
-		return &schema.ListNestedAttribute{
-			MarkdownDescription: description,
-			Optional:            true,
-			Required:            false,
-			NestedObject: schema.NestedAttributeObject{
-				Attributes: map[string]schema.Attribute{
-					"navigation_property": navigationPropertySchema,
-					"select":              selectListAttributeSchema,
-					"filter":              filterSchema,
-					"order_by":            orderbySchema,
-					"top":                 topSchema,
-					"expand":              returnExpandSchema(depth - 1),
-				},
+	}
+	return &schema.ListNestedAttribute{
+		MarkdownDescription: description,
+		Optional:            true,
+		Required:            false,
+		NestedObject: schema.NestedAttributeObject{
+			Attributes: map[string]schema.Attribute{
+				"navigation_property": navigationPropertySchema,
+				"select":              selectListAttributeSchema,
+				"filter":              filterSchema,
+				"order_by":            orderbySchema,
+				"top":                 topSchema,
+				"expand":              returnExpandSchema(depth - 1),
 			},
-		}
+		},
 	}
 }
 
@@ -204,7 +203,7 @@ func (d *DataRecordDataSource) ConfigValidators(ctx context.Context) []datasourc
 	}
 }
 
-func (d *DataRecordDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataRecordDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -268,7 +267,6 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	var elements = []attr.Value{}
 	for _, record := range queryRespnse.Records {
-
 		columns, err := d.convertColumnsToState(record)
 		if err != nil {
 			resp.Diagnostics.AddError("Failed to convert columns to state", err.Error())
@@ -294,7 +292,7 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 }
 
-func (d *DataRecordDataSource) convertColumnsToState(columns map[string]interface{}) (*basetypes.DynamicValue, error) {
+func (d *DataRecordDataSource) convertColumnsToState(columns map[string]any) (*basetypes.DynamicValue, error) {
 	if columns == nil {
 		return nil, nil
 	}
@@ -304,39 +302,23 @@ func (d *DataRecordDataSource) convertColumnsToState(columns map[string]interfac
 	for key, value := range columns {
 		switch value.(type) {
 		case bool:
-			v, ok := columns[key].(bool)
-			if ok {
-				attributeTypes[key] = types.BoolType
-				attributes[key] = types.BoolValue(v)
-			}
+			caseBool(columns[key].(bool), attributes, attributeTypes, key)
 		case int64:
-			v, ok := columns[key].(int64)
-			if ok {
-				attributeTypes[key] = types.Int64Type
-				attributes[key] = types.Int64Value(v)
-			}
+			caseInt64(columns[key].(int64), attributes, attributeTypes, key)
 		case float64:
-			v, ok := columns[key].(float64)
-			if ok {
-				attributeTypes[key] = types.Float64Type
-				attributes[key] = types.Float64Value(v)
-			}
+			caseFloat64(columns[key].(float64), attributes, attributeTypes, key)
 		case string:
-			v, ok := columns[key].(string)
-			if ok {
-				attributeTypes[key] = types.StringType
-				attributes[key] = types.StringValue(v)
-			}
-		case map[string]interface{}:
-			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]interface{}))
+			caseString(columns[key].(string), attributes, attributeTypes, key)
+		case map[string]any:
+			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]any))
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
 			v, _ := types.ObjectValue(typ, val)
 			attributes[key] = v
 			attributeTypes[key] = tupleElementType
-		case []interface{}:
-			typeObj, valObj := d.buildExpandObject(columns[key].([]interface{}))
+		case []any:
+			typeObj, valObj := d.buildExpandObject(columns[key].([]any))
 			attributeTypes[key] = typeObj
 			attributes[key] = valObj
 		}
@@ -347,47 +329,30 @@ func (d *DataRecordDataSource) convertColumnsToState(columns map[string]interfac
 	return &result, nil
 }
 
-func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]interface{}) (map[string]attr.Type, map[string]attr.Value, error) {
-
+func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]any) (map[string]attr.Type, map[string]attr.Value, error) {
 	knownObjectType := map[string]attr.Type{}
 	knownObjectValue := map[string]attr.Value{}
 
 	for key, value := range columns {
 		switch value.(type) {
 		case bool:
-			v, ok := columns[key].(bool)
-			if ok {
-				knownObjectType[key] = types.BoolType
-				knownObjectValue[key] = types.BoolValue(v)
-			}
+			caseBool(columns[key].(bool), knownObjectValue, knownObjectType, key)
 		case int64:
-			v, ok := columns[key].(int64)
-			if ok {
-				knownObjectType[key] = types.Int64Type
-				knownObjectValue[key] = types.Int64Value(v)
-			}
+			caseInt64(columns[key].(int64), knownObjectValue, knownObjectType, key)
 		case float64:
-			v, ok := columns[key].(float64)
-			if ok {
-				knownObjectType[key] = types.Float64Type
-				knownObjectValue[key] = types.Float64Value(v)
-			}
+			caseFloat64(columns[key].(float64), knownObjectValue, knownObjectType, key)
 		case string:
-			v, ok := columns[key].(string)
-			if ok {
-				knownObjectType[key] = types.StringType
-				knownObjectValue[key] = types.StringValue(v)
-			}
-		case map[string]interface{}:
-			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]interface{}))
+			caseString(columns[key].(string), knownObjectValue, knownObjectType, key)
+		case map[string]any:
+			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]any))
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
 			v, _ := types.ObjectValue(typ, val)
 			knownObjectValue[key] = v
 			knownObjectType[key] = tupleElementType
-		case []interface{}:
-			typeObj, valObj := d.buildExpandObject(columns[key].([]interface{}))
+		case []any:
+			typeObj, valObj := d.buildExpandObject(columns[key].([]any))
 			knownObjectValue[key] = valObj
 			knownObjectType[key] = typeObj
 		}
@@ -395,19 +360,17 @@ func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]interfac
 	return knownObjectType, knownObjectValue, nil
 }
 
-func (d *DataRecordDataSource) buildExpandObject(items []interface{}) (basetypes.TupleType, basetypes.TupleValue) {
+func (d *DataRecordDataSource) buildExpandObject(items []any) (basetypes.TupleType, basetypes.TupleValue) {
 	var listTypes []attr.Type
 	var listValues []attr.Value
 	for _, item := range items {
-
-		typ, val, _ := d.buildObjectValueFromX(item.(map[string]interface{}))
+		typ, val, _ := d.buildObjectValueFromX(item.(map[string]any))
 		tupleElementType := types.ObjectType{
 			AttrTypes: typ,
 		}
 		v, _ := types.ObjectValue(typ, val)
 		listValues = append(listValues, v)
 		listTypes = append(listTypes, tupleElementType)
-
 	}
 	nestedObjectType := types.TupleType{
 		ElemTypes: listTypes,

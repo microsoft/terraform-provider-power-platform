@@ -27,7 +27,6 @@ func (d *forceStringValueUnknownModifier) MarkdownDescription(ctx context.Contex
 }
 
 func (d *forceStringValueUnknownModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-
 	r, _ := req.Private.GetKey(ctx, "force_value_unknown")
 	if r == nil || !bytes.Equal(r, []byte("true")) {
 		return

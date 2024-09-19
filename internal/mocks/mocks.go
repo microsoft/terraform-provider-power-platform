@@ -75,5 +75,4 @@ func ActivateEnvironmentHttpMocks() {
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
-
 }

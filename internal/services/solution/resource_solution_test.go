@@ -27,7 +27,6 @@ const (
 )
 
 func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
-
 	solutionFileBytes1, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
 	if err != nil {
 		t.Fatalf("Failed to read solution file: %v", err)
@@ -498,7 +497,6 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 }
 
 func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
-
 	solutionFileBytes, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
 	if err != nil {
 		t.Fatalf("Failed to read solution file: %v", err)

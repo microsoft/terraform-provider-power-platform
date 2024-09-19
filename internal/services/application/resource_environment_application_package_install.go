@@ -28,7 +28,7 @@ func NewEnvironmentApplicationPackageInstallResource() resource.Resource {
 }
 
 type EnvironmentApplicationPackageInstallResource struct {
-	ApplicationClient ApplicationClient
+	ApplicationClient Client
 	ProviderTypeName  string
 	TypeName          string
 }

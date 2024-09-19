@@ -10,21 +10,22 @@ import (
 	"strings"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewConnectorsClient(api *api.ApiClient) ConnectorsClient {
-	return ConnectorsClient{
-		Api: api,
+func NewConnectorsClient(apiClient *api.Client) Client {
+	return Client{
+		Api: apiClient,
 	}
 }
 
-type ConnectorsClient struct {
-	Api *api.ApiClient
+type Client struct {
+	Api *api.Client
 }
 
-func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorDto, error) {
+func (client *Client) GetConnectors(ctx context.Context) ([]Dto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerAppsUrl,
 		Path:   "/providers/Microsoft.PowerApps/apis",
 	}
@@ -43,7 +44,7 @@ func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorD
 	}
 
 	apiUrl = &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/unblockable",
 	}
@@ -62,7 +63,7 @@ func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorD
 	}
 
 	apiUrl = &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/virtual",
 	}
@@ -72,7 +73,7 @@ func (client *ConnectorsClient) GetConnectors(ctx context.Context) ([]ConnectorD
 		return nil, err
 	}
 	for _, virutualConnector := range virtualConnectorArray {
-		connectorArray.Value = append(connectorArray.Value, ConnectorDto{
+		connectorArray.Value = append(connectorArray.Value, Dto{
 			Id:   virutualConnector.Id,
 			Name: virutualConnector.Metadata.Name,
 			Type: virutualConnector.Metadata.Type,

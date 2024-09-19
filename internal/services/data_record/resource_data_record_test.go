@@ -753,7 +753,6 @@ func TestUnitDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 }
 
 func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
-
 	var primarycontactidStep1 = &mocks.StateValue{}
 	var primarycontactidStep2 = &mocks.StateValue{}
 
@@ -1036,7 +1035,6 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 }
 
 func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
-
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -1112,7 +1110,6 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 
 	httpmock.RegisterResponder("POST", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts`,
 		func(req *http.Request) (*http.Response, error) {
-
 			bodyAsBytes := make([]byte, req.ContentLength)
 			_, err := req.Body.Read(bodyAsBytes)
 			if err != nil {

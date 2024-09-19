@@ -29,7 +29,7 @@ func NewBillingPoliciesDataSource() datasource.DataSource {
 }
 
 type BillingPoliciesDataSource struct {
-	LicensingClient  LicensingClient
+	LicensingClient  Client
 	ProviderTypeName string
 	TypeName         string
 }
@@ -54,7 +54,7 @@ type BillingInstrumentDataSourceModel struct {
 	SubscriptionId types.String `tfsdk:"subscription_id"`
 }
 
-func (d *BillingPoliciesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *BillingPoliciesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
@@ -127,7 +127,7 @@ func (d *BillingPoliciesDataSource) Schema(ctx context.Context, _ datasource.Sch
 	}
 }
 
-func (d *BillingPoliciesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *BillingPoliciesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -145,7 +145,7 @@ func (d *BillingPoliciesDataSource) Configure(_ context.Context, req datasource.
 	d.LicensingClient = NewLicensingClient(clientApi)
 }
 
-func (d *BillingPoliciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *BillingPoliciesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state BillingPoliciesListDataSourceModel
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {

@@ -29,8 +29,6 @@ type DlpPolicyDto struct {
 	PolicyDefinition                     DlpPolicyDefinitionDto                   `json:"policyDefinition"`
 	ConnectorConfigurationsDefinition    *DlpConnectorConfigurationsDefinitionDto `json:"connectorConfigurationsDefinition,omitempty"`
 	CustomConnectorUrlPatternsDefinition DlpConnectorUrlPatternsDefinitionDto     `json:"customConnectorUrlPatternsDefinition"`
-	//ExemptResourcesDefinition            DlpExemptResourcesDefinitionDto         `json:"exemptResourcesDefinition"`
-	//ScopeDefinition                      DlpScopeDefinitionDto                   `json:"scopeDefinition"`
 }
 
 type DlpPolicyDefinitionDto struct {
@@ -83,8 +81,8 @@ type DlpConnectorUrlPatternsRuleDto struct {
 
 type DlpEnvironmentDto struct {
 	Name string `json:"name"`
-	Id   string `json:"id"`   //$"/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/{x.Name}",
-	Type string `json:"type"` //"Microsoft.BusinessAppPlatform/scopes/environments"
+	Id   string `json:"id"`   // $"/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/{x.Name}",.
+	Type string `json:"type"` // "Microsoft.BusinessAppPlatform/scopes/environments".
 }
 
 type DlpConnectorGroupsDto struct {

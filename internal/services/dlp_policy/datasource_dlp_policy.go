@@ -37,12 +37,11 @@ type DataLossPreventionPolicyDataSource struct {
 	TypeName         string
 }
 
-func (d *DataLossPreventionPolicyDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataLossPreventionPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
 func (d *DataLossPreventionPolicyDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-
 	connectorSchema := schema.NestedAttributeObject{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -236,7 +235,7 @@ func (d *DataLossPreventionPolicyDataSource) Schema(ctx context.Context, _ datas
 	}
 }
 
-func (d *DataLossPreventionPolicyDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataLossPreventionPolicyDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -283,7 +282,6 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 	state.Id = types.StringValue(strconv.Itoa(len(policies)))
 
 	for _, policy := range policies {
-
 		policyModel := DataLossPreventionPolicyDatasourceModel{}
 		policyModel.Id = types.StringValue(policy.Name)
 		policyModel.DefaultConnectorsClassification = types.StringValue(policy.DefaultConnectorsClassification)

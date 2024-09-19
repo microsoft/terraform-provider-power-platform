@@ -19,15 +19,15 @@ var (
 	EnvironmentTypes = []string{"Sandbox", "Production", "Trial", "Developer", "Default"}
 )
 
-type EnvironmentDto struct {
-	Id         string                   `json:"id"`
-	Type       string                   `json:"type"`
-	Location   string                   `json:"location"`
-	Name       string                   `json:"name"`
-	Properties EnvironmentPropertiesDto `json:"properties"`
+type Dto struct {
+	Id         string        `json:"id"`
+	Type       string        `json:"type"`
+	Location   string        `json:"location"`
+	Name       string        `json:"name"`
+	Properties PropertiesDto `json:"properties"`
 }
 
-type EnvironmentPropertiesDto struct {
+type PropertiesDto struct {
 	AzureRegion               string                        `json:"azureRegion,omitempty"`
 	DatabaseType              string                        `json:"databaseType"`
 	DisplayName               string                        `json:"displayName"`
@@ -76,20 +76,19 @@ type ExtendedSettingsDto struct {
 	SuppressValidationEmails       string `json:"suppressValidationEmails"`
 	SolutionCheckerRuleOverrides   string `json:"solutionCheckerRuleOverrides"`
 	MakerOnboardingUrl             string `json:"makerOnboardingUrl"`
-	//MakerOnboardingTimestamp       time.Time `json:"makerOnboardingTimestamp"`
-	MakerOnboardingMarkdown string `json:"makerOnboardingMarkdown"`
+	MakerOnboardingMarkdown        string `json:"makerOnboardingMarkdown"`
 }
 
 type LinkedEnvironmentMetadataDto struct {
-	BackgroundOperationsState string                             `json:"backgroundOperationsState,omitempty"`
-	DomainName                string                             `json:"domainName,omitempty"`
-	InstanceURL               string                             `json:"instanceUrl"`
-	BaseLanguage              int                                `json:"baseLanguage"`
-	SecurityGroupId           string                             `json:"securityGroupId"`
-	ResourceId                string                             `json:"resourceId"`
-	Version                   string                             `json:"version"`
-	Templates                 []string                           `json:"template,omitempty"`
-	TemplateMetadata          *EnvironmentCreateTemplateMetadata `json:"templateMetadata,omitempty"`
+	BackgroundOperationsState string                  `json:"backgroundOperationsState,omitempty"`
+	DomainName                string                  `json:"domainName,omitempty"`
+	InstanceURL               string                  `json:"instanceUrl"`
+	BaseLanguage              int                     `json:"baseLanguage"`
+	SecurityGroupId           string                  `json:"securityGroupId"`
+	ResourceId                string                  `json:"resourceId"`
+	Version                   string                  `json:"version"`
+	Templates                 []string                `json:"template,omitempty"`
+	TemplateMetadata          *CreateTemplateMetadata `json:"templateMetadata,omitempty"`
 }
 
 type LinkedAppMetadataDto struct {
@@ -111,65 +110,65 @@ type StatesManagementEnvironmentDto struct {
 	Id string `json:"id"`
 }
 
-type EnvironmentDtoArray struct {
-	Value []EnvironmentDto `json:"value"`
+type DtoArray struct {
+	Value []Dto `json:"value"`
 }
 
-type EnvironmentCreateDto struct {
-	Location   string                         `json:"location"`
-	Properties EnvironmentCreatePropertiesDto `json:"properties"`
+type CreateDto struct {
+	Location   string              `json:"location"`
+	Properties CreatePropertiesDto `json:"properties"`
 }
 
-type EnvironmentCreatePropertiesDto struct {
-	AzureRegion               string                                       `json:"azureRegion,omitempty"`
-	BillingPolicy             BillingPolicyDto                             `json:"billingPolicy,omitempty"`
-	DataBaseType              string                                       `json:"databaseType,omitempty"`
-	DisplayName               string                                       `json:"displayName"`
-	Description               string                                       `json:"description,omitempty"`
-	UpdateCadence             *UpdateCadenceDto                            `json:"updateCadence,omitempty"`
-	EnvironmentSku            string                                       `json:"environmentSku"`
-	LinkedEnvironmentMetadata *EnvironmentCreateLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
-	ParentEnvironmentGroup    *ParentEnvironmentGroupDto                   `json:"parentEnvironmentGroup,omitempty"`
+type CreatePropertiesDto struct {
+	AzureRegion               string                            `json:"azureRegion,omitempty"`
+	BillingPolicy             BillingPolicyDto                  `json:"billingPolicy,omitempty"`
+	DataBaseType              string                            `json:"databaseType,omitempty"`
+	DisplayName               string                            `json:"displayName"`
+	Description               string                            `json:"description,omitempty"`
+	UpdateCadence             *UpdateCadenceDto                 `json:"updateCadence,omitempty"`
+	EnvironmentSku            string                            `json:"environmentSku"`
+	LinkedEnvironmentMetadata *CreateLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
+	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 }
 
-type EnvironmentCreateLinkEnvironmentMetadataDto struct {
-	BaseLanguage     int                                `json:"baseLanguage"`
-	DomainName       string                             `json:"domainName,omitempty"`
-	Currency         EnvironmentCreateCurrency          `json:"currency"`
-	SecurityGroupId  string                             `json:"securityGroupId,omitempty"`
-	Templates        []string                           `json:"templates,omitempty"`
-	TemplateMetadata *EnvironmentCreateTemplateMetadata `json:"templateMetadata,omitempty"`
+type CreateLinkEnvironmentMetadataDto struct {
+	BaseLanguage     int                     `json:"baseLanguage"`
+	DomainName       string                  `json:"domainName,omitempty"`
+	Currency         CreateCurrency          `json:"currency"`
+	SecurityGroupId  string                  `json:"securityGroupId,omitempty"`
+	Templates        []string                `json:"templates,omitempty"`
+	TemplateMetadata *CreateTemplateMetadata `json:"templateMetadata,omitempty"`
 }
-type EnvironmentCreateCurrency struct {
+type CreateCurrency struct {
 	Code string `json:"code"`
 }
 
-type EnvironmentCreateTemplateMetadata struct {
-	PostProvisioningPackages []EnvironmentCreatePostProvisioningPackages `json:"PostProvisioningPackages,omitempty"`
+type CreateTemplateMetadata struct {
+	PostProvisioningPackages []CreatePostProvisioningPackages `json:"PostProvisioningPackages,omitempty"`
 }
 
-type EnvironmentCreatePostProvisioningPackages struct {
+type CreatePostProvisioningPackages struct {
 	ApplicationUniqueName string `json:"applicationUniqueName,omitempty"`
 	Parameters            string `json:"parameters,omitempty"`
 }
 
-type EnvironmentCreateLinkedAppMetadataDto struct {
+type CreateLinkedAppMetadataDto struct {
 	Id   string `json:"id"`
 	Type string `json:"type"`
 	Url  string `json:"url"`
 }
 
-type EnvironmentDeleteDto struct {
+type DeleteDto struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
-type EnvironmentLifecycleCreatedDto struct {
-	Name       string                                   `json:"name"`
-	Properties EnvironmentLifecycleCreatedPropertiesDto `json:"properties"`
+type LifecycleCreatedDto struct {
+	Name       string                        `json:"name"`
+	Properties LifecycleCreatedPropertiesDto `json:"properties"`
 }
 
-type EnvironmentLifecycleCreatedPropertiesDto struct {
+type LifecycleCreatedPropertiesDto struct {
 	ProvisioningState string `json:"provisioningState"`
 }
 
@@ -203,13 +202,13 @@ type ValidateEnvironmentDetailsDto struct {
 	EnvironmentLocation string `json:"environmentLocation"`
 }
 
-type EnvironmentsListDataSourceModel struct {
-	Timeouts     timeouts.Value           `tfsdk:"timeouts"`
-	Environments []EnvironmentSourceModel `tfsdk:"environments"`
-	Id           types.Int64              `tfsdk:"id"`
+type ListDataSourceModel struct {
+	Timeouts     timeouts.Value `tfsdk:"timeouts"`
+	Environments []SourceModel  `tfsdk:"environments"`
+	Id           types.Int64    `tfsdk:"id"`
 }
 
-type EnvironmentSourceModel struct {
+type SourceModel struct {
 	Timeouts           timeouts.Value `tfsdk:"timeouts"`
 	Id                 types.String   `tfsdk:"id"`
 	Location           types.String   `tfsdk:"location"`
@@ -241,13 +240,13 @@ type DataverseSourceModel struct {
 	BackgroundOperation types.Bool   `tfsdk:"background_operation_enabled"`
 }
 
-func ConvertUpdateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource EnvironmentSourceModel) (*EnvironmentDto, error) {
-	environmentDto := EnvironmentDto{
+func ConvertUpdateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource SourceModel) (*Dto, error) {
+	environmentDto := Dto{
 		Id:       environmentSource.Id.ValueString(),
 		Name:     environmentSource.DisplayName.ValueString(),
 		Type:     environmentSource.EnvironmentType.ValueString(),
 		Location: environmentSource.Location.ValueString(),
-		Properties: EnvironmentPropertiesDto{
+		Properties: PropertiesDto{
 			DisplayName:    environmentSource.DisplayName.ValueString(),
 			Description:    environmentSource.Description.ValueString(),
 			EnvironmentSku: environmentSource.EnvironmentType.ValueString(),
@@ -261,7 +260,6 @@ func ConvertUpdateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 	}
 
 	if !environmentSource.Dataverse.IsNull() && !environmentSource.Dataverse.IsUnknown() {
-
 		var dataverseSourceModel DataverseSourceModel
 		environmentSource.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
@@ -269,23 +267,21 @@ func ConvertUpdateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 			SecurityGroupId: dataverseSourceModel.SecurityGroupId.ValueString(),
 			DomainName:      dataverseSourceModel.Domain.ValueString(),
 		}
-
 	}
-
 	return &environmentDto, nil
 }
 
-func IsDataverseEnvironmentEmpty(ctx context.Context, environment *EnvironmentSourceModel) bool {
+func IsDataverseEnvironmentEmpty(ctx context.Context, environment *SourceModel) bool {
 	var dataverseSourceModel DataverseSourceModel
 	environment.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 	return dataverseSourceModel.CurrencyCode.IsNull() || dataverseSourceModel.CurrencyCode.ValueString() == ""
 }
 
-func ConvertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource EnvironmentSourceModel) (*EnvironmentCreateDto, error) {
-	environmentDto := &EnvironmentCreateDto{
+func ConvertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource SourceModel) (*CreateDto, error) {
+	environmentDto := &CreateDto{
 		Location: environmentSource.Location.ValueString(),
-		Properties: EnvironmentCreatePropertiesDto{
+		Properties: CreatePropertiesDto{
 			DisplayName:    environmentSource.DisplayName.ValueString(),
 			EnvironmentSku: environmentSource.EnvironmentType.ValueString(),
 		},
@@ -329,12 +325,12 @@ func ConvertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 	return environmentDto, nil
 }
 
-func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx context.Context, dataverse types.Object) (*EnvironmentCreateLinkEnvironmentMetadataDto, error) {
+func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx context.Context, dataverse types.Object) (*CreateLinkEnvironmentMetadataDto, error) {
 	if !dataverse.IsNull() && !dataverse.IsUnknown() {
 		var dataverseSourceModel DataverseSourceModel
 		dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
-		var templateMetadataObject *EnvironmentCreateTemplateMetadata
+		var templateMetadataObject *CreateTemplateMetadata
 		if dataverseSourceModel.TemplateMetadata.ValueString() != "" {
 			err := json.Unmarshal([]byte(dataverseSourceModel.TemplateMetadata.ValueString()), &templateMetadataObject)
 			if err != nil {
@@ -345,10 +341,10 @@ func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 			}
 		}
 
-		linkedEnvironmentMetadata := &EnvironmentCreateLinkEnvironmentMetadataDto{
+		linkedEnvironmentMetadata := &CreateLinkEnvironmentMetadataDto{
 			BaseLanguage:    int(dataverseSourceModel.LanguageName.ValueInt64()),
 			SecurityGroupId: dataverseSourceModel.SecurityGroupId.ValueString(),
-			Currency: EnvironmentCreateCurrency{
+			Currency: CreateCurrency{
 				Code: dataverseSourceModel.CurrencyCode.ValueString(),
 			},
 			Templates:        dataverseSourceModel.Templates,
@@ -366,9 +362,9 @@ func ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 	return nil, fmt.Errorf("dataverse object is null or unknown")
 }
 
-func ConvertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode *string, templateMetadata *EnvironmentCreateTemplateMetadata, templates []string, timeouts timeouts.Value) (*EnvironmentSourceModel, error) {
-	model := &EnvironmentSourceModel{
-		Timeouts:        timeouts,
+func ConvertSourceModelFromEnvironmentDto(environmentDto Dto, currencyCode *string, templateMetadata *CreateTemplateMetadata, templates []string, timeout timeouts.Value) (*SourceModel, error) {
+	model := &SourceModel{
+		Timeouts:        timeout,
 		Description:     types.StringValue(environmentDto.Properties.Description),
 		Id:              types.StringValue(environmentDto.Name),
 		DisplayName:     types.StringValue(environmentDto.Properties.DisplayName),
@@ -500,22 +496,18 @@ type LocationArrayDto struct {
 }
 
 type LocationDto struct {
-	ID         string `json:"id"`
-	Type       string `json:"type"`
-	Name       string `json:"name"`
-	Properties struct {
-		DisplayName                            string   `json:"displayName"`
-		Code                                   string   `json:"code"`
-		IsDefault                              bool     `json:"isDefault"`
-		IsDisabled                             bool     `json:"isDisabled"`
-		CanProvisionDatabase                   bool     `json:"canProvisionDatabase"`
-		CanProvisionCustomerEngagementDatabase bool     `json:"canProvisionCustomerEngagementDatabase"`
-		AzureRegions                           []string `json:"azureRegions"`
-	} `json:"properties"`
+	ID         string                `json:"id"`
+	Type       string                `json:"type"`
+	Name       string                `json:"name"`
+	Properties LocationPropertiesDto `json:"properties"`
 }
 
-type WhoAmIDto struct {
-	BusinessUnitId string `json:"BusinessUnitId"`
-	UserId         string `json:"UserId"`
-	OrganizationId string `json:"OrganizationId"`
+type LocationPropertiesDto struct {
+	DisplayName                            string   `json:"displayName"`
+	Code                                   string   `json:"code"`
+	IsDefault                              bool     `json:"isDefault"`
+	IsDisabled                             bool     `json:"isDisabled"`
+	CanProvisionDatabase                   bool     `json:"canProvisionDatabase"`
+	CanProvisionCustomerEngagementDatabase bool     `json:"canProvisionCustomerEngagementDatabase"`
+	AzureRegions                           []string `json:"azureRegions"`
 }

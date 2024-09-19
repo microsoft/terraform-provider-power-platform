@@ -32,7 +32,7 @@ func (t UUIDType) String() string {
 	return "UUIDType"
 }
 
-func (t UUIDType) ValueFromString(_ context.Context, in basetypes.StringValue) (basetypes.StringValuable, diag.Diagnostics) {
+func (t UUIDType) ValueFromString(ctx context.Context, in basetypes.StringValue) (basetypes.StringValuable, diag.Diagnostics) {
 	value := UUIDValue{
 		StringValue: in,
 	}

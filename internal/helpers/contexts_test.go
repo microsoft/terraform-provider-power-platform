@@ -13,17 +13,15 @@ import (
 )
 
 func TestUnitEnterRequestContext(t *testing.T) {
-	// Arrange
 	ctx := context.Background()
 	typ := helpers.TypeInfo{
 		ProviderTypeName: "powerplatformtest",
 		TypeName:         "testresource",
 	}
-	
+
 	req := resource.CreateRequest{}
 
 	newCtx, deferFunc := helpers.EnterRequestContext(ctx, typ, req)
-
 
 	// Assert
 	if newCtx == nil {

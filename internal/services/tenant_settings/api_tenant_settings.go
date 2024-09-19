@@ -15,19 +15,19 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewTenantSettingsClient(api *api.ApiClient) TenantSettingsClient {
+func NewTenantSettingsClient(apiClient *api.Client) TenantSettingsClient {
 	return TenantSettingsClient{
-		Api: api,
+		Api: apiClient,
 	}
 }
 
 type TenantSettingsClient struct {
-	Api *api.ApiClient
+	Api *api.Client
 }
 
 func (client *TenantSettingsClient) GetTenant(ctx context.Context) (*TenantDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/tenant",
 	}
@@ -46,7 +46,7 @@ func (client *TenantSettingsClient) GetTenant(ctx context.Context) (*TenantDto, 
 
 func (client *TenantSettingsClient) GetTenantSettings(ctx context.Context) (*TenantSettingsDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/listTenantSettings",
 	}
@@ -65,13 +65,13 @@ func (client *TenantSettingsClient) GetTenantSettings(ctx context.Context) (*Ten
 
 func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, tenantSettings TenantSettingsDto) (*TenantSettingsDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/updateTenantSettings",
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
 	var backendSettings TenantSettingsDto
@@ -83,7 +83,13 @@ func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, te
 }
 
 func applyCorrections(ctx context.Context, planned TenantSettingsDto, actual TenantSettingsDto) *TenantSettingsDto {
-	corrected := filterDto(ctx, planned, actual).(*TenantSettingsDto)
+	correctedFilter := filterDto(ctx, planned, actual)
+	corrected, ok := correctedFilter.(*TenantSettingsDto)
+	if !ok {
+		tflog.Error(ctx, "Type assertion to failed in applyCorrections")
+		return nil
+	}
+
 	if planned.PowerPlatform != nil && planned.PowerPlatform.Governance != nil {
 		if planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId != nil && *planned.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == constants.ZERO_UUID && corrected.PowerPlatform.Governance.EnvironmentRoutingTargetSecurityGroupId == nil {
 			zu := constants.ZERO_UUID
@@ -98,9 +104,9 @@ func applyCorrections(ctx context.Context, planned TenantSettingsDto, actual Ten
 	return corrected
 }
 
-// This function is used to filter out the fields that are not opted in to configuration
-// The backend always returns all properties, but Terraform can only handle the properties that are opted in
-func filterDto(ctx context.Context, configuredSettings interface{}, backendSettings interface{}) interface{} {
+// This function is used to filter out the fields that are not opted in to configuration.
+// The backend always returns all properties, but Terraform can only handle the properties that are opted in.
+func filterDto(ctx context.Context, configuredSettings any, backendSettings any) any {
 	configuredType := reflect.TypeOf(configuredSettings)
 	backendType := reflect.TypeOf(backendSettings)
 	if configuredType != backendType {

@@ -11,21 +11,22 @@ import (
 	"net/url"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewEnvironmentTemplatesClient(api *api.ApiClient) EnvironmentTemplatesClient {
+func NewEnvironmentTemplatesClient(apiClient *api.Client) EnvironmentTemplatesClient {
 	return EnvironmentTemplatesClient{
-		Api: api,
+		Api: apiClient,
 	}
 }
 
 type EnvironmentTemplatesClient struct {
-	Api *api.ApiClient
+	Api *api.Client
 }
 
-func (client *EnvironmentTemplatesClient) GetEnvironmentTemplatesByLocation(ctx context.Context, location string) (EnvironmentTemplatesDto, error) {
+func (client *EnvironmentTemplatesClient) GetEnvironmentTemplatesByLocation(ctx context.Context, location string) (Dto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/templates", location),
 	}
@@ -33,7 +34,7 @@ func (client *EnvironmentTemplatesClient) GetEnvironmentTemplatesByLocation(ctx 
 		"api-version": []string{"2023-06-01"},
 	}.Encode()
 
-	templates := EnvironmentTemplatesDto{}
+	templates := Dto{}
 
 	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {

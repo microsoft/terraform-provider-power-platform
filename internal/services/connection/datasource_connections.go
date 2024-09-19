@@ -53,7 +53,7 @@ type ConnectionsDataSourceModel struct {
 	ConnectionParametersSet types.String `tfsdk:"connection_parameters_set"`
 }
 
-func (d *ConnectionsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *ConnectionsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
@@ -111,7 +111,7 @@ func (d *ConnectionsDataSource) Schema(ctx context.Context, _ datasource.SchemaR
 	}
 }
 
-func (d *ConnectionsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *ConnectionsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -164,10 +164,9 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 }
 
-func ConvertFromConnectionDto(connection ConnectionDto) ConnectionsDataSourceModel {
+func ConvertFromConnectionDto(connection Dto) ConnectionsDataSourceModel {
 	nameConnectorSplit := strings.Split(connection.Properties.ApiId, "/")
 	nameConnector := nameConnectorSplit[len(nameConnectorSplit)-1]
 
