@@ -65,7 +65,7 @@ type DataRecordListDataSourceModel struct {
 	Rows                        types.Dynamic  `tfsdk:"rows"`
 }
 
-func (d *DataRecordDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataRecordDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
@@ -203,7 +203,7 @@ func (d *DataRecordDataSource) ConfigValidators(ctx context.Context) []datasourc
 	}
 }
 
-func (d *DataRecordDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataRecordDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

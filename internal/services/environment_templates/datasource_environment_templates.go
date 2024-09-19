@@ -54,7 +54,7 @@ type EnvironmentTemplatesDataModel struct {
 	IsSupportedForResetOperation bool   `tfsdk:"is_supported_for_reset_operation"`
 }
 
-func (d *EnvironmentTemplatesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *EnvironmentTemplatesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 

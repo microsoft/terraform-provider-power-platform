@@ -35,10 +35,10 @@ type DataSource struct {
 }
 
 type DataSourceModel struct {
-	Timeouts timeouts.Value      `tfsdk:"timeouts"`
-	Id       types.Int64         `tfsdk:"id"`
-	Location types.String        `tfsdk:"location"`
-	Value    []DataModel `tfsdk:"languages"`
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	Id       types.Int64    `tfsdk:"id"`
+	Location types.String   `tfsdk:"location"`
+	Value    []DataModel    `tfsdk:"languages"`
 }
 
 type DataModel struct {
@@ -50,7 +50,7 @@ type DataModel struct {
 	IsTenantDefault bool   `tfsdk:"is_tenant_default"`
 }
 
-func (d *DataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 

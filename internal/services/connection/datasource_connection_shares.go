@@ -55,7 +55,7 @@ type SharesPrincipalDataSourceModel struct {
 	DisplayName types.String `tfsdk:"display_name"`
 }
 
-func (d *SharesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *SharesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
@@ -116,7 +116,7 @@ func (d *SharesDataSource) Schema(ctx context.Context, _ datasource.SchemaReques
 	}
 }
 
-func (d *SharesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *SharesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

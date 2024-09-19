@@ -295,8 +295,12 @@ func (client *DataRecordClient) GetTableSingularNameFromPlural(ctx context.Conte
 	return &result, nil
 }
 
-func getEntityRelationDefinitionOneToMany(oneToMany []any, entityLogicalName, relationLogicalName string) (string, error) {
+func getEntityRelationDefinitionOneToMany(mapResponse map[string]any, entityLogicalName, relationLogicalName string) (string, error) {
 	var tableName string
+	oneToMany, ok := mapResponse["OneToManyRelationships"].([]any)
+	if !ok {
+		return "", fmt.Errorf("OneToManyRelationships field is not of type []any")
+	}
 	for _, list := range oneToMany {
 		item, ok := list.(map[string]any)
 		if !ok {
@@ -401,19 +405,20 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 		return "", err
 	}
 
-	oneToMany, ok := mapResponse["OneToManyRelationships"].([]any)
-	if !ok {
-		return "", fmt.Errorf("OneToManyRelationships field is not of type []any")
-	}
-
-	tableName, err = getEntityRelationDefinitionOneToMany(oneToMany, entityLogicalName, relationLogicalName)
+	tableName, err = getEntityRelationDefinitionOneToMany(mapResponse, entityLogicalName, relationLogicalName)
 	if err != nil {
 		return "", err
+	}
+	if tableName != "" {
+		return tableName, nil
 	}
 
 	tableName, err = getEntityRelationDefinitionManyToOne(mapResponse, relationLogicalName)
 	if err != nil {
 		return "", err
+	}
+	if tableName != "" {
+		return tableName, nil
 	}
 
 	tableName, err = getEntityRelationDefinitionManyToMany(mapResponse, entityLogicalName, relationLogicalName)
