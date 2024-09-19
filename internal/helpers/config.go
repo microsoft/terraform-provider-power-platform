@@ -45,11 +45,11 @@ func GetConfigBool(ctx context.Context, configValue basetypes.BoolValue, environ
 		return configValue.ValueBool()
 	} else if value, ok := os.LookupEnv(environmentVariableName); ok && value != "" {
 		envValue, err := strconv.ParseBool(value)
-		if err == nil {
-			return envValue
+		if err != nil {
+			tflog.Warn(ctx, "Failed to parse environment variable value as a boolean. Using default value instead.", map[string]interface{}{environmentVariableName: value})
+			return defaultValue
 		}
-		tflog.Warn(ctx, "Failed to parse environment variable value as a boolean. Using default value instead.", map[string]any{environmentVariableName: value})
-		return defaultValue
+		return envValue
 	}
 	return defaultValue
 }
