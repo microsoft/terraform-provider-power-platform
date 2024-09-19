@@ -96,7 +96,6 @@ const (
 	HEADER_OPERATION_LOCATION = "Operation-Location"
 	HTTPS                     = "https"
 	API_VERSION_PARAM         = "api-version"
-	EMPTY                     = ""
 )
 
 const (
