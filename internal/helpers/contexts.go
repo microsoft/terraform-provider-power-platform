@@ -65,7 +65,7 @@ func EnterRequestContext[T AllowedRequestTypes](ctx context.Context, typ TypeInf
 	ctx = tflog.SetField(ctx, "request_id", reqId)
 	ctx = tflog.SetField(ctx, "request_type", reqType)
 
-	ctx, cancel := enterTimeoutContext(ctx, typ, req)
+	ctx, cancel := enterTimeoutContext(ctx, req)
 
 	// This returns a closure that can be used to defer the exit of the request scope.
 	return ctx, func() {
@@ -77,7 +77,7 @@ func EnterRequestContext[T AllowedRequestTypes](ctx context.Context, typ TypeInf
 }
 
 // EnterTimeoutContext is a helper function that enters a timeout context based on the request type and the timeouts set in the plan or state.
-func enterTimeoutContext[T AllowedRequestTypes](ctx context.Context, typ TypeInfo, req T)(context.Context, *context.CancelFunc){
+func enterTimeoutContext[T AllowedRequestTypes](ctx context.Context, req T)(context.Context, *context.CancelFunc){
 	var tos timeouts.Value
 	switch req := any(req).(type) {
 	case resource.CreateRequest:
