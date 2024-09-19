@@ -29,13 +29,12 @@ type SecurityRoleDtoArray struct {
 func (u *UserDto) SecurityRolesArray() []string {
 	if len(u.SecurityRoles) == 0 {
 		return []string{}
-	} else {
-		var roles []string
-		for _, role := range u.SecurityRoles {
-			roles = append(roles, role.RoleId)
-		}
-		return roles
 	}
+	var roles []string
+	for _, role := range u.SecurityRoles {
+		roles = append(roles, role.RoleId)
+	}
+	return roles
 }
 
 type UserDtoArray struct {

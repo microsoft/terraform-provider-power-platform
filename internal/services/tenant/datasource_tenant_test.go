@@ -17,7 +17,7 @@ func TestUnitTenantDataSource_Validate_Read(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/tenant?api-version=2021-04-01`,
-		func(req *http.Request) (*http.Response, error) {
+		func(_ *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/Validate_Read/get_tenant.json").String()), nil
 		})
 

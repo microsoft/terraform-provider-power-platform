@@ -65,7 +65,6 @@ func (r *DataverseWebApiResource) Metadata(ctx context.Context, req resource.Met
 }
 
 func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Resource to execute web api requests. There are four distinct operations, that you can define independently. The HTTP response' body of the operation, that was called as last, will be returned in 'output.body' \n\n:
 		* Create: will be called once during the lifecycle of the resource (first 'terraform apply')
@@ -177,18 +176,15 @@ func (r *DataverseWebApiResource) Configure(ctx context.Context, req resource.Co
 	if req.ProviderData == nil {
 		return
 	}
-
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
 	if clientApi == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 	r.DataRecordClient = NewWebApiClient(clientApi)
-
 }
 
 func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -237,7 +233,6 @@ func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.Creat
 			}
 			state.Output = bodyWrapped
 		}
-
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.TypeName))
@@ -284,7 +279,6 @@ func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadReq
 		} else {
 			resp.Private.SetKey(ctx, "force_value_unknown", []byte("false"))
 		}
-
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
@@ -362,7 +356,6 @@ func (r *DataverseWebApiResource) Delete(ctx context.Context, req resource.Delet
 		state.Output = bodyWrapped
 	}
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.TypeName))
-
 }
 
 func (r *DataverseWebApiResource) NullOutputValue() basetypes.ObjectValue {

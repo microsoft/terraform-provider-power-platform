@@ -14,7 +14,7 @@ type TypeInfo struct {
 	TypeName         string
 }
 
-// FullTypeName returns the full type name in the format provider_type
+// FullTypeName returns the full type name in the format provider_type.
 func (t *TypeInfo) FullTypeName() string {
 	return fmt.Sprintf("%s_%s", t.ProviderTypeName, t.TypeName)
 }

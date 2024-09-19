@@ -14,7 +14,6 @@ import (
 )
 
 func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
@@ -291,7 +290,6 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 }
 
 func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,

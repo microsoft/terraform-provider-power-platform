@@ -50,7 +50,7 @@ func NewSecurityRolesDataSource() datasource.DataSource {
 	}
 }
 
-func (d *SecurityRolesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (_ *SecurityRolesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dataverse security roles for a given environment and business unit",
 		MarkdownDescription: "Fetches the list of Dataverse security roles for a given environment and business unit.  For more information see [About security roles and privileges](https://learn.microsoft.com/power-platform/admin/security-roles-privileges)",
@@ -121,11 +121,11 @@ func (d *SecurityRolesDataSource) Configure(ctx context.Context, req datasource.
 	d.UserClient = NewUserClient(clientApi)
 }
 
-func (d *SecurityRolesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *SecurityRolesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *SecurityRolesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var state SecurityRolesListDataSourceModel
 	resp.State.Get(ctx, &state)
 
@@ -171,7 +171,6 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadR
 			IsManaged:      types.BoolValue(role.IsManaged),
 			BusinessUnitId: types.StringValue(role.BusinessUnitId),
 		})
-
 	}
 
 	diags = resp.State.Set(ctx, &state)

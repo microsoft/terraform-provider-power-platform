@@ -12,32 +12,33 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-type LicensingClient struct {
-	Api *api.ApiClient
+type Client struct {
+	Api *api.Client
 }
 
-func NewLicensingClient(api *api.ApiClient) LicensingClient {
-	return LicensingClient{
-		Api: api,
+func NewLicensingClient(apiClient *api.Client) Client {
+	return Client{
+		Api: apiClient,
 	}
 }
 
 const (
-	API_VERSION = "2022-03-01-preview"
+	API_VERSION_2022_03_01_preview = "2022-03-01-preview"
 )
 
-func (client *LicensingClient) GetBillingPolicies(ctx context.Context) ([]BillingPolicyDto, error) {
+func (client *Client) GetBillingPolicies(ctx context.Context) ([]BillingPolicyDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   "licensing/billingPolicies",
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION)
+	values.Add("api-version", API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
 	policies := BillingPolicyArrayDto{}
@@ -46,15 +47,15 @@ func (client *LicensingClient) GetBillingPolicies(ctx context.Context) ([]Billin
 	return policies.Value, err
 }
 
-func (client *LicensingClient) GetBillingPolicy(ctx context.Context, billingId string) (*BillingPolicyDto, error) {
+func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*BillingPolicyDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   fmt.Sprintf("/licensing/billingPolicies/%s", billingId),
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION)
+	values.Add("api-version", API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
 	policy := BillingPolicyDto{}
@@ -66,15 +67,15 @@ func (client *LicensingClient) GetBillingPolicy(ctx context.Context, billingId s
 	return &policy, err
 }
 
-func (client *LicensingClient) CreateBillingPolicy(ctx context.Context, policyToCreate BillingPolicyCreateDto) (*BillingPolicyDto, error) {
+func (client *Client) CreateBillingPolicy(ctx context.Context, policyToCreate BillingPolicyCreateDto) (*BillingPolicyDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   "/licensing/BillingPolicies",
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION)
+	values.Add(constants.API_VERSION_PARAM, API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
 	policy := &BillingPolicyDto{}
@@ -95,15 +96,15 @@ func (client *LicensingClient) CreateBillingPolicy(ctx context.Context, policyTo
 	return policy, err
 }
 
-func (client *LicensingClient) UpdateBillingPolicy(ctx context.Context, billingId string, policyToUpdate BillingPolicyUpdateDto) (*BillingPolicyDto, error) {
+func (client *Client) UpdateBillingPolicy(ctx context.Context, billingId string, policyToUpdate BillingPolicyUpdateDto) (*BillingPolicyDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   fmt.Sprintf("/licensing/billingPolicies/%s", billingId),
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION)
+	values.Add("api-version", API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
 	policy := &BillingPolicyDto{}
@@ -121,15 +122,15 @@ func (client *LicensingClient) UpdateBillingPolicy(ctx context.Context, billingI
 	return policy, err
 }
 
-func (client *LicensingClient) DeleteBillingPolicy(ctx context.Context, billingId string) error {
+func (client *Client) DeleteBillingPolicy(ctx context.Context, billingId string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   fmt.Sprintf("/licensing/BillingPolicies/%s", billingId),
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION)
+	values.Add("api-version", API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
 	_, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
@@ -137,15 +138,15 @@ func (client *LicensingClient) DeleteBillingPolicy(ctx context.Context, billingI
 	return err
 }
 
-func (client *LicensingClient) GetEnvironmentsForBillingPolicy(ctx context.Context, billingId string) ([]string, error) {
+func (client *Client) GetEnvironmentsForBillingPolicy(ctx context.Context, billingId string) ([]string, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   fmt.Sprintf("licensing/billingPolicies/%s/environments", billingId),
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION)
+	values.Add("api-version", API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
 	billingPolicyEnvironments := BillingPolicyEnvironmentsArrayResponseDto{}
@@ -164,18 +165,18 @@ func (client *LicensingClient) GetEnvironmentsForBillingPolicy(ctx context.Conte
 	return environments, err
 }
 
-func (client *LicensingClient) AddEnvironmentsToBillingPolicy(ctx context.Context, billingId string, environmentIds []string) error {
+func (client *Client) AddEnvironmentsToBillingPolicy(ctx context.Context, billingId string, environmentIds []string) error {
 	if len(environmentIds) == 0 {
 		return nil
 	}
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   fmt.Sprintf("licensing/billingPolicies/%s/environments/add", billingId),
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION)
+	values.Add("api-version", API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
 	environments := BillingPolicyEnvironmentsArrayDto{
@@ -186,18 +187,18 @@ func (client *LicensingClient) AddEnvironmentsToBillingPolicy(ctx context.Contex
 	return err
 }
 
-func (client *LicensingClient) RemoveEnvironmentsToBillingPolicy(ctx context.Context, billingId string, environmentIds []string) error {
+func (client *Client) RemoveEnvironmentsToBillingPolicy(ctx context.Context, billingId string, environmentIds []string) error {
 	if len(environmentIds) == 0 {
 		return nil
 	}
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   fmt.Sprintf("licensing/billingPolicies/%s/environments/remove", billingId),
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION)
+	values.Add("api-version", API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
 	environments := BillingPolicyEnvironmentsArrayDto{
@@ -208,7 +209,7 @@ func (client *LicensingClient) RemoveEnvironmentsToBillingPolicy(ctx context.Con
 	return err
 }
 
-func (client *LicensingClient) DoWaitForFinalStatus(ctx context.Context, billingPolicyDto *BillingPolicyDto) (*BillingPolicyDto, error) {
+func (client *Client) DoWaitForFinalStatus(ctx context.Context, billingPolicyDto *BillingPolicyDto) (*BillingPolicyDto, error) {
 	billingId := billingPolicyDto.Id
 
 	for {

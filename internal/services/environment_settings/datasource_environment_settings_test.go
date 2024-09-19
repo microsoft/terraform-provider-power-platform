@@ -52,20 +52,17 @@ func TestAccTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 }
 
 func TestUnitTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
-
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/Validate_Read/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
-
 		})
 
 	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/Validate_Read/organisations.json").String()), nil
-
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -93,7 +90,6 @@ func TestUnitTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 }
 
 func TestUnitTestEnvironmentSettingsDataSource_Validate_No_Dataverse(t *testing.T) {
-
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 

@@ -8,22 +8,23 @@ import (
 	"net/http"
 	"net/url"
 
-	api "github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewTenantClient(api *api.ApiClient) TenantClient {
-	return TenantClient{
-		Api: api,
+func NewTenantClient(apiClient *api.Client) Client {
+	return Client{
+		Api: apiClient,
 	}
 }
 
-type TenantClient struct {
-	Api *api.ApiClient
+type Client struct {
+	Api *api.Client
 }
 
-func (client *TenantClient) GetTenant(ctx context.Context) (*TenantDto, error) {
+func (client *Client) GetTenant(ctx context.Context) (*Dto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/tenant",
 	}
@@ -32,7 +33,7 @@ func (client *TenantClient) GetTenant(ctx context.Context) (*TenantDto, error) {
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	var dto TenantDto
+	var dto Dto
 
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &dto)
 	if err != nil {

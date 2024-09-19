@@ -167,7 +167,6 @@ func TestUnitUserResource_Validate_Create(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestUnitUserResource_Validate_No_Dataverse(t *testing.T) {
@@ -222,7 +221,6 @@ func TestUnitUserResource_Validate_No_Dataverse(t *testing.T) {
 			},
 		},
 	})
-
 }
 
 func TestUnitUserResource_Validate_Create_And_Force_Recreate(t *testing.T) {
@@ -460,5 +458,4 @@ func TestUnitUserResource_Validate_Disable_Delete(t *testing.T) {
 			},
 		},
 	})
-
 }

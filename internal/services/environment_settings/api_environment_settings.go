@@ -11,21 +11,21 @@ import (
 	"strings"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewEnvironmentSettingsClient(api *api.ApiClient) EnvironmentSettingsClient {
+func NewEnvironmentSettingsClient(apiClient *api.Client) EnvironmentSettingsClient {
 	return EnvironmentSettingsClient{
-		Api: api,
+		Api: apiClient,
 	}
 }
 
 type EnvironmentSettingsClient struct {
-	Api *api.ApiClient
+	Api *api.Client
 }
 
 func (client *EnvironmentSettingsClient) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
-
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return false, err
@@ -40,7 +40,7 @@ func (client *EnvironmentSettingsClient) GetEnvironmentSettings(ctx context.Cont
 	}
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.0/organizations",
 	}
@@ -65,7 +65,7 @@ func (client *EnvironmentSettingsClient) UpdateEnvironmentSettings(ctx context.C
 	}
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.0/organizations(%s)", *settings.OrganizationId),
 	}
@@ -88,16 +88,16 @@ func (client *EnvironmentSettingsClient) GetEnvironmentHostById(ctx context.Cont
 		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 
-	url, err := url.Parse(environmentUrl)
+	envUrl, err := url.Parse(environmentUrl)
 	if err != nil {
 		return "", err
 	}
-	return url.Host, nil
+	return envUrl.Host, nil
 }
 
 func (client *EnvironmentSettingsClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}

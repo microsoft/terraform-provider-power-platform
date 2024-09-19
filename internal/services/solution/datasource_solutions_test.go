@@ -138,7 +138,6 @@ func TestUnitSolutionsDataSource_Validate_No_Dataverse(t *testing.T) {
 }
 
 func TestAccSolutionsDataSource_Validate_Read(t *testing.T) {
-
 	resource.Test(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
@@ -161,10 +160,10 @@ func TestAccSolutionsDataSource_Validate_Read(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					//Verify placeholder id attribute
+					// Verify placeholder id attribute.
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
-					// Verify the first power app to ensure all attributes are set
+					// Verify the first power app to ensure all attributes are set.
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.name", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.environment_id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_solutions.all", "solutions.0.display_name", regexp.MustCompile(helpers.StringRegex)),

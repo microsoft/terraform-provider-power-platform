@@ -23,43 +23,43 @@ var (
 )
 
 func NewConnectionSharesDataSource() datasource.DataSource {
-	return &ConnectionSharesDataSource{
+	return &SharesDataSource{
 		ProviderTypeName: "powerplatform",
 		TypeName:         "_connection_shares",
 	}
 }
 
-type ConnectionSharesDataSource struct {
+type SharesDataSource struct {
 	ConnectionsClient ConnectionsClient
 	ProviderTypeName  string
 	TypeName          string
 }
 
-type ConnectionSharesListDataSourceModel struct {
-	Timeouts      timeouts.Value                    `tfsdk:"timeouts"`
-	Id            types.String                      `tfsdk:"id"`
-	EnvironmentId types.String                      `tfsdk:"environment_id"`
-	ConnectorName types.String                      `tfsdk:"connector_name"`
-	ConnectionId  types.String                      `tfsdk:"connection_id"`
-	Shares        []ConnectionSharesDataSourceModel `tfsdk:"shares"`
+type SharesListDataSourceModel struct {
+	Timeouts      timeouts.Value          `tfsdk:"timeouts"`
+	Id            types.String            `tfsdk:"id"`
+	EnvironmentId types.String            `tfsdk:"environment_id"`
+	ConnectorName types.String            `tfsdk:"connector_name"`
+	ConnectionId  types.String            `tfsdk:"connection_id"`
+	Shares        []SharesDataSourceModel `tfsdk:"shares"`
 }
 
-type ConnectionSharesDataSourceModel struct {
-	Id        types.String                            `tfsdk:"id"`
-	RoleName  types.String                            `tfsdk:"role_name"`
-	Principal ConnectionShresPrincipalDataSourceModel `tfsdk:"principal"`
+type SharesDataSourceModel struct {
+	Id        types.String                   `tfsdk:"id"`
+	RoleName  types.String                   `tfsdk:"role_name"`
+	Principal SharesPrincipalDataSourceModel `tfsdk:"principal"`
 }
 
-type ConnectionShresPrincipalDataSourceModel struct {
+type SharesPrincipalDataSourceModel struct {
 	EntraId     types.String `tfsdk:"entra_object_id"`
 	DisplayName types.String `tfsdk:"display_name"`
 }
 
-func (d *ConnectionSharesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *SharesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *ConnectionSharesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *SharesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "",
 		Attributes: map[string]schema.Attribute{
@@ -116,7 +116,7 @@ func (d *ConnectionSharesDataSource) Schema(ctx context.Context, _ datasource.Sc
 	}
 }
 
-func (d *ConnectionSharesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *SharesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -133,8 +133,8 @@ func (d *ConnectionSharesDataSource) Configure(_ context.Context, req datasource
 
 	d.ConnectionsClient = NewConnectionsClient(client)
 }
-func (d *ConnectionSharesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state ConnectionSharesListDataSourceModel
+func (d *SharesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state SharesListDataSourceModel
 	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
@@ -170,11 +170,11 @@ func (d *ConnectionSharesDataSource) Read(ctx context.Context, req datasource.Re
 	}
 }
 
-func ConvertFromConnectionSharesDto(connection ShareConnectionResponseDto) ConnectionSharesDataSourceModel {
-	share := ConnectionSharesDataSourceModel{
+func ConvertFromConnectionSharesDto(connection ShareConnectionResponseDto) SharesDataSourceModel {
+	share := SharesDataSourceModel{
 		Id:       types.StringValue(connection.Name),
 		RoleName: types.StringValue(connection.Properties.RoleName),
-		Principal: ConnectionShresPrincipalDataSourceModel{
+		Principal: SharesPrincipalDataSourceModel{
 			EntraId:     types.StringValue(connection.Properties.Principal["id"].(string)),
 			DisplayName: types.StringValue(connection.Properties.Principal["displayName"].(string)),
 		},

@@ -15,30 +15,30 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &TenantCapacityDataSource{}
-	_ datasource.DataSourceWithConfigure = &TenantCapacityDataSource{}
+	_ datasource.DataSource              = &DataSource{}
+	_ datasource.DataSourceWithConfigure = &DataSource{}
 )
 
 func NewTenantCapcityDataSource() datasource.DataSource {
-	return &TenantCapacityDataSource{
+	return &DataSource{
 		ProviderTypeName: "powerplatform",
 		TypeName:         "_tenant_capacity",
 	}
 }
 
-type TenantCapacityDataSource struct {
-	CapacityClient   CapacityClient
+type DataSource struct {
+	CapacityClient   Client
 	ProviderTypeName string
 	TypeName         string
 }
 
-type TenantCapacityDataSourceModel struct {
-	TenantId         types.String              `tfsdk:"tenant_id"`
-	LicenseModelType types.String              `tfsdk:"license_model_type"`
-	TenantCapacities []CapacityDataSourceModel `tfsdk:"tenant_capacities"`
+type DataSourceModel struct {
+	TenantId         types.String                    `tfsdk:"tenant_id"`
+	LicenseModelType types.String                    `tfsdk:"license_model_type"`
+	TenantCapacities []TenantCapacityDataSourceModel `tfsdk:"tenant_capacities"`
 }
 
-type CapacityDataSourceModel struct {
+type TenantCapacityDataSourceModel struct {
 	CapacityType  types.String               `tfsdk:"capacity_type"`
 	CapacityUnits types.String               `tfsdk:"capacity_units"`
 	TotalCapacity types.Float32              `tfsdk:"total_capacity"`
@@ -54,11 +54,11 @@ type ConsumptionDataSourceModel struct {
 	RatedUpdatedOn  types.String  `tfsdk:"rated_updated_on"`
 }
 
-func (d *TenantCapacityDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *TenantCapacityDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the capacity information for a given tenant.",
 		MarkdownDescription: "Fetches the capacity information for a given tenant.",
@@ -125,7 +125,7 @@ func (d *TenantCapacityDataSource) Schema(_ context.Context, _ datasource.Schema
 	}
 }
 
-func (d *TenantCapacityDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -143,8 +143,8 @@ func (d *TenantCapacityDataSource) Configure(_ context.Context, req datasource.C
 	d.CapacityClient = NewCapacityClient(client)
 }
 
-func (d *TenantCapacityDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state TenantCapacityDataSourceModel
+func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state DataSourceModel
 	var tenantId string
 	req.Config.GetAttribute(ctx, path.Root("tenant_id"), &tenantId)
 
@@ -161,7 +161,7 @@ func (d *TenantCapacityDataSource) Read(ctx context.Context, req datasource.Read
 	state.LicenseModelType = types.StringValue(tenantCapacityDto.LicenseModelType)
 
 	for _, capacity := range tenantCapacityDto.TenantCapacities {
-		state.TenantCapacities = append(state.TenantCapacities, CapacityDataSourceModel{
+		state.TenantCapacities = append(state.TenantCapacities, TenantCapacityDataSourceModel{
 			CapacityType:  types.StringValue(capacity.CapacityType),
 			CapacityUnits: types.StringValue(capacity.CapacityUnits),
 			TotalCapacity: types.Float32Value(capacity.TotalCapacity),

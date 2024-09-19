@@ -43,7 +43,6 @@ func (r *DataLossPreventionPolicyResource) Metadata(ctx context.Context, req res
 }
 
 func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-
 	connectorSchema := schema.NestedAttributeObject{
 		Attributes: map[string]schema.Attribute{
 
@@ -277,10 +276,9 @@ func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resourc
 		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
-		} else {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-			return
 		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
 	}
 
 	state.Id = types.StringValue(policy.Name)
@@ -363,7 +361,6 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 }
 
 func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.TypeName))
 
 	var plan *DataLossPreventionPolicyResourceModel
@@ -427,7 +424,6 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 }
 
 func (r *DataLossPreventionPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.TypeName))
 
 	var state *DataLossPreventionPolicyResourceModel

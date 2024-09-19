@@ -25,9 +25,8 @@ func BuildODataQueryFromModel(model *DataRecordListDataSourceModel) (string, map
 
 	if len(resultQuery) > 0 {
 		return fmt.Sprintf("%s?%s", model.EntityCollection.ValueString(), resultQuery), headers, nil
-	} else {
-		return model.EntityCollection.ValueString(), headers, nil
 	}
+	return model.EntityCollection.ValueString(), headers, nil
 }
 
 func buildTotalRowsCountPart(headers map[string]string, returnTotalRowsCount *bool) *string {
@@ -53,7 +52,6 @@ func buildExpandODataQueryPart(model []ExpandModel) *string {
 			expandQueryStrings = append(expandQueryStrings, fmt.Sprintf("%s(%s)", m.NavigationProperty.ValueString(), *expandQueryFilterString))
 		} else {
 			expandQueryStrings = append(expandQueryStrings, m.NavigationProperty.ValueString())
-
 		}
 	}
 
@@ -83,7 +81,6 @@ func buildExpandFilterQueryPart(model *ExpandModel, subExpandValueString *string
 	if orderByString != nil {
 		if len(resultQuery) > 0 {
 			resultQuery += ";"
-
 		}
 		resultQuery = strings.Join([]string{resultQuery, *orderByString}, "")
 	}

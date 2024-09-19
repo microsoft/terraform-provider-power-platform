@@ -593,7 +593,7 @@ func (r *TenantSettingsResource) ImportState(ctx context.Context, req resource.I
 func (r *TenantSettingsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	var plan TenantSettingsSourceModel
 	if !req.Plan.Raw.IsNull() {
-		//this is create
+		// this is create
 		req.Plan.Get(ctx, &plan)
 		if plan.Id.IsUnknown() || plan.Id.IsNull() {
 			tenant, errt := r.TenantSettingClient.GetTenant(ctx)

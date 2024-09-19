@@ -17,19 +17,19 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
-	solution "github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
 )
 
-func NewEnvironmentClient(api *api.ApiClient) EnvironmentClient {
-	return EnvironmentClient{
-		solutionClient: solution.NewSolutionClient(api),
-		Api:            api,
+func NewEnvironmentClient(apiClient *api.Client) Client {
+	return Client{
+		solutionClient: solution.NewSolutionClient(apiClient),
+		Api:            apiClient,
 	}
 }
 
-type EnvironmentClient struct {
-	solutionClient solution.SolutionClient
-	Api            *api.ApiClient
+type Client struct {
+	solutionClient solution.Client
+	Api            *api.Client
 }
 
 func findLocation(locations LocationArrayDto, locationToFind string) (*LocationDto, error) {
@@ -55,9 +55,9 @@ func findAzureRegion(location *LocationDto, azureRegion string) (bool, error) {
 	return false, fmt.Errorf("region '%s' is not valid for location %s. valid regions are: %s", azureRegion, location.Name, strings.Join(location.Properties.AzureRegions, ", "))
 }
 
-func (client *EnvironmentClient) GetLocations(ctx context.Context) (*LocationArrayDto, error) {
+func (client *Client) GetLocations(ctx context.Context) (*LocationArrayDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/locations",
 	}
@@ -73,7 +73,7 @@ func (client *EnvironmentClient) GetLocations(ctx context.Context) (*LocationArr
 	return &locationsArray, nil
 }
 
-func (client *EnvironmentClient) LocationValidator(ctx context.Context, location, azureRegion string) error {
+func (client *Client) LocationValidator(ctx context.Context, location, azureRegion string) error {
 	locationsArray, err := client.GetLocations(ctx)
 	if err != nil {
 		return err
@@ -96,22 +96,39 @@ func (client *EnvironmentClient) LocationValidator(ctx context.Context, location
 	return nil
 }
 
-func currencyCodeValidator(client *api.ApiClient, location string, currencyCode string) error {
-	var parsed struct {
-		Value []struct {
-			Name       string `json:"name"`
-			ID         string `json:"id"`
-			Type       string `json:"type"`
-			Properties struct {
-				Code            string `json:"code"`
-				Symbol          string `json:"symbol"`
-				IsTenantDefault bool   `json:"isTenantDefault"`
-			} `json:"properties"`
-		} `json:"value"`
-	}
+type currencyCodeValidatorDto struct {
+	Name       string                             `json:"name"`
+	ID         string                             `json:"id"`
+	Type       string                             `json:"type"`
+	Properties currencyCodeValidatorPropertiesDto `json:"properties"`
+}
+
+type currencyCodeValidatorPropertiesDto struct {
+	Code            string `json:"code"`
+	Symbol          string `json:"symbol"`
+	IsTenantDefault bool   `json:"isTenantDefault"`
+}
+
+type currencyCodeValidatorArrayDto struct {
+	Value []currencyCodeValidatorDto `json:"value"`
+}
+
+func currencyCodeValidator(client *api.Client, location string, currencyCode string) error {
+	// var parsed struct {
+	// 	Value []struct {
+	// 		Name       string `json:"name"`
+	// 		ID         string `json:"id"`
+	// 		Type       string `json:"type"`
+	// 		Properties struct {
+	// 			Code            string `json:"code"`
+	// 			Symbol          string `json:"symbol"`
+	// 			IsTenantDefault bool   `json:"isTenantDefault"`
+	// 		} `json:"properties"`
+	// 	} `json:"value"`
+	// }
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentCurrencies", location),
 	}
@@ -127,14 +144,15 @@ func currencyCodeValidator(client *api.ApiClient, location string, currencyCode 
 
 	defer response.Response.Body.Close()
 
-	err = json.Unmarshal(response.BodyAsBytes, &parsed)
+	resp := currencyCodeValidatorArrayDto{}
+	err = json.Unmarshal(response.BodyAsBytes, &resp)
 
 	if err != nil {
 		return err
 	}
 
-	codes := make([]string, len(parsed.Value))
-	for i, item := range parsed.Value {
+	codes := make([]string, len(resp.Value))
+	for i, item := range resp.Value {
 		codes[i] = item.Name
 	}
 
@@ -154,23 +172,27 @@ func currencyCodeValidator(client *api.ApiClient, location string, currencyCode 
 	return nil
 }
 
-func languageCodeValidator(client *api.ApiClient, location string, languageCode string) error {
-	var parsed struct {
-		Value []struct {
-			Name       string `json:"name"`
-			ID         string `json:"id"`
-			Type       string `json:"type"`
-			Properties struct {
-				LocaleID        int    `json:"localeId"`
-				LocalizedName   string `json:"localizedName"`
-				DisplayName     string `json:"displayName"`
-				IsTenantDefault bool   `json:"isTenantDefault"`
-			} `json:"properties"`
-		} `json:"value"`
-	}
+type languageCodeValidatorDto struct {
+	Name       string                             `json:"name"`
+	ID         string                             `json:"id"`
+	Type       string                             `json:"type"`
+	Properties languageCodeValidatorPropertiesDto `json:"properties"`
+}
 
+type languageCodeValidatorArrayDto struct {
+	Value []languageCodeValidatorDto `json:"value"`
+}
+
+type languageCodeValidatorPropertiesDto struct {
+	LocaleID        int    `json:"localeId"`
+	LocalizedName   string `json:"localizedName"`
+	DisplayName     string `json:"displayName"`
+	IsTenantDefault bool   `json:"isTenantDefault"`
+}
+
+func languageCodeValidator(client *api.Client, location string, languageCode string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentLanguages", location),
 	}
@@ -186,14 +208,15 @@ func languageCodeValidator(client *api.ApiClient, location string, languageCode 
 
 	defer response.Response.Body.Close()
 
-	err = json.Unmarshal(response.BodyAsBytes, &parsed)
+	resp := languageCodeValidatorArrayDto{}
+	err = json.Unmarshal(response.BodyAsBytes, &resp)
 
 	if err != nil {
 		return err
 	}
 
-	codes := make([]string, len(parsed.Value))
-	for i, item := range parsed.Value {
+	codes := make([]string, len(resp.Value))
+	for i, item := range resp.Value {
 		codes[i] = item.Name
 	}
 
@@ -213,7 +236,7 @@ func languageCodeValidator(client *api.ApiClient, location string, languageCode 
 	return nil
 }
 
-func (client *EnvironmentClient) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
+func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.GetEnvironment(ctx, environmentId)
 	if err != nil {
 		return "", err
@@ -223,17 +246,16 @@ func (client *EnvironmentClient) GetEnvironmentHostById(ctx context.Context, env
 		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 
-	url, err := url.Parse(environmentUrl)
+	envUrl, err := url.Parse(environmentUrl)
 	if err != nil {
 		return "", err
 	}
-	return url.Host, nil
-
+	return envUrl.Host, nil
 }
 
-func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environmentId string) (*EnvironmentDto, error) {
+func (client *Client) GetEnvironment(ctx context.Context, environmentId string) (*Dto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
@@ -242,7 +264,7 @@ func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environment
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	env := EnvironmentDto{}
+	env := Dto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
@@ -262,9 +284,9 @@ func (client *EnvironmentClient) GetEnvironment(ctx context.Context, environment
 	return &env, nil
 }
 
-func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environmentId string) error {
+func (client *Client) DeleteEnvironment(ctx context.Context, environmentId string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
@@ -272,8 +294,8 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	environmentDelete := EnvironmentDeleteDto{
-		Code:    "7", //Application
+	environmentDelete := DeleteDto{
+		Code:    "7", // Application.
 		Message: "Deleted using Power Platform Terraform Provider",
 	}
 
@@ -291,9 +313,9 @@ func (client *EnvironmentClient) DeleteEnvironment(ctx context.Context, environm
 	return nil
 }
 
-func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, environmentId string, environmentCreateLinkEnvironmentMetadata EnvironmentCreateLinkEnvironmentMetadataDto) (*EnvironmentDto, error) {
+func (client *Client) AddDataverseToEnvironment(ctx context.Context, environmentId string, environmentCreateLinkEnvironmentMetadata CreateLinkEnvironmentMetadataDto) (*Dto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/provisionInstance", environmentId),
 	}
@@ -325,7 +347,7 @@ func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, 
 		retryAfter = retryAfter * time.Second
 	}
 	for {
-		lifecycleEnv := EnvironmentDto{}
+		lifecycleEnv := Dto{}
 		lifecycleResponse, err := client.Api.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted}, &lifecycleEnv)
 		if err != nil {
 			return nil, err
@@ -347,7 +369,7 @@ func (client *EnvironmentClient) AddDataverseToEnvironment(ctx context.Context, 
 	}
 }
 
-func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environmentToCreate EnvironmentCreateDto) (*EnvironmentDto, error) {
+func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate CreateDto) (*Dto, error) {
 	if environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Location != "" && environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName != "" {
 		err := client.ValidateEnvironmentDetails(ctx, environmentToCreate.Location, environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName)
 		if err != nil {
@@ -356,7 +378,7 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 	}
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/environments",
 	}
@@ -372,7 +394,6 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 
 	createdEnvironmentId := ""
 	if apiResponse.Response.StatusCode == http.StatusAccepted {
-
 		lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 		if err != nil {
 			return nil, err
@@ -380,15 +401,14 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 
 		if lifecycleResponse.State.Id == "Succeeded" {
 			parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
-			if len(parts) > 0 {
-				createdEnvironmentId = parts[len(parts)-1]
-			} else {
+			if len(parts) == 0 {
 				return nil, errors.New("can't parse environment id from response " + lifecycleResponse.Links.Environment.Path)
 			}
+			createdEnvironmentId = parts[len(parts)-1]
 			tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
 		}
 	} else if apiResponse.Response.StatusCode == http.StatusCreated {
-		envCreatedResponse := EnvironmentLifecycleCreatedDto{}
+		envCreatedResponse := LifecycleCreatedDto{}
 		err = apiResponse.MarshallTo(&envCreatedResponse)
 		if err != nil {
 			return nil, err
@@ -401,7 +421,7 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 
 	env, err := client.GetEnvironment(ctx, createdEnvironmentId)
 	if err != nil {
-		return &EnvironmentDto{}, fmt.Errorf("environment '%s' not found. '%s'", createdEnvironmentId, err)
+		return &Dto{}, fmt.Errorf("environment '%s' not found. '%s'", createdEnvironmentId, err)
 	}
 	if env.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates != nil {
 		env.Properties.LinkedEnvironmentMetadata.Templates = environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates
@@ -410,7 +430,7 @@ func (client *EnvironmentClient) CreateEnvironment(ctx context.Context, environm
 	return env, err
 }
 
-func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environmentId string, environment EnvironmentDto) (*EnvironmentDto, error) {
+func (client *Client) UpdateEnvironment(ctx context.Context, environmentId string, environment Dto) (*Dto, error) {
 	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata != nil && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
 		err := client.ValidateEnvironmentDetails(ctx, environment.Location, environment.Properties.LinkedEnvironmentMetadata.DomainName)
 		if err != nil {
@@ -419,7 +439,7 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 	}
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
@@ -456,10 +476,8 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 				}
 
 				if createdEnv.Properties.States.Management.Id == "Ready" {
-
 					return createdEnv, nil
 				}
-
 			}
 		}
 	}
@@ -467,9 +485,9 @@ func (client *EnvironmentClient) UpdateEnvironment(ctx context.Context, environm
 	return nil, fmt.Errorf("environment '%s' not found", environmentId)
 }
 
-func (client *EnvironmentClient) GetEnvironments(ctx context.Context) ([]EnvironmentDto, error) {
+func (client *Client) GetEnvironments(ctx context.Context) ([]Dto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments",
 	}
@@ -478,7 +496,7 @@ func (client *EnvironmentClient) GetEnvironments(ctx context.Context) ([]Environ
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	envArray := EnvironmentDtoArray{}
+	envArray := DtoArray{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &envArray)
 	if err != nil {
 		return nil, err
@@ -487,32 +505,29 @@ func (client *EnvironmentClient) GetEnvironments(ctx context.Context) ([]Environ
 	return envArray.Value, nil
 }
 
-func (client *EnvironmentClient) GetDefaultCurrencyForEnvironment(ctx context.Context, environmentId string) (*TransactionCurrencyDto, error) {
+func (client *Client) GetDefaultCurrencyForEnvironment(ctx context.Context, environmentId string) (*TransactionCurrencyDto, error) {
 	orgSettings := OrganizationSettingsArrayDto{}
 	err := client.solutionClient.GetTableData(ctx, environmentId, "organizations", "", &orgSettings)
 	if err != nil {
 		return nil, err
-	} else {
-		values := url.Values{}
-		values.Add("$filter", "transactioncurrencyid eq "+orgSettings.Value[0].BaseCurrencyId)
-
-		currencies := TransactionCurrencyArrayDto{}
-		err := client.solutionClient.GetTableData(ctx, environmentId, "transactioncurrencies", values.Encode(), &currencies)
-		if err != nil {
-			return nil, err
-		} else {
-			if len(currencies.Value) >= 1 {
-				return &currencies.Value[0], nil
-			} else {
-				return nil, fmt.Errorf("no default currency found for environment %s", environmentId)
-			}
-		}
 	}
+	values := url.Values{}
+	values.Add("$filter", "transactioncurrencyid eq "+orgSettings.Value[0].BaseCurrencyId)
+
+	currencies := TransactionCurrencyArrayDto{}
+	err = client.solutionClient.GetTableData(ctx, environmentId, "transactioncurrencies", values.Encode(), &currencies)
+	if err != nil {
+		return nil, err
+	}
+	if len(currencies.Value) == 0 {
+		return nil, fmt.Errorf("no default currency found for environment %s", environmentId)
+	}
+	return &currencies.Value[0], nil
 }
 
-func (client *EnvironmentClient) ValidateEnvironmentDetails(ctx context.Context, location, domain string) error {
+func (client *Client) ValidateEnvironmentDetails(ctx context.Context, location, domain string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/validateEnvironmentDetails",
 	}

@@ -11,21 +11,22 @@ import (
 	"net/url"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewLanguagesClient(api *api.ApiClient) LanguagesClient {
-	return LanguagesClient{
-		Api: api,
+func NewLanguagesClient(apiClient *api.Client) Client {
+	return Client{
+		Api: apiClient,
 	}
 }
 
-type LanguagesClient struct {
-	Api *api.ApiClient
+type Client struct {
+	Api *api.Client
 }
 
-func (client *LanguagesClient) GetLanguagesByLocation(ctx context.Context, location string) (LanguagesDto, error) {
+func (client *Client) GetLanguagesByLocation(ctx context.Context, location string) (ArrayDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentLanguages", location),
 	}
@@ -33,7 +34,7 @@ func (client *LanguagesClient) GetLanguagesByLocation(ctx context.Context, locat
 		"api-version": []string{"2023-06-01"},
 	}.Encode()
 
-	languages := LanguagesDto{}
+	languages := ArrayDto{}
 
 	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {

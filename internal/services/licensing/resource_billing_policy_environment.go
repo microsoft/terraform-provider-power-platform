@@ -31,7 +31,7 @@ func NewBillingPolicyEnvironmentResource() resource.Resource {
 }
 
 type BillingPolicyEnvironmentResource struct {
-	LicensingClient  LicensingClient
+	LicensingClient  Client
 	ProviderTypeName string
 	TypeName         string
 }
@@ -46,7 +46,7 @@ func (r *BillingPolicyEnvironmentResource) Metadata(ctx context.Context, req res
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-func (r *BillingPolicyEnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *BillingPolicyEnvironmentResource) Schema(ctx context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "This resource allows you to manage the environments associated with a Billing Policy",
 		MarkdownDescription: "This resource allows you to manage the environments associated with a [billing policy](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy). A billing policy is a set of rules that define how a tenant is billed for usage of Power Platform services. A billing policy is associated with a billing instrument, which is a subscription and resource group that is used to pay for usage of Power Platform services.",
@@ -172,10 +172,9 @@ func (r *BillingPolicyEnvironmentResource) Read(ctx context.Context, req resourc
 		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
-		} else {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-			return
 		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
 	}
 
 	state.Environments = environments

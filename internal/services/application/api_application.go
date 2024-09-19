@@ -16,18 +16,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewApplicationClient(api *api.ApiClient) ApplicationClient {
-	return ApplicationClient{
-		Api: api,
+func NewApplicationClient(apiClient *api.Client) Client {
+	return Client{
+		Api: apiClient,
 	}
 }
 
-type ApplicationClient struct {
-	Api *api.ApiClient
+type Client struct {
+	Api *api.Client
 }
 
-func (client *ApplicationClient) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
-
+func (client *Client) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return false, err
@@ -35,10 +34,9 @@ func (client *ApplicationClient) DataverseExists(ctx context.Context, environmen
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
-func (client *ApplicationClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
-
+func (client *Client) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
@@ -55,9 +53,9 @@ func (client *ApplicationClient) getEnvironment(ctx context.Context, environment
 	return &env, nil
 }
 
-func (client *ApplicationClient) GetTenantApplications(ctx context.Context) ([]TenantApplicationDto, error) {
+func (client *Client) GetTenantApplications(ctx context.Context) ([]TenantApplicationDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   "/appmanagement/applicationPackages",
 	}
@@ -76,9 +74,9 @@ func (client *ApplicationClient) GetTenantApplications(ctx context.Context) ([]T
 	return application.Value, nil
 }
 
-func (client *ApplicationClient) GetApplicationsByEnvironmentId(ctx context.Context, environmentId string) ([]EnvironmentApplicationDto, error) {
+func (client *Client) GetApplicationsByEnvironmentId(ctx context.Context, environmentId string) ([]EnvironmentApplicationDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   fmt.Sprintf("/appmanagement/environments/%s/applicationPackages", environmentId),
 	}
@@ -97,9 +95,9 @@ func (client *ApplicationClient) GetApplicationsByEnvironmentId(ctx context.Cont
 	return application.Value, nil
 }
 
-func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Context, environmentId string, uniqueName string) (string, error) {
+func (client *Client) InstallApplicationInEnvironment(ctx context.Context, environmentId string, uniqueName string) (string, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   fmt.Sprintf("/appmanagement/environments/%s/applicationPackages/%s/install", environmentId, uniqueName),
 	}
@@ -132,11 +130,10 @@ func (client *ApplicationClient) InstallApplicationInEnvironment(ctx context.Con
 
 			if lifecycleResponse.Status == "Succeeded" {
 				parts := strings.Split(lifecycleResponse.CreatedDateTime, "/")
-				if len(parts) > 0 {
-					applicationId = parts[len(parts)-1]
-				} else {
+				if len(parts) == 0 {
 					return "", errors.New("can't parse application id from response " + lifecycleResponse.CreatedDateTime)
 				}
+				applicationId = parts[len(parts)-1]
 				tflog.Debug(ctx, "Created Application Id: "+applicationId)
 				break
 			} else if lifecycleResponse.Status == "Failed" {

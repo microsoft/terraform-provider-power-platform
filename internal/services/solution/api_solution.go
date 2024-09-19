@@ -14,21 +14,21 @@ import (
 	"strings"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewSolutionClient(api *api.ApiClient) SolutionClient {
-	return SolutionClient{
-		Api: api,
+func NewSolutionClient(apiClient *api.Client) Client {
+	return Client{
+		Api: apiClient,
 	}
 }
 
-type SolutionClient struct {
-	Api *api.ApiClient
+type Client struct {
+	Api *api.Client
 }
 
-func (client *SolutionClient) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
-
+func (client *Client) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return false, err
@@ -36,14 +36,14 @@ func (client *SolutionClient) DataverseExists(ctx context.Context, environmentId
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
-func (client *SolutionClient) GetSolutionUniqueName(ctx context.Context, environmentId, name string) (*SolutionDto, error) {
+func (client *Client) GetSolutionUniqueName(ctx context.Context, environmentId, name string) (*Dto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/solutions",
 	}
@@ -52,7 +52,7 @@ func (client *SolutionClient) GetSolutionUniqueName(ctx context.Context, environ
 	values.Add("$filter", fmt.Sprintf("uniquename eq '%s'", name))
 	apiUrl.RawQuery = values.Encode()
 
-	solutions := SolutionDtoArray{}
+	solutions := DtoArray{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutions)
 	if err != nil {
 		return nil, err
@@ -66,14 +66,14 @@ func (client *SolutionClient) GetSolutionUniqueName(ctx context.Context, environ
 	return &solutions.Value[0], nil
 }
 
-func (client *SolutionClient) GetSolutionById(ctx context.Context, environmentId, solutionId string) (*SolutionDto, error) {
+func (client *Client) GetSolutionById(ctx context.Context, environmentId, solutionId string) (*Dto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/solutions",
 	}
@@ -82,7 +82,7 @@ func (client *SolutionClient) GetSolutionById(ctx context.Context, environmentId
 	values.Add("$filter", fmt.Sprintf("solutionid eq %s", solutionId))
 	apiUrl.RawQuery = values.Encode()
 
-	solutions := SolutionDtoArray{}
+	solutions := DtoArray{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutions)
 	if err != nil {
 		return nil, err
@@ -96,14 +96,14 @@ func (client *SolutionClient) GetSolutionById(ctx context.Context, environmentId
 	return &solutions.Value[0], nil
 }
 
-func (client *SolutionClient) GetSolutions(ctx context.Context, environmentId string) ([]SolutionDto, error) {
+func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([]Dto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/solutions",
 	}
@@ -113,7 +113,7 @@ func (client *SolutionClient) GetSolutions(ctx context.Context, environmentId st
 	values.Add("$orderby", "createdon desc")
 	apiUrl.RawQuery = values.Encode()
 
-	solutionArray := SolutionDtoArray{}
+	solutionArray := DtoArray{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutionArray)
 	if err != nil {
 		return nil, err
@@ -123,13 +123,13 @@ func (client *SolutionClient) GetSolutions(ctx context.Context, environmentId st
 		solutionArray.Value[inx].EnvironmentId = environmentId
 	}
 
-	solutions := make([]SolutionDto, 0)
+	solutions := make([]Dto, 0)
 	solutions = append(solutions, solutionArray.Value...)
 
 	return solutions, nil
 }
 
-func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId string, solutionToCreate ImportSolutionDto, content []byte, settings []byte) (*SolutionDto, error) {
+func (client *Client) CreateSolution(ctx context.Context, environmentId string, solutionToCreate ImportSolutionDto, content []byte, settings []byte) (*Dto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -145,7 +145,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/StageSolution",
 	}
@@ -167,7 +167,6 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 		return nil, e
 	}
 
-	//import solution
 	solutionComponents, err := client.createSolutionComponentParameters(settings)
 	if err != nil {
 		return nil, err
@@ -183,7 +182,7 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 
 	apiUrl = &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/ImportSolutionAsync",
 	}
@@ -193,14 +192,14 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 		return nil, err
 	}
 
-	//pull for solution import completion
+	// pull for solution import completion.
 	err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
 	if err != nil {
 		return nil, err
 	}
 
 	apiUrl = &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.2/asyncoperations(%s)", importSolutionResponse.AsyncOperationId),
 	}
@@ -228,12 +227,12 @@ func (client *SolutionClient) CreateSolution(ctx context.Context, environmentId 
 	}
 }
 
-func (client *SolutionClient) createSolutionComponentParameters(settings []byte) ([]interface{}, error) {
+func (client *Client) createSolutionComponentParameters(settings []byte) ([]any, error) {
 	if len(settings) == 0 {
 		return nil, nil
 	}
 
-	solutionSettings := SolutionSettings{}
+	solutionSettings := Settings{}
 	if settings != nil {
 		err := json.Unmarshal(settings, &solutionSettings)
 		if err != nil {
@@ -241,7 +240,7 @@ func (client *SolutionClient) createSolutionComponentParameters(settings []byte)
 		}
 	}
 
-	solutionComponents := make([]interface{}, 0)
+	solutionComponents := make([]any, 0)
 	for _, connectionReferenceComponent := range solutionSettings.ConnectionReferences {
 		solutionComponents = append(solutionComponents, ImportSolutionConnectionReferencesDto{
 			Type:                           "Microsoft.Dynamics.CRM.connectionreference",
@@ -268,11 +267,11 @@ func (client *SolutionClient) createSolutionComponentParameters(settings []byte)
 	return solutionComponents, nil
 }
 
-func (client *SolutionClient) validateSolutionImportResult(ctx context.Context, environmentHost, ImportJobKey string) error {
+func (client *Client) validateSolutionImportResult(ctx context.Context, environmentHost, importJobKey string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
-		Path:   fmt.Sprintf("/api/data/v9.0/RetrieveSolutionImportResult(ImportJobId=%s)", ImportJobKey),
+		Path:   fmt.Sprintf("/api/data/v9.0/RetrieveSolutionImportResult(ImportJobId=%s)", importJobKey),
 	}
 
 	validateSolutionImportResponseDto := ValidateSolutionImportResponseDto{}
@@ -286,13 +285,13 @@ func (client *SolutionClient) validateSolutionImportResult(ctx context.Context, 
 	return nil
 }
 
-func (client *SolutionClient) DeleteSolution(ctx context.Context, environmentId, solutionId string) error {
+func (client *Client) DeleteSolution(ctx context.Context, environmentId, solutionId string) error {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return err
 	}
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.2/solutions(%s)", solutionId),
 	}
@@ -303,13 +302,13 @@ func (client *SolutionClient) DeleteSolution(ctx context.Context, environmentId,
 	return nil
 }
 
-func (client *SolutionClient) GetTableData(ctx context.Context, environmentId, tableName, odataQuery string, responseObj interface{}) error {
+func (client *Client) GetTableData(ctx context.Context, environmentId, tableName, odataQuery string, responseObj any) error {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return err
 	}
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.2/%s", tableName),
 	}
@@ -323,7 +322,7 @@ func (client *SolutionClient) GetTableData(ctx context.Context, environmentId, t
 	return nil
 }
 
-func (client *SolutionClient) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
+func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return "", err
@@ -333,17 +332,16 @@ func (client *SolutionClient) GetEnvironmentHostById(ctx context.Context, enviro
 		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 
-	url, err := url.Parse(environmentUrl)
+	envUrl, err := url.Parse(environmentUrl)
 	if err != nil {
 		return "", err
 	}
-	return url.Host, nil
+	return envUrl.Host, nil
 }
 
-func (client *SolutionClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
-
+func (client *Client) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
@@ -359,7 +357,6 @@ func (client *SolutionClient) getEnvironment(ctx context.Context, environmentId 
 			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
 		}
 		return nil, err
-
 	}
 
 	return &env, nil
