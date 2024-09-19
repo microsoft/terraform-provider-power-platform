@@ -52,7 +52,7 @@ type SharePrincipalResourceModel struct {
 	DisplayName   types.String `tfsdk:"display_name"`
 }
 
-func (r *ShareResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
@@ -126,7 +126,7 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 }
 
-func (r *ShareResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *ShareResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

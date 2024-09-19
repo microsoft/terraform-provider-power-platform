@@ -175,24 +175,24 @@ func ConvertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 
 	if !tenantSettings.PowerPlatform.IsNull() && !tenantSettings.PowerPlatform.IsUnknown() {
 		powerPlatformAttributes := tenantSettings.PowerPlatform.Attributes()
-		convertSearchModel(ctx, powerPlatformAttributes, tenantSettingsDto)
-		convertTeamsIntegrationModel(ctx, powerPlatformAttributes, tenantSettingsDto)
-		convertPowerAppsModel(ctx, powerPlatformAttributes, tenantSettingsDto)
-		convertPowerAutomateModel(ctx, powerPlatformAttributes, tenantSettingsDto)
-		convertEnvironmentsModel(ctx, powerPlatformAttributes, tenantSettingsDto)
-		convertGovernanceModel(ctx, powerPlatformAttributes, tenantSettingsDto)
-		convertLicensingModel(ctx, powerPlatformAttributes, tenantSettingsDto)
-		convertPowerPagesModel(ctx, powerPlatformAttributes, tenantSettingsDto)
-		convertChampionsModel(ctx, powerPlatformAttributes, tenantSettingsDto)
-		convertIntelligenceModel(ctx, powerPlatformAttributes, tenantSettingsDto)
-		convertModelExperimentationModel(ctx, powerPlatformAttributes, tenantSettingsDto)
-		convertCatalogSettingsModel(ctx, powerPlatformAttributes, tenantSettingsDto)
-		convertUserManagementSettingsModel(ctx, powerPlatformAttributes, tenantSettingsDto)
+		convertSearchModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		convertTeamsIntegrationModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		convertPowerAppsModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		convertPowerAutomateModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		convertEnvironmentsModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		convertGovernanceModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		convertLicensingModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		convertPowerPagesModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		convertChampionsModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		convertIntelligenceModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		convertModelExperimentationModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		convertCatalogSettingsModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		convertUserManagementSettingsModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
 	}
 	return tenantSettingsDto
 }
 
-func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto TenantSettingsDto) {
+func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
 	searchObject := powerPlatformAttributes["search"]
 	if !searchObject.IsNull() && !searchObject.IsUnknown() {
 		var searchSettings SearchSettingsModel
@@ -214,7 +214,7 @@ func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]
 	}
 }
 
-func convertTeamsIntegrationModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto TenantSettingsDto) {
+func convertTeamsIntegrationModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
 	teamIntegrationObject := powerPlatformAttributes["teams_integration"]
 	if !teamIntegrationObject.IsNull() && !teamIntegrationObject.IsUnknown() {
 		var teamsIntegrationSettings TeamsIntegrationSettings
@@ -230,7 +230,7 @@ func convertTeamsIntegrationModel(ctx context.Context, powerPlatformAttributes m
 	}
 }
 
-func convertPowerAppsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto TenantSettingsDto) {
+func convertPowerAppsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
 	powerAppsObject := powerPlatformAttributes["power_apps"]
 	if !powerAppsObject.IsNull() && !powerAppsObject.IsUnknown() {
 		var powerAppsSettings PowerAppsSettings
@@ -264,7 +264,7 @@ func convertPowerAppsModel(ctx context.Context, powerPlatformAttributes map[stri
 	}
 }
 
-func convertPowerAutomateModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto TenantSettingsDto) {
+func convertPowerAutomateModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
 	powerAutomateObject := powerPlatformAttributes["power_automate"]
 	if !powerAutomateObject.IsNull() && !powerAutomateObject.IsUnknown() {
 		var powerAutomateSettings PowerAutomateSettings
@@ -280,7 +280,7 @@ func convertPowerAutomateModel(ctx context.Context, powerPlatformAttributes map[
 	}
 }
 
-func convertEnvironmentsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto TenantSettingsDto) {
+func convertEnvironmentsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
 	environmentsObject := powerPlatformAttributes["environments"]
 	if !environmentsObject.IsNull() && !environmentsObject.IsUnknown() {
 		var environmentsSettings EnvironmentsSettings
@@ -296,7 +296,7 @@ func convertEnvironmentsModel(ctx context.Context, powerPlatformAttributes map[s
 	}
 }
 
-func convertGovernanceModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto TenantSettingsDto) {
+func convertGovernanceModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
 	governanceObject := powerPlatformAttributes["governance"]
 	if !governanceObject.IsNull() && !governanceObject.IsUnknown() {
 		var governanceSettings GovernanceSettings
@@ -341,7 +341,7 @@ func convertGovernanceModel(ctx context.Context, powerPlatformAttributes map[str
 	}
 }
 
-func convertLicensingModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto TenantSettingsDto) {
+func convertLicensingModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
 	licensingObject := powerPlatformAttributes["licensing"]
 	if !licensingObject.IsNull() && !licensingObject.IsUnknown() {
 		var licensingSettings LicensingSettings
@@ -369,7 +369,7 @@ func convertLicensingModel(ctx context.Context, powerPlatformAttributes map[stri
 	}
 }
 
-func convertPowerPagesModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto TenantSettingsDto) {
+func convertPowerPagesModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
 	powerPagesObject := powerPlatformAttributes["power_pages"]
 	if !powerPagesObject.IsNull() && !powerPagesObject.IsUnknown() {
 		var powerPagesSettings PowerPagesSettings
@@ -382,7 +382,7 @@ func convertPowerPagesModel(ctx context.Context, powerPlatformAttributes map[str
 	}
 }
 
-func convertChampionsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto TenantSettingsDto) {
+func convertChampionsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
 	championsObject := powerPlatformAttributes["champions"]
 	if !championsObject.IsNull() && !championsObject.IsUnknown() {
 		var championsSettings ChampionsSettings
@@ -401,7 +401,7 @@ func convertChampionsModel(ctx context.Context, powerPlatformAttributes map[stri
 	}
 }
 
-func convertIntelligenceModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto TenantSettingsDto) {
+func convertIntelligenceModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
 	intelligenceObject := powerPlatformAttributes["intelligence"]
 	if !intelligenceObject.IsNull() && !intelligenceObject.IsUnknown() {
 		var intelligenceSettings IntelligenceSettings
@@ -420,7 +420,7 @@ func convertIntelligenceModel(ctx context.Context, powerPlatformAttributes map[s
 	}
 }
 
-func convertModelExperimentationModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto TenantSettingsDto) {
+func convertModelExperimentationModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
 	modelExperimentationObject := powerPlatformAttributes["model_experimentation"]
 	if !modelExperimentationObject.IsNull() && !modelExperimentationObject.IsUnknown() {
 		var modelExperimentationSettings ModelExperimentationSettings
@@ -436,7 +436,7 @@ func convertModelExperimentationModel(ctx context.Context, powerPlatformAttribut
 	}
 }
 
-func convertCatalogSettingsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto TenantSettingsDto) {
+func convertCatalogSettingsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
 	catalogSettingsObject := powerPlatformAttributes["catalog_settings"]
 	if !catalogSettingsObject.IsNull() && !catalogSettingsObject.IsUnknown() {
 		var catalogSettings CatalogSettingsSettings
@@ -449,7 +449,7 @@ func convertCatalogSettingsModel(ctx context.Context, powerPlatformAttributes ma
 	}
 }
 
-func convertUserManagementSettingsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto TenantSettingsDto) {
+func convertUserManagementSettingsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
 	userManagementSettingsObject := powerPlatformAttributes["user_management_settings"]
 	if !userManagementSettingsObject.IsNull() && !userManagementSettingsObject.IsUnknown() {
 		var userManagementSettings UserManagementSettings

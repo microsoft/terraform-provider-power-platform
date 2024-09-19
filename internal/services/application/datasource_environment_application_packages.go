@@ -56,7 +56,7 @@ type EnvironmentApplicationPackageDataSourceModel struct {
 	ApplicationVisibility types.String `tfsdk:"application_visibility"`
 }
 
-func (d *EnvironmentApplicationPackagesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *EnvironmentApplicationPackagesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 

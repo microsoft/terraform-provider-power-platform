@@ -57,7 +57,7 @@ func ConvertFromPowerAppDto(powerAppDto PowerAppBapi) EnvironmentPowerAppsDataSo
 	}
 }
 
-func (d *EnvironmentPowerAppsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *EnvironmentPowerAppsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
@@ -107,7 +107,7 @@ func (d *EnvironmentPowerAppsDataSource) Schema(ctx context.Context, _ datasourc
 	}
 }
 
-func (d *EnvironmentPowerAppsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *EnvironmentPowerAppsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

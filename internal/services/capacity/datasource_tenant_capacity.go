@@ -33,8 +33,8 @@ type DataSource struct {
 }
 
 type DataSourceModel struct {
-	TenantId         types.String              `tfsdk:"tenant_id"`
-	LicenseModelType types.String              `tfsdk:"license_model_type"`
+	TenantId         types.String                    `tfsdk:"tenant_id"`
+	LicenseModelType types.String                    `tfsdk:"license_model_type"`
 	TenantCapacities []TenantCapacityDataSourceModel `tfsdk:"tenant_capacities"`
 }
 
@@ -54,11 +54,11 @@ type ConsumptionDataSourceModel struct {
 	RatedUpdatedOn  types.String  `tfsdk:"rated_updated_on"`
 }
 
-func (d *DataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *DataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the capacity information for a given tenant.",
 		MarkdownDescription: "Fetches the capacity information for a given tenant.",
@@ -125,7 +125,7 @@ func (d *DataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp 
 	}
 }
 
-func (d *DataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

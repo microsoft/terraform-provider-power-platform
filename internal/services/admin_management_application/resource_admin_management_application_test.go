@@ -57,9 +57,9 @@ func TestUnitAdminManagementApplicationResource_Validate_Create(t *testing.T) {
 	url := fmt.Sprintf("https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/adminApplications/%s?api-version=2020-10-01", client_id.String())
 	body := fmt.Sprintf("{ \"applicationId\": \"%s\" }", client_id.String())
 
-	httpmock.RegisterResponder(http.MethodPut, url, httpmock.NewStringResponder(http.StatusOK, body))
+	httpmock.RegisterResponder("PUT", url, httpmock.NewStringResponder(http.StatusOK, body))
 	httpmock.RegisterResponder("GET", url, httpmock.NewStringResponder(http.StatusOK, body))
-	httpmock.RegisterResponder(http.MethodDelete, url, httpmock.NewStringResponder(http.StatusNoContent, ""))
+	httpmock.RegisterResponder("DELETE", url, httpmock.NewStringResponder(http.StatusNoContent, ""))
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,

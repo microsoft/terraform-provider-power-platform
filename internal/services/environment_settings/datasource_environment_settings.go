@@ -217,6 +217,6 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, _ datasource
 	}
 }
 
-func (d *EnvironmentSettingsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *EnvironmentSettingsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }

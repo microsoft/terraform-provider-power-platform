@@ -45,7 +45,7 @@ type DataRecordResourceModel struct {
 	Columns          types.Dynamic  `tfsdk:"columns"`
 }
 
-func (r *DataRecordResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *DataRecordResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 

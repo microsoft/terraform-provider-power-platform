@@ -37,7 +37,7 @@ type DataLossPreventionPolicyDataSource struct {
 	TypeName         string
 }
 
-func (d *DataLossPreventionPolicyDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataLossPreventionPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
@@ -235,7 +235,7 @@ func (d *DataLossPreventionPolicyDataSource) Schema(ctx context.Context, _ datas
 	}
 }
 
-func (d *DataLossPreventionPolicyDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataLossPreventionPolicyDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

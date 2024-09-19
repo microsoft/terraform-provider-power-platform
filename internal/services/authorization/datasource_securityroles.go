@@ -105,7 +105,7 @@ func (_ *SecurityRolesDataSource) Schema(ctx context.Context, _ datasource.Schem
 	}
 }
 
-func (d *SecurityRolesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *SecurityRolesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -121,7 +121,7 @@ func (d *SecurityRolesDataSource) Configure(_ context.Context, req datasource.Co
 	d.UserClient = NewUserClient(clientApi)
 }
 
-func (d *SecurityRolesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *SecurityRolesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 

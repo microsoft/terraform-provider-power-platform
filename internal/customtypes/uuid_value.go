@@ -47,7 +47,7 @@ func (v UUIDValue) Equal(o attr.Value) bool {
 	return v.StringValue.Equal(other.StringValue)
 }
 
-func (v UUIDValue) StringSemanticEquals(_ context.Context, newValuable basetypes.StringValuable) (bool, diag.Diagnostics) {
+func (v UUIDValue) StringSemanticEquals(ctx context.Context, newValuable basetypes.StringValuable) (bool, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	newValue, ok := newValuable.(UUIDValue)
@@ -80,7 +80,7 @@ func (v UUIDValue) StringSemanticEquals(_ context.Context, newValuable basetypes
 	return reflect.DeepEqual(oldUUID, newUUID), diags
 }
 
-func (v UUIDValue) ValidateAttribute(_ context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+func (v UUIDValue) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
 	if v.IsUnknown() || v.IsNull() {
 		return
 	}
@@ -96,7 +96,7 @@ func (v UUIDValue) ValidateAttribute(_ context.Context, req xattr.ValidateAttrib
 	}
 }
 
-func (v UUIDValue) ValidateParameter(_ context.Context, req function.ValidateParameterRequest, resp *function.ValidateParameterResponse) {
+func (v UUIDValue) ValidateParameter(ctx context.Context, req function.ValidateParameterRequest, resp *function.ValidateParameterResponse) {
 	if v.IsUnknown() || v.IsNull() {
 		return
 	}
