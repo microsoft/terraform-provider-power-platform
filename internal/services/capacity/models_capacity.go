@@ -4,8 +4,8 @@
 package capacity
 
 type Dto struct {
-	TenantId         string        `json:"tenantId"`
-	LicenseModelType string        `json:"licenseModelType"`
+	TenantId         string              `json:"tenantId"`
+	LicenseModelType string              `json:"licenseModelType"`
 	TenantCapacities []TenantCapacityDto `json:"tenantCapacities"`
 }
 

@@ -5,10 +5,12 @@ deps:
 
 build:
 	$(MAKE) deps
+	go fmt ./...
 	go build -o ./bin/
 
 install:
 	$(MAKE) deps
+	go fmt ./...
 	go install
 
 clean:

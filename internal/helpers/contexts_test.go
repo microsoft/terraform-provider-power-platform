@@ -61,7 +61,7 @@ package helpers_test
 // 			Schema: schema.Schema{
 // 				MarkdownDescription: "This resource manages a PowerPlatform environment",
 // 				Description:         "This resource manages a PowerPlatform environment",
-		
+
 // 				Attributes: map[string]schema.Attribute{
 // 					"timeouts": timeouts.Attributes(ctx),
 // 				},

@@ -9,7 +9,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-
 func TestUnitTypeInfoString(t *testing.T) {
 	t.Parallel()
 
