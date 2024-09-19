@@ -208,6 +208,7 @@ func (d *TenantApplicationPackagesDataSource) Schema(ctx context.Context, _ data
 
 func (d *TenantApplicationPackagesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
 		return
 	}
 	clientApi := req.ProviderData.(*api.ProviderClient).Api

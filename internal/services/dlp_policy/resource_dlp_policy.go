@@ -246,6 +246,7 @@ func (r *DataLossPreventionPolicyResource) Configure(ctx context.Context, req re
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", r.TypeName)
 		return
 	}
 
@@ -299,7 +300,6 @@ func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resourc
 	state.BlockedConnectors = convertToAttrValueConnectorsGroup("Blocked", policy.ConnectorGroups)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-
 }
 
 func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

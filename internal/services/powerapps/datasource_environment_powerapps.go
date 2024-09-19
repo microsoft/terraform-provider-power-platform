@@ -117,6 +117,7 @@ func (d *EnvironmentPowerAppsDataSource) Schema(ctx context.Context, _ datasourc
 
 func (d *EnvironmentPowerAppsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
 		return
 	}
 

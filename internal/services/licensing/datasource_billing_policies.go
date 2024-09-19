@@ -137,6 +137,7 @@ func (d *BillingPoliciesDataSource) Schema(ctx context.Context, _ datasource.Sch
 
 func (d *BillingPoliciesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
 		return
 	}
 

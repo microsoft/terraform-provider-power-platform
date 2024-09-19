@@ -129,6 +129,7 @@ func (d *DataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *d
 
 func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
 		return
 	}
 

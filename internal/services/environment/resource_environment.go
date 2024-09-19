@@ -234,8 +234,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 }
 
 func (d *Resource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
-	path.Root("dataverse").AtName("administration_mode_enabled").Expression()
-
 	return []resource.ConfigValidator{
 		resourcevalidator.RequiredTogether(
 			path.Root("dataverse").AtName("administration_mode_enabled").Expression(),
@@ -249,7 +247,7 @@ func (r *Resource) Configure(ctx context.Context, req resource.ConfigureRequest,
 	defer exitContext()
 
 	if req.ProviderData == nil {
-		// TODO: Should we add a warning here?
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", r.TypeName)
 		return
 	}
 

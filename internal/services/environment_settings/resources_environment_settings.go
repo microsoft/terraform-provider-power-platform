@@ -206,6 +206,7 @@ func (r *EnvironmentSettingsResource) Configure(ctx context.Context, req resourc
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", r.TypeName)
 		return
 	}
 

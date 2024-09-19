@@ -187,6 +187,7 @@ func (r *DataverseWebApiResource) Configure(ctx context.Context, req resource.Co
 	defer exitContext()
 
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", r.TypeName)
 		return
 	}
 

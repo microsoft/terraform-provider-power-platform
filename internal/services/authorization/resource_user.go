@@ -142,6 +142,7 @@ func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequ
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", r.TypeName)
 		return
 	}
 
@@ -285,7 +286,6 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	plan.BusinessUnitId = model.BusinessUnitId
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-
 }
 
 func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

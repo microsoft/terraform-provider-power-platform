@@ -126,6 +126,7 @@ func (d *SharesDataSource) Schema(ctx context.Context, _ datasource.SchemaReques
 
 func (d *SharesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
 		return
 	}
 	client := req.ProviderData.(*api.ProviderClient).Api

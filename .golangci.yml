@@ -48,3 +48,4 @@ issues:
   exclude:
     - "ineffectual assignment to ctx"
     - "SA4006: this value of `ctx` is never used"
+    - "unused parameter (ctx|diags|req|resp)"

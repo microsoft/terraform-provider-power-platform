@@ -141,6 +141,7 @@ func (r *ShareResource) Configure(ctx context.Context, req resource.ConfigureReq
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", r.TypeName)
 		return
 	}
 
@@ -211,7 +212,6 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	newState := ConvertFromConnectionResourceSharesDto(state, share)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
-
 }
 
 func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

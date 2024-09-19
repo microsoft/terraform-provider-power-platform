@@ -146,6 +146,7 @@ func (r *BillingPolicyResource) Configure(ctx context.Context, req resource.Conf
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", r.TypeName)
 		return
 	}
 

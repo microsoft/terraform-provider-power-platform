@@ -107,6 +107,7 @@ func (_ *SecurityRolesDataSource) Schema(ctx context.Context, _ datasource.Schem
 
 func (d *SecurityRolesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
 		return
 	}
 	clientApi := req.ProviderData.(*api.ProviderClient).Api

@@ -156,6 +156,7 @@ func (r *ManagedEnvironmentResource) Configure(ctx context.Context, req resource
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", r.TypeName)
 		return
 	}
 
@@ -331,7 +332,6 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-
 }
 
 func (r *ManagedEnvironmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

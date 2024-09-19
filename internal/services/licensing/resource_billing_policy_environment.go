@@ -88,6 +88,7 @@ func (r *BillingPolicyEnvironmentResource) Configure(ctx context.Context, req re
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	if req.ProviderData == nil {
+		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", r.TypeName)
 		return
 	}
 
@@ -220,7 +221,6 @@ func (r *BillingPolicyEnvironmentResource) Update(ctx context.Context, req resou
 	plan.Environments = environments
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-
 }
 
 func (r *BillingPolicyEnvironmentResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
