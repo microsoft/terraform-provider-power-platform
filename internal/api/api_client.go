@@ -140,8 +140,7 @@ func (client *Client) Execute(ctx context.Context, method, url string, headers h
 			return response, err
 		}
 
-		if response.Response.StatusCode != http.StatusUnauthorized &&
-			response.Response.StatusCode != http.StatusGatewayTimeout &&
+		if response.Response.StatusCode != http.StatusGatewayTimeout &&
 			response.Response.StatusCode != http.StatusTooManyRequests &&
 			response.Response.StatusCode != http.StatusServiceUnavailable &&
 			response.Response.StatusCode != http.StatusBadGateway {

@@ -10,11 +10,14 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/common"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
 // ContextKey is a custom type for context keys.
@@ -62,9 +65,79 @@ func EnterRequestContext[T AllowedRequestTypes](ctx context.Context, typ TypeInf
 	ctx = tflog.SetField(ctx, "request_id", reqId)
 	ctx = tflog.SetField(ctx, "request_type", reqType)
 
+	ctx, cancel := enterTimeoutContext(ctx, typ, req)
+
 	// This returns a closure that can be used to defer the exit of the request scope.
 	return ctx, func() {
 		tflog.Debug(ctx, fmt.Sprintf("%s END: %s", reqType, name))
+		if cancel != nil {
+			(*cancel)()
+		}
+	}
+}
+
+// EnterTimeoutContext is a helper function that enters a timeout context based on the request type and the timeouts set in the plan or state.
+func enterTimeoutContext[T AllowedRequestTypes](ctx context.Context, typ TypeInfo, req T)(context.Context, *context.CancelFunc){
+	var tos timeouts.Value
+	switch req := any(req).(type) {
+	case resource.CreateRequest:
+		diag := req.Plan.GetAttribute(ctx, path.Root("timeouts"), &tos)
+		if diag.HasError() {
+			return ctx, nil
+		}
+		
+		dur, err := tos.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+		if err != nil {
+			// function returns default timeout even if error occurs
+			tflog.Debug(ctx, "Could not retrieve create timeout, using default")
+		}
+
+		ctx, cancel := context.WithTimeout(ctx, dur)
+		return ctx, &cancel
+	case resource.ReadRequest:
+		diag := req.State.GetAttribute(ctx, path.Root("timeouts"), &tos)
+		if diag.HasError() {
+			return ctx, nil
+		}
+
+		dur, err := tos.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+		if err != nil {
+			// function returns default timeout even if error occurs
+			tflog.Debug(ctx, "Could not retrieve read timeout, using default")
+		}
+
+		ctx, cancel := context.WithTimeout(ctx, dur)
+		return ctx, &cancel
+	case resource.UpdateRequest:
+		diag := req.Plan.GetAttribute(ctx, path.Root("timeouts"), &tos)
+		if diag.HasError() {
+			return ctx, nil
+		}
+
+		dur, err := tos.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+		if err != nil {
+			// function returns default timeout even if error occurs
+			tflog.Debug(ctx, "Could not retrieve update timeout, using default")
+		}
+
+		ctx, cancel := context.WithTimeout(ctx, dur)
+		return ctx, &cancel
+	case resource.DeleteRequest:
+		diag := req.State.GetAttribute(ctx, path.Root("timeouts"), &tos)
+		if diag.HasError() {
+			return ctx, nil
+		}
+
+		dur, err := tos.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
+		if err != nil {
+			// function returns default timeout even if error occurs
+			tflog.Debug(ctx, "Could not retrieve delete timeout, using default")
+		}
+
+		ctx, cancel := context.WithTimeout(ctx, dur)
+		return ctx, &cancel
+	default:
+		return ctx, nil
 	}
 }
 
