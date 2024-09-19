@@ -482,6 +482,6 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, _ datasource.Sche
 }
 
 // Metadata returns the metadata for the resource, which includes the resource type name.
-func (d *TenantSettingsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *TenantSettingsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }

@@ -42,7 +42,7 @@ type BillingPolicyEnvironmentResourceModel struct {
 	Environments    []string       `tfsdk:"environments"`
 }
 
-func (r *BillingPolicyEnvironmentResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *BillingPolicyEnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
@@ -75,7 +75,7 @@ func (r *BillingPolicyEnvironmentResource) Schema(ctx context.Context, _ resourc
 	}
 }
 
-func (r *BillingPolicyEnvironmentResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *BillingPolicyEnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

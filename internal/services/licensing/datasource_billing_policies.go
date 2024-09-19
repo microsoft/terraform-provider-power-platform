@@ -54,7 +54,7 @@ type BillingInstrumentDataSourceModel struct {
 	SubscriptionId types.String `tfsdk:"subscription_id"`
 }
 
-func (d *BillingPoliciesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *BillingPoliciesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
@@ -127,7 +127,7 @@ func (d *BillingPoliciesDataSource) Schema(ctx context.Context, _ datasource.Sch
 	}
 }
 
-func (d *BillingPoliciesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *BillingPoliciesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

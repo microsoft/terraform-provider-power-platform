@@ -67,7 +67,7 @@ type TenantApplicationErrorDetailsDataSourceModel struct {
 	Type       types.String `tfsdk:"type"`
 }
 
-func (d *TenantApplicationPackagesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *TenantApplicationPackagesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 

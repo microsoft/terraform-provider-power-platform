@@ -65,7 +65,7 @@ func ConvertFromConnectorDto(connectorDto Dto) DataSourceModel {
 	}
 }
 
-func (d *DataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
@@ -133,7 +133,7 @@ func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, res
 	}
 }
 
-func (d *DataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

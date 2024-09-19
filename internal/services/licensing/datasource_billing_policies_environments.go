@@ -41,7 +41,7 @@ type BillingPoliciesEnvironmetsListDataSourceModel struct {
 	Environments    []string       `tfsdk:"environments"`
 }
 
-func (d *BillingPoliciesEnvironmetsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *BillingPoliciesEnvironmetsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
@@ -68,7 +68,7 @@ func (d *BillingPoliciesEnvironmetsDataSource) Schema(ctx context.Context, _ dat
 	}
 }
 
-func (d *BillingPoliciesEnvironmetsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *BillingPoliciesEnvironmetsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

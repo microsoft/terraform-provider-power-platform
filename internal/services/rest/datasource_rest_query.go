@@ -40,7 +40,7 @@ type DataverseWebApiDatasourceModel struct {
 	Output             types.Object                             `tfsdk:"output"`
 }
 
-func (d *DataverseWebApiDatasource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataverseWebApiDatasource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
@@ -110,7 +110,7 @@ func (d *DataverseWebApiDatasource) Schema(ctx context.Context, _ datasource.Sch
 	}
 }
 
-func (d *DataverseWebApiDatasource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataverseWebApiDatasource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}

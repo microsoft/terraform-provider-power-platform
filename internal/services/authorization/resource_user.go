@@ -51,7 +51,7 @@ type UserResourceModel struct {
 	DisableDelete     types.Bool     `tfsdk:"disable_delete"`
 }
 
-func (r *UserResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
@@ -129,7 +129,7 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 }
 
-func (r *UserResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
