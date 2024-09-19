@@ -3,49 +3,49 @@
 
 package managed_environment
 
-type OperationLifecycleDto struct {
+type operationLifecycleDto struct {
 	Id                 string                           `json:"id"`
-	Links              OperationLifecycleLinksDto       `json:"links"`
-	State              OperationLifecycleStateDto       `json:"state"`
-	Type               OperationLifecycleStateDto       `json:"type"`
+	Links              operationLifecycleLinksDto       `json:"links"`
+	State              operationLifecycleStateDto       `json:"state"`
+	Type               operationLifecycleStateDto       `json:"type"`
 	CreatedDateTime    string                           `json:"createdDateTime"`
 	LastActionDateTime string                           `json:"lastActionDateTime"`
-	RequestedBy        OperationLifecycleRequestedByDto `json:"requestedBy"`
-	Stages             []OperationLifecycleStageDto     `json:"stages"`
+	RequestedBy        operationLifecycleRequestedByDto `json:"requestedBy"`
+	Stages             []operationLifecycleStageDto     `json:"stages"`
 }
 
-type OperationLifecycleStageDto struct {
+type operationLifecycleStageDto struct {
 	Id                  string                     `json:"id"`
 	Name                string                     `json:"name"`
-	State               OperationLifecycleStateDto `json:"state"`
+	State               operationLifecycleStateDto `json:"state"`
 	FirstActionDateTime string                     `json:"firstActionDateTime"`
 	LastActionDateTime  string                     `json:"lastActionDateTime"`
 }
 
-type OperationLifecycleLinksDto struct {
-	Self        OperationLifecycleLinkDto `json:"self"`
-	Environment OperationLifecycleLinkDto `json:"environment"`
+type operationLifecycleLinksDto struct {
+	Self        operationLifecycleLinkDto `json:"self"`
+	Environment operationLifecycleLinkDto `json:"environment"`
 }
 
-type OperationLifecycleLinkDto struct {
+type operationLifecycleLinkDto struct {
 	Path string `json:"path"`
 }
 
-type OperationLifecycleStateDto struct {
+type operationLifecycleStateDto struct {
 	Id string `json:"id"`
 }
 
-type OperationLifecycleRequestedByDto struct {
+type operationLifecycleRequestedByDto struct {
 	Id          string `json:"id"`
 	DisplayName string `json:"displayName"`
 	Type        string `json:"type"`
 }
 
-type OperationLifecycleCreatedDto struct {
+type operationLifecycleCreatedDto struct {
 	Name       string                                 `json:"name"`
-	Properties OperationLifecycleCreatedPropertiesDto `json:"properties"`
+	Properties operationLifecycleCreatedPropertiesDto `json:"properties"`
 }
 
-type OperationLifecycleCreatedPropertiesDto struct {
+type operationLifecycleCreatedPropertiesDto struct {
 	ProvisioningState string `json:"provisioningState"`
 }

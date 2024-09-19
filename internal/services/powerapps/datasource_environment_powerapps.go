@@ -48,7 +48,7 @@ type EnvironmentPowerAppsDataSourceModel struct {
 	CreatedTime   types.String `tfsdk:"created_time"`
 }
 
-func ConvertFromPowerAppDto(powerAppDto PowerAppBapi) EnvironmentPowerAppsDataSourceModel {
+func ConvertFromPowerAppDto(powerAppDto powerAppBapiDto) EnvironmentPowerAppsDataSourceModel {
 	return EnvironmentPowerAppsDataSourceModel{
 		EnvironmentId: types.StringValue(powerAppDto.Properties.Environment.Name),
 		DisplayName:   types.StringValue(powerAppDto.Properties.DisplayName),

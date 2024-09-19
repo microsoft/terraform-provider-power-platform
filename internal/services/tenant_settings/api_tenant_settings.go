@@ -25,7 +25,7 @@ type TenantSettingsClient struct {
 	Api *api.Client
 }
 
-func (client *TenantSettingsClient) GetTenant(ctx context.Context) (*TenantDto, error) {
+func (client *TenantSettingsClient) GetTenant(ctx context.Context) (*tenantDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -36,7 +36,7 @@ func (client *TenantSettingsClient) GetTenant(ctx context.Context) (*TenantDto, 
 	values.Add("api-version", "2020-08-01")
 	apiUrl.RawQuery = values.Encode()
 
-	tenant := TenantDto{}
+	tenant := tenantDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &tenant)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (client *TenantSettingsClient) GetTenant(ctx context.Context) (*TenantDto, 
 	return &tenant, nil
 }
 
-func (client *TenantSettingsClient) GetTenantSettings(ctx context.Context) (*TenantSettingsDto, error) {
+func (client *TenantSettingsClient) GetTenantSettings(ctx context.Context) (*tenantSettingsDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -55,7 +55,7 @@ func (client *TenantSettingsClient) GetTenantSettings(ctx context.Context) (*Ten
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	tenantSettings := TenantSettingsDto{}
+	tenantSettings := tenantSettingsDto{}
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, nil, []int{http.StatusOK}, &tenantSettings)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (client *TenantSettingsClient) GetTenantSettings(ctx context.Context) (*Ten
 	return &tenantSettings, nil
 }
 
-func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, tenantSettings TenantSettingsDto) (*TenantSettingsDto, error) {
+func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, tenantSettings tenantSettingsDto) (*tenantSettingsDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -74,7 +74,7 @@ func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, te
 	values.Add(constants.API_VERSION_PARAM, "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	var backendSettings TenantSettingsDto
+	var backendSettings tenantSettingsDto
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, tenantSettings, []int{http.StatusOK}, &backendSettings)
 	if err != nil {
 		return nil, err
@@ -82,9 +82,9 @@ func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, te
 	return &backendSettings, nil
 }
 
-func applyCorrections(ctx context.Context, planned TenantSettingsDto, actual TenantSettingsDto) *TenantSettingsDto {
+func applyCorrections(ctx context.Context, planned tenantSettingsDto, actual tenantSettingsDto) *tenantSettingsDto {
 	correctedFilter := filterDto(ctx, planned, actual)
-	corrected, ok := correctedFilter.(*TenantSettingsDto)
+	corrected, ok := correctedFilter.(*tenantSettingsDto)
 	if !ok {
 		tflog.Error(ctx, "Type assertion to failed in applyCorrections")
 		return nil

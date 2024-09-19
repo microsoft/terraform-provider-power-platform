@@ -185,8 +185,8 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 
 	var configuredSettings TenantSettingsSourceModel
 	req.Config.Get(ctx, &configuredSettings)
-	state, _ = ConvertFromTenantSettingsDto(*tenantSettings, state.Timeouts)
-	hash, err := tenantSettings.CalcObjectHash()
+	state, _ = convertFromTenantSettingsDto(*tenantSettings, state.Timeouts)
+	hash, err := tenantSettings.calcObjectHash()
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", d.ProviderTypeName), err.Error())
 	}

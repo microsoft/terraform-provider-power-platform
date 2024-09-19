@@ -92,7 +92,7 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	state = ConvertFromEnvironmentSettingsDto(envSettings, state.Timeouts)
+	state = convertFromEnvironmentSettingsDto(envSettings, state.Timeouts)
 	state.Id = state.EnvironmentId
 
 	diags = resp.State.Set(ctx, &state)

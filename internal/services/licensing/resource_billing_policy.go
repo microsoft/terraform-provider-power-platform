@@ -160,8 +160,8 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	billingPolicyToCreate := BillingPolicyCreateDto{
-		BillingInstrument: BillingInstrumentDto{
+	billingPolicyToCreate := billingPolicyCreateDto{
+		BillingInstrument: billingInstrumentDto{
 			ResourceGroup:  plan.BillingInstrument.ResourceGroup.ValueString(),
 			SubscriptionId: plan.BillingInstrument.SubscriptionId.ValueString(),
 		},
@@ -274,7 +274,7 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 		ctx, cancel := context.WithTimeout(ctx, timeout)
 		defer cancel()
 
-		policyToUpdate := BillingPolicyUpdateDto{
+		policyToUpdate := billingPolicyUpdateDto{
 			Name:   plan.Name.ValueString(),
 			Status: plan.Status.ValueString(),
 		}

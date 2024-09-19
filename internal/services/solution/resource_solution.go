@@ -270,8 +270,8 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *Resource) importSolution(ctx context.Context, plan *ResourceModel, diagnostics *diag.Diagnostics) *Dto {
-	s := ImportSolutionDto{
+func (r *Resource) importSolution(ctx context.Context, plan *ResourceModel, diagnostics *diag.Diagnostics) *solutionDto {
+	s := importSolutionDto{
 		PublishWorkflows:                 true,
 		OverwriteUnmanagedCustomizations: true,
 		ComponentParameters:              make([]any, 0),

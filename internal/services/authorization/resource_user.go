@@ -179,7 +179,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	model := ConvertFromUserDto(userDto, plan.DisableDelete.ValueBool())
+	model := convertFromUserDto(userDto, plan.DisableDelete.ValueBool())
 
 	plan.Id = model.Id
 	plan.AadId = model.AadId
@@ -227,7 +227,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	model := ConvertFromUserDto(userDto, state.DisableDelete.ValueBool())
+	model := convertFromUserDto(userDto, state.DisableDelete.ValueBool())
 
 	state.Id = model.Id
 	state.AadId = model.AadId
@@ -293,7 +293,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		user = userDto
 	}
 
-	model := ConvertFromUserDto(user, plan.DisableDelete.ValueBool())
+	model := convertFromUserDto(user, plan.DisableDelete.ValueBool())
 
 	plan.Id = model.Id
 	plan.AadId = model.AadId

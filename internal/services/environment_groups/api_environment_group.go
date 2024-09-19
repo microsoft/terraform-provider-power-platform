@@ -22,7 +22,7 @@ type EnvironmentGroupClient struct {
 	Api *api.Client
 }
 
-func (client *EnvironmentGroupClient) CreateEnvironmentGroup(ctx context.Context, environmentGroup EnvironmentGroupDto) (*EnvironmentGroupDto, error) {
+func (client *EnvironmentGroupClient) CreateEnvironmentGroup(ctx context.Context, environmentGroup environmentGroupDto) (*environmentGroupDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -33,7 +33,7 @@ func (client *EnvironmentGroupClient) CreateEnvironmentGroup(ctx context.Context
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	newEnvironmentGroup := EnvironmentGroupDto{}
+	newEnvironmentGroup := environmentGroupDto{}
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environmentGroup, []int{http.StatusCreated}, &newEnvironmentGroup)
 	if err != nil {
 		return nil, err
@@ -63,7 +63,7 @@ func (client *EnvironmentGroupClient) DeleteEnvironmentGroup(ctx context.Context
 }
 
 // updateEnvironmentGroup updates an environment group.
-func (client *EnvironmentGroupClient) UpdateEnvironmentGroup(ctx context.Context, environmentGroupId string, environmentGroup EnvironmentGroupDto) (*EnvironmentGroupDto, error) {
+func (client *EnvironmentGroupClient) UpdateEnvironmentGroup(ctx context.Context, environmentGroupId string, environmentGroup environmentGroupDto) (*environmentGroupDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -74,7 +74,7 @@ func (client *EnvironmentGroupClient) UpdateEnvironmentGroup(ctx context.Context
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	updatedEnvironmentGroup := EnvironmentGroupDto{}
+	updatedEnvironmentGroup := environmentGroupDto{}
 	_, err := client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, environmentGroup, []int{http.StatusOK}, &updatedEnvironmentGroup)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (client *EnvironmentGroupClient) UpdateEnvironmentGroup(ctx context.Context
 }
 
 // GetEnvironmentGroup gets an environment group.
-func (client *EnvironmentGroupClient) GetEnvironmentGroup(ctx context.Context, environmentGroupId string) (*EnvironmentGroupDto, error) {
+func (client *EnvironmentGroupClient) GetEnvironmentGroup(ctx context.Context, environmentGroupId string) (*environmentGroupDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -95,7 +95,7 @@ func (client *EnvironmentGroupClient) GetEnvironmentGroup(ctx context.Context, e
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	environmentGroup := EnvironmentGroupDto{}
+	environmentGroup := environmentGroupDto{}
 	httpResponse, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound}, &environmentGroup)
 	if httpResponse.Response.StatusCode == http.StatusNotFound {
 		return nil, nil

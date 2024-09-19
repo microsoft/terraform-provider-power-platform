@@ -279,7 +279,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	envToCreate, err := ConvertCreateEnvironmentDtoFromSourceModel(ctx, *plan)
+	envToCreate, err := convertCreateEnvironmentDtoFromSourceModel(ctx, *plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting source model to create environment dto", err.Error())
 	}
@@ -320,7 +320,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 
 	var currencyCode string
-	var templateMetadata *CreateTemplateMetadata
+	var templateMetadata *createTemplateMetadata
 	var templates []string
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
 		currencyCode = envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code
@@ -330,7 +330,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
 
-	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
+	newPlan, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -388,10 +388,10 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		currencyCode = defaultCurrency.IsoCurrencyCode
 	}
 
-	var templateMetadata *CreateTemplateMetadata
+	var templateMetadata *createTemplateMetadata
 	var templates []string
 	if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
-		dv, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
+		dv, err := convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
 		if err != nil {
 			resp.Diagnostics.AddError("Error when converting dataverse source model to create link environment metadata", err.Error())
 			return
@@ -401,7 +401,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 			templates = dv.Templates
 		}
 	}
-	newState, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, state.Timeouts)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, state.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -426,12 +426,12 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	environmentDto := Dto{
+	environmentDto := environmentDto{
 		Id:       plan.Id.ValueString(),
 		Name:     plan.DisplayName.ValueString(),
 		Type:     plan.EnvironmentType.ValueString(),
 		Location: plan.Location.ValueString(),
-		Properties: PropertiesDto{
+		Properties: enviromentPropertiesDto{
 			DisplayName:    plan.DisplayName.ValueString(),
 			EnvironmentSku: plan.EnvironmentType.ValueString(),
 		},
@@ -442,7 +442,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	if !plan.Cadence.IsNull() && plan.Cadence.ValueString() != "" {
-		environmentDto.Properties.UpdateCadence = &UpdateCadenceDto{
+		environmentDto.Properties.UpdateCadence = &updateCadenceDto{
 			Id: plan.Cadence.ValueString(),
 		}
 	}
@@ -452,13 +452,13 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		if plan.EnvironmentGroupId.ValueString() != "" && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
 			envGroupId = plan.EnvironmentGroupId.ValueString()
 		}
-		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
+		environmentDto.Properties.ParentEnvironmentGroup = &parentEnvironmentGroupDto{
 			Id: envGroupId,
 		}
 	}
 
 	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
-		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
+		environmentDto.Properties.BillingPolicy = &billingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
 		}
 	}
@@ -473,9 +473,9 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	// defer cancel()
 
 	var currencyCode string
-	if !IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
+	if !isDataverseEnvironmentEmpty(ctx, state) && !isDataverseEnvironmentEmpty(ctx, plan) {
 		currencyCode = updateExistingDataverse(ctx, plan, environmentDto, state)
-	} else if IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
+	} else if isDataverseEnvironmentEmpty(ctx, state) && !isDataverseEnvironmentEmpty(ctx, plan) {
 		code, err := addDataverse(ctx, plan, resp, r)
 		if err != nil {
 			resp.Diagnostics.AddError("Error when creating new dataverse environment", err.Error())
@@ -508,10 +508,10 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	var templateMetadata *CreateTemplateMetadata
+	var templateMetadata *createTemplateMetadata
 	var templates []string
 	if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
-		dv, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
+		dv, err := convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
 		if err != nil {
 			resp.Diagnostics.AddError("Error when converting dataverse source model to create link environment metadata", err.Error())
 			return
@@ -522,7 +522,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
+	newPlan, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -532,7 +532,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 }
 
 func addDataverse(ctx context.Context, plan *SourceModel, resp *resource.UpdateResponse, r *Resource) (string, error) {
-	linkedMetadataDto, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, plan.Dataverse)
+	linkedMetadataDto, err := convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, plan.Dataverse)
 	if err != nil {
 		return "", fmt.Errorf("Error when converting dataverse source model to create link environment metadata dto: %s", err.Error())
 	}
@@ -544,25 +544,25 @@ func addDataverse(ctx context.Context, plan *SourceModel, resp *resource.UpdateR
 	return linkedMetadataDto.Currency.Code, nil
 }
 
-func updateExistingDataverse(ctx context.Context, plan *SourceModel, environmentDto Dto, state *SourceModel) string {
+func updateExistingDataverse(ctx context.Context, plan *SourceModel, environmentDto environmentDto, state *SourceModel) string {
 	var dataverseSourcePlanModel DataverseSourceModel
 	plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
-	environmentDto.Properties.LinkedEnvironmentMetadata = &LinkedEnvironmentMetadataDto{
+	environmentDto.Properties.LinkedEnvironmentMetadata = &linkedEnvironmentMetadataDto{
 		SecurityGroupId: dataverseSourcePlanModel.SecurityGroupId.ValueString(),
 		DomainName:      dataverseSourcePlanModel.Domain.ValueString(),
 	}
 
 	if !dataverseSourcePlanModel.AdministrationMode.IsNull() && !dataverseSourcePlanModel.AdministrationMode.IsUnknown() {
 		if dataverseSourcePlanModel.AdministrationMode.ValueBool() {
-			environmentDto.Properties.States = &StatesEnvironmentDto{
-				Runtime: &RuntimeEnvironmentDto{
+			environmentDto.Properties.States = &statesEnvironmentDto{
+				Runtime: &runtimeEnvironmentDto{
 					Id: "AdminMode",
 				},
 			}
 		} else {
-			environmentDto.Properties.States = &StatesEnvironmentDto{
-				Runtime: &RuntimeEnvironmentDto{
+			environmentDto.Properties.States = &statesEnvironmentDto{
+				Runtime: &runtimeEnvironmentDto{
 					Id: "Enabled",
 				},
 			}
@@ -585,7 +585,7 @@ func updateExistingDataverse(ctx context.Context, plan *SourceModel, environment
 	}
 
 	if !dataverseSourcePlanModel.LinkedAppId.IsNull() && dataverseSourcePlanModel.LinkedAppId.ValueString() != "" {
-		environmentDto.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
+		environmentDto.Properties.LinkedAppMetadata = &linkedAppMetadataDto{
 			Type: dataverseSourcePlanModel.LinkedAppType.ValueString(),
 			Id:   dataverseSourcePlanModel.LinkedAppId.ValueString(),
 			Url:  dataverseSourcePlanModel.LinkedAppURL.ValueString(),

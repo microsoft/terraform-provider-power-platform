@@ -255,7 +255,7 @@ func (d *DataLossPreventionPolicyDataSource) Configure(ctx context.Context, req 
 }
 
 func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state PoliciesListDataSourceModel
+	var state policiesListDataSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POLICIES START: %s_%s", d.ProviderTypeName, d.TypeName))
 
@@ -282,7 +282,7 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 	state.Id = types.StringValue(strconv.Itoa(len(policies)))
 
 	for _, policy := range policies {
-		policyModel := DataLossPreventionPolicyDatasourceModel{}
+		policyModel := dataLossPreventionPolicyDatasourceModel{}
 		policyModel.Id = types.StringValue(policy.Name)
 		policyModel.DefaultConnectorsClassification = types.StringValue(policy.DefaultConnectorsClassification)
 		policyModel.DisplayName = types.StringValue(policy.DisplayName)

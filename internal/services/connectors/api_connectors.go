@@ -23,7 +23,7 @@ type Client struct {
 	Api *api.Client
 }
 
-func (client *Client) GetConnectors(ctx context.Context) ([]Dto, error) {
+func (client *Client) GetConnectors(ctx context.Context) ([]connectorDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerAppsUrl,
@@ -37,7 +37,7 @@ func (client *Client) GetConnectors(ctx context.Context) ([]Dto, error) {
 	values.Add("$filter", "environment eq '~Default'")
 	apiUrl.RawQuery = values.Encode()
 
-	connectorArray := ConnectorDtoArray{}
+	connectorArray := connectorArrayDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connectorArray)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (client *Client) GetConnectors(ctx context.Context) ([]Dto, error) {
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/unblockable",
 	}
-	unblockableConnectorArray := []UnblockableConnectorDto{}
+	unblockableConnectorArray := []unblockableConnectorDto{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &unblockableConnectorArray)
 	if err != nil {
 		return nil, err
@@ -67,17 +67,17 @@ func (client *Client) GetConnectors(ctx context.Context) ([]Dto, error) {
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/PowerPlatform.Governance/v1/connectors/metadata/virtual",
 	}
-	virtualConnectorArray := []VirtualConnectorDto{}
+	virtualConnectorArray := []virtualConnectorDto{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &virtualConnectorArray)
 	if err != nil {
 		return nil, err
 	}
 	for _, virutualConnector := range virtualConnectorArray {
-		connectorArray.Value = append(connectorArray.Value, Dto{
+		connectorArray.Value = append(connectorArray.Value, connectorDto{
 			Id:   virutualConnector.Id,
 			Name: virutualConnector.Metadata.Name,
 			Type: virutualConnector.Metadata.Type,
-			Properties: ConnectorPropertiesDto{
+			Properties: connectorPropertiesDto{
 				DisplayName: virutualConnector.Metadata.DisplayName,
 				Unblockable: false,
 				Tier:        "Built-in",

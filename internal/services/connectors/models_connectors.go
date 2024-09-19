@@ -3,14 +3,14 @@
 
 package connectors
 
-type Dto struct {
+type connectorDto struct {
 	Name       string                 `json:"name"`
 	Id         string                 `json:"id"`
 	Type       string                 `json:"type"`
-	Properties ConnectorPropertiesDto `json:"properties"`
+	Properties connectorPropertiesDto `json:"properties"`
 }
 
-type ConnectorPropertiesDto struct {
+type connectorPropertiesDto struct {
 	DisplayName string `json:"displayName"`
 	Description string `json:"description"`
 	Tier        string `json:"tier"`
@@ -18,25 +18,25 @@ type ConnectorPropertiesDto struct {
 	Unblockable bool
 }
 
-type ConnectorDtoArray struct {
-	Value []Dto `json:"value"`
+type connectorArrayDto struct {
+	Value []connectorDto `json:"value"`
 }
 
-type UnblockableConnectorDto struct {
+type unblockableConnectorDto struct {
 	Id       string                          `json:"id"`
-	Metadata UnblockableConnectorMetadataDto `json:"metadata"`
+	Metadata unblockableConnectorMetadataDto `json:"metadata"`
 }
 
-type UnblockableConnectorMetadataDto struct {
+type unblockableConnectorMetadataDto struct {
 	Unblockable bool `json:"unblockable"`
 }
 
-type VirtualConnectorDto struct {
+type virtualConnectorDto struct {
 	Id       string                      `json:"id"`
-	Metadata VirtualConnectorMetadataDto `json:"metadata"`
+	Metadata virtualConnectorMetadataDto `json:"metadata"`
 }
 
-type VirtualConnectorMetadataDto struct {
+type virtualConnectorMetadataDto struct {
 	VirtualConnector bool   `json:"virtualConnector"`
 	Name             string `json:"name"`
 	Type             string `json:"type"`

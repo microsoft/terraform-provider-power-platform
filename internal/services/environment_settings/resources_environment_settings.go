@@ -231,7 +231,7 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	settingsToUpdate, err := ConvertFromEnvironmentSettingsModel(ctx, plan)
+	settingsToUpdate, err := convertFromEnvironmentSettingsModel(ctx, plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error converting environment settings model", err.Error())
 		return
@@ -256,7 +256,7 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	var state = ConvertFromEnvironmentSettingsDto(envSettings, plan.Timeouts)
+	var state = convertFromEnvironmentSettingsDto(envSettings, plan.Timeouts)
 	state.Id = plan.EnvironmentId
 	state.EnvironmentId = plan.EnvironmentId
 
@@ -296,7 +296,7 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	var newState = ConvertFromEnvironmentSettingsDto(envSettings, state.Timeouts)
+	var newState = convertFromEnvironmentSettingsDto(envSettings, state.Timeouts)
 	newState.Id = state.EnvironmentId
 	newState.EnvironmentId = state.EnvironmentId
 
@@ -335,7 +335,7 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	envSettingsToUpdate, err := ConvertFromEnvironmentSettingsModel(ctx, plan)
+	envSettingsToUpdate, err := convertFromEnvironmentSettingsModel(ctx, plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error converting environment settings model", err.Error())
 		return
@@ -349,7 +349,7 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	plan = ConvertFromEnvironmentSettingsDto(environmentSettings, plan.Timeouts)
+	plan = convertFromEnvironmentSettingsDto(environmentSettings, plan.Timeouts)
 	plan.Id = state.EnvironmentId
 	plan.EnvironmentId = state.EnvironmentId
 

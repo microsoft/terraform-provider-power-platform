@@ -33,7 +33,7 @@ func (client *EnvironmentSettingsClient) DataverseExists(ctx context.Context, en
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
-func (client *EnvironmentSettingsClient) GetEnvironmentSettings(ctx context.Context, environmentId string) (*EnvironmentSettingsDto, error) {
+func (client *EnvironmentSettingsClient) GetEnvironmentSettings(ctx context.Context, environmentId string) (*environmentSettingsDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (client *EnvironmentSettingsClient) GetEnvironmentSettings(ctx context.Cont
 		Path:   "/api/data/v9.0/organizations",
 	}
 
-	environmentSettings := EnvironmentSettingsValueDto{}
+	environmentSettings := environmentSettingsValueDto{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &environmentSettings)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (client *EnvironmentSettingsClient) GetEnvironmentSettings(ctx context.Cont
 	return &environmentSettings.Value[0], nil
 }
 
-func (client *EnvironmentSettingsClient) UpdateEnvironmentSettings(ctx context.Context, environmentId string, environmentSettings EnvironmentSettingsDto) (*EnvironmentSettingsDto, error) {
+func (client *EnvironmentSettingsClient) UpdateEnvironmentSettings(ctx context.Context, environmentId string, environmentSettings environmentSettingsDto) (*environmentSettingsDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (client *EnvironmentSettingsClient) GetEnvironmentHostById(ctx context.Cont
 	return envUrl.Host, nil
 }
 
-func (client *EnvironmentSettingsClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
+func (client *EnvironmentSettingsClient) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -105,7 +105,7 @@ func (client *EnvironmentSettingsClient) getEnvironment(ctx context.Context, env
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	env := EnvironmentIdDto{}
+	env := environmentIdDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		return nil, err

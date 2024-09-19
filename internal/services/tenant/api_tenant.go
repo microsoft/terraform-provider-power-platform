@@ -22,7 +22,7 @@ type Client struct {
 	Api *api.Client
 }
 
-func (client *Client) GetTenant(ctx context.Context) (*Dto, error) {
+func (client *Client) GetTenant(ctx context.Context) (*tenantDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -33,7 +33,7 @@ func (client *Client) GetTenant(ctx context.Context) (*Dto, error) {
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	var dto Dto
+	var dto tenantDto
 
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &dto)
 	if err != nil {

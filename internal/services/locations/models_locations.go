@@ -3,18 +3,18 @@
 
 package locations
 
-type Dto struct {
-	Value []ArrayDto `json:"value"`
+type locationDto struct {
+	Value []locationsArrayDto `json:"value"`
 }
 
-type ArrayDto struct {
-	ID         string     `json:"id"`
-	Type       string     `json:"type"`
-	Name       string     `json:"name"`
-	Properties Properties `json:"properties"`
+type locationsArrayDto struct {
+	ID         string             `json:"id"`
+	Type       string             `json:"type"`
+	Name       string             `json:"name"`
+	Properties locationProperties `json:"properties"`
 }
 
-type Properties struct {
+type locationProperties struct {
 	DisplayName                            string   `json:"displayName"`
 	Code                                   string   `json:"code"`
 	IsDefault                              bool     `json:"isDefault"`

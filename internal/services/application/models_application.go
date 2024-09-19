@@ -2,13 +2,13 @@
 // Licensed under the MIT license.
 package application
 
-type TenantApplicationDto struct {
+type tenantApplicationDto struct {
 	ApplicationDescription string                         `json:"applicationDescription"`
 	ApplicationId          string                         `json:"applicationId"`
 	ApplicationName        string                         `json:"applicationName"`
 	ApplicationVisibility  string                         `json:"applicationVisibility"`
 	CatalogVisibility      string                         `json:"catalogVisibility"`
-	LastError              *TenantApplicationErrorDetails `json:"errorDetails,omitempty"`
+	LastError              *tenantApplicationErrorDetails `json:"errorDetails,omitempty"`
 	LearnMoreUrl           string                         `json:"learnMoreUrl"`
 	LocalizedDescription   string                         `json:"localizedDescription"`
 	LocalizedName          string                         `json:"localizedName"`
@@ -17,7 +17,7 @@ type TenantApplicationDto struct {
 	UniqueName             string                         `json:"uniqueName"`
 }
 
-type TenantApplicationErrorDetails struct {
+type tenantApplicationErrorDetails struct {
 	ErrorCode  string `json:"errorCode"`
 	ErrorName  string `json:"errorName"`
 	Message    string `json:"message"`
@@ -26,15 +26,15 @@ type TenantApplicationErrorDetails struct {
 	Type       string `json:"type"`
 }
 
-type TenantApplicationArrayDto struct {
-	Value []TenantApplicationDto `json:"value"`
+type tenantApplicationArrayDto struct {
+	Value []tenantApplicationDto `json:"value"`
 }
 
-type EnvironmentApplicationArrayDto struct {
-	Value []EnvironmentApplicationDto `json:"value"`
+type environmentApplicationArrayDto struct {
+	Value []environmentApplicationDto `json:"value"`
 }
 
-type EnvironmentApplicationDto struct {
+type environmentApplicationDto struct {
 	ApplicationId         string `json:"applicationId"`
 	Name                  string `json:"applicationName"`
 	UniqueName            string `json:"uniqueName"`
@@ -47,73 +47,73 @@ type EnvironmentApplicationDto struct {
 	ApplicationVisibility string `json:"applicationVisibility"`
 }
 
-type EnvironmentApplicationDeleteDto struct {
+type environmentApplicationDeleteDto struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
 }
 
-type EnvironmentApplicationCreateDto struct {
+type environmentApplicationCreateDto struct {
 	Location string `json:"location"`
 }
 
-type EnvironmentApplicationLifecycleCreatedDto struct {
+type environmentApplicationLifecycleCreatedDto struct {
 	Name       string                                              `json:"name"`
-	Properties EnvironmentApplicationLifecycleCreatedPropertiesDto `json:"properties"`
+	Properties environmentApplicationLifecycleCreatedPropertiesDto `json:"properties"`
 }
 
-type EnvironmentApplicationLifecycleCreatedPropertiesDto struct {
+type environmentApplicationLifecycleCreatedPropertiesDto struct {
 	ProvisioningState string `json:"provisioningState"`
 }
 
-type EnvironmentApplicationBapi struct {
+type environmentApplicationBapi struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 }
 
-type EnvironmentApplicationPropertiesBapi struct {
+type environmentApplicationPropertiesBapi struct {
 	TenantID    string `json:"tenantId"`
 	DisplayName string `json:"displayName"`
 }
 
-type LinkedEnvironmentApplicationMetadataBapi struct {
+type linkedEnvironmentApplicationMetadataBapi struct {
 	Version string `json:"version"`
 }
 
-type StatesEnvironmentApplicationBapi struct {
-	Management StatesManagementApplicationBapi `json:"management"`
+type statesEnvironmentApplicationBapi struct {
+	Management statesManagementApplicationBapi `json:"management"`
 }
 
-type StatesManagementApplicationBapi struct {
+type statesManagementApplicationBapi struct {
 	Id string `json:"id"`
 }
 
-type EnvironmentApplicationDtoArray struct {
-	Value []EnvironmentApplicationDto `json:"value"`
+type environmentApplicationDtoArray struct {
+	Value []environmentApplicationDto `json:"value"`
 }
 
-type EnvironmentApplicationCreateBapi struct {
+type environmentApplicationCreateBapi struct {
 	Location string `json:"location"`
 
-	Properties EnvironmentApplicationPropertiesBapi `json:"properties"`
+	Properties environmentApplicationPropertiesBapi `json:"properties"`
 }
 
-type EnvironmentApplicationCreatePropertiesBapi struct {
+type environmentApplicationCreatePropertiesBapi struct {
 	DisplayName string `json:"displayName"`
 }
 
-type EnvironmentApplicationCreateLinkApplicationMetadataBapi struct {
+type environmentApplicationCreateLinkApplicationMetadataBapi struct {
 }
 
-type EnvironmentApplicationLifecycleDto struct {
+type environmentApplicationLifecycleDto struct {
 	OperationId        string                                  `json:"operationId"`
 	CreatedDateTime    string                                  `json:"createdDateTime"`
 	LastActionDateTime string                                  `json:"lastActionDateTime"`
 	Status             string                                  `json:"status"`
 	StatusMessage      string                                  `json:"statusMessage"`
-	Error              EnvironmentApplicationLifecycleErrorDto `json:"error"`
+	Error              environmentApplicationLifecycleErrorDto `json:"error"`
 }
 
-type EnvironmentApplicationLifecycleErrorDto struct {
+type environmentApplicationLifecycleErrorDto struct {
 	ErrorName  string `json:"errorName"`
 	ErrorCode  int    `json:"errorCode"`
 	Message    string `json:"message"`
@@ -122,16 +122,16 @@ type EnvironmentApplicationLifecycleErrorDto struct {
 	Source     string `json:"source"`
 }
 
-type EnvironmentIdDto struct {
+type environmentIdDto struct {
 	Id         string                     `json:"id"`
 	Name       string                     `json:"name"`
-	Properties EnvironmentIdPropertiesDto `json:"properties"`
+	Properties environmentIdPropertiesDto `json:"properties"`
 }
 
-type EnvironmentIdPropertiesDto struct {
-	LinkedEnvironmentMetadata LinkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
+type environmentIdPropertiesDto struct {
+	LinkedEnvironmentMetadata linkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
 }
 
-type LinkedEnvironmentIdMetadataDto struct {
+type linkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }

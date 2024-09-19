@@ -398,7 +398,7 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 	}
 
 	// Update tenant settings via the API
-	plannedSettingsDto := ConvertFromTenantSettingsModel(ctx, plan)
+	plannedSettingsDto := convertFromTenantSettingsModel(ctx, plan)
 	tenantSettingsDto, err := r.TenantSettingClient.UpdateTenantSettings(ctx, plannedSettingsDto)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -409,7 +409,7 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 
 	stateDto := applyCorrections(ctx, plannedSettingsDto, *tenantSettingsDto)
 
-	state, _ := ConvertFromTenantSettingsDto(*stateDto, plan.Timeouts)
+	state, _ := convertFromTenantSettingsDto(*stateDto, plan.Timeouts)
 	state.Id = plan.Id
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
@@ -453,9 +453,9 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 
 	var configuredSettings TenantSettingsSourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &configuredSettings)...)
-	oldStateDto := ConvertFromTenantSettingsModel(ctx, configuredSettings)
+	oldStateDto := convertFromTenantSettingsModel(ctx, configuredSettings)
 	newStateDto := applyCorrections(ctx, oldStateDto, *tenantSettings)
-	newState, _ := ConvertFromTenantSettingsDto(*newStateDto, state.Timeouts)
+	newState, _ := convertFromTenantSettingsDto(*newStateDto, state.Timeouts)
 	newState.Id = types.StringValue(tenant.TenantId)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_tenant_settings with id %s", r.ProviderTypeName, newState.Id.ValueString()))
@@ -483,12 +483,12 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	plannedDto := ConvertFromTenantSettingsModel(ctx, plan)
+	plannedDto := convertFromTenantSettingsModel(ctx, plan)
 
 	// Preprocessing updates is unfortunately needed because Terraform can not treat a zeroed UUID as a null value.
 	// This captures the case where a UUID is changed from known to zeroed/null.  Zeroed UUIDs come back as null from the API.
 	// The plannedDto remembers what the user intended, and the preprocessedDto is what we will send to the API.
-	preprocessedDto := ConvertFromTenantSettingsModel(ctx, plan)
+	preprocessedDto := convertFromTenantSettingsModel(ctx, plan)
 
 	needsProcessing := func(p path.Path) bool {
 		var attrPlan customtypes.UUID
@@ -523,7 +523,7 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	// need to make corrections from what the API returns to match what terraform expects
 	filteredDto := applyCorrections(ctx, plannedDto, *updatedSettingsDto)
 
-	newState, _ := ConvertFromTenantSettingsDto(*filteredDto, plan.Timeouts)
+	newState, _ := convertFromTenantSettingsDto(*filteredDto, plan.Timeouts)
 	newState.Id = plan.Id
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
@@ -549,7 +549,7 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
-	stateDto := ConvertFromTenantSettingsModel(ctx, state)
+	stateDto := convertFromTenantSettingsModel(ctx, state)
 
 	// restore to previous state
 	previousBytes, err := req.Private.GetKey(ctx, "original_settings")
@@ -560,7 +560,7 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	var originalSettings TenantSettingsDto
+	var originalSettings tenantSettingsDto
 	err2 := json.Unmarshal(previousBytes, &originalSettings)
 	if err2 != nil {
 		resp.Diagnostics.AddError(

@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-type DlpPolicyModelDto struct {
+type dlpPolicyModelDto struct {
 	Name                                 string                                  `json:"name"`
 	DisplayName                          string                                  `json:"displayName"`
 	DefaultConnectorsClassification      string                                  `json:"defaultConnectorsClassification"`
@@ -19,116 +19,116 @@ type DlpPolicyModelDto struct {
 	CreatedTime                          string                                  `json:"createdTime"`
 	LastModifiedBy                       string                                  `json:"lastModifiedBy"`
 	LastModifiedTime                     string                                  `json:"lastModifiedTime"`
-	Environments                         []DlpEnvironmentDto                     `json:"environments"`
-	ConnectorGroups                      []DlpConnectorGroupsModelDto            `json:"connectorGroups"`
-	CustomConnectorUrlPatternsDefinition []DlpConnectorUrlPatternsDefinitionDto  `json:"customConnectorUrlPatternsDefinition,omitempty"`
-	ConnectorConfigurationsDefinition    DlpConnectorConfigurationsDefinitionDto `json:"connectorConfigurationsDefinition,omitempty"`
+	Environments                         []dlpEnvironmentDto                     `json:"environments"`
+	ConnectorGroups                      []dlpConnectorGroupsModelDto            `json:"connectorGroups"`
+	CustomConnectorUrlPatternsDefinition []dlpConnectorUrlPatternsDefinitionDto  `json:"customConnectorUrlPatternsDefinition,omitempty"`
+	ConnectorConfigurationsDefinition    dlpConnectorConfigurationsDefinitionDto `json:"connectorConfigurationsDefinition,omitempty"`
 }
 
-type DlpPolicyDto struct {
-	PolicyDefinition                     DlpPolicyDefinitionDto                   `json:"policyDefinition"`
-	ConnectorConfigurationsDefinition    *DlpConnectorConfigurationsDefinitionDto `json:"connectorConfigurationsDefinition,omitempty"`
-	CustomConnectorUrlPatternsDefinition DlpConnectorUrlPatternsDefinitionDto     `json:"customConnectorUrlPatternsDefinition"`
+type dlpPolicyDto struct {
+	PolicyDefinition                     dlpPolicyDefinitionDto                   `json:"policyDefinition"`
+	ConnectorConfigurationsDefinition    *dlpConnectorConfigurationsDefinitionDto `json:"connectorConfigurationsDefinition,omitempty"`
+	CustomConnectorUrlPatternsDefinition dlpConnectorUrlPatternsDefinitionDto     `json:"customConnectorUrlPatternsDefinition"`
 }
 
-type DlpPolicyDefinitionDto struct {
+type dlpPolicyDefinitionDto struct {
 	Name                            string                  `json:"name,omitempty"`
 	DisplayName                     string                  `json:"displayName"`
 	DefaultConnectorsClassification string                  `json:"defaultConnectorsClassification"`
 	EnvironmentType                 string                  `json:"environmentType"`
-	Environments                    []DlpEnvironmentDto     `json:"environments"`
-	ConnectorGroups                 []DlpConnectorGroupsDto `json:"connectorGroups"`
+	Environments                    []dlpEnvironmentDto     `json:"environments"`
+	ConnectorGroups                 []dlpConnectorGroupsDto `json:"connectorGroups"`
 	ETag                            string                  `json:"etag,omitempty"`
-	CreatedBy                       DlpPolicyLastActionDto  `json:"createdBy,omitempty"`
+	CreatedBy                       dlpPolicyLastActionDto  `json:"createdBy,omitempty"`
 	CreatedTime                     string                  `json:"createdTime,omitempty"`
-	LastModifiedBy                  DlpPolicyLastActionDto  `json:"lastModifiedBy,omitempty"`
+	LastModifiedBy                  dlpPolicyLastActionDto  `json:"lastModifiedBy,omitempty"`
 	LastModifiedTime                string                  `json:"lastModifiedTime,omitempty"`
 }
 
-type DlpPolicyDefinitionDtoArray struct {
-	Value []DlpPolicyDto `json:"value"`
+type dlpPolicyDefinitionDtoArray struct {
+	Value []dlpPolicyDto `json:"value"`
 }
 
-type DlpPolicyLastActionDto struct {
+type dlpPolicyLastActionDto struct {
 	DisplayName string `json:"displayName"`
 }
 
-type DlpConnectorConfigurationsDefinitionDto struct {
-	ConnectorActionConfigurations []DlpConnectorActionConfigurationsDto `json:"connectorActionConfigurations,omitempty"`
-	EndpointConfigurations        []DlpEndpointConfigurationsDto        `json:"endpointConfigurations,omitempty"`
+type dlpConnectorConfigurationsDefinitionDto struct {
+	ConnectorActionConfigurations []dlpConnectorActionConfigurationsDto `json:"connectorActionConfigurations,omitempty"`
+	EndpointConfigurations        []dlpEndpointConfigurationsDto        `json:"endpointConfigurations,omitempty"`
 }
 
-type DlpConnectorActionConfigurationsDto struct {
+type dlpConnectorActionConfigurationsDto struct {
 	ConnectorId                        string             `json:"connectorId"`
 	DefaultConnectorActionRuleBehavior string             `json:"defaultConnectorActionRuleBehavior"`
-	ActionRules                        []DlpActionRuleDto `json:"actionRules"`
+	ActionRules                        []dlpActionRuleDto `json:"actionRules"`
 }
 
-type DlpEndpointConfigurationsDto struct {
+type dlpEndpointConfigurationsDto struct {
 	ConnectorId   string               `json:"connectorId"`
-	EndpointRules []DlpEndpointRuleDto `json:"endpointRules"`
+	EndpointRules []dlpEndpointRuleDto `json:"endpointRules"`
 }
 
-type DlpConnectorUrlPatternsDefinitionDto struct {
-	Rules []DlpConnectorUrlPatternsRuleDto `json:"rules"`
+type dlpConnectorUrlPatternsDefinitionDto struct {
+	Rules []dlpConnectorUrlPatternsRuleDto `json:"rules"`
 }
 
-type DlpConnectorUrlPatternsRuleDto struct {
+type dlpConnectorUrlPatternsRuleDto struct {
 	Order                       int64  `json:"order"`
 	ConnectorRuleClassification string `json:"customConnectorRuleClassification"`
 	Pattern                     string `json:"pattern"`
 }
 
-type DlpEnvironmentDto struct {
+type dlpEnvironmentDto struct {
 	Name string `json:"name"`
 	Id   string `json:"id"`   // $"/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/{x.Name}",.
 	Type string `json:"type"` // "Microsoft.BusinessAppPlatform/scopes/environments".
 }
 
-type DlpConnectorGroupsDto struct {
+type dlpConnectorGroupsDto struct {
 	Classification string            `json:"classification"`
-	Connectors     []DlpConnectorDto `json:"connectors"`
+	Connectors     []dlpConnectorDto `json:"connectors"`
 }
 
-type DlpConnectorGroupsModelDto struct {
+type dlpConnectorGroupsModelDto struct {
 	Classification string                 `json:"classification"`
-	Connectors     []DlpConnectorModelDto `json:"connectors"`
+	Connectors     []dlpConnectorModelDto `json:"connectors"`
 }
 
-type DlpConnectorModelDto struct {
+type dlpConnectorModelDto struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 	Type string `json:"type"`
 
 	DefaultActionRuleBehavior string
-	ActionRules               []DlpActionRuleDto
-	EndpointRules             []DlpEndpointRuleDto
+	ActionRules               []dlpActionRuleDto
+	EndpointRules             []dlpEndpointRuleDto
 }
 
-type DlpConnectorDto struct {
+type dlpConnectorDto struct {
 	Id   string `json:"id"`
 	Name string `json:"name"`
 	Type string `json:"type"`
 }
 
-type DlpEndpointRuleDto struct {
+type dlpEndpointRuleDto struct {
 	Order    int64  `json:"order"`
 	Behavior string `json:"behavior"`
 	Endpoint string `json:"endpoint"`
 }
 
-type DlpActionRuleDto struct {
+type dlpActionRuleDto struct {
 	ActionId string `json:"actionId"`
 	Behavior string `json:"behavior"`
 }
 
-type PoliciesListDataSourceModel struct {
+type policiesListDataSourceModel struct {
 	Timeouts timeouts.Value                            `tfsdk:"timeouts"`
 	Id       types.String                              `tfsdk:"id"`
-	Policies []DataLossPreventionPolicyDatasourceModel `tfsdk:"policies"`
+	Policies []dataLossPreventionPolicyDatasourceModel `tfsdk:"policies"`
 }
 
-type DataLossPreventionPolicyDatasourceModel struct {
+type dataLossPreventionPolicyDatasourceModel struct {
 	Id                                types.String `tfsdk:"id"`
 	DisplayName                       types.String `tfsdk:"display_name"`
 	DefaultConnectorsClassification   types.String `tfsdk:"default_connectors_classification"`
@@ -144,7 +144,7 @@ type DataLossPreventionPolicyDatasourceModel struct {
 	CustomConnectorsPatterns          types.Set    `tfsdk:"custom_connectors_patterns"`
 }
 
-type DataLossPreventionPolicyResourceModel struct {
+type dataLossPreventionPolicyResourceModel struct {
 	Timeouts                          timeouts.Value `tfsdk:"timeouts"`
 	Id                                types.String   `tfsdk:"id"`
 	DisplayName                       types.String   `tfsdk:"display_name"`
@@ -161,7 +161,7 @@ type DataLossPreventionPolicyResourceModel struct {
 	CustomConnectorsPatterns          types.Set      `tfsdk:"custom_connectors_patterns"`
 }
 
-type DataLossPreventionPolicyResourceCustomConnectorPattern struct {
+type dataLossPreventionPolicyResourceCustomConnectorPattern struct {
 	Order          types.Int64  `tfsdk:"order"`
 	HostUrlPattern types.String `tfsdk:"host_url_pattern"`
 	DataGroup      types.String `tfsdk:"data_group"`
@@ -175,24 +175,24 @@ var customConnectorPatternSetObjectType = types.ObjectType{
 	},
 }
 
-type DataLossPreventionPolicyResourceEnvironmentsModel struct {
+type dataLossPreventionPolicyResourceEnvironmentsModel struct {
 	Name types.String `tfsdk:"name"`
 }
 
-type DataLossPreventionPolicyResourceConnectorModel struct {
+type dataLossPreventionPolicyResourceConnectorModel struct {
 	Id                        types.String                                                 `tfsdk:"id"`
 	DefaultActionRuleBehavior types.String                                                 `tfsdk:"default_action_rule_behavior"`
-	ActionRules               []DataLossPreventionPolicyResourceConnectorActionRuleModel   `tfsdk:"action_rules"`
-	EndpointRules             []DataLossPreventionPolicyResourceConnectorEndpointRuleModel `tfsdk:"endpoint_rules"`
+	ActionRules               []dataLossPreventionPolicyResourceConnectorActionRuleModel   `tfsdk:"action_rules"`
+	EndpointRules             []dataLossPreventionPolicyResourceConnectorEndpointRuleModel `tfsdk:"endpoint_rules"`
 }
 
-type DataLossPreventionPolicyResourceConnectorEndpointRuleModel struct {
+type dataLossPreventionPolicyResourceConnectorEndpointRuleModel struct {
 	Order    types.Int64  `tfsdk:"order"`
 	Behavior types.String `tfsdk:"behavior"`
 	Endpoint types.String `tfsdk:"endpoint"`
 }
 
-type DataLossPreventionPolicyResourceConnectorActionRuleModel struct {
+type dataLossPreventionPolicyResourceConnectorActionRuleModel struct {
 	ActionId types.String `tfsdk:"action_id"`
 	Behavior types.String `tfsdk:"behavior"`
 }

@@ -3,35 +3,35 @@
 
 package powerapps
 
-type PowerAppBapi struct {
+type powerAppBapiDto struct {
 	Name       string                 `json:"name"`
-	Properties PowerAppPropertiesBapi `json:"properties"`
+	Properties powerAppPropertiesBapi `json:"properties"`
 }
 
-type PowerAppPropertiesBapi struct {
+type powerAppPropertiesBapi struct {
 	DisplayName      string                 `json:"displayName"`
-	Owner            PowerAppCreatedByDto   `json:"owner"`
-	CreatedBy        PowerAppCreatedByDto   `json:"createdBy"`
-	LastModifiedBy   PowerAppCreatedByDto   `json:"lastModifiedBy"`
-	LastPublishedBy  PowerAppCreatedByDto   `json:"lastPublishedBy"`
+	Owner            powerAppCreatedByDto   `json:"owner"`
+	CreatedBy        powerAppCreatedByDto   `json:"createdBy"`
+	LastModifiedBy   powerAppCreatedByDto   `json:"lastModifiedBy"`
+	LastPublishedBy  powerAppCreatedByDto   `json:"lastPublishedBy"`
 	CreatedTime      string                 `json:"createdTime"`
 	LastModifiedTime string                 `json:"lastModifiedTime"`
 	LastPublishTime  string                 `json:"lastPublishTime"`
-	Environment      PowerAppEnvironmentDto `json:"environment"`
+	Environment      powerAppEnvironmentDto `json:"environment"`
 }
 
-type PowerAppEnvironmentDto struct {
+type powerAppEnvironmentDto struct {
 	Id       string `json:"id"`
 	Location string `json:"location"`
 	Name     string `json:"name"`
 }
 
-type PowerAppCreatedByDto struct {
+type powerAppCreatedByDto struct {
 	DisplayName       string `json:"displayName"`
 	Id                string `json:"id"`
 	UserPrincipalName string `json:"userPrincipalName"`
 }
 
-type PowerAppDtoArray struct {
-	Value []PowerAppBapi `json:"value"`
+type powerAppArrayDto struct {
+	Value []powerAppBapiDto `json:"value"`
 }

@@ -14,10 +14,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-const (
-	ADMIN_APP_URL = "/providers/Microsoft.BusinessAppPlatform/adminApplications/"
-)
-
 func NewAdminManagementApplicationClient(clientApi *api.Client) AdminManagementApplicationClient {
 	return AdminManagementApplicationClient{
 		Api: clientApi,
@@ -28,33 +24,33 @@ type AdminManagementApplicationClient struct {
 	Api *api.Client
 }
 
-func (client *AdminManagementApplicationClient) GetAdminApplication(ctx context.Context, clientId string) (*AdminManagementApplicationDto, error) {
+func (client *AdminManagementApplicationClient) GetAdminApplication(ctx context.Context, clientId string) (*adminManagementApplicationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
-		Path:   fmt.Sprintf("%s%s", ADMIN_APP_URL, clientId),
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/adminApplications/%s", clientId),
 		RawQuery: url.Values{
-			"api-version": []string{"2020-10-01"},
+			constants.API_VERSION_PARAM: []string{"2020-10-01"},
 		}.Encode(),
 	}
 
-	var adminApp AdminManagementApplicationDto
+	var adminApp adminManagementApplicationDto
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
 
 	return &adminApp, err
 }
 
-func (client *AdminManagementApplicationClient) RegisterAdminApplication(ctx context.Context, clientId string) (*AdminManagementApplicationDto, error) {
+func (client *AdminManagementApplicationClient) RegisterAdminApplication(ctx context.Context, clientId string) (*adminManagementApplicationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
-		Path:   fmt.Sprintf("%s%s", ADMIN_APP_URL, clientId),
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/adminApplications/%s", clientId),
 		RawQuery: url.Values{
 			"api-version": []string{"2020-10-01"},
 		}.Encode(),
 	}
 
-	var adminApp AdminManagementApplicationDto
+	var adminApp adminManagementApplicationDto
 	_, err := client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
 
 	return &adminApp, err
@@ -64,7 +60,7 @@ func (client *AdminManagementApplicationClient) UnregisterAdminApplication(ctx c
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
-		Path:   fmt.Sprintf("%s%s", ADMIN_APP_URL, clientId),
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/adminApplications/%s", clientId),
 		RawQuery: url.Values{
 			"api-version": []string{"2020-10-01"},
 		}.Encode(),

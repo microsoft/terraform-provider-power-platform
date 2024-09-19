@@ -26,12 +26,12 @@ type PowerAppssClient struct {
 	environmentClient environment.Client
 }
 
-func (client *PowerAppssClient) GetPowerApps(ctx context.Context, environmentId string) ([]PowerAppBapi, error) {
+func (client *PowerAppssClient) GetPowerApps(ctx context.Context, environmentId string) ([]powerAppBapiDto, error) {
 	envs, err := client.environmentClient.GetEnvironments(ctx)
 	if err != nil {
 		return nil, err
 	}
-	apps := make([]PowerAppBapi, 0)
+	apps := make([]powerAppBapiDto, 0)
 	for _, env := range envs {
 		apiUrl := &url.URL{
 			Scheme: constants.HTTPS,
@@ -42,7 +42,7 @@ func (client *PowerAppssClient) GetPowerApps(ctx context.Context, environmentId 
 		values.Add("api-version", "2023-06-01")
 		apiUrl.RawQuery = values.Encode()
 
-		appsArray := PowerAppDtoArray{}
+		appsArray := powerAppArrayDto{}
 		_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &appsArray)
 		if err != nil {
 			return nil, err

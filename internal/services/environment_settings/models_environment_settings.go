@@ -54,8 +54,8 @@ type FeaturesSourceModel struct {
 	PowerAppsComponentFrameworkForCanvasApps types.Bool `tfsdk:"power_apps_component_framework_for_canvas_apps"`
 }
 
-func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel) (*EnvironmentSettingsDto, error) {
-	environmentSettingsDto := &EnvironmentSettingsDto{}
+func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel) (*environmentSettingsDto, error) {
+	environmentSettingsDto := &environmentSettingsDto{}
 	auditSettingsObject := environmentSettings.AuditAndLogs.Attributes()["audit_settings"]
 	if auditSettingsObject != nil && !auditSettingsObject.IsNull() && !auditSettingsObject.IsUnknown() {
 		var auditAndLogsSourceModel AuditSettingsSourceModel
@@ -95,7 +95,7 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 	return environmentSettingsDto, nil
 }
 
-func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *EnvironmentSettingsDto) {
+func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *environmentSettingsDto) {
 	emailSettingsObject := environmentSettings.Email.Attributes()["email_settings"]
 	if emailSettingsObject != nil && !emailSettingsObject.IsNull() && !emailSettingsObject.IsUnknown() {
 		var emailSourceModel EmailSettingsSourceModel
@@ -107,7 +107,7 @@ func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSetting
 	}
 }
 
-func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *EnvironmentSettingsDto) {
+func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *environmentSettingsDto) {
 	behaviorSettings := environmentSettings.Product.Attributes()["behavior_settings"]
 	if behaviorSettings != nil && !behaviorSettings.IsNull() && !behaviorSettings.IsUnknown() {
 		var behaviorSettingsSourceModel BehaviorSettingsSourceModel
@@ -119,7 +119,7 @@ func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSett
 	}
 }
 
-func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *EnvironmentSettingsDto) {
+func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *environmentSettingsDto) {
 	features := environmentSettings.Product.Attributes()["features"]
 	if features != nil && !features.IsNull() && !features.IsUnknown() {
 		var featuresSourceModel FeaturesSourceModel
@@ -131,7 +131,7 @@ func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSetti
 	}
 }
 
-func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettingsDto, timeout timeouts.Value) EnvironmentSettingsSourceModel {
+func convertFromEnvironmentSettingsDto(environmentSettingsDto *environmentSettingsDto, timeout timeouts.Value) EnvironmentSettingsSourceModel {
 	environmentSettings := EnvironmentSettingsSourceModel{
 		Timeouts: timeout,
 	}
@@ -213,11 +213,11 @@ func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettin
 	return environmentSettings
 }
 
-type EnvironmentSettingsValueDto struct {
-	Value []EnvironmentSettingsDto `json:"value"`
+type environmentSettingsValueDto struct {
+	Value []environmentSettingsDto `json:"value"`
 }
 
-type EnvironmentSettingsDto struct {
+type environmentSettingsDto struct {
 	MaxUploadFileSize                        *int64  `json:"maxuploadfilesize,omitempty"`
 	PluginTraceLogSetting                    *int64  `json:"plugintracelogsetting,omitempty"`
 	IsAuditEnabled                           *bool   `json:"isauditenabled,omitempty"`
@@ -228,16 +228,16 @@ type EnvironmentSettingsDto struct {
 	PowerAppsComponentFrameworkForCanvasApps *bool   `json:"iscustomcontrolsincanvasappsenabled,omitempty"`
 }
 
-type EnvironmentIdDto struct {
+type environmentIdDto struct {
 	Id         string                     `json:"id"`
 	Name       string                     `json:"name"`
-	Properties EnvironmentIdPropertiesDto `json:"properties"`
+	Properties environmentIdPropertiesDto `json:"properties"`
 }
 
-type EnvironmentIdPropertiesDto struct {
-	LinkedEnvironmentMetadata LinkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
+type environmentIdPropertiesDto struct {
+	LinkedEnvironmentMetadata linkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
 }
 
-type LinkedEnvironmentIdMetadataDto struct {
+type linkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }

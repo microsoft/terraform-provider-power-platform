@@ -34,7 +34,7 @@ func (client *Client) DataverseExists(ctx context.Context, environmentId string)
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
-func (client *Client) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
+func (client *Client) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -44,7 +44,7 @@ func (client *Client) getEnvironment(ctx context.Context, environmentId string) 
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	env := EnvironmentIdDto{}
+	env := environmentIdDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (client *Client) getEnvironment(ctx context.Context, environmentId string) 
 	return &env, nil
 }
 
-func (client *Client) GetTenantApplications(ctx context.Context) ([]TenantApplicationDto, error) {
+func (client *Client) GetTenantApplications(ctx context.Context) ([]tenantApplicationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -64,7 +64,7 @@ func (client *Client) GetTenantApplications(ctx context.Context) ([]TenantApplic
 	}
 	apiUrl.RawQuery = values.Encode()
 
-	application := TenantApplicationArrayDto{}
+	application := tenantApplicationArrayDto{}
 
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &application)
 	if err != nil {
@@ -74,7 +74,7 @@ func (client *Client) GetTenantApplications(ctx context.Context) ([]TenantApplic
 	return application.Value, nil
 }
 
-func (client *Client) GetApplicationsByEnvironmentId(ctx context.Context, environmentId string) ([]EnvironmentApplicationDto, error) {
+func (client *Client) GetApplicationsByEnvironmentId(ctx context.Context, environmentId string) ([]environmentApplicationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -85,7 +85,7 @@ func (client *Client) GetApplicationsByEnvironmentId(ctx context.Context, enviro
 	}
 	apiUrl.RawQuery = values.Encode()
 
-	application := EnvironmentApplicationArrayDto{}
+	application := environmentApplicationArrayDto{}
 
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &application)
 	if err != nil {
@@ -122,7 +122,7 @@ func (client *Client) InstallApplicationInEnvironment(ctx context.Context, envir
 		}
 
 		for {
-			lifecycleResponse := EnvironmentApplicationLifecycleDto{}
+			lifecycleResponse := environmentApplicationLifecycleDto{}
 			_, err = client.Api.Execute(ctx, "GET", operationLocationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
 			if err != nil {
 				return "", err
@@ -141,7 +141,7 @@ func (client *Client) InstallApplicationInEnvironment(ctx context.Context, envir
 			}
 		}
 	} else if response.Response.StatusCode == http.StatusCreated {
-		appCreatedResponse := EnvironmentApplicationLifecycleCreatedDto{}
+		appCreatedResponse := environmentApplicationLifecycleCreatedDto{}
 		err = response.MarshallTo(&appCreatedResponse)
 		if err != nil {
 			return "", err

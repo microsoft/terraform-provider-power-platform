@@ -429,8 +429,8 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 	return tableName, nil
 }
 
-func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, environmentId, tableName string, columns map[string]any) (*DataRecordDto, error) {
-	result := DataRecordDto{}
+func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, environmentId, tableName string, columns map[string]any) (*dataRecordDto, error) {
+	result := dataRecordDto{}
 
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {

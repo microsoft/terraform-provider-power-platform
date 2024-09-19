@@ -52,7 +52,7 @@ type DataSourceModel struct {
 	Unblockable types.Bool   `tfsdk:"unblockable"`
 }
 
-func ConvertFromConnectorDto(connectorDto Dto) DataSourceModel {
+func ConvertFromConnectorDto(connectorDto connectorDto) DataSourceModel {
 	return DataSourceModel{
 		Id:          types.StringValue(connectorDto.Id),
 		Name:        types.StringValue(connectorDto.Name),

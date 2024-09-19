@@ -157,10 +157,10 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	connectionToCreate := CreateDto{
-		Properties: CreatePropertiesDto{
+	connectionToCreate := createDto{
+		Properties: createPropertiesDto{
 			DisplayName: plan.DisplayName.ValueString(),
-			Environment: CreateEnvironmentDto{
+			Environment: createEnvironmentDto{
 				Name: plan.EnvironmentId.ValueString(),
 				Id:   fmt.Sprintf("/providers/Microsoft.PowerApps/environments/%s", plan.EnvironmentId.ValueString()),
 			},

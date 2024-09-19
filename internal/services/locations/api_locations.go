@@ -23,7 +23,7 @@ type Client struct {
 	Api *api.Client
 }
 
-func (client *Client) GetLocations(ctx context.Context) (Dto, error) {
+func (client *Client) GetLocations(ctx context.Context) (locationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -34,7 +34,7 @@ func (client *Client) GetLocations(ctx context.Context) (Dto, error) {
 	}
 	apiUrl.RawQuery = values.Encode()
 
-	locations := Dto{}
+	locations := locationDto{}
 
 	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {

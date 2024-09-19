@@ -170,7 +170,7 @@ func (d *SharesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, r
 	}
 }
 
-func ConvertFromConnectionSharesDto(connection ShareConnectionResponseDto) SharesDataSourceModel {
+func ConvertFromConnectionSharesDto(connection shareConnectionResponseDto) SharesDataSourceModel {
 	share := SharesDataSourceModel{
 		Id:       types.StringValue(connection.Name),
 		RoleName: types.StringValue(connection.Properties.RoleName),

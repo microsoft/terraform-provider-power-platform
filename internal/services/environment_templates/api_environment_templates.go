@@ -24,7 +24,7 @@ type EnvironmentTemplatesClient struct {
 	Api *api.Client
 }
 
-func (client *EnvironmentTemplatesClient) GetEnvironmentTemplatesByLocation(ctx context.Context, location string) (Dto, error) {
+func (client *EnvironmentTemplatesClient) GetEnvironmentTemplatesByLocation(ctx context.Context, location string) (environmentTemplateDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -34,7 +34,7 @@ func (client *EnvironmentTemplatesClient) GetEnvironmentTemplatesByLocation(ctx 
 		"api-version": []string{"2023-06-01"},
 	}.Encode()
 
-	templates := Dto{}
+	templates := environmentTemplateDto{}
 
 	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {

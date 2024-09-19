@@ -24,7 +24,7 @@ type Client struct {
 	Api *api.Client
 }
 
-func (client *Client) GetLanguagesByLocation(ctx context.Context, location string) (ArrayDto, error) {
+func (client *Client) GetLanguagesByLocation(ctx context.Context, location string) (languagesArrayDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -34,7 +34,7 @@ func (client *Client) GetLanguagesByLocation(ctx context.Context, location strin
 		"api-version": []string{"2023-06-01"},
 	}.Encode()
 
-	languages := ArrayDto{}
+	languages := languagesArrayDto{}
 
 	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {

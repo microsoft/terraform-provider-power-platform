@@ -24,7 +24,7 @@ type Client struct {
 	Api *api.Client
 }
 
-func (client *Client) GetCurrenciesByLocation(ctx context.Context, location string) (Dto, error) {
+func (client *Client) GetCurrenciesByLocation(ctx context.Context, location string) (currenciesDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -34,7 +34,7 @@ func (client *Client) GetCurrenciesByLocation(ctx context.Context, location stri
 		"api-version": []string{"2023-06-01"},
 	}.Encode()
 
-	currencies := Dto{}
+	currencies := currenciesDto{}
 
 	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {

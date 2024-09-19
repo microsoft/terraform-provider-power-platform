@@ -35,7 +35,7 @@ func (client *UserClient) DataverseExists(ctx context.Context, environmentId str
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
-func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([]UserDto, error) {
+func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([]userDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers",
 	}
-	userArray := UserDtoArray{}
+	userArray := userDtoArray{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &userArray)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([
 	return userArray.Value, nil
 }
 
-func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environmentId, systemUserId string) (*UserDto, error) {
+func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environmentId, systemUserId string) (*userDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -67,7 +67,7 @@ func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environment
 	values.Add("$expand", "systemuserroles_association($select=roleid,name,ismanaged,_businessunitid_value)")
 	apiUrl.RawQuery = values.Encode()
 
-	user := UserDto{}
+	user := userDto{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
@@ -78,7 +78,7 @@ func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environment
 	return &user, nil
 }
 
-func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentId, aadObjectId string) (*UserDto, error) {
+func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentId, aadObjectId string) (*userDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -93,7 +93,7 @@ func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentI
 	values.Add("$expand", "systemuserroles_association($select=roleid,name,ismanaged,_businessunitid_value)")
 	apiUrl.RawQuery = values.Encode()
 
-	user := UserDtoArray{}
+	user := userDtoArray{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
@@ -105,7 +105,7 @@ func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentI
 	return &user.Value[0], nil
 }
 
-func (client *UserClient) CreateUser(ctx context.Context, environmentId, aadObjectId string) (*UserDto, error) {
+func (client *UserClient) CreateUser(ctx context.Context, environmentId, aadObjectId string) (*userDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -148,7 +148,7 @@ func (client *UserClient) CreateUser(ctx context.Context, environmentId, aadObje
 	return user, nil
 }
 
-func (client *UserClient) UpdateUser(ctx context.Context, environmentId, systemUserId string, userUpdate *UserDto) (*UserDto, error) {
+func (client *UserClient) UpdateUser(ctx context.Context, environmentId, systemUserId string, userUpdate *userDto) (*userDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -189,7 +189,7 @@ func (client *UserClient) DeleteUser(ctx context.Context, environmentId, systemU
 	return nil
 }
 
-func (client *UserClient) RemoveSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*UserDto, error) {
+func (client *UserClient) RemoveSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*userDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -218,7 +218,7 @@ func (client *UserClient) RemoveSecurityRoles(ctx context.Context, environmentId
 	return user, nil
 }
 
-func (client *UserClient) AddSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*UserDto, error) {
+func (client *UserClient) AddSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*userDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -261,7 +261,7 @@ func (client *UserClient) GetEnvironmentHostById(ctx context.Context, environmen
 	return envUrl.Host, nil
 }
 
-func (client *UserClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
+func (client *UserClient) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -272,7 +272,7 @@ func (client *UserClient) getEnvironment(ctx context.Context, environmentId stri
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	env := EnvironmentIdDto{}
+	env := environmentIdDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
@@ -284,7 +284,7 @@ func (client *UserClient) getEnvironment(ctx context.Context, environmentId stri
 	return &env, nil
 }
 
-func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId, businessUnitId string) ([]SecurityRoleDto, error) {
+func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId, businessUnitId string) ([]securityRoleDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -299,7 +299,7 @@ func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId, b
 		values.Add("$filter", fmt.Sprintf("_businessunitid_value eq %s", businessUnitId))
 		apiUrl.RawQuery = values.Encode()
 	}
-	securityRoleArray := SecurityRoleDtoArray{}
+	securityRoleArray := securityRoleDtoArray{}
 	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &securityRoleArray)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {

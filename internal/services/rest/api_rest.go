@@ -25,20 +25,6 @@ type WebApiClient struct {
 	Api *api.Client
 }
 
-type EnvironmentIdDto struct {
-	Id         string                     `json:"id"`
-	Name       string                     `json:"name"`
-	Properties EnvironmentIdPropertiesDto `json:"properties"`
-}
-
-type EnvironmentIdPropertiesDto struct {
-	LinkedEnvironmentMetadata LinkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
-}
-
-type LinkedEnvironmentIdMetadataDto struct {
-	InstanceURL string
-}
-
 func (client *WebApiClient) SendOperation(ctx context.Context, operation *DataverseWebApiOperation) (types.Object, error) {
 	url := operation.Url.ValueString()
 	method := operation.Method.ValueString()

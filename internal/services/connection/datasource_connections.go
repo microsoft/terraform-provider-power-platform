@@ -166,7 +166,7 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 }
 
-func ConvertFromConnectionDto(connection Dto) ConnectionsDataSourceModel {
+func ConvertFromConnectionDto(connection connectionDto) ConnectionsDataSourceModel {
 	nameConnectorSplit := strings.Split(connection.Properties.ApiId, "/")
 	nameConnector := nameConnectorSplit[len(nameConnectorSplit)-1]
 

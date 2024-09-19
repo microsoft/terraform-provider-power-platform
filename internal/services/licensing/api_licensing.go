@@ -30,7 +30,7 @@ const (
 	API_VERSION_2022_03_01_preview = "2022-03-01-preview"
 )
 
-func (client *Client) GetBillingPolicies(ctx context.Context) ([]BillingPolicyDto, error) {
+func (client *Client) GetBillingPolicies(ctx context.Context) ([]billingPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -41,13 +41,13 @@ func (client *Client) GetBillingPolicies(ctx context.Context) ([]BillingPolicyDt
 	values.Add("api-version", API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
-	policies := BillingPolicyArrayDto{}
+	policies := billingPolicyArrayDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policies)
 
 	return policies.Value, err
 }
 
-func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*BillingPolicyDto, error) {
+func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*billingPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -58,7 +58,7 @@ func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*
 	values.Add("api-version", API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
-	policy := BillingPolicyDto{}
+	policy := billingPolicyDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 
 	if err != nil && strings.ContainsAny(err.Error(), "404") {
@@ -67,7 +67,7 @@ func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*
 	return &policy, err
 }
 
-func (client *Client) CreateBillingPolicy(ctx context.Context, policyToCreate BillingPolicyCreateDto) (*BillingPolicyDto, error) {
+func (client *Client) CreateBillingPolicy(ctx context.Context, policyToCreate billingPolicyCreateDto) (*billingPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -78,7 +78,7 @@ func (client *Client) CreateBillingPolicy(ctx context.Context, policyToCreate Bi
 	values.Add(constants.API_VERSION_PARAM, API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
-	policy := &BillingPolicyDto{}
+	policy := &billingPolicyDto{}
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, policyToCreate, []int{http.StatusCreated}, policy)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (client *Client) CreateBillingPolicy(ctx context.Context, policyToCreate Bi
 	return policy, err
 }
 
-func (client *Client) UpdateBillingPolicy(ctx context.Context, billingId string, policyToUpdate BillingPolicyUpdateDto) (*BillingPolicyDto, error) {
+func (client *Client) UpdateBillingPolicy(ctx context.Context, billingId string, policyToUpdate billingPolicyUpdateDto) (*billingPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -107,7 +107,7 @@ func (client *Client) UpdateBillingPolicy(ctx context.Context, billingId string,
 	values.Add("api-version", API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
-	policy := &BillingPolicyDto{}
+	policy := &billingPolicyDto{}
 	_, err := client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, policyToUpdate, []int{http.StatusOK}, policy)
 
 	// If billing policy status is not Enabled or Disabled, wait for it to reach a terminal state
@@ -149,7 +149,7 @@ func (client *Client) GetEnvironmentsForBillingPolicy(ctx context.Context, billi
 	values.Add("api-version", API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
-	billingPolicyEnvironments := BillingPolicyEnvironmentsArrayResponseDto{}
+	billingPolicyEnvironments := billingPolicyEnvironmentsArrayResponseDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &billingPolicyEnvironments)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
@@ -179,7 +179,7 @@ func (client *Client) AddEnvironmentsToBillingPolicy(ctx context.Context, billin
 	values.Add("api-version", API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
-	environments := BillingPolicyEnvironmentsArrayDto{
+	environments := billingPolicyEnvironmentsArrayDto{
 		EnvironmentIds: environmentIds,
 	}
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environments, []int{http.StatusOK}, nil)
@@ -201,7 +201,7 @@ func (client *Client) RemoveEnvironmentsToBillingPolicy(ctx context.Context, bil
 	values.Add("api-version", API_VERSION_2022_03_01_preview)
 	apiUrl.RawQuery = values.Encode()
 
-	environments := BillingPolicyEnvironmentsArrayDto{
+	environments := billingPolicyEnvironmentsArrayDto{
 		EnvironmentIds: environmentIds,
 	}
 	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environments, []int{http.StatusOK}, nil)
@@ -209,7 +209,7 @@ func (client *Client) RemoveEnvironmentsToBillingPolicy(ctx context.Context, bil
 	return err
 }
 
-func (client *Client) DoWaitForFinalStatus(ctx context.Context, billingPolicyDto *BillingPolicyDto) (*BillingPolicyDto, error) {
+func (client *Client) DoWaitForFinalStatus(ctx context.Context, billingPolicyDto *billingPolicyDto) (*billingPolicyDto, error) {
 	billingId := billingPolicyDto.Id
 
 	for {

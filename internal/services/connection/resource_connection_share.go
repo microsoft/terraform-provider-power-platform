@@ -235,13 +235,13 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	share := ShareConnectionRequestDto{
-		Put: []ShareConnectionRequestPutDto{
+	share := shareConnectionRequestDto{
+		Put: []shareConnectionRequestPutDto{
 			{
-				Properties: ShareConnectionRequestPutPropertiesDto{
+				Properties: shareConnectionRequestPutPropertiesDto{
 					RoleName:     plan.RoleName.ValueString(),
 					Capabilities: []any{},
-					Principal: ShareConnectionRequestPutPropertiesPrincipalDto{
+					Principal: shareConnectionRequestPutPropertiesPrincipalDto{
 						Id:       plan.Principal.EntraObjectId.ValueString(),
 						Type:     "ServicePrincipal",
 						TenantId: nil,
@@ -250,7 +250,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 				},
 			},
 		},
-		Delete: []ShareConnectionRequestDeleteDto{},
+		Delete: []shareConnectionRequestDeleteDto{},
 	}
 
 	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
@@ -315,7 +315,7 @@ func (r *ShareResource) ImportState(ctx context.Context, req resource.ImportStat
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func ConvertFromConnectionResourceSharesDto(oldPlan *ShareResourceModel, connection *ShareConnectionResponseDto) ShareResourceModel {
+func ConvertFromConnectionResourceSharesDto(oldPlan *ShareResourceModel, connection *shareConnectionResponseDto) ShareResourceModel {
 	share := ShareResourceModel{
 		Timeouts:      oldPlan.Timeouts,
 		EnvironmentId: oldPlan.EnvironmentId,

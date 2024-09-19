@@ -23,14 +23,14 @@ func NewCapacityClient(clientApi *api.Client) Client {
 	}
 }
 
-func (client *Client) GetTenantCapacity(ctx context.Context, tenantId string) (*Dto, error) {
+func (client *Client) GetTenantCapacity(ctx context.Context, tenantId string) (*capacityDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.LicensingUrl,
 		Path:   fmt.Sprintf("/v0.1-alpha/tenants/%s/TenantCapacity", tenantId),
 	}
 
-	var dto Dto
+	var dto capacityDto
 
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &dto)
 	if err != nil {

@@ -3,55 +3,55 @@
 
 package licensing
 
-type BillingPolicyCreateDto struct {
+type billingPolicyCreateDto struct {
 	Location          string               `json:"location"`
 	Name              string               `json:"name"`
 	Status            string               `json:"status"`
-	BillingInstrument BillingInstrumentDto `json:"billingInstrument"`
+	BillingInstrument billingInstrumentDto `json:"billingInstrument"`
 }
 
-type BillingInstrumentDto struct {
+type billingInstrumentDto struct {
 	Id             string `json:"id,omitempty"`
 	ResourceGroup  string `json:"resourceGroup"`
 	SubscriptionId string `json:"subscriptionId"`
 }
 
-type BillingPolicyDto struct {
+type billingPolicyDto struct {
 	Id                string               `json:"id"`
 	Name              string               `json:"name"`
 	TenantType        string               `json:"type"`
 	Status            string               `json:"status"`
 	Location          string               `json:"location"`
-	BillingInstrument BillingInstrumentDto `json:"billingInstrument"`
+	BillingInstrument billingInstrumentDto `json:"billingInstrument"`
 	CreatedOn         string               `json:"createdOn"`
-	CreatedBy         PrincipalDto         `json:"createdBy"`
+	CreatedBy         principalDto         `json:"createdBy"`
 	LastModifiedOn    string               `json:"lastModifiedOn"`
-	LastModifiedBy    PrincipalDto         `json:"lastModifiedBy"`
+	LastModifiedBy    principalDto         `json:"lastModifiedBy"`
 }
 
-type BillingPolicyArrayDto struct {
-	Value []BillingPolicyDto `json:"value"`
+type billingPolicyArrayDto struct {
+	Value []billingPolicyDto `json:"value"`
 }
 
-type BillingPolicyUpdateDto struct {
+type billingPolicyUpdateDto struct {
 	Name   string `json:"name"`
 	Status string `json:"status"`
 }
 
-type PrincipalDto struct {
+type principalDto struct {
 	Id            string `json:"id"`
 	PrincipalType string `json:"type"`
 }
 
-type BillingPolicyEnvironmentsArrayDto struct {
+type billingPolicyEnvironmentsArrayDto struct {
 	EnvironmentIds []string `json:"environmentIds"`
 }
 
-type BillingPolicyEnvironmentsDto struct {
+type billingPolicyEnvironmentsDto struct {
 	BillingPolicyId string `json:"billingPolicyId"`
 	EnvironmentId   string `json:"environmentId"`
 }
 
-type BillingPolicyEnvironmentsArrayResponseDto struct {
-	Value []BillingPolicyEnvironmentsDto `json:"value"`
+type billingPolicyEnvironmentsArrayResponseDto struct {
+	Value []billingPolicyEnvironmentsDto `json:"value"`
 }

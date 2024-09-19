@@ -3,18 +3,18 @@
 
 package currencies
 
-type Dto struct {
-	Value []ArrayDto `json:"value"`
+type currenciesDto struct {
+	Value []currenciesArrayDto `json:"value"`
 }
 
-type ArrayDto struct {
-	Name       string        `json:"name"`
-	ID         string        `json:"id"`
-	Type       string        `json:"type"`
-	Properties PropertiesDto `json:"properties"`
+type currenciesArrayDto struct {
+	Name       string                  `json:"name"`
+	ID         string                  `json:"id"`
+	Type       string                  `json:"type"`
+	Properties currenciesPropertiesDto `json:"properties"`
 }
 
-type PropertiesDto struct {
+type currenciesPropertiesDto struct {
 	Code            string `json:"code"`
 	Symbol          string `json:"symbol"`
 	IsTenantDefault bool   `json:"isTenantDefault"`
