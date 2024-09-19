@@ -43,4 +43,8 @@ linters-settings:
     issues:
       max-issues-per-linter: 1
       max-same-issues: 1
- 
+
+issues:
+  exclude:
+    - "ineffectual assignment to ctx"
+    - "SA4006: this value of `ctx` is never used"

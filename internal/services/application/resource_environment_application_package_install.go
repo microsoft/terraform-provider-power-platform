@@ -144,7 +144,6 @@ func (r *EnvironmentApplicationPackageInstallResource) Create(ctx context.Contex
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", state.UniqueName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {

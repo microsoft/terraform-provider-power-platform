@@ -217,7 +217,6 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	plan.Id = types.StringValue(fmt.Sprintf("%s_%s", plan.EnvironmentId.ValueString(), solution.Id))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-
 }
 
 func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -261,7 +260,6 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.DisplayName = types.StringValue(solution.DisplayName)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-
 }
 
 func (r *Resource) importSolution(ctx context.Context, plan *ResourceModel, diagnostics *diag.Diagnostics) *Dto {
@@ -305,6 +303,8 @@ func (r *Resource) importSolution(ctx context.Context, plan *ResourceModel, diag
 }
 
 func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
 	var plan *ResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)

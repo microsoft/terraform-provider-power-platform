@@ -187,7 +187,6 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 	state := ConvertFromConnectionResourceSharesDto(plan, share)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-
 }
 
 func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {

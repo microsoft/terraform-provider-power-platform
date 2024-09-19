@@ -418,7 +418,6 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
-
 }
 
 func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -458,7 +457,6 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_tenant_settings with id %s", r.ProviderTypeName, newState.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
-
 }
 
 func (r *TenantSettingsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {

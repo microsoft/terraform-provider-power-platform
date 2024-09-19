@@ -144,7 +144,6 @@ func (r *AdminManagementApplicationResource) Create(ctx context.Context, req res
 			Id:       customtypes.NewUUIDValue(adminApp.ClientId),
 			Timeouts: plan.Timeouts,
 		})...)
-
 }
 
 func (r *AdminManagementApplicationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

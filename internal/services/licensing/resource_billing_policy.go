@@ -204,7 +204,6 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-
 }
 
 func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -241,7 +240,6 @@ func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadReque
 	tflog.Debug(ctx, fmt.Sprintf("READ %s_%s with Id: %s", r.ProviderTypeName, r.TypeName, billing.Id))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-
 }
 
 func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -262,7 +260,6 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 
 	if plan.Name.ValueString() != state.Name.ValueString() ||
 		plan.Status.ValueString() != state.Status.ValueString() {
-
 		policyToUpdate := BillingPolicyUpdateDto{
 			Name:   plan.Name.ValueString(),
 			Status: plan.Status.ValueString(),

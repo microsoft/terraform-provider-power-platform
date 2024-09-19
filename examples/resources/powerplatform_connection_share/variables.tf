@@ -27,5 +27,4 @@ variable "user_object_id" {
   default     = "00000000-0000-0000-0000-000000000003"
   description = "Entra Object Id identifier of the user that will be granted access to the connection"
   type        = string
-
 }

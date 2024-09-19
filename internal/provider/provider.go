@@ -93,7 +93,7 @@ func (p *PowerPlatformProvider) Metadata(ctx context.Context, req provider.Metad
 }
 
 func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
-	_, exitContext := helpers.EnterProviderContext(ctx, req)
+	ctx, exitContext := helpers.EnterProviderContext(ctx, req)
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
@@ -171,7 +171,7 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 }
 
 func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
-	_, exitContext := helpers.EnterProviderContext(ctx, req)
+	ctx, exitContext := helpers.EnterProviderContext(ctx, req)
 	defer exitContext()
 
 	// Get Provider Configuration from the provider block in the configuration.
