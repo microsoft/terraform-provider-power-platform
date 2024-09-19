@@ -162,5 +162,8 @@ func (r *AdminManagementApplicationResource) Delete(ctx context.Context, req res
 }
 
 func (r *AdminManagementApplicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	resp.Diagnostics.AddError("Update not supported", "Update not supported")
 }

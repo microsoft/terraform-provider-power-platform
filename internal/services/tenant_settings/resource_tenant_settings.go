@@ -424,7 +424,6 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	var state TenantSettingsSourceModel
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -470,15 +469,6 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	plannedDto := ConvertFromTenantSettingsModel(ctx, plan)
 
 	// Preprocessing updates is unfortunately needed because Terraform can not treat a zeroed UUID as a null value.
@@ -522,7 +512,6 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	newState, _ := ConvertFromTenantSettingsDto(*filteredDto, plan.Timeouts)
 	newState.Id = plan.Id
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -575,10 +564,16 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *TenantSettingsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *TenantSettingsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	var plan TenantSettingsSourceModel
 	if !req.Plan.Raw.IsNull() {
 		// this is create

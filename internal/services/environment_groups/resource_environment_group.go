@@ -97,9 +97,10 @@ func (r *EnvironmentGroupResource) Configure(ctx context.Context, req resource.C
 	r.EnvironmentGroupClient = NewEnvironmentGroupClient(client)
 }
 
-// Read function.
+// Read function for EnvironmentGroupResource.
 func (r *EnvironmentGroupResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.TypeName))
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
 	state := EnvironmentGroupResourceModel{}
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -122,13 +123,12 @@ func (r *EnvironmentGroupResource) Read(ctx context.Context, req resource.ReadRe
 	state.DisplayName = types.StringValue(environmentGroup.DisplayName)
 	state.Description = types.StringValue(environmentGroup.Description)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.TypeName))
 }
 
 // Create function.
 func (r *EnvironmentGroupResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.TypeName))
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
 	var plan *EnvironmentGroupResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -153,12 +153,12 @@ func (r *EnvironmentGroupResource) Create(ctx context.Context, req resource.Crea
 	state.Description = types.StringValue(eg.Description)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.TypeName))
 }
 
 // Update function.
 func (r *EnvironmentGroupResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.TypeName))
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
 	var plan *EnvironmentGroupResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -189,12 +189,12 @@ func (r *EnvironmentGroupResource) Update(ctx context.Context, req resource.Upda
 	state.Description = types.StringValue(eg.Description)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.TypeName))
 }
 
 // Delete function.
 func (r *EnvironmentGroupResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.TypeName))
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
 	var state *EnvironmentGroupResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -207,14 +207,12 @@ func (r *EnvironmentGroupResource) Delete(ctx context.Context, req resource.Dele
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
-
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.TypeName))
 }
 
 // ImportState function.
 func (r *EnvironmentGroupResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("IMPORT STATE RESOURCE START: %s", r.TypeName))
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-	tflog.Debug(ctx, fmt.Sprintf("IMPORT STATE RESOURCE END: %s", r.TypeName))
 }

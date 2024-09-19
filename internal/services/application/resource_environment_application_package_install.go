@@ -180,26 +180,25 @@ func (r *EnvironmentApplicationPackageInstallResource) Update(ctx context.Contex
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 	tflog.Debug(ctx, "No application have been updated, as this is the expected behavior")
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *EnvironmentApplicationPackageInstallResourceModel
-
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
+	var state *EnvironmentApplicationPackageInstallResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 	tflog.Debug(ctx, "No application have been uninstalled, as this is the expected behavior")
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }

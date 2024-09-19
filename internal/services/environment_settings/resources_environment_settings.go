@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -227,12 +226,9 @@ func (r *EnvironmentSettingsResource) Configure(ctx context.Context, req resourc
 func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
+
 	var plan EnvironmentSettingsSourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("CREATE ENVIRONMENT SETTINGS RESOURCE START: %s", r.ProviderTypeName))
-
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -268,18 +264,14 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", state.Id.ValueString()))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	tflog.Debug(ctx, fmt.Sprintf("CREATE ENVIRONMENT SETTINGS RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
+
 	var state EnvironmentSettingsSourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("READ ENVIRONMENT SETTINGS RESOURCE START: %s", r.ProviderTypeName))
-
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -300,7 +292,6 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 	newState.EnvironmentId = state.EnvironmentId
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
-	tflog.Debug(ctx, fmt.Sprintf("READ ENVIRONMENT SETTINGS RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -309,11 +300,7 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 
 	var plan EnvironmentSettingsSourceModel
 	var state EnvironmentSettingsSourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE ENVIRONMENT SETTINGS RESOURCE START: %s", r.ProviderTypeName))
-
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -327,15 +314,6 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}
-
-	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	envSettingsToUpdate, err := ConvertFromEnvironmentSettingsModel(ctx, plan)
 	if err != nil {
@@ -356,12 +334,18 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 	plan.EnvironmentId = state.EnvironmentId
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE ENVIRONMENT SETTINGS RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *EnvironmentSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	// Do nothing on purpose
 }
 
 func (r *EnvironmentSettingsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	resource.ImportStatePassthroughID(ctx, path.Root("environment_id"), req, resp)
 }

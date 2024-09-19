@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	modifier "github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
@@ -186,9 +185,11 @@ func (r *DataverseWebApiResource) buildOperationSchema(description string) schem
 func (r *DataverseWebApiResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
+
 	if req.ProviderData == nil {
 		return
 	}
+
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
 	if clientApi == nil {
 		resp.Diagnostics.AddError(
@@ -203,11 +204,10 @@ func (r *DataverseWebApiResource) Configure(ctx context.Context, req resource.Co
 func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
+
 	var plan DataverseWebApiResourceModel
 	resp.State.Get(ctx, &plan)
-
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -239,18 +239,14 @@ func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.Creat
 		}
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.TypeName))
 }
 
 func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
+
 	var state DataverseWebApiResourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.TypeName))
-
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -279,7 +275,6 @@ func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.TypeName))
 }
 
 func (r *DataverseWebApiResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -287,23 +282,10 @@ func (r *DataverseWebApiResource) Update(ctx context.Context, req resource.Updat
 	defer exitContext()
 
 	var plan *DataverseWebApiResourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.TypeName))
-
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	if plan.Update != nil {
 		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, plan.Update)
@@ -324,16 +306,14 @@ func (r *DataverseWebApiResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.TypeName))
 }
 
 func (r *DataverseWebApiResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	var state *DataverseWebApiResourceModel
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.TypeName))
-
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -346,7 +326,6 @@ func (r *DataverseWebApiResource) Delete(ctx context.Context, req resource.Delet
 		}
 		state.Output = bodyWrapped
 	}
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.TypeName))
 }
 
 func (r *DataverseWebApiResource) NullOutputValue() basetypes.ObjectValue {

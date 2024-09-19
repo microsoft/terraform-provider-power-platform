@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -194,8 +193,6 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	defer exitContext()
 	var state *ShareResourceModel
 
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.TypeName))
-
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -214,7 +211,7 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	newState := ConvertFromConnectionResourceSharesDto(state, share)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.TypeName))
+
 }
 
 func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -250,15 +247,6 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		Delete: []ShareConnectionRequestDeleteDto{},
 	}
 
-	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	err := r.ConnectionsClient.UpdateConnectionShare(ctx, plan.EnvironmentId.ValueString(), plan.ConnectorName.ValueString(), plan.ConnectionId.ValueString(), share)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating connection share", err.Error())
@@ -277,18 +265,14 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	newState := ConvertFromConnectionResourceSharesDto(plan, newShare)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *ShareResourceModel
-
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
+	var state *ShareResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -301,6 +285,9 @@ func (r *ShareResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 }
 
 func (r *ShareResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
