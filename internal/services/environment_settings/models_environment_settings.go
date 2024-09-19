@@ -5,6 +5,7 @@ package environment_settings
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -53,8 +54,8 @@ type FeaturesSourceModel struct {
 	PowerAppsComponentFrameworkForCanvasApps types.Bool `tfsdk:"power_apps_component_framework_for_canvas_apps"`
 }
 
-func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel) EnvironmentSettingsDto {
-	environmentSettingsDto := EnvironmentSettingsDto{}
+func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel) (*EnvironmentSettingsDto, error) {
+	environmentSettingsDto := &EnvironmentSettingsDto{}
 	auditSettingsObject := environmentSettings.AuditAndLogs.Attributes()["audit_settings"]
 	if auditSettingsObject != nil && !auditSettingsObject.IsNull() && !auditSettingsObject.IsUnknown() {
 		var auditAndLogsSourceModel AuditSettingsSourceModel
@@ -72,19 +73,29 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 
 		pluginSettings := environmentSettings.AuditAndLogs.Attributes()["plugin_trace_log_setting"]
 		if pluginSettings != nil && !pluginSettings.IsNull() && !pluginSettings.IsUnknown() {
-			pluginSettings := pluginSettings.(basetypes.StringValue)
-			var v int64 = 0
-			if pluginSettings.ValueString() == "Off" {
+			pluginSettingsValue, ok := pluginSettings.(basetypes.StringValue)
+			if !ok {
+				return nil, fmt.Errorf("pluginSettings is not of type basetypes.StringValue")
+			}
+			var v int64
+			if pluginSettingsValue.ValueString() == "Off" {
 				environmentSettingsDto.PluginTraceLogSetting = &v
-			} else if pluginSettings.ValueString() == "Exception" {
+			} else if pluginSettingsValue.ValueString() == "Exception" {
 				v = 1
 				environmentSettingsDto.PluginTraceLogSetting = &v
-			} else if pluginSettings.ValueString() == "All" {
+			} else if pluginSettingsValue.ValueString() == "All" {
 				v = 2
 				environmentSettingsDto.PluginTraceLogSetting = &v
 			}
 		}
 	}
+	convertFromEnvironmentEmailSettings(ctx, environmentSettings, environmentSettingsDto)
+	convertFromEnvironmentBehaviorSettings(ctx, environmentSettings, environmentSettingsDto)
+	convertFromEnvironmentFeatureSettings(ctx, environmentSettings, environmentSettingsDto)
+	return environmentSettingsDto, nil
+}
+
+func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *EnvironmentSettingsDto) {
 	emailSettingsObject := environmentSettings.Email.Attributes()["email_settings"]
 	if emailSettingsObject != nil && !emailSettingsObject.IsNull() && !emailSettingsObject.IsUnknown() {
 		var emailSourceModel EmailSettingsSourceModel
@@ -93,9 +104,10 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 		if !emailSourceModel.MaxUploadFileSize.IsNull() && !emailSourceModel.MaxUploadFileSize.IsUnknown() {
 			environmentSettingsDto.MaxUploadFileSize = emailSourceModel.MaxUploadFileSize.ValueInt64Pointer()
 		}
-
 	}
+}
 
+func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *EnvironmentSettingsDto) {
 	behaviorSettings := environmentSettings.Product.Attributes()["behavior_settings"]
 	if behaviorSettings != nil && !behaviorSettings.IsNull() && !behaviorSettings.IsUnknown() {
 		var behaviorSettingsSourceModel BehaviorSettingsSourceModel
@@ -105,6 +117,9 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 			environmentSettingsDto.BoundDashboardDefaultCardExpanded = behaviorSettingsSourceModel.ShowDashboardCardsInExpandedState.ValueBoolPointer()
 		}
 	}
+}
+
+func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *EnvironmentSettingsDto) {
 	features := environmentSettings.Product.Attributes()["features"]
 	if features != nil && !features.IsNull() && !features.IsUnknown() {
 		var featuresSourceModel FeaturesSourceModel
@@ -114,13 +129,11 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 			environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps = featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.ValueBoolPointer()
 		}
 	}
-
-	return environmentSettingsDto
 }
 
-func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettingsDto, timeouts timeouts.Value) EnvironmentSettingsSourceModel {
+func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettingsDto, timeout timeouts.Value) EnvironmentSettingsSourceModel {
 	environmentSettings := EnvironmentSettingsSourceModel{
-		Timeouts: timeouts,
+		Timeouts: timeout,
 	}
 
 	pluginTraceSettings := "Unknown"

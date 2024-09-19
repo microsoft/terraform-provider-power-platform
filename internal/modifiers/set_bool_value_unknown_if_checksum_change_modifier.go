@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	helpers "github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 func SetBoolValueToUnknownIfChecksumsChangeModifier(firstAttributePair, secondAttributePair []string) planmodifier.Bool {
@@ -35,7 +35,6 @@ func (d *setBoolValueToUnknownIfChecksumsChangeModifier) MarkdownDescription(ctx
 }
 
 func (d *setBoolValueToUnknownIfChecksumsChangeModifier) PlanModifyBool(ctx context.Context, req planmodifier.BoolRequest, resp *planmodifier.BoolResponse) {
-
 	firstAttributeHasChanged := d.hasChecksumChanged(ctx, req, resp, d.firstAttributePair[0], d.firstAttributePair[1])
 	if resp.Diagnostics.HasError() {
 		return

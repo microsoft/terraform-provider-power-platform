@@ -11,23 +11,23 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	environment "github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
-func NewManagedEnvironmentClient(api *api.ApiClient) ManagedEnvironmentClient {
+func NewManagedEnvironmentClient(apiClient *api.Client) ManagedEnvironmentClient {
 	return ManagedEnvironmentClient{
-		Api:               api,
-		environmentClient: environment.NewEnvironmentClient(api),
+		Api:               apiClient,
+		environmentClient: environment.NewEnvironmentClient(apiClient),
 	}
 }
 
 type ManagedEnvironmentClient struct {
-	Api               *api.ApiClient
-	environmentClient environment.EnvironmentClient
+	Api               *api.Client
+	environmentClient environment.Client
 }
 
 func (client *ManagedEnvironmentClient) GetManagedEnvironmentSettings(ctx context.Context, environmentId string) (*environment.GovernanceConfigurationDto, error) {
-
 	managedEnvSettings, err := client.environmentClient.GetEnvironment(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -37,7 +37,7 @@ func (client *ManagedEnvironmentClient) GetManagedEnvironmentSettings(ctx contex
 
 func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Context, managedEnvSettings environment.GovernanceConfigurationDto, environmentId string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/governanceConfiguration", environmentId),
 	}
@@ -62,7 +62,7 @@ func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Con
 
 func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Context, environmentId string) error {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/governanceConfiguration", environmentId),
 	}
@@ -87,5 +87,4 @@ func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Co
 		return err
 	}
 	return nil
-
 }

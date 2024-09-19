@@ -154,12 +154,9 @@ func (d *TenantSettingsDataSource) Configure(ctx context.Context, req datasource
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
-
 	d.TenantSettingsClient = NewTenantSettingsClient(client)
-
 }
 
 func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -484,7 +481,7 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, _ datasource.Sche
 	}
 }
 
-// Metadata returns the metadata for the resource, which includes the resource type name
-func (d *TenantSettingsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+// Metadata returns the metadata for the resource, which includes the resource type name.
+func (d *TenantSettingsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }

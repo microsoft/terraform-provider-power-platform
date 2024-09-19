@@ -47,12 +47,9 @@ func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datas
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
-
 	d.EnvironmentSettingsClient = NewEnvironmentSettingsClient(client)
-
 }
 
 func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -220,6 +217,6 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, _ datasource
 	}
 }
 
-func (d *EnvironmentSettingsDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *EnvironmentSettingsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }

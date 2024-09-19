@@ -41,7 +41,6 @@ type ProviderConfigUrls struct {
 	LicensingUrl       string
 }
 
-// IsClientSecretCredentialsProvided returns true if all the required cred 
 func (model *ProviderConfig) IsClientSecretCredentialsProvided() bool {
 	return model.ClientId != "" && model.ClientSecret != "" && model.TenantId != ""
 }

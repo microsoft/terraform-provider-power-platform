@@ -3,13 +3,13 @@
 
 package capacity
 
-type TenantCapacityDto struct {
+type Dto struct {
 	TenantId         string        `json:"tenantId"`
 	LicenseModelType string        `json:"licenseModelType"`
-	TenantCapacities []CapacityDto `json:"tenantCapacities"`
+	TenantCapacities []TenantCapacityDto `json:"tenantCapacities"`
 }
 
-type CapacityDto struct {
+type TenantCapacityDto struct {
 	CapacityType  string         `json:"capacityType"`
 	CapacityUnits string         `json:"capacityUnits"`
 	TotalCapacity float32        `json:"totalCapacity"`

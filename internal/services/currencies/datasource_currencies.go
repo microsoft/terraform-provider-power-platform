@@ -17,18 +17,18 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &CurrenciesDataSource{}
-	_ datasource.DataSourceWithConfigure = &CurrenciesDataSource{}
+	_ datasource.DataSource              = &DataSource{}
+	_ datasource.DataSourceWithConfigure = &DataSource{}
 )
 
-type CurrenciesDataSourceModel struct {
-	Timeouts timeouts.Value      `tfsdk:"timeouts"`
-	Id       types.Int64         `tfsdk:"id"`
-	Location types.String        `tfsdk:"location"`
-	Value    []CurrencyDataModel `tfsdk:"currencies"`
+type DataSourceModel struct {
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	Id       types.Int64    `tfsdk:"id"`
+	Location types.String   `tfsdk:"location"`
+	Value    []DataModel    `tfsdk:"currencies"`
 }
 
-type CurrencyDataModel struct {
+type DataModel struct {
 	ID              string `tfsdk:"id"`
 	Name            string `tfsdk:"name"`
 	Type            string `tfsdk:"type"`
@@ -38,23 +38,23 @@ type CurrencyDataModel struct {
 }
 
 func NewCurrenciesDataSource() datasource.DataSource {
-	return &CurrenciesDataSource{
+	return &DataSource{
 		ProviderTypeName: "powerplatform",
 		TypeName:         "_currencies",
 	}
 }
 
-type CurrenciesDataSource struct {
-	CurrenciesClient CurrenciesClient
+type DataSource struct {
+	CurrenciesClient Client
 	ProviderTypeName string
 	TypeName         string
 }
 
-func (d *CurrenciesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *CurrenciesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of available Dynamics 365 currencies",
 		MarkdownDescription: "Fetches the list of available Dynamics 365 currencies. For more information see [Power Platform Currencies](https://learn.microsoft.com/power-platform/admin/manage-transactions-with-multiple-currencies)",
@@ -107,7 +107,7 @@ func (d *CurrenciesDataSource) Schema(ctx context.Context, _ datasource.SchemaRe
 	}
 }
 
-func (d *CurrenciesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -123,8 +123,8 @@ func (d *CurrenciesDataSource) Configure(ctx context.Context, req datasource.Con
 	d.CurrenciesClient = NewCurrenciesClient(clientApi)
 }
 
-func (d *CurrenciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state CurrenciesDataSourceModel
+func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state DataSourceModel
 	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE CURRENCIES START: %s", d.ProviderTypeName))
@@ -147,7 +147,7 @@ func (d *CurrenciesDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	state.Location = types.StringValue(state.Location.ValueString())
 
 	for _, location := range currencies.Value {
-		state.Value = append(state.Value, CurrencyDataModel{
+		state.Value = append(state.Value, DataModel{
 			ID:              location.ID,
 			Name:            location.Name,
 			Type:            location.Type,

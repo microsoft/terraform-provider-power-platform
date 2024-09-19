@@ -52,8 +52,7 @@ type LifecycleRequestedByDto struct {
 	Type        string `json:"type"`
 }
 
-func (client *ApiClient) DoWaitForLifecycleOperationStatus(ctx context.Context, response *ApiHttpResponse) (*LifecycleDto, error) {
-
+func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, response *HttpResponse) (*LifecycleDto, error) {
 	locationHeader := response.GetHeader(constants.HEADER_LOCATION)
 	tflog.Debug(ctx, "Location Header: "+locationHeader)
 

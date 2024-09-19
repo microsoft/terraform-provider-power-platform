@@ -41,13 +41,13 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 				data "powerplatform_data_loss_prevention_policies" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					//Verify placeholder id attribute
+					// Verify placeholder id attribute.
 					resource.TestMatchResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
-					//Verify returned count
+					// Verify returned count.
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.#", "2"),
 
-					// Verify the first power app to ensure all attributes are set
+					// Verify the first power app to ensure all attributes are set.
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.blocked_connectors.#", "0"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "0"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "0"),

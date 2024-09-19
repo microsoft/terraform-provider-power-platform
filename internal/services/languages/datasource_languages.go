@@ -17,31 +17,31 @@ import (
 )
 
 var (
-	_ datasource.DataSource              = &LanguagesDataSource{}
-	_ datasource.DataSourceWithConfigure = &LanguagesDataSource{}
+	_ datasource.DataSource              = &DataSource{}
+	_ datasource.DataSourceWithConfigure = &DataSource{}
 )
 
 func NewLanguagesDataSource() datasource.DataSource {
-	return &LanguagesDataSource{
+	return &DataSource{
 		ProviderTypeName: "powerplatform",
 		TypeName:         "_languages",
 	}
 }
 
-type LanguagesDataSource struct {
-	LanguagesClient  LanguagesClient
+type DataSource struct {
+	LanguagesClient  Client
 	ProviderTypeName string
 	TypeName         string
 }
 
-type LanguagesDataSourceModel struct {
-	Timeouts timeouts.Value      `tfsdk:"timeouts"`
-	Id       types.Int64         `tfsdk:"id"`
-	Location types.String        `tfsdk:"location"`
-	Value    []LanguageDataModel `tfsdk:"languages"`
+type DataSourceModel struct {
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	Id       types.Int64    `tfsdk:"id"`
+	Location types.String   `tfsdk:"location"`
+	Value    []DataModel    `tfsdk:"languages"`
 }
 
-type LanguageDataModel struct {
+type DataModel struct {
 	Name            string `tfsdk:"name"`
 	ID              string `tfsdk:"id"`
 	DisplayName     string `tfsdk:"display_name"`
@@ -50,11 +50,11 @@ type LanguageDataModel struct {
 	IsTenantDefault bool   `tfsdk:"is_tenant_default"`
 }
 
-func (d *LanguagesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
-func (d *LanguagesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dynamics 365 languages",
 		MarkdownDescription: "Fetches the list of Dynamics 365 languages. For more information see [Power Platform Enable Languages](https://learn.microsoft.com/power-platform/admin/enable-languages)",
@@ -108,7 +108,7 @@ func (d *LanguagesDataSource) Schema(ctx context.Context, _ datasource.SchemaReq
 	}
 }
 
-func (d *LanguagesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -124,8 +124,8 @@ func (d *LanguagesDataSource) Configure(ctx context.Context, req datasource.Conf
 	d.LanguagesClient = NewLanguagesClient(clientApi)
 }
 
-func (d *LanguagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state LanguagesDataSourceModel
+func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	var state DataSourceModel
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -152,7 +152,7 @@ func (d *LanguagesDataSource) Read(ctx context.Context, req datasource.ReadReque
 	state.Location = types.StringValue(state.Location.ValueString())
 
 	for _, language := range languages.Value {
-		state.Value = append(state.Value, LanguageDataModel{
+		state.Value = append(state.Value, DataModel{
 			ID:              language.ID,
 			Name:            language.Name,
 			DisplayName:     language.Properties.DisplayName,

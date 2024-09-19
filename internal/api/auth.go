@@ -54,14 +54,13 @@ type OidcCredentialOptions struct {
 	TokenFilePath string
 }
 
-func NewAuthBase(config *config.ProviderConfig) *Auth {
+func NewAuthBase(configValue *config.ProviderConfig) *Auth {
 	return &Auth{
-		config: config,
+		config: configValue,
 	}
 }
 
 func (client *Auth) AuthenticateClientCertificate(ctx context.Context, scopes []string) (string, time.Time, error) {
-
 	cert, key, err := helpers.ConvertBase64ToCert(client.config.ClientCertificateRaw, client.config.ClientCertificatePassword)
 	if err != nil {
 		return "", time.Time{}, err
@@ -127,9 +126,7 @@ func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []strin
 	if err != nil {
 		return "", time.Time{}, err
 	}
-
 	return accessToken.Token, accessToken.ExpiresOn, nil
-
 }
 
 func NewOidcCredential(options *OidcCredentialOptions) (*OidcCredential, error) {
@@ -218,7 +215,7 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 		return string(idTokenData), nil
 	}
 
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, w.requestUrl, http.NoBody)
+	req, err := http.NewRequestWithContext(ctx, "GET", w.requestUrl, http.NoBody)
 	if err != nil {
 		return "", fmt.Errorf("getAssertion: failed to build request")
 	}
@@ -248,7 +245,7 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("getAssertion: cannot parse response: %v", err)
 	}
 
-	if c := resp.StatusCode; c < 200 || c > 299 {
+	if statusCode := resp.StatusCode; statusCode < http.StatusOK || statusCode >= http.StatusMultipleChoices {
 		return "", fmt.Errorf("getAssertion: received HTTP status %d with response: %s", resp.StatusCode, body)
 	}
 

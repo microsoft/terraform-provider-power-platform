@@ -10,19 +10,20 @@ import (
 	"net/url"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	environment "github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
-func NewPowerAppssClient(api *api.ApiClient) PowerAppssClient {
+func NewPowerAppssClient(apiClient *api.Client) PowerAppssClient {
 	return PowerAppssClient{
-		Api:               api,
-		environmentClient: environment.NewEnvironmentClient(api),
+		Api:               apiClient,
+		environmentClient: environment.NewEnvironmentClient(apiClient),
 	}
 }
 
 type PowerAppssClient struct {
-	Api               *api.ApiClient
-	environmentClient environment.EnvironmentClient
+	Api               *api.Client
+	environmentClient environment.Client
 }
 
 func (client *PowerAppssClient) GetPowerApps(ctx context.Context, environmentId string) ([]PowerAppBapi, error) {
@@ -33,7 +34,7 @@ func (client *PowerAppssClient) GetPowerApps(ctx context.Context, environmentId 
 	apps := make([]PowerAppBapi, 0)
 	for _, env := range envs {
 		apiUrl := &url.URL{
-			Scheme: "https",
+			Scheme: constants.HTTPS,
 			Host:   client.Api.GetConfig().Urls.PowerAppsUrl,
 			Path:   fmt.Sprintf("/providers/Microsoft.PowerApps/scopes/admin/environments/%s/apps", env.Name),
 		}
@@ -47,7 +48,6 @@ func (client *PowerAppssClient) GetPowerApps(ctx context.Context, environmentId 
 			return nil, err
 		}
 		apps = append(apps, appsArray.Value...)
-
 	}
 	return apps, nil
 }

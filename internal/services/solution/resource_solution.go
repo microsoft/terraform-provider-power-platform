@@ -21,26 +21,26 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
-	modifiers "github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
-var _ resource.Resource = &SolutionResource{}
-var _ resource.ResourceWithImportState = &SolutionResource{}
+var _ resource.Resource = &Resource{}
+var _ resource.ResourceWithImportState = &Resource{}
 
 func NewSolutionResource() resource.Resource {
-	return &SolutionResource{
+	return &Resource{
 		ProviderTypeName: "powerplatform",
 		TypeName:         "_solution",
 	}
 }
 
-type SolutionResource struct {
-	SolutionClient   SolutionClient
+type Resource struct {
+	SolutionClient   Client
 	ProviderTypeName string
 	TypeName         string
 }
 
-type SolutionResourceModel struct {
+type ResourceModel struct {
 	Timeouts             timeouts.Value `tfsdk:"timeouts"`
 	Id                   types.String   `tfsdk:"id"`
 	SolutionFileChecksum types.String   `tfsdk:"solution_file_checksum"`
@@ -53,11 +53,11 @@ type SolutionResourceModel struct {
 	DisplayName          types.String   `tfsdk:"display_name"`
 }
 
-func (r *SolutionResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + r.TypeName
 }
 
-func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Description:         "Resource for importing solutions in Power Platform environments",
 		MarkdownDescription: "Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the [`pac solution import`](https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-import) command in the Power Platform CLI.",
@@ -140,7 +140,7 @@ func (r *SolutionResource) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (r *SolutionResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -159,8 +159,8 @@ func (r *SolutionResource) Configure(ctx context.Context, req resource.Configure
 	r.SolutionClient = NewSolutionClient(clientApi)
 }
 
-func (r *SolutionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan *SolutionResourceModel
+func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan *ResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
@@ -218,8 +218,8 @@ func (r *SolutionResource) Create(ctx context.Context, req resource.CreateReques
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *SolutionResourceModel
+func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state *ResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.ProviderTypeName))
 
@@ -244,10 +244,9 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
-		} else {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
-			return
 		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
+		return
 	}
 
 	if solution == nil {
@@ -260,23 +259,22 @@ func (r *SolutionResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 		tflog.Debug(ctx, fmt.Sprintf("Solution %s not found", solutionId))
 		return
-	} else {
-		state.Id = types.StringValue(fmt.Sprintf("%s_%s", state.EnvironmentId.ValueString(), solution.Id))
-		state.SolutionVersion = types.StringValue(solution.Version)
-		state.IsManaged = types.BoolValue(solution.IsManaged)
-		state.DisplayName = types.StringValue(solution.DisplayName)
 	}
+	state.Id = types.StringValue(fmt.Sprintf("%s_%s", state.EnvironmentId.ValueString(), solution.Id))
+	state.SolutionVersion = types.StringValue(solution.Version)
+	state.IsManaged = types.BoolValue(solution.IsManaged)
+	state.DisplayName = types.StringValue(solution.DisplayName)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *SolutionResource) importSolution(ctx context.Context, plan *SolutionResourceModel, diagnostics *diag.Diagnostics) *SolutionDto {
+func (r *Resource) importSolution(ctx context.Context, plan *ResourceModel, diagnostics *diag.Diagnostics) *Dto {
 	s := ImportSolutionDto{
 		PublishWorkflows:                 true,
 		OverwriteUnmanagedCustomizations: true,
-		ComponentParameters:              make([]interface{}, 0),
+		ComponentParameters:              make([]any, 0),
 	}
 
 	solutionContent, err := os.ReadFile(plan.SolutionFile.ValueString())
@@ -312,13 +310,13 @@ func (r *SolutionResource) importSolution(ctx context.Context, plan *SolutionRes
 	return solution
 }
 
-func (r *SolutionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
 
-	var plan *SolutionResourceModel
+	var plan *ResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
-	var state *SolutionResourceModel
+	var state *ResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
@@ -370,8 +368,8 @@ func (r *SolutionResource) Update(ctx context.Context, req resource.UpdateReques
 	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *SolutionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state *SolutionResourceModel
+func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state *ResourceModel
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -402,7 +400,7 @@ func (r *SolutionResource) Delete(ctx context.Context, req resource.DeleteReques
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 
-func (r *SolutionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 

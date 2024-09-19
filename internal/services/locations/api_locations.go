@@ -10,21 +10,22 @@ import (
 	"net/url"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewLocationsClient(api *api.ApiClient) LocationsClient {
-	return LocationsClient{
-		Api: api,
+func NewLocationsClient(apiClient *api.Client) Client {
+	return Client{
+		Api: apiClient,
 	}
 }
 
-type LocationsClient struct {
-	Api *api.ApiClient
+type Client struct {
+	Api *api.Client
 }
 
-func (client *LocationsClient) GetLocations(ctx context.Context) (LocationsDto, error) {
+func (client *Client) GetLocations(ctx context.Context) (Dto, error) {
 	apiUrl := &url.URL{
-		Scheme: "https",
+		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/locations",
 	}
@@ -33,7 +34,7 @@ func (client *LocationsClient) GetLocations(ctx context.Context) (LocationsDto, 
 	}
 	apiUrl.RawQuery = values.Encode()
 
-	locations := LocationsDto{}
+	locations := Dto{}
 
 	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {

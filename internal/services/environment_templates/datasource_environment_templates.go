@@ -54,7 +54,7 @@ type EnvironmentTemplatesDataModel struct {
 	IsSupportedForResetOperation bool   `tfsdk:"is_supported_for_reset_operation"`
 }
 
-func (d *EnvironmentTemplatesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
+func (d *EnvironmentTemplatesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + d.TypeName
 }
 
@@ -144,7 +144,7 @@ func (d *EnvironmentTemplatesDataSource) Configure(ctx context.Context, req data
 }
 
 func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	appendToList := func(items []EnvironmentTemplateItem, category string, list *[]EnvironmentTemplatesDataModel) {
+	appendToList := func(items []ItemDto, category string, list *[]EnvironmentTemplatesDataModel) {
 		for _, item := range items {
 			*list = append(*list, EnvironmentTemplatesDataModel{
 				Category:                     category,

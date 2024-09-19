@@ -15,13 +15,13 @@ type StateValue struct {
 	Value string
 }
 
-var _ knownvalue.Check = getKnownValue{}
+var _ knownvalue.Check = GetKnownValue{}
 
-type getKnownValue struct {
+type GetKnownValue struct {
 	value *StateValue
 }
 
-func (v getKnownValue) CheckValue(other any) error {
+func (v GetKnownValue) CheckValue(other any) error {
 	otherVal, ok := other.(string)
 
 	if !ok {
@@ -33,12 +33,12 @@ func (v getKnownValue) CheckValue(other any) error {
 	return nil
 }
 
-func (v getKnownValue) String() string {
+func (v GetKnownValue) String() string {
 	return v.value.Value
 }
 
-func GetStateValue(value *StateValue) getKnownValue {
-	return getKnownValue{
+func GetStateValue(value *StateValue) GetKnownValue {
+	return GetKnownValue{
 		value: value,
 	}
 }

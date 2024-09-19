@@ -98,7 +98,6 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 	for _, r := range resources {
 		require.Contains(t, expectedResources, r(), "An unexpected resource was registered")
 	}
-
 }
 
 func TestUnitPowerPlatformProvider_Validate_Telementry_Optout_Is_False(t *testing.T) {
@@ -122,7 +121,6 @@ func TestUnitPowerPlatformProvider_Validate_Telementry_Optout_Is_False(t *testin
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []test.TestStep{
 			{
-				//lintignore:AT004
 				Config: `provider "powerplatform" {
 					use_cli = true
 					telemetry_optout = false
@@ -154,7 +152,6 @@ func TestUnitPowerPlatformProvider_Validate_Telementry_Optout_Is_True(t *testing
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []test.TestStep{
 			{
-				//lintignore:AT004
 				Config: `provider "powerplatform" {
 					use_cli = true
 					telemetry_optout = true

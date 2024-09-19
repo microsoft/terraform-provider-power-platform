@@ -20,7 +20,7 @@ const TEST_ENVIRONMENT_VARIABLE_NAME2 = "TEST_ENV_VAR_2"
 // otherwise it should return the value of the environmentVariableName environment variable if it is set,
 // otherwise it should return the defaultValue.
 func TestUnitGetConfigString_Matrix(t *testing.T) {
-	// Do not run in parallel as we are setting environment variables
+	// Do not run in parallel as we are setting environment variables.
 
 	type testData struct {
 		name             string
@@ -92,7 +92,7 @@ func TestUnitGetConfigString_Matrix(t *testing.T) {
 // (if the environment variable can not be parsed as a bool it should return the defaultValue.)
 // otherwise it should return the defaultValue.
 func TestUnitGetConfigBool_Matrix(t *testing.T) {
-	// Do not run in parallel as we are setting environment variables
+	// Do not run in parallel as we are setting environment variables.
 
 	type testData struct {
 		name             string
@@ -235,7 +235,7 @@ func TestUnitGetConfigBool_Matrix(t *testing.T) {
 // otherwise it should return the value of the first environment variable that is set,
 // otherwise it should return the defaultValue.
 func TestUnitGetConfigMultiString_Matrix(t *testing.T) {
-	// Do not run in parallel as we are setting environment variables
+	// Do not run in parallel as we are setting environment variables.
 
 	type testData struct {
 		name              string

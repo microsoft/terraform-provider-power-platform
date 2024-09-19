@@ -1,0 +1,46 @@
+linters:
+  enable:
+    - revive
+    - staticcheck
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - unused
+    - godot
+linters-settings:
+  revive:
+    enable-all-rules: true
+    rules:
+      - name: var-naming
+        disabled: true
+      - name: line-length-limit
+        disabled: true
+      - name: cyclomatic
+        disabled: true
+      - name: add-constant
+        disabled: true
+      - name: function-length
+        disabled: true
+      - name: unused-parameter
+        disabled: true
+      - name: cognitive-complexity
+        disabled: false
+        arguments: [40]
+      - name: unused-receiver
+        disabled: true
+      - name: max-public-structs
+        disabled: true
+      - name: receiver-naming
+        disabled: true
+      - name: argument-limit
+        disabled: true
+  errcheck:
+    # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.
+    # Such cases aren't reported by default.
+    # Default: false
+    check-type-assertions: true
+    issues:
+      max-issues-per-linter: 1
+      max-same-issues: 1
+ 
