@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -26,15 +26,15 @@ var (
 
 func NewConnectionsDataSource() datasource.DataSource {
 	return &ConnectionsDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_connections",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "connections",
+		},
 	}
 }
 
 type ConnectionsDataSource struct {
+	helpers.TypeInfo
 	ConnectionsClient ConnectionsClient
-	ProviderTypeName  string
-	TypeName          string
 }
 
 type ConnectionsListDataSourceModel struct {
@@ -130,19 +130,12 @@ func (d *ConnectionsDataSource) Configure(ctx context.Context, req datasource.Co
 }
 
 func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state ConnectionsListDataSourceModel
 	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	connections, err := d.ConnectionsClient.GetConnections(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
@@ -156,7 +149,7 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 	state.Id = types.StringValue(strconv.Itoa(len(connections)))
 
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
 

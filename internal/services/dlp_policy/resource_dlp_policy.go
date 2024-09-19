@@ -27,19 +27,27 @@ var _ resource.ResourceWithImportState = &DataLossPreventionPolicyResource{}
 
 func NewDataLossPreventionPolicyResource() resource.Resource {
 	return &DataLossPreventionPolicyResource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_data_loss_prevention_policy",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "data_loss_prevention_policy",
+		},
 	}
 }
 
 type DataLossPreventionPolicyResource struct {
-	DlpPolicyClient  DlpPolicyClient
-	ProviderTypeName string
-	TypeName         string
+	helpers.TypeInfo
+	DlpPolicyClient DlpPolicyClient
 }
 
 func (r *DataLossPreventionPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + r.TypeName
+	// update our own internal storage of the provider type name.
+	r.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = r.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
 func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -233,6 +241,8 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 }
 
 func (r *DataLossPreventionPolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	if req.ProviderData == nil {
 		return
 	}
@@ -252,6 +262,8 @@ func (r *DataLossPreventionPolicyResource) Configure(ctx context.Context, req re
 }
 
 func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	var state *DataLossPreventionPolicyResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.TypeName))
@@ -261,15 +273,6 @@ func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resourc
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	policy, err := r.DlpPolicyClient.GetPolicy(ctx, state.Id.ValueString())
 	if err != nil {
@@ -300,6 +303,8 @@ func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resourc
 }
 
 func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	var plan *DataLossPreventionPolicyResourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.TypeName))
@@ -325,15 +330,6 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors))
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.NonBusinessConfidentialConnectors))
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors))
-
-	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	policy, err_client := r.DlpPolicyClient.CreatePolicy(ctx, policyToCreate)
 	if err_client != nil {
@@ -433,15 +429,6 @@ func (r *DataLossPreventionPolicyResource) Delete(ctx context.Context, req resou
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	err := r.DlpPolicyClient.DeletePolicy(ctx, state.Id.ValueString())
 	if err != nil {

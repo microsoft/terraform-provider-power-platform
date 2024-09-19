@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -24,15 +24,15 @@ var (
 
 func NewBillingPoliciesEnvironmetsDataSource() datasource.DataSource {
 	return &BillingPoliciesEnvironmetsDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_billing_policies_environments",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "billing_policies_environments",
+		},
 	}
 }
 
 type BillingPoliciesEnvironmetsDataSource struct {
-	LicensingClient  Client
-	ProviderTypeName string
-	TypeName         string
+	helpers.TypeInfo
+	LicensingClient Client
 }
 
 type BillingPoliciesEnvironmetsListDataSourceModel struct {
@@ -87,6 +87,8 @@ func (d *BillingPoliciesEnvironmetsDataSource) Configure(ctx context.Context, re
 }
 
 func (d *BillingPoliciesEnvironmetsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state BillingPoliciesEnvironmetsListDataSourceModel
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 
@@ -102,15 +104,6 @@ func (d *BillingPoliciesEnvironmetsDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	environments, err := d.LicensingClient.GetEnvironmentsForBillingPolicy(ctx, state.BillingPolicyId)
 
 	if err != nil {
@@ -120,7 +113,7 @@ func (d *BillingPoliciesEnvironmetsDataSource) Read(ctx context.Context, req dat
 
 	state.Environments = environments
 
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
 

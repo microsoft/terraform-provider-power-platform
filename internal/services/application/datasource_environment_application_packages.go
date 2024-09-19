@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -23,15 +23,15 @@ var (
 
 func NewEnvironmentApplicationPackagesDataSource() datasource.DataSource {
 	return &EnvironmentApplicationPackagesDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_environment_application_packages",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "environment_application_packages",
+		},
 	}
 }
 
 type EnvironmentApplicationPackagesDataSource struct {
+	helpers.TypeInfo
 	ApplicationClient Client
-	ProviderTypeName  string
-	TypeName          string
 }
 
 type EnvironmentApplicationPackagesListDataSourceModel struct {
@@ -164,19 +164,12 @@ func (d *EnvironmentApplicationPackagesDataSource) Configure(ctx context.Context
 }
 
 func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state EnvironmentApplicationPackagesListDataSourceModel
 	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES START: %s", d.ProviderTypeName))
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	state.EnvironmentId = types.StringValue(state.EnvironmentId.ValueString())
 	state.Name = types.StringValue(state.Name.ValueString())
@@ -218,7 +211,7 @@ func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req
 	}
 
 	state.Id = types.StringValue(fmt.Sprintf("%s_%d", state.EnvironmentId.ValueString(), len(applications)))
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES END: %s", d.ProviderTypeName))
 

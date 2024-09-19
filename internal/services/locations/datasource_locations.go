@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -41,15 +41,15 @@ type DataModel struct {
 
 func NewLocationsDataSource() datasource.DataSource {
 	return &DataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_locations",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "locations",
+		},
 	}
 }
 
 type DataSource struct {
-	LocationsClient  Client
-	ProviderTypeName string
-	TypeName         string
+	helpers.TypeInfo
+	LocationsClient Client
 }
 
 func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -137,6 +137,8 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state DataSourceModel
 	resp.State.Get(ctx, &state)
 
@@ -146,15 +148,6 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	locations, err := d.LocationsClient.GetLocations(ctx)
 	if err != nil {
@@ -178,9 +171,7 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		})
 	}
 
-	diags = resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LOCATIONS END: %s", d.ProviderTypeName))
+	diags := resp.State.Set(ctx, &state)
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

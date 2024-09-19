@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -26,15 +25,15 @@ var (
 
 func NewEnvironmentsDataSource() datasource.DataSource {
 	return &EnvironmentsDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_environments",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "environments",
+		},
 	}
 }
 
 type EnvironmentsDataSource struct {
+	helpers.TypeInfo
 	EnvironmentClient Client
-	ProviderTypeName  string
-	TypeName          string
 }
 
 func (d *EnvironmentsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -212,6 +211,8 @@ func (d *EnvironmentsDataSource) Configure(ctx context.Context, req datasource.C
 }
 
 func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state ListDataSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENTS START: %s", d.ProviderTypeName))
@@ -220,15 +221,6 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	envs, err := d.EnvironmentClient.GetEnvironments(ctx)
 
@@ -257,7 +249,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 	}
 	state.Id = types.Int64Value(int64(len(envs)))
 
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENTS END: %s", d.ProviderTypeName))
 

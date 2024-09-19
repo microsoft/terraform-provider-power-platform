@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var _ resource.Resource = &EnvironmentSettingsResource{}
@@ -28,22 +29,32 @@ var _ resource.ResourceWithImportState = &EnvironmentSettingsResource{}
 
 func NewEnvironmentSettingsResource() resource.Resource {
 	return &EnvironmentSettingsResource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_environment_settings",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "environment_settings",
+		},
 	}
 }
 
 type EnvironmentSettingsResource struct {
+	helpers.TypeInfo
 	EnvironmentSettingClient EnvironmentSettingsClient
-	ProviderTypeName         string
-	TypeName                 string
 }
 
 func (r *EnvironmentSettingsResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + r.TypeName
+	// update our own internal storage of the provider type name.
+	r.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = r.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
 func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Manages Power Platform Settings for a given environment.",
 		MarkdownDescription: "Manages Power Platform Settings for a given environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/power-platform/admin/admin-settings) for more details.",
@@ -193,6 +204,8 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 }
 
 func (r *EnvironmentSettingsResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	if req.ProviderData == nil {
 		return
 	}
@@ -212,6 +225,8 @@ func (r *EnvironmentSettingsResource) Configure(ctx context.Context, req resourc
 }
 
 func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	var plan EnvironmentSettingsSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("CREATE ENVIRONMENT SETTINGS RESOURCE START: %s", r.ProviderTypeName))
@@ -221,15 +236,6 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	settingsToUpdate, err := ConvertFromEnvironmentSettingsModel(ctx, plan)
 	if err != nil {
@@ -266,6 +272,8 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 }
 
 func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	var state EnvironmentSettingsSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ ENVIRONMENT SETTINGS RESOURCE START: %s", r.ProviderTypeName))
@@ -280,15 +288,6 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	envSettings, err := r.EnvironmentSettingClient.GetEnvironmentSettings(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
@@ -305,6 +304,9 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 }
 
 func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	var plan EnvironmentSettingsSourceModel
 	var state EnvironmentSettingsSourceModel
 

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -21,15 +22,15 @@ var (
 
 func NewTenantCapcityDataSource() datasource.DataSource {
 	return &DataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_tenant_capacity",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "tenant_capacity",
+		},
 	}
 }
 
 type DataSource struct {
-	CapacityClient   Client
-	ProviderTypeName string
-	TypeName         string
+	helpers.TypeInfo
+	CapacityClient Client
 }
 
 type DataSourceModel struct {
@@ -144,6 +145,8 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state DataSourceModel
 	var tenantId string
 	req.Config.GetAttribute(ctx, path.Root("tenant_id"), &tenantId)

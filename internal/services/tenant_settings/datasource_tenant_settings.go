@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -24,15 +24,15 @@ var (
 
 func NewTenantSettingsDataSource() datasource.DataSource {
 	return &TenantSettingsDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_tenant_settings",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "tenant_settings",
+		},
 	}
 }
 
 type TenantSettingsDataSource struct {
+	helpers.TypeInfo
 	TenantSettingsClient TenantSettingsClient
-	ProviderTypeName     string
-	TypeName             string
 }
 
 type TenantSettingsSourceModel struct {
@@ -160,6 +160,8 @@ func (d *TenantSettingsDataSource) Configure(ctx context.Context, req datasource
 }
 
 func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state TenantSettingsSourceModel
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -167,15 +169,6 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT SETTINGS START: %s", d.ProviderTypeName))
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	tenantSettings, err := d.TenantSettingsClient.GetTenantSettings(ctx)
 	if err != nil {
@@ -192,7 +185,7 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 	state.Id = types.StringValue(*hash)
 
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT SETTINGS END: %s", d.ProviderTypeName))
 

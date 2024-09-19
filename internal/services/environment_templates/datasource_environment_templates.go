@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -23,15 +23,15 @@ var (
 
 func NewEnvironmentTemplatesDataSource() datasource.DataSource {
 	return &EnvironmentTemplatesDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_environment_templates",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "environment_templates",
+		},
 	}
 }
 
 type EnvironmentTemplatesDataSource struct {
+	helpers.TypeInfo
 	EnvironmentTemplatesClient EnvironmentTemplatesClient
-	ProviderTypeName           string
-	TypeName                   string
 }
 
 type EnvironmentTemplatesDataSourceModel struct {
@@ -170,15 +170,6 @@ func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasourc
 		return
 	}
 
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	environment_templates, err := d.EnvironmentTemplatesClient.GetEnvironmentTemplatesByLocation(ctx, state.Location.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
@@ -202,7 +193,7 @@ func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasourc
 	state.Id = types.Int64Value(int64(len(state.Templates)))
 	state.Location = types.StringValue(state.Location.ValueString())
 
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT TEMPLATES END: %s", d.ProviderTypeName))
 

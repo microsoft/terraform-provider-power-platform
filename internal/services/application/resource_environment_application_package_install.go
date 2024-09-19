@@ -17,20 +17,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 func NewEnvironmentApplicationPackageInstallResource() resource.Resource {
 	return &EnvironmentApplicationPackageInstallResource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_environment_application_package_install",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "environment_application_package_install",
+		},
 	}
 }
 
 type EnvironmentApplicationPackageInstallResource struct {
+	helpers.TypeInfo
 	ApplicationClient Client
-	ProviderTypeName  string
-	TypeName          string
 }
 
 type EnvironmentApplicationPackageInstallResourceModel struct {
@@ -41,10 +41,20 @@ type EnvironmentApplicationPackageInstallResourceModel struct {
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + r.TypeName
+	// update our own internal storage of the provider type name.
+	r.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = r.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "PowerPlatform application",
 		MarkdownDescription: "This resource allows you to install a Dynamics 365 application in an environment.\n\nThis is functionally equivalent to the 'Install' button in the Power Platform admin center or [`pac application install` in the Power Platform CLI](https://docs.microsoft.com/powerapps/developer/data-platform/powerapps-cli#pac-application-install).  This resource uses the [Install Application Package](https://learn.microsoft.com/rest/api/power-platform/appmanagement/applications/install-application-package) endpoint in the Power Platform API.\n\n~> This resource does not support updating or deleting applications.  The expected behavior is that the application is installed and remains installed until the environment is deleted.",
@@ -79,6 +89,8 @@ func (r *EnvironmentApplicationPackageInstallResource) Schema(ctx context.Contex
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	if req.ProviderData == nil {
 		return
 	}
@@ -96,25 +108,16 @@ func (r *EnvironmentApplicationPackageInstallResource) Configure(ctx context.Con
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	var state EnvironmentApplicationPackageInstallResourceModel
 	resp.State.Get(ctx, &state)
 
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
-
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	state.Id = types.StringValue(fmt.Sprintf("%s_%s", state.EnvironmentId.ValueString(), strings.ReplaceAll(strings.ToLower(state.UniqueName.ValueString()), " ", "_")))
 	state.EnvironmentId = types.StringValue(state.EnvironmentId.ValueString())
@@ -142,13 +145,13 @@ func (r *EnvironmentApplicationPackageInstallResource) Create(ctx context.Contex
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state *EnvironmentApplicationPackageInstallResourceModel
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.ProviderTypeName))
+	var state *EnvironmentApplicationPackageInstallResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
@@ -159,14 +162,13 @@ func (r *EnvironmentApplicationPackageInstallResource) Read(ctx context.Context,
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_application with application_name %s", r.ProviderTypeName, state.UniqueName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan *EnvironmentApplicationPackageInstallResourceModel
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
+	var plan *EnvironmentApplicationPackageInstallResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
@@ -186,7 +188,8 @@ func (r *EnvironmentApplicationPackageInstallResource) Update(ctx context.Contex
 func (r *EnvironmentApplicationPackageInstallResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state *EnvironmentApplicationPackageInstallResourceModel
 
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 

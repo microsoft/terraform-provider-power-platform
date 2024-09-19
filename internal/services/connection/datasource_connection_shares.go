@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -24,15 +24,15 @@ var (
 
 func NewConnectionSharesDataSource() datasource.DataSource {
 	return &SharesDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_connection_shares",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "connection_shares",
+		},
 	}
 }
 
 type SharesDataSource struct {
+	helpers.TypeInfo
 	ConnectionsClient ConnectionsClient
-	ProviderTypeName  string
-	TypeName          string
 }
 
 type SharesListDataSourceModel struct {
@@ -139,15 +139,6 @@ func (d *SharesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, r
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
 
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	connectionsList, err := d.ConnectionsClient.GetConnectionShares(ctx, state.EnvironmentId.ValueString(), state.ConnectorName.ValueString(), state.ConnectionId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to get connection shares", err.Error())
@@ -160,7 +151,7 @@ func (d *SharesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, r
 	}
 	state.Id = types.StringValue(strconv.Itoa(len(connectionsList.Value)))
 
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
 

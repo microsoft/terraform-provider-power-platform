@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -27,15 +27,15 @@ var (
 
 func NewDataRecordDataSource() datasource.DataSource {
 	return &DataRecordDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_data_records",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "data_records",
+		},
 	}
 }
 
 type DataRecordDataSource struct {
+	helpers.TypeInfo
 	DataRecordClient DataRecordClient
-	ProviderTypeName string
-	TypeName         string
 }
 
 type ExpandModel struct {
@@ -223,6 +223,8 @@ func (d *DataRecordDataSource) Configure(ctx context.Context, req datasource.Con
 }
 
 func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state DataRecordListDataSourceModel
 	var config DataRecordListDataSourceModel
 
@@ -234,15 +236,6 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	query, headers, err := BuildODataQueryFromModel(&config)
 	tflog.Debug(ctx, fmt.Sprintf("Query: %s", query))

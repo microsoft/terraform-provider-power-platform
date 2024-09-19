@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -23,9 +23,8 @@ var (
 )
 
 type SecurityRolesDataSource struct {
-	UserClient       UserClient
-	ProviderTypeName string
-	TypeName         string
+	helpers.TypeInfo
+	UserClient UserClient
 }
 
 type SecurityRolesListDataSourceModel struct {
@@ -45,8 +44,9 @@ type SecurityRoleDataSourceModel struct {
 
 func NewSecurityRolesDataSource() datasource.DataSource {
 	return &SecurityRolesDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_security_roles",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "security_roles",
+		},
 	}
 }
 
@@ -136,15 +136,6 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, _ datasource.ReadReq
 		return
 	}
 
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	dvExits, err := d.UserClient.DataverseExists(ctx, state.EnvironmentId.ValueString())
 	tflog.Debug(ctx, fmt.Sprintf("Environment Id: %s", state.EnvironmentId.ValueString()))
 	if err != nil {
@@ -173,7 +164,7 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, _ datasource.ReadReq
 		})
 	}
 
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SECURITY ROLES END: %s", d.ProviderTypeName))
 

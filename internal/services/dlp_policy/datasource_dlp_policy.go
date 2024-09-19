@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -26,15 +26,15 @@ var (
 
 func NewDataLossPreventionPolicyDataSource() datasource.DataSource {
 	return &DataLossPreventionPolicyDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_data_loss_prevention_policies",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "data_loss_prevention_policies",
+		},
 	}
 }
 
 type DataLossPreventionPolicyDataSource struct {
-	DlpPolicyClient  DlpPolicyClient
-	ProviderTypeName string
-	TypeName         string
+	helpers.TypeInfo
+	DlpPolicyClient DlpPolicyClient
 }
 
 func (d *DataLossPreventionPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -255,6 +255,8 @@ func (d *DataLossPreventionPolicyDataSource) Configure(ctx context.Context, req 
 }
 
 func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state PoliciesListDataSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POLICIES START: %s_%s", d.ProviderTypeName, d.TypeName))
@@ -263,15 +265,6 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	policies, err := d.DlpPolicyClient.GetPolicies(ctx)
 	if err != nil {
@@ -299,7 +292,7 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 		state.Policies = append(state.Policies, policyModel)
 	}
 
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POLICIES END: %s_%s", d.ProviderTypeName, d.TypeName))
 

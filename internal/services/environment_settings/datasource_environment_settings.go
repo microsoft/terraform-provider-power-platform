@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -24,15 +24,15 @@ var (
 
 func NewEnvironmentSettingsDataSource() *EnvironmentSettingsDataSource {
 	return &EnvironmentSettingsDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_environment_settings",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "environment_settings",
+		},
 	}
 }
 
 type EnvironmentSettingsDataSource struct {
+	helpers.TypeInfo
 	EnvironmentSettingsClient EnvironmentSettingsClient
-	ProviderTypeName          string
-	TypeName                  string
 }
 
 func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -53,6 +53,8 @@ func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datas
 }
 
 func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state EnvironmentSettingsSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS START: %s", d.ProviderTypeName))
@@ -66,15 +68,6 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	dvExits, err := d.EnvironmentSettingsClient.DataverseExists(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
@@ -95,7 +88,7 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 	state = ConvertFromEnvironmentSettingsDto(envSettings, state.Timeouts)
 	state.Id = state.EnvironmentId
 
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS END: %s", d.ProviderTypeName))
 

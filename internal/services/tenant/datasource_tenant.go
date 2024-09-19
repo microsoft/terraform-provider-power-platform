@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -20,9 +21,8 @@ var (
 )
 
 type DataSource struct {
-	TenantClient     Client
-	ProviderTypeName string
-	TypeName         string
+	helpers.TypeInfo
+	TenantClient Client
 }
 
 type DataSourceModel struct {
@@ -38,8 +38,9 @@ type DataSourceModel struct {
 
 func NewTenantDataSource() datasource.DataSource {
 	return &DataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_tenant",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "tenant",
+		},
 	}
 }
 

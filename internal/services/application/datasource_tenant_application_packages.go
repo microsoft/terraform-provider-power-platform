@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -24,15 +24,15 @@ var (
 
 func NewTenantApplicationPackagesDataSource() datasource.DataSource {
 	return &TenantApplicationPackagesDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_tenant_application_packages",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "tenant_application_packages",
+		},
 	}
 }
 
 type TenantApplicationPackagesDataSource struct {
+	helpers.TypeInfo
 	ApplicationClient Client
-	ProviderTypeName  string
-	TypeName          string
 }
 
 type TenantApplicationPackagesListDataSourceModel struct {
@@ -215,19 +215,12 @@ func (d *TenantApplicationPackagesDataSource) Configure(ctx context.Context, req
 }
 
 func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state TenantApplicationPackagesListDataSourceModel
 	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT APPLICATION PACKAGES START: %s", d.ProviderTypeName))
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	state.Name = types.StringValue(state.Name.ValueString())
 	state.PublisherName = types.StringValue(state.PublisherName.ValueString())
@@ -271,7 +264,7 @@ func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req data
 		state.Applications = append(state.Applications, app)
 	}
 
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT APPLICATION PACKAGES END: %s", d.ProviderTypeName))
 

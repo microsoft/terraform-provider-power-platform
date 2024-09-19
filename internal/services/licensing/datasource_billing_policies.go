@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -23,15 +23,15 @@ var (
 
 func NewBillingPoliciesDataSource() datasource.DataSource {
 	return &BillingPoliciesDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_billing_policies",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "billing_policies",
+		},
 	}
 }
 
 type BillingPoliciesDataSource struct {
-	LicensingClient  Client
-	ProviderTypeName string
-	TypeName         string
+	helpers.TypeInfo
+	LicensingClient Client
 }
 
 type BillingPoliciesListDataSourceModel struct {
@@ -154,15 +154,6 @@ func (d *BillingPoliciesDataSource) Read(ctx context.Context, _ datasource.ReadR
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE BILLING POLICIES START: %s", d.ProviderTypeName))
 
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	policies, err := d.LicensingClient.GetBillingPolicies(ctx)
 
 	if err != nil {
@@ -185,7 +176,7 @@ func (d *BillingPoliciesDataSource) Read(ctx context.Context, _ datasource.ReadR
 	}
 
 	state.Id = types.Int64Value(int64(len(policies)))
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE BILLING POLICIES END: %s", d.ProviderTypeName))
 

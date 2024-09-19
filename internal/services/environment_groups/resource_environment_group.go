@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var _ resource.Resource = &EnvironmentGroupResource{}
@@ -22,15 +23,15 @@ var _ resource.ResourceWithImportState = &EnvironmentGroupResource{}
 
 func NewEnvironmentGroupResource() resource.Resource {
 	return &EnvironmentGroupResource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_environment_group",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "environment_group",
+		},
 	}
 }
 
 type EnvironmentGroupResource struct {
+	helpers.TypeInfo
 	EnvironmentGroupClient EnvironmentGroupClient
-	ProviderTypeName       string
-	TypeName               string
 }
 
 type EnvironmentGroupResourceModel struct {
@@ -40,10 +41,20 @@ type EnvironmentGroupResourceModel struct {
 }
 
 func (r *EnvironmentGroupResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + r.TypeName
+	// update our own internal storage of the provider type name.
+	r.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = r.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
 func (r *EnvironmentGroupResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "This resource manages an [Environment Group](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups).",
 		Attributes: map[string]schema.Attribute{
@@ -67,6 +78,8 @@ func (r *EnvironmentGroupResource) Schema(ctx context.Context, req resource.Sche
 }
 
 func (r *EnvironmentGroupResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	if req.ProviderData == nil {
 		return
 	}

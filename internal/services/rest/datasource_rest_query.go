@@ -13,20 +13,20 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 func NewDataverseWebApiDatasource() datasource.DataSource {
 	return &DataverseWebApiDatasource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_rest_query",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "rest_query",
+		},
 	}
 }
 
 type DataverseWebApiDatasource struct {
+	helpers.TypeInfo
 	DataRecordClient WebApiClient
-	ProviderTypeName string
-	TypeName         string
 }
 
 type DataverseWebApiDatasourceModel struct {
@@ -128,6 +128,8 @@ func (d *DataverseWebApiDatasource) Configure(ctx context.Context, req datasourc
 }
 
 func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state DataverseWebApiDatasourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
@@ -136,15 +138,6 @@ func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.Rea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	outputObjectType, err := d.DataRecordClient.SendOperation(ctx, &DataverseWebApiOperation{
 		Scope:              state.Scope,
@@ -161,7 +154,7 @@ func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.Rea
 
 	state.Output = outputObjectType
 
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
 

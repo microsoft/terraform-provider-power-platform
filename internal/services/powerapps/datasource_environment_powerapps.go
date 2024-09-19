@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -24,15 +24,15 @@ var (
 
 func NewEnvironmentPowerAppsDataSource() datasource.DataSource {
 	return &EnvironmentPowerAppsDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_environment_powerapps",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "environment_powerapps",
+		},
 	}
 }
 
 type EnvironmentPowerAppsDataSource struct {
+	helpers.TypeInfo
 	PowerAppssClient PowerAppssClient
-	ProviderTypeName string
-	TypeName         string
 }
 
 type EnvironmentPowerAppsListDataSourceModel struct {
@@ -127,6 +127,8 @@ func (d *EnvironmentPowerAppsDataSource) Configure(ctx context.Context, req data
 }
 
 func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state EnvironmentPowerAppsListDataSourceModel
 
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
@@ -135,15 +137,6 @@ func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasourc
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT POWERAPPS START: %s", d.ProviderTypeName))
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	apps, err := d.PowerAppssClient.GetPowerApps(ctx, "")
 	if err != nil {
@@ -158,7 +151,7 @@ func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasourc
 
 	state.Id = types.StringValue(strconv.Itoa(len(apps)))
 
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT POWERAPPS END: %s", d.ProviderTypeName))
 
