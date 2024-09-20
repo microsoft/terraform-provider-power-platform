@@ -446,10 +446,15 @@ func (client *Client) doWaitForAccess(ctx context.Context, env *Dto) error {
 		whoAmIUrl := &url.URL{
 			Scheme: constants.HTTPS,
 			Host:   envUrl.Host,
-			Path:   "/api/data/v9.2/WhoAmI",
+			Path:   "/api/data/v9.2/systemusers",
 		}
 
 		for {
+			err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
+			if err != nil {
+				return err
+			}
+
 			resp, _ := client.Api.Execute(ctx, http.MethodGet, whoAmIUrl.String(), http.Header{}, nil, []int{http.StatusOK, http.StatusUnauthorized}, nil)
 			if resp != nil && resp.Response != nil && resp.Response.StatusCode == http.StatusOK {
 				break
@@ -457,11 +462,6 @@ func (client *Client) doWaitForAccess(ctx context.Context, env *Dto) error {
 
 			if resp != nil && resp.Response != nil && resp.Response.StatusCode != http.StatusUnauthorized {
 				return fmt.Errorf("unexpected status code %d. %s", resp.Response.StatusCode, whoAmIUrl.String())
-			}
-
-			err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
-			if err != nil {
-				return err
 			}
 		}
 	}
