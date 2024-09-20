@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -27,15 +27,15 @@ var (
 
 func NewDataRecordDataSource() datasource.DataSource {
 	return &DataRecordDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_data_records",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "data_records",
+		},
 	}
 }
 
 type DataRecordDataSource struct {
+	helpers.TypeInfo
 	DataRecordClient DataRecordClient
-	ProviderTypeName string
-	TypeName         string
 }
 
 type ExpandModel struct {
@@ -66,7 +66,15 @@ type DataRecordListDataSourceModel struct {
 }
 
 func (d *DataRecordDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + d.TypeName
+	// update our own internal storage of the provider type name.
+	d.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = d.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
 var navigationPropertySchema = schema.StringAttribute{
@@ -134,7 +142,9 @@ func returnExpandSchema(depth int) *schema.ListNestedAttribute {
 	}
 }
 
-func (d *DataRecordDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataRecordDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Resource for retrieving data records from Dataverse using (OData Query)[https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/query-data-web-api#page-results].",
 		Attributes: map[string]schema.Attribute{
@@ -204,7 +214,11 @@ func (d *DataRecordDataSource) ConfigValidators(ctx context.Context) []datasourc
 }
 
 func (d *DataRecordDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 
@@ -223,6 +237,8 @@ func (d *DataRecordDataSource) Configure(ctx context.Context, req datasource.Con
 }
 
 func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state DataRecordListDataSourceModel
 	var config DataRecordListDataSourceModel
 
@@ -234,15 +250,6 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	query, headers, err := BuildODataQueryFromModel(&config)
 	tflog.Debug(ctx, fmt.Sprintf("Query: %s", query))

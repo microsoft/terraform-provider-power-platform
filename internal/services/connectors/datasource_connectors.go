@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -24,15 +24,15 @@ var (
 
 func NewConnectorsDataSource() datasource.DataSource {
 	return &DataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_connectors",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "connectors",
+		},
 	}
 }
 
 type DataSource struct {
+	helpers.TypeInfo
 	ConnectorsClient Client
-	ProviderTypeName string
-	TypeName         string
 }
 
 type ListDataSourceModel struct {
@@ -66,10 +66,20 @@ func ConvertFromConnectorDto(connectorDto Dto) DataSourceModel {
 }
 
 func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + d.TypeName
+	// update our own internal storage of the provider type name.
+	d.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = d.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of available connectors within a specific Power Platform tenant. Each connector represents a service that can be used to enhance the capabilities of Power Apps, Power Automate, and Power Virtual Agents. The returned list includes both standard and custom connectors, providing a comprehensive view of the services that can be integrated into your Power Platform solutions. The list can be used to understand what services are readily available for use within your tenant, and can assist in planning and developing new applications or flows. It's important to note that the availability of connectors may vary based on the specific licenses and permissions assigned within your tenant.",
 		MarkdownDescription: "Fetches the list of available connectors within a specific Power Platform tenant. Each connector represents a service that can be used to enhance the capabilities of Power Apps, Power Automate, and Power Virtual Agents. The returned list includes both standard and custom connectors, providing a comprehensive view of the services that can be integrated into your Power Platform solutions. The list can be used to understand what services are readily available for use within your tenant, and can assist in planning and developing new applications or flows. It's important to note that the availability of connectors may vary based on the specific licenses and permissions assigned within your tenant.\n\nAdditional Resources:\n\n* [Connectors Overview](https://learn.microsoft.com/connectors/connectors)\n",
@@ -134,7 +144,11 @@ func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, res
 }
 
 func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 	client := req.ProviderData.(*api.ProviderClient).Api
@@ -152,19 +166,11 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	var state ListDataSourceModel
 	resp.State.Get(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE CONNECTORS START: %s", d.ProviderTypeName))
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	connectors, err := d.ConnectorsClient.GetConnectors(ctx)
 	if err != nil {
@@ -178,9 +184,7 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	}
 	state.Id = types.StringValue(strconv.Itoa(len(connectors)))
 
-	diags = resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE CONNECTORS END: %s", d.ProviderTypeName))
+	diags := resp.State.Set(ctx, &state)
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

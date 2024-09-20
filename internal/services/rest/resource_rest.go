@@ -19,21 +19,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	modifier "github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
 func NewDataverseWebApiResource() resource.Resource {
 	return &DataverseWebApiResource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_rest",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "rest",
+		},
 	}
 }
 
 type DataverseWebApiResource struct {
+	helpers.TypeInfo
 	DataRecordClient WebApiClient
-	ProviderTypeName string
-	TypeName         string
 }
 
 type DataverseWebApiResourceModel struct {
@@ -61,10 +61,20 @@ type DataverseWebApiOperationHeaderResource struct {
 }
 
 func (r *DataverseWebApiResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + r.TypeName
+	// update our own internal storage of the provider type name.
+	r.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = r.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
 func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		MarkdownDescription: `Resource to execute web api requests. There are four distinct operations, that you can define independently. The HTTP response' body of the operation, that was called as last, will be returned in 'output.body' \n\n:
 		* Create: will be called once during the lifecycle of the resource (first 'terraform apply')
@@ -173,9 +183,14 @@ func (r *DataverseWebApiResource) buildOperationSchema(description string) schem
 }
 
 func (r *DataverseWebApiResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
+
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
 	if clientApi == nil {
 		resp.Diagnostics.AddError(
@@ -188,13 +203,12 @@ func (r *DataverseWebApiResource) Configure(ctx context.Context, req resource.Co
 }
 
 func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	var plan DataverseWebApiResourceModel
 	resp.State.Get(ctx, &plan)
-
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
-
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -206,15 +220,6 @@ func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.Creat
 	state.Destroy = plan.Destroy
 	state.Read = plan.Read
 	state.Output = plan.Output
-
-	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	state.Id = types.StringValue(strconv.Itoa(int(time.Now().UnixMilli())))
 	if plan.Create != nil {
@@ -235,28 +240,17 @@ func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.Creat
 		}
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.TypeName))
 }
 
 func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	var state DataverseWebApiResourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.TypeName))
-
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	newState := DataverseWebApiResourceModel{}
 	newState.Timeouts = state.Timeouts
@@ -282,28 +276,17 @@ func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, newState)...)
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.TypeName))
 }
 
 func (r *DataverseWebApiResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	var plan *DataverseWebApiResourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.TypeName))
-
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	if plan.Update != nil {
 		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, plan.Update)
@@ -324,28 +307,17 @@ func (r *DataverseWebApiResource) Update(ctx context.Context, req resource.Updat
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.TypeName))
 }
 
 func (r *DataverseWebApiResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	var state *DataverseWebApiResourceModel
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.TypeName))
-
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	if state.Destroy != nil {
 		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, state.Destroy)
@@ -355,7 +327,6 @@ func (r *DataverseWebApiResource) Delete(ctx context.Context, req resource.Delet
 		}
 		state.Output = bodyWrapped
 	}
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.TypeName))
 }
 
 func (r *DataverseWebApiResource) NullOutputValue() basetypes.ObjectValue {

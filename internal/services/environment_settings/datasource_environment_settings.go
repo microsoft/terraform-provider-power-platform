@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -24,19 +24,23 @@ var (
 
 func NewEnvironmentSettingsDataSource() *EnvironmentSettingsDataSource {
 	return &EnvironmentSettingsDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_environment_settings",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "environment_settings",
+		},
 	}
 }
 
 type EnvironmentSettingsDataSource struct {
+	helpers.TypeInfo
 	EnvironmentSettingsClient EnvironmentSettingsClient
-	ProviderTypeName          string
-	TypeName                  string
 }
 
 func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 
@@ -53,6 +57,8 @@ func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datas
 }
 
 func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state EnvironmentSettingsSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS START: %s", d.ProviderTypeName))
@@ -66,15 +72,6 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	dvExits, err := d.EnvironmentSettingsClient.DataverseExists(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
@@ -95,7 +92,7 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 	state = ConvertFromEnvironmentSettingsDto(envSettings, state.Timeouts)
 	state.Id = state.EnvironmentId
 
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS END: %s", d.ProviderTypeName))
 
@@ -105,7 +102,9 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 	}
 }
 
-func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Power Platform Environment Settings Data Source",
 		MarkdownDescription: "Power Platform Environment Settings Data Source. Power Platform Settings are configuration options that apply to a specific environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/power-platform/admin/admin-settings) for more details.",
@@ -218,5 +217,13 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, _ datasource
 }
 
 func (d *EnvironmentSettingsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + d.TypeName
+	// update our own internal storage of the provider type name.
+	d.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = d.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -23,9 +23,8 @@ var (
 )
 
 type SecurityRolesDataSource struct {
-	UserClient       UserClient
-	ProviderTypeName string
-	TypeName         string
+	helpers.TypeInfo
+	UserClient UserClient
 }
 
 type SecurityRolesListDataSourceModel struct {
@@ -45,12 +44,16 @@ type SecurityRoleDataSourceModel struct {
 
 func NewSecurityRolesDataSource() datasource.DataSource {
 	return &SecurityRolesDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_security_roles",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "security_roles",
+		},
 	}
 }
 
-func (_ *SecurityRolesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *SecurityRolesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dataverse security roles for a given environment and business unit",
 		MarkdownDescription: "Fetches the list of Dataverse security roles for a given environment and business unit.  For more information see [About security roles and privileges](https://learn.microsoft.com/power-platform/admin/security-roles-privileges)",
@@ -106,7 +109,11 @@ func (_ *SecurityRolesDataSource) Schema(ctx context.Context, _ datasource.Schem
 }
 
 func (d *SecurityRolesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
@@ -122,28 +129,28 @@ func (d *SecurityRolesDataSource) Configure(ctx context.Context, req datasource.
 }
 
 func (d *SecurityRolesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + d.TypeName
+	// update our own internal storage of the provider type name.
+	d.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = d.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *SecurityRolesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	var state SecurityRolesListDataSourceModel
 	resp.State.Get(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SECURITY ROLES START: %s", d.ProviderTypeName))
 
 	if state.EnvironmentId.ValueString() == "" {
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	dvExits, err := d.UserClient.DataverseExists(ctx, state.EnvironmentId.ValueString())
 	tflog.Debug(ctx, fmt.Sprintf("Environment Id: %s", state.EnvironmentId.ValueString()))
@@ -173,10 +180,7 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, _ datasource.ReadReq
 		})
 	}
 
-	diags = resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SECURITY ROLES END: %s", d.ProviderTypeName))
-
+	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

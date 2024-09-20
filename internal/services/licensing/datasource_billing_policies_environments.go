@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -24,15 +24,15 @@ var (
 
 func NewBillingPoliciesEnvironmetsDataSource() datasource.DataSource {
 	return &BillingPoliciesEnvironmetsDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_billing_policies_environments",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "billing_policies_environments",
+		},
 	}
 }
 
 type BillingPoliciesEnvironmetsDataSource struct {
-	LicensingClient  Client
-	ProviderTypeName string
-	TypeName         string
+	helpers.TypeInfo
+	LicensingClient Client
 }
 
 type BillingPoliciesEnvironmetsListDataSourceModel struct {
@@ -42,10 +42,20 @@ type BillingPoliciesEnvironmetsListDataSourceModel struct {
 }
 
 func (d *BillingPoliciesEnvironmetsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + d.TypeName
+	// update our own internal storage of the provider type name.
+	d.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = d.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *BillingPoliciesEnvironmetsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *BillingPoliciesEnvironmetsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the environments associated with a billing policy",
 		MarkdownDescription: "Fetches the environments associated with a [billing policy](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy).\n\nThis data source uses the [List Billing Policy Environments](https://learn.microsoft.com/rest/api/power-platform/licensing/billing-policy-environment/list-billing-policy-environments) endpoint in the Power Platform API.",
@@ -69,7 +79,11 @@ func (d *BillingPoliciesEnvironmetsDataSource) Schema(ctx context.Context, _ dat
 }
 
 func (d *BillingPoliciesEnvironmetsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 
@@ -87,11 +101,11 @@ func (d *BillingPoliciesEnvironmetsDataSource) Configure(ctx context.Context, re
 }
 
 func (d *BillingPoliciesEnvironmetsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	var state BillingPoliciesEnvironmetsListDataSourceModel
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -102,15 +116,6 @@ func (d *BillingPoliciesEnvironmetsDataSource) Read(ctx context.Context, req dat
 		return
 	}
 
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	environments, err := d.LicensingClient.GetEnvironmentsForBillingPolicy(ctx, state.BillingPolicyId)
 
 	if err != nil {
@@ -120,10 +125,7 @@ func (d *BillingPoliciesEnvironmetsDataSource) Read(ctx context.Context, req dat
 
 	state.Environments = environments
 
-	diags = resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
-
+	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

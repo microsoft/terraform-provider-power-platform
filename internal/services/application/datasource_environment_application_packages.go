@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -23,15 +23,15 @@ var (
 
 func NewEnvironmentApplicationPackagesDataSource() datasource.DataSource {
 	return &EnvironmentApplicationPackagesDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_environment_application_packages",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "environment_application_packages",
+		},
 	}
 }
 
 type EnvironmentApplicationPackagesDataSource struct {
+	helpers.TypeInfo
 	ApplicationClient Client
-	ProviderTypeName  string
-	TypeName          string
 }
 
 type EnvironmentApplicationPackagesListDataSourceModel struct {
@@ -57,10 +57,20 @@ type EnvironmentApplicationPackageDataSourceModel struct {
 }
 
 func (d *EnvironmentApplicationPackagesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + d.TypeName
+	// update our own internal storage of the provider type name.
+	d.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = d.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *EnvironmentApplicationPackagesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentApplicationPackagesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dynamics 365 applications in a tenant",
 		MarkdownDescription: "Fetches the list of Dynamics 365 applications in a tenant.  The data source can be filtered by name and publisher name.\n\nThis is functionally equivalent to the [Environment-level view of apps](https://learn.microsoft.com/power-platform/admin/manage-apps#environment-level-view-of-apps) in the Power Platform Admin Center or the [`pac application list` command from Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/reference/application#pac-application-list).  This data source uses the [Get Environment Application Package](https://learn.microsoft.com/rest/api/power-platform/appmanagement/applications/get-environment-application-package) endpoint in the Power Platform API.",
@@ -148,7 +158,11 @@ func (d *EnvironmentApplicationPackagesDataSource) Schema(ctx context.Context, _
 }
 
 func (d *EnvironmentApplicationPackagesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
@@ -164,19 +178,12 @@ func (d *EnvironmentApplicationPackagesDataSource) Configure(ctx context.Context
 }
 
 func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	var state EnvironmentApplicationPackagesListDataSourceModel
 	resp.State.Get(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES START: %s", d.ProviderTypeName))
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	state.EnvironmentId = types.StringValue(state.EnvironmentId.ValueString())
 	state.Name = types.StringValue(state.Name.ValueString())
@@ -218,7 +225,7 @@ func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req
 	}
 
 	state.Id = types.StringValue(fmt.Sprintf("%s_%d", state.EnvironmentId.ValueString(), len(applications)))
-	diags = resp.State.Set(ctx, &state)
+	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES END: %s", d.ProviderTypeName))
 

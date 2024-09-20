@@ -40,5 +40,4 @@ resource "powerplatform_tenant_settings" "environment_routing" {
   }
 
   walk_me_opt_out = true
-
 }

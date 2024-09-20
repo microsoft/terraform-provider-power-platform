@@ -15,21 +15,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 func NewAdminManagementApplicationResource() resource.Resource {
 	return &AdminManagementApplicationResource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_admin_management_application",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "admin_management_application",
+		},
 	}
 }
 
 type AdminManagementApplicationResource struct {
+	helpers.TypeInfo
 	AdminManagementApplicationClient AdminManagementApplicationClient
-	ProviderTypeName                 string
-	TypeName                         string
 }
 
 type AdminManagementApplicationResourceModel struct {
@@ -38,10 +38,21 @@ type AdminManagementApplicationResourceModel struct {
 }
 
 func (r *AdminManagementApplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + r.TypeName
+	// update our own internal storage of the provider type name.
+	r.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = r.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
 func (r *AdminManagementApplicationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	resp.Schema = schema.Schema{
 		Description:         "Power Platform Admin Management Application",
 		MarkdownDescription: "This resource allows you to register a service principal as an administrator for Power Platform.\n\nThis resource implements the process documented here [Registering an admin management application](https://learn.microsoft.com/power-platform/admin/powerplatform-api-create-service-principal). A service principal can't register itself—by design, the application must be registered by an administrator.",
@@ -65,7 +76,11 @@ func (r *AdminManagementApplicationResource) Schema(ctx context.Context, req res
 }
 
 func (r *AdminManagementApplicationResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 
@@ -79,26 +94,21 @@ func (r *AdminManagementApplicationResource) Configure(ctx context.Context, req 
 }
 
 func (r *AdminManagementApplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *AdminManagementApplicationResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.ProviderTypeName))
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
 	var state AdminManagementApplicationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	adminApp, err := r.AdminManagementApplicationClient.GetAdminApplication(ctx, state.Id.ValueString())
 	if err != nil {
@@ -110,27 +120,17 @@ func (r *AdminManagementApplicationResource) Read(ctx context.Context, req resou
 		Timeouts: state.Timeouts,
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *AdminManagementApplicationResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
 	var plan AdminManagementApplicationResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	adminApp, err := r.AdminManagementApplicationClient.RegisterAdminApplication(ctx, plan.Id.ValueString())
 	if err != nil {
@@ -143,12 +143,11 @@ func (r *AdminManagementApplicationResource) Create(ctx context.Context, req res
 			Id:       customtypes.NewUUIDValue(adminApp.ClientId),
 			Timeouts: plan.Timeouts,
 		})...)
-
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *AdminManagementApplicationResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
 	var state AdminManagementApplicationResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -156,24 +155,16 @@ func (r *AdminManagementApplicationResource) Delete(ctx context.Context, req res
 		return
 	}
 
-	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
 	err := r.AdminManagementApplicationClient.UnregisterAdminApplication(ctx, state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to unregister admin application", fmt.Sprintf("Failed to unregister admin application: %v", err))
 		return
 	}
-
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *AdminManagementApplicationResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	resp.Diagnostics.AddError("Update not supported", "Update not supported")
 }

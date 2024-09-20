@@ -234,8 +234,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 }
 
 func (d *Resource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
-	path.Root("dataverse").AtName("administration_mode_enabled").Expression()
-
 	return []resource.ConfigValidator{
 		resourcevalidator.RequiredTogether(
 			path.Root("dataverse").AtName("administration_mode_enabled").Expression(),
@@ -249,7 +247,7 @@ func (r *Resource) Configure(ctx context.Context, req resource.ConfigureRequest,
 	defer exitContext()
 
 	if req.ProviderData == nil {
-		// TODO: Should we add a warning here?
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 
@@ -284,21 +282,13 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		resp.Diagnostics.AddError("Error when converting source model to create environment dto", err.Error())
 	}
 
-	// timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	// if diags != nil {
-	// 	resp.Diagnostics.Append(diags...)
-	// 	return
-	// }
-
-	// ctx, cancel := context.WithTimeout(ctx, timeout)
-	// defer cancel()
-
 	err = r.EnvironmentClient.LocationValidator(ctx, envToCreate.Location, envToCreate.Properties.AzureRegion)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
 
+	// If it's dataverse environment, validate the currency and language code
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
 		err = languageCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
 		if err != nil {
@@ -330,7 +320,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
 
-	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
+	newState, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -338,7 +328,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
 // Read reads the resource state from the remote system. If the resource does not exist, the state should be removed from the state store.
@@ -352,15 +342,6 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	// if diags != nil {
-	// 	resp.Diagnostics.Append(diags...)
-	// 	return
-	// }
-
-	// ctx, cancel := context.WithTimeout(ctx, timeout)
-	// defer cancel()
 
 	envDto, err := r.EnvironmentClient.GetEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
@@ -376,6 +357,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	defaultCurrency, err := r.EnvironmentClient.GetDefaultCurrencyForEnvironment(ctx, envDto.Name)
 	if err != nil {
 		if helpers.Code(err) != helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND {
+			// This is only a warning because you may have BAPI access to the environment but not WebAPI access to dataverse to get currency.
 			resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", envDto.Name), err.Error())
 		}
 
@@ -462,15 +444,6 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 			Id: plan.BillingPolicyId.ValueString(),
 		}
 	}
-
-	// timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	// if diags != nil {
-	// 	resp.Diagnostics.Append(diags...)
-	// 	return
-	// }
-
-	// ctx, cancel := context.WithTimeout(ctx, timeout)
-	// defer cancel()
 
 	var currencyCode string
 	if !IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
@@ -608,15 +581,6 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	// if diags != nil {
-	// 	resp.Diagnostics.Append(diags...)
-	// 	return
-	// }
-
-	// ctx, cancel := context.WithTimeout(ctx, timeout)
-	// defer cancel()
 
 	err := r.EnvironmentClient.DeleteEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
