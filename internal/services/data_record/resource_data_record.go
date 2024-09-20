@@ -103,6 +103,7 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 func (r *DataRecordResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
+
 	if req.ProviderData == nil {
 		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", r.TypeName)
 		return
@@ -123,14 +124,14 @@ func (r *DataRecordResource) Configure(ctx context.Context, req resource.Configu
 func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
+
 	var plan DataRecordResourceModel
-
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	// TODO: Why are we setting plan to itself? Remove?
 	plan.Id = types.StringValue(plan.Id.ValueString())
 	plan.EnvironmentId = types.StringValue(plan.EnvironmentId.ValueString())
 	plan.TableLogicalName = types.StringValue(plan.TableLogicalName.ValueString())

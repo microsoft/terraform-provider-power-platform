@@ -288,6 +288,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
+	// If it's dataverse environment, validate the currency and language code
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
 		err = languageCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
 		if err != nil {
@@ -319,7 +320,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
 
-	newPlan, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
+	newState, err := ConvertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -327,7 +328,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
 // Read reads the resource state from the remote system. If the resource does not exist, the state should be removed from the state store.
@@ -356,6 +357,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	defaultCurrency, err := r.EnvironmentClient.GetDefaultCurrencyForEnvironment(ctx, envDto.Name)
 	if err != nil {
 		if helpers.Code(err) != helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND {
+			// This is only a warning because you may have BAPI access to the environment but not WebAPI access to dataverse to get currency.
 			resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", envDto.Name), err.Error())
 		}
 
