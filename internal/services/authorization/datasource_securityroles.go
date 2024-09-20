@@ -50,7 +50,10 @@ func NewSecurityRolesDataSource() datasource.DataSource {
 	}
 }
 
-func (_ *SecurityRolesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *SecurityRolesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dataverse security roles for a given environment and business unit",
 		MarkdownDescription: "Fetches the list of Dataverse security roles for a given environment and business unit.  For more information see [About security roles and privileges](https://learn.microsoft.com/power-platform/admin/security-roles-privileges)",
@@ -106,8 +109,11 @@ func (_ *SecurityRolesDataSource) Schema(ctx context.Context, _ datasource.Schem
 }
 
 func (d *SecurityRolesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
-		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
@@ -134,11 +140,12 @@ func (d *SecurityRolesDataSource) Metadata(ctx context.Context, req datasource.M
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *SecurityRolesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	var state SecurityRolesListDataSourceModel
 	resp.State.Get(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SECURITY ROLES START: %s", d.ProviderTypeName))
 
 	if state.EnvironmentId.ValueString() == "" {
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
@@ -174,9 +181,6 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, _ datasource.ReadReq
 	}
 
 	diags := resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SECURITY ROLES END: %s", d.ProviderTypeName))
-
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

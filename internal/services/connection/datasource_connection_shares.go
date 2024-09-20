@@ -67,7 +67,10 @@ func (d *SharesDataSource) Metadata(ctx context.Context, req datasource.Metadata
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *SharesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *SharesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "",
 		Attributes: map[string]schema.Attribute{
@@ -125,8 +128,11 @@ func (d *SharesDataSource) Schema(ctx context.Context, _ datasource.SchemaReques
 }
 
 func (d *SharesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
-		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 	client := req.ProviderData.(*api.ProviderClient).Api
@@ -142,11 +148,12 @@ func (d *SharesDataSource) Configure(ctx context.Context, req datasource.Configu
 
 	d.ConnectionsClient = NewConnectionsClient(client)
 }
-func (d *SharesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	var state SharesListDataSourceModel
 	resp.State.Get(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
 
 	connectionsList, err := d.ConnectionsClient.GetConnectionShares(ctx, state.EnvironmentId.ValueString(), state.ConnectorName.ValueString(), state.ConnectionId.ValueString())
 	if err != nil {
@@ -161,9 +168,6 @@ func (d *SharesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, r
 	state.Id = types.StringValue(strconv.Itoa(len(connectionsList.Value)))
 
 	diags := resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
-
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

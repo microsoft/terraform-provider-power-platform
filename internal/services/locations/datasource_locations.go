@@ -64,7 +64,9 @@ func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataReques
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of available Dynamics 365 locations",
 		MarkdownDescription: "Fetches the list of available Dynamics 365 locations. For more information see [Power Platform Geos](https://learn.microsoft.com/power-platform/admin/regions-overview)",
@@ -129,8 +131,11 @@ func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, res
 }
 
 func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
-		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
@@ -148,11 +153,9 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
+
 	var state DataSourceModel
 	resp.State.Get(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LOCATIONS START: %s", d.ProviderTypeName))
-
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

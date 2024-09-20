@@ -57,7 +57,9 @@ func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataReques
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the client configuration for the given tenant.",
 		MarkdownDescription: "Fetches the client configuration for the given tenant.",
@@ -106,7 +108,10 @@ func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, res
 	}
 }
 
-func (d *DataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	tenant, err := d.TenantClient.GetTenant(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to fetch tenant", fmt.Sprintf("Failed to fetch tenant: %v", err))
@@ -128,8 +133,11 @@ func (d *DataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *d
 }
 
 func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
-		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 

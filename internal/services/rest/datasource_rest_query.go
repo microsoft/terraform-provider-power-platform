@@ -52,7 +52,9 @@ func (d *DataverseWebApiDatasource) Metadata(ctx context.Context, req datasource
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *DataverseWebApiDatasource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataverseWebApiDatasource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Datasource to fetch api requests",
 		Attributes: map[string]schema.Attribute{
@@ -119,8 +121,11 @@ func (d *DataverseWebApiDatasource) Schema(ctx context.Context, _ datasource.Sch
 }
 
 func (d *DataverseWebApiDatasource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
-		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
@@ -139,9 +144,8 @@ func (d *DataverseWebApiDatasource) Configure(ctx context.Context, req datasourc
 func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
-	var state DataverseWebApiDatasourceModel
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
+	var state DataverseWebApiDatasourceModel
 
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -164,9 +168,6 @@ func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.Rea
 	state.Output = outputObjectType
 
 	diags := resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
-
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -80,7 +80,9 @@ func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataReques
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Solutions in an environment",
 		MarkdownDescription: "Fetches the list of Solutions in an environment.  This is the equivalent of the [`pac solution list`](https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-list) command in the Power Platform CLI.",
@@ -157,8 +159,11 @@ func (d *DataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, res
 }
 
 func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
-		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 
@@ -185,8 +190,6 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		return
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SOLUTIONS START: %s", d.ProviderTypeName))
-
 	dvExits, err := d.SolutionClient.DataverseExists(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when checking if Dataverse exists in environment '%s'", state.EnvironmentId.ValueString()), err.Error())
@@ -211,9 +214,6 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	state.Id = types.StringValue(strconv.Itoa(len(solutions)))
 
 	diags := resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE SOLUTIONS END: %s", d.ProviderTypeName))
-
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

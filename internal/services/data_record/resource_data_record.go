@@ -105,7 +105,7 @@ func (r *DataRecordResource) Configure(ctx context.Context, req resource.Configu
 	defer exitContext()
 
 	if req.ProviderData == nil {
-		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", r.TypeName)
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 

@@ -143,8 +143,11 @@ type UserManagementSettings struct {
 }
 
 func (d *TenantSettingsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
-		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 
@@ -163,13 +166,12 @@ func (d *TenantSettingsDataSource) Configure(ctx context.Context, req datasource
 func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
+
 	var state TenantSettingsSourceModel
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT SETTINGS START: %s", d.ProviderTypeName))
 
 	tenantSettings, err := d.TenantSettingsClient.GetTenantSettings(ctx)
 	if err != nil {
@@ -187,16 +189,15 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	state.Id = types.StringValue(*hash)
 
 	diags := resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT SETTINGS END: %s", d.ProviderTypeName))
-
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 }
 
-func (d *TenantSettingsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *TenantSettingsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Power Platform Tenant Settings Data Source",
 		MarkdownDescription: "Fetches Power Platform Tenant Settings.  See [Tenant Settings Overview](https://learn.microsoft.com/power-platform/admin/tenant-settings) for more information.",

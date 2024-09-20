@@ -69,7 +69,9 @@ func (d *EnvironmentPowerAppsDataSource) Metadata(ctx context.Context, req datas
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *EnvironmentPowerAppsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentPowerAppsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Power Apps in an environment",
 		MarkdownDescription: "Fetches the list of Power Apps in an environment.  See [Manage Power Apps](https://learn.microsoft.com/power-platform/admin/admin-manage-apps) for more details about how this data is surfaced in Power Platform Admin Center.",
@@ -116,8 +118,11 @@ func (d *EnvironmentPowerAppsDataSource) Schema(ctx context.Context, _ datasourc
 }
 
 func (d *EnvironmentPowerAppsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
-		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 
@@ -138,14 +143,13 @@ func (d *EnvironmentPowerAppsDataSource) Configure(ctx context.Context, req data
 func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
+
 	var state EnvironmentPowerAppsListDataSourceModel
 
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT POWERAPPS START: %s", d.ProviderTypeName))
 
 	apps, err := d.PowerAppssClient.GetPowerApps(ctx, "")
 	if err != nil {
@@ -161,9 +165,6 @@ func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasourc
 	state.Id = types.StringValue(strconv.Itoa(len(apps)))
 
 	diags := resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT POWERAPPS END: %s", d.ProviderTypeName))
-
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

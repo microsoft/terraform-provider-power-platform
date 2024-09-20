@@ -561,7 +561,7 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId),
 	}
 	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
-	if err != nil && !strings.ContainsAny(err.Error(), "404") { 
+	if err != nil && !strings.ContainsAny(err.Error(), "404") {
 		// TODO: 404 is desired state for delete.  We should pass 404 as acceptable status code and not error
 		return err
 	}

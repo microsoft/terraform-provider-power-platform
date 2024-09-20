@@ -140,8 +140,9 @@ func (r *ShareResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 func (r *ShareResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
+
 	if req.ProviderData == nil {
-		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", r.TypeName)
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 
@@ -161,6 +162,7 @@ func (r *ShareResource) Configure(ctx context.Context, req resource.ConfigureReq
 func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
+
 	var plan *ShareResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -192,6 +194,7 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
+
 	var state *ShareResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)

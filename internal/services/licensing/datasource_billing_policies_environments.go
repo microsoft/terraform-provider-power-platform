@@ -53,7 +53,9 @@ func (d *BillingPoliciesEnvironmetsDataSource) Metadata(ctx context.Context, req
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *BillingPoliciesEnvironmetsDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *BillingPoliciesEnvironmetsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the environments associated with a billing policy",
 		MarkdownDescription: "Fetches the environments associated with a [billing policy](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy).\n\nThis data source uses the [List Billing Policy Environments](https://learn.microsoft.com/rest/api/power-platform/licensing/billing-policy-environment/list-billing-policy-environments) endpoint in the Power Platform API.",
@@ -77,8 +79,11 @@ func (d *BillingPoliciesEnvironmetsDataSource) Schema(ctx context.Context, _ dat
 }
 
 func (d *BillingPoliciesEnvironmetsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
-		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 
@@ -98,11 +103,9 @@ func (d *BillingPoliciesEnvironmetsDataSource) Configure(ctx context.Context, re
 func (d *BillingPoliciesEnvironmetsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
+
 	var state BillingPoliciesEnvironmetsListDataSourceModel
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -123,9 +126,6 @@ func (d *BillingPoliciesEnvironmetsDataSource) Read(ctx context.Context, req dat
 	state.Environments = environments
 
 	diags := resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
-
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

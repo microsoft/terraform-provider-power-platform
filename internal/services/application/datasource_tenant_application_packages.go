@@ -79,7 +79,9 @@ func (d *TenantApplicationPackagesDataSource) Metadata(ctx context.Context, req 
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *TenantApplicationPackagesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *TenantApplicationPackagesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dynamics 365 tenant level applications",
 		MarkdownDescription: "Fetches the list of Dynamics 365 tenant level applications",
@@ -207,8 +209,11 @@ func (d *TenantApplicationPackagesDataSource) Schema(ctx context.Context, _ data
 }
 
 func (d *TenantApplicationPackagesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
-		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
@@ -226,10 +231,9 @@ func (d *TenantApplicationPackagesDataSource) Configure(ctx context.Context, req
 func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
+
 	var state TenantApplicationPackagesListDataSourceModel
 	resp.State.Get(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT APPLICATION PACKAGES START: %s", d.ProviderTypeName))
 
 	state.Name = types.StringValue(state.Name.ValueString())
 	state.PublisherName = types.StringValue(state.PublisherName.ValueString())
@@ -274,8 +278,6 @@ func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req data
 	}
 
 	diags := resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE TENANT APPLICATION PACKAGES END: %s", d.ProviderTypeName))
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

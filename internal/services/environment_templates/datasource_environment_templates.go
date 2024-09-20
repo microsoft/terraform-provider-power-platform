@@ -66,7 +66,9 @@ func (d *EnvironmentTemplatesDataSource) Metadata(ctx context.Context, req datas
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *EnvironmentTemplatesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentTemplatesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dynamics 365 environment templates.",
 		MarkdownDescription: "Fetches the list of Dynamics 365 environment templates.",
@@ -136,8 +138,11 @@ func (d *EnvironmentTemplatesDataSource) Schema(ctx context.Context, _ datasourc
 }
 
 func (d *EnvironmentTemplatesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
-		resp.Diagnostics.AddError("Failed to configure %s because provider data is nil", d.TypeName)
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
@@ -153,6 +158,9 @@ func (d *EnvironmentTemplatesDataSource) Configure(ctx context.Context, req data
 }
 
 func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	appendToList := func(items []ItemDto, category string, list *[]EnvironmentTemplatesDataModel) {
 		for _, item := range items {
 			*list = append(*list, EnvironmentTemplatesDataModel{
@@ -171,9 +179,6 @@ func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasourc
 	}
 
 	var state EnvironmentTemplatesDataSourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT TEMPLATES START: %s", d.ProviderTypeName))
-
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -203,9 +208,6 @@ func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasourc
 	state.Location = types.StringValue(state.Location.ValueString())
 
 	diags := resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT TEMPLATES END: %s", d.ProviderTypeName))
-
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
