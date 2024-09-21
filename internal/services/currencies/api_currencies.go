@@ -36,7 +36,7 @@ func (client *Client) GetCurrenciesByLocation(ctx context.Context, location stri
 
 	currencies := Dto{}
 
-	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return currencies, err
 	}

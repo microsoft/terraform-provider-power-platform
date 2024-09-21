@@ -14,8 +14,11 @@ import (
 	"net/http"
 	"runtime"
 	"strings"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/common"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -87,12 +90,12 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 	}
 	defer response.Body.Close()
 
-	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		if len(body) != 0 {
-			return apiHttpResponse, fmt.Errorf("status: %d, message: %s", response.StatusCode, string(body))
-		}
-		return apiHttpResponse, fmt.Errorf("status: %d", response.StatusCode)
-	}
+	// if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+	// 	if len(body) != 0 {
+	// 		return apiHttpResponse, fmt.Errorf("status: %d, message: %s", response.StatusCode, string(body))
+	// 	}
+	// 	return apiHttpResponse, fmt.Errorf("status: %d", response.StatusCode)
+	// }
 	return apiHttpResponse, nil
 }
 
@@ -113,9 +116,15 @@ func (apiResponse *HttpResponse) GetHeader(name string) string {
 	return apiResponse.Response.Header.Get(name)
 }
 
-func (apiResponse *HttpResponse) ValidateStatusCode(expectedStatusCode int) error {
-	if apiResponse.Response.StatusCode != expectedStatusCode {
-		return fmt.Errorf("expected status code: %d, recieved: %d", expectedStatusCode, apiResponse.Response.StatusCode)
+func retryAfter(ctx context.Context, resp *http.Response) time.Duration {
+	retryHeader := resp.Header.Get(constants.HEADER_RETRY_AFTER)
+	tflog.Debug(ctx, "Retry Header: "+retryHeader)
+
+	retryAfter, err := time.ParseDuration(retryHeader)
+	if err != nil {
+		// default retry after 5-10 seconds
+		return time.Duration((rand.Intn(5) + 5)) * time.Second
 	}
-	return nil
+
+	return retryAfter
 }

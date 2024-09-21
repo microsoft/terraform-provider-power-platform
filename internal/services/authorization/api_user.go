@@ -46,7 +46,7 @@ func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([
 		Path:   "/api/data/v9.2/systemusers",
 	}
 	userArray := UserDtoArray{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &userArray)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &userArray)
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +68,7 @@ func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environment
 	apiUrl.RawQuery = values.Encode()
 
 	user := UserDto{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
 			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with systemUserId %s not found", systemUserId))
@@ -94,7 +94,7 @@ func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentI
 	apiUrl.RawQuery = values.Encode()
 
 	user := UserDtoArray{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
 			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with aadObjectId %s not found", aadObjectId))
@@ -123,7 +123,7 @@ func (client *UserClient) CreateUser(ctx context.Context, environmentId, aadObje
 	retryCount := 6 * 9
 	err := fmt.Errorf("")
 	for retryCount > 0 {
-		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, userToCreate, []int{http.StatusOK}, nil)
+		_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, userToCreate, []int{http.StatusOK}, nil)
 		// the license assignment in Entra is async, so we need to wait for that to happen if a user is created in the same terraform run.
 		if err == nil || !strings.Contains(err.Error(), "userNotLicensed") {
 			break
@@ -159,7 +159,7 @@ func (client *UserClient) UpdateUser(ctx context.Context, environmentId, systemU
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
 	}
 
-	_, err = client.Api.Execute(ctx, "PATCH", apiUrl.String(), nil, userUpdate, []int{http.StatusOK}, nil)
+	_, err = client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, userUpdate, []int{http.StatusOK}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (client *UserClient) DeleteUser(ctx context.Context, environmentId, systemU
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
 	}
 
-	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func (client *UserClient) RemoveSecurityRoles(ctx context.Context, environmentId
 		values.Add("$id", fmt.Sprintf("https://%s/api/data/v9.2/roles(%s)", environmentHost, roleId))
 		apiUrl.RawQuery = values.Encode()
 
-		_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+		_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -233,7 +233,7 @@ func (client *UserClient) AddSecurityRoles(ctx context.Context, environmentId, s
 		roleToassociate := map[string]any{
 			"@odata.id": fmt.Sprintf("https://%s/api/data/v9.2/roles(%s)", environmentHost, roleId),
 		}
-		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, roleToassociate, []int{http.StatusNoContent}, nil)
+		_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, roleToassociate, []int{http.StatusNoContent}, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -273,7 +273,7 @@ func (client *UserClient) getEnvironment(ctx context.Context, environmentId stri
 	apiUrl.RawQuery = values.Encode()
 
 	env := EnvironmentIdDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
 			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
@@ -300,7 +300,7 @@ func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId, b
 		apiUrl.RawQuery = values.Encode()
 	}
 	securityRoleArray := SecurityRoleDtoArray{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &securityRoleArray)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &securityRoleArray)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
 			tflog.Debug(ctx, fmt.Sprintf("Error getting security roles: %s", err.Error()))

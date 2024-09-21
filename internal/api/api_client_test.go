@@ -30,7 +30,7 @@ func TestUnitApiClient_GetConfig(t *testing.T) {
 	}
 
 	x := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
-	_, err := x.ExecuteForGivenScope(ctx, "test", "GET", "/relativeurl", http.Header{}, nil, []int{http.StatusOK}, nil)
+	_, err := x.Execute(ctx, []string{"test"}, "GET", "/relativeurl", http.Header{}, nil, []int{http.StatusOK}, nil)
 	if err == nil {
 		t.Error("Expected an error for relatvieurl but got nil error")
 	}

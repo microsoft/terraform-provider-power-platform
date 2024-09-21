@@ -39,10 +39,17 @@ type RequestContextValue struct {
 	RequestId   string
 }
 
+// TestContextValue is a struct that holds the test name for a given test.
+type TestContextValue struct {
+	IsTestMode bool
+	TestName   string
+}
+
 // Context keys for the execution and request context.
 const (
 	EXECUTION_CONTEXT_KEY ContextKey = "executionContext"
 	REQUEST_CONTEXT_KEY   ContextKey = "requestContext"
+	TEST_CONTEXT_KEY      ContextKey = "testContext"
 )
 
 // EnterRequestScope is a helper function that logs the start of a request scope and returns a closure that can be used to defer the exit of the request scope
@@ -184,4 +191,15 @@ type AllowedProviderRequestTypes interface {
 		provider.MetadataRequest |
 		provider.SchemaRequest |
 		provider.ValidateConfigRequest
+}
+
+// TestContext creates a new context with the test context value.
+func TestContext(ctx context.Context, testName string) context.Context {
+	return context.WithValue(ctx, TEST_CONTEXT_KEY, TestContextValue{IsTestMode: true, TestName: testName})
+}
+
+// IsTestContext returns true if the context is a test context.
+func IsTestContext(ctx context.Context) bool {
+	testContext, ok := ctx.Value(TEST_CONTEXT_KEY).(TestContextValue)
+	return ok && testContext.IsTestMode
 }

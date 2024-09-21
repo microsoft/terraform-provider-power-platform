@@ -96,7 +96,7 @@ func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, scope *string
 	}
 
 	if scope != nil {
-		return client.Api.ExecuteForGivenScope(ctx, *scope, method, url, h, body, codes, nil)
+		return client.Api.Execute(ctx, []string{*scope}, method, url, h, body, codes, nil)
 	}
 	panic("scope or evironment_id must be provided")
 }

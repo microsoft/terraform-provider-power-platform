@@ -66,7 +66,7 @@ func (client *Client) GetLocations(ctx context.Context) (*LocationArrayDto, erro
 	apiUrl.RawQuery = values.Encode()
 
 	locationsArray := LocationArrayDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &locationsArray)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &locationsArray)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +136,8 @@ func currencyCodeValidator(client *api.Client, location string, currencyCode str
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	// TODO: Why aren't we using the correct context?
+	response, err := client.Execute(context.Background(), nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 
 	if err != nil {
 		return err
@@ -200,7 +201,8 @@ func languageCodeValidator(client *api.Client, location string, languageCode str
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	// TODO: why aren't we using the correct context?
+	response, err := client.Execute(context.Background(), nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 
 	if err != nil {
 		return err
@@ -265,7 +267,7 @@ func (client *Client) GetEnvironment(ctx context.Context, environmentId string) 
 	apiUrl.RawQuery = values.Encode()
 
 	env := Dto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
 			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment '%s' not found", environmentId))
@@ -299,7 +301,7 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 		Message: "Deleted using Power Platform Terraform Provider",
 	}
 
-	response, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
+	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
@@ -323,7 +325,7 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	apiResponse, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environmentCreateLinkEnvironmentMetadata, []int{http.StatusAccepted}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentCreateLinkEnvironmentMetadata, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		tflog.Error(ctx, "Error adding Dataverse to environment: "+err.Error())
 	}
@@ -348,7 +350,7 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 	}
 	for {
 		lifecycleEnv := Dto{}
-		lifecycleResponse, err := client.Api.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted}, &lifecycleEnv)
+		lifecycleResponse, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted}, &lifecycleEnv)
 		if err != nil {
 			return nil, err
 		}
@@ -385,7 +387,7 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 	values := url.Values{}
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
-	apiResponse, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environmentToCreate, []int{http.StatusAccepted, http.StatusCreated}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentToCreate, []int{http.StatusAccepted, http.StatusCreated}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -455,7 +457,7 @@ func (client *Client) doWaitForAccess(ctx context.Context, env *Dto) error {
 				return err
 			}
 
-			resp, _ := client.Api.Execute(ctx, http.MethodGet, whoAmIUrl.String(), http.Header{}, nil, []int{http.StatusOK, http.StatusUnauthorized}, nil)
+			resp, _ := client.Api.Execute(ctx, nil, http.MethodGet, whoAmIUrl.String(), http.Header{}, nil, []int{http.StatusOK, http.StatusUnauthorized}, nil)
 			if resp != nil && resp.Response != nil && resp.Response.StatusCode == http.StatusOK {
 				break
 			}
@@ -486,7 +488,7 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
 	values.Add("api-version", "2022-05-01")
 	apiUrl.RawQuery = values.Encode()
-	_, err := client.Api.Execute(ctx, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
+	_, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -536,7 +538,7 @@ func (client *Client) GetEnvironments(ctx context.Context) ([]Dto, error) {
 	apiUrl.RawQuery = values.Encode()
 
 	envArray := DtoArray{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &envArray)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &envArray)
 	if err != nil {
 		return nil, err
 	}
@@ -579,7 +581,7 @@ func (client *Client) ValidateEnvironmentDetails(ctx context.Context, location, 
 		EnvironmentLocation: location,
 	}
 
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, envDetails, []int{http.StatusOK}, nil)
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, envDetails, []int{http.StatusOK}, nil)
 	if err != nil {
 		return err
 	}

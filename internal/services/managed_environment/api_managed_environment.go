@@ -45,7 +45,7 @@ func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Con
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	apiResponse, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, managedEnvSettings, []int{http.StatusNoContent, http.StatusAccepted}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, managedEnvSettings, []int{http.StatusNoContent, http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
@@ -74,7 +74,7 @@ func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Co
 		ProtectionLevel: "Basic",
 	}
 
-	apiResponse, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, managedEnv, []int{http.StatusAccepted}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, managedEnv, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}

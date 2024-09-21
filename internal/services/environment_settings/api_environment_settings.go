@@ -46,7 +46,7 @@ func (client *EnvironmentSettingsClient) GetEnvironmentSettings(ctx context.Cont
 	}
 
 	environmentSettings := EnvironmentSettingsValueDto{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &environmentSettings)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &environmentSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (client *EnvironmentSettingsClient) UpdateEnvironmentSettings(ctx context.C
 		Path:   fmt.Sprintf("/api/data/v9.0/organizations(%s)", *settings.OrganizationId),
 	}
 
-	_, err = client.Api.Execute(ctx, "PATCH", apiUrl.String(), nil, environmentSettings, []int{http.StatusNoContent}, nil)
+	_, err = client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environmentSettings, []int{http.StatusNoContent}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (client *EnvironmentSettingsClient) getEnvironment(ctx context.Context, env
 	apiUrl.RawQuery = values.Encode()
 
 	env := EnvironmentIdDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		return nil, err
 	}

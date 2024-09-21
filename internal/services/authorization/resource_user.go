@@ -19,6 +19,7 @@ import (
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers/array"
 )
 
 var _ resource.Resource = &UserResource{}
@@ -249,7 +250,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	addedSecurityRoles, removedSecurityRoles := helpers.DiffArrays(plan.SecurityRoles, state.SecurityRoles)
+	addedSecurityRoles, removedSecurityRoles := array.Diff(plan.SecurityRoles, state.SecurityRoles)
 
 	user, err := r.UserClient.GetUserBySystemUserId(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString())
 	if err != nil {

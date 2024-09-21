@@ -71,7 +71,7 @@ func GetEntityDefinition(ctx context.Context, client *DataRecordClient, environm
 	}
 
 	entityDefinition := EntityDefinitionsDto{}
-	_, err = client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
+	_, err = client.Api.Execute(ctx, nil, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +107,7 @@ func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentI
 	apiUrl.RawQuery = values.Encode()
 
 	env := EnvironmentIdDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func (client *DataRecordClient) GetDataRecordsByODataQuery(ctx context.Context, 
 	apiUrl := fmt.Sprintf("https://%s/api/data/%s/%s", environmentHost, constants.DATAVERSE_API_VERSION, query)
 
 	response := map[string]any{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl, h, nil, []int{http.StatusOK}, &response)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl, h, nil, []int{http.StatusOK}, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId, env
 
 	result := make(map[string]any, 0)
 
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
 			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Data Record '%s' not found", recordId))
@@ -235,7 +235,7 @@ func (client *DataRecordClient) GetRelationData(ctx context.Context, environment
 
 	result := make(map[string]any, 0)
 
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +269,7 @@ func (client *DataRecordClient) GetTableSingularNameFromPlural(ctx context.Conte
 	q.Add("$select", "PrimaryIdAttribute,LogicalCollectionName,LogicalName")
 	apiUrl.RawQuery = q.Encode()
 
-	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -394,7 +394,7 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 
 	apiUrl := fmt.Sprintf("https://%s/api/data/%s/EntityDefinitions(LogicalName='%s')?$expand=OneToManyRelationships,ManyToManyRelationships,ManyToOneRelationships", environmentHost, constants.DATAVERSE_API_VERSION, entityLogicalName)
 
-	response, err := client.Api.Execute(ctx, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
+	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return "", err
 	}
@@ -483,7 +483,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 		Path:   apiPath,
 	}
 
-	response, err := client.Api.Execute(ctx, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
+	response, err := client.Api.Execute(ctx, nil, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -547,7 +547,7 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 					Host:   environmentHost,
 					Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s(%s)/$ref", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId, key, dataRecordId),
 				}
-				_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+				_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 				if err != nil && !strings.ContainsAny(err.Error(), "404") {
 					return err
 				}
@@ -560,7 +560,7 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId),
 	}
-	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
+	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
 	if err != nil && !strings.ContainsAny(err.Error(), "404") {
 		// TODO: 404 is desired state for delete.  We should pass 404 as acceptable status code and not error
 		return err
@@ -606,7 +606,7 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 
 	existingRelationsResponse := RelationApiResponse{}
 
-	apiResponse, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 	if err != nil {
 		return err
 	}
@@ -647,7 +647,7 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 	}
 
 	for _, relation := range toBeDeleted {
-		_, err = client.Api.Execute(ctx, "DELETE", relation.OdataID, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+		_, err = client.Api.Execute(ctx, nil, "DELETE", relation.OdataID, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 		if err != nil {
 			return err
 		}
@@ -672,7 +672,7 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 		relation := RelationApiBody{
 			OdataID: fmt.Sprintf("https://%s/api/data/%s/%s(%s)", environmentHost, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId),
 		}
-		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
+		_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
 		if err != nil {
 			return err
 		}
