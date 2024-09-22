@@ -5,6 +5,7 @@ package authorization
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -70,7 +71,8 @@ func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environment
 	user := UserDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
+		var unexpectedError api.UnexpectedHttpStatusCodeError
+		if errors.As(err, &unexpectedError) && unexpectedError.StatusCode == http.StatusNotFound {
 			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with systemUserId %s not found", systemUserId))
 		}
 		return nil, err

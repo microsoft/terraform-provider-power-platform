@@ -60,6 +60,26 @@ var retryableStatusCodes = []int{
 }
 
 // Execute executes an HTTP request with the given method, url, headers, and body.
+//
+// Parameters:
+//   - ctx: context.Context - Provides context for the request, allowing for timeout and cancellation control.
+//   - scopes: []string - A list of scopes that the request should be associated with. If no scopes are provided, the method attempts to infer the scope from the URL.
+//   - method: string - Specifies the HTTP method to be used for the request (e.g., "GET", "POST", "PATCH").
+//   - url: string - The URL to which the request is sent. This includes the scheme, host, path, and query parameters. The URL must be absolute and properly formatted.
+//   - headers: http.Header - A collection of HTTP headers to include in the request. Headers provide additional information about the request, such as content type, authorization tokens, and custom metadata.
+//   - body: any - The body of the request, which can be of any type. This is typically used for methods like POST and PATCH, where data needs to be sent to the server.
+//   - acceptableStatusCodes: []int - A list of HTTP status codes that are considered acceptable for the response. If the response status code is not in this list, the method treats it as an error.
+//   - responseObj: any - An optional parameter where the response body can be unmarshaled into. This is useful for directly obtaining a structured representation of the response data.
+//
+// Returns:
+//   - *Response: The response from the HTTP request.
+//   - error: An error if the request fails. Possible error types include:
+//   - UrlFormatError: Returned if the URL is invalid or not absolute.
+//   - UnexpectedHttpStatusCodeError: Returned if the response status code is not acceptable.
+//
+// If no scopes are provided, the method attempts to infer the scope from the URL. The URL is validated to ensure it is absolute and properly formatted.
+// The HTTP request is then prepared and executed. The response status code is checked against the list of acceptable status codes. If the status code
+// is not acceptable, an error is returned. If a responseObj is provided, the response body is unmarshaled into this object.
 func (client *Client) Execute(ctx context.Context, scopes []string, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*Response, error) {
 	if len(scopes) == 0 {
 		// if no scopes are provided, try to guess the scope from the URL.
