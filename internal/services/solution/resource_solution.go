@@ -194,7 +194,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	plan.SettingsFileChecksum = types.StringNull()
 	if !plan.SettingsFile.IsNull() && !plan.SettingsFile.IsUnknown() {
-		value, err := helpers.CalculateMd5(plan.SettingsFile.ValueString())
+		value, err := helpers.CalculateSHA256(plan.SettingsFile.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddWarning("Issue when calculating checksum for settings file", err.Error())
 		} else {
@@ -205,7 +205,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	plan.SolutionFileChecksum = types.StringUnknown()
 	if !plan.SolutionFile.IsNull() && !plan.SolutionFile.IsUnknown() {
-		value, err := helpers.CalculateMd5(plan.SolutionFile.ValueString())
+		value, err := helpers.CalculateSHA256(plan.SolutionFile.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddWarning("Issue when calculating checksum for solution file", err.Error())
 		} else {
@@ -326,7 +326,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	plan.SettingsFileChecksum = types.StringNull()
 	if !plan.SettingsFile.IsNull() && !plan.SettingsFile.IsUnknown() {
-		value, err := helpers.CalculateMd5(plan.SettingsFile.ValueString())
+		value, err := helpers.CalculateSHA256(plan.SettingsFile.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddWarning("Issue when calculating checksum for settings file", err.Error())
 		} else {
@@ -336,7 +336,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	plan.SolutionFileChecksum = types.StringUnknown()
 	if !plan.SolutionFile.IsNull() && !plan.SolutionFile.IsUnknown() {
-		value, err := helpers.CalculateMd5(plan.SolutionFile.ValueString())
+		value, err := helpers.CalculateSHA256(plan.SolutionFile.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddWarning("Issue when calculating checksum for solution file", err.Error())
 		} else {
