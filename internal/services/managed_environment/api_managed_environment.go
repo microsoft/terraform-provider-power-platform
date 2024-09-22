@@ -50,7 +50,7 @@ func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Con
 		return err
 	}
 
-	tflog.Debug(ctx, "Managed Environment Enablement Operation HTTP Status: '"+apiResponse.Response.Status+"'")
+	tflog.Debug(ctx, "Managed Environment Enablement Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 
 	tflog.Debug(ctx, "Waiting for Managed Environment Enablement Operation to complete")
 	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
@@ -79,7 +79,7 @@ func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Co
 		return err
 	}
 
-	tflog.Debug(ctx, "Managed Environment Disablement Operation HTTP Status: '"+apiResponse.Response.Status+"'")
+	tflog.Debug(ctx, "Managed Environment Disablement Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 	tflog.Debug(ctx, "Waiting for Managed Environment Disablement Operation to complete")
 
 	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)

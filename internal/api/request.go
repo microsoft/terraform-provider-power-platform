@@ -48,8 +48,7 @@ func (client *Client) buildUserAgent(ctx context.Context) string {
 	return userAgent
 }
 
-func (client *Client) doRequest(ctx context.Context, token *string, request *http.Request, headers http.Header) (*HttpResponse, error) {
-	apiHttpResponse := &HttpResponse{}
+func (client *Client) doRequest(ctx context.Context, token *string, request *http.Request, headers http.Header) (*Response, error) {
 	if headers != nil {
 		request.Header = headers
 	}
@@ -77,34 +76,29 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 		request.Header.Set("Correlation-Context", cc)
 	}
 
-	response, err := httpClient.Do(request)
-	apiHttpResponse.Response = response
-	if err != nil {
-		return apiHttpResponse, err
+	apiResponse, err := httpClient.Do(request)
+
+	resp := &Response{
+		HttpResponse: apiResponse,
 	}
 
-	body, err := io.ReadAll(response.Body)
-	apiHttpResponse.BodyAsBytes = body
 	if err != nil {
-		return apiHttpResponse, err
+		return resp, err
 	}
-	defer response.Body.Close()
 
-	// if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-	// 	if len(body) != 0 {
-	// 		return apiHttpResponse, fmt.Errorf("status: %d, message: %s", response.StatusCode, string(body))
-	// 	}
-	// 	return apiHttpResponse, fmt.Errorf("status: %d", response.StatusCode)
-	// }
-	return apiHttpResponse, nil
+	defer apiResponse.Body.Close()
+	body, err := io.ReadAll(apiResponse.Body)
+	resp.BodyAsBytes = body
+
+	return resp, err
 }
 
-type HttpResponse struct {
-	Response    *http.Response
-	BodyAsBytes []byte
+type Response struct {
+	HttpResponse *http.Response
+	BodyAsBytes  []byte
 }
 
-func (apiResponse *HttpResponse) MarshallTo(obj any) error {
+func (apiResponse *Response) MarshallTo(obj any) error {
 	err := json.NewDecoder(bytes.NewReader(apiResponse.BodyAsBytes)).Decode(&obj)
 	if err != nil {
 		return err
@@ -112,8 +106,8 @@ func (apiResponse *HttpResponse) MarshallTo(obj any) error {
 	return nil
 }
 
-func (apiResponse *HttpResponse) GetHeader(name string) string {
-	return apiResponse.Response.Header.Get(name)
+func (apiResponse *Response) GetHeader(name string) string {
+	return apiResponse.HttpResponse.Header.Get(name)
 }
 
 func retryAfter(ctx context.Context, resp *http.Response) time.Duration {

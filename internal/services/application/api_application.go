@@ -112,7 +112,7 @@ func (client *Client) InstallApplicationInEnvironment(ctx context.Context, envir
 	}
 
 	applicationId := ""
-	if response.Response.StatusCode == http.StatusAccepted {
+	if response.HttpResponse.StatusCode == http.StatusAccepted {
 		operationLocationHeader := response.GetHeader(constants.HEADER_OPERATION_LOCATION)
 		tflog.Debug(ctx, "Opeartion Location Header: "+operationLocationHeader)
 
@@ -140,7 +140,7 @@ func (client *Client) InstallApplicationInEnvironment(ctx context.Context, envir
 				return "", errors.New("application installation failed. status message: " + lifecycleResponse.Error.Message)
 			}
 		}
-	} else if response.Response.StatusCode == http.StatusCreated {
+	} else if response.HttpResponse.StatusCode == http.StatusCreated {
 		appCreatedResponse := EnvironmentApplicationLifecycleCreatedDto{}
 		err = response.MarshallTo(&appCreatedResponse)
 		if err != nil {

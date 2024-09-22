@@ -41,7 +41,7 @@ func (client *Client) GetCurrenciesByLocation(ctx context.Context, location stri
 		return currencies, err
 	}
 
-	defer response.Response.Body.Close()
+	defer response.HttpResponse.Body.Close()
 
 	err = json.Unmarshal(response.BodyAsBytes, &currencies)
 

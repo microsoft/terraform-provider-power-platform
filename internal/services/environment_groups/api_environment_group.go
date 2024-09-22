@@ -97,7 +97,7 @@ func (client *EnvironmentGroupClient) GetEnvironmentGroup(ctx context.Context, e
 
 	environmentGroup := EnvironmentGroupDto{}
 	httpResponse, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound}, &environmentGroup)
-	if httpResponse.Response.StatusCode == http.StatusNotFound {
+	if httpResponse.HttpResponse.StatusCode == http.StatusNotFound {
 		return nil, nil
 	} else if err != nil {
 		return nil, err

@@ -51,7 +51,7 @@ type LifecycleRequestedByDto struct {
 	Type        string `json:"type"`
 }
 
-func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, response *HttpResponse) (*LifecycleDto, error) {
+func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, response *Response) (*LifecycleDto, error) {
 	locationHeader := response.GetHeader(constants.HEADER_LOCATION)
 	tflog.Debug(ctx, "Location Header: "+locationHeader)
 
@@ -70,7 +70,7 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 	// 	retryAfter = retryAfter * time.Second
 	// }
 
-	waitFor := retryAfter(ctx, response.Response)
+	waitFor := retryAfter(ctx, response.HttpResponse)
 
 	for {
 		lifecycleResponse := LifecycleDto{}
@@ -85,7 +85,7 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 		}
 
 		tflog.Debug(ctx, "Environment Creation Operation State: '"+lifecycleResponse.State.Id+"'")
-		tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+response.Response.Status+"'")
+		tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+response.HttpResponse.Status+"'")
 
 		if lifecycleResponse.State.Id == "Succeeded" {
 			return &lifecycleResponse, nil

@@ -5,6 +5,7 @@ package rest
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 func NewWebApiClient(apiClient *api.Client) WebApiClient {
@@ -55,16 +55,22 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 		}
 	}
 
-	res, err := client.ExecuteApiRequest(ctx, operation.Scope.ValueStringPointer(), url, method, body, headers, operation.ExpectedHttpStatus)
-	if helpers.Code(err) == helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE {
-		return types.ObjectUnknown(map[string]attr.Type{
-			"body": types.StringType,
-		}), err
+	expectedStatusCodes := operation.ExpectedHttpStatus
+	if len(operation.ExpectedHttpStatus) == 0 {
+		expectedStatusCodes = []int{http.StatusOK, http.StatusCreated, http.StatusAccepted, http.StatusNoContent}
 	}
 
-	if res != nil && res.Response != nil {
+	res, err := client.ExecuteApiRequest(ctx, operation.Scope.ValueStringPointer(), url, method, body, headers, expectedStatusCodes)
+	var unexpected api.UnexpectedHttpStatusCodeError
+	if errors.As(err, &unexpected) {
+		return types.ObjectUnknown(map[string]attr.Type{
+			"body": types.StringType,
+		}), unexpected
+	}
+
+	if res != nil && res.HttpResponse != nil {
 		tflog.Trace(ctx, fmt.Sprintf("SendOperation Response: %v", res.BodyAsBytes))
-		tflog.Trace(ctx, fmt.Sprintf("SendOperation Response Status: %v", res.Response.Status))
+		tflog.Trace(ctx, fmt.Sprintf("SendOperation Response Status: %v", res.HttpResponse.Status))
 	}
 
 	output := map[string]attr.Value{
@@ -84,16 +90,16 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 	return o, nil
 }
 
-func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, scope *string, url, method string, body *string, headers map[string]string, expectedStatusCodes []int64) (*api.HttpResponse, error) {
+func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, scope *string, url, method string, body *string, headers map[string]string, expectedStatusCodes []int) (*api.Response, error) {
 	h := http.Header{}
 	for k, v := range headers {
 		h.Add(k, v)
 	}
 
-	codes := make([]int, len(expectedStatusCodes))
-	for i, code := range expectedStatusCodes {
-		codes[i] = int(code)
-	}
+	codes := expectedStatusCodes // make([]int, len(expectedStatusCodes))
+	// for i, code := range expectedStatusCodes {
+	// 	codes[i] = int(code)
+	// }
 
 	if scope != nil {
 		return client.Api.Execute(ctx, []string{*scope}, method, url, h, body, codes, nil)

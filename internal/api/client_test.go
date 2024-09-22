@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 func TestUnitApiClient_GetConfig(t *testing.T) {
@@ -35,10 +34,11 @@ func TestUnitApiClient_GetConfig(t *testing.T) {
 		t.Error("Expected an error for relatvieurl but got nil error")
 	}
 
-	if e, ok := err.(helpers.ProviderError); !ok {
-		t.Errorf("Expected error type %s but got %s", reflect.TypeFor[helpers.ProviderError](), reflect.TypeOf(e.ErrorCode))
-	} else if e.ErrorCode != helpers.ERROR_INCORRECT_URL_FORMAT {
-		t.Errorf("Expected error code %s but got %s", helpers.ERROR_INCORRECT_URL_FORMAT, e.ErrorCode)
+	switch err.(type) {
+	case api.UrlFormatError:
+		return
+	default:
+		t.Errorf("Expected error type %s but got %s", reflect.TypeOf(api.UrlFormatError{}), reflect.TypeOf(err))
 	}
 }
 

@@ -143,7 +143,7 @@ func currencyCodeValidator(client *api.Client, location string, currencyCode str
 		return err
 	}
 
-	defer response.Response.Body.Close()
+	defer response.HttpResponse.Body.Close()
 
 	resp := currencyCodeValidatorArrayDto{}
 	err = json.Unmarshal(response.BodyAsBytes, &resp)
@@ -208,7 +208,7 @@ func languageCodeValidator(client *api.Client, location string, languageCode str
 		return err
 	}
 
-	defer response.Response.Body.Close()
+	defer response.HttpResponse.Body.Close()
 
 	resp := languageCodeValidatorArrayDto{}
 	err = json.Unmarshal(response.BodyAsBytes, &resp)
@@ -305,7 +305,7 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 	if err != nil {
 		return err
 	}
-	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.Response.Status+"'")
+	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.HttpResponse.Status+"'")
 
 	tflog.Debug(ctx, "Waiting for environment deletion operation to complete")
 	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, response)
@@ -330,7 +330,7 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 		tflog.Error(ctx, "Error adding Dataverse to environment: "+err.Error())
 	}
 
-	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.Response.Status+"'")
+	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 
 	locationHeader := apiResponse.GetHeader(constants.HEADER_LOCATION)
 	tflog.Debug(ctx, "Location Header: "+locationHeader)
@@ -361,7 +361,7 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 		}
 
 		tflog.Debug(ctx, "Dataverse Creation Operation State: '"+lifecycleEnv.Properties.ProvisioningState+"'")
-		tflog.Debug(ctx, "Dataverse Creation Operation HTTP Status: '"+lifecycleResponse.Response.Status+"'")
+		tflog.Debug(ctx, "Dataverse Creation Operation HTTP Status: '"+lifecycleResponse.HttpResponse.Status+"'")
 
 		if lifecycleEnv.Properties.ProvisioningState == "Succeeded" {
 			return &lifecycleEnv, nil
@@ -392,10 +392,10 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 		return nil, err
 	}
 
-	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.Response.Status+"'")
+	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 
 	createdEnvironmentId := ""
-	if apiResponse.Response.StatusCode == http.StatusAccepted {
+	if apiResponse.HttpResponse.StatusCode == http.StatusAccepted {
 		lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 		if err != nil {
 			return nil, err
@@ -409,7 +409,7 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 			createdEnvironmentId = parts[len(parts)-1]
 			tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
 		}
-	} else if apiResponse.Response.StatusCode == http.StatusCreated {
+	} else if apiResponse.HttpResponse.StatusCode == http.StatusCreated {
 		envCreatedResponse := LifecycleCreatedDto{}
 		err = apiResponse.MarshallTo(&envCreatedResponse)
 		if err != nil {
@@ -430,46 +430,46 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 		env.Properties.LinkedEnvironmentMetadata.TemplateMetadata = environmentToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
 	}
 
-	err = client.doWaitForAccess(ctx, env)
-	if err != nil {
-		return &Dto{}, err
-	}
+	// err = client.doWaitForAccess(ctx, env)
+	// if err != nil {
+	// 	return &Dto{}, err
+	// }
 
 	return env, err
 }
 
-func (client *Client) doWaitForAccess(ctx context.Context, env *Dto) error {
-	if env.Properties.LinkedEnvironmentMetadata != nil && env.Properties.LinkedEnvironmentMetadata.InstanceURL != "" {
-		envUrl, err := url.Parse(env.Properties.LinkedEnvironmentMetadata.InstanceURL)
-		if err != nil {
-			return err
-		}
+// func (client *Client) doWaitForAccess(ctx context.Context, env *Dto) error {
+// 	if env.Properties.LinkedEnvironmentMetadata != nil && env.Properties.LinkedEnvironmentMetadata.InstanceURL != "" {
+// 		envUrl, err := url.Parse(env.Properties.LinkedEnvironmentMetadata.InstanceURL)
+// 		if err != nil {
+// 			return err
+// 		}
 
-		whoAmIUrl := &url.URL{
-			Scheme: constants.HTTPS,
-			Host:   envUrl.Host,
-			Path:   "/api/data/v9.2/systemusers",
-		}
+// 		whoAmIUrl := &url.URL{
+// 			Scheme: constants.HTTPS,
+// 			Host:   envUrl.Host,
+// 			Path:   "/api/data/v9.2/systemusers",
+// 		}
 
-		for {
-			err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
-			if err != nil {
-				return err
-			}
+// 		for {
+// 			err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
+// 			if err != nil {
+// 				return err
+// 			}
 
-			resp, _ := client.Api.Execute(ctx, nil, http.MethodGet, whoAmIUrl.String(), http.Header{}, nil, []int{http.StatusOK, http.StatusUnauthorized}, nil)
-			if resp != nil && resp.Response != nil && resp.Response.StatusCode == http.StatusOK {
-				break
-			}
+// 			resp, _ := client.Api.Execute(ctx, nil, http.MethodGet, whoAmIUrl.String(), http.Header{}, nil, []int{http.StatusOK, http.StatusUnauthorized}, nil)
+// 			if resp != nil && resp.Response != nil && resp.Response.StatusCode == http.StatusOK {
+// 				break
+// 			}
 
-			if resp != nil && resp.Response != nil && resp.Response.StatusCode != http.StatusUnauthorized {
-				return fmt.Errorf("unexpected status code %d. %s", resp.Response.StatusCode, whoAmIUrl.String())
-			}
-		}
-	}
+// 			if resp != nil && resp.Response != nil && resp.Response.StatusCode != http.StatusUnauthorized {
+// 				return fmt.Errorf("unexpected status code %d. %s", resp.Response.StatusCode, whoAmIUrl.String())
+// 			}
+// 		}
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func (client *Client) UpdateEnvironment(ctx context.Context, environmentId string, environment Dto) (*Dto, error) {
 	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata != nil && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {

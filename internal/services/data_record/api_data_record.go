@@ -493,9 +493,9 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 		if err != nil {
 			return nil, err
 		}
-	} else if response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID) != "" {
+	} else if response.HttpResponse.Header.Get(constants.HEADER_ODATA_ENTITY_ID) != "" {
 		re := regexp.MustCompile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-		match := re.FindAllStringSubmatch(response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID), -1)
+		match := re.FindAllStringSubmatch(response.HttpResponse.Header.Get(constants.HEADER_ODATA_ENTITY_ID), -1)
 		if len(match) == 0 {
 			return nil, fmt.Errorf("no entity record id returned from the odata-entityid header")
 		}

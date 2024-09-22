@@ -41,7 +41,7 @@ func (client *EnvironmentTemplatesClient) GetEnvironmentTemplatesByLocation(ctx 
 		return templates, err
 	}
 
-	defer response.Response.Body.Close()
+	defer response.HttpResponse.Body.Close()
 
 	err = json.Unmarshal(response.BodyAsBytes, &templates)
 

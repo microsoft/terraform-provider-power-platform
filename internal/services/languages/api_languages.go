@@ -41,7 +41,7 @@ func (client *Client) GetLanguagesByLocation(ctx context.Context, location strin
 		return languages, err
 	}
 
-	defer response.Response.Body.Close()
+	defer response.HttpResponse.Body.Close()
 
 	err = json.Unmarshal(response.BodyAsBytes, &languages)
 

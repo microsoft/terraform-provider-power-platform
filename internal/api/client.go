@@ -60,7 +60,7 @@ var retryableStatusCodes = []int{
 }
 
 // Execute executes an HTTP request with the given method, url, headers, and body.
-func (client *Client) Execute(ctx context.Context, scopes []string, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*HttpResponse, error) {
+func (client *Client) Execute(ctx context.Context, scopes []string, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*Response, error) {
 	if len(scopes) == 0 {
 		// if no scopes are provided, try to guess the scope from the URL.
 		scope, err := tryGetScopeFromURL(url, client.Config.Urls)
@@ -72,7 +72,7 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 	}
 
 	if u, e := neturl.Parse(url); e != nil || !u.IsAbs() {
-		return nil, helpers.WrapIntoProviderError(e, helpers.ERROR_INCORRECT_URL_FORMAT, "when using scope, the calling url must be an absolute url, not a relative path")
+		return nil, NewUrlFormatError(url, e)
 	}
 
 	for {
@@ -96,7 +96,7 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 			return resp, err
 		}
 
-		isAcceptable := len(acceptableStatusCodes) > 0 && array.Contains(acceptableStatusCodes, resp.Response.StatusCode)
+		isAcceptable := len(acceptableStatusCodes) > 0 && array.Contains(acceptableStatusCodes, resp.HttpResponse.StatusCode)
 		if isAcceptable {
 			if responseObj != nil {
 				err = resp.MarshallTo(responseObj)
@@ -108,14 +108,14 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 			return resp, nil
 		}
 
-		isRetryable := array.Contains(retryableStatusCodes, resp.Response.StatusCode)
+		isRetryable := array.Contains(retryableStatusCodes, resp.HttpResponse.StatusCode)
 		if !isRetryable {
-			return resp, helpers.WrapIntoProviderError(err, helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE, fmt.Sprintf("expected status code: %d, recieved: [%d]", acceptableStatusCodes, resp.Response.StatusCode))
+			return resp, NewUnexpectedHttpStatusCodeError(acceptableStatusCodes, resp.HttpResponse.StatusCode, resp.HttpResponse.Status, resp.BodyAsBytes)
 		}
 
-		waitFor := retryAfter(ctx, resp.Response)
+		waitFor := retryAfter(ctx, resp.HttpResponse)
 
-		tflog.Debug(ctx, fmt.Sprintf("Received status code %d for request %s, retrying after %s", resp.Response.StatusCode, url, waitFor))
+		tflog.Debug(ctx, fmt.Sprintf("Received status code %d for request %s, retrying after %s", resp.HttpResponse.StatusCode, url, waitFor))
 
 		err = client.SleepWithContext(ctx, waitFor)
 		if err != nil {
