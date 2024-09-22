@@ -448,7 +448,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	var currencyCode string
 	if !IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
-		currencyCode = updateExistingDataverse(ctx, plan, environmentDto, state)
+		currencyCode = updateExistingDataverse(ctx, plan, &environmentDto, state)
 	} else if IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
 		code, err := addDataverse(ctx, plan, r)
 		if err != nil {
@@ -518,7 +518,7 @@ func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, 
 	return linkedMetadataDto.Currency.Code, nil
 }
 
-func updateExistingDataverse(ctx context.Context, plan *SourceModel, environmentDto Dto, state *SourceModel) string {
+func updateExistingDataverse(ctx context.Context, plan *SourceModel, environmentDto *Dto, state *SourceModel) string {
 	var dataverseSourcePlanModel DataverseSourceModel
 	plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
