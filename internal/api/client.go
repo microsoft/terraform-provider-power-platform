@@ -124,56 +124,9 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 	}
 }
 
-// ExecuteForGivenScope executes an HTTP request with the given scope.
-// The scope is used to obtain an access token for the request.
-// The method, url, headers, and body are used to construct the request.
-// The acceptableStatusCodes are used to validate the response status code.
-// The responseObj is used to unmarshal the response body from json.
-// If the responseObj is nil, the response body is not unmarshalled.
-// If the response status code is not in the acceptableStatusCodes, an error is returned.
-// func (client *Client) ExecuteForGivenScope(ctx context.Context, scope, method, url string, headers http.Header, body any, acceptableStatusCodes []int, responseObj any) (*HttpResponse, error) {
-// 	if u, e := neturl.Parse(url); e != nil || !u.IsAbs() {
-// 		return nil, helpers.WrapIntoProviderError(e, helpers.ERROR_INCORRECT_URL_FORMAT, "when using scope, the calling url must be an absolute url, not a relative path")
-// 	}
-
-// 	token, err := client.BaseAuth.GetTokenForScopes(ctx, []string{scope})
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	bodyBuffer, err := prepareRequestBody(body)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	request, err := http.NewRequestWithContext(ctx, method, url, bodyBuffer)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	apiResponse, err := client.doRequest(ctx, token, request, headers)
-// 	if err != nil {
-// 		return apiResponse, err
-// 	}
-
-// 	isStatusCodeValid := array.Contains(acceptableStatusCodes, apiResponse.Response.StatusCode)
-// 	if !isStatusCodeValid && len(acceptableStatusCodes) > 0 {
-// 		return apiResponse, helpers.WrapIntoProviderError(err, helpers.ERROR_UNEXPECTED_HTTP_RETURN_CODE, fmt.Sprintf("expected status code: %d, recieved: [%d]", acceptableStatusCodes, apiResponse.Response.StatusCode))
-// 	}
-
-// 	if responseObj != nil {
-// 		err = apiResponse.MarshallTo(responseObj)
-// 		if err != nil {
-// 			return apiResponse, err
-// 		}
-// 	}
-// 	return apiResponse, nil
-// }
-
 // RetryAfterDefault returns a random duration between 5 and 10 seconds.
-func (client *Client) RetryAfterDefault() time.Duration {
-	retryAfter5to10Seconds := time.Duration((rand.Intn(5) + 5)) * time.Second
-	return retryAfter5to10Seconds
+func DefaultRetryAfter() time.Duration {
+	return time.Duration((rand.Intn(5) + 5)) * time.Second
 }
 
 // SleepWithContext sleeps for the given duration or until the context is canceled.

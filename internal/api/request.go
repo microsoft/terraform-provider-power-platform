@@ -22,32 +22,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func (client *Client) BuildCorrelationHeaders(ctx context.Context) (requestId string, correlationContext string) {
-	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
-	if ok {
-		cc := strings.Join([]string{
-			"objectName=" + requestContext.ObjectName,
-			"requestType=" + requestContext.RequestType,
-		}, ",")
-
-		rid := "|" + requestContext.RequestId + "." + fmt.Sprintf("%016x", rand.Uint64()) + "."
-
-		return rid, cc
-	}
-	return "", ""
-}
-
-func (client *Client) buildUserAgent(ctx context.Context) string {
-	userAgent := fmt.Sprintf("terraform-provider-power-platform/%s (%s; %s) terraform/%s go/%s", common.ProviderVersion, runtime.GOOS, runtime.GOARCH, client.Config.TerraformVersion, runtime.Version())
-
-	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
-	if ok {
-		userAgent += fmt.Sprintf(" %s %s", requestContext.ObjectName, requestContext.RequestType)
-	}
-
-	return userAgent
-}
-
 func (client *Client) doRequest(ctx context.Context, token *string, request *http.Request, headers http.Header) (*Response, error) {
 	if headers != nil {
 		request.Header = headers
@@ -71,7 +45,7 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 		ua := client.buildUserAgent(ctx)
 		request.Header.Set("User-Agent", ua)
 
-		rid, cc := client.BuildCorrelationHeaders(ctx)
+		rid, cc := client.buildCorrelationHeaders(ctx)
 		request.Header.Set("Request-Id", rid)
 		request.Header.Set("Correlation-Context", cc)
 	}
@@ -121,4 +95,30 @@ func retryAfter(ctx context.Context, resp *http.Response) time.Duration {
 	}
 
 	return retryAfter
+}
+
+func (client *Client) buildCorrelationHeaders(ctx context.Context) (requestId string, correlationContext string) {
+	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
+	if ok {
+		cc := strings.Join([]string{
+			"objectName=" + requestContext.ObjectName,
+			"requestType=" + requestContext.RequestType,
+		}, ",")
+
+		rid := "|" + requestContext.RequestId + "." + fmt.Sprintf("%016x", rand.Uint64()) + "."
+
+		return rid, cc
+	}
+	return "", ""
+}
+
+func (client *Client) buildUserAgent(ctx context.Context) string {
+	userAgent := fmt.Sprintf("terraform-provider-power-platform/%s (%s; %s) terraform/%s go/%s", common.ProviderVersion, runtime.GOOS, runtime.GOARCH, client.Config.TerraformVersion, runtime.Version())
+
+	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
+	if ok {
+		userAgent += fmt.Sprintf(" %s %s", requestContext.ObjectName, requestContext.RequestType)
+	}
+
+	return userAgent
 }
