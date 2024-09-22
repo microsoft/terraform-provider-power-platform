@@ -12,7 +12,7 @@ import (
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func NewDlpPolicyClient(apiClient *api.Client) DlpPolicyClient {
@@ -68,7 +68,7 @@ func (client *DlpPolicyClient) GetPolicy(ctx context.Context, name string) (*Dlp
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("DLP Policy '%s' not found", name))
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("DLP Policy '%s' not found", name))
 		}
 		return nil, err
 	}

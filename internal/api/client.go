@@ -18,6 +18,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers/array"
 )
@@ -92,7 +93,7 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 	}
 
 	if u, e := neturl.Parse(url); e != nil || !u.IsAbs() {
-		return nil, NewUrlFormatError(url, e)
+		return nil, customerrors.NewUrlFormatError(url, e)
 	}
 
 	for {
@@ -113,7 +114,7 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 
 		resp, err := client.doRequest(ctx, token, request, headers)
 		if err != nil {
-			return resp, err
+			return resp, fmt.Errorf("Error making %s request to %s. %w", request.Method, request.RequestURI, err)
 		}
 
 		isAcceptable := len(acceptableStatusCodes) > 0 && array.Contains(acceptableStatusCodes, resp.HttpResponse.StatusCode)
@@ -121,7 +122,7 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 			if responseObj != nil {
 				err = resp.MarshallTo(responseObj)
 				if err != nil {
-					return resp, err
+					return resp, fmt.Errorf("Error marshalling response to json. %w", err)
 				}
 			}
 
@@ -130,7 +131,7 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 
 		isRetryable := array.Contains(retryableStatusCodes, resp.HttpResponse.StatusCode)
 		if !isRetryable {
-			return resp, NewUnexpectedHttpStatusCodeError(acceptableStatusCodes, resp.HttpResponse.StatusCode, resp.HttpResponse.Status, resp.BodyAsBytes)
+			return resp, customerrors.NewUnexpectedHttpStatusCodeError(acceptableStatusCodes, resp.HttpResponse.StatusCode, resp.HttpResponse.Status, resp.BodyAsBytes)
 		}
 
 		waitFor := retryAfter(ctx, resp.HttpResponse)

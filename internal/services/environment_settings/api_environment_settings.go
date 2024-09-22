@@ -12,7 +12,7 @@ import (
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func NewEnvironmentSettingsClient(apiClient *api.Client) EnvironmentSettingsClient {
@@ -85,7 +85,7 @@ func (client *EnvironmentSettingsClient) GetEnvironmentHostById(ctx context.Cont
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
-		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+		return "", customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 
 	envUrl, err := url.Parse(environmentUrl)

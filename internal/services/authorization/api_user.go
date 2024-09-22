@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func NewUserClient(apiClient *api.Client) UserClient {
@@ -71,9 +71,9 @@ func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environment
 	user := UserDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
-		var unexpectedError api.UnexpectedHttpStatusCodeError
+		var unexpectedError *customerrors.UnexpectedHttpStatusCodeError
 		if errors.As(err, &unexpectedError) && unexpectedError.StatusCode == http.StatusNotFound {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with systemUserId %s not found", systemUserId))
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with systemUserId %s not found", systemUserId))
 		}
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentI
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with aadObjectId %s not found", aadObjectId))
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with aadObjectId %s not found", aadObjectId))
 		}
 
 		return nil, err
@@ -254,7 +254,7 @@ func (client *UserClient) GetEnvironmentHostById(ctx context.Context, environmen
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
-		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+		return "", customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 	envUrl, err := url.Parse(environmentUrl)
 	if err != nil {
@@ -278,7 +278,7 @@ func (client *UserClient) getEnvironment(ctx context.Context, environmentId stri
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
 		}
 		return nil, err
 	}
@@ -306,7 +306,7 @@ func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId, b
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
 			tflog.Debug(ctx, fmt.Sprintf("Error getting security roles: %s", err.Error()))
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, "security roles not found")
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, "security roles not found")
 		}
 		return nil, err
 	}

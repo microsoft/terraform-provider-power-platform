@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
@@ -233,7 +234,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	solutionId := getSolutionId(state.Id.ValueString())
 	solution, err := r.SolutionClient.GetSolutionById(ctx, state.EnvironmentId.ValueString(), solutionId)
 	if err != nil {
-		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
+		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
 		}

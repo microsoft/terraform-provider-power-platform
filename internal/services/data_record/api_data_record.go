@@ -14,7 +14,7 @@ import (
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func NewDataRecordClient(apiClient *api.Client) DataRecordClient {
@@ -86,7 +86,7 @@ func (client *DataRecordClient) GetEnvironmentHostById(ctx context.Context, envi
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
-		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+		return "", customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 
 	envUrl, err := url.Parse(environmentUrl)
@@ -207,7 +207,7 @@ func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId, env
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Data Record '%s' not found", recordId))
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Data Record '%s' not found", recordId))
 		}
 		return nil, err
 	}

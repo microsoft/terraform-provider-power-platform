@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers/array"
 )
@@ -211,7 +212,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	userDto, err := r.UserClient.GetUserByAadObjectId(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString())
 	if err != nil {
-		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
+		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
 		}

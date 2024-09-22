@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package helpers
+package customerrors
 
 import (
 	"errors"
@@ -15,18 +15,24 @@ const (
 	ERROR_ENVIRONMENT_URL_NOT_FOUND ErrorCode = "ENVIRONMENT_URL_NOT_FOUND"
 )
 
+var _ error = ProviderError{}
+
 type ProviderError struct {
-	error
 	ErrorCode ErrorCode
+	Err       error
 }
 
 func (e ProviderError) Error() string {
-	return fmt.Sprintf("%s: %s", e.ErrorCode, e.error.Error())
+	if e.Err == nil {
+		return string(e.ErrorCode)
+	}
+
+	return fmt.Sprintf("%s: %s", e.ErrorCode, e.Err.Error())
 }
 
 func Unwrap(err error) error {
 	if e, ok := err.(ProviderError); ok {
-		return errors.Unwrap(e.error)
+		return errors.Unwrap(e.Err)
 	}
 
 	return errors.Unwrap(err)
@@ -46,7 +52,7 @@ func Code(err error) ErrorCode {
 
 func NewProviderError(errorCode ErrorCode, format string, args ...any) error {
 	return ProviderError{
-		error:     fmt.Errorf(format, args...),
+		Err:       fmt.Errorf(format, args...),
 		ErrorCode: errorCode,
 	}
 }
@@ -54,12 +60,12 @@ func NewProviderError(errorCode ErrorCode, format string, args ...any) error {
 func WrapIntoProviderError(err error, errorCode ErrorCode, msg string) error {
 	if err == nil {
 		return ProviderError{
-			error:     fmt.Errorf("%s", msg),
+			Err:       fmt.Errorf("%s", msg),
 			ErrorCode: errorCode,
 		}
 	}
 	return ProviderError{
-		error:     fmt.Errorf("%s: [%w]", msg, err),
+		Err:       fmt.Errorf("%s: [%w]", msg, err),
 		ErrorCode: errorCode,
 	}
 }

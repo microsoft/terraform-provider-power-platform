@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func TestUnitApiClient_GetConfig(t *testing.T) {
@@ -35,10 +36,10 @@ func TestUnitApiClient_GetConfig(t *testing.T) {
 	}
 
 	switch err.(type) {
-	case api.UrlFormatError:
+	case customerrors.UrlFormatError:
 		return
 	default:
-		t.Errorf("Expected error type %s but got %s", reflect.TypeOf(api.UrlFormatError{}), reflect.TypeOf(err))
+		t.Errorf("Expected error type %s but got %s", reflect.TypeOf(customerrors.UrlFormatError{}), reflect.TypeOf(err))
 	}
 }
 

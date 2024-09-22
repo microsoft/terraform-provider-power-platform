@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 type Client struct {
@@ -62,7 +62,7 @@ func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 
 	if err != nil && strings.ContainsAny(err.Error(), "404") {
-		return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+		return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
 	}
 	return &policy, err
 }
@@ -153,7 +153,7 @@ func (client *Client) GetEnvironmentsForBillingPolicy(ctx context.Context, billi
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &billingPolicyEnvironments)
 	if err != nil {
 		if strings.ContainsAny(err.Error(), "404") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
 		}
 		return nil, err
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func NewWebApiClient(apiClient *api.Client) WebApiClient {
@@ -61,7 +62,7 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 	}
 
 	res, err := client.ExecuteApiRequest(ctx, operation.Scope.ValueStringPointer(), url, method, body, headers, expectedStatusCodes)
-	var unexpected api.UnexpectedHttpStatusCodeError
+	var unexpected *customerrors.UnexpectedHttpStatusCodeError
 	if errors.As(err, &unexpected) {
 		return types.ObjectUnknown(map[string]attr.Type{
 			"body": types.StringType,

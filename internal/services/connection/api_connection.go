@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func NewConnectionsClient(apiClient *api.Client) ConnectionsClient {
@@ -99,7 +99,7 @@ func (client *ConnectionsClient) GetConnection(ctx context.Context, environmentI
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connection)
 	if err != nil {
 		if strings.Contains(err.Error(), "ConnectionNotFound") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Connection '%s' not found", connectionId))
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Connection '%s' not found", connectionId))
 		}
 		return nil, err
 	}
@@ -216,7 +216,7 @@ func (client *ConnectionsClient) GetConnectionShare(ctx context.Context, environ
 			return &share, nil
 		}
 	}
-	return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Share for principal '%s' not found", principalId))
+	return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Share for principal '%s' not found", principalId))
 }
 
 func (client *ConnectionsClient) UpdateConnectionShare(ctx context.Context, environmentId, connectorName, connectionId string, share ShareConnectionRequestDto) error {
