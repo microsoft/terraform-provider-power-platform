@@ -60,16 +60,6 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 		tflog.Error(ctx, "Error parsing location header: "+err.Error())
 	}
 
-	// retryHeader := response.GetHeader(constants.HEADER_RETRY_AFTER)
-	// tflog.Debug(ctx, "Retry Header: "+retryHeader)
-	// retryAfter, err := time.ParseDuration(retryHeader)
-
-	// if err != nil {
-	// 	retryAfter = client.RetryAfterDefault()
-	// } else {
-	// 	retryAfter = retryAfter * time.Second
-	// }
-
 	waitFor := retryAfter(ctx, response.HttpResponse)
 
 	for {
