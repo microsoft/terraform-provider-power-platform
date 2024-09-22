@@ -52,6 +52,10 @@ const (
 	TEST_CONTEXT_KEY      ContextKey = "testContext"
 )
 
+func UnitTestContext(ctx context.Context, testName string) context.Context {
+	return context.WithValue(ctx, TEST_CONTEXT_KEY, TestContextValue{IsTestMode: true, TestName: testName})
+}
+
 // EnterRequestScope is a helper function that logs the start of a request scope and returns a closure that can be used to defer the exit of the request scope
 // This function should be called at the start of a resource or data source request function
 // The returned closure should be deferred at the start of the function

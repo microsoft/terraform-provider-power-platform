@@ -113,7 +113,7 @@ type currencyCodeValidatorArrayDto struct {
 	Value []currencyCodeValidatorDto `json:"value"`
 }
 
-func currencyCodeValidator(client *api.Client, location string, currencyCode string) error {
+func currencyCodeValidator(ctx context.Context, client *api.Client, location string, currencyCode string) error {
 	// var parsed struct {
 	// 	Value []struct {
 	// 		Name       string `json:"name"`
@@ -136,8 +136,7 @@ func currencyCodeValidator(client *api.Client, location string, currencyCode str
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	// TODO: Why aren't we using the correct context?
-	response, err := client.Execute(context.Background(), nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	response, err := client.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 
 	if err != nil {
 		return err
@@ -191,7 +190,7 @@ type languageCodeValidatorPropertiesDto struct {
 	IsTenantDefault bool   `json:"isTenantDefault"`
 }
 
-func languageCodeValidator(client *api.Client, location string, languageCode string) error {
+func languageCodeValidator(ctx context.Context, client *api.Client, location string, languageCode string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.GetConfig().Urls.BapiUrl,
@@ -201,8 +200,7 @@ func languageCodeValidator(client *api.Client, location string, languageCode str
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	// TODO: why aren't we using the correct context?
-	response, err := client.Execute(context.Background(), nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	response, err := client.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 
 	if err != nil {
 		return err

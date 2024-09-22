@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/provider"
 )
 
@@ -30,7 +31,7 @@ func TestsEntraLicesingGroupName() string {
 }
 
 var TestUnitTestProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
-	"powerplatform": providerserver.NewProtocol6WithError(provider.NewPowerPlatformProvider(context.Background(), true)()),
+	"powerplatform": providerserver.NewProtocol6WithError(provider.NewPowerPlatformProvider(helpers.UnitTestContext(context.Background(), ""), true)()),
 }
 
 var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
