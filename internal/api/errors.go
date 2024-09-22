@@ -40,5 +40,10 @@ func NewUrlFormatError(url string, err error) error {
 }
 
 func (e UrlFormatError) Error() string {
-	return fmt.Sprintf("Request url must be an absolute url. %s : %s", e.Url, e.error.Error())
+	errorMsg := ""
+	if e.error != nil {
+		errorMsg = e.error.Error()
+	}
+
+	return fmt.Sprintf("Request url must be an absolute url. %s : %s", e.Url, errorMsg)
 }
