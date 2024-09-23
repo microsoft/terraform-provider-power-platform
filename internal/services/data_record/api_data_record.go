@@ -549,10 +549,9 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 					Host:   environmentHost,
 					Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s(%s)/$ref", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId, key, dataRecordId),
 				}
-				_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
-				var httpError *customerrors.UnexpectedHttpStatusCodeError
-				if err != nil && errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
-					return err
+				_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent, http.StatusNotFound}, nil)
+				if err != nil {
+					return fmt.Errorf("Error while deleting data record. %w", err)
 				}
 			}
 		}
@@ -563,10 +562,10 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId),
 	}
-	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
-	var httpError *customerrors.UnexpectedHttpStatusCodeError
-	if err != nil && errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
-		// TODO: 404 is desired state for delete.  We should pass 404 as acceptable status code and not error
+
+	// 200, 201, or 404 are acceptable status codes for delete and not error
+	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent, http.StatusNotFound}, nil)
+	if err != nil {
 		return err
 	}
 	return nil
