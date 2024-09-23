@@ -1,0 +1,5 @@
+kind: fixed
+body: Fixed authentication error when calling `powerplatform_rest` or `powerplatform_rest_query` on newly created environment
+time: 2024-09-23T18:50:14.570939656Z
+custom:
+    Issue: "452"
