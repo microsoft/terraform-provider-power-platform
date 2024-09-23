@@ -36,12 +36,12 @@ func (client *Client) GetLanguagesByLocation(ctx context.Context, location strin
 
 	languages := ArrayDto{}
 
-	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return languages, err
 	}
 
-	defer response.Response.Body.Close()
+	defer response.HttpResponse.Body.Close()
 
 	err = json.Unmarshal(response.BodyAsBytes, &languages)
 

@@ -52,7 +52,7 @@ type DataverseWebApiOperation struct {
 	Url                types.String                             `tfsdk:"url"`
 	Body               types.String                             `tfsdk:"body"`
 	Headers            []DataverseWebApiOperationHeaderResource `tfsdk:"headers"`
-	ExpectedHttpStatus []int64                                  `tfsdk:"expected_http_status"`
+	ExpectedHttpStatus []int                                    `tfsdk:"expected_http_status"`
 }
 
 type DataverseWebApiOperationHeaderResource struct {
@@ -138,8 +138,8 @@ func (r *DataverseWebApiResource) buildOperationSchema(description string) schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"expected_http_status": schema.ListAttribute{
-				ElementType:         types.Int64Type,
+			"expected_http_status": schema.SetAttribute{
+				ElementType:         types.Int32Type,
 				MarkdownDescription: "Expected HTTP status code. If the response status code does not match any of the expected status codes, the operation will fail.",
 				Required:            false,
 				Optional:            true,

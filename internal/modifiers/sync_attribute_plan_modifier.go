@@ -45,7 +45,7 @@ func (d *syncAttributePlanModifier) PlanModifyString(ctx context.Context, req pl
 	} else if settingsFile.IsUnknown() {
 		resp.PlanValue = types.StringNull()
 	} else {
-		value, err := helpers.CalculateMd5(settingsFile.ValueString())
+		value, err := helpers.CalculateSHA256(settingsFile.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Error calculating MD5 checksum for %s", d.syncAttribute), err.Error())
 			return

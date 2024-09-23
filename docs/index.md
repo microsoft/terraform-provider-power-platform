@@ -8,7 +8,7 @@ description: |-
 
 The Power Platform provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
-!> This code is made available as a public preview. Features are being actively developed and may have restricted or limited functionality. Future updates may introduce breaking changes, but we follow [Semantic Versioning](https://semver.org/) to help mitigate this. The software may contain bugs, errors, or other issues that could cause service interruption or data loss. We recommend backing up your data and testing in non-production environments before using this software in production. Your feedback is valuable to us, so please share any issues or suggestions you encounter via GitHub issues.
+!> This code is made available as a public preview. Features are being actively developed and may have restricted or limited functionality. Future updates may introduce breaking changes, but we follow [Semantic Versioning](https://semver.org/) to help mitigate this. The software may contain bugs, errors, or other issues that could cause service interruption or data loss. We recommend backing up your data and testing in non-production environments. Your feedback is valuable to us, so please share any issues or suggestions you encounter via GitHub issues.
 
 ## Requirements
 

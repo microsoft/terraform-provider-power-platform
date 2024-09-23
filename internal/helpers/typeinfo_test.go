@@ -27,12 +27,12 @@ func TestUnitTypeInfoString(t *testing.T) {
 		{
 			name:     "empty",
 			typeInfo: helpers.TypeInfo{},
-			expected: "_",
+			expected: "powerplatform_", // Default provider name used
 		},
 		{
 			name:     "empty provider",
 			typeInfo: helpers.TypeInfo{TypeName: "type"},
-			expected: "_type",
+			expected: "powerplatform_type", // Default provider name used
 		},
 		{
 			name:     "empty type",

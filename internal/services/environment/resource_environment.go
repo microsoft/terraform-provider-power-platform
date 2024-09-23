@@ -22,6 +22,7 @@ import (
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
@@ -290,13 +291,13 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	// If it's dataverse environment, validate the currency and language code
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
-		err = languageCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
+		err = languageCodeValidator(ctx, r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Language code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 			return
 		}
 
-		err = currencyCodeValidator(r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
+		err = currencyCodeValidator(ctx, r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Currency code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 			return
@@ -345,7 +346,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 
 	envDto, err := r.EnvironmentClient.GetEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
-		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
+		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -356,7 +357,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	currencyCode := ""
 	defaultCurrency, err := r.EnvironmentClient.GetDefaultCurrencyForEnvironment(ctx, envDto.Name)
 	if err != nil {
-		if helpers.Code(err) != helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND {
+		if customerrors.Code(err) != customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND {
 			// This is only a warning because you may have BAPI access to the environment but not WebAPI access to dataverse to get currency.
 			resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", envDto.Name), err.Error())
 		}
@@ -447,9 +448,9 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	var currencyCode string
 	if !IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
-		currencyCode = updateExistingDataverse(ctx, plan, environmentDto, state)
+		currencyCode = updateExistingDataverse(ctx, plan, &environmentDto, state)
 	} else if IsDataverseEnvironmentEmpty(ctx, state) && !IsDataverseEnvironmentEmpty(ctx, plan) {
-		code, err := addDataverse(ctx, plan, resp, r)
+		code, err := addDataverse(ctx, plan, r)
 		if err != nil {
 			resp.Diagnostics.AddError("Error when creating new dataverse environment", err.Error())
 			return
@@ -504,7 +505,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
 }
 
-func addDataverse(ctx context.Context, plan *SourceModel, resp *resource.UpdateResponse, r *Resource) (string, error) {
+func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, error) {
 	linkedMetadataDto, err := ConvertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, plan.Dataverse)
 	if err != nil {
 		return "", fmt.Errorf("Error when converting dataverse source model to create link environment metadata dto: %s", err.Error())
@@ -517,7 +518,7 @@ func addDataverse(ctx context.Context, plan *SourceModel, resp *resource.UpdateR
 	return linkedMetadataDto.Currency.Code, nil
 }
 
-func updateExistingDataverse(ctx context.Context, plan *SourceModel, environmentDto Dto, state *SourceModel) string {
+func updateExistingDataverse(ctx context.Context, plan *SourceModel, environmentDto *Dto, state *SourceModel) string {
 	var dataverseSourcePlanModel DataverseSourceModel
 	plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 

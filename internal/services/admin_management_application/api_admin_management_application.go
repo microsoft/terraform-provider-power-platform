@@ -39,7 +39,7 @@ func (client *AdminManagementApplicationClient) GetAdminApplication(ctx context.
 	}
 
 	var adminApp AdminManagementApplicationDto
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
 
 	return &adminApp, err
 }
@@ -55,7 +55,7 @@ func (client *AdminManagementApplicationClient) RegisterAdminApplication(ctx con
 	}
 
 	var adminApp AdminManagementApplicationDto
-	_, err := client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
+	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
 
 	return &adminApp, err
 }
@@ -70,7 +70,7 @@ func (client *AdminManagementApplicationClient) UnregisterAdminApplication(ctx c
 		}.Encode(),
 	}
 
-	_, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 
 	return err
 }

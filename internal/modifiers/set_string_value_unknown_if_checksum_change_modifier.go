@@ -59,7 +59,7 @@ func (d *setStringValueToUnknownIfChecksumsChangeModifier) hasChecksumChanged(ct
 	diags = req.State.GetAttribute(ctx, path.Root(checksumAttributeName), &attributeChecksum)
 	resp.Diagnostics.Append(diags...)
 
-	value, err := helpers.CalculateMd5(attribute.ValueString())
+	value, err := helpers.CalculateSHA256(attribute.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating MD5 checksum for %s", attribute), err.Error())
 	}

@@ -16,5 +16,9 @@ type TypeInfo struct {
 
 // FullTypeName returns the full type name in the format provider_type.
 func (t *TypeInfo) FullTypeName() string {
+	if t.ProviderTypeName == "" {
+		return fmt.Sprintf("powerplatform_%s", t.TypeName)
+	}
+
 	return fmt.Sprintf("%s_%s", t.ProviderTypeName, t.TypeName)
 }
