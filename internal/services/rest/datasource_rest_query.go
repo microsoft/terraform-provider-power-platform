@@ -152,11 +152,6 @@ func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	// // If the expected status code is not provided, default to 200
-	// if state.ExpectedHttpStatus == nil {
-	// 	state.ExpectedHttpStatus = []int{200}
-	// }
-
 	outputObjectType, err := d.DataRecordClient.SendOperation(ctx, &DataverseWebApiOperation{
 		Scope:              state.Scope,
 		Method:             state.Method,
