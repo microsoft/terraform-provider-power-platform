@@ -267,7 +267,7 @@ func (r *DataLossPreventionPolicyResource) Configure(ctx context.Context, req re
 func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
-	var state *DataLossPreventionPolicyResourceModel
+	var state *dataLossPreventionPolicyResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
@@ -305,7 +305,7 @@ func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resourc
 func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
-	var plan *DataLossPreventionPolicyResourceModel
+	var plan *dataLossPreventionPolicyResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
@@ -409,7 +409,7 @@ func (r *DataLossPreventionPolicyResource) Delete(ctx context.Context, req resou
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state *DataLossPreventionPolicyResourceModel
+	var state *dataLossPreventionPolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

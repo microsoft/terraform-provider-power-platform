@@ -470,8 +470,7 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-
-	plannedDto := ConvertFromTenantSettingsModel(ctx, plan)
+	plannedDto := convertFromTenantSettingsModel(ctx, plan)
 	// Preprocessing updates is unfortunately needed because Terraform can not treat a zeroed UUID as a null value.
 	// This captures the case where a UUID is changed from known to zeroed/null.  Zeroed UUIDs come back as null from the API.
 	// The plannedDto remembers what the user intended, and the preprocessedDto is what we will send to the API.
@@ -527,8 +526,7 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 
 	resp.Diagnostics.AddWarning("Tenant Settings are not deleted", "Tenant Settings may not be deleted in Power Platform.  Deleting this resource will attempt to restore settings to their previous values and remove this configuration from Terraform state.")
 
-
-	stateDto := ConvertFromTenantSettingsModel(ctx, state)
+	stateDto := convertFromTenantSettingsModel(ctx, state)
 
 	// restore to previous state
 	previousBytes, err := req.Private.GetKey(ctx, "original_settings")

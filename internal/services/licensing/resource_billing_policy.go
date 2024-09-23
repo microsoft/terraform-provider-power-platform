@@ -259,7 +259,7 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 	if plan.Name.ValueString() != state.Name.ValueString() ||
 		plan.Status.ValueString() != state.Status.ValueString() {
 
-		policyToUpdate := BillingPolicyUpdateDto{
+		policyToUpdate := billingPolicyUpdateDto{
 			Name:   plan.Name.ValueString(),
 			Status: plan.Status.ValueString(),
 		}

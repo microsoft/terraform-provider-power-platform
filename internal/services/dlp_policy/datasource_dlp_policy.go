@@ -273,7 +273,7 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 
-	var state PoliciesListDataSourceModel
+	var state policiesListDataSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POLICIES START: %s_%s", d.ProviderTypeName, d.TypeName))
 

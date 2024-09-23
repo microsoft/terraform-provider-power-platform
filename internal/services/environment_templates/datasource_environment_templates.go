@@ -161,7 +161,7 @@ func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasourc
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 
-	appendToList := func(items []ItemDto, category string, list *[]EnvironmentTemplatesDataModel) {
+	appendToList := func(items []itemDto, category string, list *[]EnvironmentTemplatesDataModel) {
 		for _, item := range items {
 			*list = append(*list, EnvironmentTemplatesDataModel{
 				Category:                     category,

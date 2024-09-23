@@ -234,8 +234,7 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-
-	settingsToUpdate, err := ConvertFromEnvironmentSettingsModel(ctx, plan)
+	settingsToUpdate, err := convertFromEnvironmentSettingsModel(ctx, plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error converting environment settings model", err.Error())
 		return
@@ -317,8 +316,7 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-
-	envSettingsToUpdate, err := ConvertFromEnvironmentSettingsModel(ctx, plan)
+	envSettingsToUpdate, err := convertFromEnvironmentSettingsModel(ctx, plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error converting environment settings model", err.Error())
 		return
