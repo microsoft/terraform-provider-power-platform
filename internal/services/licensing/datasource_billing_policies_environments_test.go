@@ -16,7 +16,7 @@ import (
 )
 
 func TestAccBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azapi": {
@@ -72,7 +72,7 @@ func TestUnitTestBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("test/datasource/environments/get_environments_for_policy.json").String()), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

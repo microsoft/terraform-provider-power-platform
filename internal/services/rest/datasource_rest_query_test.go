@@ -28,7 +28,7 @@ func TestUnitDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/Web_Apis_WhoAmI/get_whoami.json").String()), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -49,7 +49,7 @@ func TestUnitDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
 }
 
 func TestAccDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

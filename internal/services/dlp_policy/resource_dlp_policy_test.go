@@ -474,7 +474,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -797,7 +797,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -918,7 +918,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 }
 
 func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               false,
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

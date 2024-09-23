@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccConnectionsResource_Validate_Create(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -81,7 +81,7 @@ func TestUnitConnectionsResource_Validate_Create(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest: true,
 
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,

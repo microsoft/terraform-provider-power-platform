@@ -14,7 +14,7 @@ import (
 )
 
 func TestAccEnvironmentGroupResource_Validate_Create(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -58,7 +58,7 @@ func TestUnitEnvirionmentGroupResource_Validate_Create(t *testing.T) {
 		},
 	)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

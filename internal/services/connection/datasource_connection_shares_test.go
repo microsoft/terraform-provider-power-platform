@@ -13,7 +13,7 @@ import (
 )
 
 func TestAccConnectionsShareDataSource_Validate_Read(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azuread": {
@@ -131,7 +131,7 @@ func TestUnitConnectionsShareDataSource_Validate_Read(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/connection_shares/Validate_Read/get_connection_shares.json").String()), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest: true,
 
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,

@@ -19,7 +19,7 @@ import (
 )
 
 func TestAccDataRecordResource_Validate_Create(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -188,7 +188,7 @@ func TestUnitDataRecordResource_Validate_Create(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -280,7 +280,7 @@ func TestUnitDataRecordResource_Validate_Create(t *testing.T) {
 }
 
 func TestAccDataRecordResource_Validate_Update(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -420,7 +420,7 @@ func TestUnitDataRecordResource_Validate_Update(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -500,7 +500,7 @@ func TestUnitDataRecordResource_Validate_Update(t *testing.T) {
 }
 
 func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -675,7 +675,7 @@ func TestUnitDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -766,7 +766,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 	var contactAtIndex1Step2 = &mocks.StateValue{}
 	var contactAtIndex2Step2 = &mocks.StateValue{}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -1144,7 +1144,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

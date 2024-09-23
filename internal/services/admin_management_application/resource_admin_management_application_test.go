@@ -16,7 +16,7 @@ import (
 )
 
 func TestAccAdminManagementApplicationResource_Validate_Create(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azuread": {
@@ -61,7 +61,7 @@ func TestUnitAdminManagementApplicationResource_Validate_Create(t *testing.T) {
 	httpmock.RegisterResponder("GET", url, httpmock.NewStringResponder(http.StatusOK, body))
 	httpmock.RegisterResponder("DELETE", url, httpmock.NewStringResponder(http.StatusNoContent, ""))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

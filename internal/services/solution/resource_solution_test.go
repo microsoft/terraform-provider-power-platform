@@ -47,7 +47,7 @@ func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 		t.Fatalf("Failed to write solution file: %v", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -94,7 +94,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 
 	solutionFileChecksum, _ := helpers.CalculateMd5(SOLUTION_1_NAME)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -186,7 +186,7 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("tests/resource/Validate_Create_With_Settings_File/get_solution.json").String()), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -256,7 +256,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 	solutionFileChecksum, _ := helpers.CalculateMd5(SOLUTION_1_NAME)
 	settingsFileChecksum, _ := helpers.CalculateMd5(solutionSettingsFileName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -348,7 +348,7 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("tests/resource/Validate_Create_No_Settings_File/get_solution.json").String()), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -433,7 +433,7 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNoContent, httpmock.File("tests/resource/Validate_Create_And_Force_Recreate/get_solution.json").String()), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -507,7 +507,7 @@ func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 		t.Fatalf("Failed to write solution file: %v", err)
 	}
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -602,7 +602,7 @@ func TestUnitSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 			return resp, nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

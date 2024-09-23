@@ -16,7 +16,7 @@ import (
 )
 
 func TestAccEnvironmentApplicationPackageInstallResource_Validate_Install(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -118,7 +118,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 			return resp, nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -231,7 +231,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_No_Dataverse(
 			return resp, nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

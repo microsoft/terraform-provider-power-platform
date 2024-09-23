@@ -17,7 +17,7 @@ import (
 )
 
 func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azapi": {
@@ -85,7 +85,7 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -119,7 +119,7 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 }
 
 func TestAccBillingPolicy_Validate_Update(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azapi": {
@@ -251,7 +251,7 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("test/resource/policies/Validate_Update/put_billing_policy_1.json").String()), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -310,7 +310,7 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 }
 
 func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azapi": {
@@ -433,7 +433,7 @@ func TestUnitTestBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -528,7 +528,7 @@ func TestUnitTestBillingPolicy_Validate_Create_WithoutFinalStatusInPostResponse(
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -581,7 +581,7 @@ func TestUnitTestBillingPolicy_Validate_Create_WithoutFinalStatusInPostResponse(
 // 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 // 		})
 
-// 	resource.Test(t, resource.TestCase{
+// 	resource.ParallelTest(t, resource.TestCase{
 // 		IsUnitTest:               true,
 // 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 // 		Steps: []resource.TestStep{

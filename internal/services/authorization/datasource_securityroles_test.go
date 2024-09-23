@@ -16,7 +16,7 @@ import (
 )
 
 func TestAccSecurityDataSource_Validate_Read(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -67,7 +67,7 @@ func TestUnitSecurityDataSource_Validate_Read(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/security_roles/Validate_Read/get_security_roles.json").String()), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -139,7 +139,7 @@ func TestUnitSecurityDataSource_Validate_No_Dataverse(t *testing.T) {
 			return resp, nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -177,7 +177,7 @@ func TestUnitSecurityDataSource_Validate_Read_Filter_BusinessUnit(t *testing.T) 
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/security_roles/Validate_Read_Filter_BusinessUnit/get_security_roles.json").String()), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

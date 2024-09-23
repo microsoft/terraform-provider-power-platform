@@ -16,7 +16,7 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 	beforeUpdateRegex := `^\{"@odata\.context":"https:\/\/org[0-9a-fA-F]{8}\.crm\.dynamics\.com\/api\/data\/v9\.2\/\$metadata#accounts\(name,accountid\)\/\$entity","@odata\.etag":"W\/\\"[0-9]{7}\\"","name":"powerplatform_rest","accountid":"00000000-0000-0000-0000-000000000001"\}$`
 	afterUpdateRegex := `^\{"@odata\.context":"https:\/\/org[0-9a-fA-F]{8}\.crm\.dynamics\.com\/api\/data\/v9\.2\/\$metadata#accounts\(name,accountid\)\/\$entity","@odata\.etag":"W\/\\"[0-9]{7}\\"","name":"powerplatform_rest_change","accountid":"00000000-0000-0000-0000-000000000001"\}$`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -206,7 +206,7 @@ func TestUnitTestRest_Validate_Create(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Web_Api_Validate_Create/post_account.json").String()), nil
 		})
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
