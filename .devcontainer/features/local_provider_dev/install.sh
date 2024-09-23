@@ -8,3 +8,6 @@ go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
 
 # install delve debugger
 go install -v github.com/go-delve/delve/cmd/dlv@latest
+
+# install changie
+go install github.com/miniscruff/changie@latest

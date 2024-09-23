@@ -1,0 +1,5 @@
+kind: added
+body: '`powerplatform_environment_group` resource added to support basic creation of environment groups (no rules yet)'
+time: 2024-09-23T18:44:47.882275014Z
+custom:
+    Issue: "393"
