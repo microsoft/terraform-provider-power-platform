@@ -182,24 +182,24 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	// Get Provider Configuration from the configuration, environment variables, or defaults.
-	cloud := helpers.GetConfigString(ctx, configValue.Cloud, "POWER_PLATFORM_CLOUD", "public")
-	tenantId := helpers.GetConfigString(ctx, configValue.TenantId, "POWER_PLATFORM_TENANT_ID", "")
-	clientId := helpers.GetConfigString(ctx, configValue.ClientId, "POWER_PLATFORM_CLIENT_ID", "")
-	clientSecret := helpers.GetConfigString(ctx, configValue.ClientSecret, "POWER_PLATFORM_CLIENT_SECRET", "")
-	useOidc := helpers.GetConfigBool(ctx, configValue.UseOidc, "POWER_PLATFORM_USE_OIDC", false)
-	useCli := helpers.GetConfigBool(ctx, configValue.UseCli, "POWER_PLATFORM_USE_CLI", false)
-	clientCertificate := helpers.GetConfigString(ctx, configValue.ClientCertificate, "POWER_PLATFORM_CLIENT_CERTIFICATE", "")
-	clientCertificateFilePath := helpers.GetConfigString(ctx, configValue.ClientCertificateFilePath, "POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH", "")
-	clientCertificatePassword := helpers.GetConfigString(ctx, configValue.ClientCertificatePassword, "POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD", "")
+	cloud := helpers.GetConfigString(ctx, configValue.Cloud, constants.ENV_VAR_POWER_PLATFORM_CLOUD, "public")
+	tenantId := helpers.GetConfigString(ctx, configValue.TenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID, "")
+	clientId := helpers.GetConfigString(ctx, configValue.ClientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID, "")
+	clientSecret := helpers.GetConfigString(ctx, configValue.ClientSecret, constants.ENV_VAR_POWER_PLATFORM_CLIENT_SECRET, "")
+	useOidc := helpers.GetConfigBool(ctx, configValue.UseOidc, constants.ENV_VAR_POWER_PLATFORM_USE_OIDC, false)
+	useCli := helpers.GetConfigBool(ctx, configValue.UseCli, constants.ENV_VAR_POWER_PLATFORM_USE_CLI, false)
+	clientCertificate := helpers.GetConfigString(ctx, configValue.ClientCertificate, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE, "")
+	clientCertificateFilePath := helpers.GetConfigString(ctx, configValue.ClientCertificateFilePath, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH, "")
+	clientCertificatePassword := helpers.GetConfigString(ctx, configValue.ClientCertificatePassword, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD, "")
 
 	// Check for AzDO and GitHub environment variables
-	oidcRequestUrl := helpers.GetConfigMultiString(ctx, configValue.OidcRequestUrl, []string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"}, "")
-	oidcRequestToken := helpers.GetConfigMultiString(ctx, configValue.OidcRequestToken, []string{"ARM_OIDC_REQUEST_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN"}, "")
-	oidcToken := helpers.GetConfigString(ctx, configValue.OidcToken, "ARM_OIDC_TOKEN", "")
-	oidcTokenFilePath := helpers.GetConfigString(ctx, configValue.OidcTokenFilePath, "ARM_OIDC_TOKEN_FILE_PATH", "")
+	oidcRequestUrl := helpers.GetConfigMultiString(ctx, configValue.OidcRequestUrl, []string{constants.ENV_VAR_ARM_OIDC_REQUEST_URL, constants.ENV_VAR_ACTIONS_ID_TOKEN_REQUEST_URL}, "")
+	oidcRequestToken := helpers.GetConfigMultiString(ctx, configValue.OidcRequestToken, []string{constants.ENV_VAR_ARM_OIDC_REQUEST_TOKEN, constants.ENV_VAR_ACTIONS_ID_TOKEN_REQUEST_TOKEN}, "")
+	oidcToken := helpers.GetConfigString(ctx, configValue.OidcToken, constants.ENV_VAR_ARM_OIDC_TOKEN, "")
+	oidcTokenFilePath := helpers.GetConfigString(ctx, configValue.OidcTokenFilePath, constants.ENV_VAR_ARM_OIDC_TOKEN_FILE_PATH, "")
 
 	// Check for telemetry opt out
-	telemetryOptOut := helpers.GetConfigBool(ctx, configValue.TelemetryOptout, "POWER_PLATFORM_TELEMETRY_OPTOUT", false)
+	telemetryOptOut := helpers.GetConfigBool(ctx, configValue.TelemetryOptout, constants.ENV_VAR_POWER_PLATFORM_TELEMETRY_OPTOUT, false)
 
 	// Set the configuration values
 
@@ -210,8 +210,8 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.UseCli = true
 	} else if useOidc {
 		tflog.Info(ctx, "Using OpenID Connect for authentication")
-		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
-		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
+		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
+		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID)
 
 		p.Config.UseOidc = true
 		p.Config.TenantId = tenantId
@@ -222,8 +222,8 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.OidcTokenFilePath = oidcTokenFilePath
 	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
 		tflog.Info(ctx, "Using client certificate for authentication")
-		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
-		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
+		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
+		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID)
 
 		cert, err := helpers.GetCertificateRawFromCertOrFilePath(clientCertificate, clientCertificateFilePath)
 		if err != nil {
@@ -240,9 +240,9 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 			p.Config.ClientId = clientId
 			p.Config.ClientSecret = clientSecret
 		} else {
-			ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
-			ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
-			ValidateProviderAttribute(resp, path.Root("client_secret"), "client secret", clientSecret, "POWER_PLATFORM_CLIENT_SECRET")
+			ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
+			ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID)
+			ValidateProviderAttribute(resp, path.Root("client_secret"), "client secret", clientSecret, constants.ENV_VAR_POWER_PLATFORM_CLIENT_SECRET)
 		}
 	}
 
@@ -314,7 +314,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 			path.Root("cloud"),
 			"Unknown cloud",
 			"The provider cannot create the API client as there is an unknown configuration value for `cloud`. "+
-				"Either set the value in the provider configuration or use the POWER_PLATFORM_CLOUD environment variable.",
+				"Either set the value in the provider configuration or use the "+constants.ENV_VAR_POWER_PLATFORM_CLOUD+" environment variable.",
 		)
 	}
 
