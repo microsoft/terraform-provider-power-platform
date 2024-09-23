@@ -83,11 +83,6 @@ func (client *client) ExecuteApiRequest(ctx context.Context, scope *string, url,
 		h.Add(k, v)
 	}
 
-	//codes := expectedStatusCodes // make([]int, len(expectedStatusCodes))
-	// for i, code := range expectedStatusCodes {
-	// 	codes[i] = int(code)
-	// }
-
 	if scope != nil {
 		return client.Api.Execute(ctx, []string{*scope}, method, url, h, body, expectedStatusCodes, nil)
 	}
