@@ -16,17 +16,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewApplicationClient(apiClient *api.Client) Client {
-	return Client{
+func newApplicationClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type Client struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *Client) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
+func (client *client) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return false, err
@@ -34,7 +34,7 @@ func (client *Client) DataverseExists(ctx context.Context, environmentId string)
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
-func (client *Client) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {
+func (client *client) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -53,7 +53,7 @@ func (client *Client) getEnvironment(ctx context.Context, environmentId string) 
 	return &env, nil
 }
 
-func (client *Client) GetTenantApplications(ctx context.Context) ([]tenantApplicationDto, error) {
+func (client *client) GetTenantApplications(ctx context.Context) ([]tenantApplicationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -74,7 +74,7 @@ func (client *Client) GetTenantApplications(ctx context.Context) ([]tenantApplic
 	return application.Value, nil
 }
 
-func (client *Client) GetApplicationsByEnvironmentId(ctx context.Context, environmentId string) ([]environmentApplicationDto, error) {
+func (client *client) GetApplicationsByEnvironmentId(ctx context.Context, environmentId string) ([]environmentApplicationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -95,7 +95,7 @@ func (client *Client) GetApplicationsByEnvironmentId(ctx context.Context, enviro
 	return application.Value, nil
 }
 
-func (client *Client) InstallApplicationInEnvironment(ctx context.Context, environmentId string, uniqueName string) (string, error) {
+func (client *client) InstallApplicationInEnvironment(ctx context.Context, environmentId string, uniqueName string) (string, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,

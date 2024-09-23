@@ -12,17 +12,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewEnvironmentGroupClient(apiClient *api.Client) EnvironmentGroupClient {
-	return EnvironmentGroupClient{
+func newEnvironmentGroupClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type EnvironmentGroupClient struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *EnvironmentGroupClient) CreateEnvironmentGroup(ctx context.Context, environmentGroup environmentGroupDto) (*environmentGroupDto, error) {
+func (client *client) CreateEnvironmentGroup(ctx context.Context, environmentGroup environmentGroupDto) (*environmentGroupDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -43,7 +43,7 @@ func (client *EnvironmentGroupClient) CreateEnvironmentGroup(ctx context.Context
 }
 
 // DeleteEnvironmentGroup deletes an environment group.
-func (client *EnvironmentGroupClient) DeleteEnvironmentGroup(ctx context.Context, environmentGroupId string) error {
+func (client *client) DeleteEnvironmentGroup(ctx context.Context, environmentGroupId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -63,7 +63,7 @@ func (client *EnvironmentGroupClient) DeleteEnvironmentGroup(ctx context.Context
 }
 
 // updateEnvironmentGroup updates an environment group.
-func (client *EnvironmentGroupClient) UpdateEnvironmentGroup(ctx context.Context, environmentGroupId string, environmentGroup environmentGroupDto) (*environmentGroupDto, error) {
+func (client *client) UpdateEnvironmentGroup(ctx context.Context, environmentGroupId string, environmentGroup environmentGroupDto) (*environmentGroupDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -84,7 +84,7 @@ func (client *EnvironmentGroupClient) UpdateEnvironmentGroup(ctx context.Context
 }
 
 // GetEnvironmentGroup gets an environment group.
-func (client *EnvironmentGroupClient) GetEnvironmentGroup(ctx context.Context, environmentGroupId string) (*environmentGroupDto, error) {
+func (client *client) GetEnvironmentGroup(ctx context.Context, environmentGroupId string) (*environmentGroupDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,

@@ -37,7 +37,7 @@ func NewManagedEnvironmentResource() resource.Resource {
 
 type ManagedEnvironmentResource struct {
 	helpers.TypeInfo
-	ManagedEnvironmentClient ManagedEnvironmentClient
+	ManagedEnvironmentClient client
 }
 
 type ManagedEnvironmentResourceModel struct {
@@ -170,7 +170,7 @@ func (r *ManagedEnvironmentResource) Configure(ctx context.Context, req resource
 
 		return
 	}
-	r.ManagedEnvironmentClient = NewManagedEnvironmentClient(clientApi)
+	r.ManagedEnvironmentClient = newManagedEnvironmentClient(clientApi)
 }
 
 func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

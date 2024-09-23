@@ -36,7 +36,7 @@ func (client *Client) DataverseExists(ctx context.Context, environmentId string)
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
-func (client *Client) GetSolutionUniqueName(ctx context.Context, environmentId, name string) (*solutionDto, error) {
+func (client *Client) GetSolutionUniqueName(ctx context.Context, environmentId, name string) (*SolutionDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (client *Client) GetSolutionUniqueName(ctx context.Context, environmentId, 
 	return &solutions.Value[0], nil
 }
 
-func (client *Client) GetSolutionById(ctx context.Context, environmentId, solutionId string) (*solutionDto, error) {
+func (client *Client) GetSolutionById(ctx context.Context, environmentId, solutionId string) (*SolutionDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (client *Client) GetSolutionById(ctx context.Context, environmentId, soluti
 	return &solutions.Value[0], nil
 }
 
-func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([]solutionDto, error) {
+func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([]SolutionDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -123,13 +123,13 @@ func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([
 		solutionArray.Value[inx].EnvironmentId = environmentId
 	}
 
-	solutions := make([]solutionDto, 0)
+	solutions := make([]SolutionDto, 0)
 	solutions = append(solutions, solutionArray.Value...)
 
 	return solutions, nil
 }
 
-func (client *Client) CreateSolution(ctx context.Context, environmentId string, solutionToCreate importSolutionDto, content []byte, settings []byte) (*solutionDto, error) {
+func (client *Client) CreateSolution(ctx context.Context, environmentId string, solutionToCreate importSolutionDto, content []byte, settings []byte) (*SolutionDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err

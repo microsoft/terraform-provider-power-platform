@@ -34,7 +34,7 @@ func NewUserResource() resource.Resource {
 
 type UserResource struct {
 	helpers.TypeInfo
-	UserClient UserClient
+	UserClient client
 }
 
 type UserResourceModel struct {
@@ -156,7 +156,7 @@ func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequ
 
 		return
 	}
-	r.UserClient = NewUserClient(clientApi)
+	r.UserClient = newUserClient(clientApi)
 }
 
 func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

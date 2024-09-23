@@ -47,7 +47,7 @@ func NewCurrenciesDataSource() datasource.DataSource {
 
 type DataSource struct {
 	helpers.TypeInfo
-	CurrenciesClient Client
+	CurrenciesClient client
 }
 
 func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -134,7 +134,7 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 
 		return
 	}
-	d.CurrenciesClient = NewCurrenciesClient(clientApi)
+	d.CurrenciesClient = newCurrenciesClient(clientApi)
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

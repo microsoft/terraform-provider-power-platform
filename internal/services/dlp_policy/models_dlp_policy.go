@@ -175,10 +175,6 @@ var customConnectorPatternSetObjectType = types.ObjectType{
 	},
 }
 
-type dataLossPreventionPolicyResourceEnvironmentsModel struct {
-	Name types.String `tfsdk:"name"`
-}
-
 type dataLossPreventionPolicyResourceConnectorModel struct {
 	Id                        types.String                                                 `tfsdk:"id"`
 	DefaultActionRuleBehavior types.String                                                 `tfsdk:"default_action_rule_behavior"`

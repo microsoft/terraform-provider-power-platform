@@ -30,7 +30,7 @@ func NewEnvironmentApplicationPackageInstallResource() resource.Resource {
 
 type EnvironmentApplicationPackageInstallResource struct {
 	helpers.TypeInfo
-	ApplicationClient Client
+	ApplicationClient client
 }
 
 type EnvironmentApplicationPackageInstallResourceModel struct {
@@ -105,7 +105,7 @@ func (r *EnvironmentApplicationPackageInstallResource) Configure(ctx context.Con
 
 		return
 	}
-	r.ApplicationClient = NewApplicationClient(clientApi)
+	r.ApplicationClient = newApplicationClient(clientApi)
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

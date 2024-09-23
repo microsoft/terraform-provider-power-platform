@@ -31,7 +31,7 @@ func NewEnvironmentTemplatesDataSource() datasource.DataSource {
 
 type EnvironmentTemplatesDataSource struct {
 	helpers.TypeInfo
-	EnvironmentTemplatesClient EnvironmentTemplatesClient
+	EnvironmentTemplatesClient client
 }
 
 type EnvironmentTemplatesDataSourceModel struct {
@@ -154,7 +154,7 @@ func (d *EnvironmentTemplatesDataSource) Configure(ctx context.Context, req data
 
 		return
 	}
-	d.EnvironmentTemplatesClient = NewEnvironmentTemplatesClient(clientApi)
+	d.EnvironmentTemplatesClient = newEnvironmentTemplatesClient(clientApi)
 }
 
 func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

@@ -37,7 +37,7 @@ func NewConnectionResource() resource.Resource {
 
 type Resource struct {
 	helpers.TypeInfo
-	ConnectionsClient ConnectionsClient
+	ConnectionsClient client
 }
 
 type ResourceModel struct {
@@ -155,7 +155,7 @@ func (r *Resource) Configure(ctx context.Context, req resource.ConfigureRequest,
 
 		return
 	}
-	r.ConnectionsClient = NewConnectionsClient(clientApi)
+	r.ConnectionsClient = newConnectionsClient(clientApi)
 }
 
 func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

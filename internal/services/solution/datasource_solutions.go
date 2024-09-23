@@ -54,7 +54,7 @@ type DataSourceModel struct {
 	IsManaged     types.Bool   `tfsdk:"is_managed"`
 }
 
-func ConvertFromSolutionDto(solutionDto solutionDto) DataSourceModel {
+func ConvertFromSolutionDto(solutionDto SolutionDto) DataSourceModel {
 	return DataSourceModel{
 		EnvironmentId: types.StringValue(solutionDto.EnvironmentId),
 		DisplayName:   types.StringValue(solutionDto.DisplayName),

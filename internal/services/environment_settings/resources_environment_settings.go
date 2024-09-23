@@ -36,7 +36,7 @@ func NewEnvironmentSettingsResource() resource.Resource {
 
 type EnvironmentSettingsResource struct {
 	helpers.TypeInfo
-	EnvironmentSettingClient EnvironmentSettingsClient
+	EnvironmentSettingClient client
 }
 
 func (r *EnvironmentSettingsResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -221,7 +221,7 @@ func (r *EnvironmentSettingsResource) Configure(ctx context.Context, req resourc
 		return
 	}
 
-	r.EnvironmentSettingClient = NewEnvironmentSettingsClient(client)
+	r.EnvironmentSettingClient = newEnvironmentSettingsClient(client)
 }
 
 func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

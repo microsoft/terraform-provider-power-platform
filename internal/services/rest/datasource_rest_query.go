@@ -26,7 +26,7 @@ func NewDataverseWebApiDatasource() datasource.DataSource {
 
 type DataverseWebApiDatasource struct {
 	helpers.TypeInfo
-	DataRecordClient WebApiClient
+	DataRecordClient client
 }
 
 type DataverseWebApiDatasourceModel struct {
@@ -138,7 +138,7 @@ func (d *DataverseWebApiDatasource) Configure(ctx context.Context, req datasourc
 
 		return
 	}
-	d.DataRecordClient = NewWebApiClient(clientApi)
+	d.DataRecordClient = newWebApiClient(clientApi)
 }
 
 func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

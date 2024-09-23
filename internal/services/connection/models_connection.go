@@ -92,25 +92,6 @@ type createEnvironmentDto struct {
 	Name string `json:"name"`
 }
 
-type connectorDefinition struct {
-	Name       string                        `json:"name"`
-	Id         string                        `json:"id"`
-	Type       string                        `json:"type"`
-	Properties connectorDefinitionProperties `json:"properties"`
-}
-
-type connectorDefinitionProperties struct {
-	DisplayName             string          `json:"displayName"`
-	IconUri                 string          `json:"iconUri"`
-	IconBrandColor          string          `json:"iconBrandColor"`
-	ApiEnvironment          string          `json:"apiEnvironment"`
-	IsCustomApi             bool            `json:"isCustomApi"`
-	BlobUrisAreProxied      bool            `json:"blobUrisAreProxied"`
-	ConnectionParameters    *map[string]any `json:"connectionParameters,omitempty"`
-	ConnectionParameterSets *map[string]any `json:"connectionParameterSets,omitempty"`
-	Swagger                 *map[string]any `json:"swagger,omitempty"`
-}
-
 type shareConnectionRequestDto struct {
 	Put    []shareConnectionRequestPutDto    `json:"put"`
 	Delete []shareConnectionRequestDeleteDto `json:"delete"`
@@ -153,13 +134,4 @@ type shareConnectionResponsePropertiesDto struct {
 	Principal               map[string]any `json:"principal"`
 	NotifyShareTargetOption string         `json:"NotifyShareTargetOption"`
 	InviteGuestToTenant     bool           `json:"inviteGuestToTenant"`
-}
-
-type shareConnectionResponsePropertiesPrincipalDto struct {
-	Id                string `json:"id"`
-	DisplayName       string `json:"displayName"`
-	Type              string `json:"type"`
-	TenantId          string `json:"tenantId"`
-	Email             string `json:"email"`
-	PreferredLanguage string `json:"preferredLanguage"`
 }

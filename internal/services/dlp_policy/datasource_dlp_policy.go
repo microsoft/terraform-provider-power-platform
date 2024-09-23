@@ -34,7 +34,7 @@ func NewDataLossPreventionPolicyDataSource() datasource.DataSource {
 
 type DataLossPreventionPolicyDataSource struct {
 	helpers.TypeInfo
-	DlpPolicyClient DlpPolicyClient
+	DlpPolicyClient client
 }
 
 func (d *DataLossPreventionPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -266,7 +266,7 @@ func (d *DataLossPreventionPolicyDataSource) Configure(ctx context.Context, req 
 		return
 	}
 
-	d.DlpPolicyClient = NewDlpPolicyClient(client)
+	d.DlpPolicyClient = newDlpPolicyClient(client)
 }
 
 func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

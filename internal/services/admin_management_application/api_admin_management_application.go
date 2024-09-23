@@ -14,17 +14,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewAdminManagementApplicationClient(clientApi *api.Client) AdminManagementApplicationClient {
-	return AdminManagementApplicationClient{
+func newAdminManagementApplicationClient(clientApi *api.Client) client {
+	return client{
 		Api: clientApi,
 	}
 }
 
-type AdminManagementApplicationClient struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *AdminManagementApplicationClient) GetAdminApplication(ctx context.Context, clientId string) (*adminManagementApplicationDto, error) {
+func (client *client) GetAdminApplication(ctx context.Context, clientId string) (*adminManagementApplicationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -40,7 +40,7 @@ func (client *AdminManagementApplicationClient) GetAdminApplication(ctx context.
 	return &adminApp, err
 }
 
-func (client *AdminManagementApplicationClient) RegisterAdminApplication(ctx context.Context, clientId string) (*adminManagementApplicationDto, error) {
+func (client *client) RegisterAdminApplication(ctx context.Context, clientId string) (*adminManagementApplicationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -56,7 +56,7 @@ func (client *AdminManagementApplicationClient) RegisterAdminApplication(ctx con
 	return &adminApp, err
 }
 
-func (client *AdminManagementApplicationClient) UnregisterAdminApplication(ctx context.Context, clientId string) error {
+func (client *client) UnregisterAdminApplication(ctx context.Context, clientId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,

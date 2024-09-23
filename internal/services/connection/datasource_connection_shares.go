@@ -32,7 +32,7 @@ func NewConnectionSharesDataSource() datasource.DataSource {
 
 type SharesDataSource struct {
 	helpers.TypeInfo
-	ConnectionsClient ConnectionsClient
+	ConnectionsClient client
 }
 
 type SharesListDataSourceModel struct {
@@ -146,7 +146,7 @@ func (d *SharesDataSource) Configure(ctx context.Context, req datasource.Configu
 		return
 	}
 
-	d.ConnectionsClient = NewConnectionsClient(client)
+	d.ConnectionsClient = newConnectionsClient(client)
 }
 func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)

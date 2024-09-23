@@ -310,7 +310,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 
 	var currencyCode string
-	var templateMetadata *createTemplateMetadata
+	var templateMetadata *CreateTemplateMetadata
 	var templates []string
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
 		currencyCode = envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code
@@ -370,7 +370,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		currencyCode = defaultCurrency.IsoCurrencyCode
 	}
 
-	var templateMetadata *createTemplateMetadata
+	var templateMetadata *CreateTemplateMetadata
 	var templates []string
 	if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
 		dv, err := convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
@@ -408,12 +408,12 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	environmentDto := environmentDto{
+	environmentDto := EnvironmentDto{
 		Id:       plan.Id.ValueString(),
 		Name:     plan.DisplayName.ValueString(),
 		Type:     plan.EnvironmentType.ValueString(),
 		Location: plan.Location.ValueString(),
-		Properties: enviromentPropertiesDto{
+		Properties: EnviromentPropertiesDto{
 			DisplayName:    plan.DisplayName.ValueString(),
 			EnvironmentSku: plan.EnvironmentType.ValueString(),
 		},
@@ -424,7 +424,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	if !plan.Cadence.IsNull() && plan.Cadence.ValueString() != "" {
-		environmentDto.Properties.UpdateCadence = &updateCadenceDto{
+		environmentDto.Properties.UpdateCadence = &UpdateCadenceDto{
 			Id: plan.Cadence.ValueString(),
 		}
 	}
@@ -434,13 +434,13 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		if plan.EnvironmentGroupId.ValueString() != "" && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
 			envGroupId = plan.EnvironmentGroupId.ValueString()
 		}
-		environmentDto.Properties.ParentEnvironmentGroup = &parentEnvironmentGroupDto{
+		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
 			Id: envGroupId,
 		}
 	}
 
 	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
-		environmentDto.Properties.BillingPolicy = &billingPolicyDto{
+		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
 		}
 	}
@@ -481,7 +481,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	var templateMetadata *createTemplateMetadata
+	var templateMetadata *CreateTemplateMetadata
 	var templates []string
 	if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
 		dv, err := convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
@@ -517,25 +517,25 @@ func addDataverse(ctx context.Context, plan *SourceModel, resp *resource.UpdateR
 	return linkedMetadataDto.Currency.Code, nil
 }
 
-func updateExistingDataverse(ctx context.Context, plan *SourceModel, environmentDto environmentDto, state *SourceModel) string {
+func updateExistingDataverse(ctx context.Context, plan *SourceModel, environmentDto EnvironmentDto, state *SourceModel) string {
 	var dataverseSourcePlanModel DataverseSourceModel
 	plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
-	environmentDto.Properties.LinkedEnvironmentMetadata = &linkedEnvironmentMetadataDto{
+	environmentDto.Properties.LinkedEnvironmentMetadata = &LinkedEnvironmentMetadataDto{
 		SecurityGroupId: dataverseSourcePlanModel.SecurityGroupId.ValueString(),
 		DomainName:      dataverseSourcePlanModel.Domain.ValueString(),
 	}
 
 	if !dataverseSourcePlanModel.AdministrationMode.IsNull() && !dataverseSourcePlanModel.AdministrationMode.IsUnknown() {
 		if dataverseSourcePlanModel.AdministrationMode.ValueBool() {
-			environmentDto.Properties.States = &statesEnvironmentDto{
-				Runtime: &runtimeEnvironmentDto{
+			environmentDto.Properties.States = &StatesEnvironmentDto{
+				Runtime: &RuntimeEnvironmentDto{
 					Id: "AdminMode",
 				},
 			}
 		} else {
-			environmentDto.Properties.States = &statesEnvironmentDto{
-				Runtime: &runtimeEnvironmentDto{
+			environmentDto.Properties.States = &StatesEnvironmentDto{
+				Runtime: &RuntimeEnvironmentDto{
 					Id: "Enabled",
 				},
 			}
@@ -558,7 +558,7 @@ func updateExistingDataverse(ctx context.Context, plan *SourceModel, environment
 	}
 
 	if !dataverseSourcePlanModel.LinkedAppId.IsNull() && dataverseSourcePlanModel.LinkedAppId.ValueString() != "" {
-		environmentDto.Properties.LinkedAppMetadata = &linkedAppMetadataDto{
+		environmentDto.Properties.LinkedAppMetadata = &LinkedAppMetadataDto{
 			Type: dataverseSourcePlanModel.LinkedAppType.ValueString(),
 			Id:   dataverseSourcePlanModel.LinkedAppId.ValueString(),
 			Url:  dataverseSourcePlanModel.LinkedAppURL.ValueString(),

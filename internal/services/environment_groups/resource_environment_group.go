@@ -31,7 +31,7 @@ func NewEnvironmentGroupResource() resource.Resource {
 
 type EnvironmentGroupResource struct {
 	helpers.TypeInfo
-	EnvironmentGroupClient EnvironmentGroupClient
+	EnvironmentGroupClient client
 }
 
 type EnvironmentGroupResourceModel struct {
@@ -95,7 +95,7 @@ func (r *EnvironmentGroupResource) Configure(ctx context.Context, req resource.C
 		return
 	}
 
-	r.EnvironmentGroupClient = NewEnvironmentGroupClient(client)
+	r.EnvironmentGroupClient = newEnvironmentGroupClient(client)
 }
 
 // Read function for EnvironmentGroupResource.

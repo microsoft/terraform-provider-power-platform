@@ -12,17 +12,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewTenantClient(apiClient *api.Client) Client {
-	return Client{
+func newTenantClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type Client struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *Client) GetTenant(ctx context.Context) (*tenantDto, error) {
+func (client *client) GetTenant(ctx context.Context) (*tenantDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,

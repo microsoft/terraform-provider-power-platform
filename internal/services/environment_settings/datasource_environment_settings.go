@@ -32,7 +32,7 @@ func NewEnvironmentSettingsDataSource() *EnvironmentSettingsDataSource {
 
 type EnvironmentSettingsDataSource struct {
 	helpers.TypeInfo
-	EnvironmentSettingsClient EnvironmentSettingsClient
+	EnvironmentSettingsClient client
 }
 
 func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
@@ -53,7 +53,7 @@ func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datas
 		)
 		return
 	}
-	d.EnvironmentSettingsClient = NewEnvironmentSettingsClient(client)
+	d.EnvironmentSettingsClient = newEnvironmentSettingsClient(client)
 }
 
 func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

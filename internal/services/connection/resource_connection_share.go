@@ -34,7 +34,7 @@ func NewConnectionShareResource() resource.Resource {
 
 type ShareResource struct {
 	helpers.TypeInfo
-	ConnectionsClient ConnectionsClient
+	ConnectionsClient client
 }
 
 type ShareResourceModel struct {
@@ -156,7 +156,7 @@ func (r *ShareResource) Configure(ctx context.Context, req resource.ConfigureReq
 
 		return
 	}
-	r.ConnectionsClient = NewConnectionsClient(clientApi)
+	r.ConnectionsClient = newConnectionsClient(clientApi)
 }
 
 func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

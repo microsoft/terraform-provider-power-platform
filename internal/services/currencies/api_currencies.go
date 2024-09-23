@@ -14,17 +14,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewCurrenciesClient(apiClient *api.Client) Client {
-	return Client{
+func newCurrenciesClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type Client struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *Client) GetCurrenciesByLocation(ctx context.Context, location string) (currenciesDto, error) {
+func (client *client) GetCurrenciesByLocation(ctx context.Context, location string) (currenciesDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,

@@ -35,7 +35,7 @@ func NewDataRecordDataSource() datasource.DataSource {
 
 type DataRecordDataSource struct {
 	helpers.TypeInfo
-	DataRecordClient DataRecordClient
+	DataRecordClient client
 }
 
 type ExpandModel struct {
@@ -233,7 +233,7 @@ func (d *DataRecordDataSource) Configure(ctx context.Context, req datasource.Con
 		return
 	}
 
-	d.DataRecordClient = NewDataRecordClient(client)
+	d.DataRecordClient = newDataRecordClient(client)
 }
 
 func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

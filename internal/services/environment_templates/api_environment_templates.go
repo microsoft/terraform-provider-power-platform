@@ -14,17 +14,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewEnvironmentTemplatesClient(apiClient *api.Client) EnvironmentTemplatesClient {
-	return EnvironmentTemplatesClient{
+func newEnvironmentTemplatesClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type EnvironmentTemplatesClient struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *EnvironmentTemplatesClient) GetEnvironmentTemplatesByLocation(ctx context.Context, location string) (environmentTemplateDto, error) {
+func (client *client) GetEnvironmentTemplatesByLocation(ctx context.Context, location string) (environmentTemplateDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,

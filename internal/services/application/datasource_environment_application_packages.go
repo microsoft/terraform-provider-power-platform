@@ -31,7 +31,7 @@ func NewEnvironmentApplicationPackagesDataSource() datasource.DataSource {
 
 type EnvironmentApplicationPackagesDataSource struct {
 	helpers.TypeInfo
-	ApplicationClient Client
+	ApplicationClient client
 }
 
 type EnvironmentApplicationPackagesListDataSourceModel struct {
@@ -174,7 +174,7 @@ func (d *EnvironmentApplicationPackagesDataSource) Configure(ctx context.Context
 
 		return
 	}
-	d.ApplicationClient = NewApplicationClient(clientApi)
+	d.ApplicationClient = newApplicationClient(clientApi)
 }
 
 func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

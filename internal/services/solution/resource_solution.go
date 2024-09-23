@@ -260,7 +260,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *Resource) importSolution(ctx context.Context, plan *ResourceModel, diagnostics *diag.Diagnostics) *solutionDto {
+func (r *Resource) importSolution(ctx context.Context, plan *ResourceModel, diagnostics *diag.Diagnostics) *SolutionDto {
 	s := importSolutionDto{
 		PublishWorkflows:                 true,
 		OverwriteUnmanagedCustomizations: true,

@@ -32,7 +32,7 @@ func NewConnectorsDataSource() datasource.DataSource {
 
 type DataSource struct {
 	helpers.TypeInfo
-	ConnectorsClient Client
+	ConnectorsClient client
 }
 
 type ListDataSourceModel struct {
@@ -162,7 +162,7 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 		return
 	}
 
-	d.ConnectorsClient = NewConnectorsClient(client)
+	d.ConnectorsClient = newConnectorsClient(client)
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

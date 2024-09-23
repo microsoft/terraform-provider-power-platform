@@ -32,7 +32,7 @@ func NewTenantApplicationPackagesDataSource() datasource.DataSource {
 
 type TenantApplicationPackagesDataSource struct {
 	helpers.TypeInfo
-	ApplicationClient Client
+	ApplicationClient client
 }
 
 type TenantApplicationPackagesListDataSourceModel struct {
@@ -225,7 +225,7 @@ func (d *TenantApplicationPackagesDataSource) Configure(ctx context.Context, req
 
 		return
 	}
-	d.ApplicationClient = NewApplicationClient(clientApi)
+	d.ApplicationClient = newApplicationClient(clientApi)
 }
 
 func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

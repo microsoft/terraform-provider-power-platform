@@ -23,7 +23,7 @@ var (
 
 type DataSource struct {
 	helpers.TypeInfo
-	TenantClient Client
+	TenantClient client
 }
 
 type DataSourceModel struct {
@@ -151,5 +151,5 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 		return
 	}
 
-	d.TenantClient = NewTenantClient(client)
+	d.TenantClient = newTenantClient(client)
 }

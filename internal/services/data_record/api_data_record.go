@@ -17,47 +17,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewDataRecordClient(apiClient *api.Client) DataRecordClient {
-	return DataRecordClient{
+func newDataRecordClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type DataRecordClient struct {
+type client struct {
 	Api *api.Client
 }
 
-type EnvironmentIdDto struct {
-	Id         string                     `json:"id"`
-	Name       string                     `json:"name"`
-	Properties EnvironmentIdPropertiesDto `json:"properties"`
-}
-
-type EnvironmentIdPropertiesDto struct {
-	LinkedEnvironmentMetadata LinkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
-}
-
-type LinkedEnvironmentIdMetadataDto struct {
-	InstanceURL string
-}
-
-type EntityDefinitionsDto struct {
-	OdataContext          string `json:"@odata.context"`
-	PrimaryIDAttribute    string `json:"PrimaryIdAttribute"`
-	LogicalCollectionName string `json:"LogicalCollectionName"`
-	MetadataID            string `json:"MetadataId"`
-}
-
-type RelationApiResponse struct {
-	OdataContext string            `json:"@odata.context"`
-	Value        []RelationApiBody `json:"value"`
-}
-
-type RelationApiBody struct {
-	OdataID string `json:"@odata.id"`
-}
-
-func GetEntityDefinition(ctx context.Context, client *DataRecordClient, environmentId, entityLogicalName string) (*EntityDefinitionsDto, error) {
+func getEntityDefinition(ctx context.Context, client *client, environmentId, entityLogicalName string) (*entityDefinitionsDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -70,7 +40,7 @@ func GetEntityDefinition(ctx context.Context, client *DataRecordClient, environm
 		Fragment: "$select=PrimaryIdAttribute,LogicalCollectionName",
 	}
 
-	entityDefinition := EntityDefinitionsDto{}
+	entityDefinition := entityDefinitionsDto{}
 	_, err = client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
 	if err != nil {
 		return nil, err
@@ -79,7 +49,7 @@ func GetEntityDefinition(ctx context.Context, client *DataRecordClient, environm
 	return &entityDefinition, nil
 }
 
-func (client *DataRecordClient) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
+func (client *client) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return "", err
@@ -96,7 +66,7 @@ func (client *DataRecordClient) GetEnvironmentHostById(ctx context.Context, envi
 	return envUrl.Host, nil
 }
 
-func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
+func (client *client) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -106,7 +76,7 @@ func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentI
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	env := EnvironmentIdDto{}
+	env := environmentIdDto{}
 	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		return nil, err
@@ -115,7 +85,7 @@ func (client *DataRecordClient) getEnvironment(ctx context.Context, environmentI
 	return &env, nil
 }
 
-func (client *DataRecordClient) GetDataRecordsByODataQuery(ctx context.Context, environmentId, query string, headers map[string]string) (*ODataQueryResponse, error) {
+func (client *client) GetDataRecordsByODataQuery(ctx context.Context, environmentId, query string, headers map[string]string) (*ODataQueryResponse, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -185,13 +155,13 @@ type ODataQueryResponse struct {
 	TablePluralName          string
 }
 
-func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId, environmentId, tableName string) (map[string]any, error) {
+func (client *client) GetDataRecord(ctx context.Context, recordId, environmentId, tableName string) (map[string]any, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
-	entityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableName)
+	entityDefinition, err := getEntityDefinition(ctx, client, environmentId, tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -215,13 +185,13 @@ func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId, env
 	return result, nil
 }
 
-func (client *DataRecordClient) GetRelationData(ctx context.Context, environmentId, tableName, recordId, relationName string) ([]any, error) {
+func (client *client) GetRelationData(ctx context.Context, environmentId, tableName, recordId, relationName string) ([]any, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
-	entityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableName)
+	entityDefinition, err := getEntityDefinition(ctx, client, environmentId, tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +223,7 @@ func (client *DataRecordClient) GetRelationData(ctx context.Context, environment
 	return value, nil
 }
 
-func (client *DataRecordClient) GetTableSingularNameFromPlural(ctx context.Context, environmentId, logicalCollectionName string) (*string, error) {
+func (client *client) GetTableSingularNameFromPlural(ctx context.Context, environmentId, logicalCollectionName string) (*string, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -386,7 +356,7 @@ func getEntityRelationDefinitionManyToMany(mapResponse map[string]any, entityLog
 	return tableName, nil
 }
 
-func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string, err error) {
+func (client *client) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string, err error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return "", err
@@ -429,7 +399,7 @@ func (client *DataRecordClient) GetEntityRelationDefinitionInfo(ctx context.Cont
 	return tableName, nil
 }
 
-func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, environmentId, tableName string, columns map[string]any) (*dataRecordDto, error) {
+func (client *client) ApplyDataRecord(ctx context.Context, recordId, environmentId, tableName string, columns map[string]any) (*dataRecordDto, error) {
 	result := dataRecordDto{}
 
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
@@ -448,7 +418,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 					return nil, err
 				}
 
-				entityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableLogicalName)
+				entityDefinition, err := getEntityDefinition(ctx, client, environmentId, tableLogicalName)
 				if err != nil {
 					return nil, err
 				}
@@ -461,7 +431,7 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 		}
 	}
 
-	entityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableName)
+	entityDefinition, err := getEntityDefinition(ctx, client, environmentId, tableName)
 	if err != nil {
 		return nil, err
 	}
@@ -513,13 +483,13 @@ func (client *DataRecordClient) ApplyDataRecord(ctx context.Context, recordId, e
 	return &result, nil
 }
 
-func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId string, environmentId string, tableName string, columns map[string]any) error {
+func (client *client) DeleteDataRecord(ctx context.Context, recordId string, environmentId string, tableName string, columns map[string]any) error {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return err
 	}
 
-	tableEntityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableName)
+	tableEntityDefinition, err := getEntityDefinition(ctx, client, environmentId, tableName)
 	if err != nil {
 		return err
 	}
@@ -580,7 +550,7 @@ func getTableLogicalNameAndDataRecordIdFromMap(nestedMap map[string]any) (tableL
 	return tableLogicalName, id, nil
 }
 
-func applyRelations(ctx context.Context, client *DataRecordClient, relations map[string]any, environmentId string, parentRecordId string, entityDefinition *EntityDefinitionsDto) error {
+func applyRelations(ctx context.Context, client *client, relations map[string]any, environmentId string, parentRecordId string, entityDefinition *entityDefinitionsDto) error {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return err
@@ -597,14 +567,14 @@ func applyRelations(ctx context.Context, client *DataRecordClient, relations map
 	return nil
 }
 
-func applyRelation(ctx context.Context, environmentHost string, entityDefinition *EntityDefinitionsDto, parentRecordId string, key string, client *DataRecordClient, nestedMapList []any, environmentId string) error {
+func applyRelation(ctx context.Context, environmentHost string, entityDefinition *entityDefinitionsDto, parentRecordId string, key string, client *client, nestedMapList []any, environmentId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s/$ref", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, parentRecordId, key),
 	}
 
-	existingRelationsResponse := RelationApiResponse{}
+	existingRelationsResponse := relationApiResponse{}
 
 	apiResponse, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 	if err != nil {
@@ -617,7 +587,7 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 		return err
 	}
 
-	var toBeDeleted = make([]RelationApiBody, 0)
+	var toBeDeleted = make([]relationApiBody, 0)
 
 	for _, existingRelation := range existingRelationsResponse.Value {
 		shouldDelete := true
@@ -632,7 +602,7 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 				return err
 			}
 
-			relationEntityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableLogicalName)
+			relationEntityDefinition, err := getEntityDefinition(ctx, client, environmentId, tableLogicalName)
 			if err != nil {
 				return err
 			}
@@ -664,12 +634,12 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 			return err
 		}
 
-		entityDefinition, err := GetEntityDefinition(ctx, client, environmentId, tableLogicalName)
+		entityDefinition, err := getEntityDefinition(ctx, client, environmentId, tableLogicalName)
 		if err != nil {
 			return err
 		}
 
-		relation := RelationApiBody{
+		relation := relationApiBody{
 			OdataID: fmt.Sprintf("https://%s/api/data/%s/%s(%s)", environmentHost, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId),
 		}
 		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)

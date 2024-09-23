@@ -15,17 +15,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewWebApiClient(apiClient *api.Client) WebApiClient {
-	return WebApiClient{
+func newWebApiClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type WebApiClient struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *WebApiClient) SendOperation(ctx context.Context, operation *DataverseWebApiOperation) (types.Object, error) {
+func (client *client) SendOperation(ctx context.Context, operation *DataverseWebApiOperation) (types.Object, error) {
 	url := operation.Url.ValueString()
 	method := operation.Method.ValueString()
 	var body *string
@@ -70,7 +70,7 @@ func (client *WebApiClient) SendOperation(ctx context.Context, operation *Datave
 	return o, nil
 }
 
-func (client *WebApiClient) ExecuteApiRequest(ctx context.Context, scope *string, url, method string, body *string, headers map[string]string, expectedStatusCodes []int64) (*api.HttpResponse, error) {
+func (client *client) ExecuteApiRequest(ctx context.Context, scope *string, url, method string, body *string, headers map[string]string, expectedStatusCodes []int64) (*api.HttpResponse, error) {
 	h := http.Header{}
 	for k, v := range headers {
 		h.Add(k, v)

@@ -14,19 +14,19 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
-func NewPowerAppssClient(apiClient *api.Client) PowerAppssClient {
-	return PowerAppssClient{
+func newPowerAppssClient(apiClient *api.Client) client {
+	return client{
 		Api:               apiClient,
 		environmentClient: environment.NewEnvironmentClient(apiClient),
 	}
 }
 
-type PowerAppssClient struct {
+type client struct {
 	Api               *api.Client
 	environmentClient environment.Client
 }
 
-func (client *PowerAppssClient) GetPowerApps(ctx context.Context, environmentId string) ([]powerAppBapiDto, error) {
+func (client *client) GetPowerApps(ctx context.Context, environmentId string) ([]powerAppBapiDto, error) {
 	envs, err := client.environmentClient.GetEnvironments(ctx)
 	if err != nil {
 		return nil, err

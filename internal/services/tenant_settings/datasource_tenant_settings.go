@@ -32,7 +32,7 @@ func NewTenantSettingsDataSource() datasource.DataSource {
 
 type TenantSettingsDataSource struct {
 	helpers.TypeInfo
-	TenantSettingsClient TenantSettingsClient
+	TenantSettingsClient client
 }
 
 type TenantSettingsSourceModel struct {
@@ -160,7 +160,7 @@ func (d *TenantSettingsDataSource) Configure(ctx context.Context, req datasource
 		)
 		return
 	}
-	d.TenantSettingsClient = NewTenantSettingsClient(client)
+	d.TenantSettingsClient = newTenantSettingsClient(client)
 }
 
 func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

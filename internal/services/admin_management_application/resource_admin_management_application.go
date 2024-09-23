@@ -29,7 +29,7 @@ func NewAdminManagementApplicationResource() resource.Resource {
 
 type AdminManagementApplicationResource struct {
 	helpers.TypeInfo
-	AdminManagementApplicationClient AdminManagementApplicationClient
+	AdminManagementApplicationClient client
 }
 
 type AdminManagementApplicationResourceModel struct {
@@ -90,7 +90,7 @@ func (r *AdminManagementApplicationResource) Configure(ctx context.Context, req 
 		return
 	}
 
-	r.AdminManagementApplicationClient = NewAdminManagementApplicationClient(clientApi)
+	r.AdminManagementApplicationClient = newAdminManagementApplicationClient(clientApi)
 }
 
 func (r *AdminManagementApplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

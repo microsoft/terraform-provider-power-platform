@@ -34,7 +34,7 @@ func NewConnectionsDataSource() datasource.DataSource {
 
 type ConnectionsDataSource struct {
 	helpers.TypeInfo
-	ConnectionsClient ConnectionsClient
+	ConnectionsClient client
 }
 
 type ConnectionsListDataSourceModel struct {
@@ -141,7 +141,7 @@ func (d *ConnectionsDataSource) Configure(ctx context.Context, req datasource.Co
 		return
 	}
 
-	d.ConnectionsClient = NewConnectionsClient(client)
+	d.ConnectionsClient = newConnectionsClient(client)
 }
 
 func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

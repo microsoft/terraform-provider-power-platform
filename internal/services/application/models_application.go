@@ -47,15 +47,6 @@ type environmentApplicationDto struct {
 	ApplicationVisibility string `json:"applicationVisibility"`
 }
 
-type environmentApplicationDeleteDto struct {
-	Code    string `json:"code"`
-	Message string `json:"message"`
-}
-
-type environmentApplicationCreateDto struct {
-	Location string `json:"location"`
-}
-
 type environmentApplicationLifecycleCreatedDto struct {
 	Name       string                                              `json:"name"`
 	Properties environmentApplicationLifecycleCreatedPropertiesDto `json:"properties"`
@@ -63,45 +54,6 @@ type environmentApplicationLifecycleCreatedDto struct {
 
 type environmentApplicationLifecycleCreatedPropertiesDto struct {
 	ProvisioningState string `json:"provisioningState"`
-}
-
-type environmentApplicationBapi struct {
-	Id   string `json:"id"`
-	Name string `json:"name"`
-}
-
-type environmentApplicationPropertiesBapi struct {
-	TenantID    string `json:"tenantId"`
-	DisplayName string `json:"displayName"`
-}
-
-type linkedEnvironmentApplicationMetadataBapi struct {
-	Version string `json:"version"`
-}
-
-type statesEnvironmentApplicationBapi struct {
-	Management statesManagementApplicationBapi `json:"management"`
-}
-
-type statesManagementApplicationBapi struct {
-	Id string `json:"id"`
-}
-
-type environmentApplicationDtoArray struct {
-	Value []environmentApplicationDto `json:"value"`
-}
-
-type environmentApplicationCreateBapi struct {
-	Location string `json:"location"`
-
-	Properties environmentApplicationPropertiesBapi `json:"properties"`
-}
-
-type environmentApplicationCreatePropertiesBapi struct {
-	DisplayName string `json:"displayName"`
-}
-
-type environmentApplicationCreateLinkApplicationMetadataBapi struct {
 }
 
 type environmentApplicationLifecycleDto struct {

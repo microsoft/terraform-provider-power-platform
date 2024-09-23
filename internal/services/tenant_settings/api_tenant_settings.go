@@ -15,17 +15,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewTenantSettingsClient(apiClient *api.Client) TenantSettingsClient {
-	return TenantSettingsClient{
+func newTenantSettingsClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type TenantSettingsClient struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *TenantSettingsClient) GetTenant(ctx context.Context) (*tenantDto, error) {
+func (client *client) GetTenant(ctx context.Context) (*tenantDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -44,7 +44,7 @@ func (client *TenantSettingsClient) GetTenant(ctx context.Context) (*tenantDto, 
 	return &tenant, nil
 }
 
-func (client *TenantSettingsClient) GetTenantSettings(ctx context.Context) (*tenantSettingsDto, error) {
+func (client *client) GetTenantSettings(ctx context.Context) (*tenantSettingsDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -63,7 +63,7 @@ func (client *TenantSettingsClient) GetTenantSettings(ctx context.Context) (*ten
 	return &tenantSettings, nil
 }
 
-func (client *TenantSettingsClient) UpdateTenantSettings(ctx context.Context, tenantSettings tenantSettingsDto) (*tenantSettingsDto, error) {
+func (client *client) UpdateTenantSettings(ctx context.Context, tenantSettings tenantSettingsDto) (*tenantSettingsDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,

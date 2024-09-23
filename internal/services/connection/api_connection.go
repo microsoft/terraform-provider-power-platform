@@ -17,17 +17,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewConnectionsClient(apiClient *api.Client) ConnectionsClient {
-	return ConnectionsClient{
+func newConnectionsClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type ConnectionsClient struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *ConnectionsClient) BuildHostUri(environmentId string) string {
+func (client *client) BuildHostUri(environmentId string) string {
 	envId := strings.ReplaceAll(environmentId, "-", "")
 	realm := string(envId[len(envId)-2:])
 	envId = envId[:len(envId)-2]
@@ -35,7 +35,7 @@ func (client *ConnectionsClient) BuildHostUri(environmentId string) string {
 	return fmt.Sprintf("%s.%s.environment.%s", envId, realm, client.Api.GetConfig().Urls.PowerPlatformUrl)
 }
 
-func (client *ConnectionsClient) CreateConnection(ctx context.Context, environmentId, connectorName string, connectionToCreate createDto) (*connectionDto, error) {
+func (client *client) CreateConnection(ctx context.Context, environmentId, connectorName string, connectionToCreate createDto) (*connectionDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -55,7 +55,7 @@ func (client *ConnectionsClient) CreateConnection(ctx context.Context, environme
 	return &connection, nil
 }
 
-func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environmentId, connectorName, connectionId, displayName string, connParams, connParamsSet map[string]any) (*connectionDto, error) {
+func (client *client) UpdateConnection(ctx context.Context, environmentId, connectorName, connectionId, displayName string, connParams, connParamsSet map[string]any) (*connectionDto, error) {
 	conn, err := client.GetConnection(ctx, environmentId, connectorName, connectionId)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environme
 	return &updatedConnection, nil
 }
 
-func (client *ConnectionsClient) GetConnection(ctx context.Context, environmentId, connectorName, connectionId string) (*connectionDto, error) {
+func (client *client) GetConnection(ctx context.Context, environmentId, connectorName, connectionId string) (*connectionDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -106,7 +106,7 @@ func (client *ConnectionsClient) GetConnection(ctx context.Context, environmentI
 	return &connection, nil
 }
 
-func (client *ConnectionsClient) GetConnections(ctx context.Context, environmentId string) ([]connectionDto, error) {
+func (client *client) GetConnections(ctx context.Context, environmentId string) ([]connectionDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -126,7 +126,7 @@ func (client *ConnectionsClient) GetConnections(ctx context.Context, environment
 	return connetionsArray.Value, nil
 }
 
-func (client *ConnectionsClient) DeleteConnection(ctx context.Context, environmentId, connectorName, connectionId string) error {
+func (client *client) DeleteConnection(ctx context.Context, environmentId, connectorName, connectionId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -144,7 +144,7 @@ func (client *ConnectionsClient) DeleteConnection(ctx context.Context, environme
 	return nil
 }
 
-func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmentId, connectorName, connectionId, roleName, entraUserObjectId string) error {
+func (client *client) ShareConnection(ctx context.Context, environmentId, connectorName, connectionId, roleName, entraUserObjectId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -180,7 +180,7 @@ func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmen
 	return nil
 }
 
-func (client *ConnectionsClient) GetConnectionShares(ctx context.Context, environmentId, connectorName, connectionId string) (*shareConnectionResponseArrayDto, error) {
+func (client *client) GetConnectionShares(ctx context.Context, environmentId, connectorName, connectionId string) (*shareConnectionResponseArrayDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -205,7 +205,7 @@ func (client *ConnectionsClient) GetConnectionShares(ctx context.Context, enviro
 	return &share, nil
 }
 
-func (client *ConnectionsClient) GetConnectionShare(ctx context.Context, environmentId, connectorName, connectionId, principalId string) (*shareConnectionResponseDto, error) {
+func (client *client) GetConnectionShare(ctx context.Context, environmentId, connectorName, connectionId, principalId string) (*shareConnectionResponseDto, error) {
 	shares, err := client.GetConnectionShares(ctx, environmentId, connectorName, connectionId)
 	if err != nil {
 		return nil, err
@@ -219,7 +219,7 @@ func (client *ConnectionsClient) GetConnectionShare(ctx context.Context, environ
 	return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Share for principal '%s' not found", principalId))
 }
 
-func (client *ConnectionsClient) UpdateConnectionShare(ctx context.Context, environmentId, connectorName, connectionId string, share shareConnectionRequestDto) error {
+func (client *client) UpdateConnectionShare(ctx context.Context, environmentId, connectorName, connectionId string, share shareConnectionRequestDto) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -237,7 +237,7 @@ func (client *ConnectionsClient) UpdateConnectionShare(ctx context.Context, envi
 	return nil
 }
 
-func (client *ConnectionsClient) DeleteConnectionShare(ctx context.Context, environmentId, connectorName, connectionId, shareId string) error {
+func (client *client) DeleteConnectionShare(ctx context.Context, environmentId, connectorName, connectionId, shareId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),

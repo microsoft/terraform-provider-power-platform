@@ -13,17 +13,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewConnectorsClient(apiClient *api.Client) Client {
-	return Client{
+func newConnectorsClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type Client struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *Client) GetConnectors(ctx context.Context) ([]connectorDto, error) {
+func (client *client) GetConnectors(ctx context.Context) ([]connectorDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerAppsUrl,

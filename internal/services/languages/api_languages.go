@@ -14,17 +14,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func NewLanguagesClient(apiClient *api.Client) Client {
-	return Client{
+func newLanguagesClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type Client struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *Client) GetLanguagesByLocation(ctx context.Context, location string) (languagesArrayDto, error) {
+func (client *client) GetLanguagesByLocation(ctx context.Context, location string) (languagesArrayDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,

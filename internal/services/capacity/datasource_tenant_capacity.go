@@ -31,7 +31,7 @@ func NewTenantCapcityDataSource() datasource.DataSource {
 
 type DataSource struct {
 	helpers.TypeInfo
-	CapacityClient Client
+	CapacityClient client
 }
 
 type DataSourceModel struct {
@@ -156,7 +156,7 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 		return
 	}
 
-	d.CapacityClient = NewCapacityClient(client)
+	d.CapacityClient = newCapacityClient(client)
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

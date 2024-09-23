@@ -31,7 +31,7 @@ func NewLanguagesDataSource() datasource.DataSource {
 
 type DataSource struct {
 	helpers.TypeInfo
-	LanguagesClient Client
+	LanguagesClient client
 }
 
 type DataSourceModel struct {
@@ -135,7 +135,7 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 
 		return
 	}
-	d.LanguagesClient = NewLanguagesClient(clientApi)
+	d.LanguagesClient = newLanguagesClient(clientApi)
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

@@ -7,51 +7,51 @@ type billingPolicyCreateDto struct {
 	Location          string               `json:"location"`
 	Name              string               `json:"name"`
 	Status            string               `json:"status"`
-	BillingInstrument billingInstrumentDto `json:"billingInstrument"`
+	BillingInstrument BillingInstrumentDto `json:"billingInstrument"`
 }
 
-type billingInstrumentDto struct {
+type BillingInstrumentDto struct {
 	Id             string `json:"id,omitempty"`
 	ResourceGroup  string `json:"resourceGroup"`
 	SubscriptionId string `json:"subscriptionId"`
 }
 
-type billingPolicyDto struct {
+type BillingPolicyDto struct {
 	Id                string               `json:"id"`
 	Name              string               `json:"name"`
 	TenantType        string               `json:"type"`
 	Status            string               `json:"status"`
 	Location          string               `json:"location"`
-	BillingInstrument billingInstrumentDto `json:"billingInstrument"`
+	BillingInstrument BillingInstrumentDto `json:"billingInstrument"`
 	CreatedOn         string               `json:"createdOn"`
-	CreatedBy         principalDto         `json:"createdBy"`
+	CreatedBy         PrincipalDto         `json:"createdBy"`
 	LastModifiedOn    string               `json:"lastModifiedOn"`
-	LastModifiedBy    principalDto         `json:"lastModifiedBy"`
+	LastModifiedBy    PrincipalDto         `json:"lastModifiedBy"`
 }
 
-type billingPolicyArrayDto struct {
-	Value []billingPolicyDto `json:"value"`
+type BillingPolicyArrayDto struct {
+	Value []BillingPolicyDto `json:"value"`
 }
 
-type billingPolicyUpdateDto struct {
+type BillingPolicyUpdateDto struct {
 	Name   string `json:"name"`
 	Status string `json:"status"`
 }
 
-type principalDto struct {
+type PrincipalDto struct {
 	Id            string `json:"id"`
 	PrincipalType string `json:"type"`
 }
 
-type billingPolicyEnvironmentsArrayDto struct {
+type BillingPolicyEnvironmentsArrayDto struct {
 	EnvironmentIds []string `json:"environmentIds"`
 }
 
-type billingPolicyEnvironmentsDto struct {
+type BillingPolicyEnvironmentsDto struct {
 	BillingPolicyId string `json:"billingPolicyId"`
 	EnvironmentId   string `json:"environmentId"`
 }
 
-type billingPolicyEnvironmentsArrayResponseDto struct {
-	Value []billingPolicyEnvironmentsDto `json:"value"`
+type BillingPolicyEnvironmentsArrayResponseDto struct {
+	Value []BillingPolicyEnvironmentsDto `json:"value"`
 }

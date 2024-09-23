@@ -174,7 +174,7 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	billingPolicyToCreate := billingPolicyCreateDto{
-		BillingInstrument: billingInstrumentDto{
+		BillingInstrument: BillingInstrumentDto{
 			ResourceGroup:  plan.BillingInstrument.ResourceGroup.ValueString(),
 			SubscriptionId: plan.BillingInstrument.SubscriptionId.ValueString(),
 		},
@@ -258,8 +258,7 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 
 	if plan.Name.ValueString() != state.Name.ValueString() ||
 		plan.Status.ValueString() != state.Status.ValueString() {
-
-		policyToUpdate := billingPolicyUpdateDto{
+		policyToUpdate := BillingPolicyUpdateDto{
 			Name:   plan.Name.ValueString(),
 			Status: plan.Status.ValueString(),
 		}
@@ -278,7 +277,6 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 		plan.BillingInstrument.ResourceGroup = types.StringValue(policy.BillingInstrument.ResourceGroup)
 		plan.BillingInstrument.SubscriptionId = types.StringValue(policy.BillingInstrument.SubscriptionId)
 	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 

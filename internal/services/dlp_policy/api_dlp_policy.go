@@ -15,17 +15,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func NewDlpPolicyClient(apiClient *api.Client) DlpPolicyClient {
-	return DlpPolicyClient{
+func newDlpPolicyClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type DlpPolicyClient struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *DlpPolicyClient) GetPolicies(ctx context.Context) ([]dlpPolicyModelDto, error) {
+func (client *client) GetPolicies(ctx context.Context) ([]dlpPolicyModelDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -58,7 +58,7 @@ func (client *DlpPolicyClient) GetPolicies(ctx context.Context) ([]dlpPolicyMode
 	return policies, nil
 }
 
-func (client *DlpPolicyClient) GetPolicy(ctx context.Context, name string) (*dlpPolicyModelDto, error) {
+func (client *client) GetPolicy(ctx context.Context, name string) (*dlpPolicyModelDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -75,7 +75,7 @@ func (client *DlpPolicyClient) GetPolicy(ctx context.Context, name string) (*dlp
 	return covertDlpPolicyToPolicyModel(policy)
 }
 
-func (client *DlpPolicyClient) DeletePolicy(ctx context.Context, name string) error {
+func (client *client) DeletePolicy(ctx context.Context, name string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -88,7 +88,7 @@ func (client *DlpPolicyClient) DeletePolicy(ctx context.Context, name string) er
 	return nil
 }
 
-func (client *DlpPolicyClient) UpdatePolicy(ctx context.Context, name string, policy dlpPolicyModelDto) (*dlpPolicyModelDto, error) {
+func (client *client) UpdatePolicy(ctx context.Context, name string, policy dlpPolicyModelDto) (*dlpPolicyModelDto, error) {
 	policyToCreate := convertPolicyModelToDlpPolicy(policy)
 
 	apiUrl := &url.URL{
@@ -238,7 +238,7 @@ func covertDlpPolicyToPolicyModel(policy dlpPolicyDto) (*dlpPolicyModelDto, erro
 	return &policyModel, nil
 }
 
-func (client *DlpPolicyClient) CreatePolicy(ctx context.Context, policy dlpPolicyModelDto) (*dlpPolicyModelDto, error) {
+func (client *client) CreatePolicy(ctx context.Context, policy dlpPolicyModelDto) (*dlpPolicyModelDto, error) {
 	policyToCreate := convertPolicyModelToDlpPolicy(policy)
 
 	apiUrl := &url.URL{

@@ -24,7 +24,7 @@ var (
 
 type SecurityRolesDataSource struct {
 	helpers.TypeInfo
-	UserClient UserClient
+	UserClient client
 }
 
 type SecurityRolesListDataSourceModel struct {
@@ -125,7 +125,7 @@ func (d *SecurityRolesDataSource) Configure(ctx context.Context, req datasource.
 
 		return
 	}
-	d.UserClient = NewUserClient(clientApi)
+	d.UserClient = newUserClient(clientApi)
 }
 
 func (d *SecurityRolesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {

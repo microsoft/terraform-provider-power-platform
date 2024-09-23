@@ -13,17 +13,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-type Client struct {
-	Api *api.Client
-}
-
-func NewCapacityClient(clientApi *api.Client) Client {
-	return Client{
+func newCapacityClient(clientApi *api.Client) client {
+	return client{
 		Api: clientApi,
 	}
 }
 
-func (client *Client) GetTenantCapacity(ctx context.Context, tenantId string) (*capacityDto, error) {
+type client struct {
+	Api *api.Client
+}
+
+func (client *client) GetTenantCapacity(ctx context.Context, tenantId string) (*capacityDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.LicensingUrl,

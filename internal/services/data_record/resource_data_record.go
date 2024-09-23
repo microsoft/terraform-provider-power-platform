@@ -33,7 +33,7 @@ func NewDataRecordResource() resource.Resource {
 
 type DataRecordResource struct {
 	helpers.TypeInfo
-	DataRecordClient DataRecordClient
+	DataRecordClient client
 }
 
 type DataRecordResourceModel struct {
@@ -118,7 +118,7 @@ func (r *DataRecordResource) Configure(ctx context.Context, req resource.Configu
 
 		return
 	}
-	r.DataRecordClient = NewDataRecordClient(clientApi)
+	r.DataRecordClient = newDataRecordClient(clientApi)
 }
 
 func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -333,7 +333,7 @@ func caseMapStringOfAny(columnValue any, attrValue map[string]attr.Value, attrTy
 }
 
 func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrType map[string]attr.Type,
-	apiClient *DataRecordClient, objectType map[string]attr.Type, key, environmentId, tableLogicalName, recordid string) error {
+	apiClient *client, objectType map[string]attr.Type, key, environmentId, tableLogicalName, recordid string) error {
 	var listTypes []attr.Type
 	var listValues []attr.Value
 	tupleElementType := types.ObjectType{
@@ -355,7 +355,7 @@ func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrTy
 		if err != nil {
 			return fmt.Errorf("error getting entity relation definition info: %s", err.Error())
 		}
-		entDefinition, err := GetEntityDefinition(ctx, apiClient, environmentId, relationTableLogicalName)
+		entDefinition, err := getEntityDefinition(ctx, apiClient, environmentId, relationTableLogicalName)
 		if err != nil {
 			return fmt.Errorf("error getting entity definition: %s", err.Error())
 		}
@@ -383,7 +383,7 @@ func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrTy
 	return nil
 }
 
-func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClient *DataRecordClient, environmentId, tableLogicalName string, recordid, recordColumns *string, columns map[string]any) (*basetypes.DynamicValue, error) {
+func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClient *client, environmentId, tableLogicalName string, recordid, recordColumns *string, columns map[string]any) (*basetypes.DynamicValue, error) {
 	var objectType = map[string]attr.Type{
 		"table_logical_name": types.StringType,
 		"data_record_id":     types.StringType,

@@ -19,7 +19,7 @@ type settingsConnectionReferences struct {
 	ConnectorId  string `json:"connectorid"`
 }
 
-type solutionDto struct {
+type SolutionDto struct {
 	Id            string `json:"solutionid"`
 	EnvironmentId string `json:"environment_id"`
 	Name          string `json:"uniquename"`
@@ -32,7 +32,7 @@ type solutionDto struct {
 }
 
 type solutionArrayDto struct {
-	Value []solutionDto `json:"value"`
+	Value []SolutionDto `json:"value"`
 }
 
 type stageSolutionImportDto struct {

@@ -32,7 +32,7 @@ func NewEnvironmentPowerAppsDataSource() datasource.DataSource {
 
 type EnvironmentPowerAppsDataSource struct {
 	helpers.TypeInfo
-	PowerAppssClient PowerAppssClient
+	PowerAppssClient client
 }
 
 type EnvironmentPowerAppsListDataSourceModel struct {
@@ -137,7 +137,7 @@ func (d *EnvironmentPowerAppsDataSource) Configure(ctx context.Context, req data
 		return
 	}
 
-	d.PowerAppssClient = NewPowerAppssClient(clientApi)
+	d.PowerAppssClient = newPowerAppssClient(clientApi)
 }
 
 func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

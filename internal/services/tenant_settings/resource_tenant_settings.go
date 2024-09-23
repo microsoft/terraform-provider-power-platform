@@ -38,7 +38,7 @@ func NewTenantSettingsResource() resource.Resource {
 
 type TenantSettingsResource struct {
 	helpers.TypeInfo
-	TenantSettingClient TenantSettingsClient
+	TenantSettingClient client
 }
 
 func (r *TenantSettingsResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -365,7 +365,7 @@ func (r *TenantSettingsResource) Configure(ctx context.Context, req resource.Con
 		return
 	}
 
-	r.TenantSettingClient = NewTenantSettingsClient(client)
+	r.TenantSettingClient = newTenantSettingsClient(client)
 }
 
 func (r *TenantSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

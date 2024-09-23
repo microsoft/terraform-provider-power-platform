@@ -49,7 +49,7 @@ func NewLocationsDataSource() datasource.DataSource {
 
 type DataSource struct {
 	helpers.TypeInfo
-	LocationsClient Client
+	LocationsClient client
 }
 
 func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -147,7 +147,7 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 
 		return
 	}
-	d.LocationsClient = NewLocationsClient(clientApi)
+	d.LocationsClient = newLocationsClient(clientApi)
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
