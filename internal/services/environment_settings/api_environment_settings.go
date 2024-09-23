@@ -12,7 +12,7 @@ import (
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func newEnvironmentSettingsClient(apiClient *api.Client) client {
@@ -46,7 +46,7 @@ func (client *client) GetEnvironmentSettings(ctx context.Context, environmentId 
 	}
 
 	environmentSettings := environmentSettingsValueDto{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &environmentSettings)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &environmentSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (client *client) UpdateEnvironmentSettings(ctx context.Context, environment
 		Path:   fmt.Sprintf("/api/data/v9.0/organizations(%s)", *settings.OrganizationId),
 	}
 
-	_, err = client.Api.Execute(ctx, "PATCH", apiUrl.String(), nil, environmentSettings, []int{http.StatusNoContent}, nil)
+	_, err = client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environmentSettings, []int{http.StatusNoContent}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (client *client) GetEnvironmentHostById(ctx context.Context, environmentId 
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
-		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+		return "", customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 
 	envUrl, err := url.Parse(environmentUrl)
@@ -106,7 +106,7 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 	apiUrl.RawQuery = values.Encode()
 
 	env := environmentIdDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		return nil, err
 	}

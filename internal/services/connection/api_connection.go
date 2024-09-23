@@ -14,7 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func newConnectionsClient(apiClient *api.Client) client {
@@ -47,7 +47,7 @@ func (client *client) CreateConnection(ctx context.Context, environmentId, conne
 	apiUrl.RawQuery = values.Encode()
 
 	connection := connectionDto{}
-	_, err := client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, connectionToCreate, []int{http.StatusCreated}, &connection)
+	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, connectionToCreate, []int{http.StatusCreated}, &connection)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (client *client) UpdateConnection(ctx context.Context, environmentId, conne
 	conn.Properties.ConnectionParameters = connParams
 
 	updatedConnection := connectionDto{}
-	_, err = client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, conn, []int{http.StatusOK}, &updatedConnection)
+	_, err = client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, conn, []int{http.StatusOK}, &updatedConnection)
 	if err != nil {
 		return nil, err
 	}
@@ -96,10 +96,10 @@ func (client *client) GetConnection(ctx context.Context, environmentId, connecto
 	apiUrl.RawQuery = values.Encode()
 
 	connection := connectionDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connection)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connection)
 	if err != nil {
 		if strings.Contains(err.Error(), "ConnectionNotFound") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Connection '%s' not found", connectionId))
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Connection '%s' not found", connectionId))
 		}
 		return nil, err
 	}
@@ -118,7 +118,7 @@ func (client *client) GetConnections(ctx context.Context, environmentId string) 
 	apiUrl.RawQuery = values.Encode()
 
 	connetionsArray := connectionArrayDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connetionsArray)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connetionsArray)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (client *client) DeleteConnection(ctx context.Context, environmentId, conne
 	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return err
 	}
@@ -173,7 +173,7 @@ func (client *client) ShareConnection(ctx context.Context, environmentId, connec
 		Delete: []shareConnectionRequestDeleteDto{},
 	}
 
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func (client *client) GetConnectionShares(ctx context.Context, environmentId, co
 
 	share := shareConnectionResponseArrayDto{}
 
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &share)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &share)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +216,7 @@ func (client *client) GetConnectionShare(ctx context.Context, environmentId, con
 			return &share, nil
 		}
 	}
-	return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Share for principal '%s' not found", principalId))
+	return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Share for principal '%s' not found", principalId))
 }
 
 func (client *client) UpdateConnectionShare(ctx context.Context, environmentId, connectorName, connectionId string, share shareConnectionRequestDto) error {
@@ -230,7 +230,7 @@ func (client *client) UpdateConnectionShare(ctx context.Context, environmentId, 
 	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
 		return err
 	}
@@ -257,7 +257,7 @@ func (client *client) DeleteConnectionShare(ctx context.Context, environmentId, 
 		},
 	}
 
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
 		return err
 	}

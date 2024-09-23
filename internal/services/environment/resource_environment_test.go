@@ -18,7 +18,7 @@ import (
 
 func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 	domainName := fmt.Sprintf("terraformprovidertest%d", rand.Intn(100000))
-	newDomaimName := fmt.Sprintf("terraformprovidertest%d", rand.Intn(100000))
+	newDomainName := fmt.Sprintf("terraformprovidertest%d", rand.Intn(100000))
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
@@ -30,7 +30,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 					description                               = "aaaa"
 					cadence								   	  = "Moderate"
 					location                                  = "unitedstates"
-					environment_type                          = "Sandbox"
+					environment_type                       	  = "Sandbox"
 					dataverse = {
 						language_code                             = "1033"
 						currency_code                             = "USD"
@@ -67,7 +67,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					dataverse = {
-						domain									  =  "` + newDomaimName + `"
+						domain									  =  "` + newDomainName + `"
 						language_code                             = "1033"
 						currency_code                             = "USD"
 						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
@@ -77,8 +77,8 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "bbbb"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "cadence", "Frequent"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", newDomaimName),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+newDomaimName+".crm.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", newDomainName),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+newDomainName+".crm.dynamics.com/"),
 				),
 			},
 		},

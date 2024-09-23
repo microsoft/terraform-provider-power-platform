@@ -8,7 +8,6 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
@@ -52,7 +51,7 @@ type LifecycleRequestedByDto struct {
 	Type        string `json:"type"`
 }
 
-func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, response *HttpResponse) (*LifecycleDto, error) {
+func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, response *Response) (*LifecycleDto, error) {
 	locationHeader := response.GetHeader(constants.HEADER_LOCATION)
 	tflog.Debug(ctx, "Location Header: "+locationHeader)
 
@@ -61,30 +60,22 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 		tflog.Error(ctx, "Error parsing location header: "+err.Error())
 	}
 
-	retryHeader := response.GetHeader(constants.HEADER_RETRY_AFTER)
-	tflog.Debug(ctx, "Retry Header: "+retryHeader)
-	retryAfter, err := time.ParseDuration(retryHeader)
-
-	if err != nil {
-		retryAfter = client.RetryAfterDefault()
-	} else {
-		retryAfter = retryAfter * time.Second
-	}
+	waitFor := retryAfter(ctx, response.HttpResponse)
 
 	for {
 		lifecycleResponse := LifecycleDto{}
-		response, err = client.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
+		response, err = client.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
 		if err != nil {
 			return nil, err
 		}
 
-		err = client.SleepWithContext(ctx, retryAfter)
+		err = client.SleepWithContext(ctx, waitFor)
 		if err != nil {
 			return nil, err
 		}
 
 		tflog.Debug(ctx, "Environment Creation Operation State: '"+lifecycleResponse.State.Id+"'")
-		tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+response.Response.Status+"'")
+		tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+response.HttpResponse.Status+"'")
 
 		if lifecycleResponse.State.Id == "Succeeded" {
 			return &lifecycleResponse, nil

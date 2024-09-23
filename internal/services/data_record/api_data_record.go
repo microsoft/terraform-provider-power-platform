@@ -6,6 +6,7 @@ package data_record
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -14,7 +15,7 @@ import (
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func newDataRecordClient(apiClient *api.Client) client {
@@ -41,7 +42,7 @@ func getEntityDefinition(ctx context.Context, client *client, environmentId, ent
 	}
 
 	entityDefinition := entityDefinitionsDto{}
-	_, err = client.Api.Execute(ctx, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
+	_, err = client.Api.Execute(ctx, nil, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +57,7 @@ func (client *client) GetEnvironmentHostById(ctx context.Context, environmentId 
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
-		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+		return "", customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 
 	envUrl, err := url.Parse(environmentUrl)
@@ -77,7 +78,7 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 	apiUrl.RawQuery = values.Encode()
 
 	env := environmentIdDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +100,7 @@ func (client *client) GetDataRecordsByODataQuery(ctx context.Context, environmen
 	apiUrl := fmt.Sprintf("https://%s/api/data/%s/%s", environmentHost, constants.DATAVERSE_API_VERSION, query)
 
 	response := map[string]any{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl, h, nil, []int{http.StatusOK}, &response)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl, h, nil, []int{http.StatusOK}, &response)
 	if err != nil {
 		return nil, err
 	}
@@ -174,10 +175,11 @@ func (client *client) GetDataRecord(ctx context.Context, recordId, environmentId
 
 	result := make(map[string]any, 0)
 
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Data Record '%s' not found", recordId))
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Data Record '%s' not found", recordId))
 		}
 		return nil, err
 	}
@@ -205,7 +207,7 @@ func (client *client) GetRelationData(ctx context.Context, environmentId, tableN
 
 	result := make(map[string]any, 0)
 
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +241,7 @@ func (client *client) GetTableSingularNameFromPlural(ctx context.Context, enviro
 	q.Add("$select", "PrimaryIdAttribute,LogicalCollectionName,LogicalName")
 	apiUrl.RawQuery = q.Encode()
 
-	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +366,7 @@ func (client *client) GetEntityRelationDefinitionInfo(ctx context.Context, envir
 
 	apiUrl := fmt.Sprintf("https://%s/api/data/%s/EntityDefinitions(LogicalName='%s')?$expand=OneToManyRelationships,ManyToManyRelationships,ManyToOneRelationships", environmentHost, constants.DATAVERSE_API_VERSION, entityLogicalName)
 
-	response, err := client.Api.Execute(ctx, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
+	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return "", err
 	}
@@ -453,7 +455,7 @@ func (client *client) ApplyDataRecord(ctx context.Context, recordId, environment
 		Path:   apiPath,
 	}
 
-	response, err := client.Api.Execute(ctx, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
+	response, err := client.Api.Execute(ctx, nil, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -463,9 +465,9 @@ func (client *client) ApplyDataRecord(ctx context.Context, recordId, environment
 		if err != nil {
 			return nil, err
 		}
-	} else if response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID) != "" {
+	} else if response.HttpResponse.Header.Get(constants.HEADER_ODATA_ENTITY_ID) != "" {
 		re := regexp.MustCompile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
-		match := re.FindAllStringSubmatch(response.Response.Header.Get(constants.HEADER_ODATA_ENTITY_ID), -1)
+		match := re.FindAllStringSubmatch(response.HttpResponse.Header.Get(constants.HEADER_ODATA_ENTITY_ID), -1)
 		if len(match) == 0 {
 			return nil, fmt.Errorf("no entity record id returned from the odata-entityid header")
 		}
@@ -517,9 +519,9 @@ func (client *client) DeleteDataRecord(ctx context.Context, recordId string, env
 					Host:   environmentHost,
 					Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s(%s)/$ref", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId, key, dataRecordId),
 				}
-				_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
-				if err != nil && !strings.ContainsAny(err.Error(), "404") {
-					return err
+				_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent, http.StatusNotFound}, nil)
+				if err != nil {
+					return fmt.Errorf("Error while deleting data record. %w", err)
 				}
 			}
 		}
@@ -530,9 +532,10 @@ func (client *client) DeleteDataRecord(ctx context.Context, recordId string, env
 		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId),
 	}
-	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
-	if err != nil && !strings.ContainsAny(err.Error(), "404") {
-		// TODO: 404 is desired state for delete.  We should pass 404 as acceptable status code and not error
+
+	// 200, 201, or 404 are acceptable status codes for delete and not error
+	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent, http.StatusNotFound}, nil)
+	if err != nil {
 		return err
 	}
 	return nil
@@ -576,7 +579,7 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 
 	existingRelationsResponse := relationApiResponse{}
 
-	apiResponse, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 	if err != nil {
 		return err
 	}
@@ -617,7 +620,7 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 	}
 
 	for _, relation := range toBeDeleted {
-		_, err = client.Api.Execute(ctx, "DELETE", relation.OdataID, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+		_, err = client.Api.Execute(ctx, nil, "DELETE", relation.OdataID, nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 		if err != nil {
 			return err
 		}
@@ -642,7 +645,7 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 		relation := relationApiBody{
 			OdataID: fmt.Sprintf("https://%s/api/data/%s/%s(%s)", environmentHost, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId),
 		}
-		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
+		_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
 		if err != nil {
 			return err
 		}

@@ -91,7 +91,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 		t.Fatalf("Failed to write solution file: %v", err)
 	}
 
-	solutionFileChecksum, _ := helpers.CalculateMd5(SOLUTION_1_NAME)
+	solutionFileChecksum, _ := helpers.CalculateSHA256(SOLUTION_1_NAME)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
@@ -251,8 +251,8 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 		t.Fatalf("Failed to write settings file: %v", err)
 	}
 
-	solutionFileChecksum, _ := helpers.CalculateMd5(SOLUTION_1_NAME)
-	settingsFileChecksum, _ := helpers.CalculateMd5(solutionSettingsFileName)
+	solutionFileChecksum, _ := helpers.CalculateSHA256(SOLUTION_1_NAME)
+	settingsFileChecksum, _ := helpers.CalculateSHA256(solutionSettingsFileName)
 
 	resource.ParallelTest(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
@@ -636,6 +636,6 @@ func createFile(fileName string, content string) string {
 		panic(err)
 	}
 
-	fileChecksum, _ := helpers.CalculateMd5(fileName)
+	fileChecksum, _ := helpers.CalculateSHA256(fileName)
 	return fileChecksum
 }

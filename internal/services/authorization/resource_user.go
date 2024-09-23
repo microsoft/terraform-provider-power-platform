@@ -18,7 +18,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers/array"
 )
 
 var _ resource.Resource = &UserResource{}
@@ -210,7 +212,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	userDto, err := r.UserClient.GetUserByAadObjectId(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString())
 	if err != nil {
-		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
+		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -249,7 +251,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	addedSecurityRoles, removedSecurityRoles := helpers.DiffArrays(plan.SecurityRoles, state.SecurityRoles)
+	addedSecurityRoles, removedSecurityRoles := array.Diff(plan.SecurityRoles, state.SecurityRoles)
 
 	user, err := r.UserClient.GetUserBySystemUserId(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString())
 	if err != nil {

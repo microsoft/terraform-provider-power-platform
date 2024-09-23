@@ -36,12 +36,12 @@ func (client *client) GetCurrenciesByLocation(ctx context.Context, location stri
 
 	currencies := currenciesDto{}
 
-	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return currencies, err
 	}
 
-	defer response.Response.Body.Close()
+	defer response.HttpResponse.Body.Close()
 
 	err = json.Unmarshal(response.BodyAsBytes, &currencies)
 

@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func TestUnitApiClient_GetConfig(t *testing.T) {
@@ -30,15 +30,16 @@ func TestUnitApiClient_GetConfig(t *testing.T) {
 	}
 
 	x := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
-	_, err := x.ExecuteForGivenScope(ctx, "test", "GET", "/relativeurl", http.Header{}, nil, []int{http.StatusOK}, nil)
+	_, err := x.Execute(ctx, []string{"test"}, "GET", "/relativeurl", http.Header{}, nil, []int{http.StatusOK}, nil)
 	if err == nil {
 		t.Error("Expected an error for relatvieurl but got nil error")
 	}
 
-	if e, ok := err.(helpers.ProviderError); !ok {
-		t.Errorf("Expected error type %s but got %s", reflect.TypeFor[helpers.ProviderError](), reflect.TypeOf(e.ErrorCode))
-	} else if e.ErrorCode != helpers.ERROR_INCORRECT_URL_FORMAT {
-		t.Errorf("Expected error code %s but got %s", helpers.ERROR_INCORRECT_URL_FORMAT, e.ErrorCode)
+	switch err.(type) {
+	case customerrors.UrlFormatError:
+		return
+	default:
+		t.Errorf("Expected error type %s but got %s", reflect.TypeOf(customerrors.UrlFormatError{}), reflect.TypeOf(err))
 	}
 }
 

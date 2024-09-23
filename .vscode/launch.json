@@ -9,7 +9,9 @@
             // this assumes your workspace is the root of the repo
             "program": "${workspaceFolder}",
             "preLaunchTask": "install",
-            "env": {},
+            "env": {
+                "TF_ACC": "true",
+            },
             "args": [
                 "-debug",
             ]

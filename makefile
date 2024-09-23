@@ -42,3 +42,10 @@ test:
 lint:
 	clear
 	golangci-lint run
+
+precommit:
+	$(MAKE) clean
+	$(MAKE) build
+	$(MAKE) lint
+	$(MAKE) unittest
+	$(MAKE) userdocs

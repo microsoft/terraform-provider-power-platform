@@ -35,7 +35,7 @@ type DataverseWebApiDatasourceModel struct {
 	Method             types.String                             `tfsdk:"method"`
 	Url                types.String                             `tfsdk:"url"`
 	Body               types.String                             `tfsdk:"body"`
-	ExpectedHttpStatus []int64                                  `tfsdk:"expected_http_status"`
+	ExpectedHttpStatus []int                                    `tfsdk:"expected_http_status"`
 	Headers            []DataverseWebApiOperationHeaderResource `tfsdk:"headers"`
 	Output             types.Object                             `tfsdk:"output"`
 }
@@ -81,8 +81,8 @@ func (d *DataverseWebApiDatasource) Schema(ctx context.Context, req datasource.S
 				Required:            false,
 				Optional:            true,
 			},
-			"expected_http_status": schema.ListAttribute{
-				ElementType:         types.Int64Type,
+			"expected_http_status": schema.SetAttribute{
+				ElementType:         types.Int32Type,
 				MarkdownDescription: "Expected HTTP status code. If the response status code does not match any of the expected status codes, the operation will fail.",
 				Required:            false,
 				Optional:            true,
@@ -151,6 +151,11 @@ func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.Rea
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// // If the expected status code is not provided, default to 200
+	// if state.ExpectedHttpStatus == nil {
+	// 	state.ExpectedHttpStatus = []int{200}
+	// }
 
 	outputObjectType, err := d.DataRecordClient.SendOperation(ctx, &DataverseWebApiOperation{
 		Scope:              state.Scope,

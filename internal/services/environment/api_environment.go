@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
 )
 
@@ -66,7 +66,7 @@ func (client *Client) GetLocations(ctx context.Context) (*LocationArrayDto, erro
 	apiUrl.RawQuery = values.Encode()
 
 	locationsArray := LocationArrayDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &locationsArray)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &locationsArray)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ type currencyCodeValidatorArrayDto struct {
 	Value []currencyCodeValidatorDto `json:"value"`
 }
 
-func currencyCodeValidator(client *api.Client, location string, currencyCode string) error {
+func currencyCodeValidator(ctx context.Context, client *api.Client, location string, currencyCode string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.GetConfig().Urls.BapiUrl,
@@ -123,13 +123,13 @@ func currencyCodeValidator(client *api.Client, location string, currencyCode str
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	response, err := client.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 
 	if err != nil {
 		return err
 	}
 
-	defer response.Response.Body.Close()
+	defer response.HttpResponse.Body.Close()
 
 	resp := currencyCodeValidatorArrayDto{}
 	err = json.Unmarshal(response.BodyAsBytes, &resp)
@@ -177,7 +177,7 @@ type languageCodeValidatorPropertiesDto struct {
 	IsTenantDefault bool   `json:"isTenantDefault"`
 }
 
-func languageCodeValidator(client *api.Client, location string, languageCode string) error {
+func languageCodeValidator(ctx context.Context, client *api.Client, location string, languageCode string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.GetConfig().Urls.BapiUrl,
@@ -187,13 +187,13 @@ func languageCodeValidator(client *api.Client, location string, languageCode str
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	response, err := client.Execute(context.Background(), "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	response, err := client.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 
 	if err != nil {
 		return err
 	}
 
-	defer response.Response.Body.Close()
+	defer response.HttpResponse.Body.Close()
 
 	resp := languageCodeValidatorArrayDto{}
 	err = json.Unmarshal(response.BodyAsBytes, &resp)
@@ -230,7 +230,7 @@ func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId 
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
-		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+		return "", customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 
 	envUrl, err := url.Parse(environmentUrl)
@@ -252,10 +252,11 @@ func (client *Client) GetEnvironment(ctx context.Context, environmentId string) 
 	apiUrl.RawQuery = values.Encode()
 
 	env := EnvironmentDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment '%s' not found", environmentId))
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment '%s' not found", environmentId))
 		}
 		return nil, err
 	}
@@ -286,11 +287,11 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 		Message: "Deleted using Power Platform Terraform Provider",
 	}
 
-	response, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
+	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
-	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.Response.Status+"'")
+	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.HttpResponse.Status+"'")
 
 	tflog.Debug(ctx, "Waiting for environment deletion operation to complete")
 	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, response)
@@ -310,12 +311,12 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	apiResponse, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environmentCreateLinkEnvironmentMetadata, []int{http.StatusAccepted}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentCreateLinkEnvironmentMetadata, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		tflog.Error(ctx, "Error adding Dataverse to environment: "+err.Error())
 	}
 
-	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.Response.Status+"'")
+	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 
 	locationHeader := apiResponse.GetHeader(constants.HEADER_LOCATION)
 	tflog.Debug(ctx, "Location Header: "+locationHeader)
@@ -329,13 +330,13 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 	tflog.Debug(ctx, "Retry Header: "+retryHeader)
 	retryAfter, err := time.ParseDuration(retryHeader)
 	if err != nil {
-		retryAfter = client.Api.RetryAfterDefault()
+		retryAfter = api.DefaultRetryAfter()
 	} else {
 		retryAfter = retryAfter * time.Second
 	}
 	for {
 		lifecycleEnv := EnvironmentDto{}
-		lifecycleResponse, err := client.Api.Execute(ctx, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted}, &lifecycleEnv)
+		lifecycleResponse, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted}, &lifecycleEnv)
 		if err != nil {
 			return nil, err
 		}
@@ -346,7 +347,7 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 		}
 
 		tflog.Debug(ctx, "Dataverse Creation Operation State: '"+lifecycleEnv.Properties.ProvisioningState+"'")
-		tflog.Debug(ctx, "Dataverse Creation Operation HTTP Status: '"+lifecycleResponse.Response.Status+"'")
+		tflog.Debug(ctx, "Dataverse Creation Operation HTTP Status: '"+lifecycleResponse.HttpResponse.Status+"'")
 
 		if lifecycleEnv.Properties.ProvisioningState == "Succeeded" {
 			return &lifecycleEnv, nil
@@ -372,15 +373,15 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 	values := url.Values{}
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
-	apiResponse, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environmentToCreate, []int{http.StatusAccepted, http.StatusCreated}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentToCreate, []int{http.StatusAccepted, http.StatusCreated}, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.Response.Status+"'")
+	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 
 	createdEnvironmentId := ""
-	if apiResponse.Response.StatusCode == http.StatusAccepted {
+	if apiResponse.HttpResponse.StatusCode == http.StatusAccepted {
 		lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 		if err != nil {
 			return nil, err
@@ -394,7 +395,7 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 			createdEnvironmentId = parts[len(parts)-1]
 			tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
 		}
-	} else if apiResponse.Response.StatusCode == http.StatusCreated {
+	} else if apiResponse.HttpResponse.StatusCode == http.StatusCreated {
 		envCreatedResponse := lifecycleCreatedDto{}
 		err = apiResponse.MarshallTo(&envCreatedResponse)
 		if err != nil {
@@ -415,45 +416,7 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 		env.Properties.LinkedEnvironmentMetadata.TemplateMetadata = environmentToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
 	}
 
-	err = client.doWaitForAccess(ctx, env)
-	if err != nil {
-		return &EnvironmentDto{}, err
-	}
-
 	return env, err
-}
-
-func (client *Client) doWaitForAccess(ctx context.Context, env *EnvironmentDto) error {
-	if env.Properties.LinkedEnvironmentMetadata != nil && env.Properties.LinkedEnvironmentMetadata.InstanceURL != "" {
-		envUrl, err := url.Parse(env.Properties.LinkedEnvironmentMetadata.InstanceURL)
-		if err != nil {
-			return err
-		}
-
-		whoAmIUrl := &url.URL{
-			Scheme: constants.HTTPS,
-			Host:   envUrl.Host,
-			Path:   "/api/data/v9.2/WhoAmI",
-		}
-
-		for {
-			resp, _ := client.Api.Execute(ctx, http.MethodGet, whoAmIUrl.String(), http.Header{}, nil, []int{http.StatusOK, http.StatusUnauthorized}, nil)
-			if resp != nil && resp.Response != nil && resp.Response.StatusCode == http.StatusOK {
-				break
-			}
-
-			if resp != nil && resp.Response != nil && resp.Response.StatusCode != http.StatusUnauthorized {
-				return fmt.Errorf("unexpected status code %d. %s", resp.Response.StatusCode, whoAmIUrl.String())
-			}
-
-			err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
 }
 
 func (client *Client) UpdateEnvironment(ctx context.Context, environmentId string, environment EnvironmentDto) (*EnvironmentDto, error) {
@@ -473,12 +436,12 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
 	values.Add("api-version", "2022-05-01")
 	apiUrl.RawQuery = values.Encode()
-	_, err := client.Api.Execute(ctx, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
+	_, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
+	err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
 	if err != nil {
 		return nil, err
 	}
@@ -496,7 +459,7 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 					return nil, err
 				}
 				tflog.Info(ctx, "Environment State: '"+createdEnv.Properties.States.Management.Id+"'")
-				err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
+				err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
 				if err != nil {
 					return nil, err
 				}
@@ -523,7 +486,7 @@ func (client *Client) GetEnvironments(ctx context.Context) ([]EnvironmentDto, er
 	apiUrl.RawQuery = values.Encode()
 
 	envArray := environmentArrayDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &envArray)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &envArray)
 	if err != nil {
 		return nil, err
 	}
@@ -566,7 +529,7 @@ func (client *Client) ValidateEnvironmentDetails(ctx context.Context, location, 
 		EnvironmentLocation: location,
 	}
 
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, envDetails, []int{http.StatusOK}, nil)
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, envDetails, []int{http.StatusOK}, nil)
 	if err != nil {
 		return err
 	}

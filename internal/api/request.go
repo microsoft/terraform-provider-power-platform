@@ -14,12 +14,90 @@ import (
 	"net/http"
 	"runtime"
 	"strings"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/common"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-func (client *Client) BuildCorrelationHeaders(ctx context.Context) (requestId string, correlationContext string) {
+func (client *Client) doRequest(ctx context.Context, token *string, request *http.Request, headers http.Header) (*Response, error) {
+	if headers != nil {
+		request.Header = headers
+	}
+
+	if token == nil || *token == "" {
+		return nil, errors.New("token is empty")
+	}
+
+	if request.Header.Get("Content-Type") == "" {
+		request.Header.Set("Content-Type", "application/json")
+	}
+
+	httpClient := http.DefaultClient
+
+	if request.Header["Authorization"] == nil {
+		request.Header.Set("Authorization", "Bearer "+*token)
+	}
+
+	if !client.GetConfig().TelemetryOptout {
+		ua := client.buildUserAgent(ctx)
+		request.Header.Set("User-Agent", ua)
+
+		rid, cc := client.buildCorrelationHeaders(ctx)
+		request.Header.Set("Request-Id", rid)
+		request.Header.Set("Correlation-Context", cc)
+	}
+
+	apiResponse, err := httpClient.Do(request)
+
+	resp := &Response{
+		HttpResponse: apiResponse,
+	}
+
+	if err != nil {
+		return resp, err
+	}
+
+	defer apiResponse.Body.Close()
+	body, err := io.ReadAll(apiResponse.Body)
+	resp.BodyAsBytes = body
+
+	return resp, err
+}
+
+type Response struct {
+	HttpResponse *http.Response
+	BodyAsBytes  []byte
+}
+
+func (apiResponse *Response) MarshallTo(obj any) error {
+	err := json.NewDecoder(bytes.NewReader(apiResponse.BodyAsBytes)).Decode(&obj)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (apiResponse *Response) GetHeader(name string) string {
+	return apiResponse.HttpResponse.Header.Get(name)
+}
+
+func retryAfter(ctx context.Context, resp *http.Response) time.Duration {
+	retryHeader := resp.Header.Get(constants.HEADER_RETRY_AFTER)
+	tflog.Debug(ctx, "Retry Header: "+retryHeader)
+
+	retryAfter, err := time.ParseDuration(retryHeader)
+	if err != nil {
+		// default retry after 5-10 seconds
+		return time.Duration((rand.Intn(5) + 5)) * time.Second
+	}
+
+	return retryAfter
+}
+
+func (client *Client) buildCorrelationHeaders(ctx context.Context) (requestId string, correlationContext string) {
 	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
 	if ok {
 		cc := strings.Join([]string{
@@ -43,79 +121,4 @@ func (client *Client) buildUserAgent(ctx context.Context) string {
 	}
 
 	return userAgent
-}
-
-func (client *Client) doRequest(ctx context.Context, token *string, request *http.Request, headers http.Header) (*HttpResponse, error) {
-	apiHttpResponse := &HttpResponse{}
-	if headers != nil {
-		request.Header = headers
-	}
-
-	if token == nil || *token == "" {
-		return nil, errors.New("token is empty")
-	}
-
-	if request.Header.Get("Content-Type") == "" {
-		request.Header.Set("Content-Type", "application/json")
-	}
-
-	httpClient := http.DefaultClient
-
-	if request.Header["Authorization"] == nil {
-		request.Header.Set("Authorization", "Bearer "+*token)
-	}
-
-	if !client.GetConfig().TelemetryOptout {
-		ua := client.buildUserAgent(ctx)
-		request.Header.Set("User-Agent", ua)
-
-		rid, cc := client.BuildCorrelationHeaders(ctx)
-		request.Header.Set("Request-Id", rid)
-		request.Header.Set("Correlation-Context", cc)
-	}
-
-	response, err := httpClient.Do(request)
-	apiHttpResponse.Response = response
-	if err != nil {
-		return apiHttpResponse, err
-	}
-
-	body, err := io.ReadAll(response.Body)
-	apiHttpResponse.BodyAsBytes = body
-	if err != nil {
-		return apiHttpResponse, err
-	}
-	defer response.Body.Close()
-
-	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		if len(body) != 0 {
-			return apiHttpResponse, fmt.Errorf("status: %d, message: %s", response.StatusCode, string(body))
-		}
-		return apiHttpResponse, fmt.Errorf("status: %d", response.StatusCode)
-	}
-	return apiHttpResponse, nil
-}
-
-type HttpResponse struct {
-	Response    *http.Response
-	BodyAsBytes []byte
-}
-
-func (apiResponse *HttpResponse) MarshallTo(obj any) error {
-	err := json.NewDecoder(bytes.NewReader(apiResponse.BodyAsBytes)).Decode(&obj)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (apiResponse *HttpResponse) GetHeader(name string) string {
-	return apiResponse.Response.Header.Get(name)
-}
-
-func (apiResponse *HttpResponse) ValidateStatusCode(expectedStatusCode int) error {
-	if apiResponse.Response.StatusCode != expectedStatusCode {
-		return fmt.Errorf("expected status code: %d, recieved: %d", expectedStatusCode, apiResponse.Response.StatusCode)
-	}
-	return nil
 }

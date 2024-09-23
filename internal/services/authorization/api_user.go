@@ -5,6 +5,7 @@ package authorization
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -14,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func newUserClient(apiClient *api.Client) client {
@@ -46,7 +47,7 @@ func (client *client) GetUsers(ctx context.Context, environmentId string) ([]use
 		Path:   "/api/data/v9.2/systemusers",
 	}
 	userArray := userDtoArray{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &userArray)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &userArray)
 	if err != nil {
 		return nil, err
 	}
@@ -68,10 +69,11 @@ func (client *client) GetUserBySystemUserId(ctx context.Context, environmentId, 
 	apiUrl.RawQuery = values.Encode()
 
 	user := userDto{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with systemUserId %s not found", systemUserId))
+		var unexpectedError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &unexpectedError) && unexpectedError.StatusCode == http.StatusNotFound {
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with systemUserId %s not found", systemUserId))
 		}
 		return nil, err
 	}
@@ -94,10 +96,11 @@ func (client *client) GetUserByAadObjectId(ctx context.Context, environmentId, a
 	apiUrl.RawQuery = values.Encode()
 
 	user := userDtoArray{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with aadObjectId %s not found", aadObjectId))
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with aadObjectId %s not found", aadObjectId))
 		}
 
 		return nil, err
@@ -123,7 +126,7 @@ func (client *client) CreateUser(ctx context.Context, environmentId, aadObjectId
 	retryCount := 6 * 9
 	err := fmt.Errorf("")
 	for retryCount > 0 {
-		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, userToCreate, []int{http.StatusOK}, nil)
+		_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, userToCreate, []int{http.StatusOK}, nil)
 		// the license assignment in Entra is async, so we need to wait for that to happen if a user is created in the same terraform run.
 		if err == nil || !strings.Contains(err.Error(), "userNotLicensed") {
 			break
@@ -159,7 +162,7 @@ func (client *client) UpdateUser(ctx context.Context, environmentId, systemUserI
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
 	}
 
-	_, err = client.Api.Execute(ctx, "PATCH", apiUrl.String(), nil, userUpdate, []int{http.StatusOK}, nil)
+	_, err = client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, userUpdate, []int{http.StatusOK}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +185,7 @@ func (client *client) DeleteUser(ctx context.Context, environmentId, systemUserI
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
 	}
 
-	_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 	if err != nil {
 		return err
 	}
@@ -205,7 +208,7 @@ func (client *client) RemoveSecurityRoles(ctx context.Context, environmentId, sy
 		values.Add("$id", fmt.Sprintf("https://%s/api/data/v9.2/roles(%s)", environmentHost, roleId))
 		apiUrl.RawQuery = values.Encode()
 
-		_, err = client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+		_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -233,7 +236,7 @@ func (client *client) AddSecurityRoles(ctx context.Context, environmentId, syste
 		roleToassociate := map[string]any{
 			"@odata.id": fmt.Sprintf("https://%s/api/data/v9.2/roles(%s)", environmentHost, roleId),
 		}
-		_, err = client.Api.Execute(ctx, "POST", apiUrl.String(), nil, roleToassociate, []int{http.StatusNoContent}, nil)
+		_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, roleToassociate, []int{http.StatusNoContent}, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -252,7 +255,7 @@ func (client *client) GetEnvironmentHostById(ctx context.Context, environmentId 
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
-		return "", helpers.WrapIntoProviderError(nil, helpers.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+		return "", customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
 	}
 	envUrl, err := url.Parse(environmentUrl)
 	if err != nil {
@@ -273,10 +276,11 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 	apiUrl.RawQuery = values.Encode()
 
 	env := environmentIdDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
 		}
 		return nil, err
 	}
@@ -300,11 +304,12 @@ func (client *client) GetSecurityRoles(ctx context.Context, environmentId, busin
 		apiUrl.RawQuery = values.Encode()
 	}
 	securityRoleArray := securityRoleDtoArray{}
-	_, err = client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &securityRoleArray)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &securityRoleArray)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
 			tflog.Debug(ctx, fmt.Sprintf("Error getting security roles: %s", err.Error()))
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, "security roles not found")
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, "security roles not found")
 		}
 		return nil, err
 	}

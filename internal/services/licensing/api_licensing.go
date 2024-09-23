@@ -5,15 +5,15 @@ package licensing
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func NewLicensingClient(apiClient *api.Client) Client {
@@ -38,7 +38,7 @@ func (client *Client) GetBillingPolicies(ctx context.Context) ([]BillingPolicyDt
 	apiUrl.RawQuery = values.Encode()
 
 	policies := BillingPolicyArrayDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policies)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policies)
 
 	return policies.Value, err
 }
@@ -55,10 +55,11 @@ func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*
 	apiUrl.RawQuery = values.Encode()
 
 	policy := BillingPolicyDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 
-	if err != nil && strings.ContainsAny(err.Error(), "404") {
-		return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+	var httpError *customerrors.UnexpectedHttpStatusCodeError
+	if err != nil && errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
+		return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
 	}
 	return &policy, err
 }
@@ -75,7 +76,7 @@ func (client *Client) CreateBillingPolicy(ctx context.Context, policyToCreate bi
 	apiUrl.RawQuery = values.Encode()
 
 	policy := &BillingPolicyDto{}
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, policyToCreate, []int{http.StatusCreated}, policy)
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, policyToCreate, []int{http.StatusCreated}, policy)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +105,7 @@ func (client *Client) UpdateBillingPolicy(ctx context.Context, billingId string,
 	apiUrl.RawQuery = values.Encode()
 
 	policy := &BillingPolicyDto{}
-	_, err := client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, policyToUpdate, []int{http.StatusOK}, policy)
+	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, policyToUpdate, []int{http.StatusOK}, policy)
 
 	// If billing policy status is not Enabled or Disabled, wait for it to reach a terminal state
 	if policy.Status != "Enabled" && policy.Status != "Disabled" {
@@ -129,7 +130,7 @@ func (client *Client) DeleteBillingPolicy(ctx context.Context, billingId string)
 	values.Add("api-version", "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 
 	return err
 }
@@ -146,10 +147,11 @@ func (client *Client) GetEnvironmentsForBillingPolicy(ctx context.Context, billi
 	apiUrl.RawQuery = values.Encode()
 
 	billingPolicyEnvironments := BillingPolicyEnvironmentsArrayResponseDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &billingPolicyEnvironments)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &billingPolicyEnvironments)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
 		}
 		return nil, err
 	}
@@ -178,7 +180,7 @@ func (client *Client) AddEnvironmentsToBillingPolicy(ctx context.Context, billin
 	environments := BillingPolicyEnvironmentsArrayDto{
 		EnvironmentIds: environmentIds,
 	}
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environments, []int{http.StatusOK}, nil)
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environments, []int{http.StatusOK}, nil)
 
 	return err
 }
@@ -200,7 +202,7 @@ func (client *Client) RemoveEnvironmentsToBillingPolicy(ctx context.Context, bil
 	environments := BillingPolicyEnvironmentsArrayDto{
 		EnvironmentIds: environmentIds,
 	}
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environments, []int{http.StatusOK}, nil)
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environments, []int{http.StatusOK}, nil)
 
 	return err
 }
@@ -219,7 +221,7 @@ func (client *Client) DoWaitForFinalStatus(ctx context.Context, billingPolicyDto
 			return billingPolicy, nil
 		}
 
-		err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
+		err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
 		if err != nil {
 			return nil, err
 		}

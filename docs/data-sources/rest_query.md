@@ -57,7 +57,7 @@ data "powerplatform_rest_query" "webapi_query" {
 ### Optional
 
 - `body` (String) Body of the request
-- `expected_http_status` (List of Number) Expected HTTP status code. If the response status code does not match any of the expected status codes, the operation will fail.
+- `expected_http_status` (Set of Number) Expected HTTP status code. If the response status code does not match any of the expected status codes, the operation will fail.
 - `headers` (Attributes List) Headers of the request (see [below for nested schema](#nestedatt--headers))
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 

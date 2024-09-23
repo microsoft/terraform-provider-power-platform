@@ -34,7 +34,7 @@ func (client *client) CreateEnvironmentGroup(ctx context.Context, environmentGro
 	apiUrl.RawQuery = values.Encode()
 
 	newEnvironmentGroup := environmentGroupDto{}
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, environmentGroup, []int{http.StatusCreated}, &newEnvironmentGroup)
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentGroup, []int{http.StatusCreated}, &newEnvironmentGroup)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (client *client) DeleteEnvironmentGroup(ctx context.Context, environmentGro
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func (client *client) UpdateEnvironmentGroup(ctx context.Context, environmentGro
 	apiUrl.RawQuery = values.Encode()
 
 	updatedEnvironmentGroup := environmentGroupDto{}
-	_, err := client.Api.Execute(ctx, "PUT", apiUrl.String(), nil, environmentGroup, []int{http.StatusOK}, &updatedEnvironmentGroup)
+	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, environmentGroup, []int{http.StatusOK}, &updatedEnvironmentGroup)
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +96,8 @@ func (client *client) GetEnvironmentGroup(ctx context.Context, environmentGroupI
 	apiUrl.RawQuery = values.Encode()
 
 	environmentGroup := environmentGroupDto{}
-	httpResponse, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound}, &environmentGroup)
-	if httpResponse.Response.StatusCode == http.StatusNotFound {
+	httpResponse, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound}, &environmentGroup)
+	if httpResponse.HttpResponse.StatusCode == http.StatusNotFound {
 		return nil, nil
 	} else if err != nil {
 		return nil, err

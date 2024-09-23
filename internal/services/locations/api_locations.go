@@ -5,7 +5,6 @@ package locations
 
 import (
 	"context"
-	"encoding/json"
 	"net/http"
 	"net/url"
 
@@ -28,26 +27,12 @@ func (client *client) GetLocations(ctx context.Context) (locationDto, error) {
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   "/providers/Microsoft.BusinessAppPlatform/locations",
-	}
-	values := url.Values{
-		"api-version": []string{"2023-06-01"},
-	}
-	apiUrl.RawQuery = values.Encode()
-
-	locations := locationDto{}
-
-	response, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
-	if err != nil {
-		return locations, err
+		RawQuery: url.Values{
+			"api-version": []string{"2023-06-01"},
+		}.Encode(),
 	}
 
-	defer response.Response.Body.Close()
-
-	err = json.Unmarshal(response.BodyAsBytes, &locations)
-
-	if err != nil {
-		return locations, err
-	}
-
-	return locations, nil
+	var locations locationDto
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &locations)
+	return locations, err
 }

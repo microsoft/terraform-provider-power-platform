@@ -37,7 +37,7 @@ func (client *client) GetTenant(ctx context.Context) (*tenantDto, error) {
 	apiUrl.RawQuery = values.Encode()
 
 	tenant := tenantDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &tenant)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &tenant)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (client *client) GetTenantSettings(ctx context.Context) (*tenantSettingsDto
 	apiUrl.RawQuery = values.Encode()
 
 	tenantSettings := tenantSettingsDto{}
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, nil, []int{http.StatusOK}, &tenantSettings)
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, nil, []int{http.StatusOK}, &tenantSettings)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func (client *client) UpdateTenantSettings(ctx context.Context, tenantSettings t
 	apiUrl.RawQuery = values.Encode()
 
 	var backendSettings tenantSettingsDto
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, tenantSettings, []int{http.StatusOK}, &backendSettings)
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, tenantSettings, []int{http.StatusOK}, &backendSettings)
 	if err != nil {
 		return nil, err
 	}

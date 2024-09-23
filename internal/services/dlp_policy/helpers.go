@@ -195,7 +195,7 @@ func convertToDlpConnectorGroup(ctx context.Context, diags diag.Diagnostics, cla
 	return connectorGroup
 }
 
-func convertToDlpEnvironment(ctx context.Context, diags diag.Diagnostics, environmentsInPolicy []string) []dlpEnvironmentDto {
+func convertToDlpEnvironment(environmentsInPolicy []string) []dlpEnvironmentDto {
 	environments := make([]dlpEnvironmentDto, 0)
 	for _, environment := range environmentsInPolicy {
 		environments = append(environments, dlpEnvironmentDto{

@@ -34,8 +34,6 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 					}
 				}
 
-
-
 				data "powerplatform_environments" "all" {
 					depends_on = [powerplatform_environment.env]
 				}`,

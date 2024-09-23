@@ -45,7 +45,7 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 	apiUrl.RawQuery = values.Encode()
 
 	env := environmentIdDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (client *client) GetTenantApplications(ctx context.Context) ([]tenantApplic
 
 	application := tenantApplicationArrayDto{}
 
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &application)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &application)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (client *client) GetApplicationsByEnvironmentId(ctx context.Context, enviro
 
 	application := environmentApplicationArrayDto{}
 
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &application)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &application)
 	if err != nil {
 		return nil, err
 	}
@@ -106,13 +106,13 @@ func (client *client) InstallApplicationInEnvironment(ctx context.Context, envir
 	}
 	apiUrl.RawQuery = values.Encode()
 
-	response, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, nil, []int{http.StatusAccepted}, nil)
+	response, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, nil, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return "", err
 	}
 
 	applicationId := ""
-	if response.Response.StatusCode == http.StatusAccepted {
+	if response.HttpResponse.StatusCode == http.StatusAccepted {
 		operationLocationHeader := response.GetHeader(constants.HEADER_OPERATION_LOCATION)
 		tflog.Debug(ctx, "Opeartion Location Header: "+operationLocationHeader)
 
@@ -123,7 +123,7 @@ func (client *client) InstallApplicationInEnvironment(ctx context.Context, envir
 
 		for {
 			lifecycleResponse := environmentApplicationLifecycleDto{}
-			_, err = client.Api.Execute(ctx, "GET", operationLocationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
+			_, err = client.Api.Execute(ctx, nil, "GET", operationLocationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
 			if err != nil {
 				return "", err
 			}
@@ -140,7 +140,7 @@ func (client *client) InstallApplicationInEnvironment(ctx context.Context, envir
 				return "", errors.New("application installation failed. status message: " + lifecycleResponse.Error.Message)
 			}
 		}
-	} else if response.Response.StatusCode == http.StatusCreated {
+	} else if response.HttpResponse.StatusCode == http.StatusCreated {
 		appCreatedResponse := environmentApplicationLifecycleCreatedDto{}
 		err = response.MarshallTo(&appCreatedResponse)
 		if err != nil {

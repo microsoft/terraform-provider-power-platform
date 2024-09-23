@@ -32,7 +32,7 @@ func (client *client) GetTenantCapacity(ctx context.Context, tenantId string) (*
 
 	var dto capacityDto
 
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &dto)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &dto)
 	if err != nil {
 		return nil, err
 	}

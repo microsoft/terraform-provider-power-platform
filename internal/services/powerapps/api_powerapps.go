@@ -43,7 +43,7 @@ func (client *client) GetPowerApps(ctx context.Context, environmentId string) ([
 		apiUrl.RawQuery = values.Encode()
 
 		appsArray := powerAppArrayDto{}
-		_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &appsArray)
+		_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &appsArray)
 		if err != nil {
 			return nil, err
 		}

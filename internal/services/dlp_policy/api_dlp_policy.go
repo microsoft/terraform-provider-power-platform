@@ -5,6 +5,7 @@ package dlp_policy
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -12,7 +13,7 @@ import (
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func newDlpPolicyClient(apiClient *api.Client) client {
@@ -32,7 +33,7 @@ func (client *client) GetPolicies(ctx context.Context) ([]dlpPolicyModelDto, err
 		Path:   "providers/PowerPlatform.Governance/v2/policies",
 	}
 	policiesArray := dlpPolicyDefinitionDtoArray{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policiesArray)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policiesArray)
 	if err != nil {
 		return nil, err
 	}
@@ -45,7 +46,7 @@ func (client *client) GetPolicies(ctx context.Context) ([]dlpPolicyModelDto, err
 			Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", policy.PolicyDefinition.Name),
 		}
 		policy := dlpPolicyDto{}
-		_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
+		_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 		if err != nil {
 			return nil, err
 		}
@@ -65,10 +66,11 @@ func (client *client) GetPolicy(ctx context.Context, name string) (*dlpPolicyMod
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", name),
 	}
 	policy := dlpPolicyDto{}
-	_, err := client.Api.Execute(ctx, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
-			return nil, helpers.WrapIntoProviderError(err, helpers.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("DLP Policy '%s' not found", name))
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("DLP Policy '%s' not found", name))
 		}
 		return nil, err
 	}
@@ -81,7 +83,7 @@ func (client *client) DeletePolicy(ctx context.Context, name string) error {
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v1/policies/%s", name),
 	}
-	_, err := client.Api.Execute(ctx, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return err
 	}
@@ -98,7 +100,7 @@ func (client *client) UpdatePolicy(ctx context.Context, name string, policy dlpP
 	}
 	createdPolicy := dlpPolicyDto{}
 
-	_, err := client.Api.Execute(ctx, "PATCH", apiUrl.String(), nil, policyToCreate, []int{http.StatusOK}, &createdPolicy)
+	_, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, policyToCreate, []int{http.StatusOK}, &createdPolicy)
 	if err != nil {
 		return nil, err
 	}
@@ -248,7 +250,7 @@ func (client *client) CreatePolicy(ctx context.Context, policy dlpPolicyModelDto
 	}
 
 	createdPolicy := dlpPolicyDto{}
-	_, err := client.Api.Execute(ctx, "POST", apiUrl.String(), nil, policyToCreate, []int{http.StatusCreated}, &createdPolicy)
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, policyToCreate, []int{http.StatusCreated}, &createdPolicy)
 	if err != nil {
 		return nil, err
 	}

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -277,7 +278,7 @@ func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resourc
 
 	policy, err := r.DlpPolicyClient.GetPolicy(ctx, state.Id.ValueString())
 	if err != nil {
-		if helpers.Code(err) == helpers.ERROR_OBJECT_NOT_FOUND {
+		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -305,10 +306,9 @@ func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resourc
 func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
+
 	var plan *dataLossPreventionPolicyResourceModel
-
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -322,7 +322,7 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 		CustomConnectorUrlPatternsDefinition: []dlpConnectorUrlPatternsDefinitionDto{},
 	}
 
-	policyToCreate.Environments = convertToDlpEnvironment(ctx, resp.Diagnostics, plan.Environments)
+	policyToCreate.Environments = convertToDlpEnvironment(plan.Environments)
 	policyToCreate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
 	policyToCreate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors))
@@ -375,7 +375,7 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 		ConnectorGroups:                 []dlpConnectorGroupsModelDto{},
 	}
 
-	policyToUpdate.Environments = convertToDlpEnvironment(ctx, resp.Diagnostics, plan.Environments)
+	policyToUpdate.Environments = convertToDlpEnvironment(plan.Environments)
 	policyToUpdate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
 	policyToUpdate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
 	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors))
