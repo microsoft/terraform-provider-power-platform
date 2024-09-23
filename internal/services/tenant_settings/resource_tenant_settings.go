@@ -21,6 +21,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var _ resource.Resource = &TenantSettingsResource{}
@@ -29,22 +30,32 @@ var _ resource.ResourceWithModifyPlan = &TenantSettingsResource{}
 
 func NewTenantSettingsResource() resource.Resource {
 	return &TenantSettingsResource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_tenant_settings",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "tenant_settings",
+		},
 	}
 }
 
 type TenantSettingsResource struct {
+	helpers.TypeInfo
 	TenantSettingClient TenantSettingsClient
-	ProviderTypeName    string
-	TypeName            string
 }
 
 func (r *TenantSettingsResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + r.TypeName
+	// update our own internal storage of the provider type name.
+	r.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = r.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
 func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Manages Power Platform Tenant Settings.",
 		MarkdownDescription: "Manages Power Platform Tenant Settings. Power Platform Tenant Settings are configuration options that apply to the entire tenant. They control various aspects of Power Platform features and behaviors, such as security, data protection, licensing, and more. These settings apply to all environments within your tenant. See [Tenant Settings Overview](https://learn.microsoft.com/power-platform/admin/tenant-settings) for more details.",
@@ -336,7 +347,10 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 }
 
 func (r *TenantSettingsResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 
@@ -355,23 +369,14 @@ func (r *TenantSettingsResource) Configure(ctx context.Context, req resource.Con
 }
 
 func (r *TenantSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	var plan TenantSettingsSourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := plan.Timeouts.Create(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	// Save the original tenant settings in private state
 	originalSettings, erro := r.TenantSettingClient.GetTenantSettings(ctx)
@@ -414,26 +419,17 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
-	tflog.Debug(ctx, fmt.Sprintf("CREATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 	var state TenantSettingsSourceModel
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", r.ProviderTypeName))
 
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	tenantSettings, err := r.TenantSettingClient.GetTenantSettings(ctx)
 	if err != nil {
@@ -461,30 +457,21 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_tenant_settings with id %s", r.ProviderTypeName, newState.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *TenantSettingsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan TenantSettingsSourceModel
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE START: %s", r.ProviderTypeName))
+	var plan TenantSettingsSourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	timeout, diags := plan.Timeouts.Update(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
 
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	plannedDto := convertFromTenantSettingsModel(ctx, plan)
-
+	plannedDto := ConvertFromTenantSettingsModel(ctx, plan)
 	// Preprocessing updates is unfortunately needed because Terraform can not treat a zeroed UUID as a null value.
 	// This captures the case where a UUID is changed from known to zeroed/null.  Zeroed UUIDs come back as null from the API.
 	// The plannedDto remembers what the user intended, and the preprocessedDto is what we will send to the API.
@@ -526,12 +513,12 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	newState, _ := convertFromTenantSettingsDto(*filteredDto, plan.Timeouts)
 	newState.Id = plan.Id
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
-	tflog.Debug(ctx, fmt.Sprintf("UPDATE RESOURCE END: %s", r.ProviderTypeName))
 }
 
 func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	var state TenantSettingsSourceModel
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE START: %s", r.ProviderTypeName))
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -540,16 +527,8 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 
 	resp.Diagnostics.AddWarning("Tenant Settings are not deleted", "Tenant Settings may not be deleted in Power Platform.  Deleting this resource will attempt to restore settings to their previous values and remove this configuration from Terraform state.")
 
-	timeout, diags := state.Timeouts.Delete(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
 
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
-
-	stateDto := convertFromTenantSettingsModel(ctx, state)
+	stateDto := ConvertFromTenantSettingsModel(ctx, state)
 
 	// restore to previous state
 	previousBytes, err := req.Private.GetKey(ctx, "original_settings")
@@ -587,10 +566,16 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 }
 
 func (r *TenantSettingsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *TenantSettingsResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
 	var plan TenantSettingsSourceModel
 	if !req.Plan.Raw.IsNull() {
 		// this is create

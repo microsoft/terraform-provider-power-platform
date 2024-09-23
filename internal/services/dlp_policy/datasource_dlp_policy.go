@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -26,22 +26,33 @@ var (
 
 func NewDataLossPreventionPolicyDataSource() datasource.DataSource {
 	return &DataLossPreventionPolicyDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_data_loss_prevention_policies",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "data_loss_prevention_policies",
+		},
 	}
 }
 
 type DataLossPreventionPolicyDataSource struct {
-	DlpPolicyClient  DlpPolicyClient
-	ProviderTypeName string
-	TypeName         string
+	helpers.TypeInfo
+	DlpPolicyClient DlpPolicyClient
 }
 
 func (d *DataLossPreventionPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + d.TypeName
+	// update our own internal storage of the provider type name.
+	d.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = d.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *DataLossPreventionPolicyDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *DataLossPreventionPolicyDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	connectorSchema := schema.NestedAttributeObject{
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
@@ -236,7 +247,11 @@ func (d *DataLossPreventionPolicyDataSource) Schema(ctx context.Context, _ datas
 }
 
 func (d *DataLossPreventionPolicyDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 
@@ -255,7 +270,10 @@ func (d *DataLossPreventionPolicyDataSource) Configure(ctx context.Context, req 
 }
 
 func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state policiesListDataSourceModel
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
+	var state PoliciesListDataSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POLICIES START: %s_%s", d.ProviderTypeName, d.TypeName))
 
@@ -263,15 +281,6 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	policies, err := d.DlpPolicyClient.GetPolicies(ctx)
 	if err != nil {
@@ -299,10 +308,7 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 		state.Policies = append(state.Policies, policyModel)
 	}
 
-	diags = resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POLICIES END: %s_%s", d.ProviderTypeName, d.TypeName))
-
+	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

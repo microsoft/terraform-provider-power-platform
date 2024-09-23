@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -23,15 +23,15 @@ var (
 
 func NewEnvironmentTemplatesDataSource() datasource.DataSource {
 	return &EnvironmentTemplatesDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_environment_templates",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "environment_templates",
+		},
 	}
 }
 
 type EnvironmentTemplatesDataSource struct {
+	helpers.TypeInfo
 	EnvironmentTemplatesClient EnvironmentTemplatesClient
-	ProviderTypeName           string
-	TypeName                   string
 }
 
 type EnvironmentTemplatesDataSourceModel struct {
@@ -55,10 +55,20 @@ type EnvironmentTemplatesDataModel struct {
 }
 
 func (d *EnvironmentTemplatesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + d.TypeName
+	// update our own internal storage of the provider type name.
+	d.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = d.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *EnvironmentTemplatesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *EnvironmentTemplatesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of Dynamics 365 environment templates.",
 		MarkdownDescription: "Fetches the list of Dynamics 365 environment templates.",
@@ -128,7 +138,11 @@ func (d *EnvironmentTemplatesDataSource) Schema(ctx context.Context, _ datasourc
 }
 
 func (d *EnvironmentTemplatesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 	clientApi := req.ProviderData.(*api.ProviderClient).Api
@@ -144,7 +158,10 @@ func (d *EnvironmentTemplatesDataSource) Configure(ctx context.Context, req data
 }
 
 func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	appendToList := func(items []itemDto, category string, list *[]EnvironmentTemplatesDataModel) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
+	appendToList := func(items []ItemDto, category string, list *[]EnvironmentTemplatesDataModel) {
 		for _, item := range items {
 			*list = append(*list, EnvironmentTemplatesDataModel{
 				Category:                     category,
@@ -162,22 +179,10 @@ func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasourc
 	}
 
 	var state EnvironmentTemplatesDataSourceModel
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT TEMPLATES START: %s", d.ProviderTypeName))
-
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	environment_templates, err := d.EnvironmentTemplatesClient.GetEnvironmentTemplatesByLocation(ctx, state.Location.ValueString())
 	if err != nil {
@@ -202,10 +207,7 @@ func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasourc
 	state.Id = types.Int64Value(int64(len(state.Templates)))
 	state.Location = types.StringValue(state.Location.ValueString())
 
-	diags = resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT TEMPLATES END: %s", d.ProviderTypeName))
-
+	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

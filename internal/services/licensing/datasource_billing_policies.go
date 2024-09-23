@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var (
@@ -23,15 +23,15 @@ var (
 
 func NewBillingPoliciesDataSource() datasource.DataSource {
 	return &BillingPoliciesDataSource{
-		ProviderTypeName: "powerplatform",
-		TypeName:         "_billing_policies",
+		TypeInfo: helpers.TypeInfo{
+			TypeName: "billing_policies",
+		},
 	}
 }
 
 type BillingPoliciesDataSource struct {
-	LicensingClient  Client
-	ProviderTypeName string
-	TypeName         string
+	helpers.TypeInfo
+	LicensingClient Client
 }
 
 type BillingPoliciesListDataSourceModel struct {
@@ -55,10 +55,20 @@ type BillingInstrumentDataSourceModel struct {
 }
 
 func (d *BillingPoliciesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
-	resp.TypeName = req.ProviderTypeName + d.TypeName
+	// update our own internal storage of the provider type name.
+	d.ProviderTypeName = req.ProviderTypeName
+
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
+	// Set the type name for the resource to providername_resourcename.
+	resp.TypeName = d.FullTypeName()
+	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (d *BillingPoliciesDataSource) Schema(ctx context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *BillingPoliciesDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of billing policies in a tenant",
 		MarkdownDescription: "Fetches the list of [billing policies](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy) in a tenant. A billing policy is a set of rules that define how a tenant is billed for usage of Power Platform services. A billing policy is associated with a billing instrument, which is a subscription and resource group that is used to pay for usage of Power Platform services.",
@@ -128,7 +138,11 @@ func (d *BillingPoliciesDataSource) Schema(ctx context.Context, _ datasource.Sch
 }
 
 func (d *BillingPoliciesDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
 
@@ -145,23 +159,15 @@ func (d *BillingPoliciesDataSource) Configure(ctx context.Context, req datasourc
 	d.LicensingClient = NewLicensingClient(clientApi)
 }
 
-func (d *BillingPoliciesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *BillingPoliciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
 	var state BillingPoliciesListDataSourceModel
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE BILLING POLICIES START: %s", d.ProviderTypeName))
-
-	timeout, diags := state.Timeouts.Read(ctx, constants.DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES)
-	if diags != nil {
-		resp.Diagnostics.Append(diags...)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(ctx, timeout)
-	defer cancel()
 
 	policies, err := d.LicensingClient.GetBillingPolicies(ctx)
 
@@ -185,9 +191,7 @@ func (d *BillingPoliciesDataSource) Read(ctx context.Context, _ datasource.ReadR
 	}
 
 	state.Id = types.Int64Value(int64(len(policies)))
-	diags = resp.State.Set(ctx, &state)
-
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE BILLING POLICIES END: %s", d.ProviderTypeName))
+	diags := resp.State.Set(ctx, &state)
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
