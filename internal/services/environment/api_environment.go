@@ -267,7 +267,8 @@ func (client *Client) GetEnvironment(ctx context.Context, environmentId string) 
 	env := Dto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment '%s' not found", environmentId))
 		}
 		return nil, err
@@ -428,46 +429,8 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 		env.Properties.LinkedEnvironmentMetadata.TemplateMetadata = environmentToCreate.Properties.LinkedEnvironmentMetadata.TemplateMetadata
 	}
 
-	// err = client.doWaitForAccess(ctx, env)
-	// if err != nil {
-	// 	return &Dto{}, err
-	// }
-
 	return env, err
 }
-
-// func (client *Client) doWaitForAccess(ctx context.Context, env *Dto) error {
-// 	if env.Properties.LinkedEnvironmentMetadata != nil && env.Properties.LinkedEnvironmentMetadata.InstanceURL != "" {
-// 		envUrl, err := url.Parse(env.Properties.LinkedEnvironmentMetadata.InstanceURL)
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		whoAmIUrl := &url.URL{
-// 			Scheme: constants.HTTPS,
-// 			Host:   envUrl.Host,
-// 			Path:   "/api/data/v9.2/systemusers",
-// 		}
-
-// 		for {
-// 			err = client.Api.SleepWithContext(ctx, client.Api.RetryAfterDefault())
-// 			if err != nil {
-// 				return err
-// 			}
-
-// 			resp, _ := client.Api.Execute(ctx, nil, http.MethodGet, whoAmIUrl.String(), http.Header{}, nil, []int{http.StatusOK, http.StatusUnauthorized}, nil)
-// 			if resp != nil && resp.Response != nil && resp.Response.StatusCode == http.StatusOK {
-// 				break
-// 			}
-
-// 			if resp != nil && resp.Response != nil && resp.Response.StatusCode != http.StatusUnauthorized {
-// 				return fmt.Errorf("unexpected status code %d. %s", resp.Response.StatusCode, whoAmIUrl.String())
-// 			}
-// 		}
-// 	}
-
-// 	return nil
-// }
 
 func (client *Client) UpdateEnvironment(ctx context.Context, environmentId string, environment Dto) (*Dto, error) {
 	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata != nil && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {

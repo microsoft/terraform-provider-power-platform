@@ -5,10 +5,10 @@ package licensing
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
@@ -61,7 +61,8 @@ func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*
 	policy := BillingPolicyDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 
-	if err != nil && strings.ContainsAny(err.Error(), "404") {
+	var httpError *customerrors.UnexpectedHttpStatusCodeError
+	if err != nil && errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
 		return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
 	}
 	return &policy, err
@@ -152,7 +153,8 @@ func (client *Client) GetEnvironmentsForBillingPolicy(ctx context.Context, billi
 	billingPolicyEnvironments := BillingPolicyEnvironmentsArrayResponseDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &billingPolicyEnvironments)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
 		}
 		return nil, err

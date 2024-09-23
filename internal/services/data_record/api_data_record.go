@@ -6,6 +6,7 @@ package data_record
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -206,7 +207,8 @@ func (client *DataRecordClient) GetDataRecord(ctx context.Context, recordId, env
 
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Data Record '%s' not found", recordId))
 		}
 		return nil, err
@@ -548,7 +550,8 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 					Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s(%s)/$ref", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId, key, dataRecordId),
 				}
 				_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
-				if err != nil && !strings.ContainsAny(err.Error(), "404") {
+				var httpError *customerrors.UnexpectedHttpStatusCodeError
+				if err != nil && errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
 					return err
 				}
 			}
@@ -561,7 +564,8 @@ func (client *DataRecordClient) DeleteDataRecord(ctx context.Context, recordId s
 		Path:   fmt.Sprintf("/api/data/%s/%s(%s)", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId),
 	}
 	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
-	if err != nil && !strings.ContainsAny(err.Error(), "404") {
+	var httpError *customerrors.UnexpectedHttpStatusCodeError
+	if err != nil && errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
 		// TODO: 404 is desired state for delete.  We should pass 404 as acceptable status code and not error
 		return err
 	}

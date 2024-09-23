@@ -353,7 +353,8 @@ func (client *Client) getEnvironment(ctx context.Context, environmentId string) 
 	env := EnvironmentIdDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
 		}
 		return nil, err

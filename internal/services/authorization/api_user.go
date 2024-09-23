@@ -98,7 +98,8 @@ func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentI
 	user := UserDtoArray{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with aadObjectId %s not found", aadObjectId))
 		}
 
@@ -277,7 +278,8 @@ func (client *UserClient) getEnvironment(ctx context.Context, environmentId stri
 	env := EnvironmentIdDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
 		}
 		return nil, err
@@ -304,7 +306,8 @@ func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId, b
 	securityRoleArray := SecurityRoleDtoArray{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &securityRoleArray)
 	if err != nil {
-		if strings.ContainsAny(err.Error(), "404") {
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
 			tflog.Debug(ctx, fmt.Sprintf("Error getting security roles: %s", err.Error()))
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, "security roles not found")
 		}
