@@ -13,9 +13,9 @@ import (
 	"math/rand"
 	"net/http"
 	"runtime"
-	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/common"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
@@ -45,9 +45,10 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 		ua := client.buildUserAgent(ctx)
 		request.Header.Set("User-Agent", ua)
 
-		rid, cc := client.buildCorrelationHeaders(ctx)
-		request.Header.Set("Request-Id", rid)
-		request.Header.Set("Correlation-Context", cc)
+		sessionId, requestId := client.buildCorrelationHeaders(ctx)
+		request.Header.Set("X-Correlation-Id", sessionId)
+		request.Header.Set("X-Ms-Client-Session-Id", sessionId)
+		request.Header.Set("X-Ms-Client-Request-Id", requestId)
 	}
 
 	apiResponse, err := httpClient.Do(request)
@@ -97,19 +98,15 @@ func retryAfter(ctx context.Context, resp *http.Response) time.Duration {
 	return retryAfter
 }
 
-func (client *Client) buildCorrelationHeaders(ctx context.Context) (requestId string, correlationContext string) {
+func (client *Client) buildCorrelationHeaders(ctx context.Context) (sessionId string, requestId string) {
+	sessionId = ""
+	requestId = uuid.New().String() // Generate a new request ID for each request
 	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
 	if ok {
-		cc := strings.Join([]string{
-			"objectName=" + requestContext.ObjectName,
-			"requestType=" + requestContext.RequestType,
-		}, ",")
-
-		rid := "|" + requestContext.RequestId + "." + fmt.Sprintf("%016x", rand.Uint64()) + "."
-
-		return rid, cc
+		// If the request context is available, use the session ID from the request context
+		sessionId = requestContext.RequestId
 	}
-	return "", ""
+	return sessionId, requestId
 }
 
 func (client *Client) buildUserAgent(ctx context.Context) string {
