@@ -129,7 +129,7 @@ func TestUnitConnectionsShareResource_Validate_Create(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/connection_shares/Validate_Create/get_connection_shares.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,

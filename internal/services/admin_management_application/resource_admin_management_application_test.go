@@ -61,7 +61,7 @@ func TestUnitAdminManagementApplicationResource_Validate_Create(t *testing.T) {
 	httpmock.RegisterResponder("GET", url, httpmock.NewStringResponder(http.StatusOK, body))
 	httpmock.RegisterResponder("DELETE", url, httpmock.NewStringResponder(http.StatusNoContent, ""))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

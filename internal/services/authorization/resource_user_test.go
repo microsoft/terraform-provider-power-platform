@@ -136,7 +136,7 @@ func TestUnitUserResource_Validate_Create(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create/get_systemuser_00000000-0000-0000-0000-000000000002.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -202,7 +202,7 @@ func TestUnitUserResource_Validate_No_Dataverse(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_No_Dataverse/get_systemuser_00000000-0000-0000-0000-000000000002.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -261,7 +261,7 @@ func TestUnitUserResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_And_Force_Recreate/get_systemuser_00000000-0000-0000-0000-000000000002.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -345,7 +345,7 @@ func TestUnitUserResource_Validate_Create_And_Force_Update(t *testing.T) {
 			return resp, nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -427,7 +427,7 @@ func TestUnitUserResource_Validate_Disable_Delete(t *testing.T) {
 			return resp, nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

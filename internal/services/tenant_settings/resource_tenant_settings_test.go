@@ -15,7 +15,6 @@ import (
 
 func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -161,7 +160,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resources/Validate_Create/post_update_tenant_settings.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -291,7 +290,6 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 
 func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -562,7 +560,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resources/Validate_Update/post_list_tenant_settings_%d.json", listSettingsResponseCount)).String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

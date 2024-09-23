@@ -78,7 +78,7 @@ func TestUnitConnectionsDataSource_Validate_Read(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/connections/Validate_Read/get_connections.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest: true,
 
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,

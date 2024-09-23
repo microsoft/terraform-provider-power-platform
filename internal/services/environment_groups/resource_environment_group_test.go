@@ -58,7 +58,7 @@ func TestUnitEnvirionmentGroupResource_Validate_Create(t *testing.T) {
 		},
 	)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

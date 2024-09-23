@@ -96,7 +96,7 @@ func TestUnitEnvironmentApplicationPackagesDataSource_Validate_Read(t *testing.T
 			return resp, nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -175,7 +175,7 @@ func TestUnitEnvironmentApplicationPackagesDataSource_Validate_No_Dataverse(t *t
 			return resp, nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

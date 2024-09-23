@@ -17,7 +17,6 @@ import (
 
 func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -74,7 +73,6 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 
 func TestAccTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -139,7 +137,7 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -238,7 +236,7 @@ func TestUnitTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T)
 			return resp, nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

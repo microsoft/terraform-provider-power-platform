@@ -100,7 +100,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -314,7 +314,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

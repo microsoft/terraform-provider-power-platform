@@ -248,7 +248,7 @@ func TestUnitDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -387,7 +387,7 @@ func TestUnitDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -473,7 +473,7 @@ func TestUnitDataRecordDatasource_Validate_Top(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -547,7 +547,7 @@ func TestUnitDataRecordDatasource_Validate_Apply(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -569,7 +569,6 @@ func TestUnitDataRecordDatasource_Validate_Apply(t *testing.T) {
 
 func TestAccDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -623,7 +622,7 @@ func TestUnitDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -644,7 +643,6 @@ func TestUnitDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 
 func TestAccDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -702,7 +700,7 @@ func TestUnitDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -724,7 +722,6 @@ func TestUnitDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 
 func TestAccDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -786,7 +783,7 @@ func TestUnitDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -810,7 +807,6 @@ func TestUnitDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 
 func TestAccDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -892,7 +888,7 @@ func TestUnitDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

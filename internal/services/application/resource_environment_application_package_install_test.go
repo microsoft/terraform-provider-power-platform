@@ -118,7 +118,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_Install(t *te
 			return resp, nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -231,7 +231,7 @@ func TestUnitEnvironmentApplicationPackageInstallResource_Validate_No_Dataverse(
 			return resp, nil
 		})
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
