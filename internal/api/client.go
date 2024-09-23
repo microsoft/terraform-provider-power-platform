@@ -49,15 +49,14 @@ func NewApiClientBase(providerConfig *config.ProviderConfig, baseAuth *Auth) *Cl
 }
 
 var retryableStatusCodes = []int{
-	http.StatusUnauthorized,    // 401 is retryable because the token may have expired.
-	http.StatusRequestTimeout,  // 408 is retryable because the request may have timed out.
-	http.StatusTooEarly,        // 425 is retryable because the request may have been rate limited.
-	http.StatusTooManyRequests, // 429 is retryable because the request may have been rate limited.
-	http.StatusInternalServerError,
-	http.StatusBadGateway,
-	http.StatusServiceUnavailable,
-	http.StatusGatewayTimeout,
-	http.StatusTooManyRequests,
+	http.StatusUnauthorized,        // 401 is retryable because the token may have expired.
+	http.StatusRequestTimeout,      // 408 is retryable because the request may have timed out.
+	http.StatusTooEarly,            // 425 is retryable because the request may have been rate limited.
+	http.StatusTooManyRequests,     // 429 is retryable because the request may have been rate limited.
+	http.StatusInternalServerError, // 500 is retryable because the server may be overloaded.
+	http.StatusBadGateway,          // 502 is retryable because the server may be overloaded.
+	http.StatusServiceUnavailable,  // 503 is retryable because the server may be overloaded.
+	http.StatusGatewayTimeout,      // 504 is retryable because the server may be overloaded.
 }
 
 // Execute executes an HTTP request with the given method, url, headers, and body.
