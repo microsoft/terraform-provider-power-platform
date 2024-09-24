@@ -21,16 +21,21 @@ permissions:
   contents: read  # This is required for actions/checkout
 
 jobs:
-  skip-unlabeled-prs:
+  should_run:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'run-acceptance-tests')
+    if: github.event_name != 'pull_request' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-acceptance-tests'))
+    outputs:
+      acceptance_tests: ${{ steps.set_acceptance_tests.outputs.acceptance_tests }}
     steps:
-      - name: Skip acceptance tests due to missing label
-        run: exit 0
+      - id: set_acceptance_tests
+        name: Skip acceptance tests due to missing label
+        run: echo "acceptance_tests=true" >> $GITHUB_ENV
   # ensure go.mod and go.sum are updated
   depscheck:
     name: Check Dependencies
     runs-on: ubuntu-latest
+    needs: should_run
+    if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     steps:
 
     - name: Harden Runner
@@ -59,6 +64,8 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    needs: should_run
+    if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     timeout-minutes: 5
     steps:
 
@@ -87,7 +94,8 @@ jobs:
 
   tests:
     name: Running Test
-    needs: build
+    needs: [build, should_run]
+    if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     runs-on: ubuntu-latest
     steps:
     
