@@ -129,7 +129,7 @@ func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([
 	return solutions, nil
 }
 
-func (client *Client) CreateSolution(ctx context.Context, environmentId string, solutionToCreate importSolutionDto, content []byte, settings []byte) (*SolutionDto, error) {
+func (client *Client) CreateSolution(ctx context.Context, environmentId string, content []byte, settings []byte) (*SolutionDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err

@@ -244,12 +244,6 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 }
 
 func (r *Resource) importSolution(ctx context.Context, plan *ResourceModel, diagnostics *diag.Diagnostics) *SolutionDto {
-	s := importSolutionDto{
-		PublishWorkflows:                 true,
-		OverwriteUnmanagedCustomizations: true,
-		ComponentParameters:              make([]any, 0),
-	}
-
 	solutionContent, err := os.ReadFile(plan.SolutionFile.ValueString())
 	if err != nil {
 		diagnostics.AddError(fmt.Sprintf("Client error when reading solution file %s", plan.SolutionFile.ValueString()), err.Error())
@@ -276,7 +270,7 @@ func (r *Resource) importSolution(ctx context.Context, plan *ResourceModel, diag
 		return nil
 	}
 
-	solution, err := r.SolutionClient.CreateSolution(ctx, plan.EnvironmentId.ValueString(), s, solutionContent, settingsContent)
+	solution, err := r.SolutionClient.CreateSolution(ctx, plan.EnvironmentId.ValueString(), solutionContent, settingsContent)
 	if err != nil {
 		diagnostics.AddError(fmt.Sprintf("Client error when importing solution %s", plan.SolutionFile), err.Error())
 	}

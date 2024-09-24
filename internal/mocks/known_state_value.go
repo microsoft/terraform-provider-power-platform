@@ -46,7 +46,7 @@ func GetStateValue(value *StateValue) GetKnownValue {
 type StateCheckFunc func(a, b *StateValue) error
 
 func TestStateValueMatch(a, b *StateValue, checkFunc StateCheckFunc) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
+	return func(_ *terraform.State) error {
 		return checkFunc(a, b)
 	}
 }

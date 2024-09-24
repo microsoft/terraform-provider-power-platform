@@ -377,7 +377,7 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.NonBusinessConfidentialConnectors))
 	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors))
 
-	policy, err_client := r.DlpPolicyClient.UpdatePolicy(ctx, plan.Id.ValueString(), policyToUpdate)
+	policy, err_client := r.DlpPolicyClient.UpdatePolicy(ctx, policyToUpdate)
 	if err_client != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.TypeName), err_client.Error())
 		return

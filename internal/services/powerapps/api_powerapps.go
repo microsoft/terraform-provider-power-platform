@@ -26,7 +26,7 @@ type client struct {
 	environmentClient environment.Client
 }
 
-func (client *client) GetPowerApps(ctx context.Context, environmentId string) ([]powerAppBapiDto, error) {
+func (client *client) GetPowerApps(ctx context.Context) ([]powerAppBapiDto, error) {
 	envs, err := client.environmentClient.GetEnvironments(ctx)
 	if err != nil {
 		return nil, err

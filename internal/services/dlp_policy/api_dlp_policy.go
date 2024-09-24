@@ -90,7 +90,7 @@ func (client *client) DeletePolicy(ctx context.Context, name string) error {
 	return nil
 }
 
-func (client *client) UpdatePolicy(ctx context.Context, name string, policy dlpPolicyModelDto) (*dlpPolicyModelDto, error) {
+func (client *client) UpdatePolicy(ctx context.Context, policy dlpPolicyModelDto) (*dlpPolicyModelDto, error) {
 	policyToCreate := convertPolicyModelToDlpPolicy(policy)
 
 	apiUrl := &url.URL{

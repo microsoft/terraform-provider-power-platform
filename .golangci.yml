@@ -23,7 +23,9 @@ linters-settings:
       - name: function-length
         disabled: true
       - name: unused-parameter
-        disabled: true
+        disabled: false
+        arguments:
+        - allowRegex: "(ctx|diags|req|resp)"
       - name: cognitive-complexity
         disabled: false
         arguments: [40]

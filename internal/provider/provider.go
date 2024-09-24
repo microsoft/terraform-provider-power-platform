@@ -261,8 +261,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		resp.Diagnostics.AddAttributeError(
 			path.Root("cloud"),
 			"Unknown cloud",
-			"The provider cannot create the API client as there is an unknown configuration value for `cloud`. "+
-				"Either set the value in the provider configuration or use the "+constants.ENV_VAR_POWER_PLATFORM_CLOUD+" environment variable.",
+			fmt.Sprintf("The provider cannot create the API client as there is an unknown configuration value for `cloud`. Either set the value in the provider configuration or use the '%s' environment variable.", constants.ENV_VAR_POWER_PLATFORM_CLOUD),
 		)
 	}
 
