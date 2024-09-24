@@ -6,8 +6,6 @@ on:
      # run at 4 AM UTC every day
      - cron:  '0 4 * * *' 
   pull_request:
-    #  paths:
-    #    - 'go.mod'
   push:
      branches:
        - main
@@ -28,7 +26,7 @@ jobs:
       acceptance_tests: ${{ steps.set_acceptance_tests.outputs.acceptance_tests }}
     steps:
       - id: set_acceptance_tests
-        name: Skip acceptance tests due to missing label
+        name: Only run acceptance tests if necessary
         run: echo "::set-output name=acceptance_tests::true"
   # ensure go.mod and go.sum are updated
   depscheck:
