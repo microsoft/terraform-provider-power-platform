@@ -18,17 +18,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
-func NewUserClient(apiClient *api.Client) UserClient {
-	return UserClient{
+func newUserClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type UserClient struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *UserClient) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
+func (client *client) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return false, err
@@ -36,7 +36,7 @@ func (client *UserClient) DataverseExists(ctx context.Context, environmentId str
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
-func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([]UserDto, error) {
+func (client *client) GetUsers(ctx context.Context, environmentId string) ([]userDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers",
 	}
-	userArray := UserDtoArray{}
+	userArray := userArrayDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &userArray)
 	if err != nil {
 		return nil, err
@@ -54,7 +54,7 @@ func (client *UserClient) GetUsers(ctx context.Context, environmentId string) ([
 	return userArray.Value, nil
 }
 
-func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environmentId, systemUserId string) (*UserDto, error) {
+func (client *client) GetUserBySystemUserId(ctx context.Context, environmentId, systemUserId string) (*userDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -68,7 +68,7 @@ func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environment
 	values.Add("$expand", "systemuserroles_association($select=roleid,name,ismanaged,_businessunitid_value)")
 	apiUrl.RawQuery = values.Encode()
 
-	user := UserDto{}
+	user := userDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
 		var unexpectedError *customerrors.UnexpectedHttpStatusCodeError
@@ -80,7 +80,7 @@ func (client *UserClient) GetUserBySystemUserId(ctx context.Context, environment
 	return &user, nil
 }
 
-func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentId, aadObjectId string) (*UserDto, error) {
+func (client *client) GetUserByAadObjectId(ctx context.Context, environmentId, aadObjectId string) (*userDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentI
 	values.Add("$expand", "systemuserroles_association($select=roleid,name,ismanaged,_businessunitid_value)")
 	apiUrl.RawQuery = values.Encode()
 
-	user := UserDtoArray{}
+	user := userArrayDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
 		var httpError *customerrors.UnexpectedHttpStatusCodeError
@@ -108,7 +108,7 @@ func (client *UserClient) GetUserByAadObjectId(ctx context.Context, environmentI
 	return &user.Value[0], nil
 }
 
-func (client *UserClient) CreateUser(ctx context.Context, environmentId, aadObjectId string) (*UserDto, error) {
+func (client *client) CreateUser(ctx context.Context, environmentId, aadObjectId string) (*userDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -151,7 +151,7 @@ func (client *UserClient) CreateUser(ctx context.Context, environmentId, aadObje
 	return user, nil
 }
 
-func (client *UserClient) UpdateUser(ctx context.Context, environmentId, systemUserId string, userUpdate *UserDto) (*UserDto, error) {
+func (client *client) UpdateUser(ctx context.Context, environmentId, systemUserId string, userUpdate *userDto) (*userDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func (client *UserClient) UpdateUser(ctx context.Context, environmentId, systemU
 	return user, nil
 }
 
-func (client *UserClient) DeleteUser(ctx context.Context, environmentId, systemUserId string) error {
+func (client *client) DeleteUser(ctx context.Context, environmentId, systemUserId string) error {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return err
@@ -192,7 +192,7 @@ func (client *UserClient) DeleteUser(ctx context.Context, environmentId, systemU
 	return nil
 }
 
-func (client *UserClient) RemoveSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*UserDto, error) {
+func (client *client) RemoveSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*userDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -221,7 +221,7 @@ func (client *UserClient) RemoveSecurityRoles(ctx context.Context, environmentId
 	return user, nil
 }
 
-func (client *UserClient) AddSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*UserDto, error) {
+func (client *client) AddSecurityRoles(ctx context.Context, environmentId, systemUserId string, securityRolesIds []string) (*userDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -248,7 +248,7 @@ func (client *UserClient) AddSecurityRoles(ctx context.Context, environmentId, s
 	return user, nil
 }
 
-func (client *UserClient) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
+func (client *client) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.getEnvironment(ctx, environmentId)
 	if err != nil {
 		return "", err
@@ -264,7 +264,7 @@ func (client *UserClient) GetEnvironmentHostById(ctx context.Context, environmen
 	return envUrl.Host, nil
 }
 
-func (client *UserClient) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
+func (client *client) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -275,7 +275,7 @@ func (client *UserClient) getEnvironment(ctx context.Context, environmentId stri
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	env := EnvironmentIdDto{}
+	env := environmentIdDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		var httpError *customerrors.UnexpectedHttpStatusCodeError
@@ -288,7 +288,7 @@ func (client *UserClient) getEnvironment(ctx context.Context, environmentId stri
 	return &env, nil
 }
 
-func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId, businessUnitId string) ([]SecurityRoleDto, error) {
+func (client *client) GetSecurityRoles(ctx context.Context, environmentId, businessUnitId string) ([]securityRoleDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -303,7 +303,7 @@ func (client *UserClient) GetSecurityRoles(ctx context.Context, environmentId, b
 		values.Add("$filter", fmt.Sprintf("_businessunitid_value eq %s", businessUnitId))
 		apiUrl.RawQuery = values.Encode()
 	}
-	securityRoleArray := SecurityRoleDtoArray{}
+	securityRoleArray := securityRoleArrayDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &securityRoleArray)
 	if err != nil {
 		var httpError *customerrors.UnexpectedHttpStatusCodeError

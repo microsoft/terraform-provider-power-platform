@@ -41,7 +41,6 @@ data "powerplatform_environment_templates" "all_environment_templates_by_locatio
 
 ### Optional
 
-- `id` (Number) Id of the read operation
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

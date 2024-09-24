@@ -6,7 +6,6 @@ package application
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -28,43 +27,6 @@ func NewTenantApplicationPackagesDataSource() datasource.DataSource {
 			TypeName: "tenant_application_packages",
 		},
 	}
-}
-
-type TenantApplicationPackagesDataSource struct {
-	helpers.TypeInfo
-	ApplicationClient Client
-}
-
-type TenantApplicationPackagesListDataSourceModel struct {
-	Timeouts      timeouts.Value                            `tfsdk:"timeouts"`
-	Name          types.String                              `tfsdk:"name"`
-	PublisherName types.String                              `tfsdk:"publisher_name"`
-	Id            types.String                              `tfsdk:"id"`
-	Applications  []TenantApplicationPackageDataSourceModel `tfsdk:"applications"`
-}
-
-type TenantApplicationPackageDataSourceModel struct {
-	ApplicationId          types.String                                   `tfsdk:"application_id"`
-	ApplicationDescprition types.String                                   `tfsdk:"application_descprition"`
-	Name                   types.String                                   `tfsdk:"application_name"`
-	LearnMoreUrl           types.String                                   `tfsdk:"learn_more_url"`
-	LocalizedDescription   types.String                                   `tfsdk:"localized_description"`
-	LocalizedName          types.String                                   `tfsdk:"localized_name"`
-	PublisherId            types.String                                   `tfsdk:"publisher_id"`
-	PublisherName          types.String                                   `tfsdk:"publisher_name"`
-	UniqueName             types.String                                   `tfsdk:"unique_name"`
-	ApplicationVisibility  types.String                                   `tfsdk:"application_visibility"`
-	CatalogVisibility      types.String                                   `tfsdk:"catalog_visibility"`
-	LastError              []TenantApplicationErrorDetailsDataSourceModel `tfsdk:"last_error"`
-}
-
-type TenantApplicationErrorDetailsDataSourceModel struct {
-	ErrorCode  types.String `tfsdk:"error_code"`
-	ErrorName  types.String `tfsdk:"error_name"`
-	Message    types.String `tfsdk:"message"`
-	Source     types.String `tfsdk:"source"`
-	StatusCode types.Int64  `tfsdk:"status_code"`
-	Type       types.String `tfsdk:"type"`
 }
 
 func (d *TenantApplicationPackagesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -89,10 +51,6 @@ func (d *TenantApplicationPackagesDataSource) Schema(ctx context.Context, req da
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.StringAttribute{
-				Description: "Id of the read operation",
-				Optional:    true,
-			},
 			"name": schema.StringAttribute{
 				Description: "Name of the Dynamics 365 application",
 				Optional:    true,
@@ -225,7 +183,7 @@ func (d *TenantApplicationPackagesDataSource) Configure(ctx context.Context, req
 
 		return
 	}
-	d.ApplicationClient = NewApplicationClient(clientApi)
+	d.ApplicationClient = newApplicationClient(clientApi)
 }
 
 func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -243,8 +201,6 @@ func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req data
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
-
-	state.Id = types.StringValue(strconv.Itoa(len(applications)))
 
 	for _, application := range applications {
 		if (state.Name.ValueString() != "" && state.Name.ValueString() != application.ApplicationName) ||

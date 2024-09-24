@@ -32,11 +32,6 @@ func NewEnvironmentsDataSource() datasource.DataSource {
 	}
 }
 
-type EnvironmentsDataSource struct {
-	helpers.TypeInfo
-	EnvironmentClient Client
-}
-
 func (d *EnvironmentsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	d.ProviderTypeName = req.ProviderTypeName
@@ -59,11 +54,6 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.Int64Attribute{
-				Description:         "Id of the read operation",
-				MarkdownDescription: "Id of the read operation",
-				Computed:            true,
-			},
 			"environments": schema.ListNestedAttribute{
 				Description:         "List of environments",
 				MarkdownDescription: "List of environments",
@@ -254,14 +244,13 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 			currencyCode = defaultCurrency.IsoCurrencyCode
 		}
 
-		env, err := ConvertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil, timeouts.Value{})
+		env, err := convertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil, timeouts.Value{})
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Error when converting environment %s", env.DisplayName), err.Error())
 			return
 		}
 		state.Environments = append(state.Environments, *env)
 	}
-	state.Id = types.Int64Value(int64(len(envs)))
 
 	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)

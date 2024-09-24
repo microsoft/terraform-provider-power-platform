@@ -29,31 +29,6 @@ func NewEnvironmentTemplatesDataSource() datasource.DataSource {
 	}
 }
 
-type EnvironmentTemplatesDataSource struct {
-	helpers.TypeInfo
-	EnvironmentTemplatesClient EnvironmentTemplatesClient
-}
-
-type EnvironmentTemplatesDataSourceModel struct {
-	Timeouts  timeouts.Value                  `tfsdk:"timeouts"`
-	Id        types.Int64                     `tfsdk:"id"`
-	Location  types.String                    `tfsdk:"location"`
-	Templates []EnvironmentTemplatesDataModel `tfsdk:"environment_templates"`
-}
-
-type EnvironmentTemplatesDataModel struct {
-	Category                     string `tfsdk:"category"`
-	ID                           string `tfsdk:"id"`
-	Name                         string `tfsdk:"name"`
-	DisplayName                  string `tfsdk:"display_name"`
-	Location                     string `tfsdk:"location"`
-	IsDisabled                   bool   `tfsdk:"is_disabled"`
-	DisabledReasonCode           string `tfsdk:"disabled_reason_code"`
-	DisabledReasonMessage        string `tfsdk:"disabled_reason_message"`
-	IsCustomerEngagement         bool   `tfsdk:"is_customer_engagement"`
-	IsSupportedForResetOperation bool   `tfsdk:"is_supported_for_reset_operation"`
-}
-
 func (d *EnvironmentTemplatesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	d.ProviderTypeName = req.ProviderTypeName
@@ -76,10 +51,6 @@ func (d *EnvironmentTemplatesDataSource) Schema(ctx context.Context, req datasou
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.Int64Attribute{
-				Description: "Id of the read operation",
-				Optional:    true,
-			},
 			"location": schema.StringAttribute{
 				Description: "Location of the environment templates",
 				Required:    true,
@@ -154,14 +125,14 @@ func (d *EnvironmentTemplatesDataSource) Configure(ctx context.Context, req data
 
 		return
 	}
-	d.EnvironmentTemplatesClient = NewEnvironmentTemplatesClient(clientApi)
+	d.EnvironmentTemplatesClient = newEnvironmentTemplatesClient(clientApi)
 }
 
 func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 
-	appendToList := func(items []ItemDto, category string, list *[]EnvironmentTemplatesDataModel) {
+	appendToList := func(items []itemDto, category string, list *[]EnvironmentTemplatesDataModel) {
 		for _, item := range items {
 			*list = append(*list, EnvironmentTemplatesDataModel{
 				Category:                     category,
@@ -204,7 +175,6 @@ func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasourc
 	appendToList(environment_templates.Teams, "teams", &state.Templates)
 	appendToList(environment_templates.Platform, "platform", &state.Templates)
 
-	state.Id = types.Int64Value(int64(len(state.Templates)))
 	state.Location = types.StringValue(state.Location.ValueString())
 
 	diags := resp.State.Set(ctx, &state)

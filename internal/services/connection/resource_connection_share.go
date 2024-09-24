@@ -32,26 +32,6 @@ func NewConnectionShareResource() resource.Resource {
 	}
 }
 
-type ShareResource struct {
-	helpers.TypeInfo
-	ConnectionsClient ConnectionsClient
-}
-
-type ShareResourceModel struct {
-	Timeouts      timeouts.Value              `tfsdk:"timeouts"`
-	Id            types.String                `tfsdk:"id"`
-	EnvironmentId types.String                `tfsdk:"environment_id"`
-	ConnectorName types.String                `tfsdk:"connector_name"`
-	ConnectionId  types.String                `tfsdk:"connection_id"`
-	RoleName      types.String                `tfsdk:"role_name"`
-	Principal     SharePrincipalResourceModel `tfsdk:"principal"`
-}
-
-type SharePrincipalResourceModel struct {
-	EntraObjectId types.String `tfsdk:"entra_object_id"`
-	DisplayName   types.String `tfsdk:"display_name"`
-}
-
 func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName
@@ -156,7 +136,7 @@ func (r *ShareResource) Configure(ctx context.Context, req resource.ConfigureReq
 
 		return
 	}
-	r.ConnectionsClient = NewConnectionsClient(clientApi)
+	r.ConnectionsClient = newConnectionsClient(clientApi)
 }
 
 func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -186,7 +166,7 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		resp.Diagnostics.AddError("Error getting connection share", "Connection share not found")
 	}
 
-	state := ConvertFromConnectionResourceSharesDto(plan, share)
+	state := convertFromConnectionResourceSharesDto(plan, share)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -212,7 +192,7 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		resp.Diagnostics.AddError("Error getting connection share", "Connection share not found")
 	}
 
-	newState := ConvertFromConnectionResourceSharesDto(state, share)
+	newState := convertFromConnectionResourceSharesDto(state, share)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
@@ -232,13 +212,13 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	share := ShareConnectionRequestDto{
-		Put: []ShareConnectionRequestPutDto{
+	share := shareConnectionRequestDto{
+		Put: []shareConnectionRequestPutDto{
 			{
-				Properties: ShareConnectionRequestPutPropertiesDto{
+				Properties: shareConnectionRequestPutPropertiesDto{
 					RoleName:     plan.RoleName.ValueString(),
 					Capabilities: []any{},
-					Principal: ShareConnectionRequestPutPropertiesPrincipalDto{
+					Principal: shareConnectionRequestPutPropertiesPrincipalDto{
 						Id:       plan.Principal.EntraObjectId.ValueString(),
 						Type:     "ServicePrincipal",
 						TenantId: nil,
@@ -247,7 +227,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 				},
 			},
 		},
-		Delete: []ShareConnectionRequestDeleteDto{},
+		Delete: []shareConnectionRequestDeleteDto{},
 	}
 
 	err := r.ConnectionsClient.UpdateConnectionShare(ctx, plan.EnvironmentId.ValueString(), plan.ConnectorName.ValueString(), plan.ConnectionId.ValueString(), share)
@@ -265,7 +245,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		resp.Diagnostics.AddError("Error getting connection share", "Connection share not found")
 	}
 
-	newState := ConvertFromConnectionResourceSharesDto(plan, newShare)
+	newState := convertFromConnectionResourceSharesDto(plan, newShare)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
@@ -294,7 +274,7 @@ func (r *ShareResource) ImportState(ctx context.Context, req resource.ImportStat
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func ConvertFromConnectionResourceSharesDto(oldPlan *ShareResourceModel, connection *ShareConnectionResponseDto) ShareResourceModel {
+func convertFromConnectionResourceSharesDto(oldPlan *ShareResourceModel, connection *shareConnectionResponseDto) ShareResourceModel {
 	share := ShareResourceModel{
 		Timeouts:      oldPlan.Timeouts,
 		EnvironmentId: oldPlan.EnvironmentId,

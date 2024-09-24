@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"os"
 
-	azcloud "github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
@@ -52,16 +52,10 @@ type PowerPlatformProvider struct {
 }
 
 func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func() provider.Provider {
+	cloudUrls, cloudConfig := getCloudPublicUrls()
 	providerConfig := config.ProviderConfig{
-		Urls: config.ProviderConfigUrls{
-			BapiUrl:            constants.PUBLIC_BAPI_DOMAIN,
-			PowerAppsUrl:       constants.PUBLIC_POWERAPPS_API_DOMAIN,
-			PowerAppsScope:     constants.PUBLIC_POWERAPPS_SCOPE,
-			PowerPlatformUrl:   constants.PUBLIC_POWERPLATFORM_API_DOMAIN,
-			PowerPlatformScope: constants.PUBLIC_POWERPLATFORM_API_SCOPE,
-			LicensingUrl:       constants.PUBLIC_LICENSING_API_DOMAIN,
-		},
-		Cloud:            azcloud.AzurePublic,
+		Urls:             *cloudUrls,
+		Cloud:            *cloudConfig,
 		TerraformVersion: "unknown",
 		TelemetryOptout:  false,
 	}
@@ -182,24 +176,24 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	}
 
 	// Get Provider Configuration from the configuration, environment variables, or defaults.
-	cloud := helpers.GetConfigString(ctx, configValue.Cloud, "POWER_PLATFORM_CLOUD", "public")
-	tenantId := helpers.GetConfigString(ctx, configValue.TenantId, "POWER_PLATFORM_TENANT_ID", "")
-	clientId := helpers.GetConfigString(ctx, configValue.ClientId, "POWER_PLATFORM_CLIENT_ID", "")
-	clientSecret := helpers.GetConfigString(ctx, configValue.ClientSecret, "POWER_PLATFORM_CLIENT_SECRET", "")
-	useOidc := helpers.GetConfigBool(ctx, configValue.UseOidc, "POWER_PLATFORM_USE_OIDC", false)
-	useCli := helpers.GetConfigBool(ctx, configValue.UseCli, "POWER_PLATFORM_USE_CLI", false)
-	clientCertificate := helpers.GetConfigString(ctx, configValue.ClientCertificate, "POWER_PLATFORM_CLIENT_CERTIFICATE", "")
-	clientCertificateFilePath := helpers.GetConfigString(ctx, configValue.ClientCertificateFilePath, "POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH", "")
-	clientCertificatePassword := helpers.GetConfigString(ctx, configValue.ClientCertificatePassword, "POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD", "")
+	cloudType := helpers.GetConfigString(ctx, configValue.Cloud, constants.ENV_VAR_POWER_PLATFORM_CLOUD, "public")
+	tenantId := helpers.GetConfigString(ctx, configValue.TenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID, "")
+	clientId := helpers.GetConfigString(ctx, configValue.ClientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID, "")
+	clientSecret := helpers.GetConfigString(ctx, configValue.ClientSecret, constants.ENV_VAR_POWER_PLATFORM_CLIENT_SECRET, "")
+	useOidc := helpers.GetConfigBool(ctx, configValue.UseOidc, constants.ENV_VAR_POWER_PLATFORM_USE_OIDC, false)
+	useCli := helpers.GetConfigBool(ctx, configValue.UseCli, constants.ENV_VAR_POWER_PLATFORM_USE_CLI, false)
+	clientCertificate := helpers.GetConfigString(ctx, configValue.ClientCertificate, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE, "")
+	clientCertificateFilePath := helpers.GetConfigString(ctx, configValue.ClientCertificateFilePath, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH, "")
+	clientCertificatePassword := helpers.GetConfigString(ctx, configValue.ClientCertificatePassword, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD, "")
 
 	// Check for AzDO and GitHub environment variables
-	oidcRequestUrl := helpers.GetConfigMultiString(ctx, configValue.OidcRequestUrl, []string{"ARM_OIDC_REQUEST_URL", "ACTIONS_ID_TOKEN_REQUEST_URL"}, "")
-	oidcRequestToken := helpers.GetConfigMultiString(ctx, configValue.OidcRequestToken, []string{"ARM_OIDC_REQUEST_TOKEN", "ACTIONS_ID_TOKEN_REQUEST_TOKEN"}, "")
-	oidcToken := helpers.GetConfigString(ctx, configValue.OidcToken, "ARM_OIDC_TOKEN", "")
-	oidcTokenFilePath := helpers.GetConfigString(ctx, configValue.OidcTokenFilePath, "ARM_OIDC_TOKEN_FILE_PATH", "")
+	oidcRequestUrl := helpers.GetConfigMultiString(ctx, configValue.OidcRequestUrl, []string{constants.ENV_VAR_ARM_OIDC_REQUEST_URL, constants.ENV_VAR_ACTIONS_ID_TOKEN_REQUEST_URL}, "")
+	oidcRequestToken := helpers.GetConfigMultiString(ctx, configValue.OidcRequestToken, []string{constants.ENV_VAR_ARM_OIDC_REQUEST_TOKEN, constants.ENV_VAR_ACTIONS_ID_TOKEN_REQUEST_TOKEN}, "")
+	oidcToken := helpers.GetConfigString(ctx, configValue.OidcToken, constants.ENV_VAR_ARM_OIDC_TOKEN, "")
+	oidcTokenFilePath := helpers.GetConfigString(ctx, configValue.OidcTokenFilePath, constants.ENV_VAR_ARM_OIDC_TOKEN_FILE_PATH, "")
 
 	// Check for telemetry opt out
-	telemetryOptOut := helpers.GetConfigBool(ctx, configValue.TelemetryOptout, "POWER_PLATFORM_TELEMETRY_OPTOUT", false)
+	telemetryOptOut := helpers.GetConfigBool(ctx, configValue.TelemetryOptout, constants.ENV_VAR_POWER_PLATFORM_TELEMETRY_OPTOUT, false)
 
 	// Set the configuration values
 
@@ -210,8 +204,8 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.UseCli = true
 	} else if useOidc {
 		tflog.Info(ctx, "Using OpenID Connect for authentication")
-		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
-		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
+		validateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
+		validateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID)
 
 		p.Config.UseOidc = true
 		p.Config.TenantId = tenantId
@@ -222,8 +216,8 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.OidcTokenFilePath = oidcTokenFilePath
 	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
 		tflog.Info(ctx, "Using client certificate for authentication")
-		ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
-		ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
+		validateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
+		validateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID)
 
 		cert, err := helpers.GetCertificateRawFromCertOrFilePath(clientCertificate, clientCertificateFilePath)
 		if err != nil {
@@ -240,84 +234,39 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 			p.Config.ClientId = clientId
 			p.Config.ClientSecret = clientSecret
 		} else {
-			ValidateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, "POWER_PLATFORM_TENANT_ID")
-			ValidateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, "POWER_PLATFORM_CLIENT_ID")
-			ValidateProviderAttribute(resp, path.Root("client_secret"), "client secret", clientSecret, "POWER_PLATFORM_CLIENT_SECRET")
+			validateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
+			validateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID)
+			validateProviderAttribute(resp, path.Root("client_secret"), "client secret", clientSecret, constants.ENV_VAR_POWER_PLATFORM_CLIENT_SECRET)
 		}
 	}
 
-	switch cloud {
+	var providerConfigUrls *config.ProviderConfigUrls
+	var cloudConfiguration *cloud.Configuration
+	switch cloudType {
 	case "public":
-		p.Config.Urls.BapiUrl = constants.PUBLIC_BAPI_DOMAIN
-		p.Config.Urls.PowerAppsUrl = constants.PUBLIC_POWERAPPS_API_DOMAIN
-		p.Config.Urls.PowerAppsScope = constants.PUBLIC_POWERAPPS_SCOPE
-		p.Config.Urls.PowerPlatformUrl = constants.PUBLIC_POWERPLATFORM_API_DOMAIN
-		p.Config.Urls.PowerPlatformScope = constants.PUBLIC_POWERPLATFORM_API_SCOPE
-		p.Config.Urls.LicensingUrl = constants.PUBLIC_LICENSING_API_DOMAIN
-		p.Config.Cloud = azcloud.AzurePublic
+		providerConfigUrls, cloudConfiguration = getCloudPublicUrls()
 	case "gcc":
-		p.Config.Urls.BapiUrl = constants.USGOV_BAPI_DOMAIN
-		p.Config.Urls.PowerAppsUrl = constants.USGOV_POWERAPPS_API_DOMAIN
-		p.Config.Urls.PowerAppsScope = constants.USGOV_POWERAPPS_SCOPE
-		p.Config.Urls.PowerPlatformUrl = constants.USGOV_POWERPLATFORM_API_DOMAIN
-		p.Config.Urls.PowerPlatformScope = constants.USGOV_POWERPLATFORM_API_SCOPE
-		p.Config.Urls.LicensingUrl = constants.USGOV_LICENSING_API_DOMAIN
-		p.Config.Cloud = azcloud.AzurePublic // GCC uses public cloud for authentication.
+		providerConfigUrls, cloudConfiguration = getGccUrls()
 	case "gcchigh":
-		p.Config.Urls.BapiUrl = constants.USGOVHIGH_BAPI_DOMAIN
-		p.Config.Urls.PowerAppsUrl = constants.USGOVHIGH_POWERAPPS_API_DOMAIN
-		p.Config.Urls.PowerAppsScope = constants.USGOVHIGH_POWERAPPS_SCOPE
-		p.Config.Urls.PowerPlatformUrl = constants.USGOVHIGH_POWERPLATFORM_API_DOMAIN
-		p.Config.Urls.PowerPlatformScope = constants.USGOVHIGH_POWERPLATFORM_API_SCOPE
-		p.Config.Urls.LicensingUrl = constants.USGOVHIGH_LICENSING_API_DOMAIN
-		p.Config.Cloud = azcloud.AzureGovernment
+		providerConfigUrls, cloudConfiguration = getGccHighUrls()
 	case "dod":
-		p.Config.Urls.BapiUrl = constants.USDOD_BAPI_DOMAIN
-		p.Config.Urls.PowerAppsUrl = constants.USDOD_POWERAPPS_API_DOMAIN
-		p.Config.Urls.PowerAppsScope = constants.USDOD_POWERAPPS_SCOPE
-		p.Config.Urls.PowerPlatformUrl = constants.USDOD_POWERPLATFORM_API_DOMAIN
-		p.Config.Urls.PowerPlatformScope = constants.USDOD_POWERPLATFORM_API_SCOPE
-		p.Config.Urls.LicensingUrl = constants.USDOD_LICENSING_API_DOMAIN
-		p.Config.Cloud = azcloud.AzureGovernment
+		providerConfigUrls, cloudConfiguration = getDodUrls()
 	case "china":
-		p.Config.Urls.BapiUrl = constants.CHINA_BAPI_DOMAIN
-		p.Config.Urls.PowerAppsUrl = constants.CHINA_POWERAPPS_API_DOMAIN
-		p.Config.Urls.PowerAppsScope = constants.CHINA_POWERAPPS_SCOPE
-		p.Config.Urls.PowerPlatformUrl = constants.CHINA_POWERPLATFORM_API_DOMAIN
-		p.Config.Urls.PowerPlatformScope = constants.CHINA_POWERPLATFORM_API_SCOPE
-		p.Config.Urls.LicensingUrl = constants.CHINA_LICENSING_API_DOMAIN
-		p.Config.Cloud = azcloud.AzureChina
+		providerConfigUrls, cloudConfiguration = getChinaUrls()
 	case "ex":
-		p.Config.Urls.BapiUrl = constants.EX_BAPI_DOMAIN
-		p.Config.Urls.PowerAppsUrl = constants.EX_POWERAPPS_API_DOMAIN
-		p.Config.Urls.PowerAppsScope = constants.EX_POWERAPPS_SCOPE
-		p.Config.Urls.PowerPlatformUrl = constants.EX_POWERPLATFORM_API_DOMAIN
-		p.Config.Urls.PowerPlatformScope = constants.EX_POWERPLATFORM_API_SCOPE
-		p.Config.Urls.LicensingUrl = constants.EX_LICENSING_API_DOMAIN
-		p.Config.Cloud = azcloud.Configuration{
-			ActiveDirectoryAuthorityHost: constants.EX_AUTHORITY_HOST,
-			Services:                     map[azcloud.ServiceName]azcloud.ServiceConfiguration{},
-		}
+		providerConfigUrls, cloudConfiguration = getExUrls()
 	case "rx":
-		p.Config.Urls.BapiUrl = constants.RX_BAPI_DOMAIN
-		p.Config.Urls.PowerAppsUrl = constants.RX_POWERAPPS_API_DOMAIN
-		p.Config.Urls.PowerAppsScope = constants.RX_POWERAPPS_SCOPE
-		p.Config.Urls.PowerPlatformUrl = constants.RX_POWERPLATFORM_API_DOMAIN
-		p.Config.Urls.PowerPlatformScope = constants.RX_POWERPLATFORM_API_SCOPE
-		p.Config.Urls.LicensingUrl = constants.RX_LICENSING_API_DOMAIN
-		p.Config.Cloud = azcloud.Configuration{
-			ActiveDirectoryAuthorityHost: constants.RX_AUTHORITY_HOST,
-			Services:                     map[azcloud.ServiceName]azcloud.ServiceConfiguration{},
-		}
+		providerConfigUrls, cloudConfiguration = getRxUrls()
 	default:
 		resp.Diagnostics.AddAttributeError(
 			path.Root("cloud"),
 			"Unknown cloud",
-			"The provider cannot create the API client as there is an unknown configuration value for `cloud`. "+
-				"Either set the value in the provider configuration or use the POWER_PLATFORM_CLOUD environment variable.",
+			fmt.Sprintf("The provider cannot create the API client as there is an unknown configuration value for `cloud`. Either set the value in the provider configuration or use the '%s' environment variable.", constants.ENV_VAR_POWER_PLATFORM_CLOUD),
 		)
 	}
 
+	p.Config.Urls = *providerConfigUrls
+	p.Config.Cloud = *cloudConfiguration
 	p.Config.TelemetryOptout = telemetryOptOut
 	p.Config.TerraformVersion = req.TerraformVersion
 
@@ -377,7 +326,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 	}
 }
 
-func ValidateProviderAttribute(resp *provider.ConfigureResponse, attrPath path.Path, name, value string, environmentVariableName string) {
+func validateProviderAttribute(resp *provider.ConfigureResponse, attrPath path.Path, name, value string, environmentVariableName string) {
 	environmentVariableText := "Target apply the source of the value first, set the value statically in the configuration."
 	if environmentVariableName != "" {
 		environmentVariableText = fmt.Sprintf("Either target apply the source of the value first, set the value statically in the configuration, or use the %s environment variable.", environmentVariableName)
@@ -402,4 +351,87 @@ func MultiEnvDefaultFunc(ks []string) string {
 		}
 	}
 	return ""
+}
+
+func getCloudPublicUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
+	return &config.ProviderConfigUrls{
+		BapiUrl:            constants.PUBLIC_BAPI_DOMAIN,
+		PowerAppsUrl:       constants.PUBLIC_POWERAPPS_API_DOMAIN,
+		PowerAppsScope:     constants.PUBLIC_POWERAPPS_SCOPE,
+		PowerPlatformUrl:   constants.PUBLIC_POWERPLATFORM_API_DOMAIN,
+		PowerPlatformScope: constants.PUBLIC_POWERPLATFORM_API_SCOPE,
+		LicensingUrl:       constants.PUBLIC_LICENSING_API_DOMAIN,
+	}, &cloud.AzurePublic
+}
+
+func getGccUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
+	return &config.ProviderConfigUrls{
+		BapiUrl:            constants.USGOV_BAPI_DOMAIN,
+		PowerAppsUrl:       constants.USGOV_POWERAPPS_API_DOMAIN,
+		PowerAppsScope:     constants.USGOV_POWERAPPS_SCOPE,
+		PowerPlatformUrl:   constants.USGOV_POWERPLATFORM_API_DOMAIN,
+		PowerPlatformScope: constants.USGOV_POWERPLATFORM_API_SCOPE,
+		LicensingUrl:       constants.USGOV_LICENSING_API_DOMAIN,
+	}, &cloud.AzurePublic // GCC uses public cloud for authentication.
+}
+
+func getGccHighUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
+	return &config.ProviderConfigUrls{
+		BapiUrl:            constants.USGOVHIGH_BAPI_DOMAIN,
+		PowerAppsUrl:       constants.USGOVHIGH_POWERAPPS_API_DOMAIN,
+		PowerAppsScope:     constants.USGOVHIGH_POWERAPPS_SCOPE,
+		PowerPlatformUrl:   constants.USGOVHIGH_POWERPLATFORM_API_DOMAIN,
+		PowerPlatformScope: constants.USGOVHIGH_POWERPLATFORM_API_SCOPE,
+		LicensingUrl:       constants.USGOVHIGH_LICENSING_API_DOMAIN,
+	}, &cloud.AzureGovernment
+}
+
+func getDodUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
+	return &config.ProviderConfigUrls{
+		BapiUrl:            constants.USDOD_BAPI_DOMAIN,
+		PowerAppsUrl:       constants.USDOD_POWERAPPS_API_DOMAIN,
+		PowerAppsScope:     constants.USDOD_POWERAPPS_SCOPE,
+		PowerPlatformUrl:   constants.USDOD_POWERPLATFORM_API_DOMAIN,
+		PowerPlatformScope: constants.USDOD_POWERPLATFORM_API_SCOPE,
+		LicensingUrl:       constants.USDOD_LICENSING_API_DOMAIN,
+	}, &cloud.AzureGovernment
+}
+
+func getChinaUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
+	return &config.ProviderConfigUrls{
+		BapiUrl:            constants.CHINA_BAPI_DOMAIN,
+		PowerAppsUrl:       constants.CHINA_POWERAPPS_API_DOMAIN,
+		PowerAppsScope:     constants.CHINA_POWERAPPS_SCOPE,
+		PowerPlatformUrl:   constants.CHINA_POWERPLATFORM_API_DOMAIN,
+		PowerPlatformScope: constants.CHINA_POWERPLATFORM_API_SCOPE,
+		LicensingUrl:       constants.CHINA_LICENSING_API_DOMAIN,
+	}, &cloud.AzureChina
+}
+
+func getExUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
+	return &config.ProviderConfigUrls{
+			BapiUrl:            constants.EX_BAPI_DOMAIN,
+			PowerAppsUrl:       constants.EX_POWERAPPS_API_DOMAIN,
+			PowerAppsScope:     constants.EX_POWERAPPS_SCOPE,
+			PowerPlatformUrl:   constants.EX_POWERPLATFORM_API_DOMAIN,
+			PowerPlatformScope: constants.EX_POWERPLATFORM_API_SCOPE,
+			LicensingUrl:       constants.EX_LICENSING_API_DOMAIN,
+		}, &cloud.Configuration{
+			ActiveDirectoryAuthorityHost: constants.EX_AUTHORITY_HOST,
+			Services:                     map[cloud.ServiceName]cloud.ServiceConfiguration{},
+		}
+}
+
+func getRxUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
+	return &config.ProviderConfigUrls{
+			BapiUrl:            constants.RX_BAPI_DOMAIN,
+			PowerAppsUrl:       constants.RX_POWERAPPS_API_DOMAIN,
+			PowerAppsScope:     constants.RX_POWERAPPS_SCOPE,
+			PowerPlatformUrl:   constants.RX_POWERPLATFORM_API_DOMAIN,
+			PowerPlatformScope: constants.RX_POWERPLATFORM_API_SCOPE,
+			LicensingUrl:       constants.RX_LICENSING_API_DOMAIN,
+		}, &cloud.Configuration{
+			ActiveDirectoryAuthorityHost: constants.RX_AUTHORITY_HOST,
+			Services:                     map[cloud.ServiceName]cloud.ServiceConfiguration{},
+		}
 }

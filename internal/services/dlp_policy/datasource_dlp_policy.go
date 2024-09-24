@@ -6,7 +6,6 @@ package dlp_policy
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -30,11 +29,6 @@ func NewDataLossPreventionPolicyDataSource() datasource.DataSource {
 			TypeName: "data_loss_prevention_policies",
 		},
 	}
-}
-
-type DataLossPreventionPolicyDataSource struct {
-	helpers.TypeInfo
-	DlpPolicyClient DlpPolicyClient
 }
 
 func (d *DataLossPreventionPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -131,11 +125,6 @@ func (d *DataLossPreventionPolicyDataSource) Schema(ctx context.Context, req dat
 				Delete: false,
 				Read:   false,
 			}),
-			"id": schema.StringAttribute{
-				Description:         "Id of the read operation",
-				MarkdownDescription: "Id of the read operation",
-				Computed:            true,
-			},
 			"policies": schema.ListNestedAttribute{
 				Description:         "List of Data Loss Prevention Policies",
 				MarkdownDescription: "List of Data Loss Prevention Policies",
@@ -266,14 +255,14 @@ func (d *DataLossPreventionPolicyDataSource) Configure(ctx context.Context, req 
 		return
 	}
 
-	d.DlpPolicyClient = NewDlpPolicyClient(client)
+	d.DlpPolicyClient = newDlpPolicyClient(client)
 }
 
 func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 
-	var state PoliciesListDataSourceModel
+	var state policiesListDataSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POLICIES START: %s_%s", d.ProviderTypeName, d.TypeName))
 
@@ -288,10 +277,8 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 		return
 	}
 
-	state.Id = types.StringValue(strconv.Itoa(len(policies)))
-
 	for _, policy := range policies {
-		policyModel := DataLossPreventionPolicyDatasourceModel{}
+		policyModel := dataLossPreventionPolicyDatasourceModel{}
 		policyModel.Id = types.StringValue(policy.Name)
 		policyModel.DefaultConnectorsClassification = types.StringValue(policy.DefaultConnectorsClassification)
 		policyModel.DisplayName = types.StringValue(policy.DisplayName)

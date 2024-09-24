@@ -36,7 +36,7 @@ func (client *Client) DataverseExists(ctx context.Context, environmentId string)
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
-func (client *Client) GetSolutionUniqueName(ctx context.Context, environmentId, name string) (*Dto, error) {
+func (client *Client) GetSolutionUniqueName(ctx context.Context, environmentId, name string) (*SolutionDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -52,7 +52,7 @@ func (client *Client) GetSolutionUniqueName(ctx context.Context, environmentId, 
 	values.Add("$filter", fmt.Sprintf("uniquename eq '%s'", name))
 	apiUrl.RawQuery = values.Encode()
 
-	solutions := DtoArray{}
+	solutions := solutionArrayDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutions)
 	if err != nil {
 		return nil, err
@@ -66,7 +66,7 @@ func (client *Client) GetSolutionUniqueName(ctx context.Context, environmentId, 
 	return &solutions.Value[0], nil
 }
 
-func (client *Client) GetSolutionById(ctx context.Context, environmentId, solutionId string) (*Dto, error) {
+func (client *Client) GetSolutionById(ctx context.Context, environmentId, solutionId string) (*SolutionDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -82,7 +82,7 @@ func (client *Client) GetSolutionById(ctx context.Context, environmentId, soluti
 	values.Add("$filter", fmt.Sprintf("solutionid eq %s", solutionId))
 	apiUrl.RawQuery = values.Encode()
 
-	solutions := DtoArray{}
+	solutions := solutionArrayDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutions)
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (client *Client) GetSolutionById(ctx context.Context, environmentId, soluti
 	return &solutions.Value[0], nil
 }
 
-func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([]Dto, error) {
+func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([]SolutionDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -113,7 +113,7 @@ func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([
 	values.Add("$orderby", "createdon desc")
 	apiUrl.RawQuery = values.Encode()
 
-	solutionArray := DtoArray{}
+	solutionArray := solutionArrayDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutionArray)
 	if err != nil {
 		return nil, err
@@ -123,13 +123,13 @@ func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([
 		solutionArray.Value[inx].EnvironmentId = environmentId
 	}
 
-	solutions := make([]Dto, 0)
+	solutions := make([]SolutionDto, 0)
 	solutions = append(solutions, solutionArray.Value...)
 
 	return solutions, nil
 }
 
-func (client *Client) CreateSolution(ctx context.Context, environmentId string, solutionToCreate ImportSolutionDto, content []byte, settings []byte) (*Dto, error) {
+func (client *Client) CreateSolution(ctx context.Context, environmentId string, content []byte, settings []byte) (*SolutionDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -140,7 +140,7 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 		return nil, err
 	}
 
-	stageSolutionRequestBody := StageSolutionImportDto{
+	stageSolutionRequestBody := stageSolutionImportDto{
 		CustomizationFile: base64.StdEncoding.EncodeToString(content),
 	}
 
@@ -150,7 +150,7 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 		Path:   "/api/data/v9.2/StageSolution",
 	}
 
-	stageSolutionResponse := StageSolutionImportResponseDto{}
+	stageSolutionResponse := stageSolutionImportResponseDto{}
 	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, stageSolutionRequestBody, []int{http.StatusOK}, &stageSolutionResponse)
 	if err != nil {
 		return nil, err
@@ -172,11 +172,11 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 		return nil, err
 	}
 
-	importSolutionRequestBody := ImportSolutionDto{
+	importSolutionRequestBody := importSolutionDto{
 		PublishWorkflows:                 true,
 		OverwriteUnmanagedCustomizations: false,
 		ComponentParameters:              solutionComponents,
-		SolutionParameters: ImportSolutionSolutionParametersDto{
+		SolutionParameters: importSolutionSolutionParametersDto{
 			StageSolutionUploadId: stageSolutionResponse.StageSolutionResults.StageSolutionUploadId,
 		},
 	}
@@ -186,7 +186,7 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/ImportSolutionAsync",
 	}
-	importSolutionResponse := ImportSolutionResponseDto{}
+	importSolutionResponse := importSolutionResponseDto{}
 	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, importSolutionRequestBody, []int{http.StatusOK}, &importSolutionResponse)
 	if err != nil {
 		return nil, err
@@ -204,7 +204,7 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 		Path:   fmt.Sprintf("/api/data/v9.2/asyncoperations(%s)", importSolutionResponse.AsyncOperationId),
 	}
 	for {
-		asyncSolutionPullResponse := AsyncSolutionPullResponseDto{}
+		asyncSolutionPullResponse := asyncSolutionPullResponseDto{}
 		_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &asyncSolutionPullResponse)
 		if err != nil {
 			return nil, err
@@ -232,7 +232,7 @@ func (client *Client) createSolutionComponentParameters(settings []byte) ([]any,
 		return nil, nil
 	}
 
-	solutionSettings := Settings{}
+	solutionSettings := solutionSettingsDto{}
 	if settings != nil {
 		err := json.Unmarshal(settings, &solutionSettings)
 		if err != nil {
@@ -242,7 +242,7 @@ func (client *Client) createSolutionComponentParameters(settings []byte) ([]any,
 
 	solutionComponents := make([]any, 0)
 	for _, connectionReferenceComponent := range solutionSettings.ConnectionReferences {
-		solutionComponents = append(solutionComponents, ImportSolutionConnectionReferencesDto{
+		solutionComponents = append(solutionComponents, importSolutionConnectionReferencesDto{
 			Type:                           "Microsoft.Dynamics.CRM.connectionreference",
 			ConnectionId:                   connectionReferenceComponent.ConnectionId,
 			ConnectorId:                    connectionReferenceComponent.ConnectorId,
@@ -253,7 +253,7 @@ func (client *Client) createSolutionComponentParameters(settings []byte) ([]any,
 	}
 	for _, envVariableComponent := range solutionSettings.EnvironmentVariables {
 		if envVariableComponent.Value != "" {
-			solutionComponents = append(solutionComponents, ImportSolutionEnvironmentVariablesDto{
+			solutionComponents = append(solutionComponents, importSolutionEnvironmentVariablesDto{
 				Type:       "Microsoft.Dynamics.CRM.environmentvariablevalue",
 				SchemaName: envVariableComponent.SchemaName,
 				Value:      envVariableComponent.Value,
@@ -274,7 +274,7 @@ func (client *Client) validateSolutionImportResult(ctx context.Context, environm
 		Path:   fmt.Sprintf("/api/data/v9.0/RetrieveSolutionImportResult(ImportJobId=%s)", importJobKey),
 	}
 
-	validateSolutionImportResponseDto := ValidateSolutionImportResponseDto{}
+	validateSolutionImportResponseDto := validateSolutionImportResponseDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &validateSolutionImportResponseDto)
 	if err != nil {
 		return err
@@ -339,7 +339,7 @@ func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId 
 	return envUrl.Host, nil
 }
 
-func (client *Client) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
+func (client *Client) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -350,7 +350,7 @@ func (client *Client) getEnvironment(ctx context.Context, environmentId string) 
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	env := EnvironmentIdDto{}
+	env := environmentIdDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		var httpError *customerrors.UnexpectedHttpStatusCodeError

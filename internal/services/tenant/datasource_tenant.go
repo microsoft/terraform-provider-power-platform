@@ -21,22 +21,6 @@ var (
 	_ datasource.DataSourceWithConfigure = &DataSource{}
 )
 
-type DataSource struct {
-	helpers.TypeInfo
-	TenantClient Client
-}
-
-type DataSourceModel struct {
-	TenantId                         types.String `tfsdk:"tenant_id"`
-	State                            types.String `tfsdk:"state"`
-	Location                         types.String `tfsdk:"location"`
-	AadCountryGeo                    types.String `tfsdk:"aad_country_geo"`
-	DataStorageGeo                   types.String `tfsdk:"data_storage_geo"`
-	DefaultEnvironmentGeo            types.String `tfsdk:"default_environment_geo"`
-	AadDataBoundary                  types.String `tfsdk:"aad_data_boundary"`
-	FedRAMPHighCertificationRequired types.Bool   `tfsdk:"fed_ramp_high_certification_required"`
-}
-
 func NewTenantDataSource() datasource.DataSource {
 	return &DataSource{
 		TypeInfo: helpers.TypeInfo{
@@ -151,5 +135,5 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 		return
 	}
 
-	d.TenantClient = NewTenantClient(client)
+	d.TenantClient = newTenantClient(client)
 }

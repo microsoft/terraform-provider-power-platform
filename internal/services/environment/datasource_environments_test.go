@@ -96,8 +96,6 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 				data "powerplatform_environments" "all" {}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
-
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.#", "2"),
 
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.cadence", "Moderate"),

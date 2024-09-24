@@ -42,7 +42,6 @@ data "powerplatform_tenant_application_packages" "specific_application" {
 
 ### Optional
 
-- `id` (String) Id of the read operation
 - `name` (String) Name of the Dynamics 365 application
 - `publisher_name` (String) Publisher Name of the Dynamics 365 application
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))

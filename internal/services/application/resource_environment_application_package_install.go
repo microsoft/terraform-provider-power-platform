@@ -28,18 +28,6 @@ func NewEnvironmentApplicationPackageInstallResource() resource.Resource {
 	}
 }
 
-type EnvironmentApplicationPackageInstallResource struct {
-	helpers.TypeInfo
-	ApplicationClient Client
-}
-
-type EnvironmentApplicationPackageInstallResourceModel struct {
-	Timeouts      timeouts.Value `tfsdk:"timeouts"`
-	Id            types.String   `tfsdk:"id"`
-	UniqueName    types.String   `tfsdk:"unique_name"`
-	EnvironmentId types.String   `tfsdk:"environment_id"`
-}
-
 func (r *EnvironmentApplicationPackageInstallResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName
@@ -105,7 +93,7 @@ func (r *EnvironmentApplicationPackageInstallResource) Configure(ctx context.Con
 
 		return
 	}
-	r.ApplicationClient = NewApplicationClient(clientApi)
+	r.ApplicationClient = newApplicationClient(clientApi)
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

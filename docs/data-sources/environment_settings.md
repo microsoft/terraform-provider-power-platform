@@ -26,10 +26,6 @@ Power Platform Environment Settings Data Source. Power Platform Settings are con
 - `product` (Attributes) Product (see [below for nested schema](#nestedatt--product))
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
-### Read-Only
-
-- `id` (String) Id of the read operation
-
 <a id="nestedatt--audit_and_logs"></a>
 ### Nested Schema for `audit_and_logs`
 

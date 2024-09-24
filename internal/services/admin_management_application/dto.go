@@ -2,6 +2,6 @@
 // Licensed under the MIT license.
 package admin_management_application
 
-type AdminManagementApplicationDto struct {
+type adminManagementApplicationDto struct {
 	ClientId string `json:"applicationId"`
 }

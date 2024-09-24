@@ -33,7 +33,7 @@ func NewDataverseWebApiResource() resource.Resource {
 
 type DataverseWebApiResource struct {
 	helpers.TypeInfo
-	DataRecordClient WebApiClient
+	DataRecordClient client
 }
 
 type DataverseWebApiResourceModel struct {
@@ -199,7 +199,7 @@ func (r *DataverseWebApiResource) Configure(ctx context.Context, req resource.Co
 		)
 		return
 	}
-	r.DataRecordClient = NewWebApiClient(clientApi)
+	r.DataRecordClient = newWebApiClient(clientApi)
 }
 
 func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

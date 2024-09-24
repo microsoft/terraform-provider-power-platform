@@ -29,17 +29,6 @@ func NewEnvironmentGroupResource() resource.Resource {
 	}
 }
 
-type EnvironmentGroupResource struct {
-	helpers.TypeInfo
-	EnvironmentGroupClient EnvironmentGroupClient
-}
-
-type EnvironmentGroupResourceModel struct {
-	Id          types.String `tfsdk:"id"`
-	DisplayName types.String `tfsdk:"display_name"`
-	Description types.String `tfsdk:"description"`
-}
-
 func (r *EnvironmentGroupResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName
@@ -95,7 +84,7 @@ func (r *EnvironmentGroupResource) Configure(ctx context.Context, req resource.C
 		return
 	}
 
-	r.EnvironmentGroupClient = NewEnvironmentGroupClient(client)
+	r.EnvironmentGroupClient = newEnvironmentGroupClient(client)
 }
 
 // Read function for EnvironmentGroupResource.
@@ -137,7 +126,7 @@ func (r *EnvironmentGroupResource) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	environmentGroupToCreate := EnvironmentGroupDto{
+	environmentGroupToCreate := environmentGroupDto{
 		DisplayName: plan.DisplayName.ValueString(),
 		Description: plan.Description.ValueString(),
 	}
@@ -173,7 +162,7 @@ func (r *EnvironmentGroupResource) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	environmentGroupToUpdate := EnvironmentGroupDto{
+	environmentGroupToUpdate := environmentGroupDto{
 		Id:          plan.Id.ValueString(),
 		DisplayName: plan.DisplayName.ValueString(),
 		Description: plan.Description.ValueString(),

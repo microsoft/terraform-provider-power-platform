@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -30,27 +29,6 @@ func NewConnectionsDataSource() datasource.DataSource {
 			TypeName: "connections",
 		},
 	}
-}
-
-type ConnectionsDataSource struct {
-	helpers.TypeInfo
-	ConnectionsClient ConnectionsClient
-}
-
-type ConnectionsListDataSourceModel struct {
-	Timeouts      timeouts.Value               `tfsdk:"timeouts"`
-	Id            types.String                 `tfsdk:"id"`
-	EnvironmentId types.String                 `tfsdk:"environment_id"`
-	Connections   []ConnectionsDataSourceModel `tfsdk:"connections"`
-}
-
-type ConnectionsDataSourceModel struct {
-	Id                      types.String `tfsdk:"id"`
-	Name                    types.String `tfsdk:"name"`
-	DisplayName             types.String `tfsdk:"display_name"`
-	Status                  []string     `tfsdk:"status"`
-	ConnectionParameters    types.String `tfsdk:"connection_parameters"`
-	ConnectionParametersSet types.String `tfsdk:"connection_parameters_set"`
 }
 
 func (d *ConnectionsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -76,9 +54,6 @@ func (d *ConnectionsDataSource) Schema(ctx context.Context, req datasource.Schem
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
 			"environment_id": schema.StringAttribute{
 				Description:         "Environment Id. The unique identifier of the environment that the connection are associated with.",
 				MarkdownDescription: "Environment Id. The unique identifier of the environment that the connection are associated with.",
@@ -141,7 +116,7 @@ func (d *ConnectionsDataSource) Configure(ctx context.Context, req datasource.Co
 		return
 	}
 
-	d.ConnectionsClient = NewConnectionsClient(client)
+	d.ConnectionsClient = newConnectionsClient(client)
 }
 
 func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -163,8 +138,6 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 		connectionModel := ConvertFromConnectionDto(connection)
 		state.Connections = append(state.Connections, connectionModel)
 	}
-	state.Id = types.StringValue(strconv.Itoa(len(connections)))
-
 	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
@@ -175,7 +148,7 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 }
 
-func ConvertFromConnectionDto(connection Dto) ConnectionsDataSourceModel {
+func ConvertFromConnectionDto(connection connectionDto) ConnectionsDataSourceModel {
 	nameConnectorSplit := strings.Split(connection.Properties.ApiId, "/")
 	nameConnector := nameConnectorSplit[len(nameConnectorSplit)-1]
 

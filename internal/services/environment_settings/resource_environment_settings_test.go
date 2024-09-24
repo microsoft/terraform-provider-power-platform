@@ -17,7 +17,6 @@ import (
 
 func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -74,7 +73,6 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 
 func TestAccTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

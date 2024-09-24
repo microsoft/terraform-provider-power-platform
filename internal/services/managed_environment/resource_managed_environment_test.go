@@ -17,7 +17,6 @@ import (
 
 func TestAccManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -65,7 +64,6 @@ func TestAccManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 
 func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -578,7 +576,6 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 
 func TestAccManagedEnvironmentsResource_Validate_No_Dataverse(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

@@ -3,7 +3,7 @@
 
 package licensing
 
-type BillingPolicyCreateDto struct {
+type billingPolicyCreateDto struct {
 	Location          string               `json:"location"`
 	Name              string               `json:"name"`
 	Status            string               `json:"status"`

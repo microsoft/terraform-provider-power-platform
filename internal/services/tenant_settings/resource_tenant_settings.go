@@ -36,11 +36,6 @@ func NewTenantSettingsResource() resource.Resource {
 	}
 }
 
-type TenantSettingsResource struct {
-	helpers.TypeInfo
-	TenantSettingClient TenantSettingsClient
-}
-
 func (r *TenantSettingsResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName
@@ -365,13 +360,13 @@ func (r *TenantSettingsResource) Configure(ctx context.Context, req resource.Con
 		return
 	}
 
-	r.TenantSettingClient = NewTenantSettingsClient(client)
+	r.TenantSettingClient = newTenantSettingsClient(client)
 }
 
 func (r *TenantSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
-	var plan TenantSettingsSourceModel
+	var plan TenantSettingsResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -403,7 +398,7 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 	}
 
 	// Update tenant settings via the API
-	plannedSettingsDto := ConvertFromTenantSettingsModel(ctx, plan)
+	plannedSettingsDto := convertFromTenantSettingsModel(ctx, plan)
 	tenantSettingsDto, err := r.TenantSettingClient.UpdateTenantSettings(ctx, plannedSettingsDto)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -414,7 +409,7 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 
 	stateDto := applyCorrections(ctx, plannedSettingsDto, *tenantSettingsDto)
 
-	state, _ := ConvertFromTenantSettingsDto(*stateDto, plan.Timeouts)
+	state, _ := convertFromTenantSettingsDto[TenantSettingsResourceModel](*stateDto, plan.Timeouts)
 	state.Id = plan.Id
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
@@ -424,7 +419,7 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
-	var state TenantSettingsSourceModel
+	var state TenantSettingsResourceModel
 
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -447,11 +442,11 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	var configuredSettings TenantSettingsSourceModel
+	var configuredSettings TenantSettingsResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &configuredSettings)...)
-	oldStateDto := ConvertFromTenantSettingsModel(ctx, configuredSettings)
+	oldStateDto := convertFromTenantSettingsModel(ctx, configuredSettings)
 	newStateDto := applyCorrections(ctx, oldStateDto, *tenantSettings)
-	newState, _ := ConvertFromTenantSettingsDto(*newStateDto, state.Timeouts)
+	newState, _ := convertFromTenantSettingsDto[TenantSettingsResourceModel](*newStateDto, state.Timeouts)
 	newState.Id = types.StringValue(tenant.TenantId)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_tenant_settings with id %s", r.ProviderTypeName, newState.Id.ValueString()))
@@ -463,19 +458,18 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan TenantSettingsSourceModel
+	var plan TenantSettingsResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	plannedDto := ConvertFromTenantSettingsModel(ctx, plan)
-
+	plannedDto := convertFromTenantSettingsModel(ctx, plan)
 	// Preprocessing updates is unfortunately needed because Terraform can not treat a zeroed UUID as a null value.
 	// This captures the case where a UUID is changed from known to zeroed/null.  Zeroed UUIDs come back as null from the API.
 	// The plannedDto remembers what the user intended, and the preprocessedDto is what we will send to the API.
-	preprocessedDto := ConvertFromTenantSettingsModel(ctx, plan)
+	preprocessedDto := convertFromTenantSettingsModel(ctx, plan)
 
 	needsProcessing := func(p path.Path) bool {
 		var attrPlan customtypes.UUID
@@ -510,13 +504,13 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	// need to make corrections from what the API returns to match what terraform expects
 	filteredDto := applyCorrections(ctx, plannedDto, *updatedSettingsDto)
 
-	newState, _ := ConvertFromTenantSettingsDto(*filteredDto, plan.Timeouts)
+	newState, _ := convertFromTenantSettingsDto[TenantSettingsResourceModel](*filteredDto, plan.Timeouts)
 	newState.Id = plan.Id
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
 func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state TenantSettingsSourceModel
+	var state TenantSettingsResourceModel
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
@@ -527,7 +521,7 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 
 	resp.Diagnostics.AddWarning("Tenant Settings are not deleted", "Tenant Settings may not be deleted in Power Platform.  Deleting this resource will attempt to restore settings to their previous values and remove this configuration from Terraform state.")
 
-	stateDto := ConvertFromTenantSettingsModel(ctx, state)
+	stateDto := convertFromTenantSettingsModel(ctx, state)
 
 	// restore to previous state
 	previousBytes, err := req.Private.GetKey(ctx, "original_settings")
@@ -538,7 +532,7 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	var originalSettings TenantSettingsDto
+	var originalSettings tenantSettingsDto
 	err2 := json.Unmarshal(previousBytes, &originalSettings)
 	if err2 != nil {
 		resp.Diagnostics.AddError(
@@ -575,7 +569,7 @@ func (r *TenantSettingsResource) ModifyPlan(ctx context.Context, req resource.Mo
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan TenantSettingsSourceModel
+	var plan TenantSettingsResourceModel
 	if !req.Plan.Raw.IsNull() {
 		// this is create
 		req.Plan.Get(ctx, &plan)

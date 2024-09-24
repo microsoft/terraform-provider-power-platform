@@ -114,19 +114,6 @@ type currencyCodeValidatorArrayDto struct {
 }
 
 func currencyCodeValidator(ctx context.Context, client *api.Client, location string, currencyCode string) error {
-	// var parsed struct {
-	// 	Value []struct {
-	// 		Name       string `json:"name"`
-	// 		ID         string `json:"id"`
-	// 		Type       string `json:"type"`
-	// 		Properties struct {
-	// 			Code            string `json:"code"`
-	// 			Symbol          string `json:"symbol"`
-	// 			IsTenantDefault bool   `json:"isTenantDefault"`
-	// 		} `json:"properties"`
-	// 	} `json:"value"`
-	// }
-
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.GetConfig().Urls.BapiUrl,
@@ -253,7 +240,7 @@ func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId 
 	return envUrl.Host, nil
 }
 
-func (client *Client) GetEnvironment(ctx context.Context, environmentId string) (*Dto, error) {
+func (client *Client) GetEnvironment(ctx context.Context, environmentId string) (*EnvironmentDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -264,7 +251,7 @@ func (client *Client) GetEnvironment(ctx context.Context, environmentId string) 
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	env := Dto{}
+	env := EnvironmentDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		var httpError *customerrors.UnexpectedHttpStatusCodeError
@@ -295,7 +282,7 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	environmentDelete := DeleteDto{
+	environmentDelete := enironmentDeleteDto{
 		Code:    "7", // Application.
 		Message: "Deleted using Power Platform Terraform Provider",
 	}
@@ -314,7 +301,7 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 	return nil
 }
 
-func (client *Client) AddDataverseToEnvironment(ctx context.Context, environmentId string, environmentCreateLinkEnvironmentMetadata CreateLinkEnvironmentMetadataDto) (*Dto, error) {
+func (client *Client) AddDataverseToEnvironment(ctx context.Context, environmentId string, environmentCreateLinkEnvironmentMetadata createLinkEnvironmentMetadataDto) (*EnvironmentDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -348,7 +335,7 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 		retryAfter = retryAfter * time.Second
 	}
 	for {
-		lifecycleEnv := Dto{}
+		lifecycleEnv := EnvironmentDto{}
 		lifecycleResponse, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted}, &lifecycleEnv)
 		if err != nil {
 			return nil, err
@@ -370,7 +357,7 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 	}
 }
 
-func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate CreateDto) (*Dto, error) {
+func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate environmentCreateDto) (*EnvironmentDto, error) {
 	if environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Location != "" && environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName != "" {
 		err := client.ValidateEnvironmentDetails(ctx, environmentToCreate.Location, environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName)
 		if err != nil {
@@ -409,7 +396,7 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 			tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
 		}
 	} else if apiResponse.HttpResponse.StatusCode == http.StatusCreated {
-		envCreatedResponse := LifecycleCreatedDto{}
+		envCreatedResponse := lifecycleCreatedDto{}
 		err = apiResponse.MarshallTo(&envCreatedResponse)
 		if err != nil {
 			return nil, err
@@ -422,7 +409,7 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 
 	env, err := client.GetEnvironment(ctx, createdEnvironmentId)
 	if err != nil {
-		return &Dto{}, fmt.Errorf("environment '%s' not found. '%s'", createdEnvironmentId, err)
+		return &EnvironmentDto{}, fmt.Errorf("environment '%s' not found. '%s'", createdEnvironmentId, err)
 	}
 	if env.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates != nil {
 		env.Properties.LinkedEnvironmentMetadata.Templates = environmentToCreate.Properties.LinkedEnvironmentMetadata.Templates
@@ -432,7 +419,7 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 	return env, err
 }
 
-func (client *Client) UpdateEnvironment(ctx context.Context, environmentId string, environment Dto) (*Dto, error) {
+func (client *Client) UpdateEnvironment(ctx context.Context, environmentId string, environment EnvironmentDto) (*EnvironmentDto, error) {
 	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata != nil && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
 		err := client.ValidateEnvironmentDetails(ctx, environment.Location, environment.Properties.LinkedEnvironmentMetadata.DomainName)
 		if err != nil {
@@ -487,7 +474,7 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 	return nil, fmt.Errorf("environment '%s' not found", environmentId)
 }
 
-func (client *Client) GetEnvironments(ctx context.Context) ([]Dto, error) {
+func (client *Client) GetEnvironments(ctx context.Context) ([]EnvironmentDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -498,7 +485,7 @@ func (client *Client) GetEnvironments(ctx context.Context) ([]Dto, error) {
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	envArray := DtoArray{}
+	envArray := environmentArrayDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &envArray)
 	if err != nil {
 		return nil, err
@@ -508,7 +495,7 @@ func (client *Client) GetEnvironments(ctx context.Context) ([]Dto, error) {
 }
 
 func (client *Client) GetDefaultCurrencyForEnvironment(ctx context.Context, environmentId string) (*TransactionCurrencyDto, error) {
-	orgSettings := OrganizationSettingsArrayDto{}
+	orgSettings := organizationSettingsArrayDto{}
 	err := client.solutionClient.GetTableData(ctx, environmentId, "organizations", "", &orgSettings)
 	if err != nil {
 		return nil, err
@@ -516,7 +503,7 @@ func (client *Client) GetDefaultCurrencyForEnvironment(ctx context.Context, envi
 	values := url.Values{}
 	values.Add("$filter", "transactioncurrencyid eq "+orgSettings.Value[0].BaseCurrencyId)
 
-	currencies := TransactionCurrencyArrayDto{}
+	currencies := transactionCurrencyArrayDto{}
 	err = client.solutionClient.GetTableData(ctx, environmentId, "transactioncurrencies", values.Encode(), &currencies)
 	if err != nil {
 		return nil, err
@@ -537,7 +524,7 @@ func (client *Client) ValidateEnvironmentDetails(ctx context.Context, location, 
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	envDetails := ValidateEnvironmentDetailsDto{
+	envDetails := validateEnvironmentDetailsDto{
 		DomainName:          domain,
 		EnvironmentLocation: location,
 	}

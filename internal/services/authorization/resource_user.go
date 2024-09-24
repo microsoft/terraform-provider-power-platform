@@ -34,24 +34,6 @@ func NewUserResource() resource.Resource {
 	}
 }
 
-type UserResource struct {
-	helpers.TypeInfo
-	UserClient UserClient
-}
-
-type UserResourceModel struct {
-	Timeouts          timeouts.Value `tfsdk:"timeouts"`
-	Id                types.String   `tfsdk:"id"`
-	EnvironmentId     types.String   `tfsdk:"environment_id"`
-	AadId             types.String   `tfsdk:"aad_id"`
-	BusinessUnitId    types.String   `tfsdk:"business_unit_id"`
-	SecurityRoles     []string       `tfsdk:"security_roles"`
-	UserPrincipalName types.String   `tfsdk:"user_principal_name"`
-	FirstName         types.String   `tfsdk:"first_name"`
-	LastName          types.String   `tfsdk:"last_name"`
-	DisableDelete     types.Bool     `tfsdk:"disable_delete"`
-}
-
 func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName
@@ -158,7 +140,7 @@ func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequ
 
 		return
 	}
-	r.UserClient = NewUserClient(clientApi)
+	r.UserClient = newUserClient(clientApi)
 }
 
 func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -183,7 +165,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	model := ConvertFromUserDto(userDto, plan.DisableDelete.ValueBool())
+	model := convertFromUserDto(userDto, plan.DisableDelete.ValueBool())
 
 	plan.Id = model.Id
 	plan.AadId = model.AadId
@@ -220,7 +202,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	model := ConvertFromUserDto(userDto, state.DisableDelete.ValueBool())
+	model := convertFromUserDto(userDto, state.DisableDelete.ValueBool())
 
 	state.Id = model.Id
 	state.AadId = model.AadId
@@ -276,7 +258,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		user = userDto
 	}
 
-	model := ConvertFromUserDto(user, plan.DisableDelete.ValueBool())
+	model := convertFromUserDto(user, plan.DisableDelete.ValueBool())
 
 	plan.Id = model.Id
 	plan.AadId = model.AadId

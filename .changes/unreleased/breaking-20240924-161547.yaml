@@ -1,0 +1,5 @@
+kind: breaking
+body: Removed `id` attribute from datasource_tenant_application_packages, datasource_securityroles, datasource_connection_shares, datasource_connections, datasource_connectors, datasource_currencies, datasource_dlp_policy, datasource_environments, datasource_environment_settings, datasource_environment_templates, datasource_languages, datasource_billing_policies, datasource_locations, datasource_environment_powerapps, datasource_solutions, datasource_tenant_settings
+time: 2024-09-24T16:15:47.942526883Z
+custom:
+    Issue: "457"

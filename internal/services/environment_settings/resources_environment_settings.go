@@ -34,11 +34,6 @@ func NewEnvironmentSettingsResource() resource.Resource {
 	}
 }
 
-type EnvironmentSettingsResource struct {
-	helpers.TypeInfo
-	EnvironmentSettingClient EnvironmentSettingsClient
-}
-
 func (r *EnvironmentSettingsResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName
@@ -221,20 +216,20 @@ func (r *EnvironmentSettingsResource) Configure(ctx context.Context, req resourc
 		return
 	}
 
-	r.EnvironmentSettingClient = NewEnvironmentSettingsClient(client)
+	r.EnvironmentSettingClient = newEnvironmentSettingsClient(client)
 }
 
 func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan EnvironmentSettingsSourceModel
+	var plan EnvironmentSettingsResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	settingsToUpdate, err := ConvertFromEnvironmentSettingsModel(ctx, plan)
+	settingsToUpdate, err := convertFromEnvironmentSettingsModel(ctx, plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error converting environment settings model", err.Error())
 		return
@@ -259,7 +254,7 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	var state = ConvertFromEnvironmentSettingsDto(envSettings, plan.Timeouts)
+	var state = convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](envSettings, plan.Timeouts)
 	state.Id = plan.EnvironmentId
 	state.EnvironmentId = plan.EnvironmentId
 
@@ -271,7 +266,7 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state EnvironmentSettingsSourceModel
+	var state EnvironmentSettingsResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -288,7 +283,7 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	var newState = ConvertFromEnvironmentSettingsDto(envSettings, state.Timeouts)
+	var newState = convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](envSettings, state.Timeouts)
 	newState.Id = state.EnvironmentId
 	newState.EnvironmentId = state.EnvironmentId
 
@@ -299,8 +294,8 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan EnvironmentSettingsSourceModel
-	var state EnvironmentSettingsSourceModel
+	var plan EnvironmentSettingsResourceModel
+	var state EnvironmentSettingsResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -316,7 +311,7 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	envSettingsToUpdate, err := ConvertFromEnvironmentSettingsModel(ctx, plan)
+	envSettingsToUpdate, err := convertFromEnvironmentSettingsModel(ctx, plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error converting environment settings model", err.Error())
 		return
@@ -330,7 +325,7 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	plan = ConvertFromEnvironmentSettingsDto(environmentSettings, plan.Timeouts)
+	plan = convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](environmentSettings, plan.Timeouts)
 	plan.Id = state.EnvironmentId
 	plan.EnvironmentId = state.EnvironmentId
 
@@ -340,7 +335,6 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 func (r *EnvironmentSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
-
 	// Do nothing on purpose
 }
 

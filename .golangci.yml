@@ -23,7 +23,9 @@ linters-settings:
       - name: function-length
         disabled: true
       - name: unused-parameter
-        disabled: true
+        disabled: false
+        arguments:
+        - allowRegex: "(ctx|diags|req|resp)"
       - name: cognitive-complexity
         disabled: false
         arguments: [40]
@@ -49,3 +51,4 @@ issues:
     - "ineffectual assignment to ctx"
     - "SA4006: this value of `ctx` is never used"
     - "unused parameter (ctx|diags|req|resp)"
+    - "exported: type name will be used as ([a-zA-Z_]+)\\.([A-Za-z]+)Dto"

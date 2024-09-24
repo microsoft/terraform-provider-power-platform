@@ -29,27 +29,6 @@ func NewLanguagesDataSource() datasource.DataSource {
 	}
 }
 
-type DataSource struct {
-	helpers.TypeInfo
-	LanguagesClient Client
-}
-
-type DataSourceModel struct {
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
-	Id       types.Int64    `tfsdk:"id"`
-	Location types.String   `tfsdk:"location"`
-	Value    []DataModel    `tfsdk:"languages"`
-}
-
-type DataModel struct {
-	Name            string `tfsdk:"name"`
-	ID              string `tfsdk:"id"`
-	DisplayName     string `tfsdk:"display_name"`
-	LocalizedName   string `tfsdk:"localized_name"`
-	LocaleID        int64  `tfsdk:"locale_id"`
-	IsTenantDefault bool   `tfsdk:"is_tenant_default"`
-}
-
 func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	d.ProviderTypeName = req.ProviderTypeName
@@ -72,11 +51,6 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.Int64Attribute{
-				Description:         "Id of the read operation",
-				MarkdownDescription: "Id of the read operation",
-				Optional:            true,
-			},
 			"location": schema.StringAttribute{
 				Description: "Location of the languages",
 				Required:    true,
@@ -135,7 +109,7 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 
 		return
 	}
-	d.LanguagesClient = NewLanguagesClient(clientApi)
+	d.LanguagesClient = newLanguagesClient(clientApi)
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -155,7 +129,6 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		return
 	}
 
-	state.Id = types.Int64Value(int64(len(languages.Value)))
 	state.Location = types.StringValue(state.Location.ValueString())
 
 	for _, language := range languages.Value {

@@ -31,17 +31,6 @@ func NewBillingPolicyEnvironmentResource() resource.Resource {
 	}
 }
 
-type BillingPolicyEnvironmentResource struct {
-	helpers.TypeInfo
-	LicensingClient Client
-}
-
-type BillingPolicyEnvironmentResourceModel struct {
-	Timeouts        timeouts.Value `tfsdk:"timeouts"`
-	BillingPolicyId string         `tfsdk:"billing_policy_id"`
-	Environments    []string       `tfsdk:"environments"`
-}
-
 func (r *BillingPolicyEnvironmentResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName

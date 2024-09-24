@@ -16,7 +16,6 @@ import (
 
 func TestAccLanguagesDataSource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -26,7 +25,6 @@ func TestAccLanguagesDataSource_Validate_Read(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_languages.all_languages_for_unitedstates", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_languages.all_languages_for_unitedstates", "languages.#", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_languages.all_languages_for_unitedstates", "languages.0.id", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_languages.all_languages_for_unitedstates", "languages.0.name", regexp.MustCompile(helpers.StringRegex)),
@@ -58,7 +56,6 @@ func TestUnitLanguagesDataSource_Validate_Read(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_languages.all_languages_for_unitedstates", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestCheckResourceAttr("data.powerplatform_languages.all_languages_for_unitedstates", "languages.#", "45"),
 					resource.TestCheckResourceAttr("data.powerplatform_languages.all_languages_for_unitedstates", "languages.0.id", "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentLanguages/1033"),
 					resource.TestCheckResourceAttr("data.powerplatform_languages.all_languages_for_unitedstates", "languages.0.name", "1033"),

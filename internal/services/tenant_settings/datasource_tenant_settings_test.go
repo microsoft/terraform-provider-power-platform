@@ -16,7 +16,6 @@ import (
 
 func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -24,9 +23,6 @@ func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
 				data "powerplatform_tenant_settings" "settings" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify placeholder id attribute.
-					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "id", regexp.MustCompile("^[0-9a-fA-F]{32}$")),
-
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "disable_capacity_allocation_by_environment_admins", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "disable_environment_creation_by_non_admin_users", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "disable_newsletter_sendout", regexp.MustCompile(helpers.BooleanRegex)),

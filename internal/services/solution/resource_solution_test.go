@@ -48,7 +48,6 @@ func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -93,9 +92,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 	}
 
 	solutionFileChecksum, _ := helpers.CalculateSHA256(SOLUTION_1_NAME)
-
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -255,9 +252,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 
 	solutionFileChecksum, _ := helpers.CalculateSHA256(SOLUTION_1_NAME)
 	settingsFileChecksum, _ := helpers.CalculateSHA256(solutionSettingsFileName)
-
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -508,7 +503,6 @@ func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 	}
 
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

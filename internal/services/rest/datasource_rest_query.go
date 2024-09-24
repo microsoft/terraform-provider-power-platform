@@ -24,22 +24,6 @@ func NewDataverseWebApiDatasource() datasource.DataSource {
 	}
 }
 
-type DataverseWebApiDatasource struct {
-	helpers.TypeInfo
-	DataRecordClient WebApiClient
-}
-
-type DataverseWebApiDatasourceModel struct {
-	Timeouts           timeouts.Value                           `tfsdk:"timeouts"`
-	Scope              types.String                             `tfsdk:"scope"`
-	Method             types.String                             `tfsdk:"method"`
-	Url                types.String                             `tfsdk:"url"`
-	Body               types.String                             `tfsdk:"body"`
-	ExpectedHttpStatus []int                                    `tfsdk:"expected_http_status"`
-	Headers            []DataverseWebApiOperationHeaderResource `tfsdk:"headers"`
-	Output             types.Object                             `tfsdk:"output"`
-}
-
 func (d *DataverseWebApiDatasource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	d.ProviderTypeName = req.ProviderTypeName
@@ -138,7 +122,7 @@ func (d *DataverseWebApiDatasource) Configure(ctx context.Context, req datasourc
 
 		return
 	}
-	d.DataRecordClient = NewWebApiClient(clientApi)
+	d.DataRecordClient = newWebApiClient(clientApi)
 }
 
 func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -151,6 +135,11 @@ func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.Rea
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	// // If the expected status code is not provided, default to 200
+	// if state.ExpectedHttpStatus == nil {
+	// 	state.ExpectedHttpStatus = []int{200}
+	// }
 
 	outputObjectType, err := d.DataRecordClient.SendOperation(ctx, &DataverseWebApiOperation{
 		Scope:              state.Scope,

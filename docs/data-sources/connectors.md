@@ -44,7 +44,6 @@ data "powerplatform_connectors" "all_connectors" {}
 ### Read-Only
 
 - `connectors` (Attributes List) List of Connectors (see [below for nested schema](#nestedatt--connectors))
-- `id` (String) The ID of this resource.
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`

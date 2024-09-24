@@ -20,7 +20,6 @@ import (
 
 func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -281,7 +280,6 @@ func TestUnitDataRecordResource_Validate_Create(t *testing.T) {
 
 func TestAccDataRecordResource_Validate_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -501,7 +499,6 @@ func TestUnitDataRecordResource_Validate_Update(t *testing.T) {
 
 func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -767,7 +764,6 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 	var contactAtIndex2Step2 = &mocks.StateValue{}
 
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

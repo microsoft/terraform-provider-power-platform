@@ -9,7 +9,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -181,11 +180,12 @@ func (client *Auth) AuthenticateOIDC(ctx context.Context, scopes []string) (stri
 		TokenFilePath: client.config.OidcTokenFilePath,
 	})
 
-	if err == nil {
-		creds = append(creds, oidcCred)
-	} else {
-		log.Printf("newDefaultAzureCredential failed to initialize oidc credential:\n\t%s", err.Error())
+	if err != nil {
+		tflog.Error(ctx, fmt.Sprintf("newDefaultAzureCredential failed to initialize oidc credential:\n\t%s", err.Error()))
+		return "", time.Time{}, err
 	}
+	creds = append(creds, oidcCred)
+
 	chain, err := azidentity.NewChainedTokenCredential(creds, nil)
 	if err != nil {
 		return "", time.Time{}, err

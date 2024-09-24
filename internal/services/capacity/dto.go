@@ -3,22 +3,22 @@
 
 package capacity
 
-type Dto struct {
+type capacityDto struct {
 	TenantId         string              `json:"tenantId"`
 	LicenseModelType string              `json:"licenseModelType"`
-	TenantCapacities []TenantCapacityDto `json:"tenantCapacities"`
+	TenantCapacities []tenantCapacityDto `json:"tenantCapacities"`
 }
 
-type TenantCapacityDto struct {
+type tenantCapacityDto struct {
 	CapacityType  string         `json:"capacityType"`
 	CapacityUnits string         `json:"capacityUnits"`
 	TotalCapacity float32        `json:"totalCapacity"`
 	MaxCapacity   float32        `json:"maxCapacity"`
-	Consumption   ConsumptionDto `json:"consumption"`
+	Consumption   consumptionDto `json:"consumption"`
 	Status        string         `json:"status"`
 }
 
-type ConsumptionDto struct {
+type consumptionDto struct {
 	Actual          float32 `json:"actual"`
 	Rated           float32 `json:"rated"`
 	ActualUpdatedOn string  `json:"actualUpdatedOn"`

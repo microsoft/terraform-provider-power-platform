@@ -5,28 +5,28 @@ package authorization
 
 import "github.com/hashicorp/terraform-plugin-framework/types"
 
-type UserDto struct {
+type userDto struct {
 	Id             string            `json:"systemuserid"`
 	DomainName     string            `json:"domainname"`
 	FirstName      string            `json:"firstname"`
 	LastName       string            `json:"lastname"`
 	AadObjectId    string            `json:"azureactivedirectoryobjectid"`
 	BusinessUnitId string            `json:"_businessunitid_value"`
-	SecurityRoles  []SecurityRoleDto `json:"systemuserroles_association,omitempty"`
+	SecurityRoles  []securityRoleDto `json:"systemuserroles_association,omitempty"`
 }
 
-type SecurityRoleDto struct {
+type securityRoleDto struct {
 	RoleId         string `json:"roleid"`
 	Name           string `json:"name"`
 	IsManaged      bool   `json:"ismanaged"`
 	BusinessUnitId string `json:"_businessunitid_value"`
 }
 
-type SecurityRoleDtoArray struct {
-	Value []SecurityRoleDto `json:"value"`
+type securityRoleArrayDto struct {
+	Value []securityRoleDto `json:"value"`
 }
 
-func (u *UserDto) SecurityRolesArray() []string {
+func (u *userDto) securityRolesArray() []string {
 	if len(u.SecurityRoles) == 0 {
 		return []string{}
 	}
@@ -37,29 +37,29 @@ func (u *UserDto) SecurityRolesArray() []string {
 	return roles
 }
 
-type UserDtoArray struct {
-	Value []UserDto `json:"value"`
+type userArrayDto struct {
+	Value []userDto `json:"value"`
 }
 
-type EnvironmentIdDto struct {
+type environmentIdDto struct {
 	Id         string                     `json:"id"`
 	Name       string                     `json:"name"`
-	Properties EnvironmentIdPropertiesDto `json:"properties"`
+	Properties environmentIdPropertiesDto `json:"properties"`
 }
 
-type EnvironmentIdPropertiesDto struct {
-	LinkedEnvironmentMetadata LinkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
+type environmentIdPropertiesDto struct {
+	LinkedEnvironmentMetadata linkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
 }
 
-type LinkedEnvironmentIdMetadataDto struct {
+type linkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }
 
-func ConvertFromUserDto(userDto *UserDto, disableDelete bool) UserResourceModel {
+func convertFromUserDto(userDto *userDto, disableDelete bool) UserResourceModel {
 	model := UserResourceModel{
 		Id:                types.StringValue(userDto.Id),
 		AadId:             types.StringValue(userDto.AadObjectId),
-		SecurityRoles:     userDto.SecurityRolesArray(),
+		SecurityRoles:     userDto.securityRolesArray(),
 		UserPrincipalName: types.StringValue(userDto.DomainName),
 		FirstName:         types.StringValue(userDto.FirstName),
 		LastName:          types.StringValue(userDto.LastName),

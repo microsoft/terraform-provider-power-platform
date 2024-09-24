@@ -27,16 +27,6 @@ func NewAdminManagementApplicationResource() resource.Resource {
 	}
 }
 
-type AdminManagementApplicationResource struct {
-	helpers.TypeInfo
-	AdminManagementApplicationClient AdminManagementApplicationClient
-}
-
-type AdminManagementApplicationResourceModel struct {
-	Timeouts timeouts.Value        `tfsdk:"timeouts"`
-	Id       customtypes.UUIDValue `tfsdk:"id"`
-}
-
 func (r *AdminManagementApplicationResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName
@@ -90,7 +80,7 @@ func (r *AdminManagementApplicationResource) Configure(ctx context.Context, req 
 		return
 	}
 
-	r.AdminManagementApplicationClient = NewAdminManagementApplicationClient(clientApi)
+	r.AdminManagementApplicationClient = newAdminManagementApplicationClient(clientApi)
 }
 
 func (r *AdminManagementApplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

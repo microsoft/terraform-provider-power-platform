@@ -17,17 +17,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
-func NewConnectionsClient(apiClient *api.Client) ConnectionsClient {
-	return ConnectionsClient{
+func newConnectionsClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type ConnectionsClient struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *ConnectionsClient) BuildHostUri(environmentId string) string {
+func (client *client) BuildHostUri(environmentId string) string {
 	envId := strings.ReplaceAll(environmentId, "-", "")
 	realm := string(envId[len(envId)-2:])
 	envId = envId[:len(envId)-2]
@@ -35,7 +35,7 @@ func (client *ConnectionsClient) BuildHostUri(environmentId string) string {
 	return fmt.Sprintf("%s.%s.environment.%s", envId, realm, client.Api.GetConfig().Urls.PowerPlatformUrl)
 }
 
-func (client *ConnectionsClient) CreateConnection(ctx context.Context, environmentId, connectorName string, connectionToCreate CreateDto) (*Dto, error) {
+func (client *client) CreateConnection(ctx context.Context, environmentId, connectorName string, connectionToCreate createDto) (*connectionDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -46,7 +46,7 @@ func (client *ConnectionsClient) CreateConnection(ctx context.Context, environme
 	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
 	apiUrl.RawQuery = values.Encode()
 
-	connection := Dto{}
+	connection := connectionDto{}
 	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, connectionToCreate, []int{http.StatusCreated}, &connection)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (client *ConnectionsClient) CreateConnection(ctx context.Context, environme
 	return &connection, nil
 }
 
-func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environmentId, connectorName, connectionId, displayName string, connParams, connParamsSet map[string]any) (*Dto, error) {
+func (client *client) UpdateConnection(ctx context.Context, environmentId, connectorName, connectionId, displayName string, connParams, connParamsSet map[string]any) (*connectionDto, error) {
 	conn, err := client.GetConnection(ctx, environmentId, connectorName, connectionId)
 	if err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environme
 	conn.Properties.ConnectionParametersSet = connParamsSet
 	conn.Properties.ConnectionParameters = connParams
 
-	updatedConnection := Dto{}
+	updatedConnection := connectionDto{}
 	_, err = client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, conn, []int{http.StatusOK}, &updatedConnection)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (client *ConnectionsClient) UpdateConnection(ctx context.Context, environme
 	return &updatedConnection, nil
 }
 
-func (client *ConnectionsClient) GetConnection(ctx context.Context, environmentId, connectorName, connectionId string) (*Dto, error) {
+func (client *client) GetConnection(ctx context.Context, environmentId, connectorName, connectionId string) (*connectionDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -95,7 +95,7 @@ func (client *ConnectionsClient) GetConnection(ctx context.Context, environmentI
 	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
 	apiUrl.RawQuery = values.Encode()
 
-	connection := Dto{}
+	connection := connectionDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connection)
 	if err != nil {
 		if strings.Contains(err.Error(), "ConnectionNotFound") {
@@ -106,7 +106,7 @@ func (client *ConnectionsClient) GetConnection(ctx context.Context, environmentI
 	return &connection, nil
 }
 
-func (client *ConnectionsClient) GetConnections(ctx context.Context, environmentId string) ([]Dto, error) {
+func (client *client) GetConnections(ctx context.Context, environmentId string) ([]connectionDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -117,7 +117,7 @@ func (client *ConnectionsClient) GetConnections(ctx context.Context, environment
 	values.Add("api-version", "1")
 	apiUrl.RawQuery = values.Encode()
 
-	connetionsArray := DtoArray{}
+	connetionsArray := connectionArrayDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connetionsArray)
 	if err != nil {
 		return nil, err
@@ -126,7 +126,7 @@ func (client *ConnectionsClient) GetConnections(ctx context.Context, environment
 	return connetionsArray.Value, nil
 }
 
-func (client *ConnectionsClient) DeleteConnection(ctx context.Context, environmentId, connectorName, connectionId string) error {
+func (client *client) DeleteConnection(ctx context.Context, environmentId, connectorName, connectionId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -144,7 +144,7 @@ func (client *ConnectionsClient) DeleteConnection(ctx context.Context, environme
 	return nil
 }
 
-func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmentId, connectorName, connectionId, roleName, entraUserObjectId string) error {
+func (client *client) ShareConnection(ctx context.Context, environmentId, connectorName, connectionId, roleName, entraUserObjectId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -155,13 +155,13 @@ func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmen
 	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
 	apiUrl.RawQuery = values.Encode()
 
-	share := ShareConnectionRequestDto{
-		Put: []ShareConnectionRequestPutDto{
+	share := shareConnectionRequestDto{
+		Put: []shareConnectionRequestPutDto{
 			{
-				Properties: ShareConnectionRequestPutPropertiesDto{
+				Properties: shareConnectionRequestPutPropertiesDto{
 					RoleName:     roleName,
 					Capabilities: []any{},
-					Principal: ShareConnectionRequestPutPropertiesPrincipalDto{
+					Principal: shareConnectionRequestPutPropertiesPrincipalDto{
 						Id:       entraUserObjectId,
 						Type:     "ServicePrincipal",
 						TenantId: nil,
@@ -170,7 +170,7 @@ func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmen
 				},
 			},
 		},
-		Delete: []ShareConnectionRequestDeleteDto{},
+		Delete: []shareConnectionRequestDeleteDto{},
 	}
 
 	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
@@ -180,7 +180,7 @@ func (client *ConnectionsClient) ShareConnection(ctx context.Context, environmen
 	return nil
 }
 
-func (client *ConnectionsClient) GetConnectionShares(ctx context.Context, environmentId, connectorName, connectionId string) (*ShareConnectionResponseArrayDto, error) {
+func (client *client) GetConnectionShares(ctx context.Context, environmentId, connectorName, connectionId string) (*shareConnectionResponseArrayDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -191,7 +191,7 @@ func (client *ConnectionsClient) GetConnectionShares(ctx context.Context, enviro
 	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
 	apiUrl.RawQuery = values.Encode()
 
-	share := ShareConnectionResponseArrayDto{}
+	share := shareConnectionResponseArrayDto{}
 
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &share)
 	if err != nil {
@@ -205,7 +205,7 @@ func (client *ConnectionsClient) GetConnectionShares(ctx context.Context, enviro
 	return &share, nil
 }
 
-func (client *ConnectionsClient) GetConnectionShare(ctx context.Context, environmentId, connectorName, connectionId, principalId string) (*ShareConnectionResponseDto, error) {
+func (client *client) GetConnectionShare(ctx context.Context, environmentId, connectorName, connectionId, principalId string) (*shareConnectionResponseDto, error) {
 	shares, err := client.GetConnectionShares(ctx, environmentId, connectorName, connectionId)
 	if err != nil {
 		return nil, err
@@ -213,13 +213,18 @@ func (client *ConnectionsClient) GetConnectionShare(ctx context.Context, environ
 
 	for _, share := range shares.Value {
 		if id, ok := share.Properties.Principal["id"].(string); ok && id == principalId {
+			// if user will try to share with PricipalId that does not exist in Entra, share will get created but displayName will be returned empty in response.
+			displayName, ok := share.Properties.Principal["displayName"].(string)
+			if !ok || displayName == "" {
+				return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Share for principal '%s' not found. Display name is empty", principalId))
+			}
 			return &share, nil
 		}
 	}
 	return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Share for principal '%s' not found", principalId))
 }
 
-func (client *ConnectionsClient) UpdateConnectionShare(ctx context.Context, environmentId, connectorName, connectionId string, share ShareConnectionRequestDto) error {
+func (client *client) UpdateConnectionShare(ctx context.Context, environmentId, connectorName, connectionId string, share shareConnectionRequestDto) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -237,7 +242,7 @@ func (client *ConnectionsClient) UpdateConnectionShare(ctx context.Context, envi
 	return nil
 }
 
-func (client *ConnectionsClient) DeleteConnectionShare(ctx context.Context, environmentId, connectorName, connectionId, shareId string) error {
+func (client *client) DeleteConnectionShare(ctx context.Context, environmentId, connectorName, connectionId, shareId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.BuildHostUri(environmentId),
@@ -248,9 +253,9 @@ func (client *ConnectionsClient) DeleteConnectionShare(ctx context.Context, envi
 	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
 	apiUrl.RawQuery = values.Encode()
 
-	share := ShareConnectionRequestDto{
-		Put: []ShareConnectionRequestPutDto{},
-		Delete: []ShareConnectionRequestDeleteDto{
+	share := shareConnectionRequestDto{
+		Put: []shareConnectionRequestPutDto{},
+		Delete: []shareConnectionRequestDeleteDto{
 			{
 				Id: fmt.Sprintf("/providers/Microsoft.PowerApps/apis/%s/connections/%s/permissions/%s", connectorName, connectionId, shareId),
 			},

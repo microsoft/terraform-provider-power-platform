@@ -569,7 +569,6 @@ func TestUnitDataRecordDatasource_Validate_Apply(t *testing.T) {
 
 func TestAccDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -644,7 +643,6 @@ func TestUnitDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 
 func TestAccDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -724,7 +722,6 @@ func TestUnitDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 
 func TestAccDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -810,7 +807,6 @@ func TestUnitDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 
 func TestAccDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

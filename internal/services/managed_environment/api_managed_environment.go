@@ -15,19 +15,19 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
-func NewManagedEnvironmentClient(apiClient *api.Client) ManagedEnvironmentClient {
-	return ManagedEnvironmentClient{
+func newManagedEnvironmentClient(apiClient *api.Client) client {
+	return client{
 		Api:               apiClient,
 		environmentClient: environment.NewEnvironmentClient(apiClient),
 	}
 }
 
-type ManagedEnvironmentClient struct {
+type client struct {
 	Api               *api.Client
 	environmentClient environment.Client
 }
 
-func (client *ManagedEnvironmentClient) GetManagedEnvironmentSettings(ctx context.Context, environmentId string) (*environment.GovernanceConfigurationDto, error) {
+func (client *client) GetManagedEnvironmentSettings(ctx context.Context, environmentId string) (*environment.GovernanceConfigurationDto, error) {
 	managedEnvSettings, err := client.environmentClient.GetEnvironment(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (client *ManagedEnvironmentClient) GetManagedEnvironmentSettings(ctx contex
 	return &managedEnvSettings.Properties.GovernanceConfiguration, nil
 }
 
-func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Context, managedEnvSettings environment.GovernanceConfigurationDto, environmentId string) error {
+func (client *client) EnableManagedEnvironment(ctx context.Context, managedEnvSettings environment.GovernanceConfigurationDto, environmentId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -60,7 +60,7 @@ func (client *ManagedEnvironmentClient) EnableManagedEnvironment(ctx context.Con
 	return nil
 }
 
-func (client *ManagedEnvironmentClient) DisableManagedEnvironment(ctx context.Context, environmentId string) error {
+func (client *client) DisableManagedEnvironment(ctx context.Context, environmentId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,

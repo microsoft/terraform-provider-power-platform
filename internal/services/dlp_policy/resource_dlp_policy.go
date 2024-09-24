@@ -33,11 +33,6 @@ func NewDataLossPreventionPolicyResource() resource.Resource {
 	}
 }
 
-type DataLossPreventionPolicyResource struct {
-	helpers.TypeInfo
-	DlpPolicyClient DlpPolicyClient
-}
-
 func (r *DataLossPreventionPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName
@@ -262,13 +257,13 @@ func (r *DataLossPreventionPolicyResource) Configure(ctx context.Context, req re
 		return
 	}
 
-	r.DlpPolicyClient = NewDlpPolicyClient(client)
+	r.DlpPolicyClient = newDlpPolicyClient(client)
 }
 
 func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
-	var state *DataLossPreventionPolicyResourceModel
+	var state *dataLossPreventionPolicyResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
@@ -307,24 +302,24 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan *DataLossPreventionPolicyResourceModel
+	var plan *dataLossPreventionPolicyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	policyToCreate := DlpPolicyModelDto{
+	policyToCreate := dlpPolicyModelDto{
 		DefaultConnectorsClassification:      plan.DefaultConnectorsClassification.ValueString(),
 		DisplayName:                          plan.DisplayName.ValueString(),
 		EnvironmentType:                      plan.EnvironmentType.ValueString(),
-		Environments:                         []DlpEnvironmentDto{},
-		ConnectorGroups:                      []DlpConnectorGroupsModelDto{},
-		CustomConnectorUrlPatternsDefinition: []DlpConnectorUrlPatternsDefinitionDto{},
+		Environments:                         []dlpEnvironmentDto{},
+		ConnectorGroups:                      []dlpConnectorGroupsModelDto{},
+		CustomConnectorUrlPatternsDefinition: []dlpConnectorUrlPatternsDefinitionDto{},
 	}
 
 	policyToCreate.Environments = convertToDlpEnvironment(plan.Environments)
 	policyToCreate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
-	policyToCreate.ConnectorGroups = make([]DlpConnectorGroupsModelDto, 0)
+	policyToCreate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors))
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.NonBusinessConfidentialConnectors))
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors))
@@ -356,33 +351,33 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan *DataLossPreventionPolicyResourceModel
+	var plan *dataLossPreventionPolicyResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
-	var state *DataLossPreventionPolicyResourceModel
+	var state *dataLossPreventionPolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	policyToUpdate := DlpPolicyModelDto{
+	policyToUpdate := dlpPolicyModelDto{
 		Name:                            plan.Id.ValueString(),
 		DisplayName:                     plan.DisplayName.ValueString(),
 		EnvironmentType:                 plan.EnvironmentType.ValueString(),
 		DefaultConnectorsClassification: plan.DefaultConnectorsClassification.ValueString(),
-		Environments:                    []DlpEnvironmentDto{},
-		ConnectorGroups:                 []DlpConnectorGroupsModelDto{},
+		Environments:                    []dlpEnvironmentDto{},
+		ConnectorGroups:                 []dlpConnectorGroupsModelDto{},
 	}
 
 	policyToUpdate.Environments = convertToDlpEnvironment(plan.Environments)
 	policyToUpdate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
-	policyToUpdate.ConnectorGroups = make([]DlpConnectorGroupsModelDto, 0)
+	policyToUpdate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
 	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors))
 	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.NonBusinessConfidentialConnectors))
 	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors))
 
-	policy, err_client := r.DlpPolicyClient.UpdatePolicy(ctx, plan.Id.ValueString(), policyToUpdate)
+	policy, err_client := r.DlpPolicyClient.UpdatePolicy(ctx, policyToUpdate)
 	if err_client != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.TypeName), err_client.Error())
 		return
@@ -409,7 +404,7 @@ func (r *DataLossPreventionPolicyResource) Delete(ctx context.Context, req resou
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state *DataLossPreventionPolicyResourceModel
+	var state *dataLossPreventionPolicyResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return

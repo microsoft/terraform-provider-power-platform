@@ -6,12 +6,10 @@ package connectors
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
@@ -27,41 +25,6 @@ func NewConnectorsDataSource() datasource.DataSource {
 		TypeInfo: helpers.TypeInfo{
 			TypeName: "connectors",
 		},
-	}
-}
-
-type DataSource struct {
-	helpers.TypeInfo
-	ConnectorsClient Client
-}
-
-type ListDataSourceModel struct {
-	Timeouts   timeouts.Value    `tfsdk:"timeouts"`
-	Id         types.String      `tfsdk:"id"`
-	Connectors []DataSourceModel `tfsdk:"connectors"`
-}
-
-type DataSourceModel struct {
-	Id          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Type        types.String `tfsdk:"type"`
-	Description types.String `tfsdk:"description"`
-	DisplayName types.String `tfsdk:"display_name"`
-	Tier        types.String `tfsdk:"tier"`
-	Publisher   types.String `tfsdk:"publisher"`
-	Unblockable types.Bool   `tfsdk:"unblockable"`
-}
-
-func ConvertFromConnectorDto(connectorDto Dto) DataSourceModel {
-	return DataSourceModel{
-		Id:          types.StringValue(connectorDto.Id),
-		Name:        types.StringValue(connectorDto.Name),
-		Type:        types.StringValue(connectorDto.Type),
-		Description: types.StringValue(connectorDto.Properties.Description),
-		DisplayName: types.StringValue(connectorDto.Properties.DisplayName),
-		Tier:        types.StringValue(connectorDto.Properties.Tier),
-		Publisher:   types.StringValue(connectorDto.Properties.Publisher),
-		Unblockable: types.BoolValue(connectorDto.Properties.Unblockable),
 	}
 }
 
@@ -87,9 +50,6 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
 			"connectors": schema.ListNestedAttribute{
 				Description:         "List of Connectors",
 				MarkdownDescription: "List of Connectors",
@@ -162,7 +122,7 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 		return
 	}
 
-	d.ConnectorsClient = NewConnectorsClient(client)
+	d.ConnectorsClient = newConnectorsClient(client)
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -179,11 +139,9 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	}
 
 	for _, connector := range connectors {
-		connectorModel := ConvertFromConnectorDto(connector)
+		connectorModel := convertFromConnectorDto(connector)
 		state.Connectors = append(state.Connectors, connectorModel)
 	}
-	state.Id = types.StringValue(strconv.Itoa(len(connectors)))
-
 	diags := resp.State.Set(ctx, &state)
 
 	resp.Diagnostics.Append(diags...)

@@ -24,8 +24,6 @@ func TestAccConnectorsDataSource_Validate_Read(t *testing.T) {
 				data "powerplatform_connectors" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify placeholder id attribute.
-					resource.TestMatchResourceAttr("data.powerplatform_connectors.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 
 					// Verify the first power app to ensure all attributes are set.
 					resource.TestMatchResourceAttr("data.powerplatform_connectors.all", "connectors.0.description", regexp.MustCompile(helpers.StringRegex)),
@@ -69,13 +67,10 @@ func TestUnitConnectorsDataSource_Validate_Read(t *testing.T) {
 				data "powerplatform_connectors" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify placeholder id attribute.
-					resource.TestMatchResourceAttr("data.powerplatform_connectors.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
-
 					// Verify returned count.
 					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.#", "4"),
 
-					// // Verify the first power app to ensure all attributes are set
+					// Verify the first power app to ensure all attributes are set
 					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.description", "SharePoint helps organizations share and collaborate with colleagues, partners, and customers. You can connect to SharePoint Online or to an on-premises SharePoint 2013 or 2016 farm using the On-Premises Data Gateway to manage documents and list items."),
 					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.display_name", "SharePoint"),
 					resource.TestCheckResourceAttr("data.powerplatform_connectors.all", "connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"),

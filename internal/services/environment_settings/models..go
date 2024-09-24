@@ -11,11 +11,30 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-type EnvironmentSettingsSourceModel struct {
+type EnvironmentSettingsDataSource struct {
+	helpers.TypeInfo
+	EnvironmentSettingsClient client
+}
+
+type EnvironmentSettingsResource struct {
+	helpers.TypeInfo
+	EnvironmentSettingClient client
+}
+
+type EnvironmentSettingsResourceModel struct {
 	Timeouts      timeouts.Value `tfsdk:"timeouts"`
 	Id            types.String   `tfsdk:"id"`
+	EnvironmentId types.String   `tfsdk:"environment_id"`
+	AuditAndLogs  types.Object   `tfsdk:"audit_and_logs"`
+	Email         types.Object   `tfsdk:"email"`
+	Product       types.Object   `tfsdk:"product"`
+}
+
+type EnvironmentSettingsDataSourceModel struct {
+	Timeouts      timeouts.Value `tfsdk:"timeouts"`
 	EnvironmentId types.String   `tfsdk:"environment_id"`
 	AuditAndLogs  types.Object   `tfsdk:"audit_and_logs"`
 	Email         types.Object   `tfsdk:"email"`
@@ -54,8 +73,8 @@ type FeaturesSourceModel struct {
 	PowerAppsComponentFrameworkForCanvasApps types.Bool `tfsdk:"power_apps_component_framework_for_canvas_apps"`
 }
 
-func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel) (*EnvironmentSettingsDto, error) {
-	environmentSettingsDto := &EnvironmentSettingsDto{}
+func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel) (*environmentSettingsDto, error) {
+	environmentSettingsDto := &environmentSettingsDto{}
 	auditSettingsObject := environmentSettings.AuditAndLogs.Attributes()["audit_settings"]
 	if auditSettingsObject != nil && !auditSettingsObject.IsNull() && !auditSettingsObject.IsUnknown() {
 		var auditAndLogsSourceModel AuditSettingsSourceModel
@@ -95,7 +114,7 @@ func ConvertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 	return environmentSettingsDto, nil
 }
 
-func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *EnvironmentSettingsDto) {
+func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) {
 	emailSettingsObject := environmentSettings.Email.Attributes()["email_settings"]
 	if emailSettingsObject != nil && !emailSettingsObject.IsNull() && !emailSettingsObject.IsUnknown() {
 		var emailSourceModel EmailSettingsSourceModel
@@ -107,7 +126,7 @@ func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSetting
 	}
 }
 
-func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *EnvironmentSettingsDto) {
+func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) {
 	behaviorSettings := environmentSettings.Product.Attributes()["behavior_settings"]
 	if behaviorSettings != nil && !behaviorSettings.IsNull() && !behaviorSettings.IsUnknown() {
 		var behaviorSettingsSourceModel BehaviorSettingsSourceModel
@@ -119,7 +138,7 @@ func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSett
 	}
 }
 
-func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSettings EnvironmentSettingsSourceModel, environmentSettingsDto *EnvironmentSettingsDto) {
+func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) {
 	features := environmentSettings.Product.Attributes()["features"]
 	if features != nil && !features.IsNull() && !features.IsUnknown() {
 		var featuresSourceModel FeaturesSourceModel
@@ -131,11 +150,7 @@ func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSetti
 	}
 }
 
-func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettingsDto, timeout timeouts.Value) EnvironmentSettingsSourceModel {
-	environmentSettings := EnvironmentSettingsSourceModel{
-		Timeouts: timeout,
-	}
-
+func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | EnvironmentSettingsDataSourceModel](environmentSettingsDto *environmentSettingsDto, timeout timeouts.Value) T {
 	pluginTraceSettings := "Unknown"
 	if environmentSettingsDto.PluginTraceLogSetting != nil {
 		switch *environmentSettingsDto.PluginTraceLogSetting {
@@ -206,38 +221,28 @@ func ConvertFromEnvironmentSettingsDto(environmentSettingsDto *EnvironmentSettin
 		}),
 	}
 
-	environmentSettings.AuditAndLogs = types.ObjectValueMust(attrTypesAuditAndLogsObject, attrValuesAuditAndLogsProperties)
-	environmentSettings.Email = types.ObjectValueMust(attrTypesEmailObject, attrValuesEmailProperties)
-	environmentSettings.Product = types.ObjectValueMust(attrTypesProductObject, attrValuesProductProperties)
-
+	var environmentSettings T
+	var ok bool
+	switch any(environmentSettings).(type) {
+	case EnvironmentSettingsResourceModel:
+		environmentSettings, ok = any(EnvironmentSettingsResourceModel{
+			Timeouts:     timeout,
+			AuditAndLogs: types.ObjectValueMust(attrTypesAuditAndLogsObject, attrValuesAuditAndLogsProperties),
+			Email:        types.ObjectValueMust(attrTypesEmailObject, attrValuesEmailProperties),
+			Product:      types.ObjectValueMust(attrTypesProductObject, attrValuesProductProperties),
+		}).(T)
+	case EnvironmentSettingsDataSourceModel:
+		environmentSettings, ok = any(EnvironmentSettingsDataSourceModel{
+			Timeouts:     timeout,
+			AuditAndLogs: types.ObjectValueMust(attrTypesAuditAndLogsObject, attrValuesAuditAndLogsProperties),
+			Email:        types.ObjectValueMust(attrTypesEmailObject, attrValuesEmailProperties),
+			Product:      types.ObjectValueMust(attrTypesProductObject, attrValuesProductProperties),
+		}).(T)
+	default:
+		panic(fmt.Sprintf("unexpected type %T", environmentSettings))
+	}
+	if !ok {
+		panic(fmt.Sprintf("unexpected type %T", environmentSettings))
+	}
 	return environmentSettings
-}
-
-type EnvironmentSettingsValueDto struct {
-	Value []EnvironmentSettingsDto `json:"value"`
-}
-
-type EnvironmentSettingsDto struct {
-	MaxUploadFileSize                        *int64  `json:"maxuploadfilesize,omitempty"`
-	PluginTraceLogSetting                    *int64  `json:"plugintracelogsetting,omitempty"`
-	IsAuditEnabled                           *bool   `json:"isauditenabled,omitempty"`
-	IsUserAccessAuditEnabled                 *bool   `json:"isuseraccessauditenabled,omitempty"`
-	IsReadAuditEnabled                       *bool   `json:"isreadauditenabled,omitempty"`
-	BoundDashboardDefaultCardExpanded        *bool   `json:"bounddashboarddefaultcardexpanded,omitempty"`
-	OrganizationId                           *string `json:"organizationid,omitempty"`
-	PowerAppsComponentFrameworkForCanvasApps *bool   `json:"iscustomcontrolsincanvasappsenabled,omitempty"`
-}
-
-type EnvironmentIdDto struct {
-	Id         string                     `json:"id"`
-	Name       string                     `json:"name"`
-	Properties EnvironmentIdPropertiesDto `json:"properties"`
-}
-
-type EnvironmentIdPropertiesDto struct {
-	LinkedEnvironmentMetadata LinkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
-}
-
-type LinkedEnvironmentIdMetadataDto struct {
-	InstanceURL string
 }

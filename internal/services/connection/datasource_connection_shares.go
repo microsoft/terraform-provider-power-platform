@@ -6,7 +6,6 @@ package connection
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -28,31 +27,6 @@ func NewConnectionSharesDataSource() datasource.DataSource {
 			TypeName: "connection_shares",
 		},
 	}
-}
-
-type SharesDataSource struct {
-	helpers.TypeInfo
-	ConnectionsClient ConnectionsClient
-}
-
-type SharesListDataSourceModel struct {
-	Timeouts      timeouts.Value          `tfsdk:"timeouts"`
-	Id            types.String            `tfsdk:"id"`
-	EnvironmentId types.String            `tfsdk:"environment_id"`
-	ConnectorName types.String            `tfsdk:"connector_name"`
-	ConnectionId  types.String            `tfsdk:"connection_id"`
-	Shares        []SharesDataSourceModel `tfsdk:"shares"`
-}
-
-type SharesDataSourceModel struct {
-	Id        types.String                   `tfsdk:"id"`
-	RoleName  types.String                   `tfsdk:"role_name"`
-	Principal SharesPrincipalDataSourceModel `tfsdk:"principal"`
-}
-
-type SharesPrincipalDataSourceModel struct {
-	EntraId     types.String `tfsdk:"entra_object_id"`
-	DisplayName types.String `tfsdk:"display_name"`
 }
 
 func (d *SharesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -77,9 +51,6 @@ func (d *SharesDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
 			"environment_id": schema.StringAttribute{
 				Description:         "Environment Id. The unique identifier of the environment that the connection are associated with.",
 				MarkdownDescription: "Environment Id. The unique identifier of the environment that the connection are associated with.",
@@ -146,7 +117,7 @@ func (d *SharesDataSource) Configure(ctx context.Context, req datasource.Configu
 		return
 	}
 
-	d.ConnectionsClient = NewConnectionsClient(client)
+	d.ConnectionsClient = newConnectionsClient(client)
 }
 func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
@@ -165,7 +136,6 @@ func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		connectionModel := ConvertFromConnectionSharesDto(connection)
 		state.Shares = append(state.Shares, connectionModel)
 	}
-	state.Id = types.StringValue(strconv.Itoa(len(connectionsList.Value)))
 
 	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
@@ -174,7 +144,7 @@ func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 }
 
-func ConvertFromConnectionSharesDto(connection ShareConnectionResponseDto) SharesDataSourceModel {
+func ConvertFromConnectionSharesDto(connection shareConnectionResponseDto) SharesDataSourceModel {
 	share := SharesDataSourceModel{
 		Id:       types.StringValue(connection.Name),
 		RoleName: types.StringValue(connection.Properties.RoleName),

@@ -21,24 +21,6 @@ var (
 	_ datasource.DataSourceWithConfigure = &DataSource{}
 )
 
-type DataSourceModel struct {
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
-	Id       types.Int64    `tfsdk:"id"`
-	Value    []DataModel    `tfsdk:"locations"`
-}
-
-type DataModel struct {
-	ID                                     string   `tfsdk:"id"`
-	Name                                   string   `tfsdk:"name"`
-	DisplayName                            string   `tfsdk:"display_name"`
-	Code                                   string   `tfsdk:"code"`
-	IsDefault                              bool     `tfsdk:"is_default"`
-	IsDisabled                             bool     `tfsdk:"is_disabled"`
-	CanProvisionDatabase                   bool     `tfsdk:"can_provision_database"`
-	CanProvisionCustomerEngagementDatabase bool     `tfsdk:"can_provision_customer_engagement_database"`
-	AzureRegions                           []string `tfsdk:"azure_regions"`
-}
-
 func NewLocationsDataSource() datasource.DataSource {
 	return &DataSource{
 		TypeInfo: helpers.TypeInfo{
@@ -49,7 +31,7 @@ func NewLocationsDataSource() datasource.DataSource {
 
 type DataSource struct {
 	helpers.TypeInfo
-	LocationsClient Client
+	LocationsClient client
 }
 
 func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -74,11 +56,6 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.Int64Attribute{
-				Description:         "Id of the read operation",
-				MarkdownDescription: "Id of the read operation",
-				Optional:            true,
-			},
 			"locations": schema.ListNestedAttribute{
 				Description:         "List of available locations",
 				MarkdownDescription: "List of available locations",
@@ -147,7 +124,7 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 
 		return
 	}
-	d.LocationsClient = NewLocationsClient(clientApi)
+	d.LocationsClient = newLocationsClient(clientApi)
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -166,8 +143,6 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
-
-	state.Id = types.Int64Value(int64(len(locations.Value)))
 
 	for _, location := range locations.Value {
 		state.Value = append(state.Value, DataModel{

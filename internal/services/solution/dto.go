@@ -3,23 +3,23 @@
 
 package solution
 
-type Settings struct {
-	EnvironmentVariables []SettingsEnvironmentVariable  `json:"environmentvariables"`
-	ConnectionReferences []SettingsConnectionReferences `json:"connectionreferences"`
+type solutionSettingsDto struct {
+	EnvironmentVariables []settingsEnvironmentVariableDto  `json:"environmentvariables"`
+	ConnectionReferences []settingsConnectionReferencesDto `json:"connectionreferences"`
 }
 
-type SettingsEnvironmentVariable struct {
+type settingsEnvironmentVariableDto struct {
 	SchemaName string `json:"schemaname"`
 	Value      string `json:"value"`
 }
 
-type SettingsConnectionReferences struct {
+type settingsConnectionReferencesDto struct {
 	LogicalName  string `json:"logicalname"`
 	ConnectionId string `json:"connectionid"`
 	ConnectorId  string `json:"connectorid"`
 }
 
-type Dto struct {
+type SolutionDto struct {
 	Id            string `json:"solutionid"`
 	EnvironmentId string `json:"environment_id"`
 	Name          string `json:"uniquename"`
@@ -31,34 +31,34 @@ type Dto struct {
 	InstallTime   string `json:"installedon"`
 }
 
-type DtoArray struct {
-	Value []Dto `json:"value"`
+type solutionArrayDto struct {
+	Value []SolutionDto `json:"value"`
 }
 
-type StageSolutionImportDto struct {
+type stageSolutionImportDto struct {
 	CustomizationFile string `json:"CustomizationFile"`
 }
 
-type StageSolutionImportResponseDto struct {
-	StageSolutionResults StageSolutionImportResultResponseDto `json:"StageSolutionResults"`
+type stageSolutionImportResponseDto struct {
+	StageSolutionResults stageSolutionImportResultResponseDto `json:"StageSolutionResults"`
 }
 
-type StageSolutionImportResultResponseDto struct {
+type stageSolutionImportResultResponseDto struct {
 	StageSolutionUploadId     string                          `json:"StageSolutionUploadId"`
 	StageSolutionStatus       string                          `json:"StageSolutionStatus"`
-	SolutionValidationResults []ValidationResults             `json:"SolutionValidationResults"`
-	MissingDependencies       []MissingDependenciesDto        `json:"MissingDependencies"`
-	SolutionDetails           StageSolutionSolutionDetailsDto `json:"SolutionDetails"`
+	SolutionValidationResults []validationResultsDto          `json:"SolutionValidationResults"`
+	MissingDependencies       []missingDependenciesDto        `json:"MissingDependencies"`
+	SolutionDetails           stageSolutionSolutionDetailsDto `json:"SolutionDetails"`
 }
 
-type ValidationResults struct {
+type validationResultsDto struct {
 	SolutionValidationResultType string `json:"SolutionValidationResultType"`
 	ErrorCode                    int    `json:"ErrorCode"`
 	AdditionalInfo               string `json:"AdditionalInfo"`
 	Message                      string `json:"Message"`
 }
 
-type MissingDependenciesDto struct {
+type missingDependenciesDto struct {
 	RequiredComponentSchemaName         string `json:"RequiredComponentSchemaName"`
 	RequiredComponentDisplayName        string `json:"RequiredComponentDisplayName"`
 	RequiredComponentParentSchemaName   string `json:"RequiredComponentParentSchemaName"`
@@ -74,30 +74,30 @@ type MissingDependenciesDto struct {
 	DependentComponentId                string `json:"DependentComponentId"`
 }
 
-type StageSolutionSolutionDetailsDto struct {
+type stageSolutionSolutionDetailsDto struct {
 	SolutionUniqueName   string `json:"SolutionUniqueName"`
 	SolutionFriendlyName string `json:"SolutionFriendlyName"`
 	IsManaged            bool   `json:"IsManaged"`
 	SolutionVersion      string `json:"SolutionVersion"`
 }
 
-type ImportSolutionDto struct {
+type importSolutionDto struct {
 	PublishWorkflows                 bool                                `json:"PublishWorkflows"`
 	OverwriteUnmanagedCustomizations bool                                `json:"OverwriteUnmanagedCustomizations"`
 	ComponentParameters              []any                               `json:"ComponentParameters"`
-	SolutionParameters               ImportSolutionSolutionParametersDto `json:"SolutionParameters"`
+	SolutionParameters               importSolutionSolutionParametersDto `json:"SolutionParameters"`
 }
 
-type ImportSolutionResponseDto struct {
+type importSolutionResponseDto struct {
 	ImportJobKey     string `json:"ImportJobKey"`
 	AsyncOperationId string `json:"AsyncOperationId"`
 }
 
-type ImportSolutionSolutionParametersDto struct {
+type importSolutionSolutionParametersDto struct {
 	StageSolutionUploadId string `json:"StageSolutionUploadId"`
 }
 
-type ImportSolutionConnectionReferencesDto struct {
+type importSolutionConnectionReferencesDto struct {
 	Type                           string `json:"@odata.type"`
 	ConnectionReferenceDisplayName string `json:"connectionreferencedisplayname"`
 	ConnectionReferenceLogicalName string `json:"connectionreferencelogicalname"`
@@ -106,38 +106,38 @@ type ImportSolutionConnectionReferencesDto struct {
 	ConnectionId                   string `json:"connectionid"`
 }
 
-type ImportSolutionEnvironmentVariablesDto struct {
+type importSolutionEnvironmentVariablesDto struct {
 	Type       string `json:"@odata.type"`
 	SchemaName string `json:"schemaname"`
 	Value      string `json:"value"`
 }
 
-type AsyncSolutionPullResponseDto struct {
+type asyncSolutionPullResponseDto struct {
 	AsyncOperationId string `json:"AsyncOperationId"`
 	CreatedOn        string `json:"createdon"`
 	CompletedOn      string `json:"completedon"`
 }
 
-type ValidateSolutionImportResponseDto struct {
-	SolutionOperationResult ValidateSolutionImportResponseSolutionOperationResultDto `json:"SolutionOperationResult"`
+type validateSolutionImportResponseDto struct {
+	SolutionOperationResult validateSolutionImportResponseSolutionOperationResultDto `json:"SolutionOperationResult"`
 }
 
-type ValidateSolutionImportResponseSolutionOperationResultDto struct {
+type validateSolutionImportResponseSolutionOperationResultDto struct {
 	Status          string `json:"Status"`
 	WarningMessages []any  `json:"WarningMessages"`
 	ErrorMessages   []any  `json:"ErrorMessages"`
 }
 
-type EnvironmentIdDto struct {
+type environmentIdDto struct {
 	Id         string                     `json:"id"`
 	Name       string                     `json:"name"`
-	Properties EnvironmentIdPropertiesDto `json:"properties"`
+	Properties environmentIdPropertiesDto `json:"properties"`
 }
 
-type EnvironmentIdPropertiesDto struct {
-	LinkedEnvironmentMetadata LinkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
+type environmentIdPropertiesDto struct {
+	LinkedEnvironmentMetadata linkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
 }
 
-type LinkedEnvironmentIdMetadataDto struct {
+type linkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }

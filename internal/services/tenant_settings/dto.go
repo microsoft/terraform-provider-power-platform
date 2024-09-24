@@ -5,9 +5,7 @@ package tenant_settings
 
 import (
 	"context"
-	"crypto/md5"
-	"encoding/hex"
-	"encoding/json"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -16,7 +14,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
 )
 
-type TenantDto struct {
+type tenantDto struct {
 	TenantId                         string `json:"tenantId,omitempty"`
 	State                            string `json:"state,omitempty"`
 	Location                         string `json:"location,omitempty"`
@@ -26,31 +24,31 @@ type TenantDto struct {
 	FedRAMPHighCertificationRequired bool   `json:"fedRAMPHighCertificationRequired,omitempty"`
 }
 
-type PowerPlatformSettingsDto struct {
-	Search                 *SearchSettingsDto               `json:"search,omitempty"`
-	TeamsIntegration       *TeamsIntegrationSettingsDto     `json:"teamsIntegration,omitempty"`
-	PowerApps              *PowerAppsSettingsDto            `json:"powerApps,omitempty"`
-	PowerAutomate          *PowerAutomateSettingsDto        `json:"powerAutomate,omitempty"`
-	Environments           *EnvironmentSettingsDto          `json:"environments,omitempty"`
-	Governance             *GovernanceSettingsDto           `json:"governance,omitempty"`
-	Licensing              *LicenseSettingsDto              `json:"licensing,omitempty"`
-	PowerPages             *PowerPagesSettingsDto           `json:"powerPages,omitempty"`
-	Champions              *ChampionSettingsDto             `json:"champions,omitempty"`
-	Intelligence           *IntelligenceSettingsDto         `json:"intelligence,omitempty"`
-	ModelExperimentation   *ModelExperimentationSettingsDto `json:"modelExperimentation,omitempty"`
-	CatalogSettings        *CatalogSettingsDto              `json:"catalogSettings,omitempty"`
-	UserManagementSettings *UserManagementSettingsDto       `json:"userManagementSettings,omitempty"`
+type powerPlatformSettingsDto struct {
+	Search                 *searchSettingsDto               `json:"search,omitempty"`
+	TeamsIntegration       *teamsIntegrationSettingsDto     `json:"teamsIntegration,omitempty"`
+	PowerApps              *powerAppsSettingsDto            `json:"powerApps,omitempty"`
+	PowerAutomate          *powerAutomateSettingsDto        `json:"powerAutomate,omitempty"`
+	Environments           *environmentSettingsDto          `json:"environments,omitempty"`
+	Governance             *governanceSettingsDto           `json:"governance,omitempty"`
+	Licensing              *licenseSettingsDto              `json:"licensing,omitempty"`
+	PowerPages             *powerPagesSettingsDto           `json:"powerPages,omitempty"`
+	Champions              *championSettingsDto             `json:"champions,omitempty"`
+	Intelligence           *intelligenceSettingsDto         `json:"intelligence,omitempty"`
+	ModelExperimentation   *modelExperimentationSettingsDto `json:"modelExperimentation,omitempty"`
+	CatalogSettings        *catalogSettingsDto              `json:"catalogSettings,omitempty"`
+	UserManagementSettings *userManagementSettingsDto       `json:"userManagementSettings,omitempty"`
 }
 
-type TeamsIntegrationSettingsDto struct {
+type teamsIntegrationSettingsDto struct {
 	ShareWithColleaguesUserLimit *int64 `json:"shareWithColleaguesUserLimit,omitempty"`
 }
 
-type PowerAutomateSettingsDto struct {
+type powerAutomateSettingsDto struct {
 	DisableCopilot *bool `json:"disableCopilot,omitempty"`
 }
 
-type PowerAppsSettingsDto struct {
+type powerAppsSettingsDto struct {
 	DisableShareWithEveryone             *bool `json:"disableShareWithEveryone,omitempty"`
 	EnableGuestsToMake                   *bool `json:"enableGuestsToMake,omitempty"`
 	DisableMakerMatch                    *bool `json:"disableMakerMatch,omitempty"`
@@ -60,31 +58,31 @@ type PowerAppsSettingsDto struct {
 	DisableConnectionSharingWithEveryone *bool `json:"disableConnectionSharingWithEveryone,omitempty"`
 }
 
-type EnvironmentSettingsDto struct {
+type environmentSettingsDto struct {
 	DisablePreferredDataLocationForTeamsEnvironment *bool `json:"disablePreferredDataLocationForTeamsEnvironment,omitempty"`
 }
 
-type SearchSettingsDto struct {
+type searchSettingsDto struct {
 	DisableDocsSearch      *bool `json:"disableDocsSearch,omitempty"`
 	DisableCommunitySearch *bool `json:"disableCommunitySearch,omitempty"`
 	DisableBingVideoSearch *bool `json:"disableBingVideoSearch,omitempty"`
 }
 
-type GovernanceSettingsDto struct {
+type governanceSettingsDto struct {
 	DisableAdminDigest                                 *bool              `json:"disableAdminDigest,omitempty"`
 	DisableDeveloperEnvironmentCreationByNonAdminUsers *bool              `json:"disableDeveloperEnvironmentCreationByNonAdminUsers,omitempty"`
 	EnableDefaultEnvironmentRouting                    *bool              `json:"enableDefaultEnvironmentRouting,omitempty"`
 	EnvironmentRoutingAllMakers                        *bool              `json:"environmentRoutingAllMakers,omitempty"`
 	EnvironmentRoutingTargetEnvironmentGroupId         *string            `json:"environmentRoutingTargetEnvironmentGroupId,omitempty"`
 	EnvironmentRoutingTargetSecurityGroupId            *string            `json:"environmentRoutingTargetSecurityGroupId,omitempty"`
-	Policy                                             *PolicySettingsDto `json:"policy,omitempty"`
+	Policy                                             *policySettingsDto `json:"policy,omitempty"`
 }
 
-type PolicySettingsDto struct {
+type policySettingsDto struct {
 	EnableDesktopFlowDataPolicyManagement *bool `json:"enableDesktopFlowDataPolicyManagement,omitempty"`
 }
 
-type LicenseSettingsDto struct {
+type licenseSettingsDto struct {
 	DisableBillingPolicyCreationByNonAdminUsers     *bool  `json:"disableBillingPolicyCreationByNonAdminUsers,omitempty"`
 	EnableTenantCapacityReportForEnvironmentAdmins  *bool  `json:"enableTenantCapacityReportForEnvironmentAdmins,omitempty"`
 	StorageCapacityConsumptionWarningThreshold      *int64 `json:"storageCapacityConsumptionWarningThreshold,omitempty"`
@@ -92,44 +90,33 @@ type LicenseSettingsDto struct {
 	DisableUseOfUnassignedAIBuilderCredits          *bool  `json:"disableUseOfUnassignedAIBuilderCredits,omitempty"`
 }
 
-type PowerPagesSettingsDto struct {
+type powerPagesSettingsDto struct {
 }
 
-type ChampionSettingsDto struct {
+type championSettingsDto struct {
 	DisableChampionsInvitationReachout   *bool `json:"disableChampionsInvitationReachout,omitempty"`
 	DisableSkillsMatchInvitationReachout *bool `json:"disableSkillsMatchInvitationReachout,omitempty"`
 }
 
-type IntelligenceSettingsDto struct {
+type intelligenceSettingsDto struct {
 	DisableCopilot            *bool `json:"disableCopilot,omitempty"`
 	EnableOpenAiBotPublishing *bool `json:"enableOpenAiBotPublishing,omitempty"`
 }
 
-type ModelExperimentationSettingsDto struct {
+type modelExperimentationSettingsDto struct {
 	EnableModelDataSharing *bool `json:"enableModelDataSharing,omitempty"`
 	DisableDataLogging     *bool `json:"disableDataLogging,omitempty"`
 }
 
-type CatalogSettingsDto struct {
+type catalogSettingsDto struct {
 	PowerCatalogAudienceSetting *string `json:"powerCatalogAudienceSetting,omitempty"`
 }
 
-type UserManagementSettingsDto struct {
+type userManagementSettingsDto struct {
 	EnableDeleteDisabledUserinAllEnvironments *bool `json:"enableDeleteDisabledUserinAllEnvironments,omitempty"`
 }
 
-func (tenantSettings *TenantSettingsDto) CalcObjectHash() (*string, error) {
-	jsonObject, err := json.Marshal(tenantSettings)
-	if err != nil {
-		return nil, err
-	}
-
-	hash := md5.Sum(jsonObject)
-	hashString := hex.EncodeToString(hash[:])
-	return &hashString, nil
-}
-
-type TenantSettingsDto struct {
+type tenantSettingsDto struct {
 	WalkMeOptOut                                   *bool                     `json:"walkMeOptOut,omitempty"`
 	DisableNPSCommentsReachout                     *bool                     `json:"disableNPSCommentsReachout,omitempty"`
 	DisableNewsletterSendout                       *bool                     `json:"disableNewsletterSendout,omitempty"`
@@ -139,11 +126,11 @@ type TenantSettingsDto struct {
 	DisableTrialEnvironmentCreationByNonAdminUsers *bool                     `json:"disableTrialEnvironmentCreationByNonAdminUsers,omitempty"`
 	DisableCapacityAllocationByEnvironmentAdmins   *bool                     `json:"disableCapacityAllocationByEnvironmentAdmins,omitempty"`
 	DisableSupportTicketsVisibleByAllUsers         *bool                     `json:"disableSupportTicketsVisibleByAllUsers,omitempty"`
-	PowerPlatform                                  *PowerPlatformSettingsDto `json:"powerPlatform,omitempty"`
+	PowerPlatform                                  *powerPlatformSettingsDto `json:"powerPlatform,omitempty"`
 }
 
-func ConvertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSettingsSourceModel) TenantSettingsDto {
-	tenantSettingsDto := TenantSettingsDto{}
+func convertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSettingsResourceModel) tenantSettingsDto {
+	tenantSettingsDto := tenantSettingsDto{}
 
 	if !tenantSettings.WalkMeOptOut.IsNull() && !tenantSettings.WalkMeOptOut.IsUnknown() {
 		tenantSettingsDto.WalkMeOptOut = tenantSettings.WalkMeOptOut.ValueBoolPointer()
@@ -192,16 +179,16 @@ func ConvertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 	return tenantSettingsDto
 }
 
-func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
+func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	searchObject := powerPlatformAttributes["search"]
 	if !searchObject.IsNull() && !searchObject.IsUnknown() {
 		var searchSettings SearchSettingsModel
 		searchObject.(basetypes.ObjectValue).As(ctx, &searchSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
-			tenantSettingsDto.PowerPlatform = &PowerPlatformSettingsDto{}
+			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
 		}
-		tenantSettingsDto.PowerPlatform.Search = &SearchSettingsDto{}
+		tenantSettingsDto.PowerPlatform.Search = &searchSettingsDto{}
 		if !searchSettings.DisableDocsSearch.IsNull() && !searchSettings.DisableDocsSearch.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.Search.DisableDocsSearch = searchSettings.DisableDocsSearch.ValueBoolPointer()
 		}
@@ -214,32 +201,32 @@ func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]
 	}
 }
 
-func convertTeamsIntegrationModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
+func convertTeamsIntegrationModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	teamIntegrationObject := powerPlatformAttributes["teams_integration"]
 	if !teamIntegrationObject.IsNull() && !teamIntegrationObject.IsUnknown() {
 		var teamsIntegrationSettings TeamsIntegrationSettings
 		teamIntegrationObject.(basetypes.ObjectValue).As(ctx, &teamsIntegrationSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
-			tenantSettingsDto.PowerPlatform = &PowerPlatformSettingsDto{}
+			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
 		}
-		tenantSettingsDto.PowerPlatform.TeamsIntegration = &TeamsIntegrationSettingsDto{}
+		tenantSettingsDto.PowerPlatform.TeamsIntegration = &teamsIntegrationSettingsDto{}
 		if !teamsIntegrationSettings.ShareWithColleaguesUserLimit.IsNull() && !teamsIntegrationSettings.ShareWithColleaguesUserLimit.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.TeamsIntegration.ShareWithColleaguesUserLimit = teamsIntegrationSettings.ShareWithColleaguesUserLimit.ValueInt64Pointer()
 		}
 	}
 }
 
-func convertPowerAppsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
+func convertPowerAppsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	powerAppsObject := powerPlatformAttributes["power_apps"]
 	if !powerAppsObject.IsNull() && !powerAppsObject.IsUnknown() {
 		var powerAppsSettings PowerAppsSettings
 		powerAppsObject.(basetypes.ObjectValue).As(ctx, &powerAppsSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
-			tenantSettingsDto.PowerPlatform = &PowerPlatformSettingsDto{}
+			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
 		}
-		tenantSettingsDto.PowerPlatform.PowerApps = &PowerAppsSettingsDto{}
+		tenantSettingsDto.PowerPlatform.PowerApps = &powerAppsSettingsDto{}
 		if !powerAppsSettings.DisableShareWithEveryone.IsNull() && !powerAppsSettings.DisableShareWithEveryone.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.PowerApps.DisableShareWithEveryone = powerAppsSettings.DisableShareWithEveryone.ValueBoolPointer()
 		}
@@ -264,48 +251,48 @@ func convertPowerAppsModel(ctx context.Context, powerPlatformAttributes map[stri
 	}
 }
 
-func convertPowerAutomateModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
+func convertPowerAutomateModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	powerAutomateObject := powerPlatformAttributes["power_automate"]
 	if !powerAutomateObject.IsNull() && !powerAutomateObject.IsUnknown() {
 		var powerAutomateSettings PowerAutomateSettings
 		powerAutomateObject.(basetypes.ObjectValue).As(ctx, &powerAutomateSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
-			tenantSettingsDto.PowerPlatform = &PowerPlatformSettingsDto{}
+			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
 		}
-		tenantSettingsDto.PowerPlatform.PowerAutomate = &PowerAutomateSettingsDto{}
+		tenantSettingsDto.PowerPlatform.PowerAutomate = &powerAutomateSettingsDto{}
 		if !powerAutomateSettings.DisableCopilot.IsNull() && !powerAutomateSettings.DisableCopilot.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.PowerAutomate.DisableCopilot = powerAutomateSettings.DisableCopilot.ValueBoolPointer()
 		}
 	}
 }
 
-func convertEnvironmentsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
+func convertEnvironmentsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	environmentsObject := powerPlatformAttributes["environments"]
 	if !environmentsObject.IsNull() && !environmentsObject.IsUnknown() {
 		var environmentsSettings EnvironmentsSettings
 		environmentsObject.(basetypes.ObjectValue).As(ctx, &environmentsSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
-			tenantSettingsDto.PowerPlatform = &PowerPlatformSettingsDto{}
+			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
 		}
-		tenantSettingsDto.PowerPlatform.Environments = &EnvironmentSettingsDto{}
+		tenantSettingsDto.PowerPlatform.Environments = &environmentSettingsDto{}
 		if !environmentsSettings.DisablePreferredDataLocationForTeamsEnvironment.IsNull() && !environmentsSettings.DisablePreferredDataLocationForTeamsEnvironment.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.Environments.DisablePreferredDataLocationForTeamsEnvironment = environmentsSettings.DisablePreferredDataLocationForTeamsEnvironment.ValueBoolPointer()
 		}
 	}
 }
 
-func convertGovernanceModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
+func convertGovernanceModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	governanceObject := powerPlatformAttributes["governance"]
 	if !governanceObject.IsNull() && !governanceObject.IsUnknown() {
 		var governanceSettings GovernanceSettings
 		governanceObject.(basetypes.ObjectValue).As(ctx, &governanceSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
-			tenantSettingsDto.PowerPlatform = &PowerPlatformSettingsDto{}
+			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
 		}
-		tenantSettingsDto.PowerPlatform.Governance = &GovernanceSettingsDto{}
+		tenantSettingsDto.PowerPlatform.Governance = &governanceSettingsDto{}
 
 		if !governanceSettings.DisableAdminDigest.IsNull() && !governanceSettings.DisableAdminDigest.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.Governance.DisableAdminDigest = governanceSettings.DisableAdminDigest.ValueBoolPointer()
@@ -333,7 +320,7 @@ func convertGovernanceModel(ctx context.Context, powerPlatformAttributes map[str
 			var policySettings PolicySettings
 			policyObject.As(ctx, &policySettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
-			tenantSettingsDto.PowerPlatform.Governance.Policy = &PolicySettingsDto{}
+			tenantSettingsDto.PowerPlatform.Governance.Policy = &policySettingsDto{}
 			if !policySettings.EnableDesktopFlowDataPolicyManagement.IsNull() && !policySettings.EnableDesktopFlowDataPolicyManagement.IsUnknown() {
 				tenantSettingsDto.PowerPlatform.Governance.Policy.EnableDesktopFlowDataPolicyManagement = policySettings.EnableDesktopFlowDataPolicyManagement.ValueBoolPointer()
 			}
@@ -341,16 +328,16 @@ func convertGovernanceModel(ctx context.Context, powerPlatformAttributes map[str
 	}
 }
 
-func convertLicensingModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
+func convertLicensingModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	licensingObject := powerPlatformAttributes["licensing"]
 	if !licensingObject.IsNull() && !licensingObject.IsUnknown() {
 		var licensingSettings LicensingSettings
 		licensingObject.(basetypes.ObjectValue).As(ctx, &licensingSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
-			tenantSettingsDto.PowerPlatform = &PowerPlatformSettingsDto{}
+			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
 		}
-		tenantSettingsDto.PowerPlatform.Licensing = &LicenseSettingsDto{}
+		tenantSettingsDto.PowerPlatform.Licensing = &licenseSettingsDto{}
 		if !licensingSettings.DisableBillingPolicyCreationByNonAdminUsers.IsNull() && !licensingSettings.DisableBillingPolicyCreationByNonAdminUsers.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.Licensing.DisableBillingPolicyCreationByNonAdminUsers = licensingSettings.DisableBillingPolicyCreationByNonAdminUsers.ValueBoolPointer()
 		}
@@ -369,29 +356,29 @@ func convertLicensingModel(ctx context.Context, powerPlatformAttributes map[stri
 	}
 }
 
-func convertPowerPagesModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
+func convertPowerPagesModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	powerPagesObject := powerPlatformAttributes["power_pages"]
 	if !powerPagesObject.IsNull() && !powerPagesObject.IsUnknown() {
 		var powerPagesSettings PowerPagesSettings
 		powerPagesObject.(basetypes.ObjectValue).As(ctx, &powerPagesSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
-			tenantSettingsDto.PowerPlatform = &PowerPlatformSettingsDto{}
+			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
 		}
-		tenantSettingsDto.PowerPlatform.PowerPages = &PowerPagesSettingsDto{}
+		tenantSettingsDto.PowerPlatform.PowerPages = &powerPagesSettingsDto{}
 	}
 }
 
-func convertChampionsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
+func convertChampionsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	championsObject := powerPlatformAttributes["champions"]
 	if !championsObject.IsNull() && !championsObject.IsUnknown() {
 		var championsSettings ChampionsSettings
 		championsObject.(basetypes.ObjectValue).As(ctx, &championsSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
-			tenantSettingsDto.PowerPlatform = &PowerPlatformSettingsDto{}
+			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
 		}
-		tenantSettingsDto.PowerPlatform.Champions = &ChampionSettingsDto{}
+		tenantSettingsDto.PowerPlatform.Champions = &championSettingsDto{}
 		if !championsSettings.DisableChampionsInvitationReachout.IsNull() && !championsSettings.DisableChampionsInvitationReachout.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.Champions.DisableChampionsInvitationReachout = championsSettings.DisableChampionsInvitationReachout.ValueBoolPointer()
 		}
@@ -401,16 +388,16 @@ func convertChampionsModel(ctx context.Context, powerPlatformAttributes map[stri
 	}
 }
 
-func convertIntelligenceModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
+func convertIntelligenceModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	intelligenceObject := powerPlatformAttributes["intelligence"]
 	if !intelligenceObject.IsNull() && !intelligenceObject.IsUnknown() {
 		var intelligenceSettings IntelligenceSettings
 		intelligenceObject.(basetypes.ObjectValue).As(ctx, &intelligenceSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
-			tenantSettingsDto.PowerPlatform = &PowerPlatformSettingsDto{}
+			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
 		}
-		tenantSettingsDto.PowerPlatform.Intelligence = &IntelligenceSettingsDto{}
+		tenantSettingsDto.PowerPlatform.Intelligence = &intelligenceSettingsDto{}
 		if !intelligenceSettings.DisableCopilot.IsNull() && !intelligenceSettings.DisableCopilot.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.Intelligence.DisableCopilot = intelligenceSettings.DisableCopilot.ValueBoolPointer()
 		}
@@ -420,13 +407,13 @@ func convertIntelligenceModel(ctx context.Context, powerPlatformAttributes map[s
 	}
 }
 
-func convertModelExperimentationModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
+func convertModelExperimentationModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	modelExperimentationObject := powerPlatformAttributes["model_experimentation"]
 	if !modelExperimentationObject.IsNull() && !modelExperimentationObject.IsUnknown() {
 		var modelExperimentationSettings ModelExperimentationSettings
 		modelExperimentationObject.(basetypes.ObjectValue).As(ctx, &modelExperimentationSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
-		tenantSettingsDto.PowerPlatform.ModelExperimentation = &ModelExperimentationSettingsDto{}
+		tenantSettingsDto.PowerPlatform.ModelExperimentation = &modelExperimentationSettingsDto{}
 		if !modelExperimentationSettings.EnableModelDataSharing.IsNull() && !modelExperimentationSettings.EnableModelDataSharing.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.ModelExperimentation.EnableModelDataSharing = modelExperimentationSettings.EnableModelDataSharing.ValueBoolPointer()
 		}
@@ -436,34 +423,34 @@ func convertModelExperimentationModel(ctx context.Context, powerPlatformAttribut
 	}
 }
 
-func convertCatalogSettingsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
+func convertCatalogSettingsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	catalogSettingsObject := powerPlatformAttributes["catalog_settings"]
 	if !catalogSettingsObject.IsNull() && !catalogSettingsObject.IsUnknown() {
 		var catalogSettings CatalogSettingsSettings
 		catalogSettingsObject.(basetypes.ObjectValue).As(ctx, &catalogSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
-		tenantSettingsDto.PowerPlatform.CatalogSettings = &CatalogSettingsDto{}
+		tenantSettingsDto.PowerPlatform.CatalogSettings = &catalogSettingsDto{}
 		if !catalogSettings.PowerCatalogAudienceSetting.IsNull() && !catalogSettings.PowerCatalogAudienceSetting.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.CatalogSettings.PowerCatalogAudienceSetting = catalogSettings.PowerCatalogAudienceSetting.ValueStringPointer()
 		}
 	}
 }
 
-func convertUserManagementSettingsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *TenantSettingsDto) {
+func convertUserManagementSettingsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	userManagementSettingsObject := powerPlatformAttributes["user_management_settings"]
 	if !userManagementSettingsObject.IsNull() && !userManagementSettingsObject.IsUnknown() {
 		var userManagementSettings UserManagementSettings
 		userManagementSettingsObject.(basetypes.ObjectValue).As(ctx, &userManagementSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
-		tenantSettingsDto.PowerPlatform.UserManagementSettings = &UserManagementSettingsDto{}
+		tenantSettingsDto.PowerPlatform.UserManagementSettings = &userManagementSettingsDto{}
 		if !userManagementSettings.EnableDeleteDisabledUserinAllEnvironments.IsNull() && !userManagementSettings.EnableDeleteDisabledUserinAllEnvironments.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.UserManagementSettings.EnableDeleteDisabledUserinAllEnvironments = userManagementSettings.EnableDeleteDisabledUserinAllEnvironments.ValueBoolPointer()
 		}
 	}
 }
 
-func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto, timeout timeouts.Value) (TenantSettingsSourceModel, basetypes.ObjectValue) {
-	objTypePowerPlatformSettings, objValuePowerPlatformSettings := ConvertPowerPlatformSettings(tenantSettingsDto)
+func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettingsResourceModel](tenantSettingsDto tenantSettingsDto, timeout timeouts.Value) (T, basetypes.ObjectValue) {
+	objTypePowerPlatformSettings, objValuePowerPlatformSettings := convertPowerPlatformSettings(tenantSettingsDto)
 
 	tenantSettingsProperties := map[string]attr.Type{
 		"walk_me_opt_out":                                       types.BoolType,
@@ -493,38 +480,61 @@ func ConvertFromTenantSettingsDto(tenantSettingsDto TenantSettingsDto, timeout t
 
 	objValue := types.ObjectValueMust(tenantSettingsProperties, tenantSettingsValues)
 
-	tenantSettings := TenantSettingsSourceModel{
-		Timeouts:                   timeout,
-		Id:                         types.StringValue(""),
-		WalkMeOptOut:               types.BoolPointerValue(tenantSettingsDto.WalkMeOptOut),
-		DisableNPSCommentsReachout: types.BoolPointerValue(tenantSettingsDto.DisableNPSCommentsReachout),
-		DisableNewsletterSendout:   types.BoolPointerValue(tenantSettingsDto.DisableNewsletterSendout),
-		DisableEnvironmentCreationByNonAdminUsers:      types.BoolPointerValue(tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers),
-		DisablePortalsCreationByNonAdminUsers:          types.BoolPointerValue(tenantSettingsDto.DisablePortalsCreationByNonAdminUsers),
-		DisableSurveyFeedback:                          types.BoolPointerValue(tenantSettingsDto.DisableSurveyFeedback),
-		DisableTrialEnvironmentCreationByNonAdminUsers: types.BoolPointerValue(tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers),
-		DisableCapacityAllocationByEnvironmentAdmins:   types.BoolPointerValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
-		DisableSupportTicketsVisibleByAllUsers:         types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
-		PowerPlatform:                                  objValuePowerPlatformSettings,
+	var result T
+	var ok bool
+	switch any(result).(type) {
+	case TenantSettingsDataSourceModel:
+		result, ok = any(TenantSettingsDataSourceModel{
+			Timeouts:                   timeout,
+			WalkMeOptOut:               types.BoolPointerValue(tenantSettingsDto.WalkMeOptOut),
+			DisableNPSCommentsReachout: types.BoolPointerValue(tenantSettingsDto.DisableNPSCommentsReachout),
+			DisableNewsletterSendout:   types.BoolPointerValue(tenantSettingsDto.DisableNewsletterSendout),
+			DisableEnvironmentCreationByNonAdminUsers:      types.BoolPointerValue(tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers),
+			DisablePortalsCreationByNonAdminUsers:          types.BoolPointerValue(tenantSettingsDto.DisablePortalsCreationByNonAdminUsers),
+			DisableSurveyFeedback:                          types.BoolPointerValue(tenantSettingsDto.DisableSurveyFeedback),
+			DisableTrialEnvironmentCreationByNonAdminUsers: types.BoolPointerValue(tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers),
+			DisableCapacityAllocationByEnvironmentAdmins:   types.BoolPointerValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
+			DisableSupportTicketsVisibleByAllUsers:         types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
+			PowerPlatform:                                  objValuePowerPlatformSettings,
+		}).(T)
+	case TenantSettingsResourceModel:
+		result, ok = any(TenantSettingsResourceModel{
+			Timeouts:                   timeout,
+			Id:                         types.StringValue(""),
+			WalkMeOptOut:               types.BoolPointerValue(tenantSettingsDto.WalkMeOptOut),
+			DisableNPSCommentsReachout: types.BoolPointerValue(tenantSettingsDto.DisableNPSCommentsReachout),
+			DisableNewsletterSendout:   types.BoolPointerValue(tenantSettingsDto.DisableNewsletterSendout),
+			DisableEnvironmentCreationByNonAdminUsers:      types.BoolPointerValue(tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers),
+			DisablePortalsCreationByNonAdminUsers:          types.BoolPointerValue(tenantSettingsDto.DisablePortalsCreationByNonAdminUsers),
+			DisableSurveyFeedback:                          types.BoolPointerValue(tenantSettingsDto.DisableSurveyFeedback),
+			DisableTrialEnvironmentCreationByNonAdminUsers: types.BoolPointerValue(tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers),
+			DisableCapacityAllocationByEnvironmentAdmins:   types.BoolPointerValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
+			DisableSupportTicketsVisibleByAllUsers:         types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
+			PowerPlatform:                                  objValuePowerPlatformSettings,
+		}).(T)
+	default:
+		panic(fmt.Sprintf("unexpected type %T", result))
 	}
-
-	return tenantSettings, objValue
+	if !ok {
+		panic(fmt.Sprintf("unexpected type %T", result))
+	}
+	return result, objValue
 }
 
-func ConvertPowerPlatformSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
-	searchSettingsObjectType, searchSettingsObjectValue := ConvertSearchSettings(tenantSettingsDto)
-	teamsIntegrationObjectType, teamsIntegrationObjectValue := ConvertTeamsIntegrationSettings(tenantSettingsDto)
-	powerAppsObjectType, powerAppsObjectValue := ConvertPowerAppsSettings(tenantSettingsDto)
-	powerAutomateObjectType, powerAutomateObjectValue := ConvertPowerAutomateSettings(tenantSettingsDto)
-	environmentsObjectType, environmentsObjectValue := ConvertEnvironmentSettings(tenantSettingsDto)
-	governanceSettingsObjectType, governanceSettingsObjectValue := ConvertGovernanceSettings(tenantSettingsDto)
-	licensingSettingsObjectType, licensingSettingsObjectValue := ConvertLicensingSettings(tenantSettingsDto)
-	powerPagesSettingsObjectType, powerPagesSettingsObjectValue := ConvertPowerPagesSettings(tenantSettingsDto)
-	championsSettingsObjectType, championsSettingsObjectValue := ConvertChampionsSettings(tenantSettingsDto)
-	intelligenceSettingsObjectType, intelligenceSettingsObjectValue := ConvertIntelligenceSettings(tenantSettingsDto)
-	modelExperimentationSettingsObjectType, modelExperimentationSettingsObjectValue := ConvertModelExperimentationSettings(tenantSettingsDto)
-	catalogSettingsObjectType, catalogSettingsObjectValue := ConvertCatalogSettings(tenantSettingsDto)
-	userManagementSettingsObjectType, userManagementSettingsObjectValue := ConvertUserManagementSettings(tenantSettingsDto)
+func convertPowerPlatformSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+	searchSettingsObjectType, searchSettingsObjectValue := convertSearchSettings(tenantSettingsDto)
+	teamsIntegrationObjectType, teamsIntegrationObjectValue := convertTeamsIntegrationSettings(tenantSettingsDto)
+	powerAppsObjectType, powerAppsObjectValue := convertPowerAppsSettings(tenantSettingsDto)
+	powerAutomateObjectType, powerAutomateObjectValue := convertPowerAutomateSettings(tenantSettingsDto)
+	environmentsObjectType, environmentsObjectValue := convertEnvironmentSettings(tenantSettingsDto)
+	governanceSettingsObjectType, governanceSettingsObjectValue := convertGovernanceSettings(tenantSettingsDto)
+	licensingSettingsObjectType, licensingSettingsObjectValue := convertLicensingSettings(tenantSettingsDto)
+	powerPagesSettingsObjectType, powerPagesSettingsObjectValue := convertPowerPagesSettings(tenantSettingsDto)
+	championsSettingsObjectType, championsSettingsObjectValue := convertChampionsSettings(tenantSettingsDto)
+	intelligenceSettingsObjectType, intelligenceSettingsObjectValue := convertIntelligenceSettings(tenantSettingsDto)
+	modelExperimentationSettingsObjectType, modelExperimentationSettingsObjectValue := convertModelExperimentationSettings(tenantSettingsDto)
+	catalogSettingsObjectType, catalogSettingsObjectValue := convertCatalogSettings(tenantSettingsDto)
+	userManagementSettingsObjectType, userManagementSettingsObjectValue := convertUserManagementSettings(tenantSettingsDto)
 
 	attrTypesPowerPlatformObject := map[string]attr.Type{
 		"search":                   searchSettingsObjectType,
@@ -563,7 +573,7 @@ func ConvertPowerPlatformSettings(tenantSettingsDto TenantSettingsDto) (basetype
 	return types.ObjectType{AttrTypes: attrTypesPowerPlatformObject}, types.ObjectValueMust(attrTypesPowerPlatformObject, attrValuesPowerPlatformObject)
 }
 
-func ConvertUserManagementSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+func convertUserManagementSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesUserManagementSettings := map[string]attr.Type{
 		"enable_delete_disabled_user_in_all_environments": types.BoolType,
 	}
@@ -577,7 +587,7 @@ func ConvertUserManagementSettings(tenantSettingsDto TenantSettingsDto) (basetyp
 	return types.ObjectType{AttrTypes: attrTypesUserManagementSettings}, types.ObjectValueMust(attrTypesUserManagementSettings, attrValuesUserManagementSettings)
 }
 
-func ConvertCatalogSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+func convertCatalogSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesCatalogSettingsProperties := map[string]attr.Type{
 		"power_catalog_audience_setting": types.StringType,
 	}
@@ -591,7 +601,7 @@ func ConvertCatalogSettings(tenantSettingsDto TenantSettingsDto) (basetypes.Obje
 	return types.ObjectType{AttrTypes: attrTypesCatalogSettingsProperties}, types.ObjectValueMust(attrTypesCatalogSettingsProperties, attrValuesCatalogSettingsProperties)
 }
 
-func ConvertModelExperimentationSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+func convertModelExperimentationSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesModelExperimentationProperties := map[string]attr.Type{
 		"enable_model_data_sharing": types.BoolType,
 		"disable_data_logging":      types.BoolType,
@@ -607,7 +617,7 @@ func ConvertModelExperimentationSettings(tenantSettingsDto TenantSettingsDto) (b
 	return types.ObjectType{AttrTypes: attrTypesModelExperimentationProperties}, types.ObjectValueMust(attrTypesModelExperimentationProperties, attrValuesModelExperimentationProperties)
 }
 
-func ConvertIntelligenceSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+func convertIntelligenceSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesIntelligenceProperties := map[string]attr.Type{
 		"disable_copilot":               types.BoolType,
 		"enable_open_ai_bot_publishing": types.BoolType,
@@ -623,7 +633,7 @@ func ConvertIntelligenceSettings(tenantSettingsDto TenantSettingsDto) (basetypes
 	return types.ObjectType{AttrTypes: attrTypesIntelligenceProperties}, types.ObjectValueMust(attrTypesIntelligenceProperties, attrValuesIntelligenceProperties)
 }
 
-func ConvertChampionsSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+func convertChampionsSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesChampionsProperties := map[string]attr.Type{
 		"disable_champions_invitation_reachout":    types.BoolType,
 		"disable_skills_match_invitation_reachout": types.BoolType,
@@ -639,7 +649,7 @@ func ConvertChampionsSettings(tenantSettingsDto TenantSettingsDto) (basetypes.Ob
 	return types.ObjectType{AttrTypes: attrTypesChampionsProperties}, types.ObjectValueMust(attrTypesChampionsProperties, attrValuesChampionsProperties)
 }
 
-func ConvertPowerPagesSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+func convertPowerPagesSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesPowerPagesProperties := map[string]attr.Type{}
 
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.PowerPages == nil {
@@ -649,7 +659,7 @@ func ConvertPowerPagesSettings(tenantSettingsDto TenantSettingsDto) (basetypes.O
 	return types.ObjectType{AttrTypes: attrTypesPowerPagesProperties}, types.ObjectValueMust(attrTypesPowerPagesProperties, attrValuesPowerPagesProperties)
 }
 
-func ConvertLicensingSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+func convertLicensingSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesLicencingProperties := map[string]attr.Type{
 		"disable_billing_policy_creation_by_non_admin_users":    types.BoolType,
 		"enable_tenant_capacity_report_for_environment_admins":  types.BoolType,
@@ -671,7 +681,7 @@ func ConvertLicensingSettings(tenantSettingsDto TenantSettingsDto) (basetypes.Ob
 	return types.ObjectType{AttrTypes: attrTypesLicencingProperties}, types.ObjectValueMust(attrTypesLicencingProperties, attrValuesLicencingProperties)
 }
 
-func ConvertGovernanceSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+func convertGovernanceSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesPolicyProperties := map[string]attr.Type{
 		"enable_desktop_flow_data_policy_management": types.BoolType,
 	}
@@ -709,7 +719,7 @@ func ConvertGovernanceSettings(tenantSettingsDto TenantSettingsDto) (basetypes.O
 	return types.ObjectType{AttrTypes: attrTypesGovernanceProperties}, types.ObjectValueMust(attrTypesGovernanceProperties, attrValuesGovernanceProperties)
 }
 
-func ConvertEnvironmentSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+func convertEnvironmentSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesEnvironmentsProperties := map[string]attr.Type{
 		"disable_preferred_data_location_for_teams_environment": types.BoolType,
 	}
@@ -723,7 +733,7 @@ func ConvertEnvironmentSettings(tenantSettingsDto TenantSettingsDto) (basetypes.
 	return types.ObjectType{AttrTypes: attrTypesEnvironmentsProperties}, types.ObjectValueMust(attrTypesEnvironmentsProperties, attrValuesEnvironmentsProperties)
 }
 
-func ConvertPowerAutomateSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+func convertPowerAutomateSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesPowerAutomateProperties := map[string]attr.Type{
 		"disable_copilot": types.BoolType,
 	}
@@ -737,7 +747,7 @@ func ConvertPowerAutomateSettings(tenantSettingsDto TenantSettingsDto) (basetype
 	return types.ObjectType{AttrTypes: attrTypesPowerAutomateProperties}, types.ObjectValueMust(attrTypesPowerAutomateProperties, attrValuesPowerAutomateProperties)
 }
 
-func ConvertPowerAppsSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+func convertPowerAppsSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesPowerAppsProperties := map[string]attr.Type{
 		"disable_share_with_everyone":              types.BoolType,
 		"enable_guests_to_make":                    types.BoolType,
@@ -763,7 +773,7 @@ func ConvertPowerAppsSettings(tenantSettingsDto TenantSettingsDto) (basetypes.Ob
 	return types.ObjectType{AttrTypes: attrTypesPowerAppsProperties}, types.ObjectValueMust(attrTypesPowerAppsProperties, attrValuesPowerAppsProperties)
 }
 
-func ConvertTeamsIntegrationSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+func convertTeamsIntegrationSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesTeamsIntegrationProperties := map[string]attr.Type{
 		"share_with_colleagues_user_limit": types.Int64Type,
 	}
@@ -776,7 +786,7 @@ func ConvertTeamsIntegrationSettings(tenantSettingsDto TenantSettingsDto) (baset
 	return types.ObjectType{AttrTypes: attrTypesTeamsIntegrationProperties}, types.ObjectValueMust(attrTypesTeamsIntegrationProperties, attrValuesTeamsIntegrationProperties)
 }
 
-func ConvertSearchSettings(tenantSettingsDto TenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
+func convertSearchSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesSearchProperties := map[string]attr.Type{
 		"disable_docs_search":       types.BoolType,
 		"disable_community_search":  types.BoolType,

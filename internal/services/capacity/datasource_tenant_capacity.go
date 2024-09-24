@@ -29,33 +29,6 @@ func NewTenantCapcityDataSource() datasource.DataSource {
 	}
 }
 
-type DataSource struct {
-	helpers.TypeInfo
-	CapacityClient Client
-}
-
-type DataSourceModel struct {
-	TenantId         types.String                    `tfsdk:"tenant_id"`
-	LicenseModelType types.String                    `tfsdk:"license_model_type"`
-	TenantCapacities []TenantCapacityDataSourceModel `tfsdk:"tenant_capacities"`
-}
-
-type TenantCapacityDataSourceModel struct {
-	CapacityType  types.String               `tfsdk:"capacity_type"`
-	CapacityUnits types.String               `tfsdk:"capacity_units"`
-	TotalCapacity types.Float32              `tfsdk:"total_capacity"`
-	MaxCapacity   types.Float32              `tfsdk:"max_capacity"`
-	Consumption   ConsumptionDataSourceModel `tfsdk:"consumption"`
-	Status        types.String               `tfsdk:"status"`
-}
-
-type ConsumptionDataSourceModel struct {
-	Actual          types.Float32 `tfsdk:"actual"`
-	Rated           types.Float32 `tfsdk:"rated"`
-	ActualUpdatedOn types.String  `tfsdk:"actual_updated_on"`
-	RatedUpdatedOn  types.String  `tfsdk:"rated_updated_on"`
-}
-
 func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	d.ProviderTypeName = req.ProviderTypeName
@@ -156,7 +129,7 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 		return
 	}
 
-	d.CapacityClient = NewCapacityClient(client)
+	d.CapacityClient = newCapacityClient(client)
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

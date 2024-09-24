@@ -54,7 +54,6 @@ func TestAccBillingPoliciesDataSource_Validate_Read(t *testing.T) {
 					depends_on = [powerplatform_billing_policy.pay_as_you_go]
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.name", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.location", regexp.MustCompile(helpers.StringRegex)),
@@ -85,8 +84,6 @@ func TestUnitTestBillingPoliciesDataSource_Validate_Read(t *testing.T) {
 				data "powerplatform_billing_policies" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_billing_policies.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
-
 					resource.TestCheckResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.#", "2"),
 
 					resource.TestCheckResourceAttr("data.powerplatform_billing_policies.all", "billing_policies.0.id", "00000000-0000-0000-0000-000000000001"),

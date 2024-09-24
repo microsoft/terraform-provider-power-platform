@@ -16,19 +16,15 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
-type Client struct {
-	Api *api.Client
-}
-
 func NewLicensingClient(apiClient *api.Client) Client {
 	return Client{
 		Api: apiClient,
 	}
 }
 
-const (
-	API_VERSION_2022_03_01_preview = "2022-03-01-preview"
-)
+type Client struct {
+	Api *api.Client
+}
 
 func (client *Client) GetBillingPolicies(ctx context.Context) ([]BillingPolicyDto, error) {
 	apiUrl := &url.URL{
@@ -38,7 +34,7 @@ func (client *Client) GetBillingPolicies(ctx context.Context) ([]BillingPolicyDt
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION_2022_03_01_preview)
+	values.Add("api-version", "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	policies := BillingPolicyArrayDto{}
@@ -55,7 +51,7 @@ func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION_2022_03_01_preview)
+	values.Add("api-version", "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	policy := BillingPolicyDto{}
@@ -68,7 +64,7 @@ func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*
 	return &policy, err
 }
 
-func (client *Client) CreateBillingPolicy(ctx context.Context, policyToCreate BillingPolicyCreateDto) (*BillingPolicyDto, error) {
+func (client *Client) CreateBillingPolicy(ctx context.Context, policyToCreate billingPolicyCreateDto) (*BillingPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -76,7 +72,7 @@ func (client *Client) CreateBillingPolicy(ctx context.Context, policyToCreate Bi
 	}
 
 	values := url.Values{}
-	values.Add(constants.API_VERSION_PARAM, API_VERSION_2022_03_01_preview)
+	values.Add(constants.API_VERSION_PARAM, "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	policy := &BillingPolicyDto{}
@@ -105,7 +101,7 @@ func (client *Client) UpdateBillingPolicy(ctx context.Context, billingId string,
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION_2022_03_01_preview)
+	values.Add("api-version", "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	policy := &BillingPolicyDto{}
@@ -131,7 +127,7 @@ func (client *Client) DeleteBillingPolicy(ctx context.Context, billingId string)
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION_2022_03_01_preview)
+	values.Add("api-version", "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
@@ -147,7 +143,7 @@ func (client *Client) GetEnvironmentsForBillingPolicy(ctx context.Context, billi
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION_2022_03_01_preview)
+	values.Add("api-version", "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	billingPolicyEnvironments := BillingPolicyEnvironmentsArrayResponseDto{}
@@ -178,7 +174,7 @@ func (client *Client) AddEnvironmentsToBillingPolicy(ctx context.Context, billin
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION_2022_03_01_preview)
+	values.Add("api-version", "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	environments := BillingPolicyEnvironmentsArrayDto{
@@ -200,7 +196,7 @@ func (client *Client) RemoveEnvironmentsToBillingPolicy(ctx context.Context, bil
 	}
 
 	values := url.Values{}
-	values.Add("api-version", API_VERSION_2022_03_01_preview)
+	values.Add("api-version", "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
 	environments := BillingPolicyEnvironmentsArrayDto{

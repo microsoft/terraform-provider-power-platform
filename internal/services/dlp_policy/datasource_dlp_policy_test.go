@@ -5,7 +5,6 @@ package dlp_policy_test
 
 import (
 	"net/http"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -41,9 +40,6 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 				data "powerplatform_data_loss_prevention_policies" "all" {}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify placeholder id attribute.
-					resource.TestMatchResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
-
 					// Verify returned count.
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.#", "2"),
 
