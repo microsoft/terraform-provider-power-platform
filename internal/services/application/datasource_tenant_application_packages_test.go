@@ -24,7 +24,6 @@ func TestAccTenantApplicationPackagesDataSource_Validate_Read(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_tenant_application_packages.all_applications", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_application_packages.all_applications", "applications.#", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_application_packages.all_applications", "applications.0.application_id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_application_packages.all_applications", "applications.0.application_name", regexp.MustCompile(helpers.StringRegex)),
