@@ -182,6 +182,7 @@ func (client *Auth) AuthenticateOIDC(ctx context.Context, scopes []string) (stri
 
 	if err != nil {
 		tflog.Error(ctx, fmt.Sprintf("newDefaultAzureCredential failed to initialize oidc credential:\n\t%s", err.Error()))
+		return nil, nil, err
 	} else {
 		creds = append(creds, oidcCred)
 	}
