@@ -29,7 +29,7 @@ jobs:
     steps:
       - id: set_acceptance_tests
         name: Skip acceptance tests due to missing label
-        run: echo "acceptance_tests=true" >> $GITHUB_ENV
+        run: echo "::set-output name=acceptance_tests::true"
   # ensure go.mod and go.sum are updated
   depscheck:
     name: Check Dependencies
