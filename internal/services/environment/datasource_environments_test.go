@@ -9,6 +9,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
@@ -36,27 +39,28 @@ func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
 
 				data "powerplatform_environments" "all" {
 					depends_on = [powerplatform_environment.env]
-				}`,
-
-				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify placeholder id attribute.
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
-
-					// Verify the first power app to ensure all attributes are set.
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.cadence", regexp.MustCompile(`^(Frequent|Moderate)$`)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.description", regexp.MustCompile(`^(|description)$`)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.display_name", regexp.MustCompile(helpers.StringRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.domain", regexp.MustCompile(helpers.StringRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.environment_type", regexp.MustCompile(`^(Default|Sandbox|Developer|Production)$`)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.language_code", regexp.MustCompile(`^(1033|1031)$`)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.organization_id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.security_group_id", regexp.MustCompile(helpers.GuidOrEmptyValueRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.url", regexp.MustCompile(helpers.UrlValidStringRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.location", regexp.MustCompile(`^(unitedstates|europe)$`)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.version", regexp.MustCompile(helpers.VersionRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.currency_code", regexp.MustCompile(helpers.StringRegex)),
-				),
+				}
+				
+				output "test_environment"{
+					value = one([for env in data.powerplatform_environments.all.environments : env if env.id == powerplatform_environment.env.id])
+				}
+				`,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownOutputValue("test_environment", knownvalue.NotNull()),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("id"), knownvalue.StringRegexp(regexp.MustCompile(helpers.GuidRegex))),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("display_name"), knownvalue.StringExact(mocks.TestName())),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("description"), knownvalue.StringExact("description")),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("location"), knownvalue.StringExact("europe")),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("azure_region"), knownvalue.StringExact("northeurope")),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("environment_type"), knownvalue.StringExact("Sandbox")),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("cadence"), knownvalue.StringExact("Moderate")),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("dataverse").AtMapKey("language_code"), knownvalue.Int32Exact(1033)),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("dataverse").AtMapKey("currency_code"), knownvalue.StringExact("USD")),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("dataverse").AtMapKey("security_group_id"), knownvalue.StringRegexp(regexp.MustCompile(helpers.GuidOrEmptyValueRegex))),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("dataverse").AtMapKey("organization_id"), knownvalue.StringRegexp(regexp.MustCompile(helpers.GuidRegex))),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("dataverse").AtMapKey("url"), knownvalue.StringRegexp(regexp.MustCompile(helpers.UrlValidStringRegex))),
+					statecheck.ExpectKnownOutputValueAtPath("test_environment", tfjsonpath.New("dataverse").AtMapKey("version"), knownvalue.StringRegexp(regexp.MustCompile(helpers.VersionRegex))),
+				},
 			},
 		},
 	})
