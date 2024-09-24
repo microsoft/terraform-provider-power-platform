@@ -68,8 +68,7 @@ func (client *client) GetUserBySystemUserId(ctx context.Context, environmentId, 
 	values.Add("$expand", "systemuserroles_association($select=roleid,name,ismanaged,_businessunitid_value)")
 	apiUrl.RawQuery = values.Encode()
 
- user := userDto{}
- main
+	user := userDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
 		var unexpectedError *customerrors.UnexpectedHttpStatusCodeError

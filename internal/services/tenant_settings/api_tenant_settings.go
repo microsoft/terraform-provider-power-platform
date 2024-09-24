@@ -36,7 +36,6 @@ func (client *client) GetTenant(ctx context.Context) (*tenantDto, error) {
 	values.Add("api-version", "2020-08-01")
 	apiUrl.RawQuery = values.Encode()
 
-
 	tenant := tenantDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &tenant)
 	if err != nil {
@@ -56,7 +55,6 @@ func (client *client) GetTenantSettings(ctx context.Context) (*tenantSettingsDto
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-
 	tenantSettings := tenantSettingsDto{}
 	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, nil, []int{http.StatusOK}, &tenantSettings)
 	if err != nil {
@@ -75,7 +73,6 @@ func (client *client) UpdateTenantSettings(ctx context.Context, tenantSettings t
 	values := url.Values{}
 	values.Add(constants.API_VERSION_PARAM, "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
-
 
 	var backendSettings tenantSettingsDto
 	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, tenantSettings, []int{http.StatusOK}, &backendSettings)

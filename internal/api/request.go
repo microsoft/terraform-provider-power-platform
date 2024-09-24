@@ -9,16 +9,16 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"math/rand"
-	"net/http"
-	"runtime"
-	"time"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/common"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"io"
+	"math/rand"
+	"net/http"
+	"runtime"
+	"time"
 )
 
 func (client *Client) doRequest(ctx context.Context, token *string, request *http.Request, headers http.Header) (*Response, error) {

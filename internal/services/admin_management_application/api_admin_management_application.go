@@ -34,7 +34,6 @@ func (client *client) GetAdminApplication(ctx context.Context, clientId string) 
 		}.Encode(),
 	}
 
-
 	var adminApp adminManagementApplicationDto
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
 
