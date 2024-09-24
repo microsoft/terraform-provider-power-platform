@@ -213,6 +213,11 @@ func (client *client) GetConnectionShare(ctx context.Context, environmentId, con
 
 	for _, share := range shares.Value {
 		if id, ok := share.Properties.Principal["id"].(string); ok && id == principalId {
+			// if user will try to share with PricipalId that does not exist in Entra, share will get created but displayName will be returned empty in response.
+			displayName, ok := share.Properties.Principal["displayName"].(string)
+			if !ok || displayName == "" {
+				return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Share for principal '%s' not found. Display name is empty", principalId))
+			}
 			return &share, nil
 		}
 	}

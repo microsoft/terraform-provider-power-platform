@@ -186,7 +186,7 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		resp.Diagnostics.AddError("Error getting connection share", "Connection share not found")
 	}
 
-	state := ConvertFromConnectionResourceSharesDto(plan, share)
+	state := convertFromConnectionResourceSharesDto(plan, share)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -212,7 +212,7 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		resp.Diagnostics.AddError("Error getting connection share", "Connection share not found")
 	}
 
-	newState := ConvertFromConnectionResourceSharesDto(state, share)
+	newState := convertFromConnectionResourceSharesDto(state, share)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
@@ -265,7 +265,7 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		resp.Diagnostics.AddError("Error getting connection share", "Connection share not found")
 	}
 
-	newState := ConvertFromConnectionResourceSharesDto(plan, newShare)
+	newState := convertFromConnectionResourceSharesDto(plan, newShare)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
@@ -294,7 +294,7 @@ func (r *ShareResource) ImportState(ctx context.Context, req resource.ImportStat
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func ConvertFromConnectionResourceSharesDto(oldPlan *ShareResourceModel, connection *shareConnectionResponseDto) ShareResourceModel {
+func convertFromConnectionResourceSharesDto(oldPlan *ShareResourceModel, connection *shareConnectionResponseDto) ShareResourceModel {
 	share := ShareResourceModel{
 		Timeouts:      oldPlan.Timeouts,
 		EnvironmentId: oldPlan.EnvironmentId,
