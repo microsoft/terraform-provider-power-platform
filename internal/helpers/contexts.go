@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -62,7 +61,7 @@ func UnitTestContext(ctx context.Context, testName string) context.Context {
 // The closure will log the end of the request scope
 // The context is updated with the request context so that it can be accessed in lower level functions.
 func EnterRequestContext[T AllowedRequestTypes](ctx context.Context, typ TypeInfo, req T) (context.Context, func()) {
-	reqId := strings.ReplaceAll(uuid.New().String(), "-", "")
+	reqId := uuid.New().String()
 	reqType := reflect.TypeOf(req).String()
 	name := typ.FullTypeName()
 

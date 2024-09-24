@@ -74,6 +74,7 @@ func (client *client) UpdateEnvironmentGroup(ctx context.Context, environmentGro
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
+
 	updatedEnvironmentGroup := environmentGroupDto{}
 	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, environmentGroup, []int{http.StatusOK}, &updatedEnvironmentGroup)
 	if err != nil {
@@ -94,6 +95,7 @@ func (client *client) GetEnvironmentGroup(ctx context.Context, environmentGroupI
 	values := url.Values{}
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
+
 
 	environmentGroup := environmentGroupDto{}
 	httpResponse, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound}, &environmentGroup)

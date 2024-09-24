@@ -1,0 +1,5 @@
+kind: breaking
+body: '`powerplatform_solution.solution_file_checksum` is now generated using SHA256 instead of MD5.'
+time: 2024-09-23T18:34:35.808740992Z
+custom:
+    Issue: "458"

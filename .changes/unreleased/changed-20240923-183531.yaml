@@ -1,0 +1,5 @@
+kind: changed
+body: '`powerplatform_rest.expected_http_status` type is changed from []int64 to []int.  Practically, this should not affect any existing configurations.'
+time: 2024-09-23T18:35:31.052309979Z
+custom:
+    Issue: "458"

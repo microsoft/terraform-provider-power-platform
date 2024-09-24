@@ -1,0 +1,5 @@
+kind: breaking
+body: Removed `powerplatform_solution.solution_name` property because it is no longer required or used by implementation
+time: 2024-09-23T18:48:30.155411867Z
+custom:
+    Issue: "412"

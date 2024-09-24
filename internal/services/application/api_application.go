@@ -122,6 +122,7 @@ func (client *client) InstallApplicationInEnvironment(ctx context.Context, envir
 		}
 
 		for {
+
 			lifecycleResponse := environmentApplicationLifecycleDto{}
 			_, err = client.Api.Execute(ctx, nil, "GET", operationLocationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
 			if err != nil {

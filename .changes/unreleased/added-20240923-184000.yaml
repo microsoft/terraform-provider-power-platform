@@ -1,0 +1,5 @@
+kind: added
+body: Environment Routing configuration added to `powerplatform_tenant_settings`
+time: 2024-09-23T18:40:00.233321539Z
+custom:
+    Issue: "399"
