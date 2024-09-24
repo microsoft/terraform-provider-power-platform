@@ -1,5 +1,0 @@
-kind: fixed
-body: Fixed timeout error in `powerplatform_billing_policy`
-time: 2024-09-23T18:46:05.896583902Z
-custom:
-    Issue: "376"

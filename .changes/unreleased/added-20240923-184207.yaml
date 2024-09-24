@@ -1,5 +1,0 @@
-kind: added
-body: '`powerplatform_tenant` data source added to get information about current tenant'
-time: 2024-09-23T18:42:07.990828735Z
-custom:
-    Issue: "401"

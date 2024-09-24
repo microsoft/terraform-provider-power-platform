@@ -1,5 +1,0 @@
-kind: breaking
-body: '`powerplatform_tenant_settings.id` is now set to the tenant id instead of a random guid.  This will cause a change in the id value of existing resources.'
-time: 2024-09-23T18:39:16.707294658Z
-custom:
-    Issue: "399"
