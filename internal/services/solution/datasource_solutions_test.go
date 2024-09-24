@@ -137,7 +137,7 @@ func TestUnitSolutionsDataSource_Validate_No_Dataverse(t *testing.T) {
 }
 
 func TestAccSolutionsDataSource_Validate_Read(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

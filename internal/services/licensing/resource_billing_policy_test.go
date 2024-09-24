@@ -17,7 +17,7 @@ import (
 )
 
 func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azapi": {
@@ -119,7 +119,7 @@ func TestUnitTestBillingPolicyResource_Validate_Create(t *testing.T) {
 }
 
 func TestAccBillingPolicy_Validate_Update(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azapi": {
@@ -310,7 +310,7 @@ func TestUnitTestBillingPolicy_Validate_Update(t *testing.T) {
 }
 
 func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azapi": {

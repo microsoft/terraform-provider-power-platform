@@ -49,7 +49,7 @@ func TestUnitDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
 }
 
 func TestAccDatasourceRestQuery_WhoAmI_Using_Scope(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

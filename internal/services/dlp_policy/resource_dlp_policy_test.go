@@ -918,7 +918,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 }
 
 func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               false,
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

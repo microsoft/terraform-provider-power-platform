@@ -20,7 +20,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 	domainName := fmt.Sprintf("terraformprovidertest%d", rand.Intn(100000))
 	newDomainName := fmt.Sprintf("terraformprovidertest%d", rand.Intn(100000))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -88,7 +88,7 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 	domainName := fmt.Sprintf("orgtest%d", rand.Intn(100000))
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -901,7 +901,7 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 }
 
 func TestAccEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -930,7 +930,7 @@ func TestAccEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 }
 
 func TestAccEnvironmentsResource_Validate_Create_Them_Try_Remove_Dataverse(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -1170,7 +1170,7 @@ func TestUnitEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *t
 }
 
 func TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -1224,7 +1224,7 @@ func TestAccEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *te
 }
 
 func TestAccEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		IsUnitTest:               false,
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -1341,7 +1341,7 @@ func TestUnitEnvironmentsResource_Validate_Locations_And_Azure_Regions(t *testin
 }
 
 func TestAccEnvironmentsResource_Validate_Enable_Admin_Mode(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -1529,7 +1529,7 @@ func TestUnitEnvironmentsResource_Create_Environment_With_Env_Group(t *testing.T
 }
 
 func TestAccEnvironmentsResource_Create_Environment_With_Env_Group(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -1753,7 +1753,7 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 }
 
 func TestAccEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -1860,7 +1860,7 @@ func TestAccEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing
 }
 
 func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_With_Env_Group(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -1904,7 +1904,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_W
 }
 
 func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_And_Add_Env_Group(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -1989,7 +1989,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_A
 }
 
 func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Env_Group(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

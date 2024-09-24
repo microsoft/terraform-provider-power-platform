@@ -121,7 +121,7 @@ resource "powerplatform_data_record" "contact5" {
 }
 
 func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -297,7 +297,7 @@ func TestUnitDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 }
 
 func TestAccDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -419,7 +419,7 @@ func TestUnitDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing
 }
 
 func TestAccDataRecordDatasource_Validate_Top(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -494,7 +494,7 @@ func TestUnitDataRecordDatasource_Validate_Top(t *testing.T) {
 }
 
 func TestAccDataRecordDatasource_Validate_Apply(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -568,7 +568,7 @@ func TestUnitDataRecordDatasource_Validate_Apply(t *testing.T) {
 }
 
 func TestAccDataRecordDatasource_Validate_OrderBy(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -642,7 +642,7 @@ func TestUnitDataRecordDatasource_Validate_OrderBy(t *testing.T) {
 }
 
 func TestAccDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -721,7 +721,7 @@ func TestUnitDataRecordDatasource_Validate_SavedQuery(t *testing.T) {
 }
 
 func TestAccDataRecordDatasource_Validate_UserQuery(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -806,7 +806,7 @@ func TestUnitDataRecordDatasource_Validate_UserQuery(t *testing.T) {
 }
 
 func TestAccDataRecordDatasource_Validate_Expand_Lookup(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{

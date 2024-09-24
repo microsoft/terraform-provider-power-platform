@@ -47,7 +47,7 @@ func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 		t.Fatalf("Failed to write solution file: %v", err)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -92,7 +92,7 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 	}
 
 	solutionFileChecksum, _ := helpers.CalculateSHA256(SOLUTION_1_NAME)
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -252,7 +252,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 
 	solutionFileChecksum, _ := helpers.CalculateSHA256(SOLUTION_1_NAME)
 	settingsFileChecksum, _ := helpers.CalculateSHA256(solutionSettingsFileName)
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -502,7 +502,7 @@ func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 		t.Fatalf("Failed to write solution file: %v", err)
 	}
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
