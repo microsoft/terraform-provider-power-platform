@@ -4,11 +4,11 @@
 package powerapps
 
 type powerAppBapiDto struct {
-	Name       string                 `json:"name"`
-	Properties powerAppPropertiesBapi `json:"properties"`
+	Name       string                    `json:"name"`
+	Properties powerAppPropertiesBapiDto `json:"properties"`
 }
 
-type powerAppPropertiesBapi struct {
+type powerAppPropertiesBapiDto struct {
 	DisplayName      string                 `json:"displayName"`
 	Owner            powerAppCreatedByDto   `json:"owner"`
 	CreatedBy        powerAppCreatedByDto   `json:"createdBy"`

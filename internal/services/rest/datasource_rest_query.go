@@ -24,22 +24,6 @@ func NewDataverseWebApiDatasource() datasource.DataSource {
 	}
 }
 
-type DataverseWebApiDatasource struct {
-	helpers.TypeInfo
-	DataRecordClient client
-}
-
-type DataverseWebApiDatasourceModel struct {
-	Timeouts           timeouts.Value                           `tfsdk:"timeouts"`
-	Scope              types.String                             `tfsdk:"scope"`
-	Method             types.String                             `tfsdk:"method"`
-	Url                types.String                             `tfsdk:"url"`
-	Body               types.String                             `tfsdk:"body"`
-	ExpectedHttpStatus []int                                    `tfsdk:"expected_http_status"`
-	Headers            []DataverseWebApiOperationHeaderResource `tfsdk:"headers"`
-	Output             types.Object                             `tfsdk:"output"`
-}
-
 func (d *DataverseWebApiDatasource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	d.ProviderTypeName = req.ProviderTypeName

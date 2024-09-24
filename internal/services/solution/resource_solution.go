@@ -35,24 +35,6 @@ func NewSolutionResource() resource.Resource {
 	}
 }
 
-type Resource struct {
-	helpers.TypeInfo
-	SolutionClient Client
-}
-
-type ResourceModel struct {
-	Timeouts             timeouts.Value `tfsdk:"timeouts"`
-	Id                   types.String   `tfsdk:"id"`
-	SolutionFileChecksum types.String   `tfsdk:"solution_file_checksum"`
-	SettingsFileChecksum types.String   `tfsdk:"settings_file_checksum"`
-	EnvironmentId        types.String   `tfsdk:"environment_id"`
-	SolutionVersion      types.String   `tfsdk:"solution_version"`
-	SolutionFile         types.String   `tfsdk:"solution_file"`
-	SettingsFile         types.String   `tfsdk:"settings_file"`
-	IsManaged            types.Bool     `tfsdk:"is_managed"`
-	DisplayName          types.String   `tfsdk:"display_name"`
-}
-
 func (r *Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName

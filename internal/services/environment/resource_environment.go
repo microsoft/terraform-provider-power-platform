@@ -39,12 +39,6 @@ func NewEnvironmentResource() resource.Resource {
 	}
 }
 
-type Resource struct {
-	helpers.TypeInfo
-	EnvironmentClient Client
-	LicensingClient   licensing.Client
-}
-
 // Metadata returns the full name of the resource type.
 func (r *Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
@@ -311,7 +305,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 
 	var currencyCode string
-	var templateMetadata *CreateTemplateMetadata
+	var templateMetadata *createTemplateMetadataDto
 	var templates []string
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
 		currencyCode = envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code
@@ -371,7 +365,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		currencyCode = defaultCurrency.IsoCurrencyCode
 	}
 
-	var templateMetadata *CreateTemplateMetadata
+	var templateMetadata *createTemplateMetadataDto
 	var templates []string
 	if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
 		dv, err := convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)
@@ -482,7 +476,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	var templateMetadata *CreateTemplateMetadata
+	var templateMetadata *createTemplateMetadataDto
 	var templates []string
 	if !state.Dataverse.IsNull() && !state.Dataverse.IsUnknown() {
 		dv, err := convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, state.Dataverse)

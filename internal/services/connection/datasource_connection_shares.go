@@ -29,30 +29,6 @@ func NewConnectionSharesDataSource() datasource.DataSource {
 	}
 }
 
-type SharesDataSource struct {
-	helpers.TypeInfo
-	ConnectionsClient client
-}
-
-type SharesListDataSourceModel struct {
-	Timeouts      timeouts.Value          `tfsdk:"timeouts"`
-	EnvironmentId types.String            `tfsdk:"environment_id"`
-	ConnectorName types.String            `tfsdk:"connector_name"`
-	ConnectionId  types.String            `tfsdk:"connection_id"`
-	Shares        []SharesDataSourceModel `tfsdk:"shares"`
-}
-
-type SharesDataSourceModel struct {
-	Id        types.String                   `tfsdk:"id"`
-	RoleName  types.String                   `tfsdk:"role_name"`
-	Principal SharesPrincipalDataSourceModel `tfsdk:"principal"`
-}
-
-type SharesPrincipalDataSourceModel struct {
-	EntraId     types.String `tfsdk:"entra_object_id"`
-	DisplayName types.String `tfsdk:"display_name"`
-}
-
 func (d *SharesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	d.ProviderTypeName = req.ProviderTypeName

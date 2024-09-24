@@ -11,7 +11,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
+
+type EnvironmentSettingsDataSource struct {
+	helpers.TypeInfo
+	EnvironmentSettingsClient client
+}
+
+type EnvironmentSettingsResource struct {
+	helpers.TypeInfo
+	EnvironmentSettingClient client
+}
 
 type EnvironmentSettingsResourceModel struct {
 	Timeouts      timeouts.Value `tfsdk:"timeouts"`
@@ -234,33 +245,4 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		panic(fmt.Sprintf("unexpected type %T", environmentSettings))
 	}
 	return environmentSettings
-}
-
-type environmentSettingsValueDto struct {
-	Value []environmentSettingsDto `json:"value"`
-}
-
-type environmentSettingsDto struct {
-	MaxUploadFileSize                        *int64  `json:"maxuploadfilesize,omitempty"`
-	PluginTraceLogSetting                    *int64  `json:"plugintracelogsetting,omitempty"`
-	IsAuditEnabled                           *bool   `json:"isauditenabled,omitempty"`
-	IsUserAccessAuditEnabled                 *bool   `json:"isuseraccessauditenabled,omitempty"`
-	IsReadAuditEnabled                       *bool   `json:"isreadauditenabled,omitempty"`
-	BoundDashboardDefaultCardExpanded        *bool   `json:"bounddashboarddefaultcardexpanded,omitempty"`
-	OrganizationId                           *string `json:"organizationid,omitempty"`
-	PowerAppsComponentFrameworkForCanvasApps *bool   `json:"iscustomcontrolsincanvasappsenabled,omitempty"`
-}
-
-type environmentIdDto struct {
-	Id         string                     `json:"id"`
-	Name       string                     `json:"name"`
-	Properties environmentIdPropertiesDto `json:"properties"`
-}
-
-type environmentIdPropertiesDto struct {
-	LinkedEnvironmentMetadata linkedEnvironmentIdMetadataDto `json:"linkedEnvironmentMetadata"`
-}
-
-type linkedEnvironmentIdMetadataDto struct {
-	InstanceURL string
 }

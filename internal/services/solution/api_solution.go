@@ -232,7 +232,7 @@ func (client *Client) createSolutionComponentParameters(settings []byte) ([]any,
 		return nil, nil
 	}
 
-	solutionSettings := solutionSettings{}
+	solutionSettings := solutionSettingsDto{}
 	if settings != nil {
 		err := json.Unmarshal(settings, &solutionSettings)
 		if err != nil {

@@ -21,23 +21,6 @@ var (
 	_ datasource.DataSourceWithConfigure = &DataSource{}
 )
 
-type DataSourceModel struct {
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
-	Value    []DataModel    `tfsdk:"locations"`
-}
-
-type DataModel struct {
-	ID                                     string   `tfsdk:"id"`
-	Name                                   string   `tfsdk:"name"`
-	DisplayName                            string   `tfsdk:"display_name"`
-	Code                                   string   `tfsdk:"code"`
-	IsDefault                              bool     `tfsdk:"is_default"`
-	IsDisabled                             bool     `tfsdk:"is_disabled"`
-	CanProvisionDatabase                   bool     `tfsdk:"can_provision_database"`
-	CanProvisionCustomerEngagementDatabase bool     `tfsdk:"can_provision_customer_engagement_database"`
-	AzureRegions                           []string `tfsdk:"azure_regions"`
-}
-
 func NewLocationsDataSource() datasource.DataSource {
 	return &DataSource{
 		TypeInfo: helpers.TypeInfo{

@@ -33,26 +33,6 @@ func NewBillingPolicyResource() resource.Resource {
 	}
 }
 
-type BillingPolicyResource struct {
-	helpers.TypeInfo
-	LicensingClient Client
-}
-
-type BillingPolicyResourceModel struct {
-	Timeouts          timeouts.Value                 `tfsdk:"timeouts"`
-	Id                types.String                   `tfsdk:"id"`
-	Name              types.String                   `tfsdk:"name"`
-	Location          types.String                   `tfsdk:"location"`
-	Status            types.String                   `tfsdk:"status"`
-	BillingInstrument BillingInstrumentResourceModel `tfsdk:"billing_instrument"`
-}
-
-type BillingInstrumentResourceModel struct {
-	Id             types.String `tfsdk:"id"`
-	ResourceGroup  types.String `tfsdk:"resource_group"`
-	SubscriptionId types.String `tfsdk:"subscription_id"`
-}
-
 func (r *BillingPolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName

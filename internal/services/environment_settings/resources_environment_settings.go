@@ -34,11 +34,6 @@ func NewEnvironmentSettingsResource() resource.Resource {
 	}
 }
 
-type EnvironmentSettingsResource struct {
-	helpers.TypeInfo
-	EnvironmentSettingClient client
-}
-
 func (r *EnvironmentSettingsResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName

@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
@@ -26,32 +25,6 @@ func NewEnvironmentPowerAppsDataSource() datasource.DataSource {
 		TypeInfo: helpers.TypeInfo{
 			TypeName: "environment_powerapps",
 		},
-	}
-}
-
-type EnvironmentPowerAppsDataSource struct {
-	helpers.TypeInfo
-	PowerAppssClient client
-}
-
-type EnvironmentPowerAppsListDataSourceModel struct {
-	Timeouts  timeouts.Value                        `tfsdk:"timeouts"`
-	PowerApps []EnvironmentPowerAppsDataSourceModel `tfsdk:"powerapps"`
-}
-
-type EnvironmentPowerAppsDataSourceModel struct {
-	EnvironmentId types.String `tfsdk:"id"`
-	DisplayName   types.String `tfsdk:"display_name"`
-	Name          types.String `tfsdk:"name"`
-	CreatedTime   types.String `tfsdk:"created_time"`
-}
-
-func ConvertFromPowerAppDto(powerAppDto powerAppBapiDto) EnvironmentPowerAppsDataSourceModel {
-	return EnvironmentPowerAppsDataSourceModel{
-		EnvironmentId: types.StringValue(powerAppDto.Properties.Environment.Name),
-		DisplayName:   types.StringValue(powerAppDto.Properties.DisplayName),
-		Name:          types.StringValue(powerAppDto.Name),
-		CreatedTime:   types.StringValue(powerAppDto.Properties.CreatedTime),
 	}
 }
 

@@ -577,7 +577,7 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 		Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s/$ref", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, parentRecordId, key),
 	}
 
-	existingRelationsResponse := relationApiResponse{}
+	existingRelationsResponse := relationApiResponseDto{}
 
 	apiResponse, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 	if err != nil {
@@ -590,7 +590,7 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 		return err
 	}
 
-	var toBeDeleted = make([]relationApiBody, 0)
+	var toBeDeleted = make([]relationApiBodyDto, 0)
 
 	for _, existingRelation := range existingRelationsResponse.Value {
 		shouldDelete := true
@@ -642,7 +642,7 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 			return err
 		}
 
-		relation := relationApiBody{
+		relation := relationApiBodyDto{
 			OdataID: fmt.Sprintf("https://%s/api/data/%s/%s(%s)", environmentHost, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId),
 		}
 		_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)

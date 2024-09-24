@@ -29,30 +29,6 @@ func NewBillingPoliciesDataSource() datasource.DataSource {
 	}
 }
 
-type BillingPoliciesDataSource struct {
-	helpers.TypeInfo
-	LicensingClient Client
-}
-
-type BillingPoliciesListDataSourceModel struct {
-	Timeouts        timeouts.Value                 `tfsdk:"timeouts"`
-	BillingPolicies []BillingPolicyDataSourceModel `tfsdk:"billing_policies"`
-}
-
-type BillingPolicyDataSourceModel struct {
-	Id                types.String                     `tfsdk:"id"`
-	Name              types.String                     `tfsdk:"name"`
-	Location          types.String                     `tfsdk:"location"`
-	Status            types.String                     `tfsdk:"status"`
-	BillingInstrument BillingInstrumentDataSourceModel `tfsdk:"billing_instrument"`
-}
-
-type BillingInstrumentDataSourceModel struct {
-	Id             types.String `tfsdk:"id"`
-	ResourceGroup  types.String `tfsdk:"resource_group"`
-	SubscriptionId types.String `tfsdk:"subscription_id"`
-}
-
 func (d *BillingPoliciesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	d.ProviderTypeName = req.ProviderTypeName

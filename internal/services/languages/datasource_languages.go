@@ -29,26 +29,6 @@ func NewLanguagesDataSource() datasource.DataSource {
 	}
 }
 
-type DataSource struct {
-	helpers.TypeInfo
-	LanguagesClient client
-}
-
-type DataSourceModel struct {
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
-	Location types.String   `tfsdk:"location"`
-	Value    []DataModel    `tfsdk:"languages"`
-}
-
-type DataModel struct {
-	Name            string `tfsdk:"name"`
-	ID              string `tfsdk:"id"`
-	DisplayName     string `tfsdk:"display_name"`
-	LocalizedName   string `tfsdk:"localized_name"`
-	LocaleID        int64  `tfsdk:"locale_id"`
-	IsTenantDefault bool   `tfsdk:"is_tenant_default"`
-}
-
 func (d *DataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	d.ProviderTypeName = req.ProviderTypeName

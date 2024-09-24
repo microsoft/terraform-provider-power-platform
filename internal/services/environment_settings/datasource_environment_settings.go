@@ -30,11 +30,6 @@ func NewEnvironmentSettingsDataSource() *EnvironmentSettingsDataSource {
 	}
 }
 
-type EnvironmentSettingsDataSource struct {
-	helpers.TypeInfo
-	EnvironmentSettingsClient client
-}
-
 func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()

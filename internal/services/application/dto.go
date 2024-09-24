@@ -3,21 +3,21 @@
 package application
 
 type tenantApplicationDto struct {
-	ApplicationDescription string                         `json:"applicationDescription"`
-	ApplicationId          string                         `json:"applicationId"`
-	ApplicationName        string                         `json:"applicationName"`
-	ApplicationVisibility  string                         `json:"applicationVisibility"`
-	CatalogVisibility      string                         `json:"catalogVisibility"`
-	LastError              *tenantApplicationErrorDetails `json:"errorDetails,omitempty"`
-	LearnMoreUrl           string                         `json:"learnMoreUrl"`
-	LocalizedDescription   string                         `json:"localizedDescription"`
-	LocalizedName          string                         `json:"localizedName"`
-	PublisherId            string                         `json:"publisherId"`
-	PublisherName          string                         `json:"publisherName"`
-	UniqueName             string                         `json:"uniqueName"`
+	ApplicationDescription string                            `json:"applicationDescription"`
+	ApplicationId          string                            `json:"applicationId"`
+	ApplicationName        string                            `json:"applicationName"`
+	ApplicationVisibility  string                            `json:"applicationVisibility"`
+	CatalogVisibility      string                            `json:"catalogVisibility"`
+	LastError              *tenantApplicationErrorDetailsDto `json:"errorDetails,omitempty"`
+	LearnMoreUrl           string                            `json:"learnMoreUrl"`
+	LocalizedDescription   string                            `json:"localizedDescription"`
+	LocalizedName          string                            `json:"localizedName"`
+	PublisherId            string                            `json:"publisherId"`
+	PublisherName          string                            `json:"publisherName"`
+	UniqueName             string                            `json:"uniqueName"`
 }
 
-type tenantApplicationErrorDetails struct {
+type tenantApplicationErrorDetailsDto struct {
 	ErrorCode  string `json:"errorCode"`
 	ErrorName  string `json:"errorName"`
 	Message    string `json:"message"`

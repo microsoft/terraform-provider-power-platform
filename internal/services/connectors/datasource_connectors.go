@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
@@ -26,40 +25,6 @@ func NewConnectorsDataSource() datasource.DataSource {
 		TypeInfo: helpers.TypeInfo{
 			TypeName: "connectors",
 		},
-	}
-}
-
-type DataSource struct {
-	helpers.TypeInfo
-	ConnectorsClient client
-}
-
-type ListDataSourceModel struct {
-	Timeouts   timeouts.Value    `tfsdk:"timeouts"`
-	Connectors []DataSourceModel `tfsdk:"connectors"`
-}
-
-type DataSourceModel struct {
-	Id          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	Type        types.String `tfsdk:"type"`
-	Description types.String `tfsdk:"description"`
-	DisplayName types.String `tfsdk:"display_name"`
-	Tier        types.String `tfsdk:"tier"`
-	Publisher   types.String `tfsdk:"publisher"`
-	Unblockable types.Bool   `tfsdk:"unblockable"`
-}
-
-func ConvertFromConnectorDto(connectorDto connectorDto) DataSourceModel {
-	return DataSourceModel{
-		Id:          types.StringValue(connectorDto.Id),
-		Name:        types.StringValue(connectorDto.Name),
-		Type:        types.StringValue(connectorDto.Type),
-		Description: types.StringValue(connectorDto.Properties.Description),
-		DisplayName: types.StringValue(connectorDto.Properties.DisplayName),
-		Tier:        types.StringValue(connectorDto.Properties.Tier),
-		Publisher:   types.StringValue(connectorDto.Properties.Publisher),
-		Unblockable: types.BoolValue(connectorDto.Properties.Unblockable),
 	}
 }
 
@@ -174,7 +139,7 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	}
 
 	for _, connector := range connectors {
-		connectorModel := ConvertFromConnectorDto(connector)
+		connectorModel := convertFromConnectorDto(connector)
 		state.Connectors = append(state.Connectors, connectorModel)
 	}
 	diags := resp.State.Set(ctx, &state)

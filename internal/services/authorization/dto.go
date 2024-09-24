@@ -22,7 +22,7 @@ type securityRoleDto struct {
 	BusinessUnitId string `json:"_businessunitid_value"`
 }
 
-type securityRoleDtoArray struct {
+type securityRoleArrayDto struct {
 	Value []securityRoleDto `json:"value"`
 }
 
@@ -37,7 +37,7 @@ func (u *userDto) securityRolesArray() []string {
 	return roles
 }
 
-type userDtoArray struct {
+type userArrayDto struct {
 	Value []userDto `json:"value"`
 }
 

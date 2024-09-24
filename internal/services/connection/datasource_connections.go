@@ -31,26 +31,6 @@ func NewConnectionsDataSource() datasource.DataSource {
 	}
 }
 
-type ConnectionsDataSource struct {
-	helpers.TypeInfo
-	ConnectionsClient client
-}
-
-type ConnectionsListDataSourceModel struct {
-	Timeouts      timeouts.Value               `tfsdk:"timeouts"`
-	EnvironmentId types.String                 `tfsdk:"environment_id"`
-	Connections   []ConnectionsDataSourceModel `tfsdk:"connections"`
-}
-
-type ConnectionsDataSourceModel struct {
-	Id                      types.String `tfsdk:"id"`
-	Name                    types.String `tfsdk:"name"`
-	DisplayName             types.String `tfsdk:"display_name"`
-	Status                  []string     `tfsdk:"status"`
-	ConnectionParameters    types.String `tfsdk:"connection_parameters"`
-	ConnectionParametersSet types.String `tfsdk:"connection_parameters_set"`
-}
-
 func (d *ConnectionsDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	d.ProviderTypeName = req.ProviderTypeName

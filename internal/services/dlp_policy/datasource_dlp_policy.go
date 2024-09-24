@@ -31,11 +31,6 @@ func NewDataLossPreventionPolicyDataSource() datasource.DataSource {
 	}
 }
 
-type DataLossPreventionPolicyDataSource struct {
-	helpers.TypeInfo
-	DlpPolicyClient client
-}
-
 func (d *DataLossPreventionPolicyDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	d.ProviderTypeName = req.ProviderTypeName

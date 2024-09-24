@@ -32,26 +32,6 @@ func NewConnectionShareResource() resource.Resource {
 	}
 }
 
-type ShareResource struct {
-	helpers.TypeInfo
-	ConnectionsClient client
-}
-
-type ShareResourceModel struct {
-	Timeouts      timeouts.Value              `tfsdk:"timeouts"`
-	Id            types.String                `tfsdk:"id"`
-	EnvironmentId types.String                `tfsdk:"environment_id"`
-	ConnectorName types.String                `tfsdk:"connector_name"`
-	ConnectionId  types.String                `tfsdk:"connection_id"`
-	RoleName      types.String                `tfsdk:"role_name"`
-	Principal     SharePrincipalResourceModel `tfsdk:"principal"`
-}
-
-type SharePrincipalResourceModel struct {
-	EntraObjectId types.String `tfsdk:"entra_object_id"`
-	DisplayName   types.String `tfsdk:"display_name"`
-}
-
 func (r *ShareResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName

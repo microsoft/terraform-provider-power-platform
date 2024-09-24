@@ -21,21 +21,6 @@ var (
 	_ datasource.DataSourceWithConfigure = &DataSource{}
 )
 
-type DataSourceModel struct {
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
-	Location types.String   `tfsdk:"location"`
-	Value    []DataModel    `tfsdk:"currencies"`
-}
-
-type DataModel struct {
-	ID              string `tfsdk:"id"`
-	Name            string `tfsdk:"name"`
-	Type            string `tfsdk:"type"`
-	Code            string `tfsdk:"code"`
-	Symbol          string `tfsdk:"symbol"`
-	IsTenantDefault bool   `tfsdk:"is_tenant_default"`
-}
-
 func NewCurrenciesDataSource() datasource.DataSource {
 	return &DataSource{
 		TypeInfo: helpers.TypeInfo{

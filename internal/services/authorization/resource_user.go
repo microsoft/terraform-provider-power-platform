@@ -34,24 +34,6 @@ func NewUserResource() resource.Resource {
 	}
 }
 
-type UserResource struct {
-	helpers.TypeInfo
-	UserClient client
-}
-
-type UserResourceModel struct {
-	Timeouts          timeouts.Value `tfsdk:"timeouts"`
-	Id                types.String   `tfsdk:"id"`
-	EnvironmentId     types.String   `tfsdk:"environment_id"`
-	AadId             types.String   `tfsdk:"aad_id"`
-	BusinessUnitId    types.String   `tfsdk:"business_unit_id"`
-	SecurityRoles     []string       `tfsdk:"security_roles"`
-	UserPrincipalName types.String   `tfsdk:"user_principal_name"`
-	FirstName         types.String   `tfsdk:"first_name"`
-	LastName          types.String   `tfsdk:"last_name"`
-	DisableDelete     types.Bool     `tfsdk:"disable_delete"`
-}
-
 func (r *UserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName

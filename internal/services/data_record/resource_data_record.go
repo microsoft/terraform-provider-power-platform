@@ -32,19 +32,6 @@ func NewDataRecordResource() resource.Resource {
 	}
 }
 
-type DataRecordResource struct {
-	helpers.TypeInfo
-	DataRecordClient client
-}
-
-type DataRecordResourceModel struct {
-	Timeouts         timeouts.Value `tfsdk:"timeouts"`
-	Id               types.String   `tfsdk:"id"`
-	EnvironmentId    types.String   `tfsdk:"environment_id"`
-	TableLogicalName types.String   `tfsdk:"table_logical_name"`
-	Columns          types.Dynamic  `tfsdk:"columns"`
-}
-
 func (r *DataRecordResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName

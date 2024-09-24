@@ -29,11 +29,11 @@ type entityDefinitionsDto struct {
 	MetadataID            string `json:"MetadataId"`
 }
 
-type relationApiResponse struct {
-	OdataContext string            `json:"@odata.context"`
-	Value        []relationApiBody `json:"value"`
+type relationApiResponseDto struct {
+	OdataContext string               `json:"@odata.context"`
+	Value        []relationApiBodyDto `json:"value"`
 }
 
-type relationApiBody struct {
+type relationApiBodyDto struct {
 	OdataID string `json:"@odata.id"`
 }

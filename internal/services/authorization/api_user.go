@@ -46,7 +46,7 @@ func (client *client) GetUsers(ctx context.Context, environmentId string) ([]use
 		Host:   environmentHost,
 		Path:   "/api/data/v9.2/systemusers",
 	}
-	userArray := userDtoArray{}
+	userArray := userArrayDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &userArray)
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (client *client) GetUserByAadObjectId(ctx context.Context, environmentId, a
 	values.Add("$expand", "systemuserroles_association($select=roleid,name,ismanaged,_businessunitid_value)")
 	apiUrl.RawQuery = values.Encode()
 
-	user := userDtoArray{}
+	user := userArrayDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
 	if err != nil {
 		var httpError *customerrors.UnexpectedHttpStatusCodeError
@@ -303,7 +303,7 @@ func (client *client) GetSecurityRoles(ctx context.Context, environmentId, busin
 		values.Add("$filter", fmt.Sprintf("_businessunitid_value eq %s", businessUnitId))
 		apiUrl.RawQuery = values.Encode()
 	}
-	securityRoleArray := securityRoleDtoArray{}
+	securityRoleArray := securityRoleArrayDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &securityRoleArray)
 	if err != nil {
 		var httpError *customerrors.UnexpectedHttpStatusCodeError

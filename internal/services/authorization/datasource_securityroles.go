@@ -27,20 +27,6 @@ type SecurityRolesDataSource struct {
 	UserClient client
 }
 
-type SecurityRolesListDataSourceModel struct {
-	Timeouts       timeouts.Value                `tfsdk:"timeouts"`
-	EnvironmentId  types.String                  `tfsdk:"environment_id"`
-	BusinessUnitId types.String                  `tfsdk:"business_unit_id"`
-	SecurityRoles  []SecurityRoleDataSourceModel `tfsdk:"security_roles"`
-}
-
-type SecurityRoleDataSourceModel struct {
-	RoleId         types.String `tfsdk:"role_id"`
-	Name           types.String `tfsdk:"name"`
-	IsManaged      types.Bool   `tfsdk:"is_managed"`
-	BusinessUnitId types.String `tfsdk:"business_unit_id"`
-}
-
 func NewSecurityRolesDataSource() datasource.DataSource {
 	return &SecurityRolesDataSource{
 		TypeInfo: helpers.TypeInfo{

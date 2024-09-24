@@ -29,42 +29,6 @@ func NewTenantApplicationPackagesDataSource() datasource.DataSource {
 	}
 }
 
-type TenantApplicationPackagesDataSource struct {
-	helpers.TypeInfo
-	ApplicationClient client
-}
-
-type TenantApplicationPackagesListDataSourceModel struct {
-	Timeouts      timeouts.Value                            `tfsdk:"timeouts"`
-	Name          types.String                              `tfsdk:"name"`
-	PublisherName types.String                              `tfsdk:"publisher_name"`
-	Applications  []TenantApplicationPackageDataSourceModel `tfsdk:"applications"`
-}
-
-type TenantApplicationPackageDataSourceModel struct {
-	ApplicationId          types.String                                   `tfsdk:"application_id"`
-	ApplicationDescprition types.String                                   `tfsdk:"application_descprition"`
-	Name                   types.String                                   `tfsdk:"application_name"`
-	LearnMoreUrl           types.String                                   `tfsdk:"learn_more_url"`
-	LocalizedDescription   types.String                                   `tfsdk:"localized_description"`
-	LocalizedName          types.String                                   `tfsdk:"localized_name"`
-	PublisherId            types.String                                   `tfsdk:"publisher_id"`
-	PublisherName          types.String                                   `tfsdk:"publisher_name"`
-	UniqueName             types.String                                   `tfsdk:"unique_name"`
-	ApplicationVisibility  types.String                                   `tfsdk:"application_visibility"`
-	CatalogVisibility      types.String                                   `tfsdk:"catalog_visibility"`
-	LastError              []TenantApplicationErrorDetailsDataSourceModel `tfsdk:"last_error"`
-}
-
-type TenantApplicationErrorDetailsDataSourceModel struct {
-	ErrorCode  types.String `tfsdk:"error_code"`
-	ErrorName  types.String `tfsdk:"error_name"`
-	Message    types.String `tfsdk:"message"`
-	Source     types.String `tfsdk:"source"`
-	StatusCode types.Int64  `tfsdk:"status_code"`
-	Type       types.String `tfsdk:"type"`
-}
-
 func (d *TenantApplicationPackagesDataSource) Metadata(ctx context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	d.ProviderTypeName = req.ProviderTypeName

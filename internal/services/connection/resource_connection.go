@@ -36,22 +36,6 @@ func NewConnectionResource() resource.Resource {
 	}
 }
 
-type Resource struct {
-	helpers.TypeInfo
-	ConnectionsClient client
-}
-
-type ResourceModel struct {
-	Timeouts                timeouts.Value `tfsdk:"timeouts"`
-	Id                      types.String   `tfsdk:"id"`
-	Name                    types.String   `tfsdk:"name"`
-	EnvironmentId           types.String   `tfsdk:"environment_id"`
-	DisplayName             types.String   `tfsdk:"display_name"`
-	Status                  types.Set      `tfsdk:"status"`
-	ConnectionParameters    types.String   `tfsdk:"connection_parameters"`
-	ConnectionParametersSet types.String   `tfsdk:"connection_parameters_set"`
-}
-
 func (r *Resource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
 	r.ProviderTypeName = req.ProviderTypeName
