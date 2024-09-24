@@ -34,7 +34,6 @@ data "powerplatform_locations" "all_locations" {
 
 ### Optional
 
-- `id` (Number) Id of the read operation
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

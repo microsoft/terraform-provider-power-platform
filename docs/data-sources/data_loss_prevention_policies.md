@@ -38,7 +38,6 @@ data "powerplatform_data_loss_prevention_policies" "tenant_data_loss_prevention_
 
 ### Read-Only
 
-- `id` (String) Id of the read operation
 - `policies` (Attributes List) List of Data Loss Prevention Policies (see [below for nested schema](#nestedatt--policies))
 
 <a id="nestedatt--timeouts"></a>

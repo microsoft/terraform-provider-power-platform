@@ -43,7 +43,6 @@ data "powerplatform_solutions" "all" {
 
 ### Read-Only
 
-- `id` (String) Id of the read operation
 - `solutions` (Attributes List) List of Solutions (see [below for nested schema](#nestedatt--solutions))
 
 <a id="nestedatt--timeouts"></a>

@@ -22,7 +22,6 @@ Fetches the list of Dataverse security roles for a given environment and busines
 ### Optional
 
 - `business_unit_id` (String) Id of the business unit to filter the security roles
-- `id` (String) Id of the read operation
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

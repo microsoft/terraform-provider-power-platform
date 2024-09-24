@@ -41,7 +41,6 @@ data "powerplatform_currencies" "all_currencies_by_location" {
 
 ### Optional
 
-- `id` (Number) Id of the read operation
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

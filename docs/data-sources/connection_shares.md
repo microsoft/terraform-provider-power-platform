@@ -47,7 +47,6 @@ data "powerplatform_connection_shares" "all_shares" {
 
 ### Read-Only
 
-- `id` (String) The ID of this resource.
 - `shares` (Attributes List) List of shares for a given connection. (see [below for nested schema](#nestedatt--shares))
 
 <a id="nestedatt--timeouts"></a>
