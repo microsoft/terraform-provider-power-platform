@@ -29,7 +29,6 @@ type SecurityRolesDataSource struct {
 
 type SecurityRolesListDataSourceModel struct {
 	Timeouts       timeouts.Value                `tfsdk:"timeouts"`
-	Id             types.String                  `tfsdk:"id"`
 	EnvironmentId  types.String                  `tfsdk:"environment_id"`
 	BusinessUnitId types.String                  `tfsdk:"business_unit_id"`
 	SecurityRoles  []SecurityRoleDataSourceModel `tfsdk:"security_roles"`
@@ -61,11 +60,6 @@ func (d *SecurityRolesDataSource) Schema(ctx context.Context, req datasource.Sch
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.StringAttribute{
-				Description:         "Id of the read operation",
-				MarkdownDescription: "Id of the read operation",
-				Optional:            true,
-			},
 			"environment_id": schema.StringAttribute{
 				Description:         "Id of the Dynamics 365 environment",
 				MarkdownDescription: "Id of the Dynamics 365 environment",
@@ -168,8 +162,6 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadR
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", d.ProviderTypeName, d.TypeName), err.Error())
 		return
 	}
-
-	state.Id = state.EnvironmentId
 
 	for _, role := range roles {
 		state.SecurityRoles = append(state.SecurityRoles, SecurityRoleDataSourceModel{

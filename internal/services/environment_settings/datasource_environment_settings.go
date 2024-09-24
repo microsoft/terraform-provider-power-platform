@@ -59,7 +59,7 @@ func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datas
 func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
-	var state EnvironmentSettingsSourceModel
+	var state EnvironmentSettingsDataSourceModel
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS START: %s", d.ProviderTypeName))
 
@@ -89,8 +89,7 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	state = convertFromEnvironmentSettingsDto(envSettings, state.Timeouts)
-	state.Id = state.EnvironmentId
+	state = convertFromEnvironmentSettingsDto[EnvironmentSettingsDataSourceModel](envSettings, state.Timeouts)
 
 	diags := resp.State.Set(ctx, &state)
 
@@ -115,11 +114,6 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 				Delete: false,
 				Read:   false,
 			}),
-			"id": schema.StringAttribute{
-				Description:         "Id of the read operation",
-				MarkdownDescription: "Id of the read operation",
-				Computed:            true,
-			},
 			"environment_id": schema.StringAttribute{
 				Description:         "Unique environment id (guid)",
 				MarkdownDescription: "Unique environment id (guid)",

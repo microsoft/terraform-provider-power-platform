@@ -23,7 +23,6 @@ var (
 
 type DataSourceModel struct {
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
-	Id       types.Int64    `tfsdk:"id"`
 	Location types.String   `tfsdk:"location"`
 	Value    []DataModel    `tfsdk:"currencies"`
 }
@@ -72,10 +71,6 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.Int64Attribute{
-				Description: "Id of the read operation",
-				Optional:    true,
-			},
 			"location": schema.StringAttribute{
 				Description: "Location of the currencies",
 				Required:    true,
@@ -149,7 +144,6 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
-	state.Id = types.Int64Value(int64(len(currencies.Value)))
 	state.Location = types.StringValue(state.Location.ValueString())
 
 	for _, location := range currencies.Value {

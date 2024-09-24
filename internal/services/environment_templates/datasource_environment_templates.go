@@ -36,7 +36,6 @@ type EnvironmentTemplatesDataSource struct {
 
 type EnvironmentTemplatesDataSourceModel struct {
 	Timeouts  timeouts.Value                  `tfsdk:"timeouts"`
-	Id        types.Int64                     `tfsdk:"id"`
 	Location  types.String                    `tfsdk:"location"`
 	Templates []EnvironmentTemplatesDataModel `tfsdk:"environment_templates"`
 }
@@ -76,10 +75,6 @@ func (d *EnvironmentTemplatesDataSource) Schema(ctx context.Context, req datasou
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.Int64Attribute{
-				Description: "Id of the read operation",
-				Optional:    true,
-			},
 			"location": schema.StringAttribute{
 				Description: "Location of the environment templates",
 				Required:    true,
@@ -204,7 +199,6 @@ func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasourc
 	appendToList(environment_templates.Teams, "teams", &state.Templates)
 	appendToList(environment_templates.Platform, "platform", &state.Templates)
 
-	state.Id = types.Int64Value(int64(len(state.Templates)))
 	state.Location = types.StringValue(state.Location.ValueString())
 
 	diags := resp.State.Set(ctx, &state)

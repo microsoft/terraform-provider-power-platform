@@ -124,7 +124,6 @@ type dlpActionRuleDto struct {
 
 type policiesListDataSourceModel struct {
 	Timeouts timeouts.Value                            `tfsdk:"timeouts"`
-	Id       types.String                              `tfsdk:"id"`
 	Policies []dataLossPreventionPolicyDatasourceModel `tfsdk:"policies"`
 }
 

@@ -6,7 +6,6 @@ package dlp_policy
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -131,11 +130,6 @@ func (d *DataLossPreventionPolicyDataSource) Schema(ctx context.Context, req dat
 				Delete: false,
 				Read:   false,
 			}),
-			"id": schema.StringAttribute{
-				Description:         "Id of the read operation",
-				MarkdownDescription: "Id of the read operation",
-				Computed:            true,
-			},
 			"policies": schema.ListNestedAttribute{
 				Description:         "List of Data Loss Prevention Policies",
 				MarkdownDescription: "List of Data Loss Prevention Policies",
@@ -287,8 +281,6 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", d.ProviderTypeName, d.TypeName), err.Error())
 		return
 	}
-
-	state.Id = types.StringValue(strconv.Itoa(len(policies)))
 
 	for _, policy := range policies {
 		policyModel := dataLossPreventionPolicyDatasourceModel{}

@@ -6,7 +6,6 @@ package application
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -39,7 +38,6 @@ type TenantApplicationPackagesListDataSourceModel struct {
 	Timeouts      timeouts.Value                            `tfsdk:"timeouts"`
 	Name          types.String                              `tfsdk:"name"`
 	PublisherName types.String                              `tfsdk:"publisher_name"`
-	Id            types.String                              `tfsdk:"id"`
 	Applications  []TenantApplicationPackageDataSourceModel `tfsdk:"applications"`
 }
 
@@ -89,10 +87,6 @@ func (d *TenantApplicationPackagesDataSource) Schema(ctx context.Context, req da
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.StringAttribute{
-				Description: "Id of the read operation",
-				Optional:    true,
-			},
 			"name": schema.StringAttribute{
 				Description: "Name of the Dynamics 365 application",
 				Optional:    true,
@@ -243,8 +237,6 @@ func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req data
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
 		return
 	}
-
-	state.Id = types.StringValue(strconv.Itoa(len(applications)))
 
 	for _, application := range applications {
 		if (state.Name.ValueString() != "" && state.Name.ValueString() != application.ApplicationName) ||

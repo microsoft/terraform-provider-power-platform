@@ -6,7 +6,6 @@ package solution
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -37,7 +36,6 @@ type DataSource struct {
 
 type ListDataSourceModel struct {
 	Timeouts      timeouts.Value    `tfsdk:"timeouts"`
-	Id            types.String      `tfsdk:"id"`
 	EnvironmentId types.String      `tfsdk:"environment_id"`
 	Solutions     []DataSourceModel `tfsdk:"solutions"`
 }
@@ -90,11 +88,6 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.StringAttribute{
-				Description:         "Id of the read operation",
-				MarkdownDescription: "Id of the read operation",
-				Computed:            true,
-			},
 			"environment_id": schema.StringAttribute{
 				Description:         "Unique environment id (guid)",
 				MarkdownDescription: "Unique environment id (guid)",
@@ -210,8 +203,6 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		solutionModel := ConvertFromSolutionDto(solution)
 		state.Solutions = append(state.Solutions, solutionModel)
 	}
-
-	state.Id = types.StringValue(strconv.Itoa(len(solutions)))
 
 	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)

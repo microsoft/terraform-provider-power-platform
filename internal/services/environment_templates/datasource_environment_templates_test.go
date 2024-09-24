@@ -25,7 +25,6 @@ func TestAccEnvironmentTemplatesDataSource_Validate_Read(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_environment_templates.all_environment_templates_for_unitedstates", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environment_templates.all_environment_templates_for_unitedstates", "environment_templates.#", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_environment_templates.all_environment_templates_for_unitedstates", "environment_templates.0.id", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environment_templates.all_environment_templates_for_unitedstates", "environment_templates.0.name", regexp.MustCompile(helpers.StringRegex)),
@@ -57,7 +56,6 @@ func TestUnitEnvironmentTemplatesDataSource_Validate_Read(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_environment_templates.all_environment_templates_for_unitedstates", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_templates.all_environment_templates_for_unitedstates", "environment_templates.#", "53"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_templates.all_environment_templates_for_unitedstates", "environment_templates.0.id", "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates/environmentTemplates/D365_CDSSampleApp"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_templates.all_environment_templates_for_unitedstates", "environment_templates.0.name", "D365_CDSSampleApp"),

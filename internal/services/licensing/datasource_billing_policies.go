@@ -37,7 +37,6 @@ type BillingPoliciesDataSource struct {
 type BillingPoliciesListDataSourceModel struct {
 	Timeouts        timeouts.Value                 `tfsdk:"timeouts"`
 	BillingPolicies []BillingPolicyDataSourceModel `tfsdk:"billing_policies"`
-	Id              types.Int64                    `tfsdk:"id"`
 }
 
 type BillingPolicyDataSourceModel struct {
@@ -76,11 +75,6 @@ func (d *BillingPoliciesDataSource) Schema(ctx context.Context, req datasource.S
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.Int64Attribute{
-				Description:         "Id of the read operation",
-				MarkdownDescription: "Id of the read operation",
-				Computed:            true,
-			},
 			"billing_policies": schema.ListNestedAttribute{
 				Description:         "Power Platform Billing Policy",
 				MarkdownDescription: "[Power Platform Billing Policy](https://learn.microsoft.com/rest/api/power-platform/licensing/billing-policy/get-billing-policy#billingpolicyresponsemodel)",
@@ -190,7 +184,6 @@ func (d *BillingPoliciesDataSource) Read(ctx context.Context, req datasource.Rea
 		})
 	}
 
-	state.Id = types.Int64Value(int64(len(policies)))
 	diags := resp.State.Set(ctx, &state)
 
 	resp.Diagnostics.Append(diags...)

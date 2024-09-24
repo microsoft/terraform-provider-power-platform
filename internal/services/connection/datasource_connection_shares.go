@@ -6,7 +6,6 @@ package connection
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -37,7 +36,6 @@ type SharesDataSource struct {
 
 type SharesListDataSourceModel struct {
 	Timeouts      timeouts.Value          `tfsdk:"timeouts"`
-	Id            types.String            `tfsdk:"id"`
 	EnvironmentId types.String            `tfsdk:"environment_id"`
 	ConnectorName types.String            `tfsdk:"connector_name"`
 	ConnectionId  types.String            `tfsdk:"connection_id"`
@@ -77,9 +75,6 @@ func (d *SharesDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
 			"environment_id": schema.StringAttribute{
 				Description:         "Environment Id. The unique identifier of the environment that the connection are associated with.",
 				MarkdownDescription: "Environment Id. The unique identifier of the environment that the connection are associated with.",
@@ -165,7 +160,6 @@ func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		connectionModel := ConvertFromConnectionSharesDto(connection)
 		state.Shares = append(state.Shares, connectionModel)
 	}
-	state.Id = types.StringValue(strconv.Itoa(len(connectionsList.Value)))
 
 	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)

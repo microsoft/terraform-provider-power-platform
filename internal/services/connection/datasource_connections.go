@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -39,7 +38,6 @@ type ConnectionsDataSource struct {
 
 type ConnectionsListDataSourceModel struct {
 	Timeouts      timeouts.Value               `tfsdk:"timeouts"`
-	Id            types.String                 `tfsdk:"id"`
 	EnvironmentId types.String                 `tfsdk:"environment_id"`
 	Connections   []ConnectionsDataSourceModel `tfsdk:"connections"`
 }
@@ -76,9 +74,6 @@ func (d *ConnectionsDataSource) Schema(ctx context.Context, req datasource.Schem
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
 			"environment_id": schema.StringAttribute{
 				Description:         "Environment Id. The unique identifier of the environment that the connection are associated with.",
 				MarkdownDescription: "Environment Id. The unique identifier of the environment that the connection are associated with.",
@@ -163,8 +158,6 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 		connectionModel := ConvertFromConnectionDto(connection)
 		state.Connections = append(state.Connections, connectionModel)
 	}
-	state.Id = types.StringValue(strconv.Itoa(len(connections)))
-
 	diags := resp.State.Set(ctx, &state)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))

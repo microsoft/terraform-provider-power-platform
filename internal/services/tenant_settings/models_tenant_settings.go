@@ -5,9 +5,7 @@ package tenant_settings
 
 import (
 	"context"
-	"crypto/md5"
-	"encoding/hex"
-	"encoding/json"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -118,17 +116,6 @@ type userManagementSettingsDto struct {
 	EnableDeleteDisabledUserinAllEnvironments *bool `json:"enableDeleteDisabledUserinAllEnvironments,omitempty"`
 }
 
-func (tenantSettings *tenantSettingsDto) calcObjectHash() (*string, error) {
-	jsonObject, err := json.Marshal(tenantSettings)
-	if err != nil {
-		return nil, err
-	}
-
-	hash := md5.Sum(jsonObject)
-	hashString := hex.EncodeToString(hash[:])
-	return &hashString, nil
-}
-
 type tenantSettingsDto struct {
 	WalkMeOptOut                                   *bool                     `json:"walkMeOptOut,omitempty"`
 	DisableNPSCommentsReachout                     *bool                     `json:"disableNPSCommentsReachout,omitempty"`
@@ -142,7 +129,7 @@ type tenantSettingsDto struct {
 	PowerPlatform                                  *powerPlatformSettingsDto `json:"powerPlatform,omitempty"`
 }
 
-func convertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSettingsSourceModel) tenantSettingsDto {
+func convertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSettingsResourceModel) tenantSettingsDto {
 	tenantSettingsDto := tenantSettingsDto{}
 
 	if !tenantSettings.WalkMeOptOut.IsNull() && !tenantSettings.WalkMeOptOut.IsUnknown() {
@@ -462,7 +449,7 @@ func convertUserManagementSettingsModel(ctx context.Context, powerPlatformAttrib
 	}
 }
 
-func convertFromTenantSettingsDto(tenantSettingsDto tenantSettingsDto, timeout timeouts.Value) (TenantSettingsSourceModel, basetypes.ObjectValue) {
+func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettingsResourceModel](tenantSettingsDto tenantSettingsDto, timeout timeouts.Value) (T, basetypes.ObjectValue) {
 	objTypePowerPlatformSettings, objValuePowerPlatformSettings := convertPowerPlatformSettings(tenantSettingsDto)
 
 	tenantSettingsProperties := map[string]attr.Type{
@@ -493,22 +480,45 @@ func convertFromTenantSettingsDto(tenantSettingsDto tenantSettingsDto, timeout t
 
 	objValue := types.ObjectValueMust(tenantSettingsProperties, tenantSettingsValues)
 
-	tenantSettings := TenantSettingsSourceModel{
-		Timeouts:                   timeout,
-		Id:                         types.StringValue(""),
-		WalkMeOptOut:               types.BoolPointerValue(tenantSettingsDto.WalkMeOptOut),
-		DisableNPSCommentsReachout: types.BoolPointerValue(tenantSettingsDto.DisableNPSCommentsReachout),
-		DisableNewsletterSendout:   types.BoolPointerValue(tenantSettingsDto.DisableNewsletterSendout),
-		DisableEnvironmentCreationByNonAdminUsers:      types.BoolPointerValue(tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers),
-		DisablePortalsCreationByNonAdminUsers:          types.BoolPointerValue(tenantSettingsDto.DisablePortalsCreationByNonAdminUsers),
-		DisableSurveyFeedback:                          types.BoolPointerValue(tenantSettingsDto.DisableSurveyFeedback),
-		DisableTrialEnvironmentCreationByNonAdminUsers: types.BoolPointerValue(tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers),
-		DisableCapacityAllocationByEnvironmentAdmins:   types.BoolPointerValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
-		DisableSupportTicketsVisibleByAllUsers:         types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
-		PowerPlatform:                                  objValuePowerPlatformSettings,
+	var result T
+	var ok bool
+	switch any(result).(type) {
+	case TenantSettingsDataSourceModel:
+		result, ok = any(TenantSettingsDataSourceModel{
+			Timeouts:                   timeout,
+			WalkMeOptOut:               types.BoolPointerValue(tenantSettingsDto.WalkMeOptOut),
+			DisableNPSCommentsReachout: types.BoolPointerValue(tenantSettingsDto.DisableNPSCommentsReachout),
+			DisableNewsletterSendout:   types.BoolPointerValue(tenantSettingsDto.DisableNewsletterSendout),
+			DisableEnvironmentCreationByNonAdminUsers:      types.BoolPointerValue(tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers),
+			DisablePortalsCreationByNonAdminUsers:          types.BoolPointerValue(tenantSettingsDto.DisablePortalsCreationByNonAdminUsers),
+			DisableSurveyFeedback:                          types.BoolPointerValue(tenantSettingsDto.DisableSurveyFeedback),
+			DisableTrialEnvironmentCreationByNonAdminUsers: types.BoolPointerValue(tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers),
+			DisableCapacityAllocationByEnvironmentAdmins:   types.BoolPointerValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
+			DisableSupportTicketsVisibleByAllUsers:         types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
+			PowerPlatform:                                  objValuePowerPlatformSettings,
+		}).(T)
+	case TenantSettingsResourceModel:
+		result, ok = any(TenantSettingsResourceModel{
+			Timeouts:                   timeout,
+			Id:                         types.StringValue(""),
+			WalkMeOptOut:               types.BoolPointerValue(tenantSettingsDto.WalkMeOptOut),
+			DisableNPSCommentsReachout: types.BoolPointerValue(tenantSettingsDto.DisableNPSCommentsReachout),
+			DisableNewsletterSendout:   types.BoolPointerValue(tenantSettingsDto.DisableNewsletterSendout),
+			DisableEnvironmentCreationByNonAdminUsers:      types.BoolPointerValue(tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers),
+			DisablePortalsCreationByNonAdminUsers:          types.BoolPointerValue(tenantSettingsDto.DisablePortalsCreationByNonAdminUsers),
+			DisableSurveyFeedback:                          types.BoolPointerValue(tenantSettingsDto.DisableSurveyFeedback),
+			DisableTrialEnvironmentCreationByNonAdminUsers: types.BoolPointerValue(tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers),
+			DisableCapacityAllocationByEnvironmentAdmins:   types.BoolPointerValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
+			DisableSupportTicketsVisibleByAllUsers:         types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
+			PowerPlatform:                                  objValuePowerPlatformSettings,
+		}).(T)
+	default:
+		panic(fmt.Sprintf("unexpected type %T", result))
 	}
-
-	return tenantSettings, objValue
+	if !ok {
+		panic(fmt.Sprintf("unexpected type %T", result))
+	}
+	return result, objValue
 }
 
 func convertPowerPlatformSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {

@@ -23,7 +23,6 @@ func TestAccLocationsDataSource_Validate_Read(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_locations.all_locations", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_locations.all_locations", "locations.#", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestMatchResourceAttr("data.powerplatform_locations.all_locations", "locations.0.id", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_locations.all_locations", "locations.0.name", regexp.MustCompile(helpers.StringRegex)),
@@ -54,7 +53,6 @@ func TestUnitLocationsDataSource_Validate_Read(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_locations.all_locations", "id", regexp.MustCompile(`^[1-9]\d*$`)),
 					resource.TestCheckResourceAttr("data.powerplatform_locations.all_locations", "locations.#", "18"),
 					resource.TestCheckResourceAttr("data.powerplatform_locations.all_locations", "locations.0.id", "/providers/Microsoft.BusinessAppPlatform/locations/unitedstates"),
 					resource.TestCheckResourceAttr("data.powerplatform_locations.all_locations", "locations.0.name", "unitedstates"),

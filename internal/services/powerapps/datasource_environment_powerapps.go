@@ -6,7 +6,6 @@ package powerapps
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -37,7 +36,6 @@ type EnvironmentPowerAppsDataSource struct {
 
 type EnvironmentPowerAppsListDataSourceModel struct {
 	Timeouts  timeouts.Value                        `tfsdk:"timeouts"`
-	Id        types.String                          `tfsdk:"id"`
 	PowerApps []EnvironmentPowerAppsDataSourceModel `tfsdk:"powerapps"`
 }
 
@@ -79,11 +77,6 @@ func (d *EnvironmentPowerAppsDataSource) Schema(ctx context.Context, req datasou
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.StringAttribute{
-				Description:         "Id of the read operation",
-				MarkdownDescription: "Id of the read operation",
-				Computed:            true,
-			},
 			"powerapps": schema.ListNestedAttribute{
 				Description:         "List of Power Apps",
 				MarkdownDescription: "List of Power Apps",
@@ -161,8 +154,6 @@ func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasourc
 		appModel := ConvertFromPowerAppDto(app)
 		state.PowerApps = append(state.PowerApps, appModel)
 	}
-
-	state.Id = types.StringValue(strconv.Itoa(len(apps)))
 
 	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)

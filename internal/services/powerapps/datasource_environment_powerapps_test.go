@@ -30,9 +30,6 @@ func TestAccEnvironmentPowerAppsDataSource_Basic(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					// Verify placeholder id attribute.
-					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
-
 					// Verify the first power app to ensure all attributes are set.
 					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.name", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.id", regexp.MustCompile(helpers.UrlValidStringRegex)),
@@ -70,8 +67,6 @@ func TestUnitEnvironmentPowerAppsDataSource_Validate_Read(t *testing.T) {
 				data "powerplatform_environment_powerapps" "all" {}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_environment_powerapps.all", "id", regexp.MustCompile(`^[1-9]\d*$`)),
-
 					resource.TestCheckResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.#", "4"),
 
 					resource.TestCheckResourceAttr("data.powerplatform_environment_powerapps.all", "powerapps.0.name", "00000000-0000-0000-0000-000000000001"),

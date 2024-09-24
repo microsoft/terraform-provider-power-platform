@@ -371,7 +371,7 @@ func (r *TenantSettingsResource) Configure(ctx context.Context, req resource.Con
 func (r *TenantSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
-	var plan TenantSettingsSourceModel
+	var plan TenantSettingsResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -414,7 +414,7 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 
 	stateDto := applyCorrections(ctx, plannedSettingsDto, *tenantSettingsDto)
 
-	state, _ := convertFromTenantSettingsDto(*stateDto, plan.Timeouts)
+	state, _ := convertFromTenantSettingsDto[TenantSettingsResourceModel](*stateDto, plan.Timeouts)
 	state.Id = plan.Id
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
@@ -424,7 +424,7 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
-	var state TenantSettingsSourceModel
+	var state TenantSettingsResourceModel
 
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -447,11 +447,11 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	var configuredSettings TenantSettingsSourceModel
+	var configuredSettings TenantSettingsResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &configuredSettings)...)
 	oldStateDto := convertFromTenantSettingsModel(ctx, configuredSettings)
 	newStateDto := applyCorrections(ctx, oldStateDto, *tenantSettings)
-	newState, _ := convertFromTenantSettingsDto(*newStateDto, state.Timeouts)
+	newState, _ := convertFromTenantSettingsDto[TenantSettingsResourceModel](*newStateDto, state.Timeouts)
 	newState.Id = types.StringValue(tenant.TenantId)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_tenant_settings with id %s", r.ProviderTypeName, newState.Id.ValueString()))
@@ -463,7 +463,7 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan TenantSettingsSourceModel
+	var plan TenantSettingsResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -509,13 +509,13 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	// need to make corrections from what the API returns to match what terraform expects
 	filteredDto := applyCorrections(ctx, plannedDto, *updatedSettingsDto)
 
-	newState, _ := convertFromTenantSettingsDto(*filteredDto, plan.Timeouts)
+	newState, _ := convertFromTenantSettingsDto[TenantSettingsResourceModel](*filteredDto, plan.Timeouts)
 	newState.Id = plan.Id
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
 func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state TenantSettingsSourceModel
+	var state TenantSettingsResourceModel
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
@@ -574,7 +574,7 @@ func (r *TenantSettingsResource) ModifyPlan(ctx context.Context, req resource.Mo
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan TenantSettingsSourceModel
+	var plan TenantSettingsResourceModel
 	if !req.Plan.Raw.IsNull() {
 		// this is create
 		req.Plan.Get(ctx, &plan)

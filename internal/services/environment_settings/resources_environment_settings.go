@@ -228,7 +228,7 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan EnvironmentSettingsSourceModel
+	var plan EnvironmentSettingsResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -259,7 +259,7 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	var state = convertFromEnvironmentSettingsDto(envSettings, plan.Timeouts)
+	var state = convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](envSettings, plan.Timeouts)
 	state.Id = plan.EnvironmentId
 	state.EnvironmentId = plan.EnvironmentId
 
@@ -271,7 +271,7 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state EnvironmentSettingsSourceModel
+	var state EnvironmentSettingsResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -288,7 +288,7 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	var newState = convertFromEnvironmentSettingsDto(envSettings, state.Timeouts)
+	var newState = convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](envSettings, state.Timeouts)
 	newState.Id = state.EnvironmentId
 	newState.EnvironmentId = state.EnvironmentId
 
@@ -299,8 +299,8 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan EnvironmentSettingsSourceModel
-	var state EnvironmentSettingsSourceModel
+	var plan EnvironmentSettingsResourceModel
+	var state EnvironmentSettingsResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -330,7 +330,7 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	plan = convertFromEnvironmentSettingsDto(environmentSettings, plan.Timeouts)
+	plan = convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](environmentSettings, plan.Timeouts)
 	plan.Id = state.EnvironmentId
 	plan.EnvironmentId = state.EnvironmentId
 
@@ -340,7 +340,6 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 func (r *EnvironmentSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
-
 	// Do nothing on purpose
 }
 

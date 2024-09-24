@@ -59,11 +59,6 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.Int64Attribute{
-				Description:         "Id of the read operation",
-				MarkdownDescription: "Id of the read operation",
-				Computed:            true,
-			},
 			"environments": schema.ListNestedAttribute{
 				Description:         "List of environments",
 				MarkdownDescription: "List of environments",
@@ -261,7 +256,6 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 		}
 		state.Environments = append(state.Environments, *env)
 	}
-	state.Id = types.Int64Value(int64(len(envs)))
 
 	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)

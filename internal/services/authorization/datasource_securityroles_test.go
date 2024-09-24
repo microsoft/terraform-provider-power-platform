@@ -37,7 +37,6 @@ func TestAccSecurityDataSource_Validate_Read(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_security_roles.all", "id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_security_roles.all", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_security_roles.all", "security_roles.#", regexp.MustCompile(`^[1-9]\d*$`)),
 
@@ -78,8 +77,6 @@ func TestUnitSecurityDataSource_Validate_Read(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_security_roles.all", "id", regexp.MustCompile(helpers.GuidRegex)),
-
 					resource.TestCheckResourceAttr("data.powerplatform_security_roles.all", "security_roles.#", "72"),
 					resource.TestCheckResourceAttr("data.powerplatform_security_roles.all", "environment_id", "00000000-0000-0000-0000-000000000001"),
 
@@ -189,8 +186,6 @@ func TestUnitSecurityDataSource_Validate_Read_Filter_BusinessUnit(t *testing.T) 
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr("data.powerplatform_security_roles.all", "id", regexp.MustCompile(helpers.GuidRegex)),
-
 					resource.TestCheckResourceAttr("data.powerplatform_security_roles.all", "security_roles.#", "1"),
 					resource.TestCheckResourceAttr("data.powerplatform_security_roles.all", "environment_id", "00000000-0000-0000-0000-000000000001"),
 

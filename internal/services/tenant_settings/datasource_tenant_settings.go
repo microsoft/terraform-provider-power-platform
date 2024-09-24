@@ -35,7 +35,21 @@ type TenantSettingsDataSource struct {
 	TenantSettingsClient client
 }
 
-type TenantSettingsSourceModel struct {
+type TenantSettingsDataSourceModel struct {
+	Timeouts                                       timeouts.Value `tfsdk:"timeouts"`
+	WalkMeOptOut                                   types.Bool     `tfsdk:"walk_me_opt_out"`
+	DisableNPSCommentsReachout                     types.Bool     `tfsdk:"disable_nps_comments_reachout"`
+	DisableNewsletterSendout                       types.Bool     `tfsdk:"disable_newsletter_sendout"`
+	DisableEnvironmentCreationByNonAdminUsers      types.Bool     `tfsdk:"disable_environment_creation_by_non_admin_users"`
+	DisablePortalsCreationByNonAdminUsers          types.Bool     `tfsdk:"disable_portals_creation_by_non_admin_users"`
+	DisableSurveyFeedback                          types.Bool     `tfsdk:"disable_survey_feedback"`
+	DisableTrialEnvironmentCreationByNonAdminUsers types.Bool     `tfsdk:"disable_trial_environment_creation_by_non_admin_users"`
+	DisableCapacityAllocationByEnvironmentAdmins   types.Bool     `tfsdk:"disable_capacity_allocation_by_environment_admins"`
+	DisableSupportTicketsVisibleByAllUsers         types.Bool     `tfsdk:"disable_support_tickets_visible_by_all_users"`
+	PowerPlatform                                  types.Object   `tfsdk:"power_platform"`
+}
+
+type TenantSettingsResourceModel struct {
 	Timeouts                                       timeouts.Value `tfsdk:"timeouts"`
 	Id                                             types.String   `tfsdk:"id"`
 	WalkMeOptOut                                   types.Bool     `tfsdk:"walk_me_opt_out"`
@@ -167,7 +181,7 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 
-	var state TenantSettingsSourceModel
+	var state TenantSettingsDataSourceModel
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -179,15 +193,9 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	var configuredSettings TenantSettingsSourceModel
+	var configuredSettings TenantSettingsDataSourceModel
 	req.Config.Get(ctx, &configuredSettings)
-	state, _ = convertFromTenantSettingsDto(*tenantSettings, state.Timeouts)
-	hash, err := tenantSettings.calcObjectHash()
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating hash for %s", d.ProviderTypeName), err.Error())
-	}
-	state.Id = types.StringValue(*hash)
-
+	state, _ = convertFromTenantSettingsDto[TenantSettingsDataSourceModel](*tenantSettings, state.Timeouts)
 	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
@@ -208,11 +216,6 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, req datasource.Sc
 				Delete: false,
 				Read:   false,
 			}),
-			"id": schema.StringAttribute{
-				Description:         "Id of the read operation",
-				MarkdownDescription: "Id of the read operation",
-				Computed:            true,
-			},
 			"walk_me_opt_out": schema.BoolAttribute{
 				Description: "Walk Me Opt Out",
 				Computed:    true,

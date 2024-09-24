@@ -6,7 +6,6 @@ package connectors
 import (
 	"context"
 	"fmt"
-	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -37,7 +36,6 @@ type DataSource struct {
 
 type ListDataSourceModel struct {
 	Timeouts   timeouts.Value    `tfsdk:"timeouts"`
-	Id         types.String      `tfsdk:"id"`
 	Connectors []DataSourceModel `tfsdk:"connectors"`
 }
 
@@ -87,9 +85,6 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
 			"connectors": schema.ListNestedAttribute{
 				Description:         "List of Connectors",
 				MarkdownDescription: "List of Connectors",
@@ -182,8 +177,6 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		connectorModel := ConvertFromConnectorDto(connector)
 		state.Connectors = append(state.Connectors, connectorModel)
 	}
-	state.Id = types.StringValue(strconv.Itoa(len(connectors)))
-
 	diags := resp.State.Set(ctx, &state)
 
 	resp.Diagnostics.Append(diags...)
