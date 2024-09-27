@@ -113,9 +113,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Description:         "Type of the environment (Sandbox, Production etc.)",
 				MarkdownDescription: "Type of the environment (Sandbox, Production etc.)",
 				Required:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 				Validators: []validator.String{
 					stringvalidator.OneOf(EnvironmentTypes...),
 				},
@@ -414,6 +411,14 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		},
 	}
 
+	if plan.EnvironmentType.ValueString() != state.EnvironmentType.ValueString() {
+		err := r.EnvironmentClient.ModifyEnvironmentType(ctx, plan.Id.ValueString(), plan.EnvironmentType.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Error when updating environment_type", err.Error())
+			return
+		}
+	}
+
 	if !plan.Description.IsNull() && plan.Description.ValueString() != "" {
 		environmentDto.Properties.Description = plan.Description.ValueString()
 	}
@@ -490,13 +495,13 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	newPlan, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
 func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, error) {

@@ -11,6 +11,8 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
@@ -2007,6 +2009,181 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Env_Group(t
 				}`,
 				ExpectError: regexp.MustCompile(".*UnlinkedEnvironmentWithGroupId.*"),
 				Check:       resource.ComposeAggregateTestCheckFunc(),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_Update_Environment_Type(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	getLifecycleResponseInx := 0
+	patchResponseInx := 0
+	getResponseInx := 0
+	deleteResponseInx := 0
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/modifySku?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Operation-Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			deleteResponseInx++
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			if deleteResponseInx > 1 {
+				panic("Environment was recreated unexpectedly. Check the test case.")
+			}
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Environment_Type/get_lifecycle_delete.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Environment_Type/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			getLifecycleResponseInx++
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			getResponseInx++
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Validate_Update_Environment_Type/get_environment_%d.json", getResponseInx)).String()), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			patchResponseInx++
+			return httpmock.NewStringResponse(http.StatusAccepted, ""), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Validate_Update_Environment_Type/get_environments_%d.json", patchResponseInx)).String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "Example"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
+				),
+			},
+			{
+				Config: `
+					resource "powerplatform_environment" "development" {
+					display_name                              = "Example"
+					location                                  = "europe"
+					environment_type                          = "Production"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Production"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_Update_Environment_Type(t *testing.T) {
+	var environmentIdStep1 = &mocks.StateValue{}
+	var environmentIdStep2 = &mocks.StateValue{}
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               false,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("powerplatform_environment.development", tfjsonpath.New("id"), mocks.GetStateValue(environmentIdStep1)),
+				},
+			},
+			{
+				Config: `
+					resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `1"
+					location                                  = "europe"
+					environment_type                          = "Production"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Production"),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("powerplatform_environment.development", tfjsonpath.New("id"), mocks.GetStateValue(environmentIdStep2)),
+				},
+			},
+			{
+				Config: `
+					resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `1"
+					location                                  = "europe"
+					environment_type                          = "Production"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					mocks.TestStateValueMatch(environmentIdStep1, environmentIdStep2, func(a, b *mocks.StateValue) error {
+						if a.Value != b.Value {
+							return fmt.Errorf("Environment ID from before environment_type change are not equal, recreate was triggred. '%s' != '%s'", a.Value, b.Value)
+						}
+						return nil
+					}),
+				),
 			},
 		},
 	})
