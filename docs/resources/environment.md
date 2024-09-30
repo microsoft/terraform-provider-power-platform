@@ -88,7 +88,7 @@ Optional:
 - `background_operation_enabled` (Boolean) Indicates if background operation is enabled
 - `domain` (String) Domain name of the environment
 - `template_metadata` (String) Additional D365 environment template metadata (if any)
-- `templates` (List of String) The selected instance provisioning template (if any)
+- `templates` (List of String) The selected instance provisioning template (if any). See [ERP-based template](https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/tutorial-deploy-new-environment-with-erp-template?tabs=PPAC) for more information.
 
 Read-Only:
 
