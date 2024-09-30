@@ -1,0 +1,5 @@
+kind: added
+body: adding unique_name to powerplatform_environments & powerplatform_environment
+time: 2024-09-30T12:56:38.478335764Z
+custom:
+    Issue: "471"

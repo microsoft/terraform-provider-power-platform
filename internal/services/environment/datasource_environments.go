@@ -55,7 +55,6 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 				Read: true,
 			}),
 			"environments": schema.ListNestedAttribute{
-				Description:         "List of environments",
 				MarkdownDescription: "List of environments",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
@@ -67,28 +66,23 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 							Read:   false,
 						}),
 						"id": schema.StringAttribute{
-							MarkdownDescription: "Unique environment id (guid)",
-							Description:         "Unique environment id (guid)",
+							MarkdownDescription: "Environment id (guid)",
 							Computed:            true,
 						},
 						"location": schema.StringAttribute{
-							Description:         "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source.",
 							MarkdownDescription: "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source.",
 							Computed:            true,
 						},
 						"azure_region": schema.StringAttribute{
-							Description:         "Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source.",
 							MarkdownDescription: "Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source.",
 							Computed:            true,
 						},
 						"environment_type": schema.StringAttribute{
-							Description:         "Type of the environment (Sandbox, Production etc.)",
 							MarkdownDescription: "Type of the environment (Sandbox, Production etc.)",
 							Computed:            true,
 						},
 						"display_name": schema.StringAttribute{
 							MarkdownDescription: "Display name",
-							Description:         "Display name",
 							Computed:            true,
 						},
 						"description": schema.StringAttribute{
@@ -103,17 +97,15 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 							},
 						},
 						"billing_policy_id": &schema.StringAttribute{
-							Description:         "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 							MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 							Computed:            true,
 						},
 						"environment_group_id": schema.StringAttribute{
-							MarkdownDescription: "Unique environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.",
+							MarkdownDescription: "Environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.",
 							Computed:            true,
 						},
 						"dataverse": schema.SingleNestedAttribute{
 							MarkdownDescription: "Dataverse environment details",
-							Description:         "Dataverse environment details",
 							Computed:            true,
 							Attributes: map[string]schema.Attribute{
 								"unique_name": schema.StringAttribute{
@@ -129,63 +121,51 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 									Computed:            true,
 								},
 								"url": schema.StringAttribute{
-									Description:         "Url of the Denvironment",
 									MarkdownDescription: "Url of the environment",
 									Computed:            true,
 								},
 								"domain": schema.StringAttribute{
-									Description:         "Domain name of the environment",
 									MarkdownDescription: "Domain name of the environment",
 									Computed:            true,
 								},
 								"organization_id": schema.StringAttribute{
-									Description:         "Unique organization id (guid)",
-									MarkdownDescription: "Unique organization id (guid)",
+									MarkdownDescription: "Organization id (guid)",
 									Computed:            true,
 								},
 								"security_group_id": schema.StringAttribute{
-									Description:         "Unique security group id (guid)",
-									MarkdownDescription: "Unique security group id (guid)",
+									MarkdownDescription: "Security group id (guid)",
 									Computed:            true,
 								},
 								"language_code": schema.Int64Attribute{
-									Description:         "Unique language LCID (integer)",
-									MarkdownDescription: "Unique language LCID (integer)",
+									MarkdownDescription: "Language LCID (integer)",
 									Computed:            true,
 								},
 								"version": schema.StringAttribute{
-									Description:         "Version of the environment",
 									MarkdownDescription: "Version of the environment",
 									Computed:            true,
 								},
 								"linked_app_type": schema.StringAttribute{
-									Description:         "Type of the linked app (Internal, External etc.)",
 									MarkdownDescription: "Type of the linked app (Internal, External etc.)",
 									Computed:            true,
 								},
 								"linked_app_id": schema.StringAttribute{
-									Description:         "Unique linked app id (guid)",
-									MarkdownDescription: "Unique linked app id (guid)",
+									MarkdownDescription: "Linked app id (guid)",
 									Computed:            true,
 								},
 								"linked_app_url": schema.StringAttribute{
-									Description:         "URL of the linked D365 app",
 									MarkdownDescription: "URL of the linked D365 app",
 									Computed:            true,
 								},
 								"currency_code": &schema.StringAttribute{
-									Description:         "Unique currency name (EUR, USE, GBP etc.)",
-									MarkdownDescription: "Unique currency name (EUR, USE, GBP etc.)",
+									MarkdownDescription: "Currency name (EUR, USE, GBP etc.)",
 									Computed:            true,
 								},
 								"templates": schema.ListAttribute{
-									Description:         "The selected instance provisioning template (if any)",
 									MarkdownDescription: "The selected instance provisioning template (if any)",
 									Computed:            true,
 									ElementType:         types.StringType,
 								},
 								"template_metadata": schema.StringAttribute{
-									Description:         "Additional D365 environment template metadata (if any)",
 									MarkdownDescription: "Additional D365 environment template metadata (if any)",
 									Computed:            true,
 								},
