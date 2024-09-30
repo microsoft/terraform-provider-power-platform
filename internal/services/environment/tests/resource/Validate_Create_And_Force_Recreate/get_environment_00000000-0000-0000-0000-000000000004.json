@@ -22,7 +22,7 @@
         "lastModifiedTime": "2023-09-27T07:08:34.9205145Z",
         "provisioningState": "Succeeded",
         "creationType": "User",
-        "environmentSku": "Trial",
+        "environmentSku": "Sandbox",
         "isDefault": false,
         "capacity": [
             {
@@ -84,7 +84,7 @@
             "version": "9.2.23092.00206",
             "instanceUrl": "https://00000000-0000-0000-0000-000000000004.crm4.dynamics.com/",
             "instanceApiUrl": "https://00000000-0000-0000-0000-000000000004.api.crm4.dynamics.com",
-            "baseLanguage": 1033,
+            "baseLanguage": 1031,
             "instanceState": "Ready",
             "createdTime": "2023-09-27T07:08:28.957Z",
             "backgroundOperationsState": "Enabled",

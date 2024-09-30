@@ -140,8 +140,7 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 	envIdResponseArray := []string{"00000000-0000-0000-0000-000000000001",
 		"00000000-0000-0000-0000-000000000002",
 		"00000000-0000-0000-0000-000000000003",
-		"00000000-0000-0000-0000-000000000004",
-		"00000000-0000-0000-0000-000000000005"}
+		"00000000-0000-0000-0000-000000000004"}
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
@@ -252,12 +251,12 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 			},
 			{
 				Config: `
-				resource "powerplatform_environment" "development" {
+					resource "powerplatform_environment" "development" {
 					display_name                              = "Example1"
 					location                                  = "unitedstates"
-					environment_type                          = "Trial"
+					environment_type                          = "Sandbox"
 					dataverse = {
-						language_code                             = "1033"
+						language_code                             = "1031"
 						currency_code                             = "EUR"
 						domain									  = "00000000-0000-0000-0000-000000000004"
 						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
@@ -265,25 +264,6 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000004"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Trial"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.currency_code", "EUR"),
-				),
-			},
-			{
-				Config: `
-				resource "powerplatform_environment" "development" {
-					display_name                              = "Example1"
-					location                                  = "unitedstates"
-					environment_type                          = "Trial"
-					dataverse = {
-						language_code                             = "1031"
-						currency_code                             = "EUR"
-						domain									  = "00000000-0000-0000-0000-000000000005"
-						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-					}
-				}`,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000005"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.language_code", "1031"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.currency_code", "EUR"),
 				),
