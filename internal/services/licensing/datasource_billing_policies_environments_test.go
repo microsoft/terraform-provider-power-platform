@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
@@ -20,7 +21,7 @@ func TestAccBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azapi": {
-				VersionConstraint: ">= 1.15.0",
+				VersionConstraint: constants.AZAPI_PROVIDER_VERSION_CONSTRAINT,
 				Source:            "azure/azapi",
 			},
 		},
