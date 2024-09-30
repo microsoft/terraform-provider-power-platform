@@ -116,6 +116,10 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 							Description:         "Dataverse environment details",
 							Computed:            true,
 							Attributes: map[string]schema.Attribute{
+								"unique_name": schema.StringAttribute{
+									MarkdownDescription: "Unique name of the Dataverse environment",
+									Computed:            true,
+								},
 								"administration_mode_enabled": schema.BoolAttribute{
 									MarkdownDescription: "Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
 									Computed:            true,
@@ -125,7 +129,7 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 									Computed:            true,
 								},
 								"url": schema.StringAttribute{
-									Description:         "Url of the environment",
+									Description:         "Url of the Denvironment",
 									MarkdownDescription: "Url of the environment",
 									Computed:            true,
 								},
