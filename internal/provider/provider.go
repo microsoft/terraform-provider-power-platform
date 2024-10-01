@@ -355,12 +355,13 @@ func MultiEnvDefaultFunc(ks []string) string {
 
 func getCloudPublicUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 	return &config.ProviderConfigUrls{
-		BapiUrl:            constants.PUBLIC_BAPI_DOMAIN,
-		PowerAppsUrl:       constants.PUBLIC_POWERAPPS_API_DOMAIN,
-		PowerAppsScope:     constants.PUBLIC_POWERAPPS_SCOPE,
-		PowerPlatformUrl:   constants.PUBLIC_POWERPLATFORM_API_DOMAIN,
-		PowerPlatformScope: constants.PUBLIC_POWERPLATFORM_API_SCOPE,
-		LicensingUrl:       constants.PUBLIC_LICENSING_API_DOMAIN,
+		BapiUrl:                   constants.PUBLIC_BAPI_DOMAIN,
+		PowerAppsUrl:              constants.PUBLIC_POWERAPPS_API_DOMAIN,
+		PowerAppsScope:            constants.PUBLIC_POWERAPPS_SCOPE,
+		PowerPlatformUrl:          constants.PUBLIC_POWERPLATFORM_API_DOMAIN,
+		PowerPlatformScope:        constants.PUBLIC_POWERPLATFORM_API_SCOPE,
+		LicensingUrl:              constants.PUBLIC_LICENSING_API_DOMAIN,
+		PowerPlatformAnalyticsUrl: constants.PUBLIC_POWERPLATFORM_ANALYTICS_API_DOMAIN,
 	}, &cloud.AzurePublic
 }
 
