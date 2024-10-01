@@ -29,6 +29,14 @@ data "powerplatform_data_records" "root_business_unit" {
   select            = ["name"]
 }
 
+module "business_unit" {
+  source = "./res_business_unit"
+  environment_id = powerplatform_environment.data_record_example_env.id
+  name = "my business unit"
+  costcenter = "123"
+  parent_business_unit_id = one(data.powerplatform_data_records.root_business_unit.rows).businessunitid  
+}
+
 resource "powerplatform_data_record" "role" {
   environment_id     = powerplatform_environment.data_record_example_env.id
   table_logical_name = "role"

@@ -238,6 +238,8 @@ func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.Creat
 			}
 			state.Output = bodyWrapped
 		}
+	} else {
+		state.Output = r.NullOutputValue()
 	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
