@@ -62,6 +62,7 @@ type DataverseSourceModel struct {
 	TemplateMetadata    types.String `tfsdk:"template_metadata"`
 	AdministrationMode  types.Bool   `tfsdk:"administration_mode_enabled"`
 	BackgroundOperation types.Bool   `tfsdk:"background_operation_enabled"`
+	UniqueName          types.String `tfsdk:"unique_name"`
 }
 
 func isDataverseEnvironmentEmpty(ctx context.Context, environment *SourceModel) bool {
@@ -194,6 +195,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		"template_metadata":            types.StringType,
 		"administration_mode_enabled":  types.BoolType,
 		"background_operation_enabled": types.BoolType,
+		"unique_name":                  types.StringType,
 	}
 
 	attrValuesProductProperties := map[string]attr.Value{}
@@ -216,6 +218,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["security_group_id"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.SecurityGroupId)
 		attrValuesProductProperties["language_code"] = types.Int64Value(int64(environmentDto.Properties.LinkedEnvironmentMetadata.BaseLanguage))
 		attrValuesProductProperties["version"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.Version)
+		attrValuesProductProperties["unique_name"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.UniqueName)
 		if environmentDto.Properties.States != nil && environmentDto.Properties.States.Runtime != nil && environmentDto.Properties.States.Runtime.Id == "AdminMode" {
 			attrValuesProductProperties["administration_mode_enabled"] = types.BoolValue(true)
 		} else {
@@ -280,6 +283,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["background_operation_enabled"] = types.BoolNull()
 		attrValuesProductProperties["administration_mode_enabled"] = types.BoolNull()
 		attrValuesProductProperties["environment_group_id"] = types.StringNull()
+		attrValuesProductProperties["unique_name"] = types.StringNull()
 	}
 	return model, nil
 }
