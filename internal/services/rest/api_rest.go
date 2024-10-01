@@ -48,7 +48,7 @@ func (client *client) SendOperation(ctx context.Context, operation *DataverseWeb
 	}
 
 	res, err := client.ExecuteApiRequest(ctx, operation.Scope.ValueStringPointer(), url, method, body, headers, expectedStatusCodes)
-	var unexpected *customerrors.UnexpectedHttpStatusCodeError
+	var unexpected customerrors.UnexpectedHttpStatusCodeError
 	if errors.As(err, &unexpected) {
 		return types.ObjectUnknown(map[string]attr.Type{
 			"body": types.StringType,
