@@ -61,7 +61,7 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Read:   true,
 			}),
 			"disable_on_destroy": schema.BoolAttribute{
-				MarkdownDescription: "If true, the resource will state",
+				MarkdownDescription: "If true, the resource will either set isdisabled to true or statecode to 1 with a PATCH request, before attempting to delete the record.",
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),

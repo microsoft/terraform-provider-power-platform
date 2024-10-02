@@ -1389,20 +1389,20 @@ func TestUnitDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions%28LogicalName=%27contact%27%29#$select=PrimaryIdAttribute,LogicalCollectionName`,
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions%28LogicalName=%27mailbox%27%29#$select=PrimaryIdAttribute,LogicalCollectionName`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_entitydefinition_contact.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_entitydefinition_mailbox.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts%2800000000-0000-0000-0000-000000000010%29`,
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/mailboxes%2800000000-0000-0000-0000-000000000010%29`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_contact_00000000-0000-0000-0000-000000000010.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_mailbox_00000000-0000-0000-0000-000000000010.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("POST", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts`,
+	httpmock.RegisterResponder("POST", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/mailboxes`,
 		func(req *http.Request) (*http.Response, error) {
 			resp := httpmock.NewStringResponse(http.StatusOK, "")
-			resp.Header.Set("OData-EntityId", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts(00000000-0000-0000-0000-000000000010)")
+			resp.Header.Set("OData-EntityId", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/mailboxes(00000000-0000-0000-0000-000000000010)")
 			return resp, nil
 		})
 
@@ -1411,12 +1411,12 @@ func TestUnitDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
-	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions(LogicalName='contact')/Attributes?$select=LogicalName`,
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions(LogicalName='mailbox')/Attributes?$select=LogicalName`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_entitydefinition_contact_attributes.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_entitydefinition_mailbox_attributes.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("PATCH", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts%2800000000-0000-0000-0000-000000000010%29`,
+	httpmock.RegisterResponder("PATCH", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/mailboxes%2800000000-0000-0000-0000-000000000010%29`,
 		func(req *http.Request) (*http.Response, error) {
 			body, err := readBodyBuff(req)
 			if err != nil {
@@ -1428,7 +1428,7 @@ func TestUnitDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
 			}
 
 			resp := httpmock.NewStringResponse(http.StatusOK, "")
-			resp.Header.Set("OData-EntityId", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts(00000000-0000-0000-0000-000000000010)")
+			resp.Header.Set("OData-EntityId", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/mailboxes(00000000-0000-0000-0000-000000000010)")
 			return resp, nil
 		})
 
@@ -1477,13 +1477,13 @@ func TestUnitDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_data_record" "contant" {
+				resource "powerplatform_data_record" "mailbox" {
 					disable_on_destroy = true
 					environment_id     = "00000000-0000-0000-0000-000000000001"
-					table_logical_name = "contact"
+					table_logical_name = "mailbox"
 					columns = {
-					  firstname          = "John"
-					  lastname           = "Doe"
+						name         = "contoso"
+						emailaddress = "contoso@contoso.com"
 					}
 				}
 				
@@ -1499,13 +1499,13 @@ func TestUnitDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
 			{
 				// commenting out the resource to trigger the delete
 				Config: ` 
-				// resource "powerplatform_data_record" "contant" {
+				// resource "powerplatform_data_record" "mailbox" {
 				// 	disable_on_destroy = true
 				// 	environment_id     = "00000000-0000-0000-0000-000000000001"
-				// 	table_logical_name = "contact"
+				// 	table_logical_name = "mailbox"
 				// 	columns = {
-				// 	  firstname          = "John"
-				// 	  lastname           = "Doe"
+				// 		name         = "my mailbox"
+				// 		emailaddress = "contoso@contoso.com"
 				// 	}
 				// }
 				
@@ -1520,7 +1520,7 @@ func TestUnitDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					func(_ *terraform.State) error {
 						if !contactDisabledExecuted {
-							return fmt.Errorf("expected contact to be disabled on delete")
+							return fmt.Errorf("expected mailbox to be disabled on delete")
 						}
 						return nil
 					},
@@ -1561,13 +1561,13 @@ func TestAccDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
 					select            = ["name"]
 				}
 
-				resource "powerplatform_data_record" "contant" {
+				resource "powerplatform_data_record" "mailbox" {
 					disable_on_destroy = true
 					environment_id     = powerplatform_environment.test_env.id
-					table_logical_name = "contact"
+					table_logical_name = "mailbox"
 					columns = {
-					  firstname          = "John"
-					  lastname           = "Doe"
+						name         = "my mailbox"
+						emailaddress = "contoso@contoso.com"
 					}
 				}
 				

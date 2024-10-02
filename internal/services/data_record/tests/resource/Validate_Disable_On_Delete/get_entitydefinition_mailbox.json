@@ -1,13 +1,13 @@
 {
-    "@odata.context": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#EntityDefinitions/$entity",
+    "@odata.context": "https://00000000-0000-0000-0000-000000000001.crm.dynamics.com/api/data/v9.2/$metadata#EntityDefinitions/$entity",
     "ActivityTypeMask": 0,
     "AutoRouteToOwnerQueue": false,
-    "CanTriggerWorkflow": true,
+    "CanTriggerWorkflow": false,
     "EntityHelpUrlEnabled": false,
     "EntityHelpUrl": null,
     "IsDocumentManagementEnabled": false,
     "IsOneNoteIntegrationEnabled": false,
-    "IsInteractionCentricEnabled": true,
+    "IsInteractionCentricEnabled": false,
     "IsKnowledgeManagementEnabled": false,
     "IsSLAEnabled": false,
     "IsBPFEntity": false,
@@ -18,119 +18,120 @@
     "DataSourceId": null,
     "AutoCreateAccessTeams": false,
     "IsActivity": false,
-    "IsActivityParty": true,
+    "IsActivityParty": false,
     "IsRetrieveAuditEnabled": false,
     "IsRetrieveMultipleAuditEnabled": false,
     "IsArchivalEnabled": false,
     "IsRetentionEnabled": false,
+    "ClusterMode": "Local",
     "IsAvailableOffline": true,
     "IsChildEntity": false,
-    "IsAIRUpdated": true,
+    "IsAIRUpdated": false,
     "IconLargeName": null,
     "IconMediumName": null,
     "IconSmallName": null,
     "IconVectorName": null,
     "IsCustomEntity": false,
-    "IsBusinessProcessEnabled": true,
-    "SyncToExternalSearchIndex": true,
+    "IsBusinessProcessEnabled": false,
+    "SyncToExternalSearchIndex": false,
     "IsOptimisticConcurrencyEnabled": true,
     "ChangeTrackingEnabled": true,
-    "IsImportable": true,
+    "IsImportable": false,
     "IsIntersect": false,
     "IsManaged": true,
     "IsEnabledForCharts": true,
-    "IsEnabledForTrace": false,
+    "IsEnabledForTrace": true,
     "IsValidForAdvancedFind": true,
-    "DaysSinceRecordLastModified": 10,
-    "MobileOfflineFilters": "\n\t\t<fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"false\">\n\t\t\t<entity name=\"contact\">\n\t\t\t\t<filter type=\"and\">\n\t\t\t\t\t<condition attribute=\"modifiedon\" operator=\"last-x-days\" value=\"10\"/>\n\t\t\t\t</filter>\n\t\t\t</entity>\n\t\t</fetch>\n\t\t",
+    "DaysSinceRecordLastModified": 0,
+    "MobileOfflineFilters": "",
     "IsReadingPaneEnabled": true,
-    "IsQuickCreateEnabled": true,
-    "LogicalName": "contact",
-    "ObjectTypeCode": 2,
+    "IsQuickCreateEnabled": false,
+    "LogicalName": "mailbox",
+    "ObjectTypeCode": 9606,
     "OwnershipType": "UserOwned",
-    "PrimaryNameAttribute": "fullname",
+    "PrimaryNameAttribute": "name",
     "PrimaryImageAttribute": "entityimage",
-    "PrimaryIdAttribute": "contactid",
+    "PrimaryIdAttribute": "mailboxid",
     "RecurrenceBaseEntityLogicalName": null,
-    "ReportViewName": "FilteredContact",
-    "SchemaName": "Contact",
-    "IntroducedVersion": "5.0.0.0",
-    "IsStateModelAware": true,
+    "ReportViewName": "FilteredMailbox",
+    "SchemaName": "Mailbox",
+    "IntroducedVersion": "6.0.0.0",
+    "IsStateModelAware": false,
     "EnforceStateTransitions": false,
     "ExternalName": null,
-    "EntityColor": "#005088",
-    "LogicalCollectionName": "contacts",
+    "EntityColor": null,
+    "LogicalCollectionName": "mailboxes",
     "ExternalCollectionName": null,
-    "CollectionSchemaName": "Contacts",
-    "EntitySetName": "contacts",
-    "IsEnabledForExternalChannels": true,
+    "CollectionSchemaName": "Mailboxes",
+    "EntitySetName": "mailboxes",
+    "IsEnabledForExternalChannels": false,
     "IsPrivate": false,
     "UsesBusinessDataLabelTable": false,
     "IsLogicalEntity": false,
     "HasNotes": true,
-    "HasActivities": true,
-    "HasFeedback": true,
+    "HasActivities": false,
+    "HasFeedback": false,
     "IsSolutionAware": false,
     "CreatedOn": "1900-01-01T00:00:00Z",
-    "ModifiedOn": "2024-06-01T02:50:48Z",
+    "ModifiedOn": "2024-09-28T14:03:01Z",
     "HasEmailAddresses": true,
     "OwnerId": null,
     "OwnerIdType": 8,
     "OwningBusinessUnit": null,
     "TableType": "Standard",
-    "MetadataId": "608861bc-50a4-4c5f-a02c-21fe1943e2cf",
+    "MetadataId": "71903251-887c-e011-b3dc-00155d7b4422",
     "HasChanged": null,
     "Description": {
         "LocalizedLabels": [
             {
-                "Label": "Person with whom a business unit has a relationship, such as customer, supplier, and colleague.",
+                "Label": "",
                 "LanguageCode": 1033,
                 "IsManaged": true,
-                "MetadataId": "b99709b3-2241-db11-898a-0007e9e17ebd",
+                "MetadataId": "74903251-887c-e011-b3dc-00155d7b4422",
                 "HasChanged": null
             }
         ],
         "UserLocalizedLabel": {
-            "Label": "Person with whom a business unit has a relationship, such as customer, supplier, and colleague.",
+            "Label": "",
             "LanguageCode": 1033,
             "IsManaged": true,
-            "MetadataId": "b99709b3-2241-db11-898a-0007e9e17ebd",
+            "MetadataId": "74903251-887c-e011-b3dc-00155d7b4422",
             "HasChanged": null
         }
     },
     "DisplayCollectionName": {
         "LocalizedLabels": [
             {
-                "Label": "Contacts",
+                "Label": "Mailboxes",
                 "LanguageCode": 1033,
                 "IsManaged": true,
-                "MetadataId": "bb9709b3-2241-db11-898a-0007e9e17ebd",
+                "MetadataId": "73903251-887c-e011-b3dc-00155d7b4422",
                 "HasChanged": null
             }
         ],
         "UserLocalizedLabel": {
-            "Label": "Contacts",
+            "Label": "Mailboxes",
             "LanguageCode": 1033,
             "IsManaged": true,
-            "MetadataId": "bb9709b3-2241-db11-898a-0007e9e17ebd",
+            "MetadataId": "73903251-887c-e011-b3dc-00155d7b4422",
             "HasChanged": null
         }
     },
     "DisplayName": {
         "LocalizedLabels": [
             {
-                "Label": "Contact",
+                "Label": "Mailbox",
                 "LanguageCode": 1033,
                 "IsManaged": true,
-                "MetadataId": "ba9709b3-2241-db11-898a-0007e9e17ebd",
+                "MetadataId": "72903251-887c-e011-b3dc-00155d7b4422",
                 "HasChanged": null
             }
         ],
         "UserLocalizedLabel": {
-            "Label": "Contact",
+            "Label": "Mailbox",
             "LanguageCode": 1033,
             "IsManaged": true,
-            "MetadataId": "ba9709b3-2241-db11-898a-0007e9e17ebd",
+            "MetadataId": "72903251-887c-e011-b3dc-00155d7b4422",
             "HasChanged": null
         }
     },
@@ -141,12 +142,12 @@
     },
     "IsValidForQueue": {
         "Value": false,
-        "CanBeChanged": true,
+        "CanBeChanged": false,
         "ManagedPropertyLogicalName": "canmodifyqueuesettings"
     },
     "IsConnectionsEnabled": {
-        "Value": true,
-        "CanBeChanged": true,
+        "Value": false,
+        "CanBeChanged": false,
         "ManagedPropertyLogicalName": "canmodifyconnectionsettings"
     },
     "IsCustomizable": {
@@ -155,7 +156,7 @@
         "ManagedPropertyLogicalName": "iscustomizable"
     },
     "IsRenameable": {
-        "Value": true,
+        "Value": false,
         "CanBeChanged": false,
         "ManagedPropertyLogicalName": "isrenameable"
     },
@@ -165,12 +166,12 @@
         "ManagedPropertyLogicalName": "ismappable"
     },
     "IsDuplicateDetectionEnabled": {
-        "Value": true,
+        "Value": false,
         "CanBeChanged": true,
         "ManagedPropertyLogicalName": "canmodifyduplicatedetectionsettings"
     },
     "CanCreateAttributes": {
-        "Value": true,
+        "Value": false,
         "CanBeChanged": false,
         "ManagedPropertyLogicalName": "cancreateattributes"
     },
@@ -200,18 +201,18 @@
         "ManagedPropertyLogicalName": "canbeprimaryentityinrelationship"
     },
     "CanBeInManyToMany": {
-        "Value": true,
+        "Value": false,
         "CanBeChanged": false,
         "ManagedPropertyLogicalName": "canbeinmanytomany"
     },
     "CanBeInCustomEntityAssociation": {
-        "Value": true,
+        "Value": false,
         "CanBeChanged": false,
         "ManagedPropertyLogicalName": "canbeincustomentityassociation"
     },
     "CanEnableSyncToExternalSearchIndex": {
-        "Value": true,
-        "CanBeChanged": true,
+        "Value": false,
+        "CanBeChanged": false,
         "ManagedPropertyLogicalName": "canenablesynctoexternalsearchindex"
     },
     "CanModifyAdditionalSettings": {
@@ -220,18 +221,18 @@
         "ManagedPropertyLogicalName": "canmodifyadditionalsettings"
     },
     "CanChangeHierarchicalRelationship": {
-        "Value": true,
-        "CanBeChanged": true,
+        "Value": false,
+        "CanBeChanged": false,
         "ManagedPropertyLogicalName": "canchangehierarchicalrelationship"
     },
     "CanChangeTrackingBeEnabled": {
-        "Value": true,
-        "CanBeChanged": true,
+        "Value": false,
+        "CanBeChanged": false,
         "ManagedPropertyLogicalName": "canchangetrackingbeenabled"
     },
     "IsMailMergeEnabled": {
-        "Value": true,
-        "CanBeChanged": true,
+        "Value": false,
+        "CanBeChanged": false,
         "ManagedPropertyLogicalName": "canmodifymailmergesettings"
     },
     "IsVisibleInMobile": {
@@ -241,7 +242,7 @@
     },
     "IsVisibleInMobileClient": {
         "Value": true,
-        "CanBeChanged": true,
+        "CanBeChanged": false,
         "ManagedPropertyLogicalName": "canmodifymobileclientvisibility"
     },
     "IsReadOnlyInMobileClient": {
@@ -250,7 +251,7 @@
         "ManagedPropertyLogicalName": "canmodifymobileclientreadonly"
     },
     "IsOfflineInMobileClient": {
-        "Value": true,
+        "Value": false,
         "CanBeChanged": true,
         "ManagedPropertyLogicalName": "canmodifymobileclientoffline"
     },
@@ -263,8 +264,8 @@
             "CanBeEntityReference": false,
             "CanBeParentEntityReference": false,
             "CanBeRecordFilter": false,
-            "Name": "prvCreateContact",
-            "PrivilegeId": "a8bff87f-0df0-41d4-babd-f093faf1e32c",
+            "Name": "prvCreateMailbox",
+            "PrivilegeId": "2b404847-af4a-49ac-8389-a7c96a0305a3",
             "PrivilegeType": "Create"
         },
         {
@@ -275,8 +276,8 @@
             "CanBeEntityReference": false,
             "CanBeParentEntityReference": false,
             "CanBeRecordFilter": false,
-            "Name": "prvReadContact",
-            "PrivilegeId": "ba09ec92-12c4-4312-ba16-5715c2cbd6da",
+            "Name": "prvReadMailbox",
+            "PrivilegeId": "8e17de3a-5a69-479c-9535-1f7be75b2987",
             "PrivilegeType": "Read"
         },
         {
@@ -287,8 +288,8 @@
             "CanBeEntityReference": false,
             "CanBeParentEntityReference": false,
             "CanBeRecordFilter": false,
-            "Name": "prvWriteContact",
-            "PrivilegeId": "65c22075-4e09-4f39-baec-e4bc3a950686",
+            "Name": "prvWriteMailbox",
+            "PrivilegeId": "1d79f9f9-4a93-4cf7-ade4-39fbe10b1494",
             "PrivilegeType": "Write"
         },
         {
@@ -299,8 +300,8 @@
             "CanBeEntityReference": false,
             "CanBeParentEntityReference": false,
             "CanBeRecordFilter": false,
-            "Name": "prvDeleteContact",
-            "PrivilegeId": "2ddded47-7488-4039-b9ff-81defe81fdd3",
+            "Name": "prvDeleteMailbox",
+            "PrivilegeId": "1e24e27d-60e9-4a63-a1ed-44d77702425f",
             "PrivilegeType": "Delete"
         },
         {
@@ -311,8 +312,8 @@
             "CanBeEntityReference": false,
             "CanBeParentEntityReference": false,
             "CanBeRecordFilter": false,
-            "Name": "prvAssignContact",
-            "PrivilegeId": "43c63782-c7c6-471c-bd9c-24f79bf8c2a1",
+            "Name": "prvAssignMailbox",
+            "PrivilegeId": "0fddefbe-ec48-416b-b794-35f48828e71f",
             "PrivilegeType": "Assign"
         },
         {
@@ -323,8 +324,8 @@
             "CanBeEntityReference": false,
             "CanBeParentEntityReference": false,
             "CanBeRecordFilter": false,
-            "Name": "prvShareContact",
-            "PrivilegeId": "ae756940-61ff-4bd3-bfbb-f2b0d542c608",
+            "Name": "prvShareMailbox",
+            "PrivilegeId": "dd66949c-77c5-4b63-a2ef-0a45ac4e28a1",
             "PrivilegeType": "Share"
         },
         {
@@ -335,8 +336,8 @@
             "CanBeEntityReference": false,
             "CanBeParentEntityReference": false,
             "CanBeRecordFilter": false,
-            "Name": "prvAppendContact",
-            "PrivilegeId": "2b16ba12-6ab4-4ad2-b7c0-8641d2d6dff2",
+            "Name": "prvAppendMailbox",
+            "PrivilegeId": "1518e693-c382-43e8-97ca-d2dfe03427e3",
             "PrivilegeType": "Append"
         },
         {
@@ -347,8 +348,8 @@
             "CanBeEntityReference": false,
             "CanBeParentEntityReference": false,
             "CanBeRecordFilter": false,
-            "Name": "prvAppendToContact",
-            "PrivilegeId": "158327b5-f4c1-448e-93d1-5f135126665b",
+            "Name": "prvAppendToMailbox",
+            "PrivilegeId": "15b16455-4fd8-4c52-9e39-bc973d3b0181",
             "PrivilegeType": "AppendTo"
         }
     ],

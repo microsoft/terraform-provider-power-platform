@@ -94,7 +94,7 @@ resource "powerplatform_data_record" "team" {
 
 ### Optional
 
-- `disable_on_destroy` (Boolean) If true, the resource will state
+- `disable_on_destroy` (Boolean) If true, the resource will either set isdisabled to true or statecode to 1 with a PATCH request, before attempting to delete the record.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
