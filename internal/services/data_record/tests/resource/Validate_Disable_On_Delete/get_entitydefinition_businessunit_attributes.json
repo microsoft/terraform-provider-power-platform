@@ -1,0 +1,455 @@
+{
+    "@odata.context": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#EntityDefinitions('businessunit')/Attributes(LogicalName)",
+    "value": [
+        {
+            "LogicalName": "address1_addressid",
+            "MetadataId": "a6d99f33-88d4-4fde-a33a-6be2ce4f8818"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.PicklistAttributeMetadata",
+            "LogicalName": "address1_addresstypecode",
+            "MetadataId": "897f02df-355c-409f-bbf0-fb70c28a815e"
+        },
+        {
+            "LogicalName": "address1_addresstypecodename",
+            "MetadataId": "fd3f6362-69ca-4952-8550-c5346db183a4"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_city",
+            "MetadataId": "9e613cdf-d4fd-4f2a-8af4-79adbd380508"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_country",
+            "MetadataId": "05148f34-57e4-4687-b01d-86865c82e14c"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_county",
+            "MetadataId": "e7e066e1-1fa7-4143-8015-49d194bfe29b"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_fax",
+            "MetadataId": "b2dffc50-9750-4c71-b960-d91e501b735f"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.DoubleAttributeMetadata",
+            "LogicalName": "address1_latitude",
+            "MetadataId": "f58e01d7-ffab-4229-9fc3-f507ec711062"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_line1",
+            "MetadataId": "845d9789-50ad-4ff3-a290-0c799f4b3075"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_line2",
+            "MetadataId": "01ce31e8-dee0-454c-8ad4-e8f53fe5a478"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_line3",
+            "MetadataId": "13324b42-c2f2-4ae9-bc68-8fa67242668e"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.DoubleAttributeMetadata",
+            "LogicalName": "address1_longitude",
+            "MetadataId": "d4fc49e5-e2d3-41c0-a115-5d12a1fc17da"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_name",
+            "MetadataId": "3355da38-7c4c-42a5-b443-960593b230f6"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_postalcode",
+            "MetadataId": "72c9d6ea-96da-42d6-b3a4-080843220450"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_postofficebox",
+            "MetadataId": "00819ad9-e28e-4b43-9b3e-a97fa447e4ea"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.PicklistAttributeMetadata",
+            "LogicalName": "address1_shippingmethodcode",
+            "MetadataId": "cbbc3342-d081-4c3a-aee3-eeafe75c9869"
+        },
+        {
+            "LogicalName": "address1_shippingmethodcodename",
+            "MetadataId": "c8099caa-4652-457a-8f72-3971f9442d6f"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_stateorprovince",
+            "MetadataId": "e42b48ff-f15e-40d8-bed4-d9612793a3a0"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_telephone1",
+            "MetadataId": "4ae60b2e-7efe-4569-b204-c5b609c377a0"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_telephone2",
+            "MetadataId": "36fbdbe6-219f-4000-883d-4dafbf03be69"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_telephone3",
+            "MetadataId": "073861ca-7f68-40bd-af81-317c964cc0a0"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address1_upszone",
+            "MetadataId": "e1a6e624-5a18-4bd7-b56f-83088bbd2c11"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.IntegerAttributeMetadata",
+            "LogicalName": "address1_utcoffset",
+            "MetadataId": "2fff5fec-ea86-4f78-bc26-21d1f1641d84"
+        },
+        {
+            "LogicalName": "address2_addressid",
+            "MetadataId": "2534e17b-b97a-429c-ae40-4ab08608be24"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.PicklistAttributeMetadata",
+            "LogicalName": "address2_addresstypecode",
+            "MetadataId": "ded8e7fa-f9bf-444d-a9d9-1821c96e6ed0"
+        },
+        {
+            "LogicalName": "address2_addresstypecodename",
+            "MetadataId": "71ea5e68-ed4a-4d0b-b53c-07b519ef5de5"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_city",
+            "MetadataId": "379fb357-7124-4d53-8c5f-a48663f54a70"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_country",
+            "MetadataId": "92c81144-1009-48f5-b0a7-e92adae38611"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_county",
+            "MetadataId": "2d409976-9428-44f9-ab63-36df4456a3ce"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_fax",
+            "MetadataId": "95fa9948-06ea-4442-8958-d68fe3ff800f"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.DoubleAttributeMetadata",
+            "LogicalName": "address2_latitude",
+            "MetadataId": "55bc9b8c-9b51-41af-bf0c-e348d67239ad"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_line1",
+            "MetadataId": "2e7e81f8-667b-48f2-9043-b3c1bb0dcd61"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_line2",
+            "MetadataId": "f7c5bc74-cad2-48b8-83f9-00a4ebc45ff8"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_line3",
+            "MetadataId": "f170b74d-40bc-43d7-9c44-2e7c35a92424"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.DoubleAttributeMetadata",
+            "LogicalName": "address2_longitude",
+            "MetadataId": "30daa7a2-f12f-4af6-a685-5c1a06a17f65"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_name",
+            "MetadataId": "3b2fe77a-7d62-4616-9d06-c75eb5d83135"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_postalcode",
+            "MetadataId": "9eb4aa4d-4420-4b5e-b410-d4714a5861c1"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_postofficebox",
+            "MetadataId": "66d5789b-c545-4a0a-9a56-aa5703527fa9"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.PicklistAttributeMetadata",
+            "LogicalName": "address2_shippingmethodcode",
+            "MetadataId": "0fb45ab5-c22b-4e5a-935b-db755aea11b3"
+        },
+        {
+            "LogicalName": "address2_shippingmethodcodename",
+            "MetadataId": "cc4da460-db60-4ee6-9374-45465bf8cc94"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_stateorprovince",
+            "MetadataId": "94012ad3-702b-4566-9876-7ad809cd3424"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_telephone1",
+            "MetadataId": "97dbdf8e-fd06-41ee-a67f-03ea56ed0746"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_telephone2",
+            "MetadataId": "c548a564-eadf-4ded-baa8-410e21f28cc8"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_telephone3",
+            "MetadataId": "d84f6e86-d0ad-4831-adf7-818d17203ece"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "address2_upszone",
+            "MetadataId": "497b286a-3876-4edb-ac8a-df57582485e4"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.IntegerAttributeMetadata",
+            "LogicalName": "address2_utcoffset",
+            "MetadataId": "21e60f20-dda1-4cd0-8137-1eca7f76fe5f"
+        },
+        {
+            "LogicalName": "businessunitid",
+            "MetadataId": "8dc29a9f-a5b7-48b3-a35d-c383fe3cd7fa"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.LookupAttributeMetadata",
+            "LogicalName": "calendarid",
+            "MetadataId": "60c993ce-4a39-439c-b272-c93c01b3a913"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "costcenter",
+            "MetadataId": "3be8dfc6-c63c-4c32-b7b5-e517641f01a0"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.LookupAttributeMetadata",
+            "LogicalName": "createdby",
+            "MetadataId": "65ab830d-1d34-4e17-aa76-3e4a093e4f2a"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "createdbyname",
+            "MetadataId": "a57838a3-ab46-470c-8c2f-e488f80f044c"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "createdbyyominame",
+            "MetadataId": "90a853c9-cdc3-4815-b5af-304ab271f8ad"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.DateTimeAttributeMetadata",
+            "LogicalName": "createdon",
+            "MetadataId": "4fba4fb5-b1f3-4091-a8ca-a7b36c33bf93"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.LookupAttributeMetadata",
+            "LogicalName": "createdonbehalfby",
+            "MetadataId": "bda58474-e21c-49ad-b57f-4285140d277b"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "createdonbehalfbyname",
+            "MetadataId": "d2ebd187-f6b1-4169-af3a-9cac78678450"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "createdonbehalfbyyominame",
+            "MetadataId": "1eb7ef08-91ec-4c20-8918-2a75366b631e"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.DoubleAttributeMetadata",
+            "LogicalName": "creditlimit",
+            "MetadataId": "be848e1a-aa8a-4388-b51e-564edee47729"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.MemoAttributeMetadata",
+            "LogicalName": "description",
+            "MetadataId": "0ce8e98b-d2a9-4c91-8986-50f909984c60"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "disabledreason",
+            "MetadataId": "066992cc-3177-441a-a8a8-ffac81afa6c4"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "divisionname",
+            "MetadataId": "76c01510-a1f6-4a41-b919-c8d53aad2904"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "emailaddress",
+            "MetadataId": "2a35cfcd-9692-47a9-9738-ecad6e4177a7"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.DecimalAttributeMetadata",
+            "LogicalName": "exchangerate",
+            "MetadataId": "ab4735c2-7f2f-4ab4-8d80-798539264290"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "fileasname",
+            "MetadataId": "f43e8e64-6a32-48b6-8e47-a1522603cda3"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "ftpsiteurl",
+            "MetadataId": "0fdd673f-eb3f-437c-878e-51e03c52f928"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.IntegerAttributeMetadata",
+            "LogicalName": "importsequencenumber",
+            "MetadataId": "7171408b-c665-4b6c-bfb9-c7dcb20eb5d9"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.IntegerAttributeMetadata",
+            "LogicalName": "inheritancemask",
+            "MetadataId": "38d2e83d-8108-4f55-aa45-b0b091a35f6c"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.BooleanAttributeMetadata",
+            "LogicalName": "isdisabled",
+            "MetadataId": "31f0974d-7c90-41e0-9b0f-31b70d56e7c4"
+        },
+        {
+            "LogicalName": "isdisabledname",
+            "MetadataId": "852b05b3-345c-45a4-b6c7-f518cff37936"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.LookupAttributeMetadata",
+            "LogicalName": "modifiedby",
+            "MetadataId": "2e04afcd-0e2b-48eb-951b-24d254cc082c"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "modifiedbyname",
+            "MetadataId": "ca17ef08-518c-4585-9f2f-55e2700fc143"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "modifiedbyyominame",
+            "MetadataId": "0b030ebf-1dca-409a-bc15-9456574b1b79"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.DateTimeAttributeMetadata",
+            "LogicalName": "modifiedon",
+            "MetadataId": "ce3ffc6d-6736-41b6-b771-5978788169cb"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.LookupAttributeMetadata",
+            "LogicalName": "modifiedonbehalfby",
+            "MetadataId": "dd784ee1-b287-4b2f-89b0-adce01e3a884"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "modifiedonbehalfbyname",
+            "MetadataId": "53f4cca5-4c1f-4c7e-8acf-d5fcea1d6bef"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "modifiedonbehalfbyyominame",
+            "MetadataId": "191782cc-d5a5-433f-8ebb-dcaf1648f4f1"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "name",
+            "MetadataId": "10082a60-0d25-4c19-b1ec-9b8b9faedadc"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.LookupAttributeMetadata",
+            "LogicalName": "organizationid",
+            "MetadataId": "716b0ca4-8714-4e18-9aed-5ba2bb537c60"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "organizationidname",
+            "MetadataId": "ed86d6e7-2814-436d-9a06-5042de8f43f5"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.DateTimeAttributeMetadata",
+            "LogicalName": "overriddencreatedon",
+            "MetadataId": "c02b9d85-b878-453d-99ff-c8021bd58e92"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.LookupAttributeMetadata",
+            "LogicalName": "parentbusinessunitid",
+            "MetadataId": "0c1577e5-bb78-40eb-873b-56309b29226b"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "parentbusinessunitidname",
+            "MetadataId": "4892a51c-7ebf-4130-94e3-09a9a4153a3c"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.MemoAttributeMetadata",
+            "LogicalName": "picture",
+            "MetadataId": "ce7a636e-df27-4ff3-982e-a0748da7fd49"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "stockexchange",
+            "MetadataId": "bb3752e9-ac72-4c19-a848-7ca4a8a05d86"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "tickersymbol",
+            "MetadataId": "86098511-50ab-409b-a0c6-63e1b5a93235"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.LookupAttributeMetadata",
+            "LogicalName": "transactioncurrencyid",
+            "MetadataId": "039c0734-1cb8-4004-82b1-4ea0e16ef940"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "transactioncurrencyidname",
+            "MetadataId": "e48638c0-99f4-4588-b243-c0dc8f8fa5eb"
+        },
+        {
+            "LogicalName": "usergroupid",
+            "MetadataId": "e883ebbc-44ff-4632-a685-aacd9a79fbf4"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.IntegerAttributeMetadata",
+            "LogicalName": "utcoffset",
+            "MetadataId": "beeda265-5677-4a43-9f2d-22320e8ead12"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.BigIntAttributeMetadata",
+            "LogicalName": "versionnumber",
+            "MetadataId": "c21714d5-412b-4420-9f95-ab8196881e73"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StringAttributeMetadata",
+            "LogicalName": "websiteurl",
+            "MetadataId": "d28fd4b7-5767-4875-a732-7d0b54559497"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.BooleanAttributeMetadata",
+            "LogicalName": "workflowsuspended",
+            "MetadataId": "1f03a67e-38cb-467b-a33a-463d81d08349"
+        },
+        {
+            "LogicalName": "workflowsuspendedname",
+            "MetadataId": "d348e24a-2724-40d9-88ed-61632d983cd4"
+        }
+    ]
+}

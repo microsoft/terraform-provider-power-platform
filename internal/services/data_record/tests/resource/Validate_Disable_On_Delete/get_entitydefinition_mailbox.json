@@ -1,0 +1,357 @@
+{
+    "@odata.context": "https://00000000-0000-0000-0000-000000000001.crm.dynamics.com/api/data/v9.2/$metadata#EntityDefinitions/$entity",
+    "ActivityTypeMask": 0,
+    "AutoRouteToOwnerQueue": false,
+    "CanTriggerWorkflow": false,
+    "EntityHelpUrlEnabled": false,
+    "EntityHelpUrl": null,
+    "IsDocumentManagementEnabled": false,
+    "IsOneNoteIntegrationEnabled": false,
+    "IsInteractionCentricEnabled": false,
+    "IsKnowledgeManagementEnabled": false,
+    "IsSLAEnabled": false,
+    "IsBPFEntity": false,
+    "IsDocumentRecommendationsEnabled": false,
+    "IsMSTeamsIntegrationEnabled": false,
+    "SettingOf": null,
+    "DataProviderId": null,
+    "DataSourceId": null,
+    "AutoCreateAccessTeams": false,
+    "IsActivity": false,
+    "IsActivityParty": false,
+    "IsRetrieveAuditEnabled": false,
+    "IsRetrieveMultipleAuditEnabled": false,
+    "IsArchivalEnabled": false,
+    "IsRetentionEnabled": false,
+    "ClusterMode": "Local",
+    "IsAvailableOffline": true,
+    "IsChildEntity": false,
+    "IsAIRUpdated": false,
+    "IconLargeName": null,
+    "IconMediumName": null,
+    "IconSmallName": null,
+    "IconVectorName": null,
+    "IsCustomEntity": false,
+    "IsBusinessProcessEnabled": false,
+    "SyncToExternalSearchIndex": false,
+    "IsOptimisticConcurrencyEnabled": true,
+    "ChangeTrackingEnabled": true,
+    "IsImportable": false,
+    "IsIntersect": false,
+    "IsManaged": true,
+    "IsEnabledForCharts": true,
+    "IsEnabledForTrace": true,
+    "IsValidForAdvancedFind": true,
+    "DaysSinceRecordLastModified": 0,
+    "MobileOfflineFilters": "",
+    "IsReadingPaneEnabled": true,
+    "IsQuickCreateEnabled": false,
+    "LogicalName": "mailbox",
+    "ObjectTypeCode": 9606,
+    "OwnershipType": "UserOwned",
+    "PrimaryNameAttribute": "name",
+    "PrimaryImageAttribute": "entityimage",
+    "PrimaryIdAttribute": "mailboxid",
+    "RecurrenceBaseEntityLogicalName": null,
+    "ReportViewName": "FilteredMailbox",
+    "SchemaName": "Mailbox",
+    "IntroducedVersion": "6.0.0.0",
+    "IsStateModelAware": false,
+    "EnforceStateTransitions": false,
+    "ExternalName": null,
+    "EntityColor": null,
+    "LogicalCollectionName": "mailboxes",
+    "ExternalCollectionName": null,
+    "CollectionSchemaName": "Mailboxes",
+    "EntitySetName": "mailboxes",
+    "IsEnabledForExternalChannels": false,
+    "IsPrivate": false,
+    "UsesBusinessDataLabelTable": false,
+    "IsLogicalEntity": false,
+    "HasNotes": true,
+    "HasActivities": false,
+    "HasFeedback": false,
+    "IsSolutionAware": false,
+    "CreatedOn": "1900-01-01T00:00:00Z",
+    "ModifiedOn": "2024-09-28T14:03:01Z",
+    "HasEmailAddresses": true,
+    "OwnerId": null,
+    "OwnerIdType": 8,
+    "OwningBusinessUnit": null,
+    "TableType": "Standard",
+    "MetadataId": "71903251-887c-e011-b3dc-00155d7b4422",
+    "HasChanged": null,
+    "Description": {
+        "LocalizedLabels": [
+            {
+                "Label": "",
+                "LanguageCode": 1033,
+                "IsManaged": true,
+                "MetadataId": "74903251-887c-e011-b3dc-00155d7b4422",
+                "HasChanged": null
+            }
+        ],
+        "UserLocalizedLabel": {
+            "Label": "",
+            "LanguageCode": 1033,
+            "IsManaged": true,
+            "MetadataId": "74903251-887c-e011-b3dc-00155d7b4422",
+            "HasChanged": null
+        }
+    },
+    "DisplayCollectionName": {
+        "LocalizedLabels": [
+            {
+                "Label": "Mailboxes",
+                "LanguageCode": 1033,
+                "IsManaged": true,
+                "MetadataId": "73903251-887c-e011-b3dc-00155d7b4422",
+                "HasChanged": null
+            }
+        ],
+        "UserLocalizedLabel": {
+            "Label": "Mailboxes",
+            "LanguageCode": 1033,
+            "IsManaged": true,
+            "MetadataId": "73903251-887c-e011-b3dc-00155d7b4422",
+            "HasChanged": null
+        }
+    },
+    "DisplayName": {
+        "LocalizedLabels": [
+            {
+                "Label": "Mailbox",
+                "LanguageCode": 1033,
+                "IsManaged": true,
+                "MetadataId": "72903251-887c-e011-b3dc-00155d7b4422",
+                "HasChanged": null
+            }
+        ],
+        "UserLocalizedLabel": {
+            "Label": "Mailbox",
+            "LanguageCode": 1033,
+            "IsManaged": true,
+            "MetadataId": "72903251-887c-e011-b3dc-00155d7b4422",
+            "HasChanged": null
+        }
+    },
+    "IsAuditEnabled": {
+        "Value": false,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifyauditsettings"
+    },
+    "IsValidForQueue": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canmodifyqueuesettings"
+    },
+    "IsConnectionsEnabled": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canmodifyconnectionsettings"
+    },
+    "IsCustomizable": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "iscustomizable"
+    },
+    "IsRenameable": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "isrenameable"
+    },
+    "IsMappable": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "ismappable"
+    },
+    "IsDuplicateDetectionEnabled": {
+        "Value": false,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifyduplicatedetectionsettings"
+    },
+    "CanCreateAttributes": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "cancreateattributes"
+    },
+    "CanCreateForms": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "cancreateforms"
+    },
+    "CanCreateViews": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "cancreateviews"
+    },
+    "CanCreateCharts": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "cancreatecharts"
+    },
+    "CanBeRelatedEntityInRelationship": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canberelatedentityinrelationship"
+    },
+    "CanBePrimaryEntityInRelationship": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canbeprimaryentityinrelationship"
+    },
+    "CanBeInManyToMany": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canbeinmanytomany"
+    },
+    "CanBeInCustomEntityAssociation": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canbeincustomentityassociation"
+    },
+    "CanEnableSyncToExternalSearchIndex": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canenablesynctoexternalsearchindex"
+    },
+    "CanModifyAdditionalSettings": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifyadditionalsettings"
+    },
+    "CanChangeHierarchicalRelationship": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canchangehierarchicalrelationship"
+    },
+    "CanChangeTrackingBeEnabled": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canchangetrackingbeenabled"
+    },
+    "IsMailMergeEnabled": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canmodifymailmergesettings"
+    },
+    "IsVisibleInMobile": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifymobilevisibility"
+    },
+    "IsVisibleInMobileClient": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canmodifymobileclientvisibility"
+    },
+    "IsReadOnlyInMobileClient": {
+        "Value": false,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifymobileclientreadonly"
+    },
+    "IsOfflineInMobileClient": {
+        "Value": false,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifymobileclientoffline"
+    },
+    "Privileges": [
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvCreateMailbox",
+            "PrivilegeId": "2b404847-af4a-49ac-8389-a7c96a0305a3",
+            "PrivilegeType": "Create"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvReadMailbox",
+            "PrivilegeId": "8e17de3a-5a69-479c-9535-1f7be75b2987",
+            "PrivilegeType": "Read"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvWriteMailbox",
+            "PrivilegeId": "1d79f9f9-4a93-4cf7-ade4-39fbe10b1494",
+            "PrivilegeType": "Write"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvDeleteMailbox",
+            "PrivilegeId": "1e24e27d-60e9-4a63-a1ed-44d77702425f",
+            "PrivilegeType": "Delete"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvAssignMailbox",
+            "PrivilegeId": "0fddefbe-ec48-416b-b794-35f48828e71f",
+            "PrivilegeType": "Assign"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvShareMailbox",
+            "PrivilegeId": "dd66949c-77c5-4b63-a2ef-0a45ac4e28a1",
+            "PrivilegeType": "Share"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvAppendMailbox",
+            "PrivilegeId": "1518e693-c382-43e8-97ca-d2dfe03427e3",
+            "PrivilegeType": "Append"
+        },
+        {
+            "CanBeBasic": true,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvAppendToMailbox",
+            "PrivilegeId": "15b16455-4fd8-4c52-9e39-bc973d3b0181",
+            "PrivilegeType": "AppendTo"
+        }
+    ],
+    "Settings": []
+}
