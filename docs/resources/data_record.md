@@ -45,11 +45,11 @@ data "powerplatform_data_records" "root_business_unit" {
 }
 
 module "business_unit" {
-  source = "./res_business_unit"
-  environment_id = powerplatform_environment.data_record_example_env.id
-  name = "my business unit"
-  costcenter = "123"
-  parent_business_unit_id = one(data.powerplatform_data_records.root_business_unit.rows).businessunitid  
+  source                  = "./res_business_unit"
+  environment_id          = powerplatform_environment.data_record_example_env.id
+  name                    = "my business unit"
+  costcenter              = "123"
+  parent_business_unit_id = one(data.powerplatform_data_records.root_business_unit.rows).businessunitid
 }
 
 resource "powerplatform_data_record" "role" {
@@ -94,6 +94,7 @@ resource "powerplatform_data_record" "team" {
 
 ### Optional
 
+- `disable_on_destroy` (Boolean) If true, the resource will state
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
