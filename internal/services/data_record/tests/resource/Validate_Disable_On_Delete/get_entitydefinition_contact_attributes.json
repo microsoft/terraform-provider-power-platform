@@ -1,0 +1,23 @@
+{
+    "@odata.context": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#EntityDefinitions('contact')/Attributes(LogicalName)",
+    "value": [
+        {
+            "LogicalName": "stageid",
+            "MetadataId": "0f8578a7-807b-45fb-b4b7-a03c9aa3cdac"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StateAttributeMetadata",
+            "LogicalName": "statecode",
+            "MetadataId": "cdc3895a-7539-41e9-966b-3f9ef805aefd"
+        },
+        {
+            "LogicalName": "statecodename",
+            "MetadataId": "b2ad6b42-10fd-49e6-beb3-56ee929c0a8e"
+        },
+        {
+            "@odata.type": "#Microsoft.Dynamics.CRM.StatusAttributeMetadata",
+            "LogicalName": "statuscode",
+            "MetadataId": "a247349a-78ab-4729-8528-515fc2719b67"
+        }
+    ]
+}

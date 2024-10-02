@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -247,18 +248,26 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when getting entity attributes definition %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 			return
 		}
+		var containsIsDisableAttr, containsStateCode bool
 		attributes := map[string]any{}
 		for _, value := range entityAttr {
-			if value.LogicalName == "statecode" {
-				attributes["statecode"] = 1
-				// attributes["statuscode"] = 2  we can't set statuscode (status reason) because it may be customized by the user.
-				break
+			if strings.Compare(value.LogicalName, "isdisabled") == 0 {
+				containsIsDisableAttr = true
 			}
-			if value.LogicalName == "isdisabled" {
-				attributes["isdisabled"] = true
-				break
+			if strings.Compare(value.LogicalName, "statecode") == 0 {
+				containsStateCode = true
 			}
 		}
+		// in some cases both attributes are present, in that case we will set statecode to 1 and isdisabled will be ignored.
+		if (containsStateCode && !containsIsDisableAttr) || (containsStateCode && containsIsDisableAttr) {
+			attributes["statecode"] = 1
+			// attributes["statuscode"] = 2  we can't set statuscode (status reason) because it may be customized by the user.
+		} else if containsIsDisableAttr {
+			attributes["isdisabled"] = true
+		} else {
+			tflog.Debug(ctx, fmt.Sprintf("No statecode or isdisabled attribute found for %s_%s", r.ProviderTypeName, r.TypeName))
+		}
+
 		if len(attributes) > 0 {
 			_, err = r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), attributes)
 			if err != nil {

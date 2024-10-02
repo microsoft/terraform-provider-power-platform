@@ -4,6 +4,7 @@
 package data_record_test
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
@@ -1357,6 +1359,230 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 							}),
 						})),
 				},
+			},
+		},
+	})
+}
+
+func TestUnitDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	readBodyBuff := func(req *http.Request) (string, error) {
+		r, err := req.GetBody()
+		if err != nil {
+			return "", err
+		}
+		defer r.Close()
+		buf := new(bytes.Buffer)
+		if _, err := buf.ReadFrom(r); err != nil {
+			return "", err
+		}
+		return buf.String(), nil
+	}
+
+	var contactDisabledExecuted bool
+	var businessUnitDisabledExecuted bool
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions%28LogicalName=%27contact%27%29#$select=PrimaryIdAttribute,LogicalCollectionName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_entitydefinition_contact.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts%2800000000-0000-0000-0000-000000000010%29`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_contact_00000000-0000-0000-0000-000000000010.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			resp.Header.Set("OData-EntityId", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts(00000000-0000-0000-0000-000000000010)")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.2/([a-zA-Z]+)`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions(LogicalName='contact')/Attributes?$select=LogicalName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_entitydefinition_contact_attributes.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts%2800000000-0000-0000-0000-000000000010%29`,
+		func(req *http.Request) (*http.Response, error) {
+			body, err := readBodyBuff(req)
+			if err != nil {
+				return nil, err
+			}
+
+			if body == "{\"statecode\":1}" {
+				contactDisabledExecuted = true
+			}
+
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			resp.Header.Set("OData-EntityId", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts(00000000-0000-0000-0000-000000000010)")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions%28LogicalName=%27businessunit%27%29#$select=PrimaryIdAttribute,LogicalCollectionName`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_entitydefinition_businessunit.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/businessunits`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			resp.Header.Set("OData-EntityId", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/businessunits(00000000-0000-0000-0000-000000000001)")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/EntityDefinitions(LogicalName='businessunit')/Attributes?$select=LogicalName",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_entitydefinition_businessunit_attributes.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/businessunits%2800000000-0000-0000-0000-000000000001%29`,
+		func(req *http.Request) (*http.Response, error) {
+			body, err := readBodyBuff(req)
+			if err != nil {
+				return nil, err
+			}
+
+			if body == "{\"isdisabled\":true}" {
+				businessUnitDisabledExecuted = true
+			}
+			resp := httpmock.NewStringResponse(http.StatusOK, "")
+			resp.Header.Set("OData-EntityId", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/businessunits(00000000-0000-0000-0000-000000000001)")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/businessunits%2800000000-0000-0000-0000-000000000001%29`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Disable_On_Delete/get_businessunit_00000000-0000-0000-0000-000000000001.json").String())
+			resp.Header.Set("OData-EntityId", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/businessunits(00000000-0000-0000-0000-000000000001)")
+			return resp, nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_data_record" "contant" {
+					disable_on_destroy = true
+					environment_id     = "00000000-0000-0000-0000-000000000001"
+					table_logical_name = "contact"
+					columns = {
+					  firstname          = "John"
+					  lastname           = "Doe"
+					}
+				}
+				
+				resource "powerplatform_data_record" "business_unit" {
+					environment_id     = "00000000-0000-0000-0000-000000000001"
+					table_logical_name = "businessunit"
+					disable_on_destroy = true
+					columns = {
+						name       = "test"
+					}
+				}`,
+			},
+			{
+				// commenting out the resource to trigger the delete
+				Config: ` 
+				// resource "powerplatform_data_record" "contant" {
+				// 	disable_on_destroy = true
+				// 	environment_id     = "00000000-0000-0000-0000-000000000001"
+				// 	table_logical_name = "contact"
+				// 	columns = {
+				// 	  firstname          = "John"
+				// 	  lastname           = "Doe"
+				// 	}
+				// }
+				
+				// resource "powerplatform_data_record" "business_unit" {
+				// 	environment_id     = "00000000-0000-0000-0000-000000000001"
+				// 	table_logical_name = "businessunit"
+				// 	disable_on_destroy = true
+				// 	columns = {
+				// 		name       = "test"
+				// 	}
+				// }`,
+				Check: resource.ComposeTestCheckFunc(
+					func(_ *terraform.State) error {
+						if !contactDisabledExecuted {
+							return fmt.Errorf("expected contact to be disabled on delete")
+						}
+						return nil
+					},
+					func(_ *terraform.State) error {
+						if !businessUnitDisabledExecuted {
+							return fmt.Errorf("expected business unit to be disabled on delete")
+						}
+						return nil
+					},
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "test_env" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "unitedstates"
+					environment_type = "Sandbox"
+					dataverse = {
+					  language_code     = "1033"
+					  currency_code     = "USD"
+					  security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
+				data "powerplatform_data_records" "root_business_unit" {
+					environment_id    = powerplatform_environment.test_env.id
+					entity_collection = "businessunits"
+					filter            = "parentbusinessunitid eq null"
+					select            = ["name"]
+				}
+
+				resource "powerplatform_data_record" "contant" {
+					disable_on_destroy = true
+					environment_id     = powerplatform_environment.test_env.id
+					table_logical_name = "contact"
+					columns = {
+					  firstname          = "John"
+					  lastname           = "Doe"
+					}
+				}
+				
+				resource "powerplatform_data_record" "business_unit" {
+					environment_id     = powerplatform_environment.test_env.id
+					table_logical_name = "businessunit"
+					disable_on_destroy = true
+					columns = {
+						name       = "test"
+				        parentbusinessunitid = {
+							table_logical_name = "businessunit"
+							data_record_id     =  one(data.powerplatform_data_records.root_business_unit.rows).businessunitid
+						}
+					}
+				}`,
 			},
 		},
 	})
