@@ -358,6 +358,21 @@ func getEntityRelationDefinitionManyToMany(mapResponse map[string]any, entityLog
 	return tableName, nil
 }
 
+func (client *client) GetEntityAttributesDefinition(ctx context.Context, environmentId string, entityLogicalName string) ([]attributesApiBodyDto, error) {
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+	apiUrl := fmt.Sprintf("https://%s/api/data/%s/EntityDefinitions(LogicalName='%s')/Attributes?$select=LogicalName", environmentHost, constants.DATAVERSE_API_VERSION, entityLogicalName)
+
+	results := attributesApiResponseDto{}
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK}, &results)
+	if err != nil {
+		return nil, err
+	}
+	return results.Value, nil
+}
+
 func (client *client) GetEntityRelationDefinitionInfo(ctx context.Context, environmentId string, entityLogicalName string, relationLogicalName string) (tableName string, err error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {

@@ -37,3 +37,12 @@ type relationApiResponseDto struct {
 type relationApiBodyDto struct {
 	OdataID string `json:"@odata.id"`
 }
+
+type attributesApiResponseDto struct {
+	OdataContext string                 `json:"@odata.context"`
+	Value        []attributesApiBodyDto `json:"value"`
+}
+type attributesApiBodyDto struct {
+	LogicalName string `json:"LogicalName"`
+	MetadataId  string `json:"MetadataId"`
+}
