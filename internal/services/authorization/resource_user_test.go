@@ -84,7 +84,7 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 					security_roles = [
 					  "e0d2794e-82f3-e811-a951-000d3a1bcf17", // bot author
 					]
-					aad_id         = azuread_user.test_user.id
+					aad_id         =  element(split("/", azuread_user.test_user.id), 2)  
 					disable_delete = false
 				}`,
 
