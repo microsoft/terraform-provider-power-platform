@@ -4,8 +4,10 @@
 package licensing_test
 
 import (
+	"math/rand/v2"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -34,7 +36,7 @@ func TestAccBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.T) {
 				resource "azapi_resource" "rg_example" {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
-					name      = "power-platform-billing-` + mocks.TestName() + `"
+					name      = "power-platform-billing-` + mocks.TestName() + strconv.Itoa(rand.IntN(9999)) + `"
 
 					body = jsonencode({
 						properties = {}
