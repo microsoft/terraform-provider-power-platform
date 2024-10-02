@@ -1,0 +1,5 @@
+kind: fixed
+body: Fixed powerplatform_rest resources that only have a destroy
+time: 2024-10-01T21:13:51.168664977Z
+custom:
+    Issue: "477"

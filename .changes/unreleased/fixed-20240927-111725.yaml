@@ -1,0 +1,5 @@
+kind: fixed
+body: 'powerplatform_environment: environment_type change triggers update not recreate'
+time: 2024-09-27T11:17:25.556290715Z
+custom:
+    Issue: "468"

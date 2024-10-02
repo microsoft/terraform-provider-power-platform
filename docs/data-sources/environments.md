@@ -62,9 +62,9 @@ Read-Only:
 - `dataverse` (Attributes) Dataverse environment details (see [below for nested schema](#nestedatt--environments--dataverse))
 - `description` (String) Description
 - `display_name` (String) Display name
-- `environment_group_id` (String) Unique environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.
+- `environment_group_id` (String) Environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
-- `id` (String) Unique environment id (guid)
+- `id` (String) Environment id (guid)
 - `location` (String) Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source.
 
 <a id="nestedatt--environments--timeouts"></a>
@@ -78,15 +78,16 @@ Read-Only:
 
 - `administration_mode_enabled` (Boolean) Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information.
 - `background_operation_enabled` (Boolean) Background operation status for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information.
-- `currency_code` (String) Unique currency name (EUR, USE, GBP etc.)
+- `currency_code` (String) Currency name (EUR, USE, GBP etc.)
 - `domain` (String) Domain name of the environment
-- `language_code` (Number) Unique language LCID (integer)
-- `linked_app_id` (String) Unique linked app id (guid)
+- `language_code` (Number) Language LCID (integer)
+- `linked_app_id` (String) Linked app id (guid)
 - `linked_app_type` (String) Type of the linked app (Internal, External etc.)
 - `linked_app_url` (String) URL of the linked D365 app
-- `organization_id` (String) Unique organization id (guid)
-- `security_group_id` (String) Unique security group id (guid)
+- `organization_id` (String) Organization id (guid)
+- `security_group_id` (String) Security group id (guid)
 - `template_metadata` (String) Additional D365 environment template metadata (if any)
 - `templates` (List of String) The selected instance provisioning template (if any)
+- `unique_name` (String) Unique name of the Dataverse environment
 - `url` (String) Url of the environment
 - `version` (String) Version of the environment
