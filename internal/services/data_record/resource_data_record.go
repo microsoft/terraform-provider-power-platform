@@ -8,12 +8,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -58,31 +60,36 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 				Delete: true,
 				Read:   true,
 			}),
+			"disable_on_destroy": schema.BoolAttribute{
+				MarkdownDescription: "If true, the resource will either set isdisabled to true or statecode to 1 with a PATCH request, before attempting to delete the record.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id (guid)",
-				Description:         "Unique id (guid)",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"environment_id": schema.StringAttribute{
-				Description: "Id of the Dynamics 365 environment",
-				Required:    true,
+				MarkdownDescription: "Id of the Dynamics 365 environment",
+				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"table_logical_name": schema.StringAttribute{
-				Description: "Logical name of the data record table",
-				Required:    true,
+				MarkdownDescription: "Logical name of the data record table",
+				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"columns": schema.DynamicAttribute{
-				Description: "Columns of the data record table",
-				Required:    true,
+				MarkdownDescription: "Columns of the data record table",
+				Required:            true,
 			},
 		},
 	}
@@ -233,6 +240,43 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to map: %s", err.Error()), err.Error())
 		return
+	}
+
+	if state.DisableOnDestroy.ValueBool() {
+		entityAttr, err := r.DataRecordClient.GetEntityAttributesDefinition(ctx, state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when getting entity attributes definition %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
+		var containsIsDisableAttr, containsStateCode bool
+		attributes := map[string]any{}
+		for _, value := range entityAttr {
+			if strings.Compare(value.LogicalName, "isdisabled") == 0 {
+				containsIsDisableAttr = true
+			}
+			if strings.Compare(value.LogicalName, "statecode") == 0 {
+				containsStateCode = true
+			}
+		}
+		// in some cases both attributes are present, in that case we will set statecode to 1 and isdisabled will be ignored.
+		if (containsStateCode && !containsIsDisableAttr) || (containsStateCode && containsIsDisableAttr) {
+			attributes["statecode"] = 1
+			// attributes["statuscode"] = 2  we can't set statuscode (status reason) because it may be customized by the user.
+		} else if containsIsDisableAttr {
+			attributes["isdisabled"] = true
+		} else {
+			tflog.Debug(ctx, fmt.Sprintf("No statecode or isdisabled attribute found for %s_%s", r.ProviderTypeName, r.TypeName))
+		}
+
+		if len(attributes) > 0 {
+			_, err = r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), attributes)
+			if err != nil {
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when disabling %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				return
+			}
+		} else {
+			tflog.Debug(ctx, fmt.Sprintf("No statecode or isdisabled attribute found for %s_%s", r.ProviderTypeName, r.TypeName))
+		}
 	}
 
 	err = r.DataRecordClient.DeleteDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
