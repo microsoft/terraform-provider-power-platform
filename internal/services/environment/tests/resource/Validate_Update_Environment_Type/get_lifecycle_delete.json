@@ -5,7 +5,7 @@
             "path": "/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc"
         },
         "environment": {
-            "path": "/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000005"
+            "path": "/providers/Microsoft.BusinessAppPlatform/environments/123"
         }
     },
     "type": {

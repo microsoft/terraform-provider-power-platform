@@ -53,6 +53,9 @@ type LifecycleRequestedByDto struct {
 
 func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, response *Response) (*LifecycleDto, error) {
 	locationHeader := response.GetHeader(constants.HEADER_LOCATION)
+	if locationHeader == "" {
+		locationHeader = response.GetHeader(constants.HEADER_OPERATION_LOCATION)
+	}
 	tflog.Debug(ctx, "Location Header: "+locationHeader)
 
 	_, err := url.Parse(locationHeader)

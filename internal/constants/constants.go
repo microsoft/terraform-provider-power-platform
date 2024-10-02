@@ -92,8 +92,8 @@ const (
 	DATAVERSE_API_VERSION     = "v9.2"
 	HEADER_ODATA_ENTITY_ID    = "Odata-Entityid"
 	HEADER_LOCATION           = "Location"
-	HEADER_RETRY_AFTER        = "Retry-After"
 	HEADER_OPERATION_LOCATION = "Operation-Location"
+	HEADER_RETRY_AFTER        = "Retry-After"
 	HTTPS                     = "https"
 	API_VERSION_PARAM         = "api-version"
 )

@@ -112,6 +112,10 @@ type environmentCreateDto struct {
 	Properties environmentCreatePropertiesDto `json:"properties"`
 }
 
+type modifySkuDto struct {
+	EnvironmentSku string `json:"environmentSku"`
+}
+
 type environmentCreatePropertiesDto struct {
 	AzureRegion               string                            `json:"azureRegion,omitempty"`
 	BillingPolicy             BillingPolicyDto                  `json:"billingPolicy,omitempty"`
