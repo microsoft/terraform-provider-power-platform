@@ -1,5 +1,0 @@
-kind: added
-body: added `disable_on_destroy` attribute to powerplatform_record
-time: 2024-10-02T14:23:30.934797698Z
-custom:
-    Issue: "467"
