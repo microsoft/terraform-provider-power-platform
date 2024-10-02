@@ -184,7 +184,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						Computed:            true,
 					},
 					"templates": schema.ListAttribute{
-						MarkdownDescription: "The selected instance provisioning template (if any)",
+						MarkdownDescription: "The selected instance provisioning template (if any). See [ERP-based template](https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/tutorial-deploy-new-environment-with-erp-template?tabs=PPAC) for more information.",
 						Optional:            true,
 						ElementType:         types.StringType,
 					},
