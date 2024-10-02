@@ -87,7 +87,7 @@ Read-Only:
 - `organization_id` (String) Organization id (guid)
 - `security_group_id` (String) Security group id (guid)
 - `template_metadata` (String) Additional D365 environment template metadata (if any)
-- `templates` (List of String) The selected instance provisioning template (if any)
+- `templates` (List of String) The selected instance provisioning template (if any). See [ERP-based template](https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/tutorial-deploy-new-environment-with-erp-template?tabs=PPAC) for more information.
 - `unique_name` (String) Unique name of the Dataverse environment
 - `url` (String) Url of the environment
 - `version` (String) Version of the environment
