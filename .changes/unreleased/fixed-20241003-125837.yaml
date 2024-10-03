@@ -1,0 +1,5 @@
+kind: fixed
+body: powerplatform_data_record invalid character '<' error when running apply
+time: 2024-10-03T12:58:37.265266925Z
+custom:
+    Issue: "474"
