@@ -1538,8 +1538,8 @@ func TestUnitDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
 
 func TestAccDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-		IsUnitTest:               true,
-		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		IsUnitTest:               false,
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: `
