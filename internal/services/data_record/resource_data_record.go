@@ -298,6 +298,9 @@ func convertResourceModelToMap(columnsAsString *string) (mapColumns map[string]a
 		return nil, nil
 	}
 
+	replacedColumns := strings.ReplaceAll(*columnsAsString, `<null>`, `""`)
+	columnsAsString = &replacedColumns
+
 	jsonColumns, err := json.Marshal(columnsAsString)
 	if err != nil {
 		return nil, err
