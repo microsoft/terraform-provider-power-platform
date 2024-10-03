@@ -5,8 +5,10 @@ package licensing_test
 
 import (
 	"fmt"
+	"math/rand/v2"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -35,7 +37,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 				resource "azapi_resource" "rg_example" {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
-					name      = "power-platform-billing-` + mocks.TestName() + `"
+					name      = "power-platform-billing-` + mocks.TestName() + strconv.Itoa(rand.IntN(9999)) + `"
 
 					body = jsonencode({
 						properties = {}
@@ -122,6 +124,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 }
 
 func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
+	rgName := "power-platform-billing-" + mocks.TestName() + strconv.Itoa(rand.IntN(9999))
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -139,7 +142,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				resource "azapi_resource" "rg_example" {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
-					name      = "power-platform-billing-` + mocks.TestName() + `"
+					name      = "` + rgName + `"
 
 					body = jsonencode({
 						properties = {}
@@ -191,7 +194,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				resource "azapi_resource" "rg_example" {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
-					name      = "power-platform-billing-` + mocks.TestName() + `"
+					name      = "` + rgName + `"
 
 					body = jsonencode({
 						properties = {}
@@ -243,7 +246,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				resource "azapi_resource" "rg_example" {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
-					name      = "power-platform-billing-` + mocks.TestName() + `"
+					name      = "` + rgName + `"
 
 					body = jsonencode({
 						properties = {}
