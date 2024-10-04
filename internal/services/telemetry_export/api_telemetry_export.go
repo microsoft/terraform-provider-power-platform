@@ -33,7 +33,7 @@ func (client *Client) GetTelemetryExport(ctx context.Context) ([]ExportLinksDto,
 	values.Add("api-version", "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
-	telemetrylinks := telemetryExportArrayDto{}
+	telemetrylinks := TelemetryExportArrayDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &telemetrylinks)
 
 	return telemetrylinks.Value, err

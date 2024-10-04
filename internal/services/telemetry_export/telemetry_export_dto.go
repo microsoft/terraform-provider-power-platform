@@ -7,6 +7,6 @@ type ExportLinksDto struct {
 	Value []string `json:"value"`
 }
 
-type telemetryExportArrayDto struct {
+type TelemetryExportArrayDto struct {
 	Value []ExportLinksDto `json:"value"`
 }
