@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type TelemetryExportModel struct {
+type AnalyticsDataModel struct {
 	Source           string        `tfsdk:"source"`
 	Environments     []Environment `tfsdk:"environments"`
 	Sink             Sink          `tfsdk:"sink"`

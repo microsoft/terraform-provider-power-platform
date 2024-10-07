@@ -22,7 +22,7 @@ type Client struct {
 	Api *api.Client
 }
 
-func (client *Client) GetTelemetryExport(ctx context.Context) (*TelemetryExportDto, error) {
+func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*AnalyticsDataDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformAnalyticsUrl,
@@ -32,13 +32,13 @@ func (client *Client) GetTelemetryExport(ctx context.Context) (*TelemetryExportD
 	values := url.Values{}
 	apiUrl.RawQuery = values.Encode()
 
-	telemetrylinks := TelemetryExportDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &telemetrylinks)
+	analyticdatalinks := AnalyticsDataDto{}
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &analyticdatalinks)
 
-	return &telemetrylinks, err
+	return &analyticdatalinks, err
 }
 
-func (client *Client) CreateTelemetryExport(ctx context.Context, telemetryToCreate TelemetryExportCreateDto) (*TelemetryExportDto, error) {
+func (client *Client) CreateAnalyticsDataExport(ctx context.Context, analyticsdataToCreate AnalyticsDataCreateDto) (*AnalyticsDataDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformAnalyticsUrl,
@@ -48,11 +48,11 @@ func (client *Client) CreateTelemetryExport(ctx context.Context, telemetryToCrea
 	values := url.Values{}
 	apiUrl.RawQuery = values.Encode()
 
-	telemetrylinks := &TelemetryExportDto{}
-	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, telemetryToCreate, []int{http.StatusCreated}, telemetrylinks)
+	analyticdatalinks := &AnalyticsDataDto{}
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, analyticsdataToCreate, []int{http.StatusCreated}, analyticdatalinks)
 	if err != nil {
 		return nil, err
 	}
 
-	return telemetrylinks, err
+	return analyticdatalinks, err
 }
