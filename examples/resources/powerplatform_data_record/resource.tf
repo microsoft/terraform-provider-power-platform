@@ -3,6 +3,9 @@ terraform {
     powerplatform = {
       source = "microsoft/power-platform"
     }
+    azuread = {
+      source = "hashicorp/azuread"
+    }
   }
 }
 
@@ -10,6 +13,9 @@ provider "powerplatform" {
   use_cli = true
 }
 
+provider "azuread" {
+  use_cli = true
+}
 
 resource "powerplatform_environment" "data_record_example_env" {
   display_name     = "powerplatform_data_record_example"
@@ -22,6 +28,7 @@ resource "powerplatform_environment" "data_record_example_env" {
   }
 }
 
+# get the root business unit by querying for the business unit without a parent
 data "powerplatform_data_records" "root_business_unit" {
   environment_id    = powerplatform_environment.data_record_example_env.id
   entity_collection = "businessunits"
@@ -29,40 +36,44 @@ data "powerplatform_data_records" "root_business_unit" {
   select            = ["name"]
 }
 
+# Create a new business unit with the root business unit as parent
 module "business_unit" {
   source                  = "./res_business_unit"
   environment_id          = powerplatform_environment.data_record_example_env.id
-  name                    = "my business unit"
+  name                    = "Sales"
   costcenter              = "123"
   parent_business_unit_id = one(data.powerplatform_data_records.root_business_unit.rows).businessunitid
 }
 
-resource "powerplatform_data_record" "role" {
-  environment_id     = powerplatform_environment.data_record_example_env.id
-  table_logical_name = "role"
-
-  columns = {
-    name = "my custom role"
-
-    businessunitid = {
-      table_logical_name = "businessunit"
-      data_record_id     = data.powerplatform_data_records.root_business_unit.rows[0].businessunitid
-    }
-  }
+# Create a new role
+module "custom_role" {
+  source           = "./res_role"
+  environment_id   = powerplatform_environment.data_record_example_env.id
+  role_name        = "my custom role"
+  business_unit_id = one(data.powerplatform_data_records.root_business_unit.rows).businessunitid
 }
 
-resource "powerplatform_data_record" "team" {
-  environment_id     = powerplatform_environment.data_record_example_env.id
-  table_logical_name = "team"
-  columns = {
-    name        = "main team"
-    description = "main team description"
+module "team" {
+  source           = "./res_team"
+  environment_id   = powerplatform_environment.data_record_example_env.id
+  team_name        = "main team"
+  team_description = "main team description"
+  role_ids         = [module.custom_role.role_id]
 
-    teamroles_association = [
-      {
-        table_logical_name = "role"
-        data_record_id     = powerplatform_data_record.role.id
-      }
-    ]
-  }
+}
+
+resource "azuread_application_registration" "data_record_app_user" {
+  display_name = "powerplatform_data_record_example"
+}
+
+resource "azuread_service_principal" "data_record_app_user" {
+  client_id = azuread_application_registration.data_record_app_user.client_id
+}
+
+module "application_user" {
+  source           = "./res_application_user"
+  environment_id   = powerplatform_environment.data_record_example_env.id
+  application_id   = azuread_application_registration.data_record_app_user.client_id
+  business_unit_id = one(data.powerplatform_data_records.root_business_unit.rows).businessunitid
+  role_ids         = [module.custom_role.role_id]
 }
