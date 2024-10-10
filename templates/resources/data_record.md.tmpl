@@ -14,13 +14,35 @@ Data Record is a special type of a resources, that allows creation of any type D
 
 ## Example Usage
 
+The following examples show how to use the `data_record` resource to configure some of the most common Dataverse settings.  These are minimal examples just to show the syntax, and do not include all possible configuration options.  Use these as a starting point if you need to set additional fields.
+
 ### Business Units
 
-{{tffile "examples/resources/powerplatform_data_record/business_unit/resource.tf" }}
+Example of how to create a [Business Unit](https://learn.microsoft.com/power-platform/admin/create-edit-business-units)
+
+{{tffile "examples/resources/powerplatform_data_record/res_business_unit/main.tf" }}
 
 ### Application User
 
-{{tffile "examples/resources/powerplatform_data_record/application_user/resource.tf" }}
+Example of how to create an [Application User](https://learn.microsoft.com/power-platform/admin/manage-application-users)
+
+{{tffile "examples/resources/powerplatform_data_record/res_application_user/main.tf" }}
+
+### Role
+
+Example of how to create a [Role](https://learn.microsoft.com/power-platform/admin/create-edit-security-role#create-a-security-role)
+
+{{tffile "examples/resources/powerplatform_data_record/res_role/main.tf" }}
+
+### Team
+
+Example of how to create a [Team](https://learn.microsoft.com/power-platform/admin/manage-teams)
+
+{{tffile "examples/resources/powerplatform_data_record/res_team/main.tf" }}
+
+## End to End Example
+
+{{tffile "examples/resources/powerplatform_data_record/resource.tf" }}
 
 {{ .SchemaMarkdown | trimspace }}
 {{- if .HasImport }}

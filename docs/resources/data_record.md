@@ -14,7 +14,11 @@ Data Record is a special type of a resources, that allows creation of any type D
 
 ## Example Usage
 
+The following examples show how to use the `data_record` resource to configure some of the most common Dataverse settings.  These are minimal examples just to show the syntax, and do not include all possible configuration options.  Use these as a starting point if you need to set additional fields.
+
 ### Business Units
+
+Example of how to create a [Business Unit](https://learn.microsoft.com/power-platform/admin/create-edit-business-units)
 
 ```terraform
 terraform {
@@ -25,70 +29,49 @@ terraform {
   }
 }
 
-provider "powerplatform" {
-  use_cli = true
+variable "environment_id" {
+  type = string
 }
 
-
-resource "powerplatform_environment" "data_record_bu_example_env" {
-  display_name     = "powerplatform_data_record_bu_example"
-  location         = "europe"
-  environment_type = "Sandbox"
-  dataverse = {
-    language_code     = "1033"
-    currency_code     = "USD"
-    security_group_id = "00000000-0000-0000-0000-000000000000"
-  }
+variable "name" {
+  type = string
 }
 
-data "powerplatform_data_records" "root_business_unit" {
-  environment_id    = powerplatform_environment.data_record_bu_example_env.id
-  entity_collection = "businessunits"
-  filter            = "parentbusinessunitid eq null"
-  select            = ["name"]
+variable "costcenter" {
+  type = string
 }
 
-module "business_unit" {
-  source                  = "./res_business_unit"
-  environment_id          = powerplatform_environment.data_record_bu_example_env.id
-  name                    = "my business unit"
-  costcenter              = "123"
-  parent_business_unit_id = one(data.powerplatform_data_records.root_business_unit.rows).businessunitid
+variable "parent_business_unit_id" {
+  type = string
 }
 
-resource "powerplatform_data_record" "role" {
-  environment_id     = powerplatform_environment.data_record_bu_example_env.id
-  table_logical_name = "role"
-
+resource "powerplatform_data_record" "business_unit" {
+  environment_id     = var.environment_id
+  table_logical_name = "businessunit"
+  disable_on_destroy = true
   columns = {
-    name = "my custom role"
-
-    businessunitid = {
+    name       = var.name
+    costcenter = var.costcenter
+    parentbusinessunitid = {
       table_logical_name = "businessunit"
-      data_record_id     = data.powerplatform_data_records.root_business_unit.rows[0].businessunitid
+      data_record_id     = var.parent_business_unit_id
     }
   }
 }
 
-resource "powerplatform_data_record" "team" {
-  environment_id     = powerplatform_environment.data_record_bu_example_env.id
-  table_logical_name = "team"
-  columns = {
-    name        = "main team"
-    description = "main team description"
+output "resource_id" {
+  value = powerplatform_data_record.business_unit.id
+}
 
-    teamroles_association = [
-      {
-        table_logical_name = "role"
-        data_record_id     = powerplatform_data_record.role.id
-      }
-    ]
-  }
+output "resource" {
+  value = powerplatform_data_record.business_unit
 }
 ```
 
 ### Application User
 
+Example of how to create an [Application User](https://learn.microsoft.com/power-platform/admin/manage-application-users)
+
 ```terraform
 terraform {
   required_providers {
@@ -98,12 +81,201 @@ terraform {
   }
 }
 
+variable "environment_id" {
+  description = "The unique identifier of the environment"
+  type        = string
+  validation {
+    condition     = length(var.environment_id) > 0
+    error_message = "The environment id must not be empty"
+  }
+
+}
+
+variable "application_id" {
+  description = "EntraId clientid of the application"
+  type        = string
+  validation {
+    condition     = length(var.application_id) > 0
+    error_message = "The application id must not be empty"
+  }
+}
+
+variable "business_unit_id" {
+  description = "Unique identifier of the business unit"
+  type        = string
+  validation {
+    condition     = length(var.business_unit_id) > 0
+    error_message = "The business unit id must not be empty"
+  }
+}
+
+variable "role_ids" {
+  type        = set(string)
+  description = "The role ids that are granted to this application user"
+}
+
+
+resource "powerplatform_data_record" "app_user" {
+  table_logical_name = "systemuser"
+  environment_id     = var.environment_id
+  disable_on_destroy = true # Application Users cannot be deleted without being disabled first
+  columns = {
+    applicationid = var.application_id
+    businessunitid = {
+      table_logical_name = "businessunit"
+      data_record_id     = var.business_unit_id
+    }
+    systemuserroles_association = tolist([for rid in var.role_ids : { table_logical_name = "role", data_record_id = tostring(rid) }])
+  }
+}
+
+output "application_user_id" {
+  value = powerplatform_data_record.app_user.id
+}
+```
+
+### Role
+
+Example of how to create a [Role](https://learn.microsoft.com/power-platform/admin/create-edit-security-role#create-a-security-role)
+
+```terraform
+terraform {
+  required_providers {
+    powerplatform = {
+      source = "microsoft/power-platform"
+    }
+  }
+}
+
+variable "environment_id" {
+  description = "The unique identifier of the environment"
+  type        = string
+  validation {
+    condition     = length(var.environment_id) > 0
+    error_message = "The environment id must not be empty"
+  }
+}
+
+variable "role_name" {
+  description = "The name of the role"
+  type        = string
+  validation {
+    condition     = length(var.role_name) > 0
+    error_message = "The role name must not be empty"
+  }
+}
+
+variable "business_unit_id" {
+  description = "The unique identifier of the business unit"
+  type        = string
+  validation {
+    condition     = length(var.business_unit_id) > 0
+    error_message = "The business unit id must not be empty"
+  }
+}
+
+resource "powerplatform_data_record" "role" {
+  environment_id     = var.environment_id
+  table_logical_name = "role"
+
+  columns = {
+    name = var.role_name
+
+    businessunitid = {
+      table_logical_name = "businessunit"
+      data_record_id     = var.business_unit_id
+    }
+  }
+}
+
+output "role_id" {
+  value = powerplatform_data_record.role.id
+}
+```
+
+### Team
+
+Example of how to create a [Team](https://learn.microsoft.com/power-platform/admin/manage-teams)
+
+```terraform
+terraform {
+  required_providers {
+    powerplatform = {
+      source = "microsoft/power-platform"
+    }
+  }
+}
+
+variable "environment_id" {
+  description = "The unique identifier of the environment"
+  type        = string
+  validation {
+    condition     = length(var.environment_id) > 0
+    error_message = "The environment id must not be empty"
+  }
+
+}
+
+variable "team_name" {
+  description = "The name of the team"
+  type        = string
+  validation {
+    condition     = length(var.team_name) > 0
+    error_message = "The team name must not be empty"
+  }
+}
+
+variable "team_description" {
+  description = "The description of the team"
+  type        = string
+}
+
+variable "role_ids" {
+  type        = set(string)
+  description = "The role ids that are granted to this team"
+  
+}
+
+resource "powerplatform_data_record" "team" {
+  environment_id     = var.environment_id
+  table_logical_name = "team"
+  columns = {
+    name        = var.team_name
+    description = var.team_description
+
+    teamroles_association = tolist([for rid in var.role_ids : { table_logical_name = "role", data_record_id = tostring(rid) }])
+  }
+}
+
+output "team_id" {
+  value = powerplatform_data_record.team.id
+}
+```
+
+## End to End Example
+
+```terraform
+terraform {
+  required_providers {
+    powerplatform = {
+      source = "microsoft/power-platform"
+    }
+    azuread = {
+      source = "hashicorp/azuread"
+    }
+  }
+}
+
 provider "powerplatform" {
   use_cli = true
 }
 
-resource "powerplatform_environment" "data_record_app_user_example_env" {
-  display_name     = "powerplatform_data_record_app_user_example"
+provider "azuread" {
+  use_cli = true
+}
+
+resource "powerplatform_environment" "data_record_example_env" {
+  display_name     = "powerplatform_data_record_example"
   location         = "europe"
   environment_type = "Sandbox"
   dataverse = {
@@ -113,28 +285,54 @@ resource "powerplatform_environment" "data_record_app_user_example_env" {
   }
 }
 
-data "powerplatform_security_roles" "all_roles" {
-  business_unit_id = var.businessunitid
-  environment_id   = powerplatform_environment.data_record_app_user_example_env
+# get the root business unit by querying for the business unit without a parent
+data "powerplatform_data_records" "root_business_unit" {
+  environment_id    = powerplatform_environment.data_record_example_env.id
+  entity_collection = "businessunits"
+  filter            = "parentbusinessunitid eq null"
+  select            = ["name"]
 }
 
-locals {
-  selected_roles = [for role in coalesce(data.powerplatform_security_roles.all_roles.security_roles, []) : role.role_id if contains(var.roles, role.name)]
+# Create a new business unit with the root business unit as parent
+module "business_unit" {
+  source                  = "./res_business_unit"
+  environment_id          = powerplatform_environment.data_record_example_env.id
+  name                    = "Sales"
+  costcenter              = "123"
+  parent_business_unit_id = one(data.powerplatform_data_records.root_business_unit.rows).businessunitid
 }
 
-resource "powerplatform_data_record" "app_user" {
-  table_logical_name = "systemuser"
-  environment_id     = powerplatform_environment.data_record_app_user_example_env.id
-  disable_on_destroy = true
-  columns = {
-    applicationid = var.applicationid
-    businessunitid = {
-      table_logical_name = "businessunit"
-      data_record_id     = var.businessunitid
-    }
-    systemuserroles_association = tolist([for rid in local.selected_roles : { table_logical_name = "role", data_record_id = tostring(rid) }])
-    isdisabled                  = false
-  }
+# Create a new role
+module "custom_role" {
+  source           = "./res_role"
+  environment_id   = powerplatform_environment.data_record_example_env.id
+  role_name        = "my custom role"
+  business_unit_id = one(data.powerplatform_data_records.root_business_unit.rows).businessunitid
+}
+
+module "team" {
+  source           = "./res_team"
+  environment_id   = powerplatform_environment.data_record_example_env.id
+  team_name        = "main team"
+  team_description = "main team description"
+  role_ids         = [module.custom_role.role_id]
+
+}
+
+resource "azuread_application_registration" "data_record_app_user" {
+  display_name = "powerplatform_data_record_example"
+}
+
+resource "azuread_service_principal" "data_record_app_user" {
+  client_id = azuread_application_registration.data_record_app_user.client_id
+}
+
+module "application_user" {
+  source           = "./res_application_user"
+  environment_id   = powerplatform_environment.data_record_example_env.id
+  application_id   = azuread_application_registration.data_record_app_user.client_id
+  business_unit_id = one(data.powerplatform_data_records.root_business_unit.rows).businessunitid
+  role_ids         = [module.custom_role.role_id]
 }
 ```
 
