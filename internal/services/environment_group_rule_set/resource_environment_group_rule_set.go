@@ -199,17 +199,14 @@ func (r *EnvironmentGroupRuleSetResource) Create(ctx context.Context, req resour
 		ruleObj := rule.(types.Object)
 		t := ruleObj.Attributes()["type"]
 		rt := ruleObj.Attributes()["resource_type"]
-		v := ruleObj.Attributes()["values"]
 
 		rules = append(rules, types.ObjectValueMust(map[string]attr.Type{
 			"type":          types.StringType,
 			"resource_type": types.StringType,
-			"values":        types.DynamicType,
 		},
 			map[string]attr.Value{
 				"type":          t,
 				"resource_type": rt,
-				"values":        v,
 			}))
 	}
 

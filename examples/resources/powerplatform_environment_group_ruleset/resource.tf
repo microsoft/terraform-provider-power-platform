@@ -23,7 +23,8 @@ resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
       resource_type = "App",
     },
     {
-      type = "AdminDigest"
+      type          = "AdminDigest"
+      resource_type = "App"
     }
   ]
 }

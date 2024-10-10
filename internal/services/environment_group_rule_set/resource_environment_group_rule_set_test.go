@@ -26,6 +26,7 @@ func TestAccEnvironmentGroupRuleSetResource_Validate_Create(t *testing.T) {
     },
     {
       type = "AdminDigest"
+      resource_type = "App"
     }
   ]
 }`,
