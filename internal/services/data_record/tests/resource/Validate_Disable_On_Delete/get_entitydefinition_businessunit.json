@@ -1,0 +1,357 @@
+{
+    "@odata.context": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/$metadata#EntityDefinitions/$entity",
+    "ActivityTypeMask": 0,
+    "AutoRouteToOwnerQueue": false,
+    "CanTriggerWorkflow": true,
+    "EntityHelpUrlEnabled": false,
+    "EntityHelpUrl": null,
+    "IsDocumentManagementEnabled": false,
+    "IsOneNoteIntegrationEnabled": false,
+    "IsInteractionCentricEnabled": false,
+    "IsKnowledgeManagementEnabled": false,
+    "IsSLAEnabled": false,
+    "IsBPFEntity": false,
+    "IsDocumentRecommendationsEnabled": false,
+    "IsMSTeamsIntegrationEnabled": false,
+    "SettingOf": null,
+    "DataProviderId": null,
+    "DataSourceId": null,
+    "AutoCreateAccessTeams": false,
+    "IsActivity": false,
+    "IsActivityParty": false,
+    "IsRetrieveAuditEnabled": false,
+    "IsRetrieveMultipleAuditEnabled": false,
+    "IsArchivalEnabled": false,
+    "IsRetentionEnabled": false,
+    "ClusterMode": "Local",
+    "IsAvailableOffline": true,
+    "IsChildEntity": false,
+    "IsAIRUpdated": false,
+    "IconLargeName": null,
+    "IconMediumName": null,
+    "IconSmallName": null,
+    "IconVectorName": null,
+    "IsCustomEntity": false,
+    "IsBusinessProcessEnabled": false,
+    "SyncToExternalSearchIndex": false,
+    "IsOptimisticConcurrencyEnabled": true,
+    "ChangeTrackingEnabled": true,
+    "IsImportable": true,
+    "IsIntersect": false,
+    "IsManaged": true,
+    "IsEnabledForCharts": false,
+    "IsEnabledForTrace": false,
+    "IsValidForAdvancedFind": true,
+    "DaysSinceRecordLastModified": 0,
+    "MobileOfflineFilters": "\n    <fetch version=\"1.0\" output-format=\"xml-platform\" mapping=\"logical\" distinct=\"false\">\n      <entity name=\"businessunit\">\n        <filter type=\"and\">\n          <condition attribute=\"modifiedon\" operator=\"on-or-after\" value=\"1900-01-01\"/>\n        </filter>\n      </entity>\n    </fetch>\n  ",
+    "IsReadingPaneEnabled": true,
+    "IsQuickCreateEnabled": false,
+    "LogicalName": "businessunit",
+    "ObjectTypeCode": 10,
+    "OwnershipType": "BusinessOwned",
+    "PrimaryNameAttribute": "name",
+    "PrimaryImageAttribute": null,
+    "PrimaryIdAttribute": "businessunitid",
+    "RecurrenceBaseEntityLogicalName": null,
+    "ReportViewName": "FilteredBusinessUnit",
+    "SchemaName": "BusinessUnit",
+    "IntroducedVersion": "5.0.0.0",
+    "IsStateModelAware": false,
+    "EnforceStateTransitions": false,
+    "ExternalName": null,
+    "EntityColor": null,
+    "LogicalCollectionName": "businessunits",
+    "ExternalCollectionName": null,
+    "CollectionSchemaName": "BusinessUnits",
+    "EntitySetName": "businessunits",
+    "IsEnabledForExternalChannels": false,
+    "IsPrivate": false,
+    "UsesBusinessDataLabelTable": false,
+    "IsLogicalEntity": false,
+    "HasNotes": false,
+    "HasActivities": false,
+    "HasFeedback": false,
+    "IsSolutionAware": false,
+    "CreatedOn": "1900-01-01T00:00:00Z",
+    "ModifiedOn": "2023-02-11T20:52:26Z",
+    "HasEmailAddresses": true,
+    "OwnerId": null,
+    "OwnerIdType": 8,
+    "OwningBusinessUnit": null,
+    "TableType": "Standard",
+    "MetadataId": "f01e8baa-c7f5-4ec3-b538-5a3eed8527f6",
+    "HasChanged": null,
+    "Description": {
+        "LocalizedLabels": [
+            {
+                "Label": "Business, division, or department in the Microsoft Dynamics 365 database.",
+                "LanguageCode": 1033,
+                "IsManaged": true,
+                "MetadataId": "de0a19a7-2241-db11-898a-0007e9e17ebd",
+                "HasChanged": null
+            }
+        ],
+        "UserLocalizedLabel": {
+            "Label": "Business, division, or department in the Microsoft Dynamics 365 database.",
+            "LanguageCode": 1033,
+            "IsManaged": true,
+            "MetadataId": "de0a19a7-2241-db11-898a-0007e9e17ebd",
+            "HasChanged": null
+        }
+    },
+    "DisplayCollectionName": {
+        "LocalizedLabels": [
+            {
+                "Label": "Business Units",
+                "LanguageCode": 1033,
+                "IsManaged": true,
+                "MetadataId": "e00a19a7-2241-db11-898a-0007e9e17ebd",
+                "HasChanged": null
+            }
+        ],
+        "UserLocalizedLabel": {
+            "Label": "Business Units",
+            "LanguageCode": 1033,
+            "IsManaged": true,
+            "MetadataId": "e00a19a7-2241-db11-898a-0007e9e17ebd",
+            "HasChanged": null
+        }
+    },
+    "DisplayName": {
+        "LocalizedLabels": [
+            {
+                "Label": "Business Unit",
+                "LanguageCode": 1033,
+                "IsManaged": true,
+                "MetadataId": "df0a19a7-2241-db11-898a-0007e9e17ebd",
+                "HasChanged": null
+            }
+        ],
+        "UserLocalizedLabel": {
+            "Label": "Business Unit",
+            "LanguageCode": 1033,
+            "IsManaged": true,
+            "MetadataId": "df0a19a7-2241-db11-898a-0007e9e17ebd",
+            "HasChanged": null
+        }
+    },
+    "IsAuditEnabled": {
+        "Value": false,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifyauditsettings"
+    },
+    "IsValidForQueue": {
+        "Value": false,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifyqueuesettings"
+    },
+    "IsConnectionsEnabled": {
+        "Value": false,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifyconnectionsettings"
+    },
+    "IsCustomizable": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "iscustomizable"
+    },
+    "IsRenameable": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "isrenameable"
+    },
+    "IsMappable": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "ismappable"
+    },
+    "IsDuplicateDetectionEnabled": {
+        "Value": false,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifyduplicatedetectionsettings"
+    },
+    "CanCreateAttributes": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "cancreateattributes"
+    },
+    "CanCreateForms": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "cancreateforms"
+    },
+    "CanCreateViews": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "cancreateviews"
+    },
+    "CanCreateCharts": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "cancreatecharts"
+    },
+    "CanBeRelatedEntityInRelationship": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canberelatedentityinrelationship"
+    },
+    "CanBePrimaryEntityInRelationship": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canbeprimaryentityinrelationship"
+    },
+    "CanBeInManyToMany": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canbeinmanytomany"
+    },
+    "CanBeInCustomEntityAssociation": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canbeincustomentityassociation"
+    },
+    "CanEnableSyncToExternalSearchIndex": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canenablesynctoexternalsearchindex"
+    },
+    "CanModifyAdditionalSettings": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifyadditionalsettings"
+    },
+    "CanChangeHierarchicalRelationship": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canchangehierarchicalrelationship"
+    },
+    "CanChangeTrackingBeEnabled": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canchangetrackingbeenabled"
+    },
+    "IsMailMergeEnabled": {
+        "Value": false,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifymailmergesettings"
+    },
+    "IsVisibleInMobile": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canmodifymobilevisibility"
+    },
+    "IsVisibleInMobileClient": {
+        "Value": true,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canmodifymobileclientvisibility"
+    },
+    "IsReadOnlyInMobileClient": {
+        "Value": false,
+        "CanBeChanged": false,
+        "ManagedPropertyLogicalName": "canmodifymobileclientreadonly"
+    },
+    "IsOfflineInMobileClient": {
+        "Value": true,
+        "CanBeChanged": true,
+        "ManagedPropertyLogicalName": "canmodifymobileclientoffline"
+    },
+    "Privileges": [
+        {
+            "CanBeBasic": false,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": false,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvCreateBusinessUnit",
+            "PrivilegeId": "eb20684e-925f-4ebe-a277-699c910ef635",
+            "PrivilegeType": "Create"
+        },
+        {
+            "CanBeBasic": false,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvReadBusinessUnit",
+            "PrivilegeId": "487cdbaf-59f9-4db3-b648-4eed351ff00b",
+            "PrivilegeType": "Read"
+        },
+        {
+            "CanBeBasic": false,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvWriteBusinessUnit",
+            "PrivilegeId": "fcee0faa-07dc-42ac-a1f3-e1d63ca29ae7",
+            "PrivilegeType": "Write"
+        },
+        {
+            "CanBeBasic": false,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": false,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvDeleteBusinessUnit",
+            "PrivilegeId": "648be51f-6eb2-4660-a564-a5fb555406a0",
+            "PrivilegeType": "Delete"
+        },
+        {
+            "CanBeBasic": false,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvAppendBusinessUnit",
+            "PrivilegeId": "cf716ba0-04e5-4438-ae87-0b8729cc5219",
+            "PrivilegeType": "Append"
+        },
+        {
+            "CanBeBasic": false,
+            "CanBeDeep": true,
+            "CanBeGlobal": true,
+            "CanBeLocal": true,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvAppendToBusinessUnit",
+            "PrivilegeId": "f0a87077-39fb-4317-93a2-6696641c57c4",
+            "PrivilegeType": "AppendTo"
+        },
+        {
+            "CanBeBasic": false,
+            "CanBeDeep": false,
+            "CanBeGlobal": true,
+            "CanBeLocal": false,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvDisableBusinessUnit",
+            "PrivilegeId": "1c29d21f-c8a6-427b-b470-26e282bc47e7",
+            "PrivilegeType": "None"
+        },
+        {
+            "CanBeBasic": false,
+            "CanBeDeep": false,
+            "CanBeGlobal": true,
+            "CanBeLocal": false,
+            "CanBeEntityReference": false,
+            "CanBeParentEntityReference": false,
+            "CanBeRecordFilter": false,
+            "Name": "prvReparentBusinessUnit",
+            "PrivilegeId": "9c8710db-5260-4dfe-91a3-983b81f1b4d6",
+            "PrivilegeType": "None"
+        }
+    ],
+    "Settings": []
+}

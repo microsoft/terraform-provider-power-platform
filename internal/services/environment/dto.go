@@ -81,6 +81,7 @@ type LinkedEnvironmentMetadataDto struct {
 	Version                   string                     `json:"version"`
 	Templates                 []string                   `json:"template,omitempty"`
 	TemplateMetadata          *createTemplateMetadataDto `json:"templateMetadata,omitempty"`
+	UniqueName                string                     `json:"uniqueName"`
 }
 
 type LinkedAppMetadataDto struct {
@@ -109,6 +110,10 @@ type environmentArrayDto struct {
 type environmentCreateDto struct {
 	Location   string                         `json:"location"`
 	Properties environmentCreatePropertiesDto `json:"properties"`
+}
+
+type modifySkuDto struct {
+	EnvironmentSku string `json:"environmentSku"`
 }
 
 type environmentCreatePropertiesDto struct {

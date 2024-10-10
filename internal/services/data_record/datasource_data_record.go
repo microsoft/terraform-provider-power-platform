@@ -165,8 +165,8 @@ func (d *DataRecordDataSource) Schema(ctx context.Context, req datasource.Schema
 				Computed:            true,
 			},
 			"rows": schema.DynamicAttribute{
-				Description: "Columns of the data record table",
-				Computed:    true,
+				MarkdownDescription: "Columns of the data record table",
+				Computed:            true,
 			},
 		},
 	}

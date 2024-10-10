@@ -47,6 +47,7 @@ type DataRecordResource struct {
 
 type DataRecordResourceModel struct {
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
+	DisableOnDestroy types.Bool     `tfsdk:"disable_on_destroy"`
 	Id               types.String   `tfsdk:"id"`
 	EnvironmentId    types.String   `tfsdk:"environment_id"`
 	TableLogicalName types.String   `tfsdk:"table_logical_name"`

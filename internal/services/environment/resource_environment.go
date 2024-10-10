@@ -68,15 +68,14 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Read:   true,
 			}),
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Unique environment id (guid)",
-				Description:         "Unique environment id (guid)",
+				MarkdownDescription: "Environment id (guid)",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"environment_group_id": schema.StringAttribute{
-				MarkdownDescription: "Unique environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information.",
+				MarkdownDescription: "Environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information.",
 				Computed:            true,
 				Optional:            true,
 			},
@@ -99,7 +98,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				},
 			},
 			"azure_region": schema.StringAttribute{
-				Description:         "Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source. This property should only be set if absolutely necessary like when trying to create an environment in the same Azure region as Azure resources or Fabric capacity.  Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).",
 				MarkdownDescription: "Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source. This property should only be set if absolutely necessary like when trying to create an environment in the same Azure region as Azure resources or Fabric capacity.  Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).",
 				Required:            false,
 				Optional:            true,
@@ -110,37 +108,33 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				},
 			},
 			"environment_type": schema.StringAttribute{
-				Description:         "Type of the environment (Sandbox, Production etc.)",
 				MarkdownDescription: "Type of the environment (Sandbox, Production etc.)",
 				Required:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 				Validators: []validator.String{
 					stringvalidator.OneOf(EnvironmentTypes...),
 				},
 			},
 			"display_name": schema.StringAttribute{
 				MarkdownDescription: "Display name",
-				Description:         "Display name",
 				Required:            true,
 			},
 			"billing_policy_id": &schema.StringAttribute{
-				Description:         "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 				MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 				Optional:            true,
 				Computed:            true,
 			},
 			"dataverse": schema.SingleNestedAttribute{
 				MarkdownDescription: "Dataverse environment details",
-				Description:         "Dataverse environment details",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers: []planmodifier.Object{
 					modifiers.RequireReplaceObjectToEmptyModifier(),
 				},
 				Attributes: map[string]schema.Attribute{
-
+					"unique_name": schema.StringAttribute{
+						MarkdownDescription: "Unique name of the Dataverse environment",
+						Computed:            true,
+					},
 					"administration_mode_enabled": schema.BoolAttribute{
 						MarkdownDescription: "Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
 						Computed:            true,
@@ -152,73 +146,61 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						Computed:            true,
 					},
 					"currency_code": schema.StringAttribute{
-						Description:         "Unique currency code",
-						MarkdownDescription: "Unique currency name",
+						MarkdownDescription: "Currency name",
 						Required:            true,
 						PlanModifiers: []planmodifier.String{
 							modifiers.RequireReplaceStringFromNonEmptyPlanModifier(),
 						},
 					},
 					"url": schema.StringAttribute{
-						Description:         "Url of the environment",
 						MarkdownDescription: "Url of the environment",
 						Computed:            true,
 					},
 					"domain": schema.StringAttribute{
-						Description:         "Domain name of the environment",
 						MarkdownDescription: "Domain name of the environment",
 						Optional:            true,
 						Computed:            true,
 					},
 					"organization_id": schema.StringAttribute{
-						Description:         "Unique organization id (guid)",
-						MarkdownDescription: "Unique organization id (guid)",
+						MarkdownDescription: "Organization id (guid)",
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
 							stringplanmodifier.UseStateForUnknown(),
 						},
 					},
 					"security_group_id": schema.StringAttribute{
-						Description:         "Unique security group id (guid).  For an empty security group, set this property to 0000000-0000-0000-0000-000000000000",
-						MarkdownDescription: "Unique security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
+						MarkdownDescription: "Security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
 						Required:            true,
 					},
 					"language_code": schema.Int64Attribute{
-						Description:         "Unique language LCID (integer)",
-						MarkdownDescription: "Unique language LCID (integer)",
+						MarkdownDescription: "Language LCID (integer)",
 						Required:            true,
 						PlanModifiers: []planmodifier.Int64{
 							modifiers.RequireReplaceIntAttributePlanModifier(),
 						},
 					},
 					"version": schema.StringAttribute{
-						Description:         "Version of the environment",
 						MarkdownDescription: "Version of the environment",
 						Computed:            true,
 					},
 					"templates": schema.ListAttribute{
-						Description:         "The selected instance provisioning template (if any)",
-						MarkdownDescription: "The selected instance provisioning template (if any)",
+						MarkdownDescription: "The selected instance provisioning template (if any). See [ERP-based template](https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/tutorial-deploy-new-environment-with-erp-template?tabs=PPAC) for more information.",
 						Optional:            true,
 						ElementType:         types.StringType,
 					},
 					"template_metadata": schema.StringAttribute{
-						Description:         "Additional D365 environment template metadata (if any)",
 						MarkdownDescription: "Additional D365 environment template metadata (if any)",
 						Optional:            true,
 					},
 					"linked_app_type": schema.StringAttribute{
-						Description:         "The type of the linked D365 application",
 						MarkdownDescription: "The type of the linked D365 application",
 						Computed:            true,
 					},
 					"linked_app_id": schema.StringAttribute{
-						Description:         "The GUID of the linked D365 application",
 						MarkdownDescription: "The GUID of the linked D365 application",
 						Computed:            true,
 					},
 					"linked_app_url": schema.StringAttribute{
-						Description:         "The URL of the linked D365 application",
 						MarkdownDescription: "The URL of the linked D365 application",
 						Computed:            true,
 					},
@@ -414,6 +396,14 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		},
 	}
 
+	if plan.EnvironmentType.ValueString() != state.EnvironmentType.ValueString() {
+		err := r.EnvironmentClient.ModifyEnvironmentType(ctx, plan.Id.ValueString(), plan.EnvironmentType.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("Error when updating environment_type", err.Error())
+			return
+		}
+	}
+
 	if !plan.Description.IsNull() && plan.Description.ValueString() != "" {
 		environmentDto.Properties.Description = plan.Description.ValueString()
 	}
@@ -490,13 +480,13 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	newPlan, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &newPlan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
 func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, error) {

@@ -42,9 +42,8 @@ resource "powerplatform_environment" "development" {
   cadence              = "Moderate"
   environment_group_id = ""
   dataverse = {
-    language_code = "1033"
-    currency_code = "USD"
-    domain            = "mydomain"
+    language_code     = "1033"
+    currency_code     = "USD"
     security_group_id = "00000000-0000-0000-0000-000000000000"
   }
 }
@@ -66,21 +65,21 @@ resource "powerplatform_environment" "development" {
 - `cadence` (String) Cadence of updates for the environment (Frequent, Moderate). For more information check [here](https://learn.microsoft.com/en-us/power-platform/admin/create-environment#setting-an-environment-refresh-cadence).
 - `dataverse` (Attributes) Dataverse environment details (see [below for nested schema](#nestedatt--dataverse))
 - `description` (String) Description of the environment
-- `environment_group_id` (String) Unique environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information.
+- `environment_group_id` (String) Environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
 
-- `id` (String) Unique environment id (guid)
+- `id` (String) Environment id (guid)
 
 <a id="nestedatt--dataverse"></a>
 ### Nested Schema for `dataverse`
 
 Required:
 
-- `currency_code` (String) Unique currency name
-- `language_code` (Number) Unique language LCID (integer)
-- `security_group_id` (String) Unique security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`
+- `currency_code` (String) Currency name
+- `language_code` (Number) Language LCID (integer)
+- `security_group_id` (String) Security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`
 
 Optional:
 
@@ -88,14 +87,15 @@ Optional:
 - `background_operation_enabled` (Boolean) Indicates if background operation is enabled
 - `domain` (String) Domain name of the environment
 - `template_metadata` (String) Additional D365 environment template metadata (if any)
-- `templates` (List of String) The selected instance provisioning template (if any)
+- `templates` (List of String) The selected instance provisioning template (if any). See [ERP-based template](https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/tutorial-deploy-new-environment-with-erp-template?tabs=PPAC) for more information.
 
 Read-Only:
 
 - `linked_app_id` (String) The GUID of the linked D365 application
 - `linked_app_type` (String) The type of the linked D365 application
 - `linked_app_url` (String) The URL of the linked D365 application
-- `organization_id` (String) Unique organization id (guid)
+- `organization_id` (String) Organization id (guid)
+- `unique_name` (String) Unique name of the Dataverse environment
 - `url` (String) Url of the environment
 - `version` (String) Version of the environment
 

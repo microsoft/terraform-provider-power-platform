@@ -1,6 +1,6 @@
 ---
-page_title: "Authentication: Connecting to non-public sovereign clouds"
-subcategory: "Authentication"
+page_title: "Connecting to non-public sovereign clouds"
+subcategory: "Guides"
 description: |-
   <no value>
 ---

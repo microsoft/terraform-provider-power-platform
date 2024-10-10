@@ -357,6 +357,37 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 	}
 }
 
+func (client *Client) ModifyEnvironmentType(ctx context.Context, environmentId, environmentType string) error {
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/modifySku", environmentId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2021-04-01")
+	apiUrl.RawQuery = values.Encode()
+
+	modifySkuDto := modifySkuDto{
+		EnvironmentSku: environmentType,
+	}
+
+	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, modifySkuDto, []int{http.StatusAccepted, http.StatusOK}, nil)
+	if err != nil {
+		return err
+	}
+
+	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+	if err != nil {
+		return err
+	}
+
+	if lifecycleResponse.State.Id == "Succeeded" {
+		tflog.Debug(ctx, "Environment SKU Update Operation Success")
+		return nil
+	}
+	return errors.New("Environment creation failed. provisioning state: " + lifecycleResponse.State.Id)
+}
+
 func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate environmentCreateDto) (*EnvironmentDto, error) {
 	if environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Location != "" && environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName != "" {
 		err := client.ValidateEnvironmentDetails(ctx, environmentToCreate.Location, environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName)

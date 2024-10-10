@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
@@ -17,11 +18,11 @@ func TestAccConnectionsShareDataSource_Validate_Read(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azuread": {
-				VersionConstraint: ">= 2.53.1",
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
 				Source:            "hashicorp/azuread",
 			},
 			"random": {
-				VersionConstraint: ">= 3.6.3",
+				VersionConstraint: constants.RANDOM_PROVIDER_VERSION_CONSTRAINT,
 				Source:            "hashicorp/random",
 			},
 		},

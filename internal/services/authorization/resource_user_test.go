@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
@@ -20,11 +21,11 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azuread": {
-				VersionConstraint: ">= 2.53.1",
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
 				Source:            "hashicorp/azuread",
 			},
 			"random": {
-				VersionConstraint: ">= 3.6.3",
+				VersionConstraint: constants.RANDOM_PROVIDER_VERSION_CONSTRAINT,
 				Source:            "hashicorp/random",
 			},
 		},
@@ -83,7 +84,7 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 					security_roles = [
 					  "e0d2794e-82f3-e811-a951-000d3a1bcf17", // bot author
 					]
-					aad_id         = azuread_user.test_user.id
+					aad_id         =  element(split("/", azuread_user.test_user.id), 2)  
 					disable_delete = false
 				}`,
 

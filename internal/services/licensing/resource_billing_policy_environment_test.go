@@ -5,13 +5,16 @@ package licensing_test
 
 import (
 	"fmt"
+	"math/rand/v2"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
@@ -21,7 +24,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azapi": {
-				VersionConstraint: ">= 1.15.0",
+				VersionConstraint: constants.AZAPI_PROVIDER_VERSION_CONSTRAINT,
 				Source:            "azure/azapi",
 			},
 		},
@@ -34,7 +37,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 				resource "azapi_resource" "rg_example" {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
-					name      = "power-platform-billing-` + mocks.TestName() + `"
+					name      = "power-platform-billing-` + mocks.TestName() + strconv.Itoa(rand.IntN(9999)) + `"
 
 					body = jsonencode({
 						properties = {}
@@ -121,11 +124,12 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 }
 
 func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
+	rgName := "power-platform-billing-" + mocks.TestName() + strconv.Itoa(rand.IntN(9999))
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azapi": {
-				VersionConstraint: ">= 1.15.0",
+				VersionConstraint: constants.AZAPI_PROVIDER_VERSION_CONSTRAINT,
 				Source:            "azure/azapi",
 			},
 		},
@@ -138,7 +142,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				resource "azapi_resource" "rg_example" {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
-					name      = "power-platform-billing-` + mocks.TestName() + `"
+					name      = "` + rgName + `"
 
 					body = jsonencode({
 						properties = {}
@@ -190,7 +194,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				resource "azapi_resource" "rg_example" {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
-					name      = "power-platform-billing-` + mocks.TestName() + `"
+					name      = "` + rgName + `"
 
 					body = jsonencode({
 						properties = {}
@@ -242,7 +246,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				resource "azapi_resource" "rg_example" {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
-					name      = "power-platform-billing-` + mocks.TestName() + `"
+					name      = "` + rgName + `"
 
 					body = jsonencode({
 						properties = {}

@@ -93,8 +93,8 @@ const (
 	DATAVERSE_API_VERSION     = "v9.2"
 	HEADER_ODATA_ENTITY_ID    = "Odata-Entityid"
 	HEADER_LOCATION           = "Location"
-	HEADER_RETRY_AFTER        = "Retry-After"
 	HEADER_OPERATION_LOCATION = "Operation-Location"
+	HEADER_RETRY_AFTER        = "Retry-After"
 	HTTPS                     = "https"
 	API_VERSION_PARAM         = "api-version"
 )
@@ -121,4 +121,10 @@ const (
 	ENV_VAR_ACTIONS_ID_TOKEN_REQUEST_TOKEN = "ACTIONS_ID_TOKEN_REQUEST_TOKEN"
 	ENV_VAR_ARM_OIDC_TOKEN                 = "ARM_OIDC_TOKEN"
 	ENV_VAR_ARM_OIDC_TOKEN_FILE_PATH       = "ARM_OIDC_TOKEN_FILE_PATH"
+)
+
+const (
+	AZURE_AD_PROVIDER_VERSION_CONSTRAINT = ">= 3.0.1"
+	RANDOM_PROVIDER_VERSION_CONSTRAINT   = ">= 3.6.3"
+	AZAPI_PROVIDER_VERSION_CONSTRAINT    = ">= 1.15.0"
 )
