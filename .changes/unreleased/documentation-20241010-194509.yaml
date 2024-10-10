@@ -1,0 +1,5 @@
+kind: documentation
+body: Improved documentation of `data_record` with examples for app users, business units, teams, and roles
+time: 2024-10-10T19:45:09.853535143Z
+custom:
+    Issue: "414"
