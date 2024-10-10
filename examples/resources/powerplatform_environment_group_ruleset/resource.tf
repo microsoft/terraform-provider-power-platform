@@ -19,12 +19,17 @@ resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
   environment_group_id = "bd6b30f1-e31e-4cdd-b82b-689a4b674f2f"
   rules = [
     {
-      type          = "Sharing",
-      resource_type = "App",
+      type = "Sharing controls",
+      values = {
+        share_mode      = "exclude sharing with security groups"
+        share_max_limit = 10
+      }
     },
     {
-      type          = "AdminDigest"
-      resource_type = "App"
+      type = "Usage insights"
+      values = {
+        insights_enabled = true
+      }
     }
   ]
 }
