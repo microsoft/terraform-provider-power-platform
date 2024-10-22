@@ -14,10 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
@@ -27,6 +29,7 @@ import (
 
 var _ resource.Resource = &environmentGroupRuleSetResource{}
 var _ resource.ResourceWithImportState = &environmentGroupRuleSetResource{}
+var _ resource.ResourceWithValidateConfig = &environmentGroupRuleSetResource{}
 
 func NewEnvironmentGroupRuleSetResource() resource.Resource {
 	return &environmentGroupRuleSetResource{
@@ -102,7 +105,10 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 							},
 							"share_max_limit": schema.NumberAttribute{
 								MarkdownDescription: "Maximum total of individual who can be shared to: (-1..99). If `share_mode` is `No limit`, this value must be -1.",
-								Required:            true,
+								Optional:            true,
+								PlanModifiers: []planmodifier.Number{
+									numberplanmodifier.UseStateForUnknown(),
+								},
 								Validators: []validator.Number{
 									// validation for -1..99
 									numbervalidator.OneOf(maxSharingRange...),
@@ -152,7 +158,7 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 								MarkdownDescription: "Solution checker enforceemnt mode: none, warm, block",
 								Required:            true,
 								Validators: []validator.String{
-									stringvalidator.OneOf("none", "warm", "block"),
+									stringvalidator.OneOf("none", "warn", "block"),
 								},
 							},
 							"send_emails_enabled": schema.BoolAttribute{
@@ -209,6 +215,42 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 				},
 			},
 		},
+	}
+}
+
+func (r *environmentGroupRuleSetResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config environmentGroupRuleSetResourceModel
+
+	if resp.Diagnostics.Append(req.Config.Get(ctx, &config)...); resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.Rules.IsNull() || config.Rules.IsUnknown() {
+		return
+	}
+
+	sharingControlsObj := config.Rules.Attributes()["sharing_controls"]
+	if !sharingControlsObj.IsNull() && !sharingControlsObj.IsUnknown() {
+		var sharingControl environmentGroupRuleSetSharingControlsModel
+		sharingControlsObj.(basetypes.ObjectValue).As(ctx, &sharingControl, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+
+		if sharingControl.ShareMode.ValueString() == "no limit" {
+			if !sharingControl.ShareMaxLimit.IsNull() {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("rules"),
+					"sharing_controls validation error",
+					"'share_max_limit' must be null when 'share_mode' is 'no limit'",
+				)
+			}
+		} else {
+			if sharingControl.ShareMaxLimit.IsNull() || sharingControl.ShareMaxLimit.Equal(basetypes.NewFloat64Value(-1)) {
+				resp.Diagnostics.AddAttributeError(
+					path.Root("rules"),
+					"sharing_controls validation error",
+					"'share_max_limit' must be a value between 0 and 99 when 'share_mode' is 'exclude sharing with security groups'",
+				)
+			}
+		}
 	}
 }
 

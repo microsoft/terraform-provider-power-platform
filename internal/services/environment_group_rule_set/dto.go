@@ -289,7 +289,7 @@ func convertSharingControls(ctx context.Context, attrs map[string]attr.Value, dt
 		}
 		dto.Parameters = append(dto.Parameters, &rule)
 
-		if sharingControl.ShareMode.ValueString() == "No Limit" {
+		if sharingControl.ShareMode.ValueString() == "no limit" {
 			rule.Value = append(rule.Value, environmentGroupRuleSetValueDto{
 				Id:    CAN_SHARE_WITH_SECURITY_GROUPS,
 				Value: NO_LIMIT,
@@ -579,12 +579,15 @@ func convertSharingControlsDtoToModel(dto *environmentGroupRuleSetParameterDto) 
 	maxLimitValue, _ := strconv.ParseFloat(maximumShareLimit.Value, 64)
 
 	attrValue := map[string]attr.Value{}
-	if canShareWithSecurityGroups.Id == NO_LIMIT {
+	if canShareWithSecurityGroups.Value == NO_LIMIT {
+		assert.Equal(nil, -1.0, maxLimitValue, "Max limit value should be -1, when share mode is 'no limit'")
+
 		attrValue["share_mode"] = types.StringValue("no limit")
+		attrValue["share_max_limit"] = types.NumberNull() // -1 value is considered as null in terraform
 	} else {
 		attrValue["share_mode"] = types.StringValue("exclude sharing with security groups")
+		attrValue["share_max_limit"] = types.NumberValue(big.NewFloat(maxLimitValue))
 	}
-	attrValue["share_max_limit"] = types.NumberValue(big.NewFloat(maxLimitValue))
 
 	return types.ObjectType{AttrTypes: attrType}, types.ObjectValueMust(attrType, attrValue), nil
 }
