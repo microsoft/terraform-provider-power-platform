@@ -584,7 +584,7 @@ func convertSharingControlsDtoToModel(dto *environmentGroupRuleSetParameterDto) 
 	} else {
 		attrValue["share_mode"] = types.StringValue("exclude sharing with security groups")
 	}
-	attrValue["share_max_limit"] = types.NumberValue(big.NewFloat(maxLimitValue)) //types.Int32Value(int32(maxLimitValue))
+	attrValue["share_max_limit"] = types.NumberValue(big.NewFloat(maxLimitValue))
 
 	return types.ObjectType{AttrTypes: attrType}, types.ObjectValueMust(attrType, attrValue), nil
 }

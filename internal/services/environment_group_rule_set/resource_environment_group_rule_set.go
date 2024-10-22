@@ -6,8 +6,10 @@ package environment_group_rule_set
 import (
 	"context"
 	"fmt"
+	"math/big"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/numbervalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -47,6 +49,11 @@ func (r *environmentGroupRuleSetResource) Metadata(ctx context.Context, req reso
 }
 
 func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	maxSharingRange := []*big.Float{}
+	for i := -1; i < 100; i++ {
+		maxSharingRange = append(maxSharingRange, big.NewFloat(float64(i)))
+	}
+
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
@@ -55,7 +62,6 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 			// "timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 			// 	Read: true,
 			// }),
-			// TODO env filter
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id of the environment group ruleset",
 				Computed:            true,
@@ -68,6 +74,7 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"rules": schema.SingleNestedAttribute{
@@ -83,7 +90,6 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 						// modes:
 						// noLimit, false, -1
 						// excludeSharingToSecurityGroups, true, (-1.....99)
-						// TODO check noLimit, TRUE, -1.
 						MarkdownDescription: "Sharing controls",
 						Optional:            true,
 						Attributes: map[string]schema.Attribute{
@@ -97,10 +103,9 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 							"share_max_limit": schema.NumberAttribute{
 								MarkdownDescription: "Maximum total of individual who can be shared to: (-1..99). If `share_mode` is `No limit`, this value must be -1.",
 								Required:            true,
-								Validators:          []validator.Number{
-									// TODO if share_mode is no limit, this value must be -1. Add validation.
-									// TODO add validation for -1..99
-									//numbervalidator.OneOf(-1.0, 99.0),
+								Validators: []validator.Number{
+									// validation for -1..99
+									numbervalidator.OneOf(maxSharingRange...),
 								},
 							},
 						},
@@ -122,7 +127,6 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 					"maker_welcome_content": schema.SingleNestedAttribute{
 						// type: MakerOnboarding -> Maker welcome content
 						// makerOnboardingUrl, makerOnboardingMarkdown, makerOnboardingTimestamp
-						// send value or send "" not null
 						MarkdownDescription: "Maker Welcome Content",
 						Optional:            true,
 						Attributes: map[string]schema.Attribute{

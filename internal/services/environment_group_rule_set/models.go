@@ -20,16 +20,6 @@ type environmentGroupRuleSetResourceModel struct {
 	Rules              types.Object `tfsdk:"rules"`
 }
 
-type environmentGroupRuleSetRuleModel struct {
-	SharingControls            types.Map `tfsdk:"sharing_controls"`
-	UsageInsights              types.Map `tfsdk:"usage_insights"`
-	MakerWelcomeContent        types.Map `tfsdk:"maker_welcome_content"`
-	SolutionCheckerEnforcement types.Map `tfsdk:"solution_checker_enforcement"`
-	BackupRetention            types.Map `tfsdk:"backup_retention"`
-	AiGeneratedDescriptions    types.Map `tfsdk:"ai_generated_descriptions"`
-	AiGenerativeSettings       types.Map `tfsdk:"ai_generative_settings"`
-}
-
 type environmentGroupRuleSetSharingControlsModel struct {
 	ShareMode     types.String `tfsdk:"share_mode"`
 	ShareMaxLimit types.Number `tfsdk:"share_max_limit"`
