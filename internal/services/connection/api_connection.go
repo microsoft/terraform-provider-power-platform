@@ -31,7 +31,7 @@ type client struct {
 func (client *client) CreateConnection(ctx context.Context, environmentId, connectorName string, connectionToCreate createDto) (*connectionDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, strings.ReplaceAll(uuid.New().String(), "-", "")),
 	}
 	values := url.Values{}
@@ -56,7 +56,7 @@ func (client *client) UpdateConnection(ctx context.Context, environmentId, conne
 
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, connectionId),
 	}
 	values := url.Values{}
@@ -80,7 +80,7 @@ func (client *client) UpdateConnection(ctx context.Context, environmentId, conne
 func (client *client) GetConnection(ctx context.Context, environmentId, connectorName, connectionId string) (*connectionDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, connectionId),
 	}
 	values := url.Values{}
@@ -102,7 +102,7 @@ func (client *client) GetConnection(ctx context.Context, environmentId, connecto
 func (client *client) GetConnections(ctx context.Context, environmentId string) ([]connectionDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
 		Path:   "/connectivity/connections",
 	}
 
@@ -122,7 +122,7 @@ func (client *client) GetConnections(ctx context.Context, environmentId string) 
 func (client *client) DeleteConnection(ctx context.Context, environmentId, connectorName, connectionId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s", connectorName, connectionId),
 	}
 	values := url.Values{}
@@ -140,7 +140,7 @@ func (client *client) DeleteConnection(ctx context.Context, environmentId, conne
 func (client *client) ShareConnection(ctx context.Context, environmentId, connectorName, connectionId, roleName, entraUserObjectId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/modifyPermissions", connectorName, connectionId),
 	}
 	values := url.Values{}
@@ -176,7 +176,7 @@ func (client *client) ShareConnection(ctx context.Context, environmentId, connec
 func (client *client) GetConnectionShares(ctx context.Context, environmentId, connectorName, connectionId string) (*shareConnectionResponseArrayDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/permissions", connectorName, connectionId),
 	}
 	values := url.Values{}
@@ -220,7 +220,7 @@ func (client *client) GetConnectionShare(ctx context.Context, environmentId, con
 func (client *client) UpdateConnectionShare(ctx context.Context, environmentId, connectorName, connectionId string, share shareConnectionRequestDto) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/modifyPermissions", connectorName, connectionId),
 	}
 	values := url.Values{}
@@ -238,7 +238,7 @@ func (client *client) UpdateConnectionShare(ctx context.Context, environmentId, 
 func (client *client) DeleteConnectionShare(ctx context.Context, environmentId, connectorName, connectionId, shareId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
 		Path:   fmt.Sprintf("/connectivity/connectors/%s/connections/%s/modifyPermissions", connectorName, connectionId),
 	}
 	values := url.Values{}

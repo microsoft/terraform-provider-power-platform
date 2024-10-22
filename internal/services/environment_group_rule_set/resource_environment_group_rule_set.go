@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
 )
 
 var _ resource.Resource = &environmentGroupRuleSetResource{}
@@ -68,140 +69,135 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"rules": schema.SetNestedAttribute{
-				MarkdownDescription: "Set of rules",
-				Required:            true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
-							MarkdownDescription: "Type of the rule",
-							Required:            true,
-							Validators: []validator.String{
-								stringvalidator.OneOf("Sharing controls", "Usage insights", "Maker welcome content", "Solution checker enforcement", "Backup retention", "AI generated descriptions", "AI generative settings"),
+			"rules": schema.SingleNestedAttribute{
+				MarkdownDescription: "Rules for the environment group",
+				Optional:            true,
+				Attributes: map[string]schema.Attribute{
+					"sharing_controls": schema.SingleNestedAttribute{
+						// type: Sharing -> Sharing controls for Canvas apps
+						// CanShareWithSecurityGroups: noLimit, excludeSharingToSecurityGroups
+						// IsGroupSharingDisabled: true, false
+						// MaximumShareLimit: (-1..99)
+						//
+						// modes:
+						// noLimit, false, -1
+						// excludeSharingToSecurityGroups, true, (-1.....99)
+						// TODO check noLimit, TRUE, -1.
+						MarkdownDescription: "Sharing controls",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"share_mode": schema.StringAttribute{
+								MarkdownDescription: "Share mode for canvas apps: `No limit`, `Exclude sharing with security groups`",
+								Required:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf("no limit", "exclude sharing with security groups"),
+								},
+							},
+							"share_max_limit": schema.NumberAttribute{
+								MarkdownDescription: "Maximum total of individual who can be shared to: (-1..99). If `share_mode` is `No limit`, this value must be -1.",
+								Required:            true,
+								Validators:          []validator.Number{
+									// TODO if share_mode is no limit, this value must be -1. Add validation.
+									// TODO add validation for -1..99
+									//numbervalidator.OneOf(-1.0, 99.0),
+								},
 							},
 						},
-						// "resource_type": schema.StringAttribute{
-						// 	MarkdownDescription: "Resource type",
-						// 	Optional:            true,
-						// 	Computed:            true,
-						// 	Validators: []validator.String{
-						// 		stringvalidator.OneOf("App"),
-						// 	},
-						// },
-						"values": schema.SingleNestedAttribute{
-							MarkdownDescription: "Configuration values",
-							Optional:            true,
-							Attributes: map[string]schema.Attribute{
-								// type: Sharing -> Sharing controls for Canvas apps
-								// CanShareWithSecurityGroups: noLimit, excludeSharingToSecurityGroups
-								// IsGroupSharingDisabled: true, false
-								// MaximumShareLimit: (-1..99)
-								//
-								// modes:
-								// noLimit, false, -1
-								// excludeSharingToSecurityGroups, true, (-1.....99)
-								// TODO check noLimit, TRUE, -1.
-								"share_mode": schema.StringAttribute{
-									// noLimit, true
-									// excludeSharingToSecurityGroups, false
-									MarkdownDescription: "To be used together with `Sharing controls`.\n\nShare mode for canvas apps: `No limit`, `Exclude sharing with security groups`",
-									Optional:            true,
-									Computed:            true,
-									Validators: []validator.String{
-										stringvalidator.OneOf("no limit", "exclude sharing with security groups"),
-										stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("share_max_limit")),
-										AlsoRequiresValueString(types.StringValue("Sharing controls"), path.MatchRelative().AtParent().AtParent().AtName("type")),
-									},
+					},
+					"usage_insights": schema.SingleNestedAttribute{
+						// type: AdminDigest -> Usage Insights
+						// IncludeOnHomePageInsights, ExcludeEnvironmentFromAnalysis
+						// false, true (when unchecked Include Insights)
+						// false, false (when checked Include Insights)
+						MarkdownDescription: "Usage Insights",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"insights_enabled": schema.BoolAttribute{
+								MarkdownDescription: "Inculde insights for all Managed Environment in this group in weekly email digest.",
+								Required:            true,
+							},
+						},
+					},
+					"maker_welcome_content": schema.SingleNestedAttribute{
+						// type: MakerOnboarding -> Maker welcome content
+						// makerOnboardingUrl, makerOnboardingMarkdown, makerOnboardingTimestamp
+						// send value or send "" not null
+						MarkdownDescription: "Maker Welcome Content",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"maker_onboarding_url": schema.StringAttribute{
+								MarkdownDescription: "Maker onboarding URL",
+								Required:            true,
+							},
+							"maker_onboarding_markdown": schema.StringAttribute{
+								MarkdownDescription: "Maker onboarding markdown",
+								Required:            true,
+							},
+						},
+					},
+					"solution_checker_enforcement": schema.SingleNestedAttribute{
+						// SolutionChecker -> Solution checker enforcement
+						// solutionCheckerMode, suppressValidationEmails(checkbox), solutionCheckerRuleOverrides
+						// none/warm/block, false, ""
+						// warm, true, ""
+						MarkdownDescription: "Solution Checker Enforcement",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"solution_checker_mode": schema.StringAttribute{
+								MarkdownDescription: "Solution checker enforceemnt mode: none, warm, block",
+								Required:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf("none", "warm", "block"),
 								},
-								"share_max_limit": schema.Int32Attribute{
-									// (-1..99)
-									// if noLimit then send -1
-									MarkdownDescription: "To be used together with `Sharing controls`.\n\nMaximum total of individual who can be shared to: (-1..99). If `share_mode` is `No limit`, this value must be -1.",
-									Optional:            true,
-									Computed:            true,
-									Validators: []validator.Int32{
-										int32validator.Between(-1, 99),
-										AlsoRequiresValueInt32(types.StringValue("Sharing controls"), path.MatchRelative().AtParent().AtParent().AtName("type")),
-									},
+							},
+							"send_emails_enabled": schema.BoolAttribute{
+								MarkdownDescription: "Send emails only when solution is blocked, if unchecked you'll also get emails when there are warnings",
+								Required:            true,
+							},
+						},
+					},
+					"backup_retention": schema.SingleNestedAttribute{
+						// Lifecycle -> Backup retention
+						// RetentionPeriod: 14.00:00:00 / 7 / 21 / 28
+						MarkdownDescription: "Backup Retention",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"period_in_days": schema.Int32Attribute{
+								MarkdownDescription: "Backup retention period in days: 7, 14, 21, 28",
+								Required:            true,
+								Validators: []validator.Int32{
+									int32validator.OneOf(7, 14, 21, 28),
 								},
-
-								// type: AdminDigest -> Usage Insights
-								// IncludeOnHomePageInsights, ExcludeEnvironmentFromAnalysis
-								// false, true (when unchecked Include Insights)
-								// false, false (when checked Include Insights)
-								"insights_enabled": schema.BoolAttribute{
-									Optional:            true,
-									Computed:            true,
-									MarkdownDescription: "To be used together with `Usage insights`.\n\nInculde insights for all Managed Environment in this group in weekly email digest",
-									Validators: []validator.Bool{
-										AlsoRequiresValueBool(types.StringValue("Usage insights"), path.MatchRelative().AtParent().AtParent().AtName("type")),
-									},
-								},
-
-								// type: MakerOnboarding -> Maker welcome content
-								// makerOnboardingUrl, makerOnboardingMarkdown, makerOnboardingTimestamp
-								// send value or send "" not null
-								"onboarding_url": schema.StringAttribute{
-									MarkdownDescription: "To be used together with `Maker welcome content`.\n\nMaker onboarding url",
-									Computed:            true,
-									Optional:            true,
-								},
-								"onboarding_markdown": schema.StringAttribute{
-									MarkdownDescription: "To be used together with `Maker welcome content`.\n\nMaker onboarding markdown",
-									Computed:            true,
-									Optional:            true,
-								},
-
-								// SolutionChecker -> Solution checker enforcement
-								// solutionCheckerMode, suppressValidationEmails(checkbox), solutionCheckerRuleOverrides
-								// none/warm/block, false, ""
-								// warm, true, ""
-								"solution_checker_mode": schema.StringAttribute{
-									MarkdownDescription: "To be used together with `Solution checker enforcement`.\n\nSolution checker enforceemnt mode: None, Warm, Block",
-									Computed:            true,
-									Optional:            true,
-									Validators: []validator.String{
-										stringvalidator.OneOf("none", "warm", "block"),
-									},
-								},
-								"send_emails_enabled": schema.BoolAttribute{
-									MarkdownDescription: "To be used together with `Solution checker enforcement`.\n\nSend emails only when solution is blocked, if unchecked you'll also get emails when there are warnings",
-									Optional:            true,
-								},
-
-								// Lifecycle -> Backup retention
-								// RetentionPeriod: 14.00:00:00 / 7 / 21 / 28
-								"period_in_days": schema.Int32Attribute{
-									MarkdownDescription: "To be used together with `Backup retention`.\n\nBackup retention period in days: 7, 14, 21, 28",
-									Computed:            true,
-									Optional:            true,
-									Validators: []validator.Int32{
-										int32validator.OneOf(7, 14, 21, 28),
-									},
-								},
-
-								// Copilot -> AI generative description
-								// DisableAiGeneratedDescriptions (checkbox) //Enable AI generated description
-								// false (when checked as true)
-								"ai_description_enabled": schema.BoolAttribute{
-									MarkdownDescription: "To be used together with `AI generated descriptions`.\n\nEnable AI generated description",
-									Computed:            true,
-									Optional:            true,
-								},
-
-								// GenerativeAISettings -> AI generative settings
-								// crossGeoCopilotDataMovementEnabled // Move data across regions enabled
-								// bingChatEnabled //Bing Seach enbaled
-								"move_data_across_regions_enabled": schema.BoolAttribute{
-									MarkdownDescription: "To be used together with `AI generative settings`.\n\nAgree to move data across regions",
-									Computed:            true,
-									Optional:            true,
-								},
-								"bing_search_enabled": schema.BoolAttribute{
-									MarkdownDescription: "To be used together with `AI generative settings`.\n\nAgree to enable Bing search features",
-									Computed:            true,
-									Optional:            true,
-								},
+							},
+						},
+					},
+					"ai_generated_descriptions": schema.SingleNestedAttribute{
+						// Copilot -> AI generative description
+						// DisableAiGeneratedDescriptions (checkbox) //Enable AI generated description
+						// false (when checked as true)
+						MarkdownDescription: "AI Generated Descriptions",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"ai_description_enabled": schema.BoolAttribute{
+								MarkdownDescription: "Enable AI generated description",
+								Required:            true,
+							},
+						},
+					},
+					"ai_generative_settings": schema.SingleNestedAttribute{
+						// GenerativeAISettings -> AI generative settings
+						// crossGeoCopilotDataMovementEnabled // Move data across regions enabled
+						// bingChatEnabled //Bing Seach enbaled
+						MarkdownDescription: "AI Generative Settings",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"move_data_across_regions_enabled": schema.BoolAttribute{
+								MarkdownDescription: "Agree to move data across regions",
+								Required:            true,
+							},
+							"bing_search_enabled": schema.BoolAttribute{
+								MarkdownDescription: "Agree to enable Bing search features",
+								Required:            true,
 							},
 						},
 					},
@@ -229,7 +225,7 @@ func (r *environmentGroupRuleSetResource) Configure(ctx context.Context, req res
 		return
 	}
 
-	r.EnvironmentGroupRuleSetClient = newEnvironmentGroupRuleSetClient(client)
+	r.EnvironmentGroupRuleSetClient = newEnvironmentGroupRuleSetClient(client, tenant.NewTenantClient(client))
 }
 
 func (r *environmentGroupRuleSetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -242,51 +238,18 @@ func (r *environmentGroupRuleSetResource) Read(ctx context.Context, req resource
 		return
 	}
 
-	panic("read")
+	ruleSetDto, err := r.EnvironmentGroupRuleSetClient.GetEnvironmentGroupRuleSet(ctx, state.EnvironmentGroupId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to get environment group ruleset", err.Error())
+		return
+	}
+	newState, err := convertEnvironmentGroupRuleSetDtoToModel(*ruleSetDto)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert environment group ruleset dto to model", err.Error())
+		return
+	}
 
-	// envGroupRuleSet, err := r.EnvironmentGroupRuleSetClient.GetEnvironmentGroupRuleSet(ctx, state.Id.ValueString())
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-	// 	return
-	// }
-
-	//TODO what happens when rules set is deleted??
-	// if envGroupRuleSet == nil {
-	// 	resp.State.RemoveResource(ctx)
-	// 	return
-	// }
-
-	// state = environmentGroupRuleSetResourceModel{}
-
-	// state.EnvironmentGroupId = types.StringValue("bd6b30f1-e31e-4cdd-b82b-689a4b674f2f")
-	// state.Id = types.StringValue("1234")
-
-	// var rules []attr.Value
-
-	// rules = append(rules, types.ObjectValueMust(map[string]attr.Type{
-	// 	"type":          types.StringType,
-	// 	"resource_type": types.StringType,
-	// },
-	// 	map[string]attr.Value{
-	// 		"type":          types.StringValue("Sharing"),
-	// 		"resource_type": types.StringValue("App"),
-	// 	}))
-
-	// rules = append(rules, types.ObjectValueMust(map[string]attr.Type{
-	// 	"type":          types.StringType,
-	// 	"resource_type": types.StringType,
-	// },
-	// 	map[string]attr.Value{
-	// 		"type":          types.StringValue("AdminDigest"),
-	// 		"resource_type": types.StringNull(),
-	// 	}))
-
-	// state.Rules = types.SetValueMust(ruleSetObjectType, rules)
-
-	//state.Id = types.StringValue(envGroupRuleSet.Id)
-	//TODO: set rules
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
 func (r *environmentGroupRuleSetResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -299,33 +262,16 @@ func (r *environmentGroupRuleSetResource) Create(ctx context.Context, req resour
 		return
 	}
 
-	panic("asdads")
+	isCreate := true
+	plannedRuleSetDto := convertEnvironmentGroupRuleSetResourceModelToDto(ctx, isCreate, *plan)
+	createdRuleSetDto, err := r.EnvironmentGroupRuleSetClient.CreateEnvironmentGroupRuleSet(ctx, plan.EnvironmentGroupId.ValueString(), plannedRuleSetDto)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to create environment group ruleset", err.Error())
+		return
+	}
 
-	// state := environmentGroupRuleSetResourceModel{}
-
-	// state.EnvironmentGroupId = types.StringValue("bd6b30f1-e31e-4cdd-b82b-689a4b674f2f")
-	// state.Id = types.StringValue("1234")
-
-	// var rules []attr.Value
-	// for _, rule := range plan.Rules.Elements() {
-
-	// 	ruleObj := rule.(types.Object)
-	// 	t := ruleObj.Attributes()["type"]
-	// 	rt := ruleObj.Attributes()["resource_type"]
-
-	// 	rules = append(rules, types.ObjectValueMust(map[string]attr.Type{
-	// 		"type":          types.StringType,
-	// 		"resource_type": types.StringType,
-	// 	},
-	// 		map[string]attr.Value{
-	// 			"type":          t,
-	// 			"resource_type": rt,
-	// 		}))
-	// }
-
-	// state.Rules = types.SetValueMust(ruleSetObjectType, rules)
-
-	//resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	plan.Id = types.StringPointerValue(createdRuleSetDto.Id)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *environmentGroupRuleSetResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -354,6 +300,12 @@ func (r *environmentGroupRuleSetResource) Delete(ctx context.Context, req resour
 	var state *environmentGroupRuleSetResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	err := r.EnvironmentGroupRuleSetClient.DeleteEnvironmentGroupRuleSet(ctx, state.Id.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
 }
