@@ -55,19 +55,20 @@ type environmentGroupRuleSetParameterDto struct {
 	Value            []environmentGroupRuleSetValueDto `json:"value"`
 }
 
-func convertEnvironmentGroupRuleSetResourceModelToDto(ctx context.Context, isCreate bool, model environmentGroupRuleSetResourceModel) environmentGroupRuleSetValueSetDto {
+func convertEnvironmentGroupRuleSetResourceModelToDto(ctx context.Context, model environmentGroupRuleSetResourceModel) environmentGroupRuleSetValueSetDto {
 	dto := environmentGroupRuleSetValueSetDto{}
 
-	if isCreate {
-		currentTime := time.Now().Format(time.RFC3339Nano)
-		dto.LastModified = &currentTime
-		dto.EnvironmentFilter = &environmentGroupRuleSetEnvironmentFilterDto{}
-		dto.EnvironmentFilter.Type = "Include"
-		dto.EnvironmentFilter.Value = append(dto.EnvironmentFilter.Value, environmentGroupRuleSetValueTypeDto{
-			Id:   model.EnvironmentGroupId.ValueString(),
-			Type: "EnvironmentGroup",
-		})
+	if !model.Id.IsUnknown() && !model.Id.IsNull() {
+		dto.Id = model.Id.ValueStringPointer()
 	}
+	currentTime := time.Now().Format(time.RFC3339Nano)
+	dto.LastModified = &currentTime
+	dto.EnvironmentFilter = &environmentGroupRuleSetEnvironmentFilterDto{}
+	dto.EnvironmentFilter.Type = "Include"
+	dto.EnvironmentFilter.Value = append(dto.EnvironmentFilter.Value, environmentGroupRuleSetValueTypeDto{
+		Id:   model.EnvironmentGroupId.ValueString(),
+		Type: "EnvironmentGroup",
+	})
 
 	if !model.Rules.IsNull() && !model.Rules.IsUnknown() {
 		ruleAttrs := model.Rules.Attributes()

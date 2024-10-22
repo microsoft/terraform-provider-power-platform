@@ -118,7 +118,7 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 
 		isAcceptable := len(acceptableStatusCodes) > 0 && array.Contains(acceptableStatusCodes, resp.HttpResponse.StatusCode)
 		if isAcceptable {
-			if responseObj != nil {
+			if responseObj != nil && len(resp.BodyAsBytes) > 0 {
 				err = resp.MarshallTo(responseObj)
 				if err != nil {
 					return resp, fmt.Errorf("Error marshalling response to json. %w", err)

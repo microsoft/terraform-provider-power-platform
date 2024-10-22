@@ -23,7 +23,7 @@ resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
       share_max_limit = 42
     }
     usage_insights = {
-      insights_enabled = true
+      insights_enabled = false
     }
     maker_welcome_content = {
       maker_onboarding_url      = "https://contoso.com/onboarding"

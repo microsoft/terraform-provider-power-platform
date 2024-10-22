@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
 )
@@ -221,10 +222,8 @@ func (r *environmentGroupRuleSetResource) Configure(ctx context.Context, req res
 			"Unexpected Resource Configure Type",
 			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
-
 	r.EnvironmentGroupRuleSetClient = newEnvironmentGroupRuleSetClient(client, tenant.NewTenantClient(client))
 }
 
@@ -240,6 +239,10 @@ func (r *environmentGroupRuleSetResource) Read(ctx context.Context, req resource
 
 	ruleSetDto, err := r.EnvironmentGroupRuleSetClient.GetEnvironmentGroupRuleSet(ctx, state.EnvironmentGroupId.ValueString())
 	if err != nil {
+		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError("Failed to get environment group ruleset", err.Error())
 		return
 	}
@@ -262,8 +265,7 @@ func (r *environmentGroupRuleSetResource) Create(ctx context.Context, req resour
 		return
 	}
 
-	isCreate := true
-	plannedRuleSetDto := convertEnvironmentGroupRuleSetResourceModelToDto(ctx, isCreate, *plan)
+	plannedRuleSetDto := convertEnvironmentGroupRuleSetResourceModelToDto(ctx, *plan)
 	createdRuleSetDto, err := r.EnvironmentGroupRuleSetClient.CreateEnvironmentGroupRuleSet(ctx, plan.EnvironmentGroupId.ValueString(), plannedRuleSetDto)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to create environment group ruleset", err.Error())
@@ -290,7 +292,20 @@ func (r *environmentGroupRuleSetResource) Update(ctx context.Context, req resour
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	plannedRuleSetDto := convertEnvironmentGroupRuleSetResourceModelToDto(ctx, *plan)
+	updatedRuleSetDto, err := r.EnvironmentGroupRuleSetClient.UpdateEnvironmentGroupRuleSet(ctx, state.Id.ValueString(), plannedRuleSetDto)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to update environment group ruleset", err.Error())
+		return
+	}
+
+	newState, err := convertEnvironmentGroupRuleSetDtoToModel(*updatedRuleSetDto)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert environment group ruleset dto to model", err.Error())
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
 func (r *environmentGroupRuleSetResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

@@ -11,6 +11,7 @@ import (
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
 )
@@ -44,9 +45,13 @@ func (client *client) GetEnvironmentGroupRuleSet(ctx context.Context, environmen
 	apiUrl.RawQuery = values.Encode()
 
 	environmentGroupRuleSet := environmentGroupRuleSetDto{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &environmentGroupRuleSet)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, &environmentGroupRuleSet)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.HttpResponse.StatusCode == http.StatusNoContent {
+		return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, "rule set '%s' not found")
 	}
 
 	if len(environmentGroupRuleSet.Value) == 0 {
@@ -81,6 +86,32 @@ func (client *client) CreateEnvironmentGroupRuleSet(ctx context.Context, environ
 
 	if len(environmentGroupRuleSet.Parameters) == 0 {
 		return nil, fmt.Errorf("no environment group ruleset found for environment group id %s", environmentGroupId)
+	}
+
+	return &environmentGroupRuleSet, nil
+}
+
+func (client *client) UpdateEnvironmentGroupRuleSet(ctx context.Context, environmentGroupId string, newEnvironmentGroupRuleSet environmentGroupRuleSetValueSetDto) (*environmentGroupRuleSetValueSetDto, error) {
+	tenantDto, err := client.TenantApi.GetTenant(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   helpers.BuildTenantHostUri(tenantDto.TenantId, client.Api.GetConfig().Urls.PowerPlatformUrl),
+		Path:   fmt.Sprintf("/governance/ruleSets/%s", environmentGroupId),
+	}
+
+	values := url.Values{}
+	values.Add("api-version", "2021-10-01-preview")
+	apiUrl.RawQuery = values.Encode()
+
+	environmentGroupRuleSet := environmentGroupRuleSetValueSetDto{}
+	_, err = client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, newEnvironmentGroupRuleSet, []int{http.StatusOK}, &environmentGroupRuleSet)
+
+	if err != nil {
+		return nil, err
 	}
 
 	return &environmentGroupRuleSet, nil
