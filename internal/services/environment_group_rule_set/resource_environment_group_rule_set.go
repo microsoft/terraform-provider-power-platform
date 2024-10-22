@@ -28,7 +28,7 @@ import (
 var _ resource.Resource = &environmentGroupRuleSetResource{}
 var _ resource.ResourceWithImportState = &environmentGroupRuleSetResource{}
 
-func NewEnvironmentGroupRuleSetResource() resource.Resource {
+func ruNewEnvironmentGroupRuleSetResource() resource.Resource {
 	return &environmentGroupRuleSetResource{
 		TypeInfo: helpers.TypeInfo{
 			TypeName: "environment_group_rule_set",
