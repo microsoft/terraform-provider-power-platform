@@ -30,7 +30,7 @@ func (client *client) GetPolicies(ctx context.Context) ([]dlpPolicyModelDto, err
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
-		Path:   "providers/PowerPlatform.Governance/v2/policies",
+		Path:   "providers/PowerPlatform.Governance/v1/policies",
 	}
 	policiesArray := dlpPolicyDefinitionArrayDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policiesArray)
