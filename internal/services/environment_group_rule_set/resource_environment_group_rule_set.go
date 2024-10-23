@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/numbervalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -62,9 +63,12 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "",
 		Attributes: map[string]schema.Attribute{
-			// "timeouts": timeouts.Attributes(ctx, timeouts.Opts{
-			// 	Read: true,
-			// }),
+			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+				Read:   true,
+			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id of the environment group ruleset",
 				Computed:            true,

@@ -71,7 +71,6 @@ func TestAccEnvironmentGroupRuleSetResource_Validate_Create(t *testing.T) {
 }
 
 func TestAccEnvironmentGroupRuleSetResource_Validate_Update(t *testing.T) {
-	t.Setenv("TF_ACC", "1")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

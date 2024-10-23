@@ -4,6 +4,7 @@
 package environment_group_rule_set
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
@@ -14,10 +15,10 @@ type environmentGroupRuleSetResource struct {
 }
 
 type environmentGroupRuleSetResourceModel struct {
-	// Timeouts         timeouts.Value `tfsdk:"timeouts"`
-	Id                 types.String `tfsdk:"id"`
-	EnvironmentGroupId types.String `tfsdk:"environment_group_id"`
-	Rules              types.Object `tfsdk:"rules"`
+	Timeouts           timeouts.Value `tfsdk:"timeouts"`
+	Id                 types.String   `tfsdk:"id"`
+	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
+	Rules              types.Object   `tfsdk:"rules"`
 }
 
 type environmentGroupRuleSetSharingControlsModel struct {
