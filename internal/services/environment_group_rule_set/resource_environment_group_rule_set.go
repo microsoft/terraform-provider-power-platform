@@ -297,6 +297,7 @@ func (r *environmentGroupRuleSetResource) Read(ctx context.Context, req resource
 		return
 	}
 	newState, err := convertEnvironmentGroupRuleSetDtoToModel(*ruleSetDto)
+	newState.Timeouts = state.Timeouts
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to convert environment group ruleset dto to model", err.Error())
 		return
@@ -350,6 +351,7 @@ func (r *environmentGroupRuleSetResource) Update(ctx context.Context, req resour
 	}
 
 	newState, err := convertEnvironmentGroupRuleSetDtoToModel(*updatedRuleSetDto)
+	newState.Timeouts = plan.Timeouts
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to convert environment group ruleset dto to model", err.Error())
 		return
