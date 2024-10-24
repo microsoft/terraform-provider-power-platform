@@ -25,6 +25,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/data_record"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/dlp_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_group_rule_set"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_groups"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_settings"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_templates"
@@ -91,6 +92,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		connection.NewConnectionResource(),
 		connection.NewConnectionShareResource(),
 		admin_management_application.NewAdminManagementApplicationResource(),
+		environment_group_rule_set.NewEnvironmentGroupRuleSetResource(),
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
 

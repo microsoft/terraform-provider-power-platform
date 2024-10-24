@@ -40,10 +40,6 @@ func TestAccBillingPolicyResource_Validate_Create(t *testing.T) {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
 					name      = "` + rgName + `"
-
-					body = jsonencode({
-						properties = {}
-					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -143,10 +139,6 @@ func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
 					name      = "` + rgName + `"
-
-					body = jsonencode({
-						properties = {}
-					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -172,10 +164,6 @@ func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
 					name      = "` + rgName + `"
-
-					body = jsonencode({
-						properties = {}
-					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -203,10 +191,6 @@ func TestAccBillingPolicy_Validate_Update(t *testing.T) {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
 					name      = "` + rgName + `"
-
-					body = jsonencode({
-						properties = {}
-					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -334,10 +318,6 @@ func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
 					name      = "` + rgName + `"
-
-					body = jsonencode({
-						properties = {}
-					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -362,10 +342,6 @@ func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
 					name      = "` + rgName + `"
-
-					body = jsonencode({
-						properties = {}
-					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
@@ -390,10 +366,6 @@ func TestAccBillingPolicy_Validate_Update_ForceRecreate(t *testing.T) {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
 					name      = "` + rgName + `1"
-
-					body = jsonencode({
-						properties = {}
-					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {

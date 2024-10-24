@@ -1,0 +1,5 @@
+kind: added
+body: adding powerplatform_environment_group_rule_set. **Currently not supported when using service principal authentication**
+time: 2024-10-22T10:35:32.414678559Z
+custom:
+    Issue: "423"

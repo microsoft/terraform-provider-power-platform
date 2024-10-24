@@ -10,7 +10,7 @@ import (
 
 type DataSource struct {
 	helpers.TypeInfo
-	TenantClient client
+	TenantClient Client
 }
 
 type DataSourceModel struct {
