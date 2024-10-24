@@ -390,7 +390,7 @@ func (client *Client) ModifyEnvironmentType(ctx context.Context, environmentId, 
 
 func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate environmentCreateDto) (*EnvironmentDto, error) {
 	if environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Location != "" && environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName != "" {
-		err := client.ValidateEnvironmentDetails(ctx, environmentToCreate.Location, environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName)
+		err := client.ValidateCreateEnvironmentDetails(ctx, environmentToCreate.Location, environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName)
 		if err != nil {
 			return nil, err
 		}
@@ -452,7 +452,7 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 
 func (client *Client) UpdateEnvironment(ctx context.Context, environmentId string, environment EnvironmentDto) (*EnvironmentDto, error) {
 	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata != nil && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
-		err := client.ValidateEnvironmentDetails(ctx, environment.Location, environment.Properties.LinkedEnvironmentMetadata.DomainName)
+		err := client.ValidateUpdateEnvironmentDetails(ctx, environment.Id, environment.Properties.LinkedEnvironmentMetadata.DomainName)
 		if err != nil {
 			return nil, err
 		}
@@ -545,7 +545,7 @@ func (client *Client) GetDefaultCurrencyForEnvironment(ctx context.Context, envi
 	return &currencies.Value[0], nil
 }
 
-func (client *Client) ValidateEnvironmentDetails(ctx context.Context, location, domain string) error {
+func (client *Client) ValidateCreateEnvironmentDetails(ctx context.Context, location, domain string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -555,9 +555,31 @@ func (client *Client) ValidateEnvironmentDetails(ctx context.Context, location, 
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	envDetails := validateEnvironmentDetailsDto{
+	envDetails := validateCreateEnvironmentDetailsDto{
 		DomainName:          domain,
 		EnvironmentLocation: location,
+	}
+
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, envDetails, []int{http.StatusOK}, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (client *Client) ValidateUpdateEnvironmentDetails(ctx context.Context, environmentId, domain string) error {
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
+		Path:   "/providers/Microsoft.BusinessAppPlatform/validateEnvironmentDetails",
+	}
+	values := url.Values{}
+	values.Add("api-version", "2021-04-01")
+	apiUrl.RawQuery = values.Encode()
+
+	envDetails := validateUpdateEnvironmentDetailsDto{
+		DomainName:      domain,
+		EnvironmentName: environmentId,
 	}
 
 	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, envDetails, []int{http.StatusOK}, nil)

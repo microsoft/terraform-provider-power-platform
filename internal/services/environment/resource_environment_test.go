@@ -88,6 +88,62 @@ func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 	})
 }
 
+func TestAccEnvironmentsResource_Validate_Domain_Uniqueness_On_Update(t *testing.T) {
+	domainName := fmt.Sprintf("terraformprovidertest%d", rand.Intn(100000))
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					description                               = "desc"
+					cadence								   	  = "Moderate"
+					location                                  = "unitedstates"
+					environment_type                       	  = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+						domain									  =  "` + domainName + `"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "desc"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", domainName),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", "00000000-0000-0000-0000-000000000000"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+domainName+".crm.dynamics.com/"),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "` + mocks.TestName() + `"
+					description                               = "desc test"
+					cadence								   	  = "Moderate"
+					location                                  = "unitedstates"
+					environment_type                       	  = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+						domain									  =  "` + domainName + `"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "desc test"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", domainName),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", "00000000-0000-0000-0000-000000000000"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://"+domainName+".crm.dynamics.com/"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEnvironmentsResource_Validate_Create(t *testing.T) {
 	domainName := fmt.Sprintf("orgtest%d", rand.Intn(100000))
 

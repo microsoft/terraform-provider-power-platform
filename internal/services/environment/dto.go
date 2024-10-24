@@ -188,9 +188,14 @@ type transactionCurrencyArrayDto struct {
 	Value []TransactionCurrencyDto `json:"value"`
 }
 
-type validateEnvironmentDetailsDto struct {
+type validateCreateEnvironmentDetailsDto struct {
 	DomainName          string `json:"domainName"`
 	EnvironmentLocation string `json:"environmentLocation"`
+}
+
+type validateUpdateEnvironmentDetailsDto struct {
+	DomainName      string `json:"domainName"`
+	EnvironmentName string `json:"environmentName"`
 }
 
 type LocationArrayDto struct {
