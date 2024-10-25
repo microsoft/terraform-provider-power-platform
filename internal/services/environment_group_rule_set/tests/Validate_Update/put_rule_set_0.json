@@ -1,0 +1,117 @@
+{
+    "parameters": [
+        {
+            "type": "Sharing",
+            "resourceType": "App",
+            "value": [
+                {
+                    "id": "CanShareWithSecurityGroups",
+                    "value": "noLimit"
+                },
+                {
+                    "id": "IsGroupSharingDisabled",
+                    "value": "true"
+                },
+                {
+                    "id": "MaximumShareLimit",
+                    "value": "-1"
+                }
+            ]
+        },
+        {
+            "type": "AdminDigest",
+            "resourceType": "NotSpecified",
+            "value": [
+                {
+                    "id": "IncludeOnHomePageInsights",
+                    "value": "false"
+                },
+                {
+                    "id": "ExcludeEnvironmentFromAnalysis",
+                    "value": "false"
+                }
+            ]
+        },
+        {
+            "type": "MakerOnboarding",
+            "resourceType": "NotSpecified",
+            "value": [
+                {
+                    "id": "makerOnboardingUrl",
+                    "value": "https://contoso.com/onboarding1"
+                },
+                {
+                    "id": "makerOnboardingMarkdown",
+                    "value": "## Welcome to the environment!\n\n**This is a markdown description1.**"
+                },
+                {
+                    "id": "makerOnboardingTimestamp",
+                    "value": "Thu, 24 Oct 2024 07:41:48 GMT"
+                }
+            ]
+        },
+        {
+            "type": "SolutionChecker",
+            "resourceType": "NotSpecified",
+            "value": [
+                {
+                    "id": "solutionCheckerMode",
+                    "value": "warn"
+                },
+                {
+                    "id": "suppressValidationEmails",
+                    "value": "false"
+                },
+                {
+                    "id": "solutionCheckerRuleOverrides",
+                    "value": ""
+                }
+            ]
+        },
+        {
+            "type": "Lifecycle",
+            "resourceType": "NotSpecified",
+            "value": [
+                {
+                    "id": "RetentionPeriod",
+                    "value": "28.00:00:00"
+                }
+            ]
+        },
+        {
+            "type": "Copilot",
+            "resourceType": "App",
+            "value": [
+                {
+                    "id": "DisableAiGeneratedDescriptions",
+                    "value": "false"
+                }
+            ]
+        },
+        {
+            "type": "GenerativeAISettings",
+            "resourceType": "NotSpecified",
+            "value": [
+                {
+                    "id": "crossGeoCopilotDataMovementEnabled",
+                    "value": "false"
+                },
+                {
+                    "id": "bingChatEnabled",
+                    "value": "true"
+                }
+            ]
+        }
+    ],
+    "id": "00000000-0000-0000-0000-000000000001",
+    "lastModified": "2024-10-24T07:30:08.241893Z",
+    "environmentFilter": {
+        "type": "Include",
+        "values": [
+            {
+                "id": "00000000-0000-0000-0000-000000000000",
+                "type": "EnvironmentGroup"
+            }
+        ]
+    }
+}

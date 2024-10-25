@@ -37,10 +37,6 @@ func TestAccBillingPoliciesDataSource_Validate_Read(t *testing.T) {
 					type      = "Microsoft.Resources/resourceGroups@2021-04-01"
 					location  = "East US"
 					name      = "power-platform-billing-` + mocks.TestName() + strconv.Itoa(rand.IntN(9999)) + `"
-
-					body = jsonencode({
-						properties = {}
-					})
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
