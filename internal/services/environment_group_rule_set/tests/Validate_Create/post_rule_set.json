@@ -1,0 +1,113 @@
+{
+    "parameters": [
+        {
+            "type": "Sharing",
+            "resourceType": "App",
+            "value": [
+                {
+                    "id": "CanShareWithSecurityGroups",
+                    "value": "excludeSharingToSecurityGroups"
+                },
+                {
+                    "id": "IsGroupSharingDisabled",
+                    "value": "true"
+                },
+                {
+                    "id": "MaximumShareLimit",
+                    "value": "42"
+                }
+            ],
+            "hasStagedChanges": true
+        },
+        {
+            "type": "AdminDigest",
+            "resourceType": "NotSpecified",
+            "value": [
+                {
+                    "id": "IncludeOnHomePageInsights",
+                    "value": "false"
+                },
+                {
+                    "id": "ExcludeEnvironmentFromAnalysis",
+                    "value": "true"
+                }
+            ],
+            "hasStagedChanges": true
+        },
+        {
+            "type": "MakerOnboarding",
+            "resourceType": "NotSpecified",
+            "value": [
+                {
+                    "id": "makerOnboardingUrl",
+                    "value": "https://contoso.com/onboarding"
+                },
+                {
+                    "id": "makerOnboardingMarkdown",
+                    "value": "## Welcome to the environment!\n\n**This is a markdown description.**"
+                },
+                {
+                    "id": "makerOnboardingTimestamp",
+                    "value": "Thu, 24 Oct 2024 07:29:50 GMT"
+                }
+            ],
+            "hasStagedChanges": true
+        },
+        {
+            "type": "SolutionChecker",
+            "resourceType": "NotSpecified",
+            "value": [
+                {
+                    "id": "solutionCheckerMode",
+                    "value": "block"
+                },
+                {
+                    "id": "suppressValidationEmails",
+                    "value": "true"
+                },
+                {
+                    "id": "solutionCheckerRuleOverrides",
+                    "value": ""
+                }
+            ],
+            "hasStagedChanges": true
+        },
+        {
+            "type": "Lifecycle",
+            "resourceType": "NotSpecified",
+            "value": [
+                {
+                    "id": "RetentionPeriod",
+                    "value": "21.00:00:00"
+                }
+            ],
+            "hasStagedChanges": true
+        },
+        {
+            "type": "Copilot",
+            "resourceType": "App",
+            "value": [
+                {
+                    "id": "DisableAiGeneratedDescriptions",
+                    "value": "true"
+                }
+            ],
+            "hasStagedChanges": true
+        },
+        {
+            "type": "GenerativeAISettings",
+            "resourceType": "NotSpecified",
+            "value": [
+                {
+                    "id": "crossGeoCopilotDataMovementEnabled",
+                    "value": "true"
+                },
+                {
+                    "id": "bingChatEnabled",
+                    "value": "false"
+                }
+            ],
+            "hasStagedChanges": true
+        }
+    ]
+}

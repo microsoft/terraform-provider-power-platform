@@ -12,17 +12,17 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
-func newTenantClient(apiClient *api.Client) client {
-	return client{
+func NewTenantClient(apiClient *api.Client) Client {
+	return Client{
 		Api: apiClient,
 	}
 }
 
-type client struct {
+type Client struct {
 	Api *api.Client
 }
 
-func (client *client) GetTenant(ctx context.Context) (*tenantDto, error) {
+func (client *Client) GetTenant(ctx context.Context) (*TenantDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -33,7 +33,7 @@ func (client *client) GetTenant(ctx context.Context) (*tenantDto, error) {
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	var dto tenantDto
+	var dto TenantDto
 
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &dto)
 	if err != nil {

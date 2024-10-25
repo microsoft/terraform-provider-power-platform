@@ -135,5 +135,5 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 		return
 	}
 
-	d.TenantClient = newTenantClient(client)
+	d.TenantClient = NewTenantClient(client)
 }
