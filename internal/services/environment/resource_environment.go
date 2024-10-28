@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -122,6 +123,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"dataverse": schema.SingleNestedAttribute{
 				MarkdownDescription: "Dataverse environment details",
@@ -134,16 +138,25 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					"unique_name": schema.StringAttribute{
 						MarkdownDescription: "Unique name of the Dataverse environment",
 						Computed:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
 					},
 					"administration_mode_enabled": schema.BoolAttribute{
 						MarkdownDescription: "Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
 						Computed:            true,
 						Optional:            true,
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
 					},
 					"background_operation_enabled": schema.BoolAttribute{
 						MarkdownDescription: "Indicates if background operation is enabled",
 						Optional:            true,
 						Computed:            true,
+						PlanModifiers: []planmodifier.Bool{
+							boolplanmodifier.UseStateForUnknown(),
+						},
 					},
 					"currency_code": schema.StringAttribute{
 						MarkdownDescription: "Currency name",
@@ -155,11 +168,18 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					"url": schema.StringAttribute{
 						MarkdownDescription: "Url of the environment",
 						Computed:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+							SetUrlValueUnknownIfDomainChange(),
+						},
 					},
 					"domain": schema.StringAttribute{
 						MarkdownDescription: "Domain name of the environment",
 						Optional:            true,
 						Computed:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
 					},
 					"organization_id": schema.StringAttribute{
 						MarkdownDescription: "Organization id (guid)",
@@ -182,6 +202,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					"version": schema.StringAttribute{
 						MarkdownDescription: "Version of the environment",
 						Computed:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
 					},
 					"templates": schema.ListAttribute{
 						MarkdownDescription: "The selected instance provisioning template (if any). See [ERP-based template](https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/tutorial-deploy-new-environment-with-erp-template?tabs=PPAC) for more information.",
@@ -195,14 +218,23 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					"linked_app_type": schema.StringAttribute{
 						MarkdownDescription: "The type of the linked D365 application",
 						Computed:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
 					},
 					"linked_app_id": schema.StringAttribute{
 						MarkdownDescription: "The GUID of the linked D365 application",
 						Computed:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
 					},
 					"linked_app_url": schema.StringAttribute{
 						MarkdownDescription: "The URL of the linked D365 application",
 						Computed:            true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
+						},
 					},
 				},
 			},
@@ -361,6 +393,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		}
 	}
 	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, state.Timeouts)
+
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return

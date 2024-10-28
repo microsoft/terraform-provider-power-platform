@@ -206,9 +206,9 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["linked_app_id"] = types.StringValue(environmentDto.Properties.LinkedAppMetadata.Id)
 		attrValuesProductProperties["linked_app_url"] = types.StringValue(environmentDto.Properties.LinkedAppMetadata.Url)
 	} else {
-		attrValuesProductProperties["linked_app_type"] = types.StringNull()
-		attrValuesProductProperties["linked_app_id"] = types.StringNull()
-		attrValuesProductProperties["linked_app_url"] = types.StringNull()
+		attrValuesProductProperties["linked_app_type"] = types.StringValue("")
+		attrValuesProductProperties["linked_app_id"] = types.StringValue("")
+		attrValuesProductProperties["linked_app_url"] = types.StringValue("")
 	}
 
 	if environmentDto.Properties.LinkedEnvironmentMetadata != nil {

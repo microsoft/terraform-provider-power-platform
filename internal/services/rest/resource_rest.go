@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
-	modifier "github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
 func NewDataverseWebApiResource() resource.Resource {
@@ -115,7 +115,7 @@ func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.Schem
 						MarkdownDescription: "Response body after executing the web api request",
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
-							modifier.ForceStringValueUnknownModifier(),
+							modifiers.ForceStringValueUnknownModifier(),
 						},
 					},
 				},
