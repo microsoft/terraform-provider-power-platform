@@ -35,7 +35,7 @@ func (d *setUrlValueUnknownIfDomainChange) PlanModifyString(ctx context.Context,
 	diags = req.State.GetAttribute(ctx, path.Root("dataverse").AtName("domain"), &stateDomainAttribute)
 	resp.Diagnostics.Append(diags...)
 
-	if planDomainAttribute.ValueString() != stateDomainAttribute.ValueString() {
+	if planDomainAttribute.ValueString() != stateDomainAttribute.ValueString() && !planDomainAttribute.IsUnknown() && !planDomainAttribute.IsNull() {
 		resp.PlanValue = types.StringUnknown()
 	}
 }

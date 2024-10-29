@@ -15,7 +15,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_group_rule_set"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
 )
 
 var _ resource.Resource = &EnvironmentGroupResource{}
@@ -84,7 +87,7 @@ func (r *EnvironmentGroupResource) Configure(ctx context.Context, req resource.C
 		return
 	}
 
-	r.EnvironmentGroupClient = newEnvironmentGroupClient(client)
+	r.EnvironmentGroupClient = newEnvironmentGroupClient(client, tenant.NewTenantClient(client), environment_group_rule_set.NewEnvironmentGroupRuleSetClient(client, tenant.NewTenantClient(client)))
 }
 
 // Read function for EnvironmentGroupResource.
@@ -196,6 +199,46 @@ func (r *EnvironmentGroupResource) Delete(ctx context.Context, req resource.Dele
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
+	}
+
+	if customerrors.Code(err) == customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND || customerrors.Code(err) == customerrors.ERROR_POLICY_ASSIGNED_TO_ENV_GROUP {
+		envs, err := r.EnvironmentGroupClient.GetEnvironmentsInEnvironmentGroup(ctx, state.Id.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
+
+		if len(envs) > 0 {
+			tflog.Debug(ctx, fmt.Sprintf("Environment group %s_%s has %d environments. Removing them.", r.ProviderTypeName, r.TypeName, len(envs)))
+			for _, env := range envs {
+				err := r.EnvironmentGroupClient.RemoveEnvironmentFromEnvironmentGroup(ctx, state.Id.ValueString(), env.Name)
+				if err != nil {
+					resp.Diagnostics.AddError("error when removing environment", err.Error())
+					return
+				}
+			}
+		}
+
+		ruleSet, err := r.EnvironmentGroupClient.RuleSetApi.GetEnvironmentGroupRuleSet(ctx, state.Id.ValueString())
+		if err != nil && customerrors.Code(err) != customerrors.ERROR_OBJECT_NOT_FOUND {
+			resp.Diagnostics.AddError("Failed to get environment group ruleset", err.Error())
+			return
+		}
+
+		if customerrors.Code(err) != customerrors.ERROR_OBJECT_NOT_FOUND && ruleSet != nil && len(ruleSet.Parameters) > 0 {
+			tflog.Debug(ctx, fmt.Sprintf("Environment group %s_%s has %d rule sets. Deleting them.", r.ProviderTypeName, r.TypeName, len(ruleSet.Parameters)))
+			err := r.EnvironmentGroupClient.RuleSetApi.DeleteEnvironmentGroupRuleSet(ctx, *ruleSet.Id)
+			if err != nil {
+				resp.Diagnostics.AddError("error when deleting rule set", err.Error())
+				return
+			}
+		}
+
+		err = r.EnvironmentGroupClient.DeleteEnvironmentGroup(ctx, state.Id.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
 	}
 }
 

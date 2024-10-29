@@ -1492,8 +1492,15 @@ func TestAccEnvironmentsResource_Validate_Enable_Admin_Mode(t *testing.T) {
 func TestUnitEnvironmentsResource_Create_Environment_With_Env_Group(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-
 	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24filter=properties%2FparentEnvironmentGroup%2Fid+eq+00000000-0000-0000-0000-000000000001&api-version=2021-04-01",
+		httpmock.NewStringResponder(http.StatusOK, `{"value":[]}`),
+	)
+
+	httpmock.RegisterResponder("GET", "https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000001/ruleSets?api-version=2021-10-01-preview",
+		httpmock.NewStringResponder(http.StatusOK, `{"value": [{"parameters": [],"id": "00000000-0000-0000-0000-000000000001","environmentFilter": {"type": "Include","values": []}}]}`),
+	)
 
 	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
@@ -1615,8 +1622,23 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
-
 	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24filter=properties%2FparentEnvironmentGroup%2Fid+eq+00000000-0000-0000-0000-000000000001&api-version=2021-04-01",
+		httpmock.NewStringResponder(http.StatusOK, `{"value":[]}`),
+	)
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24filter=properties%2FparentEnvironmentGroup%2Fid+eq+00000000-0000-0000-0000-000000000002&api-version=2021-04-01",
+		httpmock.NewStringResponder(http.StatusOK, `{"value":[]}`),
+	)
+
+	httpmock.RegisterResponder("GET", "https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000001/ruleSets?api-version=2021-10-01-preview",
+		httpmock.NewStringResponder(http.StatusOK, `{"value": [{"parameters": [],"id": "00000000-0000-0000-0000-000000000001","environmentFilter": {"type": "Include","values": []}}]}`),
+	)
+
+	httpmock.RegisterResponder("GET", "https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000002/ruleSets?api-version=2021-10-01-preview",
+		httpmock.NewStringResponder(http.StatusOK, `{"value": [{"parameters": [],"id": "00000000-0000-0000-0000-000000000001","environmentFilter": {"type": "Include","values": []}}]}`),
+	)
 
 	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
@@ -1805,23 +1827,6 @@ func TestAccEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
-			{
-				Config: `
-				resource "powerplatform_environment" "development" {
-					display_name                              = "` + mocks.TestName() + `"
-					location                                  = "unitedstates"
-					environment_type                          = "Sandbox"
-					dataverse = {
-						language_code                             = "1033"
-						currency_code                             = "USD"
-						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-					}
-				}`,
-
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
-				),
-			},
 			{
 				Config: `
 				resource "powerplatform_environment_group" "env_group" {

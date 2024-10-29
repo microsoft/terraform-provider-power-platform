@@ -274,7 +274,7 @@ func (r *environmentGroupRuleSetResource) Configure(ctx context.Context, req res
 		)
 		return
 	}
-	r.EnvironmentGroupRuleSetClient = newEnvironmentGroupRuleSetClient(client, tenant.NewTenantClient(client))
+	r.EnvironmentGroupRuleSetClient = NewEnvironmentGroupRuleSetClient(client, tenant.NewTenantClient(client))
 }
 
 func (r *environmentGroupRuleSetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {

@@ -36,6 +36,19 @@ func TestAccEnvironmentGroupResource_Validate_Create(t *testing.T) {
 func TestUnitEnvirionmentGroupResource_Validate_Create(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24filter=properties%2FparentEnvironmentGroup%2Fid+eq+00000000-0000-0000-0000-000000000001&api-version=2021-04-01",
+		httpmock.NewStringResponder(http.StatusOK, `{"value":[]}`),
+	)
+
+	httpmock.RegisterResponder("GET", "https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000001/ruleSets?api-version=2021-10-01-preview",
+		httpmock.NewStringResponder(http.StatusOK, `{"value": [{"parameters": [],"id": "00000000-0000-0000-0000-000000000001","environmentFilter": {"type": "Include","values": []}}]}`),
+	)
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24filter=properties%2FparentEnvironmentGroup%2Fid+eq+00000000-0000-0000-0000-000000000001&api-version=2021-04-01",
+		httpmock.NewStringResponder(http.StatusOK, `{"value":[]}`),
+	)
 
 	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environmentGroups?api-version=2021-04-01",
 		func(req *http.Request) (*http.Response, error) {
