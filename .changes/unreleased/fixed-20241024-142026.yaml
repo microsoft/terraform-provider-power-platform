@@ -1,5 +1,0 @@
-kind: fixed
-body: powerplatform_environment fixed error during environment update when a custom domain is set
-time: 2024-10-24T14:20:26.015364964Z
-custom:
-    Issue: "502"

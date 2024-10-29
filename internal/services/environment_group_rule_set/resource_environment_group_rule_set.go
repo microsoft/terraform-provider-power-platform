@@ -61,7 +61,7 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "",
+		MarkdownDescription: "Allows the creation of environment group rulesets. See [Power Platform documentation](https://learn.microsoft.com/power-platform/admin/environment-groups) for more information on the available rules that can be applied to an environment group.\n\n!> Known Issue: This resource only works with a user context and can not be used at this time with a service principal.  This is a limitation of the underlying API.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
