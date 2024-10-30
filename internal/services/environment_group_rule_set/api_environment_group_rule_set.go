@@ -16,19 +16,19 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
 )
 
-func newEnvironmentGroupRuleSetClient(apiClient *api.Client, tenantClient tenant.Client) client {
-	return client{
+func NewEnvironmentGroupRuleSetClient(apiClient *api.Client, tenantClient tenant.Client) Client {
+	return Client{
 		Api:       apiClient,
 		TenantApi: tenantClient,
 	}
 }
 
-type client struct {
+type Client struct {
 	Api       *api.Client
 	TenantApi tenant.Client
 }
 
-func (client *client) GetEnvironmentGroupRuleSet(ctx context.Context, environmentGroupId string) (*environmentGroupRuleSetValueSetDto, error) {
+func (client *Client) GetEnvironmentGroupRuleSet(ctx context.Context, environmentGroupId string) (*EnvironmentGroupRuleSetValueSetDto, error) {
 	tenantDto, err := client.TenantApi.GetTenant(ctx)
 	if err != nil {
 		return nil, err
@@ -61,7 +61,7 @@ func (client *client) GetEnvironmentGroupRuleSet(ctx context.Context, environmen
 	return &environmentGroupRuleSet.Value[0], nil
 }
 
-func (client *client) CreateEnvironmentGroupRuleSet(ctx context.Context, environmentGroupId string, newEnvironmentGroupRuleSet environmentGroupRuleSetValueSetDto) (*environmentGroupRuleSetValueSetDto, error) {
+func (client *Client) CreateEnvironmentGroupRuleSet(ctx context.Context, environmentGroupId string, newEnvironmentGroupRuleSet EnvironmentGroupRuleSetValueSetDto) (*EnvironmentGroupRuleSetValueSetDto, error) {
 	tenantDto, err := client.TenantApi.GetTenant(ctx)
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (client *client) CreateEnvironmentGroupRuleSet(ctx context.Context, environ
 	values.Add("api-version", "2021-10-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
-	environmentGroupRuleSet := environmentGroupRuleSetValueSetDto{}
+	environmentGroupRuleSet := EnvironmentGroupRuleSetValueSetDto{}
 	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, newEnvironmentGroupRuleSet, []int{http.StatusCreated}, &environmentGroupRuleSet)
 
 	if err != nil {
@@ -91,7 +91,7 @@ func (client *client) CreateEnvironmentGroupRuleSet(ctx context.Context, environ
 	return &environmentGroupRuleSet, nil
 }
 
-func (client *client) UpdateEnvironmentGroupRuleSet(ctx context.Context, environmentGroupId string, newEnvironmentGroupRuleSet environmentGroupRuleSetValueSetDto) (*environmentGroupRuleSetValueSetDto, error) {
+func (client *Client) UpdateEnvironmentGroupRuleSet(ctx context.Context, environmentGroupId string, newEnvironmentGroupRuleSet EnvironmentGroupRuleSetValueSetDto) (*EnvironmentGroupRuleSetValueSetDto, error) {
 	tenantDto, err := client.TenantApi.GetTenant(ctx)
 	if err != nil {
 		return nil, err
@@ -107,7 +107,7 @@ func (client *client) UpdateEnvironmentGroupRuleSet(ctx context.Context, environ
 	values.Add("api-version", "2021-10-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
-	environmentGroupRuleSet := environmentGroupRuleSetValueSetDto{}
+	environmentGroupRuleSet := EnvironmentGroupRuleSetValueSetDto{}
 	_, err = client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, newEnvironmentGroupRuleSet, []int{http.StatusOK}, &environmentGroupRuleSet)
 
 	if err != nil {
@@ -117,7 +117,7 @@ func (client *client) UpdateEnvironmentGroupRuleSet(ctx context.Context, environ
 	return &environmentGroupRuleSet, nil
 }
 
-func (client *client) DeleteEnvironmentGroupRuleSet(ctx context.Context, ruleSetId string) error {
+func (client *Client) DeleteEnvironmentGroupRuleSet(ctx context.Context, ruleSetId string) error {
 	tenantDto, err := client.TenantApi.GetTenant(ctx)
 	if err != nil {
 		return err
