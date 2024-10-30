@@ -23,7 +23,7 @@ terraform {
   required_providers {
     powerplatform = {
       source  = "microsoft/power-platform"
-      version = "~> 1.0" # Replace with the latest version
+      version = "~> 3.1" # Replace with the latest version
     }
   }
 }
@@ -176,7 +176,7 @@ In addition to the authentication options, the following options are also suppor
 
 | Name | Description | Default Value |
 |------|-------------|---------------|
-| `telemetry_optout` | Opting out of telemetry will remove the hostheader from the requests made to the Power Platform service.  There is no other telemetry data collected by the provider.  This may affect the ability to identify and troubleshoot issues with the provider. | `false` |
+| `telemetry_optout` | Opting out of telemetry will remove the hostheader and session id headers from the requests made to the Power Platform service.  There is no other telemetry data collected by the provider.  This may affect the ability to identify and troubleshoot issues with the provider. | `false` |
 
 ## Resources and Data Sources
 
@@ -187,6 +187,11 @@ Use the navigation to the left to read about the available resources and data so
 ## Examples
 
 More detailed examples can be found in the [Power Platform Terraform Quickstarts](https://github.com/microsoft/power-platform-terraform-quickstarts) repo.  This repo contains a number of examples for using the Power Platform provider to manage environments and other resources within Power Platform along with Azure and Entra.
+
+## Releases
+
+A full list of released versions of the Power Platform Terraform Provider can be found [here](https://github.com/microsoft/terraform-provider-power-platform/releases).  Starting from v3.0.0, a summary of the changes to the provider in each release are documented the [CHANGELOG.md file in the GitHub repository](https://github.com/microsoft/terraform-provider-power-platform/blob/main/CHANGELOG.md). This provider follows Semantic Versioning for releases. The provider version is incremented based on the type of changes included in the release.
+
 
 ## Contributing
 
