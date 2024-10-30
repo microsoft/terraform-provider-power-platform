@@ -51,7 +51,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 	defer exitContext()
 	resp.Schema = schema.Schema{
 		Description:         "Manages Power Platform Settings for a given environment.",
-		MarkdownDescription: "Manages Power Platform Settings for a given environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/power-platform/admin/admin-settings) for more details.",
+		MarkdownDescription: "Manages Power Platform Settings for a given environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/power-platform/admin/admin-settings) for more details.  While this resource provides a limited set of settings, many of the settings in an environment are stored as Dataverse records and can be managed using `powerplatform_data_record` resource.  See the [data record resource documentation](./data_record) for examples of how to manage more environment settings like business units, roles, and more.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
