@@ -17,16 +17,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// type createEnvironmentGroupRuleSetDto struct {
-// 	Parameters []environmentGroupRuleSetParameterDto `json:"parameters"`
-
-// }
-
 type environmentGroupRuleSetDto struct {
-	Value []environmentGroupRuleSetValueSetDto `json:"value"`
+	Value []EnvironmentGroupRuleSetValueSetDto `json:"value"`
 }
 
-type environmentGroupRuleSetValueSetDto struct {
+type EnvironmentGroupRuleSetValueSetDto struct {
 	Parameters        []*environmentGroupRuleSetParameterDto       `json:"parameters"`
 	Id                *string                                      `json:"id,omitempty"`
 	LastModified      *string                                      `json:"lastModified,omitempty"`
@@ -55,8 +50,8 @@ type environmentGroupRuleSetParameterDto struct {
 	Value            []environmentGroupRuleSetValueDto `json:"value"`
 }
 
-func convertEnvironmentGroupRuleSetResourceModelToDto(ctx context.Context, model environmentGroupRuleSetResourceModel) environmentGroupRuleSetValueSetDto {
-	dto := environmentGroupRuleSetValueSetDto{}
+func convertEnvironmentGroupRuleSetResourceModelToDto(ctx context.Context, model environmentGroupRuleSetResourceModel) EnvironmentGroupRuleSetValueSetDto {
+	dto := EnvironmentGroupRuleSetValueSetDto{}
 
 	if !model.Id.IsUnknown() && !model.Id.IsNull() {
 		dto.Id = model.Id.ValueStringPointer()
@@ -83,7 +78,7 @@ func convertEnvironmentGroupRuleSetResourceModelToDto(ctx context.Context, model
 	return dto
 }
 
-func convertAiGenerativeSettings(ctx context.Context, attrs map[string]attr.Value, dto *environmentGroupRuleSetValueSetDto) {
+func convertAiGenerativeSettings(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
 	aiGenerativeSettingsObj := attrs["ai_generative_settings"]
 	if !aiGenerativeSettingsObj.IsNull() && !aiGenerativeSettingsObj.IsUnknown() {
 		var aiGenerativeSettings environmentGroupRuleSetAiGenerativeSettingsModel
@@ -114,7 +109,7 @@ func convertAiGenerativeSettings(ctx context.Context, attrs map[string]attr.Valu
 	}
 }
 
-func convertAiGeneratedDesc(ctx context.Context, attrs map[string]attr.Value, dto *environmentGroupRuleSetValueSetDto) {
+func convertAiGeneratedDesc(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
 	aiGeneratedDescObj := attrs["ai_generated_descriptions"]
 	if !aiGeneratedDescObj.IsNull() && !aiGeneratedDescObj.IsUnknown() {
 		var aiGeneratedDesc environmentGroupRuleSetAiGeneratedDescriptionsModel
@@ -141,7 +136,7 @@ func convertAiGeneratedDesc(ctx context.Context, attrs map[string]attr.Value, dt
 	}
 }
 
-func convertBackupRetention(ctx context.Context, attrs map[string]attr.Value, dto *environmentGroupRuleSetValueSetDto) {
+func convertBackupRetention(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
 	backupRetentionObj := attrs["backup_retention"]
 	if !backupRetentionObj.IsNull() && !backupRetentionObj.IsUnknown() {
 		var backupRetention environmentGroupRuleSetBackupRetentionModel
@@ -168,7 +163,7 @@ func convertBackupRetention(ctx context.Context, attrs map[string]attr.Value, dt
 	}
 }
 
-func convertSolutionCheckerEnforcement(ctx context.Context, attrs map[string]attr.Value, dto *environmentGroupRuleSetValueSetDto) {
+func convertSolutionCheckerEnforcement(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
 	solutionCheckerObj := attrs["solution_checker_enforcement"]
 	if !solutionCheckerObj.IsNull() && !solutionCheckerObj.IsUnknown() {
 		var solutionChecker environmentGroupRuleSetSolutionCheckerEnforcementModel
@@ -203,7 +198,7 @@ func convertSolutionCheckerEnforcement(ctx context.Context, attrs map[string]att
 	}
 }
 
-func convertMakerWelcomeContent(ctx context.Context, attrs map[string]attr.Value, dto *environmentGroupRuleSetValueSetDto) {
+func convertMakerWelcomeContent(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
 	makerWelcomeContentObj := attrs["maker_welcome_content"]
 	if !makerWelcomeContentObj.IsNull() && !makerWelcomeContentObj.IsUnknown() {
 		var makerWelcomeContent environmentGroupRuleSetMakerWelcomeContentModel
@@ -238,7 +233,7 @@ func convertMakerWelcomeContent(ctx context.Context, attrs map[string]attr.Value
 	}
 }
 
-func convertUsageInsights(ctx context.Context, attrs map[string]attr.Value, dto *environmentGroupRuleSetValueSetDto) {
+func convertUsageInsights(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
 	usageInsightsObj := attrs["usage_insights"]
 	if !usageInsightsObj.IsNull() && !usageInsightsObj.IsUnknown() {
 		var usageInsights environmentGroupRuleSetUsageInsightsModel
@@ -269,7 +264,7 @@ func convertUsageInsights(ctx context.Context, attrs map[string]attr.Value, dto 
 	}
 }
 
-func convertSharingControls(ctx context.Context, attrs map[string]attr.Value, dto *environmentGroupRuleSetValueSetDto) {
+func convertSharingControls(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
 	sharingControlObj := attrs["sharing_controls"]
 	if !sharingControlObj.IsNull() && !sharingControlObj.IsUnknown() {
 		var sharingControl environmentGroupRuleSetSharingControlsModel
@@ -319,7 +314,7 @@ func convertSharingControls(ctx context.Context, attrs map[string]attr.Value, dt
 	}
 }
 
-func convertEnvironmentGroupRuleSetDtoToModel(dto environmentGroupRuleSetValueSetDto) (*environmentGroupRuleSetResourceModel, error) {
+func convertEnvironmentGroupRuleSetDtoToModel(dto EnvironmentGroupRuleSetValueSetDto) (*environmentGroupRuleSetResourceModel, error) {
 	rulesModel, err := convertRulesDtoToModel(dto)
 	if err != nil {
 		return nil, err
@@ -334,7 +329,7 @@ func convertEnvironmentGroupRuleSetDtoToModel(dto environmentGroupRuleSetValueSe
 	return &model, nil
 }
 
-func convertRulesDtoToModel(dto environmentGroupRuleSetValueSetDto) (basetypes.ObjectValue, error) {
+func convertRulesDtoToModel(dto EnvironmentGroupRuleSetValueSetDto) (basetypes.ObjectValue, error) {
 	sharingControlType, sharingControlValue, err := convertSharingControlsDtoToModel(getParameterByType(dto, SHARING))
 	if err != nil {
 		return types.ObjectNull(map[string]attr.Type{}), err
@@ -601,7 +596,7 @@ func tryGetRuleValueFromDto(values []environmentGroupRuleSetValueDto, valueId st
 	return nil
 }
 
-func getParameterByType(params environmentGroupRuleSetValueSetDto, paramType string) *environmentGroupRuleSetParameterDto {
+func getParameterByType(params EnvironmentGroupRuleSetValueSetDto, paramType string) *environmentGroupRuleSetParameterDto {
 	for paramInx := range params.Parameters {
 		if params.Parameters[paramInx].Type == paramType {
 			return params.Parameters[paramInx]

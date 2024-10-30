@@ -80,10 +80,24 @@ func ActivateEnvironmentHttpMocks() {
 	httpmock.RegisterResponder("GET", `=~^https://([a-z\d-]+)\.(crm[\d]*)\.dynamics\.com/api/data/v9\.2/WhoAmI\z`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, `{
-    "@odata.context": "https://org000001.crm.dynamics.com/api/data/v9.2/$metadata#Microsoft.Dynamics.CRM.WhoAmIResponse",
-    "BusinessUnitId": "00000000-0000-0000-0000-000000000002",
-    "UserId": "00000000-0000-0000-0000-000000000001",
-    "OrganizationId": "00000000-0000-0000-0000-000000000003"
-}`), nil
+				"@odata.context": "https://org000001.crm.dynamics.com/api/data/v9.2/$metadata#Microsoft.Dynamics.CRM.WhoAmIResponse",
+				"BusinessUnitId": "00000000-0000-0000-0000-000000000002",
+				"UserId": "00000000-0000-0000-0000-000000000001",
+				"OrganizationId": "00000000-0000-0000-0000-000000000003"
+			}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/tenant?api-version=2021-04-01`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+				"tenantId": "00000000-0000-0000-0000-000000000001",
+				"state": "Enabled",
+				"location": "unitedstates",
+				"aadCountryGeo": "unitedstates",
+				"dataStorageGeo": "unitedstates",
+				"defaultEnvironmentGeo": "unitedstates",
+				"aadDataBoundary": "none",
+				"fedRAMPHighCertificationRequired": false
+			}`), nil
 		})
 }

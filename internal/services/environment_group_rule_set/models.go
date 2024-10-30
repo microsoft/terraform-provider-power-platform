@@ -11,7 +11,7 @@ import (
 
 type environmentGroupRuleSetResource struct {
 	helpers.TypeInfo
-	EnvironmentGroupRuleSetClient client
+	EnvironmentGroupRuleSetClient Client
 }
 
 type environmentGroupRuleSetResourceModel struct {

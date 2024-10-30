@@ -15,3 +15,20 @@ type environmentGroupDto struct {
 	CreatedTime string                       `json:"createdTime,omitempty"`
 	CreatedBy   environmentGroupPrincipalDto `json:"createdBy,omitempty"`
 }
+
+type environmentArrayDto struct {
+	Value []environmentDto `json:"value"`
+}
+
+type environmentDto struct {
+	Name       string                   `json:"name"`
+	Properties environmentPropertiesDto `json:"properties"`
+}
+
+type environmentPropertiesDto struct {
+	ParentEnvironmentGroup environmentGroupPropertiesDto `json:"parentEnvironmentGroup"`
+}
+
+type environmentGroupPropertiesDto struct {
+	Id string `json:"id"`
+}
