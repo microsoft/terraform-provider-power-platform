@@ -179,7 +179,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
 							stringplanmodifier.UseStateForUnknown(),
-							SetUrlValueUnknownIfDomainChange(),
+							modifiers.SetStringAttributeUnknownOnlyIfSecondAttributeChange(path.Root("dataverse").AtName("domain")),
 						},
 					},
 					"domain": schema.StringAttribute{

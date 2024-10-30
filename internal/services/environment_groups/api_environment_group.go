@@ -65,7 +65,6 @@ func (client *client) DeleteEnvironmentGroup(ctx context.Context, environmentGro
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	
 	resp, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusConflict}, nil)
 	if err != nil {
 		if resp.HttpResponse.StatusCode == http.StatusConflict {
