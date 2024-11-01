@@ -57,6 +57,29 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
+	policyAttributeSchema := map[string]schema.Attribute{
+		"type": schema.StringAttribute{
+			MarkdownDescription: "Type of the policy according to [schema definition](https://learn.microsoft.com/en-us/azure/templates/microsoft.powerplatform/enterprisepolicies?pivots=deployment-language-terraform#enterprisepolicies-2)",
+			Computed:            true,
+		},
+		"id": schema.StringAttribute{
+			MarkdownDescription: "Id (guid)",
+			Computed:            true,
+		},
+		"location": schema.StringAttribute{
+			MarkdownDescription: "Location of the policy",
+			Computed:            true,
+		},
+		"system_id": schema.StringAttribute{
+			MarkdownDescription: "System id (guid)",
+			Computed:            true,
+		},
+		"status": schema.StringAttribute{
+			MarkdownDescription: "Link status of the policy",
+			Computed:            true,
+		},
+	}
+
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "This resource manages a PowerPlatform environment",
 		Description:         "This resource manages a PowerPlatform environment",
@@ -134,6 +157,13 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"enterprise_policies": schema.SetNestedAttribute{
+				MarkdownDescription: "Enterprise policies for the environment. See [Enterprise policies](https://learn.microsoft.com/en-us/power-platform/admin/enterprise-policies) for more details.",
+				Computed:            true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: policyAttributeSchema,
 				},
 			},
 			"dataverse": schema.SingleNestedAttribute{
