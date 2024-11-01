@@ -3,12 +3,12 @@
 page_title: "powerplatform_environment_settings Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Power Platform Environment Settings Data Source. Power Platform Settings are configuration options that apply to a specific environment. They control various aspects of Power Platform features and behaviors, See Environment Settings Overview https://learn.microsoft.com/power-platform/admin/admin-settings for more details.
+  Power Platform Environment Settings Data Source. Power Platform Settings are configuration options that apply to a specific environment. They control various aspects of Power Platform features and behaviors, See Environment Settings Overview https://learn.microsoft.com/power-platform/admin/admin-settings for more details.  While this data source provides access to some specific environment settings, many environment settings are stored as records in Dataverse.  You may be able to read those settings using the powerplatform_data_records resource ./data_records.
 ---
 
 # powerplatform_environment_settings (Data Source)
 
-Power Platform Environment Settings Data Source. Power Platform Settings are configuration options that apply to a specific environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/power-platform/admin/admin-settings) for more details.
+Power Platform Environment Settings Data Source. Power Platform Settings are configuration options that apply to a specific environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/power-platform/admin/admin-settings) for more details.  While this data source provides access to some specific environment settings, many environment settings are stored as records in Dataverse.  You may be able to read those settings using the [`powerplatform_data_records` resource](./data_records).
 
 
 
