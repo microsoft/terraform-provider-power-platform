@@ -24,6 +24,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/currencies"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/data_record"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/dlp_policy"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/enterprise_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_group_rule_set"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_groups"
@@ -93,6 +94,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		connection.NewConnectionShareResource(),
 		admin_management_application.NewAdminManagementApplicationResource(),
 		environment_group_rule_set.NewEnvironmentGroupRuleSetResource(),
+		enterprise_policy.NewEnterpisePolicyResource(),
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
 

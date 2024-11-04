@@ -29,6 +29,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/currencies"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/data_record"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/dlp_policy"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/enterprise_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_group_rule_set"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_groups"
@@ -298,6 +299,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return environment_groups.NewEnvironmentGroupResource() },
 		func() resource.Resource { return admin_management_application.NewAdminManagementApplicationResource() },
 		func() resource.Resource { return environment_group_rule_set.NewEnvironmentGroupRuleSetResource() },
+		func() resource.Resource { return enterprise_policy.NewEnterpisePolicyResource() },
 	}
 }
 
