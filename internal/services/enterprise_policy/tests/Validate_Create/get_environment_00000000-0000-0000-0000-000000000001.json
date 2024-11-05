@@ -7,6 +7,7 @@
         "tenantId": "123",
         "azureRegion": "westeurope",
         "displayName": "displayname",
+        "description": "description",
         "createdTime": "2023-09-27T07:08:27.6057592Z",
         "createdBy": {
             "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
@@ -76,22 +77,7 @@
             "microsoft.Flow": "https://emea.api.flow.microsoft.com"
         },
         "databaseType": "CommonDataService",
-        "linkedEnvironmentMetadata": {
-            "resourceId": "orgid",
-            "friendlyName": "displayname",
-            "uniqueName": "00000000-0000-0000-0000-000000000001",
-            "domainName": "00000000-0000-0000-0000-000000000001",
-            "version": "9.2.23092.00206",
-            "instanceUrl": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/",
-            "instanceApiUrl": "https://00000000-0000-0000-0000-000000000001.api.crm4.dynamics.com",
-            "baseLanguage": 1033,
-            "instanceState": "Ready",
-            "createdTime": "2023-09-27T07:08:28.957Z",
-            "backgroundOperationsState": "Enabled",
-            "scaleGroup": "EURCRMLIVESG705",
-            "platformSku": "Standard",
-            "schemaType": "Standard"
-        },
+        "linkedEnvironmentMetadata": null,
         "trialScenarioType": "None",
         "notificationMetadata": {
             "state": "NotSpecified",

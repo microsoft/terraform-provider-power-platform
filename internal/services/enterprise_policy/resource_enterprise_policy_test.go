@@ -26,6 +26,20 @@ func TestUnitTestEnterpisePolicyResource_Validate_Create(t *testing.T) {
 		},
 	)
 
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
 	httpmock.RegisterResponder("GET", "https://api.powerplatform.com/appmanagement/environments/402c2b45-f5dc-e561-869f-368544f94a13/operations/475af49d-9bca-437f-8be1-9e467f44be8a?api-version=1",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Create/get_operation.json").String()), nil
@@ -57,8 +71,16 @@ func TestUnitTestEnterpisePolicyResource_Validate_Create(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "displayname"
+						description                               = "description"
+						cadence								      = "Frequent"
+						location                                  = "europe"
+						environment_type                          = "Sandbox"
+					}
+
 					resource "powerplatform_enterprise_policy" "network_injection" {
-						environment_id = "00000000-0000-0000-0000-000000000001"
+						environment_id = powerplatform_environment.development.id
 						system_id      = "/regions/europe/providers/Microsoft.PowerPlatform/enterprisePolicies/00000000-0000-0000-0000-000000000002"
 						policy_type    = "NetworkInjection"
 					}`,
@@ -66,7 +88,14 @@ func TestUnitTestEnterpisePolicyResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_enterprise_policy.network_injection", "environment_id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_enterprise_policy.network_injection", "system_id", "/regions/europe/providers/Microsoft.PowerPlatform/enterprisePolicies/00000000-0000-0000-0000-000000000002"),
 					resource.TestCheckResourceAttr("powerplatform_enterprise_policy.network_injection", "policy_type", "NetworkInjection"),
-					resource.TestCheckResourceAttr("powerplatform_enterprise_policy.network_injection", "id", "00000000-0000-0000-0000-000000000001_networkinjection")),
+					resource.TestCheckResourceAttr("powerplatform_enterprise_policy.network_injection", "id", "00000000-0000-0000-0000-000000000001_networkinjection"),
+
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "enterprise_policies.0.id", "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/foo/providers/Microsoft.PowerPlatform/enterprisePolicies/bar"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "enterprise_policies.0.location", "europe"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "enterprise_policies.0.system_id", "/regions/europe/providers/Microsoft.PowerPlatform/enterprisePolicies/00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "enterprise_policies.0.status", "Linked"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "enterprise_policies.0.type", "NetworkInjection"),
+				),
 			},
 		},
 	})

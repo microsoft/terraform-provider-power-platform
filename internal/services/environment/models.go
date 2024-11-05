@@ -44,7 +44,7 @@ type SourceModel struct {
 	Cadence            types.String   `tfsdk:"cadence"`
 	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
 
-	EnterprisePolicies []EnterprisePoliciesModel `tfsdk:"enterprise_policies"`
+	EnterprisePolicies basetypes.SetValue `tfsdk:"enterprise_policies"`
 
 	Dataverse types.Object `tfsdk:"dataverse"`
 }
@@ -307,24 +307,102 @@ func convertBillingPolicyModelFromDto(environmentDto EnvironmentDto, model *Sour
 }
 
 func convertEnterprisePolicyModelFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	enterprisePolicyAttrType := types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"type":      types.StringType,
+			"id":        types.StringType,
+			"location":  types.StringType,
+			"system_id": types.StringType,
+			"status":    types.StringType,
+		},
+	}
 	if environmentDto.Properties.EnterprisePolicies != nil {
 		if environmentDto.Properties.EnterprisePolicies.Vnets != nil {
-			model.EnterprisePolicies = append(model.EnterprisePolicies, EnterprisePoliciesModel{
-				Type:     types.StringValue("NetworkInjection"),
-				Id:       types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.Id),
-				Location: types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.Location),
-				SystemId: types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.SystemId),
-				Status:   types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.LinkStatus),
+			// model.EnterprisePolicies = append(model.EnterprisePolicies, EnterprisePoliciesModel{
+			// 	Type:     types.StringValue("NetworkInjection"),
+			// 	Id:       types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.Id),
+			// 	Location: types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.Location),
+			// 	SystemId: types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.SystemId),
+			// 	Status:   types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.LinkStatus),
+			// })
+			model.EnterprisePolicies = types.SetValueMust(enterprisePolicyAttrType, []attr.Value{
+				types.ObjectValueMust(
+					map[string]attr.Type{
+						"type":      types.StringType,
+						"id":        types.StringType,
+						"location":  types.StringType,
+						"system_id": types.StringType,
+						"status":    types.StringType,
+					},
+					map[string]attr.Value{
+						"type":      types.StringValue("NetworkInjection"),
+						"id":        types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.Id),
+						"location":  types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.Location),
+						"system_id": types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.SystemId),
+						"status":    types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.LinkStatus),
+					},
+				),
 			})
 		}
 		if environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys != nil {
-			model.EnterprisePolicies = append(model.EnterprisePolicies, EnterprisePoliciesModel{
-				Type:     types.StringValue("Encryption"),
-				Id:       types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.Id),
-				Location: types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.Location),
-				SystemId: types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.SystemId),
-				Status:   types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.LinkStatus),
+			model.EnterprisePolicies = types.SetValueMust(enterprisePolicyAttrType, []attr.Value{
+				types.ObjectValueMust(
+					map[string]attr.Type{
+						"type":      types.StringType,
+						"id":        types.StringType,
+						"location":  types.StringType,
+						"system_id": types.StringType,
+						"status":    types.StringType,
+					},
+					map[string]attr.Value{
+						"type":      types.StringValue("Encryption"),
+						"id":        types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.Id),
+						"location":  types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.Location),
+						"system_id": types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.SystemId),
+						"status":    types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.LinkStatus),
+					},
+				),
 			})
+			// model.EnterprisePolicies = append(model.EnterprisePolicies, EnterprisePoliciesModel{
+			// 	Type:     types.StringValue("Encryption"),
+			// 	Id:       types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.Id),
+			// 	Location: types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.Location),
+			// 	SystemId: types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.SystemId),
+			// 	Status:   types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.LinkStatus),
+			// })
 		}
+	} else {
+		model.EnterprisePolicies = types.SetValueMust(enterprisePolicyAttrType, []attr.Value{})
 	}
 }
+
+// func convertToAttrValueCustomConnectorUrlPatternsDefinition(urlPatterns []dlpConnectorUrlPatternsDefinitionDto) basetypes.SetValue {
+// 	var connUrlPattern []attr.Value
+// 	for _, connectorUrlPattern := range urlPatterns {
+// 		for _, rules := range connectorUrlPattern.Rules {
+// 			connUrlPattern = append(connUrlPattern, types.ObjectValueMust(
+// 				map[string]attr.Type{
+// 					"order":            types.Int64Type,
+// 					"host_url_pattern": types.StringType,
+// 					"data_group":       types.StringType,
+// 				},
+// 				map[string]attr.Value{
+// 					"order":            types.Int64Value(rules.Order),
+// 					"host_url_pattern": types.StringValue(rules.Pattern),
+// 					"data_group":       types.StringValue(convertConnectorRuleClassificationValues(rules.ConnectorRuleClassification)),
+// 				},
+// 			))
+// 		}
+// 	}
+// 	if len(urlPatterns) == 0 {
+// 		return types.SetValueMust(customConnectorPatternSetObjectType, []attr.Value{})
+// 	}
+// 	return types.SetValueMust(customConnectorPatternSetObjectType, connUrlPattern)
+// }
+
+// types.ObjectType{
+// 	AttrTypes: map[string]attr.Type{
+// 		"order":            types.Int64Type,
+// 		"host_url_pattern": types.StringType,
+// 		"data_group":       types.StringType,
+// 	},
