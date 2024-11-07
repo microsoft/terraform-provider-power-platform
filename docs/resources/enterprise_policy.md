@@ -18,26 +18,23 @@ terraform {
   required_providers {
     powerplatform = {
       source  = "microsoft/power-platform"
-      version = "~>3.0.0"
+      version = "~>3.0"
     }
     azapi = {
       source  = "azure/azapi"
-      version = "2.0.1"
+      version = "~>2.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>4.8.0"
+      version = "~>4.8"
     }
   }
 }
-
 provider "powerplatform" {
-  alias   = "pp"
   use_cli = true
 }
 
 provider "azurerm" {
-  alias           = "azrm"
   use_cli         = true
   subscription_id = var.subscription_id
   features {
@@ -72,10 +69,6 @@ resource "powerplatform_managed_environment" "managed_development" {
 }
 
 module "network_injection" {
-  providers = {
-    azurerm.azrm = azurerm.azrm
-  }
-
   source = "./network_injection"
 
   should_register_provider = false
@@ -96,11 +89,6 @@ resource "powerplatform_enterprise_policy" "network_injection" {
 }
 
 module "encryption" {
-  providers = {
-    powerplatform.pp = powerplatform.pp
-    azurerm.azrm     = azurerm.azrm
-  }
-
   source = "./encryption"
 
   should_register_provider = false
@@ -117,6 +105,7 @@ resource "powerplatform_enterprise_policy" "encryption" {
   system_id      = module.encryption.enterprise_policy_system_id
   policy_type    = "Encryption"
 
+  //let's wait for first policy to be executed
   depends_on = [powerplatform_enterprise_policy.network_injection]
 }
 ```
