@@ -62,6 +62,7 @@ Read-Only:
 - `dataverse` (Attributes) Dataverse environment details (see [below for nested schema](#nestedatt--environments--dataverse))
 - `description` (String) Description
 - `display_name` (String) Display name
+- `enterprise_policies` (Attributes Set) Enterprise policies for the environment. See [Enterprise policies](https://learn.microsoft.com/en-us/power-platform/admin/enterprise-policies) for more details. (see [below for nested schema](#nestedatt--environments--enterprise_policies))
 - `environment_group_id` (String) Environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.
 - `environment_type` (String) Type of the environment (Sandbox, Production etc.)
 - `id` (String) Environment id (guid)
@@ -91,3 +92,15 @@ Read-Only:
 - `unique_name` (String) Unique name of the Dataverse environment
 - `url` (String) Url of the environment
 - `version` (String) Version of the environment
+
+
+<a id="nestedatt--environments--enterprise_policies"></a>
+### Nested Schema for `environments.enterprise_policies`
+
+Read-Only:
+
+- `id` (String) Id (guid)
+- `location` (String) Location of the policy
+- `status` (String) Link status of the policy
+- `system_id` (String) System id (guid)
+- `type` (String) Type of the policy according to [schema definition](https://learn.microsoft.com/en-us/azure/templates/microsoft.powerplatform/enterprisepolicies?pivots=deployment-language-terraform#enterprisepolicies-2)
