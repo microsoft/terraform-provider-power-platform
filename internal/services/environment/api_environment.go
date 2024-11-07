@@ -472,27 +472,30 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 		return nil, err
 	}
 
+	// wait for the lifecycle operation to finish.
 	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return nil, err
 	}
 
-	env, err := client.GetEnvironment(ctx, environmentId)
-	if err != nil {
-		return nil, err
+	// despite lifecycle operation success, the environment may not be ready yet.
+	for {
+		err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
+		if err != nil {
+			return nil, err
+		}
+		env, err := client.GetEnvironment(ctx, environmentId)
+		if err != nil {
+			return nil, err
+		}
+		tflog.Info(ctx, "Environment State: '"+env.Properties.States.Management.Id+"'")
+		if env.Properties.States.Management.Id == "Ready" {
+			return env, nil
+		} else if env.Properties.States.Management.Id == "Running" {
+			continue
+		}
+		return nil, errors.New("environment update failed. unexpected management state: " + env.Properties.States.Management.Id)
 	}
-
-	tflog.Info(ctx, "Environment State: '"+env.Properties.States.Management.Id+"'")
-	err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
-	if err != nil {
-		return nil, err
-	}
-
-	if env.Properties.States.Management.Id == "Ready" {
-		return env, nil
-	}
-
-	return nil, fmt.Errorf("environment '%s' not found", environmentId)
 }
 
 func (client *Client) GetEnvironments(ctx context.Context) ([]EnvironmentDto, error) {
