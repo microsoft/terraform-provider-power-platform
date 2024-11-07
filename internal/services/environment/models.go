@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -362,4 +361,3 @@ func convertEnterprisePolicyModelFromDto(environmentDto EnvironmentDto, model *S
 		model.EnterprisePolicies = types.SetValueMust(enterprisePolicyAttrType, []attr.Value{})
 	}
 }
-
