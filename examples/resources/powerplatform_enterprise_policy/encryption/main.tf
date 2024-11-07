@@ -1,16 +1,11 @@
 terraform {
   required_version = "> 1.7.0"
   required_providers {
-    powerplatform = {
-      source                = "microsoft/power-platform"
-      configuration_aliases = [powerplatform.pp]
-    }
     azapi = {
-      source = "azure/azapi"
+      source  = "azure/azapi"
     }
     azurerm = {
-      source                = "hashicorp/azurerm"
-      configuration_aliases = [azurerm.azrm]
+      source  = "hashicorp/azurerm"
     }
   }
 }
@@ -68,23 +63,19 @@ variable "keyvault_name" {
 }
 
 resource "azurerm_resource_group" "resource_group" {
-  provider = azurerm.azrm
   name     = var.resource_group_name
   location = var.resource_group_location
 }
 
 resource "azurerm_resource_provider_registration" "provider_registration" {
-  provider = azurerm.azrm
-  count    = var.should_register_provider ? 1 : 0
-  name     = "Microsoft.PowerPlatform"
+  count = var.should_register_provider ? 1 : 0
+  name  = "Microsoft.PowerPlatform"
 }
 
 data "azurerm_client_config" "current" {
-  provider = azurerm.azrm
 }
 
 resource "azurerm_key_vault" "key_vault" {
-  provider                    = azurerm.azrm
   name                        = var.keyvault_name
   location                    = azurerm_resource_group.resource_group.location
   resource_group_name         = azurerm_resource_group.resource_group.name
@@ -101,14 +92,12 @@ resource "azurerm_key_vault" "key_vault" {
 }
 
 resource "azurerm_role_assignment" "terraform_admin_access" {
-  provider             = azurerm.azrm
   scope                = azurerm_key_vault.key_vault.id
   role_definition_name = "Key Vault Administrator"
   principal_id         = data.azurerm_client_config.current.object_id
 }
 
 resource "azurerm_key_vault_key" "kv_ep_key" {
-  provider     = azurerm.azrm
   name         = "generated-certificate"
   key_vault_id = azurerm_key_vault.key_vault.id
   key_type     = "RSA"
@@ -159,25 +148,30 @@ resource "time_sleep" "wait_90_seconds" {
   create_duration = "90s"
 }
 
-data "powerplatform_rest_query" "webapi_query" {
-  provider = powerplatform.pp
-  scope    = "https://management.core.windows.net/.default"
-  url      = "https://management.azure.com/providers/Microsoft.ResourceGraph/resources?api-version=2021-03-01"
-  body = jsonencode({
-    query         = "resources | where notempty(identity.principalId)|where (id=='${azapi_resource.powerplatform_policy.output.id}' and type=='microsoft.powerplatform/enterprisepolicies' and kind=='Encryption')|take 1"
-    subscriptions = [data.azurerm_client_config.current.subscription_id]
-  })
-  method               = "POST"
-  expected_http_status = [200]
+data "azapi_resource_action" "managed_identity_query" {
+  type        = "Microsoft.ResourceGraph@2021-03-01"
+  resource_id = "/providers/Microsoft.ResourceGraph"
+  action      = "resources"
+  body = {
+    query = <<-KQL
+resources
+| where id == "${azapi_resource.powerplatform_policy.output.id}"
+| take 1
+    KQL
+  }
+  response_export_values = ["*"]
 
-  depends_on = [time_sleep.wait_90_seconds]
+  depends_on = [ time_sleep.wait_90_seconds ]
+}
+output "o1" {
+  value = data.azapi_resource_action.managed_identity_query.output.data[0].identity.principalId
 }
 
 resource "azurerm_role_assignment" "enterprise_policy_system_access" {
-  provider             = azurerm.azrm
+  //provider = azurerm.azrm
   scope                = azurerm_key_vault.key_vault.id
   role_definition_name = "Key Vault Crypto Service Encryption User"
-  principal_id         = jsondecode(data.powerplatform_rest_query.webapi_query.output.body).data[0].identity.principalId
+  principal_id         = data.azapi_resource_action.managed_identity_query.output.data[0].identity.principalId
 }
 
 output "enterprise_policy_system_id" {

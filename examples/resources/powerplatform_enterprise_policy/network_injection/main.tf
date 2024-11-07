@@ -2,13 +2,12 @@ terraform {
   required_version = "> 1.7.0"
   required_providers {
     azapi = {
-      source = "azure/azapi"
+      source  = "azure/azapi"
       version = "~>2.0.1"
     }
     azurerm = {
-      source = "hashicorp/azurerm"
+      source  = "hashicorp/azurerm"
       version = "~>4.8.0"
-      configuration_aliases = [ azurerm.azrm ]
     }
   }
 }
@@ -67,15 +66,13 @@ variable "enterprise_policy_location" {
 }
 
 resource "azurerm_resource_group" "resource_group" {
-  provider = azurerm.azrm
   name     = var.resource_group_name
   location = var.resource_group_location
 }
 
 resource "azurerm_resource_provider_registration" "provider_registration" {
-  provider = azurerm.azrm
   count = var.should_register_provider ? 1 : 0
-  name = "Microsoft.PowerPlatform"
+  name  = "Microsoft.PowerPlatform"
 }
 
 locals {
@@ -83,8 +80,7 @@ locals {
 }
 
 resource "azurerm_virtual_network" "vnet" {
-  provider = azurerm.azrm
-  count = 2
+  count               = 2
   name                = local.vnet_names[count.index]
   location            = var.vnet_locations[count.index]
   resource_group_name = azurerm_resource_group.resource_group.name
@@ -92,8 +88,7 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 resource "azurerm_subnet" "subnet" {
-  provider = azurerm.azrm
-  count = 2
+  count                = 2
   name                 = "enterprise_policy_subnet"
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.vnet[count.index].name
@@ -112,27 +107,27 @@ resource "azurerm_subnet" "subnet" {
 resource "azapi_resource" "powerplatform_policy" {
   schema_validation_enabled = false
 
-  type = "Microsoft.PowerPlatform/enterprisePolicies@2020-10-30-preview"
-  name = var.enterprise_policy_name
+  type      = "Microsoft.PowerPlatform/enterprisePolicies@2020-10-30-preview"
+  name      = var.enterprise_policy_name
   location  = var.enterprise_policy_location
   parent_id = azurerm_resource_group.resource_group.id
   body = {
-     properties = {
+    properties = {
       networkInjection = {
         virtualNetworks = [
-            {
-              id =  azurerm_virtual_network.vnet[0].id
-              subnet = {
-                name =  azurerm_subnet.subnet[0].name
-              }
-            },
-             {
-              id =  azurerm_virtual_network.vnet[1].id
-
-              subnet = {
-                name =  azurerm_subnet.subnet[1].name
-              }
+          {
+            id = azurerm_virtual_network.vnet[0].id
+            subnet = {
+              name = azurerm_subnet.subnet[0].name
             }
+          },
+          {
+            id = azurerm_virtual_network.vnet[1].id
+
+            subnet = {
+              name = azurerm_subnet.subnet[1].name
+            }
+          }
         ]
       }
     }
