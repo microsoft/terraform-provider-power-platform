@@ -1444,18 +1444,18 @@ func TestAccEnvironmentsResource_Validate_Enable_Admin_Mode(t *testing.T) {
 			},
 			{
 				Config: `
-				resource "powerplatform_environment" "development" {
-					display_name                              = "` + mocks.TestName() + `"
-					location                                  = "unitedstates"
-					environment_type                          = "Sandbox"
-					dataverse = {
-						language_code                             = "1033"
-						currency_code                             = "USD"
-						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-						administration_mode_enabled 			 = true
-						background_operation_enabled		     = true
-					}
-				}`,
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + mocks.TestName() + `"
+						location                                  = "unitedstates"
+						environment_type                          = "Sandbox"
+						dataverse = {
+							language_code                             = "1033"
+							currency_code                             = "USD"
+							security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+							administration_mode_enabled 			 = true
+							background_operation_enabled		     = true
+						}
+					}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
@@ -1466,18 +1466,18 @@ func TestAccEnvironmentsResource_Validate_Enable_Admin_Mode(t *testing.T) {
 			},
 			{
 				Config: `
-				resource "powerplatform_environment" "development" {
-					display_name                              = "` + mocks.TestName() + `"
-					location                                  = "unitedstates"
-					environment_type                          = "Sandbox"
-					dataverse = {
-						language_code                             = "1033"
-						currency_code                             = "USD"
-						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-						administration_mode_enabled 			 = false
-						background_operation_enabled		     = true
-					}
-				}`,
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + mocks.TestName() + `"
+						location                                  = "unitedstates"
+						environment_type                          = "Sandbox"
+						dataverse = {
+							language_code                             = "1033"
+							currency_code                             = "USD"
+							security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+							administration_mode_enabled 			 = false
+							background_operation_enabled		     = true
+						}
+					}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
 

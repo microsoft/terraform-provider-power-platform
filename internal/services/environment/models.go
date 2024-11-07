@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -318,13 +319,6 @@ func convertEnterprisePolicyModelFromDto(environmentDto EnvironmentDto, model *S
 	}
 	if environmentDto.Properties.EnterprisePolicies != nil {
 		if environmentDto.Properties.EnterprisePolicies.Vnets != nil {
-			// model.EnterprisePolicies = append(model.EnterprisePolicies, EnterprisePoliciesModel{
-			// 	Type:     types.StringValue("NetworkInjection"),
-			// 	Id:       types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.Id),
-			// 	Location: types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.Location),
-			// 	SystemId: types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.SystemId),
-			// 	Status:   types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.LinkStatus),
-			// })
 			model.EnterprisePolicies = types.SetValueMust(enterprisePolicyAttrType, []attr.Value{
 				types.ObjectValueMust(
 					map[string]attr.Type{
@@ -363,46 +357,9 @@ func convertEnterprisePolicyModelFromDto(environmentDto EnvironmentDto, model *S
 					},
 				),
 			})
-			// model.EnterprisePolicies = append(model.EnterprisePolicies, EnterprisePoliciesModel{
-			// 	Type:     types.StringValue("Encryption"),
-			// 	Id:       types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.Id),
-			// 	Location: types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.Location),
-			// 	SystemId: types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.SystemId),
-			// 	Status:   types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.LinkStatus),
-			// })
 		}
 	} else {
 		model.EnterprisePolicies = types.SetValueMust(enterprisePolicyAttrType, []attr.Value{})
 	}
 }
 
-// func convertToAttrValueCustomConnectorUrlPatternsDefinition(urlPatterns []dlpConnectorUrlPatternsDefinitionDto) basetypes.SetValue {
-// 	var connUrlPattern []attr.Value
-// 	for _, connectorUrlPattern := range urlPatterns {
-// 		for _, rules := range connectorUrlPattern.Rules {
-// 			connUrlPattern = append(connUrlPattern, types.ObjectValueMust(
-// 				map[string]attr.Type{
-// 					"order":            types.Int64Type,
-// 					"host_url_pattern": types.StringType,
-// 					"data_group":       types.StringType,
-// 				},
-// 				map[string]attr.Value{
-// 					"order":            types.Int64Value(rules.Order),
-// 					"host_url_pattern": types.StringValue(rules.Pattern),
-// 					"data_group":       types.StringValue(convertConnectorRuleClassificationValues(rules.ConnectorRuleClassification)),
-// 				},
-// 			))
-// 		}
-// 	}
-// 	if len(urlPatterns) == 0 {
-// 		return types.SetValueMust(customConnectorPatternSetObjectType, []attr.Value{})
-// 	}
-// 	return types.SetValueMust(customConnectorPatternSetObjectType, connUrlPattern)
-// }
-
-// types.ObjectType{
-// 	AttrTypes: map[string]attr.Type{
-// 		"order":            types.Int64Type,
-// 		"host_url_pattern": types.StringType,
-// 		"data_group":       types.StringType,
-// 	},

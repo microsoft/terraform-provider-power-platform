@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"strings"
 	"time"
 
@@ -467,39 +468,29 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
 	values.Add("api-version", "2022-05-01")
 	apiUrl.RawQuery = values.Encode()
-	_, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return nil, err
 	}
 
+	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	env, err := client.GetEnvironment(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	tflog.Info(ctx, "Environment State: '"+env.Properties.States.Management.Id+"'")
 	err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
 	if err != nil {
 		return nil, err
 	}
 
-	environments, err := client.GetEnvironments(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, env := range environments {
-		if env.Name == environmentId {
-			for {
-				createdEnv, err := client.GetEnvironment(ctx, env.Name)
-				if err != nil {
-					return nil, err
-				}
-				tflog.Info(ctx, "Environment State: '"+createdEnv.Properties.States.Management.Id+"'")
-				err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
-				if err != nil {
-					return nil, err
-				}
-
-				if createdEnv.Properties.States.Management.Id == "Ready" {
-					return createdEnv, nil
-				}
-			}
-		}
+	if env.Properties.States.Management.Id == "Ready" {
+		return env, nil
 	}
 
 	return nil, fmt.Errorf("environment '%s' not found", environmentId)
