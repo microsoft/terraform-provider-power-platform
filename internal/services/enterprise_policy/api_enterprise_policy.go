@@ -27,15 +27,6 @@ type Client struct {
 	EnvironmentClient environment.Client
 }
 
-// https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/1bd6bd98-e60e-e571-b6d6-2d249dbf3148/enterprisePolicies/Encryption/link?api-version=2019-10-01
-// Request Method:
-// POST
-// Status Code:
-// 202 Accepted
-// {"systemId":"/regions/europe/providers/Microsoft.PowerPlatform/enterprisePolicies/aee7e0b0-c23a-4820-ae0e-ebe2a7162b4f"}
-// ----
-// Properties/SystemId:  "/regions/europe/providers/Microsoft.PowerPlatform/enterprisePolicies/aee7e0b0-c23a-4820-ae0e-ebe2a7162b4f",
-
 func (client *Client) LinkEnterprisePolicy(ctx context.Context, environmentId, environmentType, systemId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
