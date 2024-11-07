@@ -290,7 +290,7 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		var httpError *customerrors.UnexpectedHttpStatusCodeError
-		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusConflict {
+		if errors.As(err, &httpError) {
 			return fmt.Errorf("Unexpected HTTP Status %s; Body: %s", httpError.StatusText, httpError.Body)
 		}
 		return err
