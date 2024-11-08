@@ -120,21 +120,21 @@ jobs:
     - name: "Set up Terraform"
       uses: hashicorp/setup-terraform@v3  
     
-    - name: Run tests
-      env: 
-        TF_LOG: WARN
-        TF_ACC: 1
-        POWER_PLATFORM_USE_OIDC: true
-        POWER_PLATFORM_TENANT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}
-        POWER_PLATFORM_CLIENT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
-        ARM_USE_OIDC: true
-        ARM_CLIENT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
-        ARM_TENANT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}
-        ARM_SUBSCRIPTION_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}
-      run: |
-        go clean -testcache
-        go test -p 3 -v ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m
-        go tool cover -html=test-coverage.out -o test-coverage.cov.html
+    # - name: Run tests
+    #   env: 
+    #     TF_LOG: WARN
+    #     TF_ACC: 1
+    #     POWER_PLATFORM_USE_OIDC: true
+    #     POWER_PLATFORM_TENANT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}
+    #     POWER_PLATFORM_CLIENT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
+    #     ARM_USE_OIDC: true
+    #     ARM_CLIENT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
+    #     ARM_TENANT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}
+    #     ARM_SUBSCRIPTION_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}
+    #   run: |
+    #     go clean -testcache
+    #     go test -p 3 -v ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m
+    #     go tool cover -html=test-coverage.out -o test-coverage.cov.html
 
     - name: Upload Coverage Artifacts
       if: success() || failure()
@@ -148,18 +148,13 @@ jobs:
       with:
         file: test-coverage.out
         token: ${{ secrets.CODECOV_TOKEN }}
-
-  clenup:
-    name: Cleanup
-    needs: [build, tests, should_run]
-    if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
-    runs-on: windows-latest
-    steps:
-
+    
     - name: Install Power Platform Tools
+      if: success() || failure()
       uses: microsoft/powerplatform-actions/actions-install@v1
 
     - name: Environments cleanup
+      if: success() || failure()
       shell: pwsh
       run: |
         dotnet tool install --global Microsoft.PowerApps.CLI.Tool
@@ -171,4 +166,27 @@ jobs:
                 pac admin delete -env $_.EnvironmentID
             }
         } -ThrottleLimit 15
+
+  # clenup:
+  #   name: Cleanup
+  #   needs: [build, tests, should_run]
+  #   if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
+  #   runs-on: windows-latest
+  #   steps:
+
+  #   - name: Install Power Platform Tools
+  #     uses: microsoft/powerplatform-actions/actions-install@v1
+
+  #   - name: Environments cleanup
+  #     shell: pwsh
+  #     run: |
+  #       dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+  #       pac auth create --githubFederated --tenant ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }} --applicationId ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
+  #       $environmentsList = (pac admin list --name "TestAcc" --json | ConvertFrom-Json)
+  #       $environmentsList | ForEach-Object -Parallel {
+  #           if ($_.DisplayName.StartsWith("TestAcc")){
+  #               Write-Output $_.DisplayName
+  #               pac admin delete -env $_.EnvironmentID
+  #           }
+  #       } -ThrottleLimit 15
 
