@@ -926,8 +926,7 @@ func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 				Config: `
 				resource "powerplatform_environment" "env" {
 					display_name     = "` + mocks.TestName() + `"
-					location         = "europe"
-					azure_region     = "northeurope"
+					location         = "unitedstates"
 					environment_type = "Sandbox"
 				}
 

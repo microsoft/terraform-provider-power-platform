@@ -2148,7 +2148,7 @@ func TestUnitEnvironmentsResource_Validate_Update_Environment_Type(t *testing.T)
 				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "Example"
-					location                                  = "europe"
+					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					dataverse = {
 						language_code                             = "1033"
@@ -2164,7 +2164,7 @@ func TestUnitEnvironmentsResource_Validate_Update_Environment_Type(t *testing.T)
 				Config: `
 					resource "powerplatform_environment" "development" {
 					display_name                              = "Example"
-					location                                  = "europe"
+					location                                  = "unitedstates"
 					environment_type                          = "Production"
 					dataverse = {
 						language_code                             = "1033"
@@ -2192,7 +2192,7 @@ func TestAccEnvironmentsResource_Validate_Update_Environment_Type(t *testing.T) 
 				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `"
-					location                                  = "europe"
+					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					dataverse = {
 						language_code                             = "1033"
@@ -2211,7 +2211,7 @@ func TestAccEnvironmentsResource_Validate_Update_Environment_Type(t *testing.T) 
 				Config: `
 					resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `1"
-					location                                  = "europe"
+					location                                  = "unitedstates"
 					environment_type                          = "Production"
 					dataverse = {
 						language_code                             = "1033"
@@ -2230,7 +2230,7 @@ func TestAccEnvironmentsResource_Validate_Update_Environment_Type(t *testing.T) 
 				Config: `
 					resource "powerplatform_environment" "development" {
 					display_name                              = "` + mocks.TestName() + `1"
-					location                                  = "europe"
+					location                                  = "unitedstates"
 					environment_type                          = "Production"
 					dataverse = {
 						language_code                             = "1033"
