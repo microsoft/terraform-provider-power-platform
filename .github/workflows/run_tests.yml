@@ -92,7 +92,7 @@ jobs:
 
   tests:
     name: Running Test
-    #needs: [build, should_run]
+    needs: [build, should_run]
     if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -151,9 +151,7 @@ jobs:
 
   clenup:
     name: Running Test for cleanup
-    #if: always()
-    #needs: [build, test, should_run]
-    needs: [should_run]
+    needs: [build, test, should_run]
     if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     runs-on: windows-latest
     steps:
@@ -161,7 +159,7 @@ jobs:
     - name: Install Power Platform Tools
       uses: microsoft/powerplatform-actions/actions-install@v1
 
-    - name: Run cleanup
+    - name: Run environments cleanup
       shell: pwsh
       run: |
         dotnet tool install --global Microsoft.PowerApps.CLI.Tool
@@ -172,5 +170,5 @@ jobs:
                 Write-Output $_.DisplayName
                 pac admin delete -env $_.EnvironmentID
             }
-        } -ThrottleLimit 10
+        } -ThrottleLimit 15
 
