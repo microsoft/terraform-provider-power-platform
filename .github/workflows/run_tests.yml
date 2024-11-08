@@ -165,7 +165,7 @@ jobs:
       shell: pwsh
       run: |
         dotnet tool install --global Microsoft.PowerApps.CLI.Tool
-        pac auth --githubFederated
+        pac auth create --githubFederated
         pac admin list --name "TestAcc"
        
 
