@@ -166,6 +166,11 @@ jobs:
       run: |
         dotnet tool install --global Microsoft.PowerApps.CLI.Tool
         pac auth create --githubFederated --tenant ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }} --applicationId ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
-        pac admin list --name "TestAcc"
-       
+        $environmentsList = (pac admin list --name "TestAcc" --json | ConvertFrom-Json)
+        $environmentsList | ForEach-Object -Parallel {
+            if ($_.DisplayName.StartsWith("TestAcc")){
+                Write-Output $_.DisplayName
+                pac admin delete -env $_.EnvironmentID
+            }
+        } -ThrottleLimit 10
 
