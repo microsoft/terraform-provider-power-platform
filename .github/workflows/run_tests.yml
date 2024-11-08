@@ -150,7 +150,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
 
   clenup:
-    name: Running Test for cleanup
+    name: Cleanup
     needs: [build, tests, should_run]
     if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     runs-on: windows-latest
@@ -159,7 +159,7 @@ jobs:
     - name: Install Power Platform Tools
       uses: microsoft/powerplatform-actions/actions-install@v1
 
-    - name: Run environments cleanup
+    - name: Environments cleanup
       shell: pwsh
       run: |
         dotnet tool install --global Microsoft.PowerApps.CLI.Tool
