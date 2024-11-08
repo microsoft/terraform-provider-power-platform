@@ -12,6 +12,15 @@ terraform {
   }
 }
 
+variable "environment_id" {
+  description = "The ID of the environment"
+  type        = string
+  validation {
+    condition     = length(var.environment_id) > 0
+    error_message = "The environment ID must not be empty"
+  }
+}
+
 variable "should_register_provider" {
   description = "A flag to determine if the PowerPlatfomr provider should be registered in the subscription"
   type        = bool
@@ -133,6 +142,14 @@ resource "azapi_resource" "powerplatform_policy" {
     }
     kind = "NetworkInjection"
   }
+}
+
+resource "powerplatform_enterprise_policy" "network_injection" {
+  environment_id = var.environment_id
+  system_id      = azapi_resource.powerplatform_policy.output.properties.systemId
+  policy_type    = "NetworkInjection"
+
+  depends_on = [powerplatform_managed_environment.managed_development]
 }
 
 output "enterprise_policy_system_id" {

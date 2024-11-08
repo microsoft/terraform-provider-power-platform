@@ -2,11 +2,20 @@ terraform {
   required_version = "> 1.7.0"
   required_providers {
     azapi = {
-      source  = "azure/azapi"
+      source = "azure/azapi"
     }
     azurerm = {
-      source  = "hashicorp/azurerm"
+      source = "hashicorp/azurerm"
     }
+  }
+}
+
+variable "environment_id" {
+  description = "The ID of the environment"
+  type        = string
+  validation {
+    condition     = length(var.environment_id) > 0
+    error_message = "The environment ID must not be empty"
   }
 }
 
@@ -161,17 +170,22 @@ resources
   }
   response_export_values = ["*"]
 
-  depends_on = [ time_sleep.wait_90_seconds ]
+  depends_on = [time_sleep.wait_90_seconds]
 }
 output "o1" {
   value = data.azapi_resource_action.managed_identity_query.output.data[0].identity.principalId
 }
 
 resource "azurerm_role_assignment" "enterprise_policy_system_access" {
-  //provider = azurerm.azrm
   scope                = azurerm_key_vault.key_vault.id
   role_definition_name = "Key Vault Crypto Service Encryption User"
   principal_id         = data.azapi_resource_action.managed_identity_query.output.data[0].identity.principalId
+}
+
+resource "powerplatform_enterprise_policy" "encryption" {
+  environment_id = var.environment_id
+  system_id      = azapi_resource.powerplatform_policy.output.properties.systemId
+  policy_type    = "Encryption"
 }
 
 output "enterprise_policy_system_id" {

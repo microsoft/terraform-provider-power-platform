@@ -29,10 +29,19 @@ provider "azurerm" {
   }
 }
 
+// getting all locations available for the environment and their azure regions
+data "powerplatform_locations" "all_locations" {
+}
 
+// getting european loocation details. Policy has to be in the same azure region as the environment
+locals {
+  europe_location = [for location in data.powerplatform_locations.all_locations.locations : location if location.name == "europe"]
+}
+
+// creating environment that will have the policies applied
 resource "powerplatform_environment" "example_environment" {
   display_name     = "example_environment"
-  location         = "europe"
+  location         = local.europe_location[0].name
   environment_type = "Sandbox"
   dataverse = {
     language_code     = "1033"
@@ -41,6 +50,7 @@ resource "powerplatform_environment" "example_environment" {
   }
 }
 
+// creating managed environment for the environment as this is required for encryption policy
 resource "powerplatform_managed_environment" "managed_development" {
   environment_id             = powerplatform_environment.example_environment.id
   is_usage_insights_disabled = true
@@ -53,43 +63,36 @@ resource "powerplatform_managed_environment" "managed_development" {
   maker_onboarding_url       = "https://www.microsoft.com"
 }
 
+
+// module that creates all azure resources required for the network injection policy and the policy itself
 module "network_injection" {
   source = "./network_injection"
 
   should_register_provider = false
 
-  resource_group_name        = "rg_example_network_injection_policy"
-  resource_group_location    = "westeurope"
-  vnet_locations             = ["westeurope", "northeurope"]
-  enterprise_policy_name     = "ep_example_network_injection_policy"
-  enterprise_policy_location = "europe"
-}
-
-resource "powerplatform_enterprise_policy" "network_injection" {
   environment_id = powerplatform_environment.example_environment.id
-  system_id      = module.network_injection.enterprise_policy_system_id
-  policy_type    = "NetworkInjection"
 
-  depends_on = [powerplatform_managed_environment.managed_development]
+  resource_group_name        = "rg_example_network_injection_policy"
+  resource_group_location    = local.europe_location[0].azure_regions[0]
+  vnet_locations             = local.europe_location[0].azure_regions
+  enterprise_policy_name     = "ep_example_network_injection_policy"
+  enterprise_policy_location = local.europe_location[0].name
 }
 
+// module that creates all azure resources required for the encryption policy and the policy itself
 module "encryption" {
   source = "./encryption"
 
   should_register_provider = false
 
+  environment_id = powerplatform_environment.example_environment.id
+
   resource_group_name        = "rg_example_encryption_policy8"
-  resource_group_location    = "westeurope"
+  resource_group_location    = local.europe_location[0].azure_regions[0]
   enterprise_policy_name     = "ep_example_encryption_policy8"
   enterprise_policy_location = "europe"
   keyvault_name              = "kv-ep-example8"
-}
 
-resource "powerplatform_enterprise_policy" "encryption" {
-  environment_id = powerplatform_environment.example_environment.id
-  system_id      = module.encryption.enterprise_policy_system_id
-  policy_type    = "Encryption"
-
-  //let's wait for first policy to be executed
+  // let's wait for first policy to be executed
   depends_on = [powerplatform_enterprise_policy.network_injection]
 }
