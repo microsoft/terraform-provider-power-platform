@@ -38,6 +38,7 @@ func (client *Client) LinkEnterprisePolicy(ctx context.Context, environmentId, e
 	values.Add("api-version", "2019-10-01")
 	apiUrl.RawQuery = values.Encode()
 
+	
 	linkEnterprosePolicyDto := linkEnterprosePolicyDto{
 		SystemId: systemId,
 	}
