@@ -41,6 +41,7 @@ func (client *Client) LinkEnterprisePolicy(ctx context.Context, environmentId, e
 	linkEnterprosePolicyDto := linkEnterprosePolicyDto{
 		SystemId: systemId,
 	}
+
 	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, linkEnterprosePolicyDto, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return err
