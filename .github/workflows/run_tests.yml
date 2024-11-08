@@ -151,7 +151,7 @@ jobs:
 
   clenup:
     name: Running Test for cleanup
-    needs: [build, test, should_run]
+    needs: [build, tests, should_run]
     if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     runs-on: windows-latest
     steps:
