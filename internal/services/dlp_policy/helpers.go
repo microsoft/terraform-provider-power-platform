@@ -5,6 +5,7 @@ package dlp_policy
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -162,6 +163,30 @@ func convertToAttrValueConnectors(connectorsGroup dlpConnectorGroupsModelDto, co
 		))
 	}
 	return connectors
+}
+
+func getConnectorGroup(ctx context.Context, connectorsAttr basetypes.SetValue) (*dlpConnectorGroupsModelDto, error) {
+	var connectors []dataLossPreventionPolicyResourceConnectorModel
+	err := connectorsAttr.ElementsAs(ctx, &connectors, true)
+	if err != nil {
+		return nil, fmt.Errorf("error converting elements: %v", err)
+	}
+
+	connectorGroup := dlpConnectorGroupsModelDto{
+
+		Connectors: make([]dlpConnectorModelDto, 0),
+	}
+
+	for _, connector := range connectors {
+		connectorGroup.Connectors = append(connectorGroup.Connectors, dlpConnectorModelDto{
+			Id:                        connector.Id.ValueString(),
+			Type:                      "Microsoft.PowerApps/apis",
+			DefaultActionRuleBehavior: connector.DefaultActionRuleBehavior.ValueString(),
+			ActionRules:               convertToDlpActionRule(connector),
+			EndpointRules:             convertToDlpEndpointRule(connector),
+		})
+	}
+	return &connectorGroup, nil
 }
 
 func convertToDlpConnectorGroup(ctx context.Context, diags diag.Diagnostics, classification string, connectorsAttr basetypes.SetValue) dlpConnectorGroupsModelDto {
