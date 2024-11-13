@@ -120,15 +120,12 @@ func convertToAttrValueCustomConnectorUrlPatternsDefinition(urlPatterns []dlpCon
 	return types.SetValueMust(customConnectorPatternSetObjectType, connUrlPattern)
 }
 
-func convertToAttrValueEnvironments(environments []dlpEnvironmentDto) []string {
-	if len(environments) == 0 {
-		return []string{}
-	}
-	var env []string
+func convertToAttrValueEnvironments(environments []dlpEnvironmentDto) basetypes.SetValue {
+	envs := []attr.Value{}
 	for _, environment := range environments {
-		env = append(env, environment.Name)
+		envs = append(envs, types.StringValue(environment.Name))
 	}
-	return env
+	return types.SetValueMust(types.StringType, envs)
 }
 
 func convertToAttrValueConnectors(connectorsGroup dlpConnectorGroupsModelDto, connectors []attr.Value) []attr.Value {
@@ -220,9 +217,12 @@ func convertToDlpConnectorGroup(ctx context.Context, diags diag.Diagnostics, cla
 	return connectorGroup
 }
 
-func convertToDlpEnvironment(environmentsInPolicy []string) []dlpEnvironmentDto {
+func convertToDlpEnvironment(ctx context.Context, environmentsInPolicy basetypes.SetValue) []dlpEnvironmentDto {
+	envs := []string{}
+	environmentsInPolicy.ElementsAs(ctx, &envs, true)
+
 	environments := make([]dlpEnvironmentDto, 0)
-	for _, environment := range environmentsInPolicy {
+	for _, environment := range envs {
 		environments = append(environments, dlpEnvironmentDto{
 			Name: environment,
 			Id:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/" + environment,
@@ -230,6 +230,7 @@ func convertToDlpEnvironment(environmentsInPolicy []string) []dlpEnvironmentDto 
 		})
 	}
 	return environments
+
 }
 
 func convertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diags diag.Diagnostics, connectorPatternsAttr basetypes.SetValue) []dlpConnectorUrlPatternsDefinitionDto {
