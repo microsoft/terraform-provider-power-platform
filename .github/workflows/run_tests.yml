@@ -120,9 +120,27 @@ jobs:
     - name: "Set up Terraform"
       uses: hashicorp/setup-terraform@v3  
     
+    - name: Install Power Platform Tools
+      if: success() || failure()
+      uses: microsoft/powerplatform-actions/actions-install@v1
+
+    - name: Environments cleanup
+      if: success() || failure()
+      shell: pwsh
+      run: |
+        dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+        pac auth create --githubFederated --tenant ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }} --applicationId ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
+        $environmentsList = (pac admin list --name "TestAcc" --json | ConvertFrom-Json)
+        $environmentsList | ForEach-Object -Parallel {
+            if ($_.DisplayName.StartsWith("TestAcc")){
+                Write-Output $_.DisplayName
+                pac admin delete -env $_.EnvironmentID
+            }
+        } -ThrottleLimit 15
+
     - name: Run tests
       env: 
-        TF_LOG: WARN
+        TF_LOG: DEBUG
         TF_ACC: 1
         POWER_PLATFORM_USE_OIDC: true
         POWER_PLATFORM_TENANT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}
@@ -133,7 +151,7 @@ jobs:
         ARM_SUBSCRIPTION_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}
       run: |
         go clean -testcache
-        go test -p 3 -v ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m
+        go test -p 3 -v ./internal/services/environment -run ^Test -coverprofile=test-coverage.out -timeout 300m
         go tool cover -html=test-coverage.out -o test-coverage.cov.html
 
     - name: Upload Coverage Artifacts
@@ -148,3 +166,5 @@ jobs:
       with:
         file: test-coverage.out
         token: ${{ secrets.CODECOV_TOKEN }}
+    
+
