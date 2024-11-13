@@ -289,6 +289,10 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 
 	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
 	if err != nil {
+		var httpError *customerrors.UnexpectedHttpStatusCodeError
+		if errors.As(err, &httpError) {
+			return fmt.Errorf("Unexpected HTTP Status %s; Body: %s", httpError.StatusText, httpError.Body)
+		}
 		return err
 	}
 	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.HttpResponse.Status+"'")
@@ -467,42 +471,35 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
 	values.Add("api-version", "2022-05-01")
 	apiUrl.RawQuery = values.Encode()
-	_, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
+	// wait for the lifecycle operation to finish.
+	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return nil, err
 	}
 
-	environments, err := client.GetEnvironments(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, env := range environments {
-		if env.Name == environmentId {
-			for {
-				createdEnv, err := client.GetEnvironment(ctx, env.Name)
-				if err != nil {
-					return nil, err
-				}
-				tflog.Info(ctx, "Environment State: '"+createdEnv.Properties.States.Management.Id+"'")
-				err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
-				if err != nil {
-					return nil, err
-				}
-
-				if createdEnv.Properties.States.Management.Id == "Ready" {
-					return createdEnv, nil
-				}
-			}
+	// despite lifecycle operation success, the environment may not be ready yet.
+	for {
+		err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
+		if err != nil {
+			return nil, err
 		}
+		env, err := client.GetEnvironment(ctx, environmentId)
+		if err != nil {
+			return nil, err
+		}
+		tflog.Info(ctx, "Environment State: '"+env.Properties.States.Management.Id+"'")
+		if env.Properties.States.Management.Id == "Ready" {
+			return env, nil
+		} else if env.Properties.States.Management.Id == "Running" {
+			continue
+		}
+		return nil, errors.New("environment update failed. unexpected management state: " + env.Properties.States.Management.Id)
 	}
-
-	return nil, fmt.Errorf("environment '%s' not found", environmentId)
 }
 
 func (client *Client) GetEnvironments(ctx context.Context) ([]EnvironmentDto, error) {

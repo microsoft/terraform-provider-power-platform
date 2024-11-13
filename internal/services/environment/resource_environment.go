@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -56,6 +57,29 @@ func (r *Resource) Metadata(ctx context.Context, req resource.MetadataRequest, r
 func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
+
+	policyAttributeSchema := map[string]schema.Attribute{
+		"type": schema.StringAttribute{
+			MarkdownDescription: "Type of the policy according to [schema definition](https://learn.microsoft.com/en-us/azure/templates/microsoft.powerplatform/enterprisepolicies?pivots=deployment-language-terraform#enterprisepolicies-2)",
+			Computed:            true,
+		},
+		"id": schema.StringAttribute{
+			MarkdownDescription: "Id (guid)",
+			Computed:            true,
+		},
+		"location": schema.StringAttribute{
+			MarkdownDescription: "Location of the policy",
+			Computed:            true,
+		},
+		"system_id": schema.StringAttribute{
+			MarkdownDescription: "System id (guid)",
+			Computed:            true,
+		},
+		"status": schema.StringAttribute{
+			MarkdownDescription: "Link status of the policy",
+			Computed:            true,
+		},
+	}
 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "This resource manages a PowerPlatform environment",
@@ -134,6 +158,16 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"enterprise_policies": schema.SetNestedAttribute{
+				MarkdownDescription: "Enterprise policies for the environment. See [Enterprise policies](https://learn.microsoft.com/en-us/power-platform/admin/enterprise-policies) for more details.",
+				Computed:            true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: policyAttributeSchema,
 				},
 			},
 			"dataverse": schema.SingleNestedAttribute{

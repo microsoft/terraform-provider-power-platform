@@ -20,20 +20,34 @@ type EnvironmentDto struct {
 }
 
 type EnviromentPropertiesDto struct {
-	AzureRegion               string                        `json:"azureRegion,omitempty"`
-	DatabaseType              string                        `json:"databaseType"`
-	DisplayName               string                        `json:"displayName"`
-	EnvironmentSku            string                        `json:"environmentSku"`
-	LinkedAppMetadata         *LinkedAppMetadataDto         `json:"linkedAppMetadata,omitempty"`
-	LinkedEnvironmentMetadata *LinkedEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
-	States                    *StatesEnvironmentDto         `json:"states"`
-	TenantID                  string                        `json:"tenantId"`
-	GovernanceConfiguration   GovernanceConfigurationDto    `json:"governanceConfiguration"`
-	BillingPolicy             *BillingPolicyDto             `json:"billingPolicy,omitempty"`
-	ProvisioningState         string                        `json:"provisioningState,omitempty"`
-	Description               string                        `json:"description,omitempty"`
-	UpdateCadence             *UpdateCadenceDto             `json:"updateCadence,omitempty"`
-	ParentEnvironmentGroup    *ParentEnvironmentGroupDto    `json:"parentEnvironmentGroup,omitempty"`
+	AzureRegion               string                            `json:"azureRegion,omitempty"`
+	DatabaseType              string                            `json:"databaseType"`
+	DisplayName               string                            `json:"displayName"`
+	EnvironmentSku            string                            `json:"environmentSku"`
+	LinkedAppMetadata         *LinkedAppMetadataDto             `json:"linkedAppMetadata,omitempty"`
+	LinkedEnvironmentMetadata *LinkedEnvironmentMetadataDto     `json:"linkedEnvironmentMetadata,omitempty"`
+	States                    *StatesEnvironmentDto             `json:"states"`
+	TenantID                  string                            `json:"tenantId"`
+	GovernanceConfiguration   GovernanceConfigurationDto        `json:"governanceConfiguration"`
+	BillingPolicy             *BillingPolicyDto                 `json:"billingPolicy,omitempty"`
+	ProvisioningState         string                            `json:"provisioningState,omitempty"`
+	Description               string                            `json:"description,omitempty"`
+	UpdateCadence             *UpdateCadenceDto                 `json:"updateCadence,omitempty"`
+	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
+	EnterprisePolicies        *EnvironmentEnterprisePoliciesDto `json:"enterprisePolicies,omitempty"`
+}
+
+type EnvironmentEnterprisePoliciesDto struct {
+	Vnets               *EnterprisePolicyDto `json:"vnets,omitempty"`
+	CustomerManagedKeys *EnterprisePolicyDto `json:"customerManagedKeys,omitempty"`
+}
+
+type EnterprisePolicyDto struct {
+	PolicyId   string `json:"policyId"`
+	Location   string `json:"location"`
+	Id         string `json:"id"`
+	SystemId   string `json:"systemId"`
+	LinkStatus string `json:"linkStatus"`
 }
 
 type ParentEnvironmentGroupDto struct {

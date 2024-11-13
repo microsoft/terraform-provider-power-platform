@@ -44,7 +44,17 @@ type SourceModel struct {
 	Cadence            types.String   `tfsdk:"cadence"`
 	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
 
+	EnterprisePolicies basetypes.SetValue `tfsdk:"enterprise_policies"`
+
 	Dataverse types.Object `tfsdk:"dataverse"`
+}
+
+type EnterprisePoliciesModel struct {
+	Type     types.String `tfsdk:"type"`
+	Id       types.String `tfsdk:"id"`
+	Location types.String `tfsdk:"location"`
+	SystemId types.String `tfsdk:"system_id"`
+	Status   types.String `tfsdk:"status"`
 }
 
 type DataverseSourceModel struct {
@@ -168,17 +178,9 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		Cadence:         types.StringValue(environmentDto.Properties.UpdateCadence.Id),
 	}
 
-	if environmentDto.Properties.BillingPolicy != nil {
-		model.BillingPolicyId = types.StringValue(environmentDto.Properties.BillingPolicy.Id)
-	} else {
-		model.BillingPolicyId = types.StringValue("")
-	}
-
-	if environmentDto.Properties.ParentEnvironmentGroup != nil {
-		model.EnvironmentGroupId = types.StringValue(environmentDto.Properties.ParentEnvironmentGroup.Id)
-	} else {
-		model.EnvironmentGroupId = types.StringValue("")
-	}
+	convertBillingPolicyModelFromDto(environmentDto, model)
+	convertEnvironmentGroupFromDto(environmentDto, model)
+	convertEnterprisePolicyModelFromDto(environmentDto, model)
 
 	attrTypesDataverseObject := map[string]attr.Type{
 		"url":                          types.StringType,
@@ -286,4 +288,76 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["unique_name"] = types.StringNull()
 	}
 	return model, nil
+}
+
+func convertEnvironmentGroupFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	if environmentDto.Properties.ParentEnvironmentGroup != nil {
+		model.EnvironmentGroupId = types.StringValue(environmentDto.Properties.ParentEnvironmentGroup.Id)
+	} else {
+		model.EnvironmentGroupId = types.StringValue("")
+	}
+}
+
+func convertBillingPolicyModelFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	if environmentDto.Properties.BillingPolicy != nil {
+		model.BillingPolicyId = types.StringValue(environmentDto.Properties.BillingPolicy.Id)
+	} else {
+		model.BillingPolicyId = types.StringValue("")
+	}
+}
+
+func convertEnterprisePolicyModelFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	enterprisePolicyAttrType := types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"type":      types.StringType,
+			"id":        types.StringType,
+			"location":  types.StringType,
+			"system_id": types.StringType,
+			"status":    types.StringType,
+		},
+	}
+	if environmentDto.Properties.EnterprisePolicies != nil {
+		if environmentDto.Properties.EnterprisePolicies.Vnets != nil {
+			model.EnterprisePolicies = types.SetValueMust(enterprisePolicyAttrType, []attr.Value{
+				types.ObjectValueMust(
+					map[string]attr.Type{
+						"type":      types.StringType,
+						"id":        types.StringType,
+						"location":  types.StringType,
+						"system_id": types.StringType,
+						"status":    types.StringType,
+					},
+					map[string]attr.Value{
+						"type":      types.StringValue("NetworkInjection"),
+						"id":        types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.Id),
+						"location":  types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.Location),
+						"system_id": types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.SystemId),
+						"status":    types.StringValue(environmentDto.Properties.EnterprisePolicies.Vnets.LinkStatus),
+					},
+				),
+			})
+		}
+		if environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys != nil {
+			model.EnterprisePolicies = types.SetValueMust(enterprisePolicyAttrType, []attr.Value{
+				types.ObjectValueMust(
+					map[string]attr.Type{
+						"type":      types.StringType,
+						"id":        types.StringType,
+						"location":  types.StringType,
+						"system_id": types.StringType,
+						"status":    types.StringType,
+					},
+					map[string]attr.Value{
+						"type":      types.StringValue("Encryption"),
+						"id":        types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.Id),
+						"location":  types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.Location),
+						"system_id": types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.SystemId),
+						"status":    types.StringValue(environmentDto.Properties.EnterprisePolicies.CustomerManagedKeys.LinkStatus),
+					},
+				),
+			})
+		}
+	} else {
+		model.EnterprisePolicies = types.SetValueMust(enterprisePolicyAttrType, []attr.Value{})
+	}
 }

@@ -70,6 +70,7 @@ resource "powerplatform_environment" "development" {
 
 ### Read-Only
 
+- `enterprise_policies` (Attributes Set) Enterprise policies for the environment. See [Enterprise policies](https://learn.microsoft.com/en-us/power-platform/admin/enterprise-policies) for more details. (see [below for nested schema](#nestedatt--enterprise_policies))
 - `id` (String) Environment id (guid)
 
 <a id="nestedatt--dataverse"></a>
@@ -109,6 +110,18 @@ Optional:
 - `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
 - `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
 - `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+
+
+<a id="nestedatt--enterprise_policies"></a>
+### Nested Schema for `enterprise_policies`
+
+Read-Only:
+
+- `id` (String) Id (guid)
+- `location` (String) Location of the policy
+- `status` (String) Link status of the policy
+- `system_id` (String) System id (guid)
+- `type` (String) Type of the policy according to [schema definition](https://learn.microsoft.com/en-us/azure/templates/microsoft.powerplatform/enterprisepolicies?pivots=deployment-language-terraform#enterprisepolicies-2)
 
 ## Import
 
