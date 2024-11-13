@@ -230,7 +230,6 @@ func convertToDlpEnvironment(ctx context.Context, environmentsInPolicy basetypes
 		})
 	}
 	return environments
-
 }
 
 func convertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diags diag.Diagnostics, connectorPatternsAttr basetypes.SetValue) []dlpConnectorUrlPatternsDefinitionDto {
