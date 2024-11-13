@@ -157,6 +157,7 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					  {
 						id                           = conn.id
 						name                         = conn.name
+
 						default_action_rule_behavior = ""
 						action_rules                 = [],
 						endpoint_rules               = []
@@ -219,7 +220,6 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.order", "2"),
 
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environments.#", "0"),
-
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "3"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.1.id", "/providers/Microsoft.PowerApps/apis/shared_approvals"),

@@ -47,6 +47,30 @@ func (d *EnvironmentsDataSource) Metadata(ctx context.Context, req datasource.Me
 func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
+
+	policyAttributeSchema := map[string]schema.Attribute{
+		"type": schema.StringAttribute{
+			MarkdownDescription: "Type of the policy according to [schema definition](https://learn.microsoft.com/en-us/azure/templates/microsoft.powerplatform/enterprisepolicies?pivots=deployment-language-terraform#enterprisepolicies-2)",
+			Computed:            true,
+		},
+		"id": schema.StringAttribute{
+			MarkdownDescription: "Id (guid)",
+			Computed:            true,
+		},
+		"location": schema.StringAttribute{
+			MarkdownDescription: "Location of the policy",
+			Computed:            true,
+		},
+		"system_id": schema.StringAttribute{
+			MarkdownDescription: "System id (guid)",
+			Computed:            true,
+		},
+		"status": schema.StringAttribute{
+			MarkdownDescription: "Link status of the policy",
+			Computed:            true,
+		},
+	}
+
 	resp.Schema = schema.Schema{
 		Description:         "Fetches the list of environments in a tenant",
 		MarkdownDescription: "Fetches the list of environments in a tenant.  See [Environments overview](https://learn.microsoft.com/power-platform/admin/environments-overview) for more information.",
@@ -104,6 +128,13 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 							MarkdownDescription: "Environment group id (guid) that the environment belongs to. Empty guid `00000000-0000-0000-0000-000000000000` is considered as no environment group.",
 							Computed:            true,
 						},
+						"enterprise_policies": schema.SetNestedAttribute{
+							MarkdownDescription: "Enterprise policies for the environment. See [Enterprise policies](https://learn.microsoft.com/en-us/power-platform/admin/enterprise-policies) for more details.",
+							Computed:            true,
+							NestedObject: schema.NestedAttributeObject{
+								Attributes: policyAttributeSchema,
+							},
+						},
 						"dataverse": schema.SingleNestedAttribute{
 							MarkdownDescription: "Dataverse environment details",
 							Computed:            true,
@@ -113,11 +144,11 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 									Computed:            true,
 								},
 								"administration_mode_enabled": schema.BoolAttribute{
-									MarkdownDescription: "Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
+									MarkdownDescription: "Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information.",
 									Computed:            true,
 								},
 								"background_operation_enabled": schema.BoolAttribute{
-									MarkdownDescription: "Background operation status for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information. ",
+									MarkdownDescription: "Background operation status for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information.",
 									Computed:            true,
 								},
 								"url": schema.StringAttribute{

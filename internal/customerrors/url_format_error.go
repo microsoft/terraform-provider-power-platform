@@ -27,7 +27,7 @@ func (e UrlFormatError) Error() string {
 		errorMsg = e.Err.Error()
 	}
 
-	return fmt.Sprintf("Request url must be an absolute url. %s : %s", e.Url, errorMsg)
+	return fmt.Sprintf("Request url must be an absolute url: '%s' : '%s'", e.Url, errorMsg)
 }
 
 func (e UrlFormatError) Unwrap() error {
