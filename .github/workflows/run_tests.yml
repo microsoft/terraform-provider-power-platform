@@ -144,7 +144,7 @@ jobs:
         path: test-coverage.cov.html
 
     - name: Upload results to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         file: test-coverage.out
         token: ${{ secrets.CODECOV_TOKEN }}
