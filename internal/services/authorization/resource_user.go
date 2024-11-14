@@ -25,6 +25,7 @@ import (
 
 var _ resource.Resource = &UserResource{}
 var _ resource.ResourceWithImportState = &UserResource{}
+var _ resource.ResourceWithValidateConfig = &UserResource{}
 
 func NewUserResource() resource.Resource {
 	return &UserResource{
@@ -141,6 +142,15 @@ func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequ
 		return
 	}
 	r.UserClient = newUserClient(clientApi)
+}
+
+func (r *UserResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config UserResourceModel
+
+	if resp.Diagnostics.Append(req.Config.Get(ctx, &config)...); resp.Diagnostics.HasError() {
+		return
+	}
+
 }
 
 func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
