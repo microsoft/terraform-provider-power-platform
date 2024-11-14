@@ -40,6 +40,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						  is_audit_enabled             = true
 						  is_user_access_audit_enabled = true
 						  is_read_audit_enabled        = true
+						  is_audit_retention_period_v2 = true
 						}
 					}
 					email = {
@@ -61,6 +62,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_audit_enabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_read_audit_enabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_user_access_audit_enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_audit_retention_period_v2", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "100"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
@@ -91,6 +93,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T) 
 						  is_audit_enabled             = true
 						  is_user_access_audit_enabled = true
 						  is_read_audit_enabled        = true
+						  is_audit_retention_period_v2 = true
 						}
 					  }
 					  email = {
@@ -151,6 +154,7 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						  is_audit_enabled             = true
 						  is_user_access_audit_enabled = true
 						  is_read_audit_enabled        = true
+						  is_audit_retention_period_v2 = true
 						}
 					  }
 					  email = {
@@ -172,6 +176,7 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_audit_enabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_read_audit_enabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_user_access_audit_enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_audit_retention_period_v2", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "100"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
@@ -256,6 +261,7 @@ func TestUnitTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T)
 						  is_audit_enabled             = true
 						  is_user_access_audit_enabled = true
 						  is_read_audit_enabled        = true
+						  is_audit_retention_period_v2 = true
 						}
 					  }
 					  email = {

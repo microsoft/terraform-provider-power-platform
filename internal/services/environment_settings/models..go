@@ -167,12 +167,14 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		"is_audit_enabled":             types.BoolValue(*environmentSettingsDto.IsAuditEnabled),
 		"is_user_access_audit_enabled": types.BoolValue(*environmentSettingsDto.IsUserAccessAuditEnabled),
 		"is_read_audit_enabled":        types.BoolValue(*environmentSettingsDto.IsReadAuditEnabled),
+		"is_audit_retention_period_v2": types.Int64Value(*environmentSettingsDto.IsAuditRetentionPeriodV2),
 	}
 
 	attrAuditSettingsObject := map[string]attr.Type{
 		"is_audit_enabled":             types.BoolType,
 		"is_user_access_audit_enabled": types.BoolType,
 		"is_read_audit_enabled":        types.BoolType,
+		"is_audit_retention_period_v2": types.Int64Type,
 	}
 
 	attrTypesAuditAndLogsObject := map[string]attr.Type{
