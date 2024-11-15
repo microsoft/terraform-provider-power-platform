@@ -77,9 +77,9 @@ resource "powerplatform_environment" "non_dataverse_user_example" {
 resource "powerplatform_user" "new_non_dataverse_user" {
   environment_id = powerplatform_environment.non_dataverse_user_example.id
   security_roles = [
-    "Environment Admin1",
+    "Environment Admin",
     "Environment Maker"
   ]
-  aad_id         = "" //azuread_user.test_user.id
+  aad_id         = "4ee0a469-ad76-4733-9087-637689ec1248" //azuread_user.test_user.id
   disable_delete = false
 }

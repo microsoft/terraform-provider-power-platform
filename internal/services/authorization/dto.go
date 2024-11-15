@@ -3,7 +3,9 @@
 
 package authorization
 
-import "github.com/hashicorp/terraform-plugin-framework/types"
+import (
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
 
 type userDto struct {
 	Id             string            `json:"systemuserid"`
@@ -55,7 +57,55 @@ type linkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }
 
-func convertFromUserDto(userDto *userDto, disableDelete bool) UserResourceModel {
+type RoleDefinitionDto struct {
+	Id   string `json:"id"`
+	Type string `json:"type,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+type PrincipalDto struct {
+	Id          string `json:"id"`
+	Email       string `json:"email,omitempty"`
+	Type        string `json:"type"`
+	TenantId    string `json:"tenantId,omitempty"`
+	DisplayName string `json:"displayName,omitempty"`
+}
+
+type PropertiesDto struct {
+	Scope          string            `json:"scope,omitempty"`
+	RoleDefinition RoleDefinitionDto `json:"roleDefinition"`
+	Principal      PrincipalDto      `json:"principal"`
+}
+
+type AddItemRequestDto struct {
+	Properties PropertiesDto `json:"properties,omitempty"`
+}
+
+type EnvironmentUserAddRequestDto struct {
+	Add []AddItemRequestDto `json:"add"`
+}
+
+type RoleAssignmentDto struct {
+	Id         string        `json:"id"`
+	Type       string        `json:"type"`
+	Name       string        `json:"name"`
+	Properties PropertiesDto `json:"properties"`
+}
+
+type AddItemResponseDto struct {
+	RoleAssignment RoleAssignmentDto `json:"roleAssignment"`
+	HttpStatus     string            `json:"httpStatus"`
+}
+
+type EnvironmentUserAddResponseDto struct {
+	Add []AddItemResponseDto `json:"add"`
+}
+
+type EnvironmentUserGetResponseDto struct {
+	Value []RoleAssignmentDto `json:"value"`
+}
+
+func convertDataverseFromUserDto(userDto *userDto, disableDelete bool) UserResourceModel {
 	model := UserResourceModel{
 		Id:                types.StringValue(userDto.Id),
 		AadId:             types.StringValue(userDto.AadObjectId),
