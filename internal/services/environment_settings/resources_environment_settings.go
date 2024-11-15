@@ -118,7 +118,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 									boolplanmodifier.UseStateForUnknown(),
 								},
 							},
-							"is_audit_retention_period_v2" : schema.Int64Attribute{
+							"log_retention_period_in_days" : schema.Int64Attribute{
 								Description:         "Is audit retention period v2",
 								MarkdownDescription: "Is audit retention period v2",
 								Optional:            true, Computed: true,
