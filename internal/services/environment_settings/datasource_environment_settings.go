@@ -147,13 +147,10 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 								MarkdownDescription: "Is read audit enabled",
 								Optional:            true,
 							},
-							"log_retention_period_in_days" : schema.Int64Attribute{
+							"log_retention_period_in_days": schema.Int64Attribute{
 								Description:         "log_retention_period_in_days",
 								MarkdownDescription: "log_retention_period_in_days",
 								Optional:            true, Computed: true,
-								PlanModifiers: []planmodifier.Int64{
-									int64planmodifier.UseStateForUnknown(),
-								}
 							},
 						},
 					},
