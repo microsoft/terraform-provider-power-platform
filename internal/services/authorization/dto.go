@@ -81,8 +81,9 @@ type AddItemRequestDto struct {
 	Properties PropertiesDto `json:"properties,omitempty"`
 }
 
-type EnvironmentUserAddRequestDto struct {
-	Add []AddItemRequestDto `json:"add"`
+type EnvironmentUserRequestDto struct {
+	Add    []AddItemRequestDto `json:"add,omitempty"`
+	Remove []RoleDefinitionDto `json:"remove,omitempty"`
 }
 
 type RoleAssignmentDto struct {
@@ -92,13 +93,14 @@ type RoleAssignmentDto struct {
 	Properties PropertiesDto `json:"properties"`
 }
 
-type AddItemResponseDto struct {
+type ItemResponseDto struct {
 	RoleAssignment RoleAssignmentDto `json:"roleAssignment"`
 	HttpStatus     string            `json:"httpStatus"`
 }
 
-type EnvironmentUserAddResponseDto struct {
-	Add []AddItemResponseDto `json:"add"`
+type EnvironmentUserResponseDto struct {
+	Add    []ItemResponseDto `json:"add,omitempty"`
+	Remove []ItemResponseDto `json:"remove,omitempty"`
 }
 
 type EnvironmentUserGetResponseDto struct {

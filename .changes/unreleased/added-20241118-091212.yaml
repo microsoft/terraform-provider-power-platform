@@ -1,0 +1,5 @@
+kind: added
+body: powerplatform_user - added support for adding user to environments without dataverse created.
+time: 2024-11-18T09:12:12.703661961Z
+custom:
+    Issue: "488"

@@ -16,6 +16,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers/array"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
@@ -112,19 +113,20 @@ func (client *client) GetEnvironmentUserByAadObjectId(ctx context.Context, envir
 
 	for _, roleAssignment := range respObj.Value {
 		if roleAssignment.Properties.Principal.Id == aadObjectId {
-
-			isAdminRole := strings.HasPrefix(strings.ToLower(roleAssignment.Properties.Scope), "admin")
-			isMakerRole := strings.HasPrefix(strings.ToLower(roleAssignment.Properties.Scope), "maker")
+			isAdminRole := roleAssignment.Properties.RoleDefinition.Name == "EnvironmentAdmin"
+			isMakerRole := roleAssignment.Properties.RoleDefinition.Name == "EnvironmentMaker"
 
 			user.Id = roleAssignment.Properties.Principal.Id
 			user.AadObjectId = roleAssignment.Properties.Principal.Id
 			user.DomainName = roleAssignment.Properties.Principal.DisplayName
 			if isAdminRole {
 				user.SecurityRoles = append(user.SecurityRoles, securityRoleDto{
+					Name:   roleAssignment.Name,
 					RoleId: ROLE_ENVIRONMENT_ADMIN,
 				})
 			} else if isMakerRole {
 				user.SecurityRoles = append(user.SecurityRoles, securityRoleDto{
+					Name:   roleAssignment.Name,
 					RoleId: ROLE_ENVIRONMENT_MAKER,
 				})
 			}
@@ -162,7 +164,7 @@ func (client *client) GetDataverseUserByAadObjectId(ctx context.Context, environ
 	return &user.Value[0], nil
 }
 
-func (client *client) CreateEnvironmentUser(ctx context.Context, environmentId, aadObjectId string, securityRoles []string) (*userDto, error) {
+func (client *client) RemoveEnvironmentUserSecurityRoles(ctx context.Context, environmentId, aadObjectId string, securityRoles []string, savedRoles []securityRoleDto) (*userDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -172,7 +174,56 @@ func (client *client) CreateEnvironmentUser(ctx context.Context, environmentId, 
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 
-	add := EnvironmentUserAddRequestDto{
+	userRead, err := client.GetEnvironmentUserByAadObjectId(ctx, environmentId, aadObjectId)
+	if err != nil {
+		return nil, err
+	}
+	userDisplayName := userRead.DomainName
+
+	remove := EnvironmentUserRequestDto{
+		Remove: []RoleDefinitionDto{},
+	}
+
+	for _, role := range securityRoles {
+		savedRoleData := array.Find(savedRoles, func(roleDto securityRoleDto) bool {
+			return roleDto.RoleId == role
+		})
+
+		remove.Remove = append(remove.Remove, RoleDefinitionDto{
+			Id: fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/roleAssignments/%s", environmentId, savedRoleData.Name),
+		})
+	}
+
+	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, remove, []int{http.StatusOK}, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	userRead, err = client.GetEnvironmentUserByAadObjectId(ctx, environmentId, aadObjectId)
+	if err != nil {
+		return nil, err
+	}
+
+	user := userDto{
+		Id:            aadObjectId,
+		AadObjectId:   aadObjectId,
+		DomainName:    userDisplayName,
+		SecurityRoles: userRead.SecurityRoles,
+	}
+	return &user, nil
+}
+
+func (client *client) AddEnvironmentUserSecurityRoles(ctx context.Context, environmentId, aadObjectId string, securityRoles []string) (*userDto, error) {
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/modifyRoleAssignments", environmentId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2021-04-01")
+	apiUrl.RawQuery = values.Encode()
+
+	add := EnvironmentUserRequestDto{
 		Add: []AddItemRequestDto{},
 	}
 
@@ -191,13 +242,11 @@ func (client *client) CreateEnvironmentUser(ctx context.Context, environmentId, 
 		})
 	}
 
-	respObj := EnvironmentUserAddResponseDto{}
-	resp, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, add, []int{http.StatusOK}, &respObj)
+	respObj := EnvironmentUserResponseDto{}
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, add, []int{http.StatusOK}, &respObj)
 	if err != nil {
 		return nil, err
 	}
-
-	tflog.Debug(ctx, fmt.Sprintf("CreateEnvironmentUser response: %s", resp))
 
 	user := userDto{
 		Id:            aadObjectId,
@@ -206,13 +255,18 @@ func (client *client) CreateEnvironmentUser(ctx context.Context, environmentId, 
 		SecurityRoles: []securityRoleDto{},
 	}
 
-	for _, roleName := range securityRoles {
+	for _, roleAssignment := range respObj.Add {
 		user.SecurityRoles = append(user.SecurityRoles, securityRoleDto{
-			RoleId: roleName,
+			RoleId: roleAssignment.RoleAssignment.Properties.RoleDefinition.Name,
+			Name:   roleAssignment.RoleAssignment.Name,
 		})
 	}
-
 	return &user, nil
+}
+
+func (client *client) CreateEnvironmentUser(ctx context.Context, environmentId, aadObjectId string, securityRoles []string) (*userDto, error) {
+	// adding security roles and creating user is the same API call.
+	return client.AddEnvironmentUserSecurityRoles(ctx, environmentId, aadObjectId, securityRoles)
 }
 
 func (client *client) CreateDataverseUser(ctx context.Context, environmentId, aadObjectId string) (*userDto, error) {

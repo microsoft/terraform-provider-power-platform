@@ -71,6 +71,11 @@ resource "powerplatform_environment" "non_dataverse_user_example" {
   display_name     = "non_dataverse_user_example"
   location         = "europe"
   environment_type = "Sandbox"
+  # dataverse = {
+  #   language_code     = "1033"
+  #   currency_code     = "USD"
+  #   security_group_id = "00000000-0000-0000-0000-000000000000"
+  # }
 }
 
 //adding new user to the environment that does not have dataverse
@@ -80,6 +85,6 @@ resource "powerplatform_user" "new_non_dataverse_user" {
     "Environment Admin",
     "Environment Maker"
   ]
-  aad_id         = "4ee0a469-ad76-4733-9087-637689ec1248" //azuread_user.test_user.id
+  aad_id         = azuread_user.test_user.id
   disable_delete = false
 }
