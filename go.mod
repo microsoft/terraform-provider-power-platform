@@ -1,8 +1,6 @@
 module github.com/microsoft/terraform-provider-power-platform
 
-go 1.22.7
-
-toolchain go1.22.8
+go 1.22.9
 
 require (
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.16.0

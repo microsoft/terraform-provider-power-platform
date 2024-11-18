@@ -30,11 +30,12 @@ func (client *client) GetConnectors(ctx context.Context) ([]connectorDto, error)
 		Path:   "/providers/Microsoft.PowerApps/apis",
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add("api-version", "2019-05-01")
 	values.Add("showApisWithToS", "true")
 	values.Add("hideDlpExemptApis", "true")
 	values.Add("showAllDlpEnforceableApis", "true")
 	values.Add("$filter", "environment eq '~Default'")
+
 	apiUrl.RawQuery = values.Encode()
 
 	connectorArray := connectorArrayDto{}
