@@ -371,7 +371,11 @@ func (client *client) RemoveDataverseSecurityRoles(ctx context.Context, environm
 
 		_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 		if err != nil {
-			return nil, err
+			if strings.Contains(err.Error(), "0x80060888") && strings.Contains(err.Error(), roleId) {
+				return nil, fmt.Errorf("Role with id '%s' is not valid", roleId)
+			} else {
+				return nil, err
+			}
 		}
 	}
 
@@ -399,7 +403,11 @@ func (client *client) AddDataverseSecurityRoles(ctx context.Context, environment
 		}
 		_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, roleToassociate, []int{http.StatusNoContent}, nil)
 		if err != nil {
-			return nil, err
+			if strings.Contains(err.Error(), "0x80060888") && strings.Contains(err.Error(), roleId) {
+				return nil, fmt.Errorf("Role with id '%s' is not valid", roleId)
+			} else {
+				return nil, err
+			}
 		}
 	}
 	user, err := client.GetDataverseUserBySystemUserId(ctx, environmentId, systemUserId)
