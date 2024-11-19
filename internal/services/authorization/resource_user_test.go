@@ -20,7 +20,6 @@ import (
 // test update to dv and custom error msg.
 func TestAccUserResource_Validate_Create_Environment_User(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azuread": {
@@ -38,16 +37,6 @@ func TestAccUserResource_Validate_Create_Environment_User(t *testing.T) {
 				Config: `
 				data "azuread_domains" "aad_domains" {
 					only_initial = true
-				}
-
-				data "azuread_group" "licensing_group" {
-					display_name     = "` + mocks.TestsEntraLicesingGroupName() + `"
-					security_enabled = true
-				}
-
-				resource "azuread_group_member" "example" {
-					group_object_id  = data.azuread_group.licensing_group.object_id
-					member_object_id = azuread_user.test_user.object_id
 				}
 
 				locals {
@@ -104,8 +93,175 @@ func TestAccUserResource_Validate_Create_Environment_User(t *testing.T) {
 	})
 }
 
+func TestUnitUserResource_Validate_Create_Environment_User(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
 
+	mocks.ActivateEnvironmentHttpMocks()
 
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				resource "powerplatform_user" "new_user" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					security_roles = [
+					   "Environment Admin",
+    				   "Environment Maker"
+					]
+					aad_id =  "00000000-0000-0000-0000-000000000002"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "aad_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", mocks.TestName()),
+
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.0", "Environment Admin"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.1", "Environment Maker"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccUserResource_Validate_Update_Environment_User(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+			"random": {
+				VersionConstraint: constants.RANDOM_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/random",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				data "azuread_domains" "aad_domains" {
+					only_initial = true
+				}
+
+				locals {
+					domain_name = data.azuread_domains.aad_domains.domains[0].domain_name
+				}
+
+				resource "random_password" "passwords" {
+				    min_lower = 1
+					min_upper        = 1
+					min_numeric      = 1
+					min_special      = 1
+					length           = 16
+					special          = true
+					override_special = "_%@"
+				}
+
+				resource "azuread_user" "test_user" {
+					user_principal_name = "` + mocks.TestName() + `@${local.domain_name}"
+					display_name        = "` + mocks.TestName() + `"
+					mail_nickname       = "` + mocks.TestName() + `"
+					password            = random_password.passwords.result
+					usage_location      = "US"
+				}
+
+				resource "powerplatform_environment" "dataverse_user_example" {
+					display_name      = "` + mocks.TestName() + `"
+					location          = "unitedstates"
+					environment_type  = "Sandbox"
+				}
+
+				resource "powerplatform_user" "new_user" {
+					environment_id = powerplatform_environment.dataverse_user_example.id
+					security_roles = [
+					   "Environment Admin",
+    				   "Environment Maker"
+					]
+					aad_id         =  element(split("/", azuread_user.test_user.id), 2)  
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "aad_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", mocks.TestName()),
+
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.0", "Environment Admin"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.1", "Environment Maker"),
+				),
+			},
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				data "azuread_domains" "aad_domains" {
+					only_initial = true
+				}
+
+				locals {
+					domain_name = data.azuread_domains.aad_domains.domains[0].domain_name
+				}
+
+				resource "random_password" "passwords" {
+				    min_lower = 1
+					min_upper        = 1
+					min_numeric      = 1
+					min_special      = 1
+					length           = 16
+					special          = true
+					override_special = "_%@"
+				}
+
+				resource "azuread_user" "test_user" {
+					user_principal_name = "` + mocks.TestName() + `@${local.domain_name}"
+					display_name        = "` + mocks.TestName() + `"
+					mail_nickname       = "` + mocks.TestName() + `"
+					password            = random_password.passwords.result
+					usage_location      = "US"
+				}
+
+				resource "powerplatform_environment" "dataverse_user_example" {
+					display_name      = "` + mocks.TestName() + `"
+					location          = "unitedstates"
+					environment_type  = "Sandbox"
+				}
+
+				resource "powerplatform_user" "new_user" {
+					environment_id = powerplatform_environment.dataverse_user_example.id
+					security_roles = []
+					aad_id         =  element(split("/", azuread_user.test_user.id), 2)  
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "aad_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", mocks.TestName()),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "0"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccUserResource_Validate_Create_Dataverse_User(t *testing.T) {
 	resource.Test(t, resource.TestCase{
