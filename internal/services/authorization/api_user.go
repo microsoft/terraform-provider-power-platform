@@ -194,9 +194,14 @@ func (client *client) RemoveEnvironmentUserSecurityRoles(ctx context.Context, en
 		})
 	}
 
-	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, remove, []int{http.StatusOK}, nil)
+	resp, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, remove, []int{http.StatusOK, http.StatusInternalServerError}, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.HttpResponse.StatusCode == http.StatusInternalServerError {
+		tflog.Debug(ctx, fmt.Sprintf("ERROR STATUS CODE: %d", resp.HttpResponse.StatusCode))
+		tflog.Debug(ctx, fmt.Sprintf("Error removing security roles: %s", resp.BodyAsBytes))
 	}
 
 	userRead, err = client.GetEnvironmentUserByAadObjectId(ctx, environmentId, aadObjectId)
