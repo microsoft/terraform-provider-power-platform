@@ -200,7 +200,7 @@ func (client *client) RemoveEnvironmentUserSecurityRoles(ctx context.Context, en
 	}
 
 	if resp.HttpResponse.StatusCode == http.StatusInternalServerError {
-		tflog.Debug(ctx, fmt.Sprintf("ERROR STATUS CODE: %d", resp.HttpResponse.StatusCode))
+		tflog.Debug(ctx, fmt.Sprintf("Error Status Code: %d", resp.HttpResponse.StatusCode))
 		tflog.Debug(ctx, fmt.Sprintf("Error removing security roles: %s", resp.BodyAsBytes))
 	}
 

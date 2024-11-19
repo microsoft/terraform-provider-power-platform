@@ -15,7 +15,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
-func TestAccUserResource_Validate_Create_Environment_User_With_Dataverse(t *testing.T) {
+func TestAccUserResource_Validate_Create_Environment_Dv(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
