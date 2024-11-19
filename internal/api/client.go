@@ -160,6 +160,7 @@ func (client *Client) SleepWithContext(ctx context.Context, duration time.Durati
 	}
 	select {
 	case <-time.After(duration):
+		tflog.Debug(ctx, "TIME HAS PASSED!!!"+duration.String())
 		// Time has elapsed.
 		return nil
 	case <-ctx.Done():

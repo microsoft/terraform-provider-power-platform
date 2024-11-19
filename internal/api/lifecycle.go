@@ -77,13 +77,13 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 			return nil, err
 		}
 
-		tflog.Debug(ctx, "Environment Creation Operation State: '"+lifecycleResponse.State.Id+"'")
-		tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+response.HttpResponse.Status+"'")
+		tflog.Debug(ctx, "Environment Operation State: '"+lifecycleResponse.State.Id+"'")
+		tflog.Debug(ctx, "Environment Operation HTTP Status: '"+response.HttpResponse.Status+"'")
 
 		if lifecycleResponse.State.Id == "Succeeded" {
 			return &lifecycleResponse, nil
 		} else if lifecycleResponse.State.Id == "Failed" {
-			return &lifecycleResponse, errors.New("environment creation failed. provisioning state: " + lifecycleResponse.State.Id)
+			return &lifecycleResponse, errors.New("environment operation failed. provisioning state: " + lifecycleResponse.State.Id)
 		}
 	}
 }
