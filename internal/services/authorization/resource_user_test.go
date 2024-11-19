@@ -101,7 +101,17 @@ func TestUnitUserResource_Validate_Create_Environment_User(t *testing.T) {
 
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/modifyRoleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env/modify_role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/roleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env/role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -121,12 +131,12 @@ func TestUnitUserResource_Validate_Create_Environment_User(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("powerplatform_user.new_user", "id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestMatchResourceAttr("powerplatform_user.new_user", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestMatchResourceAttr("powerplatform_user.new_user", "aad_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "environment_id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "aad_id", "00000000-0000-0000-0000-000000000002"),
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
-					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", mocks.TestName()),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", "test"),
 
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "2"),
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.0", "Environment Admin"),
@@ -256,6 +266,79 @@ func TestAccUserResource_Validate_Update_Environment_User(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", mocks.TestName()),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitUserResource_Validate_Update_Environment_User(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Update_Env/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/modifyRoleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Update_Env/modify_role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/roleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Update_Env/role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				resource "powerplatform_user" "new_user" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					security_roles = [
+					   "Environment Admin",
+    				   "Environment Maker"
+					]
+					aad_id =  "00000000-0000-0000-0000-000000000002"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "environment_id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "aad_id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", "test"),
+
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.0", "Environment Admin"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.1", "Environment Maker"),
+				),
+			},
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				resource "powerplatform_user" "new_user" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					security_roles = []
+					aad_id =  "00000000-0000-0000-0000-000000000002"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "environment_id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "aad_id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", "test"),
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "0"),
 				),
 			},

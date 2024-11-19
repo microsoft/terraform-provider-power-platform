@@ -140,7 +140,7 @@ jobs:
 
     - name: Run tests
       env: 
-        TF_LOG: WARN
+        TF_LOG: DEBUG
         TF_ACC: 1
         POWER_PLATFORM_USE_OIDC: true
         POWER_PLATFORM_TENANT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}

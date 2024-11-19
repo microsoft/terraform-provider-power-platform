@@ -425,19 +425,23 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 			tflog.Debug(ctx, fmt.Sprintf("Disable delete is set to false. Skipping delete of systemuser with id %s", state.Id.ValueString()))
 		}
 	} else {
+
+		tflog.Debug(ctx, "11111")
+
 		savedRoles := []securityRoleDto{}
 		rolesObj, diag := resp.Private.GetKey(ctx, "role")
 		if diag.HasError() {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 			return
 		}
 
+		tflog.Debug(ctx, "22222")
 		err := json.Unmarshal(rolesObj, &savedRoles)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 			return
 		}
 
+		tflog.Debug(ctx, "3333")
 		_, err = r.UserClient.RemoveEnvironmentUserSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString(), state.SecurityRoles, savedRoles)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
