@@ -15,6 +15,128 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
+func TestAccUserResource_Validate_Create_Environment_User_With_Dataverse(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+			"random": {
+				VersionConstraint: constants.RANDOM_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/random",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				data "azuread_domains" "aad_domains" {
+					only_initial = true
+				}
+
+				locals {
+					domain_name = data.azuread_domains.aad_domains.domains[0].domain_name
+				}
+
+				resource "random_password" "passwords" {
+				    min_lower = 1
+					min_upper        = 1
+					min_numeric      = 1
+					min_special      = 1
+					length           = 16
+					special          = true
+					override_special = "_%@"
+				}
+
+				resource "azuread_user" "test_user" {
+					user_principal_name = "` + mocks.TestName() + `@${local.domain_name}"
+					display_name        = "` + mocks.TestName() + `"
+					mail_nickname       = "` + mocks.TestName() + `"
+					password            = random_password.passwords.result
+					usage_location      = "US"
+				}
+
+				resource "powerplatform_environment" "dataverse_user_example" {
+					display_name      = "` + mocks.TestName() + `"
+					location          = "unitedstates"
+					environment_type  = "Sandbox"
+				}
+
+				resource "powerplatform_user" "new_user" {
+					environment_id = powerplatform_environment.dataverse_user_example.id
+					security_roles = [
+					   "Environment Admin",
+					]
+					aad_id         =  element(split("/", azuread_user.test_user.id), 2)  
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "aad_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
+
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "1"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.0", "Environment Admin"),
+				),
+			},
+			{
+				ExpectError:  regexp.MustCompile(".*Role with id 'Environment Admin' is not valid.*"),
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				data "azuread_domains" "aad_domains" {
+					only_initial = true
+				}
+
+				locals {
+					domain_name = data.azuread_domains.aad_domains.domains[0].domain_name
+				}
+
+				resource "random_password" "passwords" {
+				    min_lower = 1
+					min_upper        = 1
+					min_numeric      = 1
+					min_special      = 1
+					length           = 16
+					special          = true
+					override_special = "_%@"
+				}
+
+				resource "azuread_user" "test_user" {
+					user_principal_name = "` + mocks.TestName() + `@${local.domain_name}"
+					display_name        = "` + mocks.TestName() + `"
+					mail_nickname       = "` + mocks.TestName() + `"
+					password            = random_password.passwords.result
+					usage_location      = "US"
+				}
+
+				resource "powerplatform_environment" "dataverse_user_example" {
+					display_name      = "` + mocks.TestName() + `"
+					location          = "unitedstates"
+					environment_type  = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+
+				resource "powerplatform_user" "new_user" {
+					environment_id = powerplatform_environment.dataverse_user_example.id
+					security_roles = [
+					   "Environment Admin",
+					]
+					aad_id         =  element(split("/", azuread_user.test_user.id), 2)  
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(),
+			},
+		},
+	})
+}
+
 func TestAccUserResource_Validate_Create_Environment_User(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
