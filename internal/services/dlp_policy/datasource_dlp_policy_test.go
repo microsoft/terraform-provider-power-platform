@@ -16,7 +16,7 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/policies`,
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/Validate_Read/get_policies.json").String()), nil
 		})
@@ -101,7 +101,8 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 }
 
 func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
-	t.Skip("Skipping")
+	t.Skip("Skipping due to inconsistent connectors results")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -156,6 +157,7 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					  {
 						id                           = conn.id
 						name                         = conn.name
+
 						default_action_rule_behavior = ""
 						action_rules                 = [],
 						endpoint_rules               = []
@@ -218,7 +220,6 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.order", "2"),
 
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environments.#", "0"),
-
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "3"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.1.id", "/providers/Microsoft.PowerApps/apis/shared_approvals"),

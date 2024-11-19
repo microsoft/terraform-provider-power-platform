@@ -24,7 +24,7 @@ type dataLossPreventionPolicyDatasourceModel struct {
 	CreatedTime                       types.String `tfsdk:"created_time"`
 	LastModifiedBy                    types.String `tfsdk:"last_modified_by"`
 	LastModifiedTime                  types.String `tfsdk:"last_modified_time"`
-	Environments                      []string     `tfsdk:"environments"`
+	Environments                      types.Set    `tfsdk:"environments"`
 	NonBusinessConfidentialConnectors types.Set    `tfsdk:"non_business_connectors"`
 	BusinessGeneralConnectors         types.Set    `tfsdk:"business_connectors"`
 	BlockedConnectors                 types.Set    `tfsdk:"blocked_connectors"`
@@ -41,7 +41,7 @@ type dataLossPreventionPolicyResourceModel struct {
 	CreatedTime                       types.String   `tfsdk:"created_time"`
 	LastModifiedBy                    types.String   `tfsdk:"last_modified_by"`
 	LastModifiedTime                  types.String   `tfsdk:"last_modified_time"`
-	Environments                      []string       `tfsdk:"environments"`
+	Environments                      types.Set      `tfsdk:"environments"`
 	NonBusinessConfidentialConnectors types.Set      `tfsdk:"non_business_connectors"`
 	BusinessGeneralConnectors         types.Set      `tfsdk:"business_connectors"`
 	BlockedConnectors                 types.Set      `tfsdk:"blocked_connectors"`

@@ -24,6 +24,7 @@ import (
 
 var _ resource.Resource = &DataLossPreventionPolicyResource{}
 var _ resource.ResourceWithImportState = &DataLossPreventionPolicyResource{}
+var _ resource.ResourceWithValidateConfig = &DataLossPreventionPolicyResource{}
 
 func NewDataLossPreventionPolicyResource() resource.Resource {
 	return &DataLossPreventionPolicyResource{
@@ -54,12 +55,10 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 
 			"id": schema.StringAttribute{
 				MarkdownDescription: "ID of the connector",
-				Description:         "ID of the connector",
 				Optional:            true,
 			},
 			"default_action_rule_behavior": schema.StringAttribute{
-				MarkdownDescription: "Default action rule behavior for the connector (\"Allow\", \"Block\")",
-				Description:         "Default action rule behavior for the connector (\"Allow\", \"Block\")",
+				MarkdownDescription: "Default action rule behavior for the connector (\"Allow\", \"Block\", \"\")",
 				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("Allow", "Block", ""),
@@ -67,19 +66,16 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 			},
 			"action_rules": schema.ListNestedAttribute{
 				MarkdownDescription: "Action rules for the connector",
-				Description:         "Action rules for the connector",
 				Optional:            true,
 
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"action_id": schema.StringAttribute{
 							MarkdownDescription: "ID of the action rule",
-							Description:         "ID of the action rule",
 							Required:            true,
 						},
 						"behavior": schema.StringAttribute{
 							MarkdownDescription: "Behavior of the action rule (\"Allow\", \"Block\")",
-							Description:         "Behavior of the action rule (\"Allow\", \"Block\")",
 							Required:            true,
 							Validators: []validator.String{
 								stringvalidator.OneOf("Allow", "Block"),
@@ -90,18 +86,15 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 			},
 			"endpoint_rules": schema.ListNestedAttribute{
 				MarkdownDescription: "Endpoint rules for the connector",
-				Description:         "Endpoint rules for the connector",
 				Optional:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"order": schema.Int64Attribute{
 							MarkdownDescription: "Order of the endpoint rule",
-							Description:         "Order of the endpoint rule",
 							Required:            true,
 						},
 						"behavior": schema.StringAttribute{
 							MarkdownDescription: "Behavior of the endpoint rule (\"Allow\", \"Deny\")",
-							Description:         "Behavior of the endpoint rule (\"Allow\", \"Deny\")",
 							Required:            true,
 							Validators: []validator.String{
 								stringvalidator.OneOf("Allow", "Deny"),
@@ -109,7 +102,6 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 						},
 						"endpoint": schema.StringAttribute{
 							MarkdownDescription: "Endpoint of the endpoint rule",
-							Description:         "Endpoint of the endpoint rule",
 							Required:            true,
 						},
 					},
@@ -120,7 +112,6 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "This resource manages a Data Loss Prevention Policy. See [Data Loss Prevention](https://learn.microsoft.com/power-platform/admin/prevent-data-loss) for more information.",
-		Description:         "This resource manages a Data Loss Prevention Policy",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
@@ -130,7 +121,6 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique name of the policy",
-				Description:         "Unique name of the policy",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -138,12 +128,10 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 			},
 			"display_name": schema.StringAttribute{
 				MarkdownDescription: "Display name of the policy",
-				Description:         "The display name of the policy",
 				Required:            true,
 			},
 			"created_by": schema.StringAttribute{
 				MarkdownDescription: "User who created the policy",
-				Description:         "User who created the policy",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -151,7 +139,6 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 			},
 			"created_time": schema.StringAttribute{
 				MarkdownDescription: "Time when the policy was created",
-				Description:         "Time when the policy was created",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -159,17 +146,14 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 			},
 			"last_modified_by": schema.StringAttribute{
 				MarkdownDescription: "User who last modified the policy",
-				Description:         "User who last modified the policy",
 				Computed:            true,
 			},
 			"last_modified_time": schema.StringAttribute{
 				MarkdownDescription: "Time when the policy was last modified",
-				Description:         "Time when the policy was last modified",
 				Computed:            true,
 			},
 			"environment_type": schema.StringAttribute{
 				MarkdownDescription: "Default environment handling for the policy (\"AllEnvironments\", \"ExceptEnvironments\", \"OnlyEnvironments\")",
-				Description:         "Default environment handling for the policy (\"AllEnvironments\", \"ExceptEnvironments\", \"OnlyEnvironments\")",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("AllEnvironments", "ExceptEnvironments", "OnlyEnvironments"),
@@ -177,55 +161,46 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 			},
 			"default_connectors_classification": schema.StringAttribute{
 				MarkdownDescription: "Default classification for connectors (\"General\", \"Confidential\", \"Blocked\")",
-				Description:         "Default classification for connectors (\"General\", \"Confidential\", \"Blocked\")",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("General", "Confidential", "Blocked"),
 				},
 			},
 			"environments": schema.SetAttribute{
-				Description:         "Environment to which the policy is applied",
 				MarkdownDescription: "Environment to which the policy is applied",
 				ElementType:         types.StringType,
 				Optional:            true,
 			},
 			"business_connectors": schema.SetNestedAttribute{
 				MarkdownDescription: "Connectors for sensitive data",
-				Description:         "Connectors for sensitive data",
 				Required:            true,
 				NestedObject:        connectorSchema,
 			},
 			"non_business_connectors": schema.SetNestedAttribute{
 				MarkdownDescription: "Connectors for non-sensitive data",
-				Description:         "Connectors for non-sensitive data",
 				Required:            true,
 				NestedObject:        connectorSchema,
 			},
 			"blocked_connectors": schema.SetNestedAttribute{
 				MarkdownDescription: "Blocked connectors can’t be used where this policy is applied.",
-				Description:         "Blocked connectors can’t be used where this policy is applied.",
 				Required:            true,
 				NestedObject:        connectorSchema,
 			},
 			"custom_connectors_patterns": schema.SetNestedAttribute{
 				MarkdownDescription: "Custom connectors patterns",
-				Description:         "Custom connectors patterns",
 				Required:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"order": schema.Int64Attribute{
 							MarkdownDescription: "Order of the connector",
-							Description:         "Order of the connector",
 							Required:            true,
 						},
 						"host_url_pattern": schema.StringAttribute{
 							MarkdownDescription: "Pattern of the connector",
-							Description:         "Pattern of the connector",
 							Required:            true,
 						},
 						"data_group": schema.StringAttribute{
 							MarkdownDescription: "Data group of the connector (\"Business\", \"NonBusiness\", \"Blocked\", \"Ignore\")",
-							Description:         "Data group of the connector (\"Business\", \"NonBusiness\", \"Blocked\", \"Ignore\")",
 							Required:            true,
 							Validators: []validator.String{
 								stringvalidator.OneOf("Business", "NonBusiness", "Blocked", "Ignore"),
@@ -258,6 +233,47 @@ func (r *DataLossPreventionPolicyResource) Configure(ctx context.Context, req re
 	}
 
 	r.DlpPolicyClient = newDlpPolicyClient(client)
+}
+
+func (r DataLossPreventionPolicyResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+	var config *dataLossPreventionPolicyResourceModel
+
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var connectors []dlpConnectorModelDto
+	conn, err := getConnectorGroup(ctx, config.BusinessGeneralConnectors)
+	if err != nil {
+		resp.Diagnostics.AddError("BusinessGeneralConnectors validation error", err.Error())
+	}
+	connectors = append(connectors, conn.Connectors...)
+
+	conn, err = getConnectorGroup(ctx, config.NonBusinessConfidentialConnectors)
+	if err != nil {
+		resp.Diagnostics.AddError("NonBusinessConfidentialConnectors validation error", err.Error())
+	}
+	connectors = append(connectors, conn.Connectors...)
+
+	conn, err = getConnectorGroup(ctx, config.BlockedConnectors)
+	if err != nil {
+		resp.Diagnostics.AddError("BlockedConnectors validation error", err.Error())
+	}
+	connectors = append(connectors, conn.Connectors...)
+
+	for _, c := range connectors {
+		if (c.DefaultActionRuleBehavior != "" && len(c.ActionRules) == 0) || (c.DefaultActionRuleBehavior == "" && len(c.ActionRules) > 0) {
+			resp.Diagnostics.AddAttributeError(
+				path.Empty(),
+				"Incorrect attribute Configuration",
+				"Expected 'default_action_rule_behavior' to be empty if 'action_rules' are empty.",
+			)
+		}
+	}
 }
 
 func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -317,7 +333,7 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 		CustomConnectorUrlPatternsDefinition: []dlpConnectorUrlPatternsDefinitionDto{},
 	}
 
-	policyToCreate.Environments = convertToDlpEnvironment(plan.Environments)
+	policyToCreate.Environments = convertToDlpEnvironment(ctx, plan.Environments)
 	policyToCreate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
 	policyToCreate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors))
@@ -370,7 +386,7 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 		ConnectorGroups:                 []dlpConnectorGroupsModelDto{},
 	}
 
-	policyToUpdate.Environments = convertToDlpEnvironment(plan.Environments)
+	policyToUpdate.Environments = convertToDlpEnvironment(ctx, plan.Environments)
 	policyToUpdate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
 	policyToUpdate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
 	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors))

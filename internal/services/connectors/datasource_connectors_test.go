@@ -53,7 +53,7 @@ func TestUnitConnectorsDataSource_Validate_Read(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Read/get_unblockable.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("GET", `https://api.powerapps.com/providers/Microsoft.PowerApps/apis?%24filter=environment+eq+%27~Default%27&api-version=2023-06-01&hideDlpExemptApis=true&showAllDlpEnforceableApis=true&showApisWithToS=true`,
+	httpmock.RegisterResponder("GET", `https://api.powerapps.com/providers/Microsoft.PowerApps/apis?%24filter=environment+eq+%27~Default%27&api-version=2019-05-01&hideDlpExemptApis=true&showAllDlpEnforceableApis=true&showApisWithToS=true`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Read/get_apis.json").String()), nil
 		})

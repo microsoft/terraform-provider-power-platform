@@ -120,9 +120,27 @@ jobs:
     - name: "Set up Terraform"
       uses: hashicorp/setup-terraform@v3  
     
+    - name: Install Power Platform Tools
+      if: success() || failure()
+      uses: microsoft/powerplatform-actions/actions-install@v1
+
+    - name: Environments cleanup
+      if: success() || failure()
+      shell: pwsh
+      run: |
+        dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+        pac auth create --githubFederated --tenant ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }} --applicationId ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
+        $environmentsList = (pac admin list --name "TestAcc" --json | ConvertFrom-Json)
+        $environmentsList | ForEach-Object -Parallel {
+            if ($_.DisplayName.StartsWith("TestAcc")){
+                Write-Output $_.DisplayName
+                pac admin delete -env $_.EnvironmentID
+            }
+        } -ThrottleLimit 15
+
     - name: Run tests
       env: 
-        TF_LOG: DEBUG
+        TF_LOG: WARN
         TF_ACC: 1
         POWER_PLATFORM_USE_OIDC: true
         POWER_PLATFORM_TENANT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}
@@ -144,25 +162,7 @@ jobs:
         path: test-coverage.cov.html
 
     - name: Upload results to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
         file: test-coverage.out
         token: ${{ secrets.CODECOV_TOKEN }}
-    
-    - name: Install Power Platform Tools
-      if: success() || failure()
-      uses: microsoft/powerplatform-actions/actions-install@v1
-
-    - name: Environments cleanup
-      if: success() || failure()
-      shell: pwsh
-      run: |
-        dotnet tool install --global Microsoft.PowerApps.CLI.Tool
-        pac auth create --githubFederated --tenant ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }} --applicationId ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
-        $environmentsList = (pac admin list --name "TestAcc" --json | ConvertFrom-Json)
-        $environmentsList | ForEach-Object -Parallel {
-            if ($_.DisplayName.StartsWith("TestAcc")){
-                Write-Output $_.DisplayName
-                pac admin delete -env $_.EnvironmentID
-            }
-        } -ThrottleLimit 15
