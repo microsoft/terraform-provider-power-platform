@@ -15,9 +15,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
-// force recreate user.
-// update security roles 11 00.
-// test update to dv and custom error msg.
 func TestAccUserResource_Validate_Create_Environment_User(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
@@ -289,9 +286,14 @@ func TestUnitUserResource_Validate_Update_Environment_User(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Update_Env/modify_role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
+	queryUserInx := 0
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/roleAssignments?api-version=2021-04-01`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Update_Env/role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+			queryUserInx++
+			if queryUserInx < 5 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Update_Env/role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Update_Env/role_assignments_00000000-0000-0000-0000-000000000001_empty.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
