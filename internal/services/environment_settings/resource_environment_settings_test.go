@@ -40,7 +40,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						  is_audit_enabled             = true
 						  is_user_access_audit_enabled = true
 						  is_read_audit_enabled        = true
-						  log_retention_period_in_days = null
+						  log_retention_period_in_days = "31"
 						}
 					}
 					email = {
