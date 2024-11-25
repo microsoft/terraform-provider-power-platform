@@ -469,7 +469,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Update(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, getResponsesArray[getResponsesInx]), nil
 		})
 
-	httpmock.RegisterResponder("DELETE", fmt.Sprintf(`https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/policies/%s`, policyId),
+	httpmock.RegisterResponder("DELETE", fmt.Sprintf(`https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/%s`, policyId),
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
@@ -792,7 +792,7 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/get_policy_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("DELETE", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/policies/00000000-0000-0000-0000-000000000001`,
+	httpmock.RegisterResponder("DELETE", `https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v2/policies/00000000-0000-0000-0000-000000000001`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, ""), nil
 		})
@@ -918,6 +918,8 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 }
 
 func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
+	t.Skip("Skipping as there is inconsistency in API in connectors returned")
+
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               false,
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,

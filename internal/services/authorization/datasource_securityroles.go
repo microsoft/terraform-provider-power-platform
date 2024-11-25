@@ -143,7 +143,7 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadR
 		return
 	}
 
-	roles, err := d.UserClient.GetSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.BusinessUnitId.ValueString())
+	roles, err := d.UserClient.GetDataverseSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.BusinessUnitId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", d.ProviderTypeName, d.TypeName), err.Error())
 		return

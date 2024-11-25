@@ -148,7 +148,7 @@ resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 Optional:
 
 - `action_rules` (Attributes List) Action rules for the connector (see [below for nested schema](#nestedatt--blocked_connectors--action_rules))
-- `default_action_rule_behavior` (String) Default action rule behavior for the connector ("Allow", "Block")
+- `default_action_rule_behavior` (String) Default action rule behavior for the connector ("Allow", "Block", "")
 - `endpoint_rules` (Attributes List) Endpoint rules for the connector (see [below for nested schema](#nestedatt--blocked_connectors--endpoint_rules))
 - `id` (String) ID of the connector
 
@@ -178,7 +178,7 @@ Required:
 Optional:
 
 - `action_rules` (Attributes List) Action rules for the connector (see [below for nested schema](#nestedatt--business_connectors--action_rules))
-- `default_action_rule_behavior` (String) Default action rule behavior for the connector ("Allow", "Block")
+- `default_action_rule_behavior` (String) Default action rule behavior for the connector ("Allow", "Block", "")
 - `endpoint_rules` (Attributes List) Endpoint rules for the connector (see [below for nested schema](#nestedatt--business_connectors--endpoint_rules))
 - `id` (String) ID of the connector
 
@@ -218,7 +218,7 @@ Required:
 Optional:
 
 - `action_rules` (Attributes List) Action rules for the connector (see [below for nested schema](#nestedatt--non_business_connectors--action_rules))
-- `default_action_rule_behavior` (String) Default action rule behavior for the connector ("Allow", "Block")
+- `default_action_rule_behavior` (String) Default action rule behavior for the connector ("Allow", "Block", "")
 - `endpoint_rules` (Attributes List) Endpoint rules for the connector (see [below for nested schema](#nestedatt--non_business_connectors--endpoint_rules))
 - `id` (String) ID of the connector
 

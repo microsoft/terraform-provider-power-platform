@@ -60,3 +60,14 @@ func Except[T comparable](a, b []T) []T {
 
 	return diff
 }
+
+// Find returns the first element in the array that satisfies the predicate.
+func Find[T comparable](arr []T, predicate func(T) bool) T {
+	for _, v := range arr {
+		if predicate(v) {
+			return v
+		}
+	}
+	var result T
+	return result
+}

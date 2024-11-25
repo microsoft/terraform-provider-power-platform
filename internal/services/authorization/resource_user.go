@@ -5,6 +5,7 @@ package authorization
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -50,9 +51,11 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "This resource associates a user to a Power Platform environment. Additional Resources:\n\n* [Add users to an environment](https://learn.microsoft.com/power-platform/admin/add-users-to-environment)\n\n* [Overview of User Security](https://learn.microsoft.com/power-platform/admin/grant-users-access)",
-		Description:         "This resource associates a user to a Power Platform environment",
-
+		MarkdownDescription: "This resource associates a user to a Power Platform environment.\n\n" +
+			"Additional Resources:\n\n" +
+			"* [Add users to an environment](https://learn.microsoft.com/power-platform/admin/add-users-to-environment)\n\n" +
+			"* [Overview of User Security](https://learn.microsoft.com/power-platform/admin/grant-users-access)\n\n" +
+			"*Note:* When starting with non Dataverse environments, and adding Dataverse later, the 'Environment Admin' and 'Environment Maker' used earlier in `security_roles` will not work inside Dataverse. You will need to use the Dataverse security roles instead.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
@@ -70,53 +73,60 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "Unique environment id (guid)",
-				Description:         "Unique environment id (guid)",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"business_unit_id": schema.StringAttribute{
-				Description: "Id of the business unit to which the user belongs",
-				Computed:    true,
+				MarkdownDescription: "Id of the business unit to which the user belongs",
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"aad_id": schema.StringAttribute{
 				MarkdownDescription: "Entra user object id",
-				Description:         "Entra user object id",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"security_roles": schema.SetAttribute{
-				MarkdownDescription: "Security roles Ids assigned to the user",
-				Description:         "Security roles Ids assigned to the user",
-				ElementType:         types.StringType,
-				Optional:            true,
-				Computed:            true,
+				MarkdownDescription: "Security roles Ids assigned to the Dataverse user" +
+					"When working with non Dataverse environments, only 'Environment Admin' and 'Environment Maker' role values are allowed",
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
 			},
 			"user_principal_name": schema.StringAttribute{
 				MarkdownDescription: "User principal name",
-				Description:         "User principal name",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"first_name": schema.StringAttribute{
 				MarkdownDescription: "User first name",
-				Description:         "User first name",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"last_name": schema.StringAttribute{
 				MarkdownDescription: "User last name",
-				Description:         "User last name",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"disable_delete": schema.BoolAttribute{
 				MarkdownDescription: "Disable delete. When set to `True` is expects that (Disable Delte)[https://learn.microsoft.com/power-platform/admin/delete-users?WT.mc_id=ppac_inproduct_settings#soft-delete-users-in-power-platform] feature to be enabled." +
-					"Removing resource will try to delete the systemuser from Dataverse. This is the default behaviour. If you just want to remove the resource and not delete the user from Dataverse, set this propertyto `False`",
-				Description: "Disable delete. Deletes systemuser from Dataverse if it was aleardy removed from Entra.",
-				Optional:    true,
-				Computed:    true,
-				Default:     booldefault.StaticBool(true),
+					"Removing resource will try to delete the systemuser from Dataverse. This is the default behaviour. If you just want to remove the resource and not delete the user from Dataverse, set this propertyto `False`\n\n" +
+					"**This attribute applies only when working with dataverse users.**",
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
 			},
 		},
 	}
@@ -153,20 +163,53 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		return
 	}
 
-	userDto, err := r.UserClient.CreateUser(ctx, plan.EnvironmentId.ValueString(), plan.AadId.ValueString())
+	hasEnvDataverse, err := r.UserClient.EnvironmentHasDataverse(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
+	tflog.Debug(ctx, fmt.Sprintf("Dataverse exist in eviroment %t", hasEnvDataverse))
 
-	userDto, err = r.UserClient.AddSecurityRoles(ctx, plan.EnvironmentId.ValueString(), userDto.Id, plan.SecurityRoles)
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-		return
+	newUser := userDto{}
+	if hasEnvDataverse {
+		user, err := r.UserClient.CreateDataverseUser(ctx, plan.EnvironmentId.ValueString(), plan.AadId.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
+
+		user, err = r.UserClient.AddDataverseSecurityRoles(ctx, plan.EnvironmentId.ValueString(), user.Id, plan.SecurityRoles)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
+		newUser = *user
+	} else {
+		// todo disalbe delete should be set to false.
+		err := validateEnvironmentSecurityRoles(plan.SecurityRoles)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		}
+
+		user, err := r.UserClient.CreateEnvironmentUser(ctx, plan.EnvironmentId.ValueString(), plan.AadId.ValueString(), plan.SecurityRoles)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
+
+		rolesBytes, err := json.Marshal(user.SecurityRoles)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error marshalling security roles", fmt.Sprintf("Error marshalling security roles: %s", err.Error()),
+			)
+			return
+		}
+		resp.Private.SetKey(ctx, "role", rolesBytes)
+
+		newUser = *user
 	}
 
-	model := convertFromUserDto(userDto, plan.DisableDelete.ValueBool())
-
+	model := convertDataverseFromUserDto(&newUser, plan.DisableDelete.ValueBool())
 	plan.Id = model.Id
 	plan.AadId = model.AadId
 	req.Plan.SetAttribute(ctx, path.Root("security_roles"), model.SecurityRoles)
@@ -177,7 +220,6 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	plan.BusinessUnitId = model.BusinessUnitId
 
 	tflog.Trace(ctx, fmt.Sprintf("created a resource with ID %s", plan.Id.ValueString()))
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -192,18 +234,55 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	userDto, err := r.UserClient.GetUserByAadObjectId(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString())
+	hasEnvDataverse, err := r.UserClient.EnvironmentHasDataverse(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
-			resp.State.RemoveResource(ctx)
-			return
-		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
+	tflog.Debug(ctx, fmt.Sprintf("Dataverse exist in eviroment %t", hasEnvDataverse))
 
-	model := convertFromUserDto(userDto, state.DisableDelete.ValueBool())
+	updateUser := userDto{}
+	if hasEnvDataverse {
+		user, err := r.UserClient.GetDataverseUserByAadObjectId(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString())
+		if err != nil {
+			if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
+		updateUser = *user
+	} else {
+		user, err := r.UserClient.GetEnvironmentUserByAadObjectId(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString())
+		// if all the security roles are removed, the user will not be found
+		if user.AadObjectId == "" {
+			user.AadObjectId = state.AadId.ValueString()
+			user.DomainName = state.UserPrincipalName.ValueString()
+		}
 
+		if err != nil {
+			if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
+
+		rolesBytes, err := json.Marshal(user.SecurityRoles)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error marshalling security roles", fmt.Sprintf("Error marshalling security roles: %s", err.Error()),
+			)
+			return
+		}
+		resp.Private.SetKey(ctx, "role", rolesBytes)
+
+		updateUser = *user
+	}
+
+	model := convertDataverseFromUserDto(&updateUser, state.DisableDelete.ValueBool())
 	state.Id = model.Id
 	state.AadId = model.AadId
 	state.SecurityRoles = model.SecurityRoles
@@ -233,33 +312,78 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	addedSecurityRoles, removedSecurityRoles := array.Diff(plan.SecurityRoles, state.SecurityRoles)
-
-	user, err := r.UserClient.GetUserBySystemUserId(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString())
+	hasEnvDataverse, err := r.UserClient.EnvironmentHasDataverse(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
+	tflog.Debug(ctx, fmt.Sprintf("Dataverse exist in eviroment %t", hasEnvDataverse))
 
-	if len(addedSecurityRoles) > 0 {
-		userDto, err := r.UserClient.AddSecurityRoles(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString(), addedSecurityRoles)
+	addedSecurityRoles, removedSecurityRoles := array.Diff(plan.SecurityRoles, state.SecurityRoles)
+	user := userDto{}
+	if hasEnvDataverse {
+		if len(addedSecurityRoles) > 0 {
+			userDto, err := r.UserClient.AddDataverseSecurityRoles(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString(), addedSecurityRoles)
+			if err != nil {
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when adding security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				return
+			}
+			user = *userDto
+		}
+		if len(removedSecurityRoles) > 0 {
+			userDto, err := r.UserClient.RemoveDataverseSecurityRoles(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString(), removedSecurityRoles)
+			if err != nil {
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when removing security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				return
+			}
+			user = *userDto
+		}
+	} else {
+		err := validateEnvironmentSecurityRoles(plan.SecurityRoles)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when adding security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		}
+		if len(addedSecurityRoles) > 0 {
+			userDto, err := r.UserClient.AddEnvironmentUserSecurityRoles(ctx, plan.EnvironmentId.ValueString(), plan.AadId.ValueString(), addedSecurityRoles)
+			if err != nil {
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when adding security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				return
+			}
+			user = *userDto
+		}
+		if len(removedSecurityRoles) > 0 {
+			savedRoles := []securityRoleDto{}
+			rolesObj, diag := resp.Private.GetKey(ctx, "role")
+			if diag.HasError() {
+				resp.Diagnostics.AddError(fmt.Sprintf("Error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				return
+			}
+
+			err := json.Unmarshal(rolesObj, &savedRoles)
+			if err != nil {
+				resp.Diagnostics.AddError(fmt.Sprintf("Error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				return
+			}
+
+			userDto, err := r.UserClient.RemoveEnvironmentUserSecurityRoles(ctx, plan.EnvironmentId.ValueString(), plan.AadId.ValueString(), removedSecurityRoles, savedRoles)
+			if err != nil {
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when removing security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				return
+			}
+			user = *userDto
+		}
+
+		rolesBytes, err := json.Marshal(user.SecurityRoles)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				"Error marshalling security roles", fmt.Sprintf("Error marshalling security roles: %s", err.Error()),
+			)
 			return
 		}
-		user = userDto
-	}
-	if len(removedSecurityRoles) > 0 {
-		userDto, err := r.UserClient.RemoveSecurityRoles(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString(), removedSecurityRoles)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when removing security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-			return
-		}
-		user = userDto
+		resp.Private.SetKey(ctx, "role", rolesBytes)
 	}
 
-	model := convertFromUserDto(user, plan.DisableDelete.ValueBool())
-
+	model := convertDataverseFromUserDto(&user, plan.DisableDelete.ValueBool())
 	plan.Id = model.Id
 	plan.AadId = model.AadId
 	req.Plan.SetAttribute(ctx, path.Root("security_roles"), model.SecurityRoles)
@@ -283,14 +407,41 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 
-	if state.DisableDelete.ValueBool() {
-		err := r.UserClient.DeleteUser(ctx, state.EnvironmentId.ValueString(), state.Id.ValueString())
+	hasEnvDataverse, err := r.UserClient.EnvironmentHasDataverse(ctx, state.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
+	tflog.Debug(ctx, fmt.Sprintf("Dataverse exist in eviroment %t", hasEnvDataverse))
+
+	if hasEnvDataverse {
+		if state.DisableDelete.ValueBool() {
+			err := r.UserClient.DeleteDataverseUser(ctx, state.EnvironmentId.ValueString(), state.Id.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				return
+			}
+		} else {
+			tflog.Debug(ctx, fmt.Sprintf("Disable delete is set to false. Skipping delete of systemuser with id %s", state.Id.ValueString()))
+		}
+	} else {
+		savedRoles := []securityRoleDto{}
+		rolesObj, diag := resp.Private.GetKey(ctx, "role")
+		if diag.HasError() {
+			return
+		}
+
+		err := json.Unmarshal(rolesObj, &savedRoles)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
+
+		_, err = r.UserClient.RemoveEnvironmentUserSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString(), state.SecurityRoles, savedRoles)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 			return
 		}
-	} else {
-		tflog.Debug(ctx, fmt.Sprintf("Disable delete is set to false. Skipping delete of systemuser with id %s", state.Id.ValueString()))
 	}
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
 }
@@ -300,4 +451,12 @@ func (r *UserResource) ImportState(ctx context.Context, req resource.ImportState
 	defer exitContext()
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func validateEnvironmentSecurityRoles(roles []string) error {
+	except := array.Except(roles, []string{ROLE_ENVIRONMENT_ADMIN, ROLE_ENVIRONMENT_MAKER})
+	if len(except) > 0 {
+		return fmt.Errorf("invalid security roles. only '%s' and '%s' are allowed", ROLE_ENVIRONMENT_ADMIN, ROLE_ENVIRONMENT_MAKER)
+	}
+	return nil
 }

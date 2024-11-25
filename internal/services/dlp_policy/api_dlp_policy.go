@@ -30,7 +30,7 @@ func (client *client) GetPolicies(ctx context.Context) ([]dlpPolicyModelDto, err
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
-		Path:   "providers/PowerPlatform.Governance/v1/policies",
+		Path:   "providers/PowerPlatform.Governance/v2/policies",
 	}
 	policiesArray := dlpPolicyDefinitionArrayDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policiesArray)
@@ -81,7 +81,7 @@ func (client *client) DeletePolicy(ctx context.Context, name string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
-		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v1/policies/%s", name),
+		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", name),
 	}
 	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {

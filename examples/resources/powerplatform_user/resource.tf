@@ -47,7 +47,7 @@ resource "azuread_user" "test_user" {
 }
 
 resource "powerplatform_environment" "dataverse_user_example" {
-  display_name     = "user_example"
+  display_name     = "dataverse_user_example"
   location         = "europe"
   environment_type = "Sandbox"
   dataverse = {
@@ -57,10 +57,28 @@ resource "powerplatform_environment" "dataverse_user_example" {
   }
 }
 
-resource "powerplatform_user" "new_user" {
+//adding new user to the dataverse environment
+resource "powerplatform_user" "new_dataverse_user" {
   environment_id = powerplatform_environment.dataverse_user_example.id
   security_roles = [
     "e0d2794e-82f3-e811-a951-000d3a1bcf17", // bot author
+  ]
+  aad_id         = azuread_user.test_user.id
+  disable_delete = false
+}
+
+resource "powerplatform_environment" "non_dataverse_user_example" {
+  display_name     = "non_dataverse_user_example"
+  location         = "europe"
+  environment_type = "Sandbox"
+}
+
+//adding new user to the environment that does not have dataverse
+resource "powerplatform_user" "new_non_dataverse_user" {
+  environment_id = powerplatform_environment.non_dataverse_user_example.id
+  security_roles = [
+    "Environment Admin",
+    "Environment Maker"
   ]
   aad_id         = azuread_user.test_user.id
   disable_delete = false

@@ -122,7 +122,9 @@ func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSetting
 	emailSettingsObject := environmentSettings.Email.Attributes()["email_settings"]
 	if emailSettingsObject != nil && !emailSettingsObject.IsNull() && !emailSettingsObject.IsUnknown() {
 		var emailSourceModel EmailSettingsSourceModel
-		emailSettingsObject.(basetypes.ObjectValue).As(ctx, &emailSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		if err := emailSettingsObject.(basetypes.ObjectValue).As(ctx, &emailSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
+			return
+		}
 
 		if !emailSourceModel.MaxUploadFileSize.IsNull() && !emailSourceModel.MaxUploadFileSize.IsUnknown() {
 			environmentSettingsDto.MaxUploadFileSize = emailSourceModel.MaxUploadFileSize.ValueInt64Pointer()
