@@ -168,7 +168,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 				Attributes: map[string]schema.Attribute{
 					"behavior_settings": schema.SingleNestedAttribute{
 						Description:         "Behavior Settings",
-						MarkdownDescription: "Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/power-platform/admin/settings-behavior) for more details.",
+						MarkdownDescription: "Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/power-platform/admin/settings-behavior) for more details .",
 						Optional:            true, Computed: true,
 						PlanModifiers: []planmodifier.Object{
 							objectplanmodifier.UseStateForUnknown(),
