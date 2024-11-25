@@ -3,19 +3,25 @@
 page_title: "powerplatform_user Resource - powerplatform"
 subcategory: ""
 description: |-
-  This resource associates a user to a Power Platform environment. Additional Resources:
+  This resource associates a user to a Power Platform environment.
+  Additional Resources:
   
   Add users to an environment https://learn.microsoft.com/power-platform/admin/add-users-to-environment
   Overview of User Security https://learn.microsoft.com/power-platform/admin/grant-users-access
+  Note: When starting with non Dataverse environments, and adding Dataverse later, the 'Environment Admin' and 'Environment Maker' used earlier in security_roles will not work inside Dataverse. You will need to use the Dataverse security roles instead.
 ---
 
 # powerplatform_user (Resource)
 
-This resource associates a user to a Power Platform environment. Additional Resources:
+This resource associates a user to a Power Platform environment.
+
+Additional Resources:
 
 * [Add users to an environment](https://learn.microsoft.com/power-platform/admin/add-users-to-environment)
 
 * [Overview of User Security](https://learn.microsoft.com/power-platform/admin/grant-users-access)
+
+*Note:* When starting with non Dataverse environments, and adding Dataverse later, the 'Environment Admin' and 'Environment Maker' used earlier in `security_roles` will not work inside Dataverse. You will need to use the Dataverse security roles instead.
 
 ## Example Usage
 
@@ -69,7 +75,7 @@ resource "azuread_user" "test_user" {
 }
 
 resource "powerplatform_environment" "dataverse_user_example" {
-  display_name     = "user_example"
+  display_name     = "dataverse_user_example"
   location         = "europe"
   environment_type = "Sandbox"
   dataverse = {
@@ -79,10 +85,28 @@ resource "powerplatform_environment" "dataverse_user_example" {
   }
 }
 
-resource "powerplatform_user" "new_user" {
+//adding new user to the dataverse environment
+resource "powerplatform_user" "new_dataverse_user" {
   environment_id = powerplatform_environment.dataverse_user_example.id
   security_roles = [
     "e0d2794e-82f3-e811-a951-000d3a1bcf17", // bot author
+  ]
+  aad_id         = azuread_user.test_user.id
+  disable_delete = false
+}
+
+resource "powerplatform_environment" "non_dataverse_user_example" {
+  display_name     = "non_dataverse_user_example"
+  location         = "europe"
+  environment_type = "Sandbox"
+}
+
+//adding new user to the environment that does not have dataverse
+resource "powerplatform_user" "new_non_dataverse_user" {
+  environment_id = powerplatform_environment.non_dataverse_user_example.id
+  security_roles = [
+    "Environment Admin",
+    "Environment Maker"
   ]
   aad_id         = azuread_user.test_user.id
   disable_delete = false
@@ -100,7 +124,9 @@ resource "powerplatform_user" "new_user" {
 ### Optional
 
 - `disable_delete` (Boolean) Disable delete. When set to `True` is expects that (Disable Delte)[https://learn.microsoft.com/power-platform/admin/delete-users?WT.mc_id=ppac_inproduct_settings#soft-delete-users-in-power-platform] feature to be enabled.Removing resource will try to delete the systemuser from Dataverse. This is the default behaviour. If you just want to remove the resource and not delete the user from Dataverse, set this propertyto `False`
-- `security_roles` (Set of String) Security roles Ids assigned to the user
+
+**This attribute applies only when working with dataverse users.**
+- `security_roles` (Set of String) Security roles Ids assigned to the Dataverse userWhen working with non Dataverse environments, only 'Environment Admin' and 'Environment Maker' role values are allowed
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

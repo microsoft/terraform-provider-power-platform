@@ -15,7 +15,340 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
-func TestAccUserResource_Validate_Create(t *testing.T) {
+func TestAccUserResource_Validate_Create_Environment_User(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+			"random": {
+				VersionConstraint: constants.RANDOM_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/random",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				data "azuread_domains" "aad_domains" {
+					only_initial = true
+				}
+
+				locals {
+					domain_name = data.azuread_domains.aad_domains.domains[0].domain_name
+				}
+
+				resource "random_password" "passwords" {
+				    min_lower = 1
+					min_upper        = 1
+					min_numeric      = 1
+					min_special      = 1
+					length           = 16
+					special          = true
+					override_special = "_%@"
+				}
+
+				resource "azuread_user" "test_user" {
+					user_principal_name = "` + mocks.TestName() + `@${local.domain_name}"
+					display_name        = "` + mocks.TestName() + `"
+					mail_nickname       = "` + mocks.TestName() + `"
+					password            = random_password.passwords.result
+					usage_location      = "US"
+				}
+
+				resource "powerplatform_environment" "dataverse_user_example" {
+					display_name      = "` + mocks.TestName() + `"
+					location          = "unitedstates"
+					environment_type  = "Sandbox"
+				}
+
+				resource "powerplatform_user" "new_user" {
+					environment_id = powerplatform_environment.dataverse_user_example.id
+					security_roles = [
+					   "Environment Admin",
+    				   "Environment Maker"
+					]
+					aad_id         =  element(split("/", azuread_user.test_user.id), 2)  
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "aad_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", mocks.TestName()),
+
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.0", "Environment Admin"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.1", "Environment Maker"),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitUserResource_Validate_Create_Environment_User(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/modifyRoleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env/modify_role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/roleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env/role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				resource "powerplatform_user" "new_user" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					security_roles = [
+					   "Environment Admin",
+    				   "Environment Maker"
+					]
+					aad_id =  "00000000-0000-0000-0000-000000000002"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "environment_id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "aad_id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", "test"),
+
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.0", "Environment Admin"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.1", "Environment Maker"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccUserResource_Validate_Update_Environment_User(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+			"random": {
+				VersionConstraint: constants.RANDOM_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/random",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				data "azuread_domains" "aad_domains" {
+					only_initial = true
+				}
+
+				locals {
+					domain_name = data.azuread_domains.aad_domains.domains[0].domain_name
+				}
+
+				resource "random_password" "passwords" {
+				    min_lower = 1
+					min_upper        = 1
+					min_numeric      = 1
+					min_special      = 1
+					length           = 16
+					special          = true
+					override_special = "_%@"
+				}
+
+				resource "azuread_user" "test_user" {
+					user_principal_name = "` + mocks.TestName() + `@${local.domain_name}"
+					display_name        = "` + mocks.TestName() + `"
+					mail_nickname       = "` + mocks.TestName() + `"
+					password            = random_password.passwords.result
+					usage_location      = "US"
+				}
+
+				resource "powerplatform_environment" "dataverse_user_example" {
+					display_name      = "` + mocks.TestName() + `"
+					location          = "unitedstates"
+					environment_type  = "Sandbox"
+				}
+
+				resource "powerplatform_user" "new_user" {
+					environment_id = powerplatform_environment.dataverse_user_example.id
+					security_roles = [
+					   "Environment Admin",
+    				   "Environment Maker"
+					]
+					aad_id         =  element(split("/", azuread_user.test_user.id), 2)  
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "aad_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", mocks.TestName()),
+
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.0", "Environment Admin"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.1", "Environment Maker"),
+				),
+			},
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				data "azuread_domains" "aad_domains" {
+					only_initial = true
+				}
+
+				locals {
+					domain_name = data.azuread_domains.aad_domains.domains[0].domain_name
+				}
+
+				resource "random_password" "passwords" {
+				    min_lower = 1
+					min_upper        = 1
+					min_numeric      = 1
+					min_special      = 1
+					length           = 16
+					special          = true
+					override_special = "_%@"
+				}
+
+				resource "azuread_user" "test_user" {
+					user_principal_name = "` + mocks.TestName() + `@${local.domain_name}"
+					display_name        = "` + mocks.TestName() + `"
+					mail_nickname       = "` + mocks.TestName() + `"
+					password            = random_password.passwords.result
+					usage_location      = "US"
+				}
+
+				resource "powerplatform_environment" "dataverse_user_example" {
+					display_name      = "` + mocks.TestName() + `"
+					location          = "unitedstates"
+					environment_type  = "Sandbox"
+				}
+
+				resource "powerplatform_user" "new_user" {
+					environment_id = powerplatform_environment.dataverse_user_example.id
+					security_roles = []
+					aad_id         =  element(split("/", azuread_user.test_user.id), 2)  
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "aad_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", mocks.TestName()),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitUserResource_Validate_Update_Environment_User(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Update_Env/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/modifyRoleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Update_Env/modify_role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	queryUserInx := 0
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/roleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			queryUserInx++
+			if queryUserInx < 5 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Update_Env/role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Update_Env/role_assignments_00000000-0000-0000-0000-000000000001_empty.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				resource "powerplatform_user" "new_user" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					security_roles = [
+					   "Environment Admin",
+    				   "Environment Maker"
+					]
+					aad_id =  "00000000-0000-0000-0000-000000000002"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "environment_id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "aad_id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", "test"),
+
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.0", "Environment Admin"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.1", "Environment Maker"),
+				),
+			},
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				resource "powerplatform_user" "new_user" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					security_roles = []
+					aad_id =  "00000000-0000-0000-0000-000000000002"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "environment_id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "aad_id", "00000000-0000-0000-0000-000000000002"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", ""),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "user_principal_name", "test"),
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccUserResource_Validate_Create_Dataverse_User(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
@@ -104,7 +437,7 @@ func TestAccUserResource_Validate_Create(t *testing.T) {
 	})
 }
 
-func TestUnitUserResource_Validate_Create(t *testing.T) {
+func TestUnitUserResource_Validate_Create_Dataverse_User(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -170,61 +503,7 @@ func TestUnitUserResource_Validate_Create(t *testing.T) {
 	})
 }
 
-func TestUnitUserResource_Validate_No_Dataverse(t *testing.T) {
-	httpmock.Activate()
-	defer httpmock.DeactivateAndReset()
-
-	mocks.ActivateEnvironmentHttpMocks()
-
-	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/addUser?api-version=2023-06-01",
-		func(req *http.Request) (*http.Response, error) {
-			resp := httpmock.NewStringResponse(http.StatusConflict, "{\"error\":{\"code\":\"UnlinkedEnvironmentForbiddenOperation\",\"message\":\"The environment '00000000-0000-0000-0000-000000000001' is not linked to a new CDS 2.0 instance. The following operation is forbidden for unlinked environments: 'POST/PROVIDERS/MICROSOFT.BUSINESSAPPPLATFORM/SCOPES/ADMIN/ENVIRONMENTS/ADDUSER'\"}}")
-			return resp, nil
-		})
-
-	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01`,
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_No_Dataverse/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
-		})
-
-	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/systemusers?%24expand=systemuserroles_association%28%24select%3Droleid%2Cname%2Cismanaged%2C_businessunitid_value%29&%24filter=azureactivedirectoryobjectid+eq+00000000-0000-0000-0000-000000000002",
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_No_Dataverse/get_systemusers.json").String()), nil
-		})
-
-	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/systemusers%2800000000-0000-0000-0000-000000000002%29/systemuserroles_association/$ref",
-		func(req *http.Request) (*http.Response, error) {
-			resp := httpmock.NewStringResponse(http.StatusNoContent, "")
-			return resp, nil
-		})
-
-	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/systemusers%2800000000-0000-0000-0000-000000000002%29?%24expand=systemuserroles_association%28%24select%3Droleid%2Cname%2Cismanaged%2C_businessunitid_value%29",
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_No_Dataverse/get_systemuser_00000000-0000-0000-0000-000000000002.json").String()), nil
-		})
-
-	resource.Test(t, resource.TestCase{
-		IsUnitTest:               true,
-		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: `
-				resource "powerplatform_user" "new_user" {
-					environment_id = "00000000-0000-0000-0000-000000000001"
-					security_roles = [
-					  "d58407f2-48d5-e711-a82c-000d3a37c848",
-					]
-					aad_id         = "00000000-0000-0000-0000-000000000002"
-					disable_delete = false
-				}`,
-				ExpectError: regexp.MustCompile("UnlinkedEnvironmentForbiddenOperation"),
-				Check:       resource.ComposeTestCheckFunc(),
-			},
-		},
-	})
-}
-
-func TestUnitUserResource_Validate_Create_And_Force_Recreate(t *testing.T) {
+func TestUnitUserResource_Validate_Create_And_Force_Recreate_Dataverse_User(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -298,7 +577,7 @@ func TestUnitUserResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 	})
 }
 
-func TestUnitUserResource_Validate_Create_And_Force_Update(t *testing.T) {
+func TestUnitUserResource_Validate_Create_And_Force_Update_Dataverse_User(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
