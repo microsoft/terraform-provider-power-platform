@@ -13,7 +13,7 @@ type environmentSettingsDto struct {
 	IsAuditEnabled                           *bool   `json:"isauditenabled,omitempty"`
 	IsUserAccessAuditEnabled                 *bool   `json:"isuseraccessauditenabled,omitempty"`
 	IsReadAuditEnabled                       *bool   `json:"isreadauditenabled,omitempty"`
-	AuditRetentionPeriodV2                   *int64  `json:"auditRetentionPeriodV2,omitempty"`
+	AuditRetentionPeriodV2                   *int32  `json:"auditRetentionPeriodV2,omitempty"`
 	BoundDashboardDefaultCardExpanded        *bool   `json:"bounddashboarddefaultcardexpanded,omitempty"`
 	OrganizationId                           *string `json:"organizationid,omitempty"`
 	PowerAppsComponentFrameworkForCanvasApps *bool   `json:"iscustomcontrolsincanvasappsenabled,omitempty"`
