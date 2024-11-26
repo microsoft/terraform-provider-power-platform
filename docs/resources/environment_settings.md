@@ -97,6 +97,7 @@ Optional:
 - `is_audit_enabled` (Boolean) Is audit enabled
 - `is_read_audit_enabled` (Boolean) Is read audit enabled
 - `is_user_access_audit_enabled` (Boolean) Is user access audit enabled
+- `log_retention_period_in_days` (Number) Retain these logs for a value betwen 31 days and 24855 days. no value means log will be retained forever. See [Start/stop auditing for an environment and set retention policy](https://learn.microsoft.com/power-platform/admin/manage-dataverse-auditing#startstop-auditing-for-an-environment-and-set-retention-policy) You can set a retention period for how long audit logs are kept in an environment. Under Retain these logs for, choose the period of time you wish to retain the logs.
 
 
 

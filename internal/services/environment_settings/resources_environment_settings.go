@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -111,8 +112,12 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 								},
 							},
 							"log_retention_period_in_days": schema.Int32Attribute{
-								MarkdownDescription: "Retain these logs for. See [Start/stop auditing for an environment and set retention policy](https://learn.microsoft.com/power-platform/admin/manage-dataverse-auditing#startstop-auditing-for-an-environment-and-set-retention-policy) You can set a retention period for how long audit logs are kept in an environment. Under Retain these logs for, choose the period of time you wish to retain the logs.",
+								MarkdownDescription: "Retain these logs for a value betwen 31 days and 24855 days. no value means log will be retained forever. See [Start/stop auditing for an environment and set retention policy](https://learn.microsoft.com/power-platform/admin/manage-dataverse-auditing#startstop-auditing-for-an-environment-and-set-retention-policy) You can set a retention period for how long audit logs are kept in an environment. Under Retain these logs for, choose the period of time you wish to retain the logs.",
 								Optional:            true, Computed: true,
+								Validators: []validator.Int32{
+									int32validator.AtLeast(31),
+									int32validator.AtMost(24855),
+								},
 								PlanModifiers: []planmodifier.Int32{
 									int32planmodifier.UseStateForUnknown(),
 								},
