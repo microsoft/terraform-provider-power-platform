@@ -143,7 +143,6 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 							"log_retention_period_in_days": schema.Int32Attribute{
 								MarkdownDescription: "Retain these logs for. See [Start/stop auditing for an environment and set retention policy](https://learn.microsoft.com/power-platform/admin/manage-dataverse-auditing#startstop-auditing-for-an-environment-and-set-retention-policy) You can set a retention period for how long audit logs are kept in an environment. Under Retain these logs for, choose the period of time you wish to retain the logs.",
 								Optional:            true,
-								//todo 31 - 24855
 							},
 						},
 					},
