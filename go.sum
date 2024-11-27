@@ -117,8 +117,8 @@ github.com/hashicorp/terraform-exec v0.21.0 h1:uNkLAe95ey5Uux6KJdua6+cv8asgILFVW
 github.com/hashicorp/terraform-exec v0.21.0/go.mod h1:1PPeMYou+KDUSSeRE9szMZ/oHf4fYUmB923Wzbq1ICg=
 github.com/hashicorp/terraform-json v0.23.0 h1:sniCkExU4iKtTADReHzACkk8fnpQXrdD2xoR+lppBkI=
 github.com/hashicorp/terraform-json v0.23.0/go.mod h1:MHdXbBAbSg0GvzuWazEGKAn/cyNfIB7mN6y7KJN6y2c=
-github.com/hashicorp/terraform-plugin-docs v0.20.0 h1:ox7rm1FN0dVZaJBUzkVVh10R1r3+FeMQWL0QopQ9d7o=
-github.com/hashicorp/terraform-plugin-docs v0.20.0/go.mod h1:A/+4SVMdAkQYtIBtaxV0H7AU862TxVZk/hhKaMDQB6Y=
+github.com/hashicorp/terraform-plugin-docs v0.20.1 h1:Fq7E/HrU8kuZu3hNliZGwloFWSYfWEOWnylFhYQIoys=
+github.com/hashicorp/terraform-plugin-docs v0.20.1/go.mod h1:Yz6HoK7/EgzSrHPB9J/lWFzwl9/xep2OPnc5jaJDV90=
 github.com/hashicorp/terraform-plugin-framework v1.13.0 h1:8OTG4+oZUfKgnfTdPTJwZ532Bh2BobF4H+yBiYJ/scw=
 github.com/hashicorp/terraform-plugin-framework v1.13.0/go.mod h1:j64rwMGpgM3NYXTKuxrCnyubQb/4VKldEKlcG8cvmjU=
 github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1 h1:gm5b1kHgFFhaKFhm4h2TgvMUlNzFAtUqlcOWnWPm+9E=
@@ -217,8 +217,8 @@ github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXf
 github.com/stretchr/testify v1.4.0/go.mod h1:j7eGeouHqKxXV5pUuKE4zz7dFj8WfuZ+81PSLYec5m4=
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/stretchr/testify v1.7.2/go.mod h1:R6va5+xMeoiuVRoj+gSkQ7d3FALtqAAGI1FQKckRals=
-github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
-github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
+github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
+github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/vmihailenco/msgpack v3.3.3+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
 github.com/vmihailenco/msgpack v4.0.4+incompatible h1:dSLoQfGFAo3F6OoNhwUmLwVgaUXK79GlxNBwueZn0xI=
 github.com/vmihailenco/msgpack v4.0.4+incompatible/go.mod h1:fy3FlTQTDXWkZ7Bh6AcGMlsjHatGryHQYUTf1ShIgkk=
