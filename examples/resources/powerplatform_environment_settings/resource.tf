@@ -30,7 +30,7 @@ resource "powerplatform_environment_settings" "settings" {
       is_audit_enabled             = true
       is_user_access_audit_enabled = true
       is_read_audit_enabled        = true
-      #log_retention_period_in_days = -1 //Forever
+      log_retention_period_in_days = -1 //Forever
     }
   }
   email = {

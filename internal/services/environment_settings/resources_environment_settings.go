@@ -113,7 +113,8 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 								},
 							},
 							"log_retention_period_in_days": schema.Int32Attribute{
-								Optional: true, Computed: true,
+								MarkdownDescription: "Retain these logs for a value between 31 days and 24855 days, value of '-1' means logs will be retained forever. See [Start/stop auditing for an environment and set retention policy](https://learn.microsoft.com/power-platform/admin/manage-dataverse-auditing#startstop-auditing-for-an-environment-and-set-retention-policy) You can set a retention period for how long audit logs are kept in an environment. Under Retain these logs for, choose the period of time you wish to retain the logs.",
+								Optional:            true, Computed: true,
 								Default: int32default.StaticInt32(-1),
 								Validators: []validator.Int32{
 									int32validator.Any(int32validator.Between(31, 24855), int32validator.OneOf(-1)),
