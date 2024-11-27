@@ -151,7 +151,7 @@ jobs:
         ARM_SUBSCRIPTION_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}
       run: |
         go clean -testcache
-        go test -p 3 -v ./... -run ^TestAccTestEnvironmentSettingsResource_Validate_Read$ -coverprofile=test-coverage.out -timeout 300m
+        go test -p 3 -v ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m
         go tool cover -html=test-coverage.out -o test-coverage.cov.html
 
     - name: Upload Coverage Artifacts

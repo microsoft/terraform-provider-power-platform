@@ -438,7 +438,7 @@
             "hashminaddresscount": null,
             "_createdonbehalfby_value": null,
             "advancedlookupenabled": null,
-            "auditretentionperiodv2": null,
+            "auditretentionperiodv2": -1,
             "releasewavename": null,
             "maxrollupfieldsperentity": null,
             "sqlaccessgroupid": null,

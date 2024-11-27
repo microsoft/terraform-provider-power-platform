@@ -169,7 +169,7 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		}
 	}
 
-	logRetentionPeriodTypeValue := types.Int32Null()
+	logRetentionPeriodTypeValue := types.Int32Value(-1)
 	if environmentSettingsDto.AuditRetentionPeriodV2 != nil {
 		logRetentionPeriodTypeValue = types.Int32Value(*environmentSettingsDto.AuditRetentionPeriodV2)
 	}
