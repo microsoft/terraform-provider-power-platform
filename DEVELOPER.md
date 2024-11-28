@@ -216,7 +216,13 @@ Use the `preview` extension to the MAJOR.MINOR.PATCH format for preview release 
 
 ### Using the CLI
 
-Use the `git tag` command on the `main` branch (ensure main is up to date) and then push that release back to origin.
+As a last PR to `main` branch before new release, create documentation using [Changie](https://github.com/miniscruff/changie):
+
+``` bash
+changie batch 1.0.0-preview
+```
+
+to release, use the `git tag` command on the `main` branch (ensure main is up to date) and then push that release back to origin.
 
 ``` bash
 git tag -a v1.0.0-preview -m "v1.0.0-preview"
