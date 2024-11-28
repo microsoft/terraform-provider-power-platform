@@ -1,5 +1,0 @@
-kind: documentation
-body: Added documentation to environment_settings to mention using data_record and data_records to get environment settings from Dataverse
-time: 2024-10-30T18:27:27.200561673Z
-custom:
-    Issue: "513"
