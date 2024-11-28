@@ -1,0 +1,5 @@
+kind: added
+body: powerplatform_environment_settings adding log_retention_period_in_days.
+time: 2024-11-26T18:54:01.884697624Z
+custom:
+    Issue: "431"

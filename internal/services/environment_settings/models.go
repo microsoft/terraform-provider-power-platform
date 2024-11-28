@@ -47,9 +47,10 @@ type AuditAndLogsSourceModel struct {
 }
 
 type AuditSettingsSourceModel struct {
-	IsAuditEnabled           types.Bool `tfsdk:"is_audit_enabled"`
-	IsUserAccessAuditEnabled types.Bool `tfsdk:"is_user_access_audit_enabled"`
-	IsReadAuditEnabled       types.Bool `tfsdk:"is_read_audit_enabled"`
+	IsAuditEnabled           types.Bool  `tfsdk:"is_audit_enabled"`
+	IsUserAccessAuditEnabled types.Bool  `tfsdk:"is_user_access_audit_enabled"`
+	IsReadAuditEnabled       types.Bool  `tfsdk:"is_read_audit_enabled"`
+	AuditRetentionPeriodV2   types.Int32 `tfsdk:"log_retention_period_in_days"`
 }
 
 type EmailSourceModel struct {
@@ -88,6 +89,9 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 		}
 		if !auditAndLogsSourceModel.IsReadAuditEnabled.IsNull() && !auditAndLogsSourceModel.IsReadAuditEnabled.IsUnknown() {
 			environmentSettingsDto.IsReadAuditEnabled = auditAndLogsSourceModel.IsReadAuditEnabled.ValueBoolPointer()
+		}
+		if !auditAndLogsSourceModel.AuditRetentionPeriodV2.IsNull() && !auditAndLogsSourceModel.AuditRetentionPeriodV2.IsUnknown() {
+			environmentSettingsDto.AuditRetentionPeriodV2 = auditAndLogsSourceModel.AuditRetentionPeriodV2.ValueInt32Pointer()
 		}
 
 		pluginSettings := environmentSettings.AuditAndLogs.Attributes()["plugin_trace_log_setting"]
@@ -165,16 +169,23 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		}
 	}
 
+	logRetentionPeriodTypeValue := types.Int32Value(-1)
+	if environmentSettingsDto.AuditRetentionPeriodV2 != nil {
+		logRetentionPeriodTypeValue = types.Int32Value(*environmentSettingsDto.AuditRetentionPeriodV2)
+	}
+
 	attrValuesAuditSettingsProperties := map[string]attr.Value{
 		"is_audit_enabled":             types.BoolValue(*environmentSettingsDto.IsAuditEnabled),
 		"is_user_access_audit_enabled": types.BoolValue(*environmentSettingsDto.IsUserAccessAuditEnabled),
 		"is_read_audit_enabled":        types.BoolValue(*environmentSettingsDto.IsReadAuditEnabled),
+		"log_retention_period_in_days": logRetentionPeriodTypeValue,
 	}
 
 	attrAuditSettingsObject := map[string]attr.Type{
 		"is_audit_enabled":             types.BoolType,
 		"is_user_access_audit_enabled": types.BoolType,
 		"is_read_audit_enabled":        types.BoolType,
+		"log_retention_period_in_days": types.Int32Type,
 	}
 
 	attrTypesAuditAndLogsObject := map[string]attr.Type{
