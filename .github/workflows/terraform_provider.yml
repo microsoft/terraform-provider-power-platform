@@ -133,3 +133,34 @@ jobs:
           go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
           tfplugindocs generate --provider-name powerplatform --rendered-provider-name "Power Platform"
           git diff HEAD --exit-code -- docs/
+
+  # ensure the chagie docs where added 
+  changie_check:
+    name: Check Changie Log
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Harden Runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+
+      - name: Check out code into the Go module directory
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          fetch-depth: 2
+
+      - name: Generate docs and check for differences
+        run: |
+          git diff HEAD --exit-code --quiet -- .changes/unreleased
+          if [ $? -eq 0 ]; then
+            echo "Add Changie log with `changie new` command"
+            exit 1
+          elif [ $? -eq 1 ]; then
+            exit 0
+          else
+            echo "Error occurred in `git diff`"
+            exit $?
+          fi
+
