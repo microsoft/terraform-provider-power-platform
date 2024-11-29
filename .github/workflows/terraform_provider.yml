@@ -155,7 +155,7 @@ jobs:
         run: |
           git diff HEAD --exit-code --quiet -- .changes/unreleased
           if [ $? -eq 0 ]; then
-            echo "Add Changie log with 'changie new' command"
+            echo "You forgot to add Changie log with 'changie new' command"
             exit 1
           elif [ $? -eq 1 ]; then
             exit 0
