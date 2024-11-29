@@ -1,5 +1,0 @@
-kind: fixed
-body: powerplatform_data_loss_prevention_policy added additional validation for default_action_rule_behavior and action_rules when both are empty
-time: 2024-11-12T12:12:38.994835926Z
-custom:
-    Issue: "518"
