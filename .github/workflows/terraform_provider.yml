@@ -153,14 +153,12 @@ jobs:
 
       - name: Generate docs and check for differences
         run: |
-          git diff HEAD --exit-code --quiet -- .changes/unreleased
-          if [ $? -eq 0 ]; then
-            echo "You forgot to add Changie log with 'changie new' command"
+          if git diff HEAD --exit-code --quiet -- .changes/unreleased; then
+            echo "You forgot to add a Changie log with 'changie new' command"
             exit 1
-          elif [ $? -eq 1 ]; then
-            exit 0
-          else
-            echo "Error occurred in `git diff`"
+          elif [ $? -ne 0 ]; then
+            echo "Error occurred in 'git diff'"
             exit $?
           fi
+          exit 0
 
