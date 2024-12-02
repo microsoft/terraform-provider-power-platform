@@ -17,13 +17,14 @@ import "time"
 const ZERO_UUID = "00000000-0000-0000-0000-000000000000"
 
 const (
-	PUBLIC_OAUTH_AUTHORITY_URL      = "https://login.microsoftonline.com/"
-	PUBLIC_BAPI_DOMAIN              = "api.bap.microsoft.com"
-	PUBLIC_POWERAPPS_API_DOMAIN     = "api.powerapps.com"
-	PUBLIC_POWERAPPS_SCOPE          = "https://service.powerapps.com/.default"
-	PUBLIC_POWERPLATFORM_API_DOMAIN = "api.powerplatform.com"
-	PUBLIC_POWERPLATFORM_API_SCOPE  = "https://api.powerplatform.com/.default"
-	PUBLIC_LICENSING_API_DOMAIN     = "licensing.powerplatform.microsoft.com"
+	PUBLIC_OAUTH_AUTHORITY_URL                = "https://login.microsoftonline.com/"
+	PUBLIC_BAPI_DOMAIN                        = "api.bap.microsoft.com"
+	PUBLIC_POWERAPPS_API_DOMAIN               = "api.powerapps.com"
+	PUBLIC_POWERAPPS_SCOPE                    = "https://service.powerapps.com/.default"
+	PUBLIC_POWERPLATFORM_API_DOMAIN           = "api.powerplatform.com"
+	PUBLIC_POWERPLATFORM_API_SCOPE            = "https://api.powerplatform.com/.default"
+	PUBLIC_LICENSING_API_DOMAIN               = "licensing.powerplatform.microsoft.com"
+	PUBLIC_POWERPLATFORM_ANALYTICS_API_DOMAIN = "csanalytics.powerplatform.microsoft.com"
 )
 
 const (

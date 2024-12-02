@@ -33,12 +33,13 @@ type ProviderConfig struct {
 }
 
 type ProviderConfigUrls struct {
-	BapiUrl            string
-	PowerAppsUrl       string
-	PowerAppsScope     string
-	PowerPlatformUrl   string
-	PowerPlatformScope string
-	LicensingUrl       string
+	BapiUrl                   string
+	PowerAppsUrl              string
+	PowerAppsScope            string
+	PowerPlatformUrl          string
+	PowerPlatformScope        string
+	LicensingUrl              string
+	PowerPlatformAnalyticsUrl string
 }
 
 func (model *ProviderConfig) IsClientSecretCredentialsProvided() bool {
