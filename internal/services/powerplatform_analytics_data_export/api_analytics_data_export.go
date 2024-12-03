@@ -26,7 +26,7 @@ func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*AnalyticsDat
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformAnalyticsUrl,
-		Path:   "/api/v2/connections",
+		Path:   "api/v2/connections",
 	}
 
 	values := url.Values{}
@@ -42,7 +42,7 @@ func (client *Client) CreateAnalyticsDataExport(ctx context.Context, analyticsda
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformAnalyticsUrl,
-		Path:   "/api/v2/sinks/appinsights/connections",
+		Path:   "api/v2/sinks/appinsights/connections",
 	}
 
 	values := url.Values{}
@@ -55,4 +55,41 @@ func (client *Client) CreateAnalyticsDataExport(ctx context.Context, analyticsda
 	}
 
 	return analyticdatalinks, err
+}
+
+func (client *Client) UpdateAnalyticsDataExport(ctx context.Context, id string, analyticsdataToUpdate AnalyticsDataCreateDto) (*AnalyticsDataDto, error) {
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   client.Api.GetConfig().Urls.PowerPlatformAnalyticsUrl,
+		Path:   "api/v2/sinks/appinsights/connections/" + id,
+	}
+
+	values := url.Values{}
+	apiUrl.RawQuery = values.Encode()
+
+	analyticdatalinks := &AnalyticsDataDto{}
+	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, analyticsdataToUpdate, []int{http.StatusOK}, analyticdatalinks)
+	if err != nil {
+		return nil, err
+	}
+
+	return analyticdatalinks, err
+}
+
+func (client *Client) DeleteAnalyticsDataExport(ctx context.Context, id string) error {
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   client.Api.GetConfig().Urls.PowerPlatformAnalyticsUrl,
+		Path:   "api/v2/sinks/appinsights/connections/" + id,
+	}
+
+	values := url.Values{}
+	apiUrl.RawQuery = values.Encode()
+
+	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

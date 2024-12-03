@@ -4,7 +4,6 @@
 package powerplatform_analytics_data_export
 
 type AnalyticsDataDto struct {
-	Id               string           `json:"id"`
 	Source           string           `json:"source"`
 	Environments     []EnvironmentDto `json:"environments"`
 	Sink             SinkDto          `json:"sink"`

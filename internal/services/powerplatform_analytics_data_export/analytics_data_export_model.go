@@ -5,6 +5,8 @@ package powerplatform_analytics_data_export
 
 import (
 	"time"
+
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 type AnalyticsDataModel struct {
@@ -34,4 +36,25 @@ type Status struct {
 	State     string    `tfsdk:"state"`
 	LastRunOn time.Time `tfsdk:"lastRunOn"`
 	Message   string    `tfsdk:"message"`
+}
+
+type AnalyticsExportDatasourceModel struct {
+	Source           string        `tfsdk:"source"`
+	Environments     []Environment `tfsdk:"environments"`
+	Sink             Sink          `tfsdk:"sink"`
+	PackageName      string        `tfsdk:"packageName"`
+	Scenarios        []string      `tfsdk:"scenarios"`
+	ResourceProvider string        `tfsdk:"resourceProvider"`
+	Status           []Status      `tfsdk:"status"`
+	AiType           string        `tfsdk:"aiType"`
+}
+
+type AnalyticsExportDataSource struct {
+	helpers.TypeInfo
+	AnalyticsExportData Client
+}
+
+type ResourceAnalyticsDataExport struct {
+	helpers.TypeInfo
+	ResourceAnalyticsDataExport Client
 }

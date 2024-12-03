@@ -128,3 +128,24 @@ const (
 	RANDOM_PROVIDER_VERSION_CONSTRAINT   = ">= 3.6.3"
 	AZAPI_PROVIDER_VERSION_CONSTRAINT    = ">= 1.15.0"
 )
+
+const (
+	ANALYTICS_DATA_EXPORT_URL_US   = "https://na.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_CAN  = "https://can.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_SAM  = "https://sam.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_EMEA = "https://emea.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_OCE  = "https://oce.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_APAC = "https://apac.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_Jpn  = "https://jpn.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_che  = "https://che.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_FRA  = "https://fra.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_UAE  = "https://uae.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_GER  = "https://ger.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_GBR  = "https://gbr.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_IND  = "https://ind.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_KOR  = "https://kor.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_NOR  = "https://nor.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_ZAF  = "https://zaf.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_SGP  = "https://sgp.csanalytics.powerplatform.microsoft.com/"
+	ANALYTICS_DATA_EXPORT_URL_SWE  = "https://swe.csanalytics.powerplatform.microsoft.com/"
+)
