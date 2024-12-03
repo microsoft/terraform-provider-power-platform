@@ -4,14 +4,13 @@
 package powerplatform_analytics_data_export
 
 type AnalyticsDataDto struct {
-	Source           string           `json:"source"`
-	Environments     []EnvironmentDto `json:"environments"`
-	Sink             SinkDto          `json:"sink"`
-	Status           []Status         `json:"status"`
-	PackageName      string           `json:"packageName"`
-	Scenarios        []string         `json:"scenarios"`
-	ResourceProvider string           `json:"resourceProvider"`
-	AiType           string           `json:"aiType"`
+	Source           string   `json:"source"`
+	Status           []Status `json:"status"`
+	Sink             SinkDto  `json:"sink"`
+	PackageName      string   `json:"packageName"`
+	Scenarios        []string `json:"scenarios"`
+	ResourceProvider string   `json:"resourceProvider"`
+	AiType           string   `json:"aiType"`
 }
 
 type AnalyticsDataCreateDto struct {
