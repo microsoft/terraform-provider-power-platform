@@ -45,16 +45,6 @@
             run: |
                 go install github.com/miniscruff/changie@latest
                 go mod download
-
-        #   - name: Setup Task
-        #     if: steps.changelog_check.outputs.exists == 'true'
-        #     uses: arduino/setup-task@b91d5d2c96a56797b48ac1e0e89220bf64044611 # v2.0.0
-        #     with:
-        #       repo-token: ${{ github.token }}
-    
-        #   - name: Setup Changie
-        #     if: steps.changelog_check.outputs.exists == 'true'
-        #     run: task install:changie
     
           - name: Find comment
             uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3.1.0
@@ -68,7 +58,7 @@
             if: steps.changelog_check.outputs.exists == 'true'
             run: |
               echo -e "# Changelog Preview\n" > changie.md
-              changie batch patch --dry-run --prerelease 'dev' >> changie.md
+              changie batch patch --dry-run --prerelease 'prerelease' >> changie.md
               cat changie.md >> $GITHUB_STEP_SUMMARY
               echo -e "\n<!-- changelog -->" >> changie.md
             env:
