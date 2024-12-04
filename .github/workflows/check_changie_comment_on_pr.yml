@@ -43,7 +43,7 @@
           - name: Install Changie
             if: steps.changelog_check.outputs.exists == 'true'
             run: |
-                go go install github.com/miniscruff/changie@latest
+                go install github.com/miniscruff/changie@latest
                 go mod download
 
         #   - name: Setup Task
