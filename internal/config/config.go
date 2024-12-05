@@ -11,6 +11,7 @@ import (
 type ProviderConfig struct {
 	UseCli  bool
 	UseOidc bool
+	UseMsi  bool
 
 	TenantId     string
 	ClientId     string
@@ -39,6 +40,14 @@ type ProviderConfigUrls struct {
 	PowerPlatformUrl   string
 	PowerPlatformScope string
 	LicensingUrl       string
+}
+
+func (model *ProviderConfig) IsUserManagedIdentityProvided() bool {
+	return model.UseMsi && model.ClientId != ""
+}
+
+func (model *ProviderConfig) IsSystemManagedIdentityProvided() bool {
+	return model.UseMsi && model.ClientId == "" //The switch that consumes this could be structured to avoid the second check, but we don't have a guarantee of what's consuming this.
 }
 
 func (model *ProviderConfig) IsClientSecretCredentialsProvided() bool {
