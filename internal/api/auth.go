@@ -221,7 +221,7 @@ func (client *Auth) AuthenticateUserManagedIdentity(ctx context.Context, scopes 
 }
 
 func (client *Auth) AuthenticateSystemManagedIdentity(ctx context.Context, scopes []string) (string, time.Time, error) {
-	managedIdentityCredential, err := azidentity.NewManagedIdentityCredential("", &azidentity.ManagedIdentityCredentialOptions{
+	systemManagedIdentityCredential, err := azidentity.NewManagedIdentityCredential(&azidentity.ManagedIdentityCredentialOptions{
 		ClientOptions: azcore.ClientOptions{
 			Cloud: client.config.Cloud,
 		},
@@ -230,7 +230,7 @@ func (client *Auth) AuthenticateSystemManagedIdentity(ctx context.Context, scope
 		return "", time.Time{}, err
 	}
 
-	accessToken, err := managedIdentityCredential.GetToken(context.Background(), policy.TokenRequestOptions{})
+	accessToken, err := systemManagedIdentityCredential.GetToken(context.Background(), policy.TokenRequestOptions{})
 	if err != nil {
 		return "", time.Time{}, err
 	}
