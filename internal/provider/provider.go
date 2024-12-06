@@ -222,7 +222,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.OidcToken = oidcToken
 		p.Config.OidcTokenFilePath = oidcTokenFilePath
 	} else if useMsi {
-		tflog.Info(ctx, "Using Managed Identity for authentication"
+		tflog.Info(ctx, "Using Managed Identity for authentication")
 		p.Config.ClientId = clientId // No client ID validation as it's optional for MSI
 		p.Config.UseMsi = true
 	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
