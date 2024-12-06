@@ -1,0 +1,5 @@
+kind: documentation
+body: Improve documentation around powerplatform_environment_application_package_install resource
+time: 2024-12-04T09:39:50.726689481Z
+custom:
+    Issue: "538"

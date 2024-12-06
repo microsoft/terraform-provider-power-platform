@@ -1,0 +1,31 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+description: |-
+  {{ .Description }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+
+## Known Limitations
+
+- This resource only supports the installation of applications. Once installed, the application will remain until the environment is deleted; updates or deletions are not supported.
+- Not all applications are available in every region. Depending on the location of your `powerplatform_environment`, you may encounter the `Package requested for installation was not found` error if the application is not available in that region.
+
+{{ if .HasExample -}}
+## Example Usage
+
+{{tffile .ExampleFile }}
+{{- end }}
+
+{{ .SchemaMarkdown | trimspace }}
+{{- if .HasImport }}
+
+## Import
+
+Import is supported using the following syntax:
+
+{{codefile "shell" .ImportFile }}
+{{- end }}
