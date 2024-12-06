@@ -323,8 +323,9 @@ func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*st
 	case client.config.IsClientCertificateCredentialsProvided():
 		token, tokenExpiry, err = client.AuthenticateClientCertificate(ctx, scopes)
 	case client.config.IsUserManagedIdentityProvided():
-		token, tokenExpiry, err = client.AuthenticateUserManagedIdentity()
+		token, tokenExpiry, err = client.AuthenticateUserManagedIdentity(ctx, scopes)
 	case client.config.IsSystemManagedIdentityProvided():
+		token, tokenExpiry, err = client.AuthenticateSystemManagedIdentity(ctx, scopes)
 	default:
 		return nil, errors.New("no credentials provided")
 	}
