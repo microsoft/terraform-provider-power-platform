@@ -192,7 +192,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	clientCertificate := helpers.GetConfigString(ctx, configValue.ClientCertificate, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE, "")
 	clientCertificateFilePath := helpers.GetConfigString(ctx, configValue.ClientCertificateFilePath, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH, "")
 	clientCertificatePassword := helpers.GetConfigString(ctx, configValue.ClientCertificatePassword, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD, "")
-	useMsi := helpers.GetConfigBool(ctx, configValue.UseMsi, constants.ENV_VAR_POWER_PLATFORM_USE_MI, false)
+	useMi := helpers.GetConfigBool(ctx, configValue.UseMi, constants.ENV_VAR_POWER_PLATFORM_USE_MI, false)
 
 	// Check for AzDO and GitHub environment variables
 	oidcRequestUrl := helpers.GetConfigMultiString(ctx, configValue.OidcRequestUrl, []string{constants.ENV_VAR_ARM_OIDC_REQUEST_URL, constants.ENV_VAR_ACTIONS_ID_TOKEN_REQUEST_URL}, "")
@@ -222,10 +222,10 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.OidcRequestUrl = oidcRequestUrl
 		p.Config.OidcToken = oidcToken
 		p.Config.OidcTokenFilePath = oidcTokenFilePath
-	} else if useMsi {
+	} else if useMi {
 		tflog.Info(ctx, "Using Managed Identity for authentication")
 		p.Config.ClientId = clientId // No client ID validation as it's optional for MSI
-		p.Config.UseMsi = true
+		p.Config.UseMi = true
 	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
 		tflog.Info(ctx, "Using client certificate for authentication")
 		validateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
