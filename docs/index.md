@@ -151,6 +151,7 @@ We recomend using Environment Variables to pass the credentials to the provider.
 | `POWER_PLATFORM_CLOUD` | override for the cloud used (default is `public`) | |
 | `POWER_PLATFORM_USE_OIDC` | if set to `true` then OIDC authentication will be used | |
 | `POWER_PLATFORM_USE_CLI` | if set to `true` then Azure CLI authentication will be used | |
+| `POWER_PLATFORM_USE_MI` | if set to `true` then Managed Identity authentication will be used | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE` | The Base64 format of your certificate that will be used to certificate based authentication | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH` | The path to the certificate that will be used to certificate based authentication | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD` | Password for the provider certificate | |
@@ -191,7 +192,6 @@ More detailed examples can be found in the [Power Platform Terraform Quickstarts
 ## Releases
 
 A full list of released versions of the Power Platform Terraform Provider can be found [here](https://github.com/microsoft/terraform-provider-power-platform/releases).  Starting from v3.0.0, a summary of the changes to the provider in each release are documented the [CHANGELOG.md file in the GitHub repository](https://github.com/microsoft/terraform-provider-power-platform/blob/main/CHANGELOG.md). This provider follows Semantic Versioning for releases. The provider version is incremented based on the type of changes included in the release.
-
 
 ## Contributing
 
