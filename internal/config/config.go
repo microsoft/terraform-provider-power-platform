@@ -70,6 +70,7 @@ func (model *ProviderConfig) IsOidcProvided() bool {
 type ProviderConfigModel struct {
 	UseCli  types.Bool `tfsdk:"use_cli"`
 	UseOidc types.Bool `tfsdk:"use_oidc"`
+	UseMsi  types.Bool `tfsdk:"use_msi"`
 
 	Cloud           types.String `tfsdk:"cloud"`
 	TelemetryOptout types.Bool   `tfsdk:"telemetry_optout"`
