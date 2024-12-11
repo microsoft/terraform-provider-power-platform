@@ -162,9 +162,14 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				MarkdownDescription: "Flag to indicate whether to opt out of telemetry. Default is `false`",
 				Optional:            true,
 			},
-			"use_mi": schema.BoolAttribute{
+			"use_msi": schema.BoolAttribute{
 				Description:         "Flag to indicate whether to use managed identity for authentication",
 				MarkdownDescription: "Flag to indicate whether to use managed identity for authentication",
+				Optional:            true,
+			},
+			"azdo_service_connection_id": schema.StringAttribute{
+				Description:         "The service connection id of the Azure DevOps service connection. For use in workload identity federation.",
+				MarkdownDescription: "The service connection id of the Azure DevOps service connection. For use in workload identity federation.",
 				Optional:            true,
 			},
 		},
@@ -192,7 +197,8 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	clientCertificate := helpers.GetConfigString(ctx, configValue.ClientCertificate, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE, "")
 	clientCertificateFilePath := helpers.GetConfigString(ctx, configValue.ClientCertificateFilePath, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH, "")
 	clientCertificatePassword := helpers.GetConfigString(ctx, configValue.ClientCertificatePassword, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD, "")
-	useMi := helpers.GetConfigBool(ctx, configValue.UseMi, constants.ENV_VAR_POWER_PLATFORM_USE_MI, false)
+	useMsi := helpers.GetConfigBool(ctx, configValue.UseMsi, constants.ENV_VAR_POWER_PLATFORM_USE_MSI, false)
+	azdoServiceConnectionId := configValue.AzDOServiceConnectionID.ValueString() // The whole point of AzDO workload identity federation is that we don't need to use local variables, so looking for it in a local variable would be an antipattern
 
 	// Check for AzDO and GitHub environment variables
 	oidcRequestUrl := helpers.GetConfigMultiString(ctx, configValue.OidcRequestUrl, []string{constants.ENV_VAR_ARM_OIDC_REQUEST_URL, constants.ENV_VAR_ACTIONS_ID_TOKEN_REQUEST_URL}, "")
@@ -210,6 +216,10 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	} else if useCli {
 		tflog.Info(ctx, "Using CLI for authentication")
 		p.Config.UseCli = true
+	} else if useOidc && azdoServiceConnectionId != "" {
+		tflog.Info(ctx, "Using Workload Identity Federation for Azure Pipelines")
+		p.Config.UseOidc = true
+		p.Config.AzDOServiceConnectionID = azdoServiceConnectionId
 	} else if useOidc {
 		tflog.Info(ctx, "Using OpenID Connect for authentication")
 		validateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
@@ -222,10 +232,10 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.OidcRequestUrl = oidcRequestUrl
 		p.Config.OidcToken = oidcToken
 		p.Config.OidcTokenFilePath = oidcTokenFilePath
-	} else if useMi {
+	} else if useMsi {
 		tflog.Info(ctx, "Using Managed Identity for authentication")
 		p.Config.ClientId = clientId // No client ID validation as it's optional for MSI
-		p.Config.UseMi = true
+		p.Config.UseMsi = true
 	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
 		tflog.Info(ctx, "Using client certificate for authentication")
 		validateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)

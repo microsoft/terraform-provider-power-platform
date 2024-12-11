@@ -212,7 +212,7 @@ func (client *Auth) AuthenticateUserManagedIdentity(ctx context.Context, scopes 
 		return "", time.Time{}, err
 	}
 
-	accessToken, err := userManagedIdentityCredential.GetToken(context.Background(), policy.TokenRequestOptions{})
+	accessToken, err := userManagedIdentityCredential.GetToken(context.Background(), policy.TokenRequestOptions{Scopes: scopes})
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -230,7 +230,27 @@ func (client *Auth) AuthenticateSystemManagedIdentity(ctx context.Context, scope
 		return "", time.Time{}, err
 	}
 
-	accessToken, err := systemManagedIdentityCredential.GetToken(context.Background(), policy.TokenRequestOptions{})
+	accessToken, err := systemManagedIdentityCredential.GetToken(context.Background(), policy.TokenRequestOptions{Scopes: scopes})
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	return accessToken.Token, accessToken.ExpiresOn, nil
+}
+
+func (client *Auth) AuthenticateAzDOWorkloadIdentityFederation(ctx context.Context, scopes []string) (string, time.Time, error) {
+	azdoWorkloadIdentityCredential, err := azidentity.NewAzurePipelinesCredential(
+		client.config.TenantId,
+		client.config.ClientId,
+		client.config.AzDOServiceConnectionID,
+		client.config.OidcRequestToken,
+		&azidentity.AzurePipelinesCredentialOptions{}, // Auxiliary tenants could be defined here
+	)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	accessToken, err := azdoWorkloadIdentityCredential.GetToken(context.Background(), policy.TokenRequestOptions{Scopes: scopes})
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -318,6 +338,8 @@ func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*st
 		token, tokenExpiry, err = client.AuthenticateClientSecret(ctx, scopes)
 	case client.config.IsCliProvided():
 		token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes)
+	case client.config.IsAzDOWorkloadIdentityFederationProvided():
+		token, tokenExpiry, err = client.AuthenticateAzDOWorkloadIdentityFederation(ctx, scopes)
 	case client.config.IsOidcProvided():
 		token, tokenExpiry, err = client.AuthenticateOIDC(ctx, scopes)
 	case client.config.IsClientCertificateCredentialsProvided():

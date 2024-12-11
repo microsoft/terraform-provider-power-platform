@@ -23,7 +23,7 @@ func TestUnitApiClient_GetConfig(t *testing.T) {
 	cfg := config.ProviderConfig{
 		UseCli:       false,
 		UseOidc:      false,
-		UseMi:        false,
+		UseMsi:       false,
 		TenantId:     uuid.NewString(),
 		ClientId:     uuid.NewString(),
 		ClientSecret: uuid.NewString(),
