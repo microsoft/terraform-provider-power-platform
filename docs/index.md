@@ -38,6 +38,8 @@ Terraform supports a number of different methods for authenticating to Power Pla
 * [Authenticating to Power Platform using the Azure CLI](#authenticating-to-power-platform-using-the-azure-cli)
 * [Authenticating to Power Platform using a Service Principal with OIDC](#authenticating-to-power-platform-using-a-service-principal-with-oidc)
 * [Authenticating to Power Platform using a Service Principal and a Client Secret](#authenticating-to-power-platform-using-a-service-principal-and-a-client-secret)
+* [Authenticating to Power Platform using a Managed Identity](#authenticating-to-power-platform-using-a-managed-identity)
+* [Authenticating to Power Platform using Workload Identity Federation](#authenticating-to-power-platform-using-workload-identity-federation)
 
 We recommend using either a Service Principal when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
 
@@ -77,11 +79,11 @@ The Power Platform provider can use a Service Principal with OpenID Connect (OID
 1. [Create a trust relationship between your CI/CD pipeline and the app registration](https://learn.microsoft.com/entra/workload-id/workload-identity-federation-create-trust?pivots=identity-wif-apps-methods-azp)
 1. Configure the provider to use OIDC with the following code:
 
-```terraform
-provider "powerplatform" {
-  use_oidc = true
-}
-```
+    ```terraform
+    provider "powerplatform" {
+      use_oidc = true
+    }
+    ```
 
 Additional Resources about OIDC:
 
@@ -139,9 +141,46 @@ The Power Platform provider can use a Service Principal with Client Secret to au
     }
     ```
 
-#### Using Environment Variables
+### Authenticating to Power Platform Using a Managed Identity
 
-We recomend using Environment Variables to pass the credentials to the provider.
+The Power Platform provider can use a [Managed Identity](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview) (previously called Managed Service Identity, or MSI) to authenticate to Power Platform services for keyless authentication in scenarios where the provider is being executed in select Azure services, such as Microsoft-hosted or self-hosted Azure DevOps pipelines.
+
+#### System-Managed Identity
+
+1. [Enable system-managed identity on an Azure resource](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview)
+1. [Register the managed identity with the Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal) using the Application ID from the enterprise application for the system-managed identity resource.
+1. Configure the provider to use the system-managed identity. Note that no Client ID is required as the Client ID is derived from the Azure resource running the provider.
+
+    ```terraform
+    provider "powerplatform" {
+      use_msi = true
+    }
+    ```
+
+#### User-Managed Identity
+
+1. [Create a User-Managed Identity resource](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview)
+1. [Register the Managed Identity with the Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal) using the Client ID from the user-managed identity resource.
+1. Configure the provider to use the System-Managed Identity. Note that this example sets the Client ID in the provider configuration, but it could also be set using the POWER_PLATFORM_CLIENT_ID environment variable.
+
+    ```terraform
+    provider "powerplatform" {
+      use_msi = true
+      client_id = var.client_id # This should be the Client ID from the user-managed identity resource.
+    }
+    ```
+
+### Authenticating to Power Platform Using Workload Identity Federation
+
+The Power Platform provider can use [Workload Identity Federation](https://devblogs.microsoft.com/devops/introduction-to-azure-devops-workload-identity-federation-oidc-with-terraform/) with Azure DeOps pipelines to authenticate to Power Platform services.
+
+1. Create an [App Registration](guides/app_registration.md) or a [User-Managed Identity](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview). This resource will be used to manage the identity federation with Azure DevOps.
+1. [Register the App Registration or Managed Identity with the Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal)
+1. [Complete the service connection configuration in Azure and Azure DevOps](https://learn.microsoft.com/en-us/azure/devops/pipelines/release/configure-workload-identity?view=azure-devops&tabs=managed-identity). Note that Azure DevOps may automatically generate the federated credential in Azure, depending on your permissions and Azure Subscription configuration.
+
+### Using Environment Variables
+
+We recommend using Environment Variables to pass the credentials to the provider.
 
 | Name | Description | Default Value |
 |------|-------------|---------------|
@@ -151,14 +190,14 @@ We recomend using Environment Variables to pass the credentials to the provider.
 | `POWER_PLATFORM_CLOUD` | override for the cloud used (default is `public`) | |
 | `POWER_PLATFORM_USE_OIDC` | if set to `true` then OIDC authentication will be used | |
 | `POWER_PLATFORM_USE_CLI` | if set to `true` then Azure CLI authentication will be used | |
-| `POWER_PLATFORM_USE_MI` | if set to `true` then Managed Identity authentication will be used | |
-| `POWER_PLATFORM_CLIENT_CERTIFICATE` | The Base64 format of your certificate that will be used to certificate based authentication | |
-| `POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH` | The path to the certificate that will be used to certificate based authentication | |
+| `POWER_PLATFORM_USE_MSI` | if set to `true` then Managed Identity authentication will be used | |
+| `POWER_PLATFORM_CLIENT_CERTIFICATE` | The Base64 format of your certificate that will be used for certificate-based authentication | |
+| `POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH` | The path to the certificate that will be used for certificate-based authentication | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD` | Password for the provider certificate | |
 
 -> Variables passed into the provider will override the environment variables.
 
-#### Using Terraform Variables
+### Using Terraform Variables
 
 Alternatively, you can configure the provider using variables in your Terraform configuration which can be passed in via [command line parameters](https://developer.hashicorp.com/terraform/language/values/variables#variables-on-the-command-line), [a `*.tfvars` file](https://developer.hashicorp.com/terraform/language/values/variables#variable-definitions-tfvars-files), or [environment variables](https://developer.hashicorp.com/terraform/language/values/variables#environment-variables).  If you choose to use variables, please be sure to [protect sensitive input variables](https://developer.hashicorp.com/terraform/tutorials/configuration-language/sensitive-variables) so that you do not expose your credentials in your Terraform configuration.
 

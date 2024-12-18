@@ -198,7 +198,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	clientCertificateFilePath := helpers.GetConfigString(ctx, configValue.ClientCertificateFilePath, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH, "")
 	clientCertificatePassword := helpers.GetConfigString(ctx, configValue.ClientCertificatePassword, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD, "")
 	useMsi := helpers.GetConfigBool(ctx, configValue.UseMsi, constants.ENV_VAR_POWER_PLATFORM_USE_MSI, false)
-	azdoServiceConnectionId := configValue.AzDOServiceConnectionID.ValueString() // The whole point of AzDO workload identity federation is that we don't need to use local variables, so looking for it in a local variable would be an antipattern
+	azdoServiceConnectionId := helpers.GetConfigString(ctx, configValue.AzDOServiceConnectionID, constants.ENV_VAR_POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID, "")
 
 	// Check for AzDO and GitHub environment variables
 	oidcRequestUrl := helpers.GetConfigMultiString(ctx, configValue.OidcRequestUrl, []string{constants.ENV_VAR_ARM_OIDC_REQUEST_URL, constants.ENV_VAR_ACTIONS_ID_TOKEN_REQUEST_URL}, "")
@@ -234,7 +234,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 		p.Config.OidcTokenFilePath = oidcTokenFilePath
 	} else if useMsi {
 		tflog.Info(ctx, "Using Managed Identity for authentication")
-		p.Config.ClientId = clientId // No client ID validation as it's optional for MSI
+		p.Config.ClientId = clientId // No client ID as it could be blank for system-managed or populated for user-managed.
 		p.Config.UseMsi = true
 	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
 		tflog.Info(ctx, "Using client certificate for authentication")
