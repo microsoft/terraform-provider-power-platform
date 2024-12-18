@@ -283,7 +283,6 @@ func configureUseOidc(ctx context.Context, p *PowerPlatformProvider, tenantId, c
 		tflog.Info(ctx, "Using Workload Identity Federation for Azure Pipelines")
 
 		p.Config.AzDOServiceConnectionID = azdoServiceConnectionId
-
 	} else { // OIDC
 		tflog.Info(ctx, "Using OpenID Connect for authentication")
 		validateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
