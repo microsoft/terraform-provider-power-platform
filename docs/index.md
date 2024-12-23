@@ -202,7 +202,7 @@ We recommend using Environment Variables to pass the credentials to the provider
 | `POWER_PLATFORM_CLIENT_CERTIFICATE` | The Base64 format of your certificate that will be used for certificate-based authentication | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH` | The path to the certificate that will be used for certificate-based authentication | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD` | Password for the provider certificate | |
-| `POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID` | The ID of the Azure DevOps service connection to be used for Workload Identity Federation | |
+| `POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID` | The GUID of the Azure DevOps service connection to be used for Workload Identity Federation | |
 
 -> Variables passed into the provider will override the environment variables.
 
