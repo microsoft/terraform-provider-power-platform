@@ -25,6 +25,7 @@ type EnviromentPropertiesDto struct {
 	DisplayName               string                            `json:"displayName"`
 	EnvironmentSku            string                            `json:"environmentSku"`
 	LinkedAppMetadata         *LinkedAppMetadataDto             `json:"linkedAppMetadata,omitempty"`
+	RuntimeEndpoints          *RuntimeEndpointsDto              `json:"runtimeEndpoints,omitempty"`
 	LinkedEnvironmentMetadata *LinkedEnvironmentMetadataDto     `json:"linkedEnvironmentMetadata,omitempty"`
 	States                    *StatesEnvironmentDto             `json:"states"`
 	TenantID                  string                            `json:"tenantId"`
@@ -96,6 +97,16 @@ type LinkedEnvironmentMetadataDto struct {
 	Templates                 []string                   `json:"template,omitempty"`
 	TemplateMetadata          *createTemplateMetadataDto `json:"templateMetadata,omitempty"`
 	UniqueName                string                     `json:"uniqueName"`
+}
+
+type RuntimeEndpointsDto struct {
+	BusinessAppPlatform string `json:"microsoft.BusinessAppPlatform"`
+	CommonDataModel     string `json:"microsoft.CommonDataModel"`
+	PowerApps           string `json:"microsoft.PowerApps"`
+	PowerAppsAdvisor    string `json:"microsoft.PowerAppsAdvisor"`
+	PowerVirtualAgents  string `json:"microsoft.PowerVirtualAgents"`
+	ApiManagement       string `json:"microsoft.ApiManagement"`
+	Flow                string `json:"microsoft.Flow"`
 }
 
 type LinkedAppMetadataDto struct {
