@@ -31,7 +31,7 @@ func (client *client) getCopilotStudioEndpoint(ctx context.Context, environmentI
 	return env.Properties.RuntimeEndpoints.PowerVirtualAgents, nil
 }
 
-func (client *client) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {
+func (client *client) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -41,7 +41,7 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
-	env := environmentIdDto{}
+	env := EnvironmentIdDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 	return &env, nil
 }
 
-func (client *client) getCopilotStudioAppInsightsConfiguration(ctx context.Context, environmentId, botId string) (*copilotStudioAppInsightsDto, error) {
+func (client *client) getCopilotStudioAppInsightsConfiguration(ctx context.Context, environmentId, botId string) (*CopilotStudioAppInsightsDto, error) {
 	copilotStudioEndpoint, err := client.getCopilotStudioEndpoint(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func (client *client) getCopilotStudioAppInsightsConfiguration(ctx context.Conte
 	values := url.Values{}
 	apiUrl.RawQuery = values.Encode()
 
-	copilotStudioAppInsights := copilotStudioAppInsightsDto{}
+	copilotStudioAppInsights := CopilotStudioAppInsightsDto{}
 
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &copilotStudioAppInsights)
 	if err != nil {
@@ -73,8 +73,8 @@ func (client *client) getCopilotStudioAppInsightsConfiguration(ctx context.Conte
 	return &copilotStudioAppInsights, nil
 }
 
-func (client *client) updateCopilotStudioAppInsightsConfiguration(ctx context.Context, environmentId, botId string, copilotStudioAppInsightsConfig copilotStudioAppInsightsDto) (*copilotStudioAppInsightsDto, error) {
-	copilotStudioEndpoint, err := client.getCopilotStudioEndpoint(ctx, environmentId)
+func (client *client) updateCopilotStudioAppInsightsConfiguration(ctx context.Context, copilotStudioAppInsightsConfig CopilotStudioAppInsightsDto) (*CopilotStudioAppInsightsDto, error) {
+	copilotStudioEndpoint, err := client.getCopilotStudioEndpoint(ctx, copilotStudioAppInsightsConfig.EnvironmentId)
 	if err != nil {
 		return nil, err
 	}
@@ -82,12 +82,12 @@ func (client *client) updateCopilotStudioAppInsightsConfiguration(ctx context.Co
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   copilotStudioEndpoint,
-		Path:   fmt.Sprintf("/api/botmanagement/2022-01-15/environments/%s/bots/%s/applicationinsightsconfiguration", environmentId, botId),
+		Path:   fmt.Sprintf("/api/botmanagement/2022-01-15/environments/%s/bots/%s/applicationinsightsconfiguration", copilotStudioAppInsightsConfig.EnvironmentId, copilotStudioAppInsightsConfig.BotId),
 	}
 	values := url.Values{}
 	apiUrl.RawQuery = values.Encode()
 
-	updatedCopilotStudioAppInsightsConfiguration := copilotStudioAppInsightsDto{}
+	updatedCopilotStudioAppInsightsConfiguration := CopilotStudioAppInsightsDto{}
 
 	_, err = client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, copilotStudioAppInsightsConfig, []int{http.StatusOK}, &updatedCopilotStudioAppInsightsConfiguration)
 	if err != nil {

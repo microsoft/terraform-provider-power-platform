@@ -3,25 +3,27 @@
 
 package copilot_studio_application_insights
 
-type copilotStudioAppInsightsDto struct {
+type CopilotStudioAppInsightsDto struct {
+	EnvironmentId               string `json:"environmentId"`
+	BotId                       string `json:"botId"`
 	AppInsightsConnectionString string `json:"appInsightsConnectionString"`
 	IncludeSensitiveInformation bool   `json:"includeSensitiveInformation"`
 	IncludeActivities           bool   `json:"includeActivities"`
 	IncludeActions              bool   `json:"includeActions"`
-	NetworkIsolation            string `json:"networkIsolation"`
 	Errors                      string `json:"errors"`
+	NetworkIsolation            string `json:"networkIsolation"`
 }
 
-type environmentIdDto struct {
+type EnvironmentIdDto struct {
 	Id         string                     `json:"id"`
 	Name       string                     `json:"name"`
-	Properties environmentIdPropertiesDto `json:"properties"`
+	Properties EnvironmentIdPropertiesDto `json:"properties"`
 }
 
-type environmentIdPropertiesDto struct {
-	RuntimeEndpoints runtimeEndpointsDto `json:"runtimeEndpoints"`
+type EnvironmentIdPropertiesDto struct {
+	RuntimeEndpoints RuntimeEndpointsDto `json:"runtimeEndpoints"`
 }
 
-type runtimeEndpointsDto struct {
+type RuntimeEndpointsDto struct {
 	PowerVirtualAgents string `json:"powerVirtualAgents"`
 }
