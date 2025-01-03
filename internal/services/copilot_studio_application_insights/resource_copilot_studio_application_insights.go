@@ -25,7 +25,7 @@ var _ resource.ResourceWithImportState = &Resource{}
 func NewCopilotStudioApplicationInsightsResource() resource.Resource {
 	return &Resource{
 		TypeInfo: helpers.TypeInfo{
-			TypeName: "connection",
+			TypeName: "copilot_studio_application_insights",
 		},
 	}
 }
