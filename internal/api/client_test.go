@@ -7,6 +7,7 @@ import (
 	"context"
 	"net/http"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 
@@ -33,7 +34,7 @@ func TestUnitApiClient_GetConfig(t *testing.T) {
 	x := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
 	_, err := x.Execute(ctx, []string{"test"}, "GET", "/relativeurl", http.Header{}, nil, []int{http.StatusOK}, nil)
 	if err == nil {
-		t.Error("Expected an error for relatvieurl but got nil error")
+		t.Error("Expected an error for relativeurl but got nil error")
 	}
 
 	switch err.(type) {
@@ -76,4 +77,45 @@ func TestUnitSleepWithContext_HappyPath(t *testing.T) {
 	}
 
 	cancel()
+}
+
+func TestUnitApiClient_SystemManagedIdentity(t *testing.T) {
+
+	expectedError := "ManagedIdentityCredential: failed to authenticate a system assigned identity."
+
+	ctx := context.Background()
+	cfg := config.ProviderConfig{
+		UseMsi: true,
+	}
+
+	x := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := x.Execute(ctx, []string{"test"}, "GET", "https://api.bap.microsoft.com", http.Header{}, nil, []int{http.StatusOK}, nil)
+	if err == nil {
+		t.Error("Expected an authentication error but got nil error")
+	}
+
+	if !strings.HasPrefix(err.Error(), expectedError) {
+		t.Errorf("Expected error message '%s' but got '%s'", expectedError, err.Error())
+	}
+}
+
+func TestUnitApiClient_UserManagedIdentity(t *testing.T) {
+
+	expectedError := "ManagedIdentityCredential authentication failed. the requested identity isn't assigned to this resource"
+
+	ctx := context.Background()
+	cfg := config.ProviderConfig{
+		UseMsi:   true,
+		ClientId: uuid.NewString(),
+	}
+
+	x := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := x.Execute(ctx, []string{"test"}, "GET", "https://api.bap.microsoft.com", http.Header{}, nil, []int{http.StatusOK}, nil)
+	if err == nil {
+		t.Error("Expected an authentication error but got nil error")
+	}
+
+	if !strings.HasPrefix(err.Error(), expectedError) {
+		t.Errorf("Expected error message '%s' but got '%s'", expectedError, err.Error())
+	}
 }
