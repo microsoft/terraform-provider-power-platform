@@ -72,7 +72,7 @@ The Power Platform provider can use the [Azure CLI](https://learn.microsoft.com/
 
 ### Authenticating to Power Platform using a Service Principal with OIDC
 
-The Power Platform provider can use a Service Principal with OpenID Connect (OIDC) to authenticate to Power Platform services. By using [Microsoft Entra's workload identity federation](https://learn.microsoft.com/entra/workload-id/workload-identity-federation) your CI/CD pipelines in GitHub or Azure DevOps can access Power Platform resources without needing to manage secrets.
+The Power Platform provider can use a Service Principal with OpenID Connect (OIDC) to authenticate to Power Platform services. By using [Microsoft Entra's workload identity federation](https://learn.microsoft.com/entra/workload-id/workload-identity-federation), your CI/CD pipelines in GitHub or Azure DevOps can access Power Platform resources without needing to manage secrets.
 
 1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
 1. [Register your app registration with Power Platform](https://learn.microsoft.com/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
@@ -173,6 +173,8 @@ The Power Platform provider can use a [Managed Identity](https://learn.microsoft
 ### Authenticating to Power Platform Using Workload Identity Federation
 
 The Power Platform provider can use [Workload Identity Federation](https://devblogs.microsoft.com/devops/introduction-to-azure-devops-workload-identity-federation-oidc-with-terraform/) with Azure DeOps pipelines to authenticate to Power Platform services.
+
+*Note: For similar hands-off authentication in GitHub and Azure DevOps, the Power Platform Provider also supports the [OIDC authentication method](#authenticating-to-power-platform-using-a-service-principal-with-oidc).*
 
 1. Create an [App Registration](guides/app_registration.md) or a [User-Managed Identity](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview). This resource will be used to manage the identity federation with Azure DevOps.
 1. [Register the App Registration or Managed Identity with the Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal)

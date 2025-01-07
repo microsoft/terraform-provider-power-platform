@@ -80,7 +80,6 @@ func TestUnitSleepWithContext_HappyPath(t *testing.T) {
 }
 
 func TestUnitApiClient_SystemManagedIdentity(t *testing.T) {
-
 	expectedError := "ManagedIdentityCredential: failed to authenticate a system assigned identity."
 
 	ctx := context.Background()
@@ -100,7 +99,6 @@ func TestUnitApiClient_SystemManagedIdentity(t *testing.T) {
 }
 
 func TestUnitApiClient_UserManagedIdentity(t *testing.T) {
-
 	expectedError := "ManagedIdentityCredential authentication failed. the requested identity isn't assigned to this resource"
 
 	ctx := context.Background()
