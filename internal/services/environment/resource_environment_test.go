@@ -2292,6 +2292,7 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse_Region_Not_Availa
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
+				ExpectError: regexp.MustCompile(".*Provisioning environment in azure region .* failed"),
 				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
@@ -2304,8 +2305,6 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse_Region_Not_Availa
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "azure_region", "westeurope"),
 				),
 			},
 		},
