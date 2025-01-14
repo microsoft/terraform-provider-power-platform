@@ -46,6 +46,14 @@ func (r *DataRecordResource) Metadata(ctx context.Context, req resource.Metadata
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
+func (d *DataRecordResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		DynamicColumns(
+			path.Root("columns").Expression(),
+		),
+	}
+}
+
 func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
@@ -89,7 +97,8 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"columns": schema.DynamicAttribute{
 				MarkdownDescription: "Columns of the data record table",
-				Required:            true,
+				Optional:            true,
+				Computed:            true,
 			},
 		},
 	}
@@ -181,6 +190,23 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 	state.Columns = *columns
+
+	// columnsAsAtrributes, err := convertDynamicColumnsToAttributeTypes(ctx, state.Columns)
+	// if err != nil {
+	// 	resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to attribute types: %s", err.Error()), err.Error())
+	// 	return
+	// }
+
+	// for columnName, columnValue := range columnsAsAtrributes {
+	// 	resp.Diagnostics.AddWarning(fmt.Sprintf("Key: %s, Value: %s", columnName, columnValue), "")
+	// 	columnValueType := columnValue.Type()
+	// 	//if columnValueType.Equal(tftypes.String) {
+	// 	//if columnValueType.String() {
+	// 	//	resp.Diagnostics.AddError(fmt.Sprintf("Set type not supported"), "")
+	// 	//	}
+
+	// 	resp.Diagnostics.AddWarning(fmt.Sprintf("Key: %s, Value: %s", columnName, columnValueType.String()), "")
+	// }
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_data_record with table_name %s", r.ProviderTypeName, state.TableLogicalName.ValueString()))
 
@@ -408,13 +434,22 @@ func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrTy
 		listTypes = append(listTypes, tupleElementType)
 	}
 
-	nestedObjectType := types.TupleType{
-		ElemTypes: listTypes,
+	aaa := types.SetType{
+		ElemType: tupleElementType,
 	}
-	nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
+	bbb, _ := types.SetValue(tupleElementType, listValues)
 
-	attrValue[key] = nestedObjectValue
-	attrType[key] = nestedObjectType
+	// nestedObjectType := types.TupleType{
+	// 	ElemTypes: listTypes,
+	// }
+	// nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
+
+	// attrValue[key] = nestedObjectValue
+	// attrType[key] = nestedObjectType
+
+	attrValue[key] = bbb
+	attrType[key] = aaa
+
 	return nil
 }
 
