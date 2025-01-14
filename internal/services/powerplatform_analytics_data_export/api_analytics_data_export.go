@@ -23,9 +23,10 @@ type Client struct {
 }
 
 func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*AnalyticsDataDto, error) {
+	var analyticsUrl = getAnalyticsUrlMap()
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   client.Api.GetConfig().Urls.PowerPlatformAnalyticsUrl,
+		Host:   analyticsUrl[""],
 		Path:   "api/v2/connections",
 	}
 
@@ -92,4 +93,29 @@ func (client *Client) DeleteAnalyticsDataExport(ctx context.Context, id string) 
 	}
 
 	return nil
+}
+
+func getAnalyticsUrlMap() map[string]string {
+	return map[string]string{
+		"US":   "https://na.csanalytics.powerplatform.microsoft.com/",
+		"CAN":  "https://can.csanalytics.powerplatform.microsoft.com/",
+		"SAM":  "https://sam.csanalytics.powerplatform.microsoft.com/",
+		"EMEA": "https://emea.csanalytics.powerplatform.microsoft.com/",
+		"OCE":  "https://oce.csanalytics.powerplatform.microsoft.com/",
+		"PAC":  "https://apac.csanalytics.powerplatform.microsoft.com/",
+		"JPN":  "https://jpn.csanalytics.powerplatform.microsoft.com/",
+		"CHE":  "https://che.csanalytics.powerplatform.microsoft.com/",
+		"FRA":  "https://fra.csanalytics.powerplatform.microsoft.com/",
+		"UAE":  "https://uae.csanalytics.powerplatform.microsoft.com/",
+		"GER":  "https://ger.csanalytics.powerplatform.microsoft.com/",
+		"GBR":  "https://gbr.csanalytics.powerplatform.microsoft.com/",
+		"IND":  "https://ind.csanalytics.powerplatform.microsoft.com/",
+		"KOR":  "https://kor.csanalytics.powerplatform.microsoft.com/",
+		"NOR":  "https://nor.csanalytics.powerplatform.microsoft.com/",
+		"ZAF":  "https://zaf.csanalytics.powerplatform.microsoft.com/",
+		"SGP":  "https://sgp.csanalytics.powerplatform.microsoft.com/",
+		"SWE":  "https://swe.csanalytics.powerplatform.microsoft.com/",
+		"GOV":  "https://gcc.csanalytics.powerplatform.microsoft.com/",
+		"HIGH": "https://high.csanalytics.powerplatform.microsoft.com/",
+	}
 }
