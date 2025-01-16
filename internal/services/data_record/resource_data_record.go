@@ -417,13 +417,11 @@ func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrTy
 		listTypes = append(listTypes, tupleElementType)
 	}
 
-	nestedObjectType := types.TupleType{
-		ElemTypes: listTypes,
-	}
-	nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
-
+	nestedObjectValue, _ := types.SetValue(tupleElementType, listValues)
 	attrValue[key] = nestedObjectValue
-	attrType[key] = nestedObjectType
+	attrType[key] = types.SetType{
+		ElemType: tupleElementType,
+	}
 
 	return nil
 }
