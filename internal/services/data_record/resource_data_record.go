@@ -97,8 +97,7 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"columns": schema.DynamicAttribute{
 				MarkdownDescription: "Columns of the data record table",
-				Optional:            true,
-				Computed:            true,
+				Required:            true,
 			},
 		},
 	}
