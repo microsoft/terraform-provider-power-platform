@@ -191,23 +191,6 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 	state.Columns = *columns
 
-	// columnsAsAtrributes, err := convertDynamicColumnsToAttributeTypes(ctx, state.Columns)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(fmt.Sprintf("Error converting columns to attribute types: %s", err.Error()), err.Error())
-	// 	return
-	// }
-
-	// for columnName, columnValue := range columnsAsAtrributes {
-	// 	resp.Diagnostics.AddWarning(fmt.Sprintf("Key: %s, Value: %s", columnName, columnValue), "")
-	// 	columnValueType := columnValue.Type()
-	// 	//if columnValueType.Equal(tftypes.String) {
-	// 	//if columnValueType.String() {
-	// 	//	resp.Diagnostics.AddError(fmt.Sprintf("Set type not supported"), "")
-	// 	//	}
-
-	// 	resp.Diagnostics.AddWarning(fmt.Sprintf("Key: %s, Value: %s", columnName, columnValueType.String()), "")
-	// }
-
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s_data_record with table_name %s", r.ProviderTypeName, state.TableLogicalName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -434,21 +417,13 @@ func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrTy
 		listTypes = append(listTypes, tupleElementType)
 	}
 
-	aaa := types.SetType{
-		ElemType: tupleElementType,
+	nestedObjectType := types.TupleType{
+		ElemTypes: listTypes,
 	}
-	bbb, _ := types.SetValue(tupleElementType, listValues)
+	nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
 
-	// nestedObjectType := types.TupleType{
-	// 	ElemTypes: listTypes,
-	// }
-	// nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
-
-	// attrValue[key] = nestedObjectValue
-	// attrType[key] = nestedObjectType
-
-	attrValue[key] = bbb
-	attrType[key] = aaa
+	attrValue[key] = nestedObjectValue
+	attrType[key] = nestedObjectType
 
 	return nil
 }
