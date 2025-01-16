@@ -9,7 +9,7 @@ import (
 )
 
 // DynamicColumns returns a ConfigValidator that ensures that the given expression
-// many-to-one relationships are using set collections
+// many-to-one relationships are using set collections.
 func DynamicColumns(expression path.Expression) resource.ConfigValidator {
 	return &DynamicsColumnsValidator{
 		PathExpression: expression,

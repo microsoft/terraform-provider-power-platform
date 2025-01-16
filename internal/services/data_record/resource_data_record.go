@@ -414,7 +414,6 @@ func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrTy
 			"data_record_id":     types.StringValue(dataRecordId),
 		})
 		listValues = append(listValues, v)
-		listTypes = append(listTypes, tupleElementType)
 	}
 
 	nestedObjectValue, _ := types.SetValue(tupleElementType, listValues)
