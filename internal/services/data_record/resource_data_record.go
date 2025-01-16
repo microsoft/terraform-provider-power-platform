@@ -378,7 +378,6 @@ func caseMapStringOfAny(columnValue any, attrValue map[string]attr.Value, attrTy
 
 func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrType map[string]attr.Type,
 	apiClient *client, objectType map[string]attr.Type, key, environmentId, tableLogicalName, recordid string) error {
-	var listTypes []attr.Type
 	var listValues []attr.Value
 	tupleElementType := types.ObjectType{
 		AttrTypes: objectType,
