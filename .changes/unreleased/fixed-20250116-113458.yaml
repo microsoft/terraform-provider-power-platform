@@ -1,4 +1,4 @@
-kind: breaking
+kind: fixed
 body: 'powerplatform_data_record: adding warning when something else than set is used for columns dynamic attribute'
 time: 2025-01-16T11:34:58.638948179Z
 custom:
