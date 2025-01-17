@@ -46,6 +46,14 @@ func (r *DataRecordResource) Metadata(ctx context.Context, req resource.Metadata
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
+func (d *DataRecordResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		DynamicColumns(
+			path.Root("columns").Expression(),
+		),
+	}
+}
+
 func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
@@ -369,7 +377,6 @@ func caseMapStringOfAny(columnValue any, attrValue map[string]attr.Value, attrTy
 
 func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrType map[string]attr.Type,
 	apiClient *client, objectType map[string]attr.Type, key, environmentId, tableLogicalName, recordid string) error {
-	var listTypes []attr.Type
 	var listValues []attr.Value
 	tupleElementType := types.ObjectType{
 		AttrTypes: objectType,
@@ -405,16 +412,14 @@ func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrTy
 			"data_record_id":     types.StringValue(dataRecordId),
 		})
 		listValues = append(listValues, v)
-		listTypes = append(listTypes, tupleElementType)
 	}
 
-	nestedObjectType := types.TupleType{
-		ElemTypes: listTypes,
-	}
-	nestedObjectValue, _ := types.TupleValue(listTypes, listValues)
-
+	nestedObjectValue, _ := types.SetValue(tupleElementType, listValues)
 	attrValue[key] = nestedObjectValue
-	attrType[key] = nestedObjectType
+	attrType[key] = types.SetType{
+		ElemType: tupleElementType,
+	}
+
 	return nil
 }
 
