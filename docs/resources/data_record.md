@@ -125,7 +125,7 @@ resource "powerplatform_data_record" "app_user" {
       table_logical_name = "businessunit"
       data_record_id     = var.business_unit_id
     }
-    systemuserroles_association = tolist([for rid in var.role_ids : { table_logical_name = "role", data_record_id = tostring(rid) }])
+    systemuserroles_association =toset([for rid in var.role_ids : { table_logical_name = "role", data_record_id = tostring(rid) }])
   }
 }
 
