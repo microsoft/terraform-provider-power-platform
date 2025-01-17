@@ -17,6 +17,14 @@
       pull-requests: write
     
     jobs:
+      test:
+        runs-on: ubuntu-latest
+        name: test
+        steps:
+          - run: echo "test"
+          - run: echo "$GITHUB_CONTEXT"
+          - run: echo "$GITHUB_ACTOR"
+
       changelog-existence:
         name: Check Changelog
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-changelog') && github.actor != 'dependabot[bot]' }}
