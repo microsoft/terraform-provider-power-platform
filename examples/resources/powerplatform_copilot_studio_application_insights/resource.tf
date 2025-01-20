@@ -7,6 +7,7 @@ terraform {
 }
 
 provider "powerplatform" {
+  use_cli = true
 }
 
 resource "powerplatform_copilot_studio_application_insights" "cps_app_insights_config" {

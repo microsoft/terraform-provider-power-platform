@@ -301,7 +301,9 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return admin_management_application.NewAdminManagementApplicationResource() },
 		func() resource.Resource { return environment_group_rule_set.NewEnvironmentGroupRuleSetResource() },
 		func() resource.Resource { return enterprise_policy.NewEnterpisePolicyResource() },
-		func() resource.Resource { return copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource() },
+		func() resource.Resource {
+			return copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource()
+		},
 	}
 }
 

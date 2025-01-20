@@ -12,10 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
@@ -91,23 +90,32 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"network_isolation": schema.StringAttribute{
-				MarkdownDescription: "The network isolation setting for the Application Insights resource connection.",
-				Computed:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"errors": schema.SetAttribute{
-				MarkdownDescription: "Any errors arising from the Application Insights configuration.",
-				ElementType:         types.StringType,
-				Computed:            true,
-				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.UseStateForUnknown(),
-				},
-			},
 		},
 	}
+}
+
+func (r *Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
+		return
+	}
+
+	clientApi := req.ProviderData.(*api.ProviderClient).Api
+	if clientApi == nil {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.CopilotStudioApplicationInsightsClient = newCopilotStudioClient(clientApi)
+
+	tflog.Debug(ctx, "Successfully created clients")
 }
 
 func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -121,13 +129,13 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	appInsightsConfigToCreate, err := createAppInsightsConfigDtoFromSourceModel(ctx, *plan)
+	appInsightsConfigToCreate, err := createAppInsightsConfigDtoFromSourceModel(*plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting source model to create Copilot Studio Application Insights configuration dto", err.Error())
 	}
 
 	// You can't really create a config, so treat a create as an update
-	appInsightsConfigDto, err := r.CopilotStudioApplicationInsightsClient.updateCopilotStudioAppInsightsConfiguration(ctx, *appInsightsConfigToCreate)
+	appInsightsConfigDto, err := r.CopilotStudioApplicationInsightsClient.updateCopilotStudioAppInsightsConfiguration(ctx, *appInsightsConfigToCreate, plan.BotId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating/updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
@@ -155,7 +163,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 
-	appInsightsConfigDto, err := r.CopilotStudioApplicationInsightsClient.getCopilotStudioAppInsightsConfiguration(ctx, state.EnvironmentId.String(), state.BotId.String())
+	appInsightsConfigDto, err := r.CopilotStudioApplicationInsightsClient.getCopilotStudioAppInsightsConfiguration(ctx, state.EnvironmentId.ValueString(), state.BotId.ValueString())
 	if err != nil {
 		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
@@ -187,13 +195,13 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	appInsightsConfigToCreate, err := createAppInsightsConfigDtoFromSourceModel(ctx, *plan)
+	appInsightsConfigToCreate, err := createAppInsightsConfigDtoFromSourceModel(*plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting source model to create Copilot Studio Application Insights configuration dto", err.Error())
 	}
 
 	// You can't really create a config, so treat a create as an update
-	appInsightsConfigDto, err := r.CopilotStudioApplicationInsightsClient.updateCopilotStudioAppInsightsConfiguration(ctx, *appInsightsConfigToCreate)
+	appInsightsConfigDto, err := r.CopilotStudioApplicationInsightsClient.updateCopilotStudioAppInsightsConfiguration(ctx, *appInsightsConfigToCreate, plan.BotId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating/updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return

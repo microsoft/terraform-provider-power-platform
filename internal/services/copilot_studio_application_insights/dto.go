@@ -21,9 +21,10 @@ type EnvironmentIdDto struct {
 }
 
 type EnvironmentIdPropertiesDto struct {
+	TenantId         string              `json:"tenantId"`
 	RuntimeEndpoints RuntimeEndpointsDto `json:"runtimeEndpoints"`
 }
 
 type RuntimeEndpointsDto struct {
-	PowerVirtualAgents string `json:"powerVirtualAgents"`
+	PowerVirtualAgents string `json:"microsoft.PowerVirtualAgents"`
 }

@@ -28,7 +28,16 @@ func (client *client) getCopilotStudioEndpoint(ctx context.Context, environmentI
 	if err != nil {
 		return "", err
 	}
-	return env.Properties.RuntimeEndpoints.PowerVirtualAgents, nil
+	if env.Properties.RuntimeEndpoints.PowerVirtualAgents == "" {
+		return "", fmt.Errorf("Power Virtual Agents runtime endpoint is not available in the environment")
+	}
+
+	u, err := url.Parse(env.Properties.RuntimeEndpoints.PowerVirtualAgents)
+	if err != nil {
+		return "", err
+	}
+
+	return u.Host, nil
 }
 
 func (client *client) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
@@ -65,15 +74,16 @@ func (client *client) getCopilotStudioAppInsightsConfiguration(ctx context.Conte
 	apiUrl.RawQuery = values.Encode()
 
 	copilotStudioAppInsights := CopilotStudioAppInsightsDto{}
-
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &copilotStudioAppInsights)
+	_, err = client.Api.Execute(ctx, []string{constants.COPILOT_SCOPE}, "GET", apiUrl.String(), http.Header{"x-cci-tenantid": {"1dbbeae5-8fa6-462e-a5a1-9932a520a1dc"}}, nil, []int{http.StatusOK}, &copilotStudioAppInsights)
 	if err != nil {
 		return nil, err
 	}
+	copilotStudioAppInsights.EnvironmentId = environmentId
+	copilotStudioAppInsights.BotId = botId
 	return &copilotStudioAppInsights, nil
 }
 
-func (client *client) updateCopilotStudioAppInsightsConfiguration(ctx context.Context, copilotStudioAppInsightsConfig CopilotStudioAppInsightsDto) (*CopilotStudioAppInsightsDto, error) {
+func (client *client) updateCopilotStudioAppInsightsConfiguration(ctx context.Context, copilotStudioAppInsightsConfig CopilotStudioAppInsightsDto, botId string) (*CopilotStudioAppInsightsDto, error) {
 	copilotStudioEndpoint, err := client.getCopilotStudioEndpoint(ctx, copilotStudioAppInsightsConfig.EnvironmentId)
 	if err != nil {
 		return nil, err
@@ -82,17 +92,21 @@ func (client *client) updateCopilotStudioAppInsightsConfiguration(ctx context.Co
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   copilotStudioEndpoint,
-		Path:   fmt.Sprintf("/api/botmanagement/2022-01-15/environments/%s/bots/%s/applicationinsightsconfiguration", copilotStudioAppInsightsConfig.EnvironmentId, copilotStudioAppInsightsConfig.BotId),
+		Path:   fmt.Sprintf("/api/botmanagement/2022-01-15/environments/%s/bots/%s/applicationinsightsconfiguration", copilotStudioAppInsightsConfig.EnvironmentId, botId),
 	}
 	values := url.Values{}
 	apiUrl.RawQuery = values.Encode()
 
 	updatedCopilotStudioAppInsightsConfiguration := CopilotStudioAppInsightsDto{}
 
-	_, err = client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, copilotStudioAppInsightsConfig, []int{http.StatusOK}, &updatedCopilotStudioAppInsightsConfiguration)
+	_, err = client.Api.Execute(ctx, []string{constants.COPILOT_SCOPE}, "PUT", apiUrl.String(), http.Header{"x-cci-tenantid": {"1dbbeae5-8fa6-462e-a5a1-9932a520a1dc"}}, copilotStudioAppInsightsConfig, []int{http.StatusOK}, &updatedCopilotStudioAppInsightsConfiguration)
 	if err != nil {
 		return nil, err
 	}
-
+	if len(updatedCopilotStudioAppInsightsConfiguration.Errors) > 0 {
+		return nil, fmt.Errorf("Error updating Application Insights configuration: %s", updatedCopilotStudioAppInsightsConfiguration.Errors)
+	}
+	updatedCopilotStudioAppInsightsConfiguration.EnvironmentId = copilotStudioAppInsightsConfig.EnvironmentId
+	updatedCopilotStudioAppInsightsConfiguration.BotId = botId
 	return &updatedCopilotStudioAppInsightsConfiguration, nil
 }
