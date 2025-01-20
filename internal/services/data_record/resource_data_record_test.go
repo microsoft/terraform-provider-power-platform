@@ -68,12 +68,12 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 							}
 						
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 								}
-							]
+							])
 						}
 					}
 				`,
@@ -227,12 +227,12 @@ func TestUnitDataRecordResource_Validate_Create(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 							}
 						
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 								}
-							]
+							])
 						}
 					}
 				`,
@@ -537,12 +537,12 @@ func TestAccDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 							}
 						
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 								}
-							]
+							])
 						}
 					}
 				`,
@@ -701,12 +701,12 @@ func TestUnitDataRecordResource_Validate_Delete_Relationships(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 							}
 						
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 								}
-							]
+							])
 						}
 					}
 				`,
@@ -824,7 +824,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 							}
 
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
@@ -833,7 +833,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 									table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 								}
-							]
+							])
 						}
 					}
 				`,
@@ -905,7 +905,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 							}
 
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
@@ -914,7 +914,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 									table_logical_name = powerplatform_data_record.data_record_sample_contact3.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact3.id
 								}
-							]
+							])
 						}
 					}
 				`,
@@ -981,7 +981,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 							}
 
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
@@ -990,7 +990,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 									table_logical_name = powerplatform_data_record.data_record_sample_contact3.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact3.id
 								}
-							]
+							])
 						}
 					}
 				`,
@@ -1183,7 +1183,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
 							}
 
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact1.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact1.id
@@ -1192,7 +1192,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 									table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 								}
-							]
+							])
 						}
 					}
 				`,
@@ -1257,7 +1257,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 							}
 
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
@@ -1266,7 +1266,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 									table_logical_name = powerplatform_data_record.data_record_sample_contact3.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact3.id
 								}
-							]
+							])
 						}
 					}
 				`,
@@ -1327,7 +1327,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 								data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
 							}
 
-							contact_customer_accounts = [
+							contact_customer_accounts = toset([
 								{
 									table_logical_name = powerplatform_data_record.data_record_sample_contact2.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact2.id
@@ -1336,7 +1336,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 									table_logical_name = powerplatform_data_record.data_record_sample_contact3.table_logical_name
 									data_record_id      = powerplatform_data_record.data_record_sample_contact3.id
 								}
-							]
+							])
 						}
 					}
 				`,
