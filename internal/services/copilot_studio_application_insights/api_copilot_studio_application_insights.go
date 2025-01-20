@@ -65,6 +65,11 @@ func (client *client) getCopilotStudioAppInsightsConfiguration(ctx context.Conte
 		return nil, err
 	}
 
+	env, err := client.getEnvironment(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   copilotStudioEndpoint,
@@ -74,7 +79,7 @@ func (client *client) getCopilotStudioAppInsightsConfiguration(ctx context.Conte
 	apiUrl.RawQuery = values.Encode()
 
 	copilotStudioAppInsights := CopilotStudioAppInsightsDto{}
-	_, err = client.Api.Execute(ctx, []string{constants.COPILOT_SCOPE}, "GET", apiUrl.String(), http.Header{"x-cci-tenantid": {"1dbbeae5-8fa6-462e-a5a1-9932a520a1dc"}}, nil, []int{http.StatusOK}, &copilotStudioAppInsights)
+	_, err = client.Api.Execute(ctx, []string{constants.COPILOT_SCOPE}, "GET", apiUrl.String(), http.Header{"x-cci-tenantid": {env.Properties.TenantId}}, nil, []int{http.StatusOK}, &copilotStudioAppInsights)
 	if err != nil {
 		return nil, err
 	}
@@ -89,6 +94,11 @@ func (client *client) updateCopilotStudioAppInsightsConfiguration(ctx context.Co
 		return nil, err
 	}
 
+	env, err := client.getEnvironment(ctx, copilotStudioAppInsightsConfig.EnvironmentId)
+	if err != nil {
+		return nil, err
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   copilotStudioEndpoint,
@@ -99,7 +109,7 @@ func (client *client) updateCopilotStudioAppInsightsConfiguration(ctx context.Co
 
 	updatedCopilotStudioAppInsightsConfiguration := CopilotStudioAppInsightsDto{}
 
-	_, err = client.Api.Execute(ctx, []string{constants.COPILOT_SCOPE}, "PUT", apiUrl.String(), http.Header{"x-cci-tenantid": {"1dbbeae5-8fa6-462e-a5a1-9932a520a1dc"}}, copilotStudioAppInsightsConfig, []int{http.StatusOK}, &updatedCopilotStudioAppInsightsConfiguration)
+	_, err = client.Api.Execute(ctx, []string{constants.COPILOT_SCOPE}, "PUT", apiUrl.String(), http.Header{"x-cci-tenantid": {env.Properties.TenantId}}, copilotStudioAppInsightsConfig, []int{http.StatusOK}, &updatedCopilotStudioAppInsightsConfiguration)
 	if err != nil {
 		return nil, err
 	}

@@ -15,8 +15,6 @@ type ResourceModel struct {
 	IncludeSensitiveInformation types.Bool   `tfsdk:"include_sensitive_information"`
 	IncludeActivities           types.Bool   `tfsdk:"include_activities"`
 	IncludeActions              types.Bool   `tfsdk:"include_actions"`
-	//NetworkIsolation            types.String `tfsdk:"network_isolation"`
-	//Errors                      types.String `tfsdk:"errors"`
 }
 
 type Resource struct {
@@ -46,8 +44,6 @@ func convertAppInsightsConfigModelFromDto(appInsightsConfigDto *CopilotStudioApp
 		IncludeSensitiveInformation: types.BoolValue(appInsightsConfigDto.IncludeSensitiveInformation),
 		IncludeActivities:           types.BoolValue(appInsightsConfigDto.IncludeActivities),
 		IncludeActions:              types.BoolValue(appInsightsConfigDto.IncludeActions),
-		//NetworkIsolation:            types.StringValue(appInsightsConfigDto.NetworkIsolation),
-		//Errors:                      types.StringValue(appInsightsConfigDto.Errors),
 	}
 	return model, nil
 }
