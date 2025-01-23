@@ -38,7 +38,7 @@ resource "powerplatform_data_record" "contact1" {
     firstname = "contact1"
     lastname  = "contact1"
 
-    contact_customer_contacts = [
+    contact_customer_contacts = toset([
       {
         table_logical_name = powerplatform_data_record.contact2.table_logical_name
         data_record_id     = powerplatform_data_record.contact2.columns.contactid
@@ -47,7 +47,7 @@ resource "powerplatform_data_record" "contact1" {
         table_logical_name = powerplatform_data_record.contact3.table_logical_name
         data_record_id     = powerplatform_data_record.contact3.columns.contactid
       }
-    ]
+	])
   }
 }
 
@@ -59,12 +59,12 @@ resource "powerplatform_data_record" "contact2" {
     firstname = "contact2"
     lastname  = "contact2"
 
-    contact_customer_contacts = [
+    contact_customer_contacts = toset([
       {
         table_logical_name = powerplatform_data_record.contact4.table_logical_name
         data_record_id     = powerplatform_data_record.contact4.columns.contactid
       }
-    ]
+	])
   }
 }
 
@@ -85,12 +85,12 @@ resource "powerplatform_data_record" "contact4" {
     contactid = "00000000-0000-0000-0000-000000000004"
     firstname = "contact4"
     lastname  = "contact4"
-    account_primary_contact = [
+    account_primary_contact = toset([
       {
         table_logical_name = powerplatform_data_record.account1.table_logical_name
         data_record_id     = powerplatform_data_record.account1.columns.accountid
       }
-    ]
+	])
   }
 }
 
@@ -100,12 +100,12 @@ resource "powerplatform_data_record" "account1" {
   columns = {
     accountid = "00000000-0000-0000-0000-000000000010"
     name      = "account1"
-    contact_customer_accounts = [
+    contact_customer_accounts = toset([
       {
         table_logical_name = powerplatform_data_record.contact5.table_logical_name
         data_record_id     = powerplatform_data_record.contact5.columns.contactid
       }
-    ]
+	])
   }
 }
 
@@ -133,19 +133,19 @@ func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 						entity_collection = "contacts"
 						filter            = "firstname eq 'contact1'"
 						select            = ["fullname","firstname","lastname"]
-						expand = [
+						expand = toset([
 						  {
 							navigation_property = "contact_customer_contacts"
 							select              = ["fullname"]
-							expand = [
+							expand = toset([
 							  {
 								navigation_property = "contact_customer_contacts"
 								select              = ["fullname"]
-								expand = [
+								expand = toset([
 								  {
 									navigation_property = "account_primary_contact"
 									select              = ["name"]
-									expand = [
+									expand = toset([
 									  {
 										navigation_property = "contact_customer_accounts"
 										select              = ["fullname"]
@@ -154,13 +154,13 @@ func TestAccDataRecordDatasource_Validate_Expand_Query(t *testing.T) {
 										navigation_property = "primarycontactid"
 										select              = ["fullname"]
 									  }
-									]
+									])
 								  }
-								]
+								])
 							  }
-							]
+							])
 						  },
-						]
+						])
 					  
 						depends_on = [
 						  powerplatform_data_record.contact1,
@@ -308,18 +308,18 @@ func TestAccDataRecordDatasource_Validate_Single_Record_Expand_Query(t *testing.
 						environment_id    = powerplatform_environment.data_env.id
 						entity_collection = "contacts(00000000-0000-0000-0000-000000000001)"
 						select            = ["fullname","firstname","lastname"]
-						expand = [
+						expand = toset([
 						  {
 							navigation_property = "contact_customer_contacts"
 							select              = ["fullname"]
-							expand = [
+							expand = toset([
 							  {
 								navigation_property = "contact_customer_contacts"
 								select              = ["fullname"]
 							  }
-							]
+							])
 						  },
-						]
+						])
 					  
 						depends_on = [
 						  powerplatform_data_record.contact1,
