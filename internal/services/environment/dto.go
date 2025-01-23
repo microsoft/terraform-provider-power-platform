@@ -12,11 +12,11 @@ var (
 )
 
 type EnvironmentDto struct {
-	Id         string                  `json:"id"`
-	Type       string                  `json:"type"`
-	Location   string                  `json:"location"`
-	Name       string                  `json:"name"`
-	Properties EnviromentPropertiesDto `json:"properties"`
+	Id         string                   `json:"id"`
+	Type       string                   `json:"type"`
+	Location   string                   `json:"location"`
+	Name       string                   `json:"name"`
+	Properties *EnviromentPropertiesDto `json:"properties"`
 }
 
 type EnviromentPropertiesDto struct {
@@ -28,7 +28,7 @@ type EnviromentPropertiesDto struct {
 	RuntimeEndpoints          *RuntimeEndpointsDto              `json:"runtimeEndpoints,omitempty"`
 	LinkedEnvironmentMetadata *LinkedEnvironmentMetadataDto     `json:"linkedEnvironmentMetadata,omitempty"`
 	States                    *StatesEnvironmentDto             `json:"states"`
-	TenantID                  string                            `json:"tenantId"`
+	TenantId                  string                            `json:"tenantId"`
 	GovernanceConfiguration   GovernanceConfigurationDto        `json:"governanceConfiguration"`
 	BillingPolicy             *BillingPolicyDto                 `json:"billingPolicy,omitempty"`
 	ProvisioningState         string                            `json:"provisioningState,omitempty"`

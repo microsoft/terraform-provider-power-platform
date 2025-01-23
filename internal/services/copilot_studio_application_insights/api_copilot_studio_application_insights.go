@@ -8,27 +8,31 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
 func newCopilotStudioClient(apiClient *api.Client) client {
 	return client{
-		Api: apiClient,
+		Api:               apiClient,
+		EnvironmentClient: environment.NewEnvironmentClient(apiClient),
 	}
 }
 
 type client struct {
-	Api *api.Client
+	Api               *api.Client
+	EnvironmentClient environment.Client
 }
 
 func (client *client) getCopilotStudioEndpoint(ctx context.Context, environmentId string) (string, error) {
-	env, err := client.getEnvironment(ctx, environmentId)
+	env, err := client.EnvironmentClient.GetEnvironment(ctx, environmentId)
 	if err != nil {
 		return "", err
 	}
-	if env.Properties.RuntimeEndpoints.PowerVirtualAgents == "" {
+	if env == nil || env.Properties == nil || env.Properties.RuntimeEndpoints == nil || env.Properties.RuntimeEndpoints.PowerVirtualAgents == "" {
 		return "", fmt.Errorf("Power Virtual Agents runtime endpoint is not available in the environment")
 	}
 
@@ -40,34 +44,31 @@ func (client *client) getCopilotStudioEndpoint(ctx context.Context, environmentI
 	return u.Host, nil
 }
 
-func (client *client) getEnvironment(ctx context.Context, environmentId string) (*EnvironmentIdDto, error) {
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   client.Api.GetConfig().Urls.BapiUrl,
-		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
+func parseImportId(importId string) (envId string, botId string, err error) {
+	parts := strings.Split(importId, "_")
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invalid import id format")
 	}
-	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
-	apiUrl.RawQuery = values.Encode()
+	return parts[0], parts[1], nil
+}
 
-	env := EnvironmentIdDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+func (client *client) getCopilotStudioAppInsightsConfiguration(ctx context.Context, importId string) (*CopilotStudioAppInsightsDto, error) {
+	environmentId, botId, err := parseImportId(importId)
 	if err != nil {
 		return nil, err
 	}
-
-	return &env, nil
-}
-
-func (client *client) getCopilotStudioAppInsightsConfiguration(ctx context.Context, environmentId, botId string) (*CopilotStudioAppInsightsDto, error) {
 	copilotStudioEndpoint, err := client.getCopilotStudioEndpoint(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
-	env, err := client.getEnvironment(ctx, environmentId)
+	env, err := client.EnvironmentClient.GetEnvironment(ctx, environmentId)
 	if err != nil {
 		return nil, err
+	}
+
+	if env == nil || env.Properties == nil || env.Properties.TenantId == "" {
+		return nil, fmt.Errorf("TenantId value is not available in the environment properties")
 	}
 
 	apiUrl := &url.URL{
@@ -94,9 +95,13 @@ func (client *client) updateCopilotStudioAppInsightsConfiguration(ctx context.Co
 		return nil, err
 	}
 
-	env, err := client.getEnvironment(ctx, copilotStudioAppInsightsConfig.EnvironmentId)
+	env, err := client.EnvironmentClient.GetEnvironment(ctx, copilotStudioAppInsightsConfig.EnvironmentId)
 	if err != nil {
 		return nil, err
+	}
+
+	if env == nil || env.Properties == nil || env.Properties.TenantId == "" {
+		return nil, fmt.Errorf("TenantId value is not available in the environment properties")
 	}
 
 	apiUrl := &url.URL{

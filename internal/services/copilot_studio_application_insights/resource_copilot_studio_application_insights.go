@@ -48,6 +48,13 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages the [Application Insights configuration for a Copilot](https://learn.microsoft.com/en-us/microsoft-copilot-studio/advanced-bot-framework-composer-capture-telemetry?tabs=webApp).",
 		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				MarkdownDescription: "Unique id of the Copilot Studio Application Insights configuration",
+				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"bot_id": schema.StringAttribute{
 				MarkdownDescription: "The ID of the Copilot for which the Application Insights configuration is to be managed.",
 				Required:            true,
@@ -65,9 +72,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			"application_insights_connection_string": schema.StringAttribute{
 				MarkdownDescription: "The connection string for the target Application Insights resource in Azure. If needed, follow [these instructions](https://learn.microsoft.com/en-us/azure/azure-monitor/app/connection-strings?tabs=net#find-your-connection-string) to find your connection string.",
 				Required:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"include_sensitive_information": schema.BoolAttribute{
 				MarkdownDescription: "Whether to log sensitive properties such as user ID, name, and text.",
@@ -163,7 +167,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 
-	appInsightsConfigDto, err := r.CopilotStudioApplicationInsightsClient.getCopilotStudioAppInsightsConfiguration(ctx, state.EnvironmentId.ValueString(), state.BotId.ValueString())
+	appInsightsConfigDto, err := r.CopilotStudioApplicationInsightsClient.getCopilotStudioAppInsightsConfiguration(ctx, state.Id.ValueString())
 	if err != nil {
 		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
 			resp.State.RemoveResource(ctx)
@@ -219,8 +223,31 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 }
 
 func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// Log that the delete operation is not supported
-	tflog.Warn(ctx, "Delete operation is not supported for the Copilot Studio Application Insights configuration resource")
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	var state *ResourceModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	appInsightsConfigToCreate, err := createAppInsightsConfigDtoFromSourceModel(*state)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when converting source model to create Copilot Studio Application Insights configuration dto", err.Error())
+	}
+	appInsightsConfigToCreate.AppInsightsConnectionString = ""
+	appInsightsConfigToCreate.IncludeSensitiveInformation = false
+	appInsightsConfigToCreate.IncludeActivities = false
+	appInsightsConfigToCreate.IncludeActions = false
+
+	_, err = r.CopilotStudioApplicationInsightsClient.updateCopilotStudioAppInsightsConfiguration(ctx, *appInsightsConfigToCreate, state.BotId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
 	resp.State.RemoveResource(ctx)
 }
 

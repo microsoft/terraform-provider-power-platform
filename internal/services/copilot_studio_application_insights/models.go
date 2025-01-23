@@ -4,11 +4,14 @@
 package copilot_studio_application_insights
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 type ResourceModel struct {
+	Id                          types.String `tfsdk:"id"`
 	EnvironmentId               types.String `tfsdk:"environment_id"`
 	BotId                       types.String `tfsdk:"bot_id"`
 	AppInsightsConnectionString types.String `tfsdk:"application_insights_connection_string"`
@@ -38,6 +41,7 @@ func createAppInsightsConfigDtoFromSourceModel(appInsightsConfigSource ResourceM
 
 func convertAppInsightsConfigModelFromDto(appInsightsConfigDto *CopilotStudioAppInsightsDto) (*ResourceModel, error) {
 	model := &ResourceModel{
+		Id:                          types.StringValue(fmt.Sprintf("%s_%s", appInsightsConfigDto.EnvironmentId, appInsightsConfigDto.BotId)),
 		EnvironmentId:               types.StringValue(appInsightsConfigDto.EnvironmentId),
 		BotId:                       types.StringValue(appInsightsConfigDto.BotId),
 		AppInsightsConnectionString: types.StringValue(appInsightsConfigDto.AppInsightsConnectionString),

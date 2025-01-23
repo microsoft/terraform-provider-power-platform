@@ -16,7 +16,7 @@ Manages the [Application Insights configuration for a Copilot](https://learn.mic
 terraform {
   required_providers {
     powerplatform = {
-      source = "local/power-platform"
+      source = "microsoft/power-platform"
     }
   }
 }
@@ -29,9 +29,9 @@ resource "powerplatform_copilot_studio_application_insights" "cps_app_insights_c
   environment_id                         = var.environment_id
   bot_id                                 = var.bot_id
   application_insights_connection_string = var.application_insights_connection_string
-  include_sensitive_information          = false
   include_activities                     = true
-  include_actions                        = true
+  include_sensitive_information          = false
+  include_actions                        = false
 }
 ```
 
@@ -49,3 +49,16 @@ resource "powerplatform_copilot_studio_application_insights" "cps_app_insights_c
 - `include_actions` (Boolean) Whether to log an event each time a node within a topic is executed.
 - `include_activities` (Boolean) Whether to log details of incoming/outgoing messages and events.
 - `include_sensitive_information` (Boolean) Whether to log sensitive properties such as user ID, name, and text.
+
+### Read-Only
+
+- `id` (String) Unique id of the Copilot Studio Application Insights configuration
+
+## Import
+
+Import is supported using the following syntax:
+
+```shell
+# Copilot Application Insights resource can be imported using the id in format `<environmentid>_<botid>` (replace with a real id guid)
+terraform import powerplatform_copilot_studio_application_insights.example 00000000-0000-0000-0000-000000000000
+```
