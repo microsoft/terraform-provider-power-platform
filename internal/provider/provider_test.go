@@ -21,6 +21,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/capacity"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/connection"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/connectors"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/copilot_studio_application_insights"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/currencies"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/data_record"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/dlp_policy"
@@ -95,6 +96,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		admin_management_application.NewAdminManagementApplicationResource(),
 		environment_group_rule_set.NewEnvironmentGroupRuleSetResource(),
 		enterprise_policy.NewEnterpisePolicyResource(),
+		copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource(),
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
 

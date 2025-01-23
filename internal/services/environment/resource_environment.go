@@ -466,15 +466,17 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
+	envProp := EnviromentPropertiesDto{
+		DisplayName:    plan.DisplayName.ValueString(),
+		EnvironmentSku: plan.EnvironmentType.ValueString(),
+	}
+
 	environmentDto := EnvironmentDto{
-		Id:       plan.Id.ValueString(),
-		Name:     plan.DisplayName.ValueString(),
-		Type:     plan.EnvironmentType.ValueString(),
-		Location: plan.Location.ValueString(),
-		Properties: EnviromentPropertiesDto{
-			DisplayName:    plan.DisplayName.ValueString(),
-			EnvironmentSku: plan.EnvironmentType.ValueString(),
-		},
+		Id:         plan.Id.ValueString(),
+		Name:       plan.DisplayName.ValueString(),
+		Type:       plan.EnvironmentType.ValueString(),
+		Location:   plan.Location.ValueString(),
+		Properties: &envProp,
 	}
 
 	if plan.EnvironmentType.ValueString() != state.EnvironmentType.ValueString() {
