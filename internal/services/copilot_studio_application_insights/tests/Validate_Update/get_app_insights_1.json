@@ -1,0 +1,8 @@
+{
+    "appInsightsConnectionString": "<<connection_string>>",
+    "includeSensitiveInformation": false,
+    "includeActivities": false,
+    "includeActions": false,
+    "networkIsolation": "PublicNetwork",
+    "errors": null
+}

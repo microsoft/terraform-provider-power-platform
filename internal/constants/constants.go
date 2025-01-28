@@ -89,6 +89,10 @@ const (
 )
 
 const (
+	COPILOT_SCOPE = "96ff4394-9197-43aa-b393-6a41652e21f8"
+)
+
+const (
 	DATAVERSE_API_VERSION     = "v9.2"
 	HEADER_ODATA_ENTITY_ID    = "Odata-Entityid"
 	HEADER_LOCATION           = "Location"

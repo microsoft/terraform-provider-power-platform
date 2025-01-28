@@ -12,11 +12,11 @@ var (
 )
 
 type EnvironmentDto struct {
-	Id         string                  `json:"id"`
-	Type       string                  `json:"type"`
-	Location   string                  `json:"location"`
-	Name       string                  `json:"name"`
-	Properties EnviromentPropertiesDto `json:"properties"`
+	Id         string                   `json:"id"`
+	Type       string                   `json:"type"`
+	Location   string                   `json:"location"`
+	Name       string                   `json:"name"`
+	Properties *EnviromentPropertiesDto `json:"properties"`
 }
 
 type EnviromentPropertiesDto struct {
@@ -25,9 +25,10 @@ type EnviromentPropertiesDto struct {
 	DisplayName               string                            `json:"displayName"`
 	EnvironmentSku            string                            `json:"environmentSku"`
 	LinkedAppMetadata         *LinkedAppMetadataDto             `json:"linkedAppMetadata,omitempty"`
+	RuntimeEndpoints          *RuntimeEndpointsDto              `json:"runtimeEndpoints,omitempty"`
 	LinkedEnvironmentMetadata *LinkedEnvironmentMetadataDto     `json:"linkedEnvironmentMetadata,omitempty"`
 	States                    *StatesEnvironmentDto             `json:"states"`
-	TenantID                  string                            `json:"tenantId"`
+	TenantId                  string                            `json:"tenantId"`
 	GovernanceConfiguration   GovernanceConfigurationDto        `json:"governanceConfiguration"`
 	BillingPolicy             *BillingPolicyDto                 `json:"billingPolicy,omitempty"`
 	ProvisioningState         string                            `json:"provisioningState,omitempty"`
@@ -96,6 +97,16 @@ type LinkedEnvironmentMetadataDto struct {
 	Templates                 []string                   `json:"template,omitempty"`
 	TemplateMetadata          *createTemplateMetadataDto `json:"templateMetadata,omitempty"`
 	UniqueName                string                     `json:"uniqueName"`
+}
+
+type RuntimeEndpointsDto struct {
+	BusinessAppPlatform string `json:"microsoft.BusinessAppPlatform"`
+	CommonDataModel     string `json:"microsoft.CommonDataModel"`
+	PowerApps           string `json:"microsoft.PowerApps"`
+	PowerAppsAdvisor    string `json:"microsoft.PowerAppsAdvisor"`
+	PowerVirtualAgents  string `json:"microsoft.PowerVirtualAgents"`
+	ApiManagement       string `json:"microsoft.ApiManagement"`
+	Flow                string `json:"microsoft.Flow"`
 }
 
 type LinkedAppMetadataDto struct {
