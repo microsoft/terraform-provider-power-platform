@@ -170,7 +170,7 @@ The Power Platform provider can use a [Managed Identity](https://learn.microsoft
     }
     ```
 
-### Authenticating to Power Platform Using Workload Identity Federation
+### Authenticating to Power Platform Using Azure DevOps Workload Identity Federation
 
 The Power Platform provider can use [Workload Identity Federation](https://devblogs.microsoft.com/devops/introduction-to-azure-devops-workload-identity-federation-oidc-with-terraform/) with Azure DeOps pipelines to authenticate to Power Platform services.
 
