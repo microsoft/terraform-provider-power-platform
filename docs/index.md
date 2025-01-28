@@ -179,7 +179,7 @@ The Power Platform provider can use [Azure DevOps Workload Identity Federation](
 1. Create an [App Registration](guides/app_registration.md) or a [User-Managed Identity](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview). This resource will be used to manage the identity federation with Azure DevOps.
 1. Register the App Registration or Managed Identity with the Power Platform. This task can be performed using [the provider itself](/resources/admin_management_application.md) or [PowerShell](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal).
 1. [Complete the service connection configuration in Azure and Azure DevOps](https://learn.microsoft.com/en-us/azure/devops/pipelines/release/configure-workload-identity?view=azure-devops&tabs=managed-identity). Note that Azure DevOps may automatically generate the federated credential in Azure, depending on your permissions and Azure Subscription configuration.
-1. Configure the provider to use Workload Identity Federation. This authentication option also requires values to be set in the ARM_OIDC_REQUEST_TOKEN and POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID environment variables, which should be configured in the AzDO pipeline itself. Note that this example sets some of the required properties in the provider configuration, but the whole configuration could also be performed using just environment variables.
+1. Configure the provider to use Azure DevOps Workload Identity Federation. This authentication option also requires values to be set in the ARM_OIDC_REQUEST_TOKEN and POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID environment variables, which should be configured in the AzDO pipeline itself. Note that this example sets some of the required properties in the provider configuration, but the whole configuration could also be performed using just environment variables.
 
     ```terraform
     provider "powerplatform" {
@@ -203,7 +203,6 @@ We recommend using Environment Variables to pass the credentials to the provider
 | `POWER_PLATFORM_USE_MSI` | if set to `true` then Managed Identity authentication will be used | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE` | The Base64 format of your certificate that will be used for certificate-based authentication | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH` | The path to the certificate that will be used for certificate-based authentication | |
-| `POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD` | Password for the provider certificate | |
 | `POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID` | The GUID of the Azure DevOps service connection to be used for Azure DevOps Workload Identity Federation | |
 
 -> Variables passed into the provider will override the environment variables.
