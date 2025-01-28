@@ -239,6 +239,19 @@ func (client *Auth) AuthenticateSystemManagedIdentity(ctx context.Context, scope
 }
 
 func (client *Auth) AuthenticateAzDOWorkloadIdentityFederation(ctx context.Context, scopes []string) (string, time.Time, error) {
+	if client.config.TenantId == "" {
+		return "", time.Time{}, fmt.Errorf("Tenant ID must be provided to use Azure DevOps Workload Identity Federation.")
+	}
+	if client.config.ClientId == "" {
+		return "", time.Time{}, fmt.Errorf("Client ID must be provided to use Azure DevOps Workload Identity Federation.")
+	}
+	if client.config.AzDOServiceConnectionID == "" {
+		return "", time.Time{}, fmt.Errorf("The Azure DevOps service connection ID could not be found.")
+	}
+	if client.config.OidcRequestToken == "" {
+		return "", time.Time{}, fmt.Errorf("Could not obtain an OIDC request token for Azure DevOps Workload Identity Federation.")
+	}
+
 	azdoWorkloadIdentityCredential, err := azidentity.NewAzurePipelinesCredential(
 		client.config.TenantId,
 		client.config.ClientId,
