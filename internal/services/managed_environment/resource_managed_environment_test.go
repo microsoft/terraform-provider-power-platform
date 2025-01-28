@@ -40,7 +40,7 @@ func TestAccManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 					max_limit_user_sharing     = 10
 					solution_checker_mode      = "None"
 					suppress_validation_emails = true
-					solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+					solution_checker_rule_overrides = "meta-remove-dup-reg"
 					maker_onboarding_markdown  = "this is test markdown"
 					maker_onboarding_url       = "http://www.example.com"
 				}`,
@@ -89,7 +89,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 					max_limit_user_sharing     = 10
 					solution_checker_mode      = "None"
 					suppress_validation_emails = true
-					solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+					solution_checker_rule_overrides = "meta-remove-dup-reg"
 					maker_onboarding_markdown  = "this is test markdown"
 					maker_onboarding_url       = "http://www.example.com"
 				}`,
@@ -119,7 +119,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 					max_limit_user_sharing     = 10
 					solution_checker_mode      = "None"
 					suppress_validation_emails = true
-					solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+					solution_checker_rule_overrides = "meta-remove-dup-reg"
 					maker_onboarding_markdown  = "this is test markdown"
 					maker_onboarding_url       = "http://www.example.com"
 				}`,
@@ -150,7 +150,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 					max_limit_user_sharing     = 10
 					solution_checker_mode      = "None"
 					suppress_validation_emails = true
-					solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+					solution_checker_rule_overrides = "meta-remove-dup-reg"
 					maker_onboarding_markdown  = "this is test markdown"
 					maker_onboarding_url       = "http://www.example.com"
 				}`,
@@ -181,7 +181,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 					max_limit_user_sharing     = 10
 					solution_checker_mode      = "None"
 					suppress_validation_emails = true
-					solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+					solution_checker_rule_overrides = "meta-remove-dup-reg"
 					maker_onboarding_markdown  = "this is test markdown"
 					maker_onboarding_url       = "http://www.example.com"
 				}`,
@@ -212,7 +212,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 					max_limit_user_sharing     = -1
 					solution_checker_mode      = "None"
 					suppress_validation_emails = true
-					solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+					solution_checker_rule_overrides = "meta-remove-dup-reg"
 					maker_onboarding_markdown  = "this is test markdown"
 					maker_onboarding_url       = "http://www.example.com"
 				}`,
@@ -243,7 +243,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 					max_limit_user_sharing     = -1
 					solution_checker_mode      = "None"
 					suppress_validation_emails = false
-					solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+					solution_checker_rule_overrides = "meta-remove-dup-reg"
 					maker_onboarding_markdown  = "this is test markdown"
 					maker_onboarding_url       = "http://www.example.com"
 				}`,
@@ -274,7 +274,38 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 					max_limit_user_sharing     = -1
 					solution_checker_mode      = "None"
 					suppress_validation_emails = false
-					solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+					solution_checker_rule_overrides = "meta-remove-dup-reg"
+					maker_onboarding_markdown  = "this is test markdown changed"
+					maker_onboarding_url       = "http://www.example.com"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "solution_checker_rule_overrides", "meta-remove-dup-reg"),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "unitedstates"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code    = "1033"
+						currency_code    = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+				
+				resource "powerplatform_managed_environment" "managed_development" {
+					environment_id             = powerplatform_environment.development.id
+					is_usage_insights_disabled = false
+					is_group_sharing_disabled  = false
+					limit_sharing_mode         = "NoLimit"
+					max_limit_user_sharing     = -1
+					solution_checker_mode      = "None"
+					suppress_validation_emails = false
+					solution_checker_rule_overrides = "meta-remove-dup-reg"
 					maker_onboarding_markdown  = "this is test markdown changed"
 					maker_onboarding_url       = "http://www.example.com"
 				}`,
@@ -305,7 +336,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 					max_limit_user_sharing     = -1
 					solution_checker_mode      = "None"
 					suppress_validation_emails = false
-					solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+					solution_checker_rule_overrides = "meta-remove-dup-reg"
 					maker_onboarding_markdown  = "this is test markdown changed"
 					maker_onboarding_url       = "http://www.example-changed.com"
 				}`,
@@ -336,7 +367,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 					max_limit_user_sharing     = -1
 					solution_checker_mode      = "Warn"
 					suppress_validation_emails = false
-					solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+					solution_checker_rule_overrides = "meta-remove-dup-reg"
 					maker_onboarding_markdown  = "this is test markdown changed"
 					maker_onboarding_url       = "http://www.example-changed.com"
 				}`,
@@ -392,7 +423,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 					max_limit_user_sharing     = 10
 					solution_checker_mode      = "None"
 					suppress_validation_emails = true
-					solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+					solution_checker_rule_overrides = "meta-remove-dup-reg"
 					maker_onboarding_markdown  = "this is test markdown"
 					maker_onboarding_url       = "http://www.example.com"
 				}`,
@@ -460,7 +491,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						max_limit_user_sharing     = 10
 						solution_checker_mode      = "None"
 						suppress_validation_emails = true
-						solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+						solution_checker_rule_overrides = "meta-remove-dup-reg"
 						maker_onboarding_markdown  = "this is test markdown"
 						maker_onboarding_url       = "http://www.example.com"
 					}`,
@@ -480,7 +511,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						max_limit_user_sharing     = 10
 						solution_checker_mode      = "None"
 						suppress_validation_emails = true
-						solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+						solution_checker_rule_overrides = "meta-remove-dup-reg"
 						maker_onboarding_markdown  = "this is test markdown"
 						maker_onboarding_url       = "http://www.example.com"
 					}`,
@@ -500,7 +531,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						max_limit_user_sharing     = -1
 						solution_checker_mode      = "None"
 						suppress_validation_emails = true
-						solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+						solution_checker_rule_overrides = "meta-remove-dup-reg"
 						maker_onboarding_markdown  = "this is test markdown"
 						maker_onboarding_url       = "http://www.example.com"
 					}`,
@@ -520,7 +551,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						max_limit_user_sharing     = -1
 						solution_checker_mode      = "Warn"
 						suppress_validation_emails = true
-						solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+						solution_checker_rule_overrides = "meta-remove-dup-reg"
 						maker_onboarding_markdown  = "this is test markdown"
 						maker_onboarding_url       = "http://www.example.com"
 					}`,
@@ -540,7 +571,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						max_limit_user_sharing     = -1
 						solution_checker_mode      = "Warn"
 						suppress_validation_emails = false
-						solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+						solution_checker_rule_overrides = "meta-remove-dup-reg"
 						maker_onboarding_markdown  = "this is test markdown"
 						maker_onboarding_url       = "http://www.example.com"
 					}`,
@@ -560,7 +591,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						max_limit_user_sharing     = -1
 						solution_checker_mode      = "Warn"
 						suppress_validation_emails = false
-						solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+						solution_checker_rule_overrides = "meta-remove-dup-reg"
 						maker_onboarding_markdown  = "this is test markdown"
 						maker_onboarding_url       = "http://www.example.com"
 					}`,
@@ -580,7 +611,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						max_limit_user_sharing     = -1
 						solution_checker_mode      = "Warn"
 						suppress_validation_emails = false
-						solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+						solution_checker_rule_overrides = "meta-remove-dup-reg"
 						maker_onboarding_markdown  = "this is test markdown 2"
 						maker_onboarding_url       = "http://www.example.com"
 					}`,
@@ -600,7 +631,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						max_limit_user_sharing     = -1
 						solution_checker_mode      = "Warn"
 						suppress_validation_emails = false
-						solution_checker_rule_overrides = ["meta-remove-dup-reg"]
+						solution_checker_rule_overrides = "meta-remove-dup-reg"
 						maker_onboarding_markdown  = "this is test markdown 2"
 						maker_onboarding_url       = "http://www.example2.com"
 					}`,
