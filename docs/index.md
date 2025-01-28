@@ -39,7 +39,7 @@ Terraform supports a number of different methods for authenticating to Power Pla
 * [Authenticating to Power Platform using a Service Principal with OIDC](#authenticating-to-power-platform-using-a-service-principal-with-oidc)
 * [Authenticating to Power Platform using a Service Principal and a Client Secret](#authenticating-to-power-platform-using-a-service-principal-and-a-client-secret)
 * [Authenticating to Power Platform using a Managed Identity](#authenticating-to-power-platform-using-a-managed-identity)
-* [Authenticating to Power Platform using Workload Identity Federation](#authenticating-to-power-platform-using-workload-identity-federation)
+* [Authenticating to Power Platform using Azure DevOps Workload Identity Federation](#authenticating-to-power-platform-using-workload-identity-federation)
 
 We recommend using either a Service Principal when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
 
@@ -204,7 +204,7 @@ We recommend using Environment Variables to pass the credentials to the provider
 | `POWER_PLATFORM_CLIENT_CERTIFICATE` | The Base64 format of your certificate that will be used for certificate-based authentication | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH` | The path to the certificate that will be used for certificate-based authentication | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD` | Password for the provider certificate | |
-| `POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID` | The GUID of the Azure DevOps service connection to be used for Workload Identity Federation | |
+| `POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID` | The GUID of the Azure DevOps service connection to be used for Azure DevOps Workload Identity Federation | |
 
 -> Variables passed into the provider will override the environment variables.
 
