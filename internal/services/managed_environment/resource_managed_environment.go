@@ -149,7 +149,15 @@ func (r *ManagedEnvironmentResource) Configure(ctx context.Context, req resource
 		return
 	}
 
-	clientApi := req.ProviderData.(*api.ProviderClient).Api
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	clientApi := client.Api
 
 	if clientApi == nil {
 		resp.Diagnostics.AddError(
