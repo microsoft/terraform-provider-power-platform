@@ -212,7 +212,7 @@ func (client *Auth) AuthenticateUserManagedIdentity(ctx context.Context, scopes 
 		return "", time.Time{}, err
 	}
 
-	accessToken, err := userManagedIdentityCredential.GetToken(context.Background(), policy.TokenRequestOptions{Scopes: scopes})
+	accessToken, err := userManagedIdentityCredential.GetToken(ctx, policy.TokenRequestOptions{Scopes: scopes})
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -230,7 +230,7 @@ func (client *Auth) AuthenticateSystemManagedIdentity(ctx context.Context, scope
 		return "", time.Time{}, err
 	}
 
-	accessToken, err := systemManagedIdentityCredential.GetToken(context.Background(), policy.TokenRequestOptions{Scopes: scopes})
+	accessToken, err := systemManagedIdentityCredential.GetToken(ctx, policy.TokenRequestOptions{Scopes: scopes})
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -250,7 +250,7 @@ func (client *Auth) AuthenticateAzDOWorkloadIdentityFederation(ctx context.Conte
 		return "", time.Time{}, err
 	}
 
-	accessToken, err := azdoWorkloadIdentityCredential.GetToken(context.Background(), policy.TokenRequestOptions{Scopes: scopes})
+	accessToken, err := azdoWorkloadIdentityCredential.GetToken(ctx, policy.TokenRequestOptions{Scopes: scopes})
 	if err != nil {
 		return "", time.Time{}, err
 	}
