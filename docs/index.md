@@ -148,7 +148,7 @@ The Power Platform provider can use a [Managed Identity](https://learn.microsoft
 #### System-Managed Identity
 
 1. [Enable system-managed identity on an Azure resource](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview)
-1. [Register the managed identity with the Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal) using the Application ID from the enterprise application for the system-managed identity resource.
+1. Register the managed identity with the Power Platform using the Application ID from the enterprise application for the system-managed identity resource. This task can be performed using either [the Power Platform Terraform Provider itself](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/resources/admin_management_application), or [PowerShell]([Register the managed identity with the Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal).
 1. Configure the provider to use the system-managed identity. Note that no Client ID is required as the Client ID is derived from the Azure resource running the provider.
 
     ```terraform
@@ -160,7 +160,7 @@ The Power Platform provider can use a [Managed Identity](https://learn.microsoft
 #### User-Managed Identity
 
 1. [Create a User-Managed Identity resource](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview)
-1. [Register the Managed Identity with the Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal) using the Client ID from the user-managed identity resource.
+1. Register the managed identity with the Power Platform using the Application ID from the enterprise application for the system-managed identity resource. This task can be performed using either [the Power Platform Terraform Provider itself](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/resources/admin_management_application), or [PowerShell]([Register the managed identity with the Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal).
 1. Configure the provider to use the System-Managed Identity. Note that this example sets the Client ID in the provider configuration, but it could also be set using the POWER_PLATFORM_CLIENT_ID environment variable.
 
     ```terraform
