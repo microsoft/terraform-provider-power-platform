@@ -6,6 +6,7 @@ package environment
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
@@ -27,6 +28,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
+	environment_validators "github.com/microsoft/terraform-provider-power-platform/internal/services/environment/validators"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 )
 
@@ -106,6 +108,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				//todo check if this is set then dataverse should be requried
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "Description of the environment",
@@ -124,7 +127,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				},
 			},
 			"location": schema.StringAttribute{
-				Description:         "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source. The region of your Entra tenant may [limit the available locations for Power Platform](https://learn.microsoft.com/power-platform/admin/regions-overview#who-can-create-environments-in-these-regions). Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).",
 				MarkdownDescription: "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source. The region of your Entra tenant may [limit the available locations for Power Platform](https://learn.microsoft.com/power-platform/admin/regions-overview#who-can-create-environments-in-these-regions). Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
@@ -146,6 +148,16 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(EnvironmentTypes...),
+					environment_validators.OtherFieldRequiredWhenValueOf(path.Root("owner_id").Expression(), regexp.MustCompile(`^Developer$`), "owner_id must be set when environment_type is `Developer`"),
+				},
+			},
+			"owner_id": schema.StringAttribute{
+				MarkdownDescription: "Entra ID  user id (guid) of the environment owner when creating developer environment",
+				Optional:            true,
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
+
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "owner_id must be a valida Microsoft Entra ID user Object ID guid"),
 				},
 			},
 			"display_name": schema.StringAttribute{
@@ -233,7 +245,13 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					},
 					"security_group_id": schema.StringAttribute{
 						MarkdownDescription: "Security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
-						Required:            true,
+						//Required:            true,
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "security_group_id must be a valid Microsoft Entra ID Group Object ID guid"),
+							//	stringvalidator.ConflictsWith(path.Root("owner_id").Expression()),
+							//todo custom validator to make it requried unless owner_id is sets
+						},
 					},
 					"language_code": schema.Int64Attribute{
 						MarkdownDescription: "Language LCID (integer)",

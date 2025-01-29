@@ -43,6 +43,7 @@ type SourceModel struct {
 	Description        types.String   `tfsdk:"description"`
 	Cadence            types.String   `tfsdk:"cadence"`
 	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
+	OwnerId            types.String   `tfsdk:"owner_id"`
 
 	EnterprisePolicies basetypes.SetValue `tfsdk:"enterprise_policies"`
 
