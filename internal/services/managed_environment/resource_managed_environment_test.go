@@ -649,7 +649,7 @@ func TestAccManagedEnvironmentsResource_Validate_No_Dataverse(t *testing.T) {
 					max_limit_user_sharing     = 10
 					solution_checker_mode      = "None"
 					suppress_validation_emails = true
-					solution_checker_rule_overrides = "meta-remove-dup-reg"
+					solution_checker_rule_overrides = toset(["meta-remove-dup-reg", "meta-avoid-reg-no-attribute"])
 					maker_onboarding_markdown  = "this is test markdown"
 					maker_onboarding_url       = "http://www.example.com"
 				}`,
