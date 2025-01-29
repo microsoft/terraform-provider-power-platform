@@ -37,15 +37,16 @@ resource "powerplatform_environment" "development" {
 }
 
 resource "powerplatform_managed_environment" "managed_development" {
-  environment_id             = powerplatform_environment.development.id
-  is_usage_insights_disabled = true
-  is_group_sharing_disabled  = true
-  limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
-  max_limit_user_sharing     = 10
-  solution_checker_mode      = "None"
-  suppress_validation_emails = true
-  maker_onboarding_markdown  = "this is example markdown"
-  maker_onboarding_url       = "https://www.microsoft.com"
+  environment_id                  = powerplatform_environment.development.id
+  is_usage_insights_disabled      = true
+  is_group_sharing_disabled       = true
+  limit_sharing_mode              = "ExcludeSharingToSecurityGroups"
+  max_limit_user_sharing          = 10
+  solution_checker_mode           = "Warn"
+  suppress_validation_emails      = true
+  solution_checker_rule_overrides = toset(["meta-remove-dup-reg", "meta-avoid-reg-no-attribute"])
+  maker_onboarding_markdown       = "this is example markdown"
+  maker_onboarding_url            = "https://www.microsoft.com"
 }
 ```
 
@@ -62,6 +63,7 @@ resource "powerplatform_managed_environment" "managed_development" {
 - `maker_onboarding_url` (String) Maker onboarding 'Learn more' URL. See [Maker welcome content](https://learn.microsoft.com/power-platform/admin/welcome-content) for more details.
 - `max_limit_user_sharing` (Number) Limits how many users can share canvas apps. if 'is_group_sharing_disabled' is 'False', then this values should be '-1'
 - `solution_checker_mode` (String) Automatically verify solution checker results for security and reliability issues before solution import.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.
+- `solution_checker_rule_overrides` (Set of String) List of rules to exclude from solution checker.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.
 - `suppress_validation_emails` (Boolean) Send emails only when a solution is blocked. If 'False', you'll also get emails when there are warnings
 
 ### Optional
