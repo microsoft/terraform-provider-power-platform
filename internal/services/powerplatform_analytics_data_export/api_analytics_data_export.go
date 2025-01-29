@@ -5,6 +5,7 @@ package powerplatform_analytics_data_export
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -23,10 +24,14 @@ type Client struct {
 }
 
 func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*AnalyticsDataDto, error) {
-	var analyticsUrl = getAnalyticsUrlMap()
+	var analyticsUrl, err = getAnalyticsUrl("US")
+	if err != nil {
+		return nil, err
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   analyticsUrl[""],
+		Host:   analyticsUrl,
 		Path:   "api/v2/connections",
 	}
 
@@ -34,16 +39,20 @@ func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*AnalyticsDat
 	apiUrl.RawQuery = values.Encode()
 
 	analyticdatalinks := AnalyticsDataDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &analyticdatalinks)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 
 	return &analyticdatalinks, err
 }
 
 func (client *Client) CreateAnalyticsDataExport(ctx context.Context, analyticsdataToCreate AnalyticsDataCreateDto) (*AnalyticsDataDto, error) {
-	var analyticsUrl = getAnalyticsUrlMap()
+	var analyticsUrl, err = getAnalyticsUrl("US")
+	if err != nil {
+		return nil, err
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   analyticsUrl[""],
+		Host:   analyticsUrl,
 		Path:   "api/v2/sinks/appinsights/connections",
 	}
 
@@ -51,7 +60,7 @@ func (client *Client) CreateAnalyticsDataExport(ctx context.Context, analyticsda
 	apiUrl.RawQuery = values.Encode()
 
 	analyticdatalinks := &AnalyticsDataDto{}
-	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, analyticsdataToCreate, []int{http.StatusCreated}, analyticdatalinks)
+	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -60,10 +69,14 @@ func (client *Client) CreateAnalyticsDataExport(ctx context.Context, analyticsda
 }
 
 func (client *Client) UpdateAnalyticsDataExport(ctx context.Context, id string, analyticsdataToUpdate AnalyticsDataCreateDto) (*AnalyticsDataDto, error) {
-	var analyticsUrl = getAnalyticsUrlMap()
+	var analyticsUrl, err = getAnalyticsUrl("US")
+	if err != nil {
+		return nil, err
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   analyticsUrl[""],
+		Host:   analyticsUrl,
 		Path:   "api/v2/sinks/appinsights/connections/" + id,
 	}
 
@@ -71,7 +84,7 @@ func (client *Client) UpdateAnalyticsDataExport(ctx context.Context, id string, 
 	apiUrl.RawQuery = values.Encode()
 
 	analyticdatalinks := &AnalyticsDataDto{}
-	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, analyticsdataToUpdate, []int{http.StatusOK}, analyticdatalinks)
+	_, err = client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -80,17 +93,21 @@ func (client *Client) UpdateAnalyticsDataExport(ctx context.Context, id string, 
 }
 
 func (client *Client) DeleteAnalyticsDataExport(ctx context.Context, id string) error {
-	var analyticsUrl = getAnalyticsUrlMap()
+	var analyticsUrl, err = getAnalyticsUrl("US")
+	if err != nil {
+		return err
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   analyticsUrl[""],
+		Host:   analyticsUrl,
 		Path:   "api/v2/sinks/appinsights/connections/" + id,
 	}
 
 	values := url.Values{}
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 	if err != nil {
 		return err
 	}
@@ -121,4 +138,13 @@ func getAnalyticsUrlMap() map[string]string {
 		"GOV":  "https://gcc.csanalytics.powerplatform.microsoft.com/",
 		"HIGH": "https://high.csanalytics.powerplatform.microsoft.com/",
 	}
+}
+
+func getAnalyticsUrl(region string) (string, error) {
+	urlMap := getAnalyticsUrlMap()
+	url, exists := urlMap[region]
+	if !exists {
+		return "", fmt.Errorf("invalid region: %s", region)
+	}
+	return url, nil
 }
