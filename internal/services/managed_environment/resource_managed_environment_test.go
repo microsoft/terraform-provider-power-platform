@@ -681,7 +681,7 @@ func TestAccManagedEnvironmentsResource_Validate_No_Dataverse(t *testing.T) {
 	})
 }
 
-func TestUnitManagedEnvironmentsResource_Validate_Update_InvalidSolutionCheckerRuleOverride(t *testing.T) {
+func TestUnitManagedEnvironmentsResource_Validate_Update_Wrong_Solution_Checker_Rule_Overrides(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
