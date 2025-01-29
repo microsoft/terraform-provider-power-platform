@@ -10,13 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 )
 
-// DynamicColumns returns a ConfigValidator that ensures that the given expression
-// many-to-one relationships are using set collections.
-
-// OtherFieldRequiredWhenValueOfValidator is a validator that ensures that a field is required when the value of another field is equal to a specific value.
-func OtherFieldRequiredWhenValueOf(otherFieldExpression path.Expression, currentFieldValueRegex *regexp.Regexp, errorMessage string) validator.String {
+// OtherFieldRequiredWhenValueOfValidator is a validator that ensures that a field is required (with optional specific value `currentFieldValueRegex`) when the value of another field is equal to a value.
+// When otherFieldValueRegex matches the value of the field specified by OtherFieldExpression, the other field will have to have the required value specified.
+func OtherFieldRequiredWhenValueOf(otherFieldExpression path.Expression, otherFieldValueRegex, currentFieldValueRegex *regexp.Regexp, errorMessage string) validator.String {
 	return &OtherFieldRequiredWhenValueOfValidator{
 		OtherFieldExpression:   otherFieldExpression,
+		OtherFieldValueRegex:   otherFieldValueRegex,
 		CurrentFieldValueRegex: currentFieldValueRegex,
 		ErrorMessage:           errorMessage,
 	}

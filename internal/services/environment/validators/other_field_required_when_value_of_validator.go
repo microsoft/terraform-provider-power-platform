@@ -20,6 +20,7 @@ var (
 
 type OtherFieldRequiredWhenValueOfValidator struct {
 	OtherFieldExpression   path.Expression
+	OtherFieldValueRegex   *regexp.Regexp
 	CurrentFieldValueRegex *regexp.Regexp
 	ErrorMessage           string
 }
@@ -67,7 +68,7 @@ func (av OtherFieldRequiredWhenValueOfValidator) Validate(ctx context.Context, r
 	currentFieldValue := ""
 	_ = req.Config.GetAttribute(ctx, req.Path, &currentFieldValue)
 
-	if av.CurrentFieldValueRegex.MatchString(currentFieldValue) {
+	if (av.CurrentFieldValueRegex != nil && av.CurrentFieldValueRegex.MatchString(currentFieldValue)) || (av.CurrentFieldValueRegex == nil && currentFieldValue != "") {
 		paths, _ := req.Config.PathMatches(ctx, av.OtherFieldExpression)
 		if paths == nil && len(paths) != 1 {
 			res.Diagnostics.AddError("Other field required when value of validator should have exactly one match", "")
@@ -76,8 +77,11 @@ func (av OtherFieldRequiredWhenValueOfValidator) Validate(ctx context.Context, r
 
 		otherFieldValue := ""
 		_ = req.Config.GetAttribute(ctx, paths[0], &otherFieldValue)
-		if otherFieldValue == "" {
+		if av.OtherFieldValueRegex != nil && !av.OtherFieldValueRegex.MatchString(otherFieldValue) || av.OtherFieldValueRegex == nil && otherFieldValue == "" {
 			res.Diagnostics.AddError(av.ErrorMessage, av.ErrorMessage)
 		}
 	}
+	// else {
+	// 	res.Diagnostics.AddError(av.ErrorMessage, av.ErrorMessage)
+	// }
 }

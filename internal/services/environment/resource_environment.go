@@ -148,7 +148,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(EnvironmentTypes...),
-					environment_validators.OtherFieldRequiredWhenValueOf(path.Root("owner_id").Expression(), regexp.MustCompile(`^Developer$`), "owner_id must be set when environment_type is `Developer`"),
+					environment_validators.OtherFieldRequiredWhenValueOf(path.Root("owner_id").Expression(), nil, regexp.MustCompile(`^Developer$`), "owner_id must be set when environment_type is `Developer`"),
 				},
 			},
 			"owner_id": schema.StringAttribute{
@@ -156,8 +156,8 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
-
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "owner_id must be a valida Microsoft Entra ID user Object ID guid"),
+					environment_validators.OtherFieldRequiredWhenValueOf(path.Root("environment_type").Expression(), regexp.MustCompile(`^Developer$`), nil, "environment_type must be `Developer` when owner_id is set"),
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "owner_id must be a valid Microsoft Entra ID user Object ID guid"),
 				},
 			},
 			"display_name": schema.StringAttribute{
@@ -249,8 +249,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						Optional: true,
 						Validators: []validator.String{
 							stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "security_group_id must be a valid Microsoft Entra ID Group Object ID guid"),
-							//	stringvalidator.ConflictsWith(path.Root("owner_id").Expression()),
+							//stringvalidator.ConflictsWith(path.Root("owner_id").Expression()),
 							//todo custom validator to make it requried unless owner_id is sets
+
 						},
 					},
 					"language_code": schema.Int64Attribute{
