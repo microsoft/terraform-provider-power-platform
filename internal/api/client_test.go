@@ -79,7 +79,7 @@ func TestUnitSleepWithContext_HappyPath(t *testing.T) {
 	cancel()
 }
 
-func TestUnitApiClient_SystemManagedIdentity(t *testing.T) {
+func TestUnitApiClient_SystemManagedIdentity_NoIdentity(t *testing.T) {
 	expectedError := "ManagedIdentityCredential: failed to authenticate a system assigned identity."
 
 	ctx := context.Background()
@@ -98,13 +98,102 @@ func TestUnitApiClient_SystemManagedIdentity(t *testing.T) {
 	}
 }
 
-func TestUnitApiClient_UserManagedIdentity(t *testing.T) {
+func TestUnitApiClient_UserManagedIdentity_NoIdentity(t *testing.T) {
 	expectedError := "ManagedIdentityCredential authentication failed. the requested identity isn't assigned to this resource"
 
 	ctx := context.Background()
 	cfg := config.ProviderConfig{
 		UseMsi:   true,
 		ClientId: uuid.NewString(),
+	}
+
+	x := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := x.Execute(ctx, []string{"test"}, "GET", "https://api.bap.microsoft.com", http.Header{}, nil, []int{http.StatusOK}, nil)
+	if err == nil {
+		t.Error("Expected an authentication error but got nil error")
+	}
+
+	if !strings.HasPrefix(err.Error(), expectedError) {
+		t.Errorf("Expected error message '%s' but got '%s'", expectedError, err.Error())
+	}
+}
+
+func TestUnitApiClient_AzDOWorkloadIdentity_NoTenantId(t *testing.T) {
+	expectedError := "tenant ID must be provided to use Azure DevOps Workload Identity Federation"
+
+	ctx := context.Background()
+	cfg := config.ProviderConfig{
+		UseOidc:                 true,
+		AzDOServiceConnectionID: "test",
+		ClientId:                "test",
+		OidcRequestToken:        "test",
+	}
+
+	x := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := x.Execute(ctx, []string{"test"}, "GET", "https://api.bap.microsoft.com", http.Header{}, nil, []int{http.StatusOK}, nil)
+	if err == nil {
+		t.Error("Expected an authentication error but got nil error")
+	}
+
+	if !strings.HasPrefix(err.Error(), expectedError) {
+		t.Errorf("Expected error message '%s' but got '%s'", expectedError, err.Error())
+	}
+}
+
+func TestUnitApiClient_AzDOWorkloadIdentity_NoClientId(t *testing.T) {
+	expectedError := "client ID must be provided to use Azure DevOps Workload Identity Federation"
+
+	ctx := context.Background()
+	cfg := config.ProviderConfig{
+		UseOidc:                 true,
+		AzDOServiceConnectionID: "test",
+		TenantId:                "test",
+		OidcRequestToken:        "test",
+	}
+
+	x := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := x.Execute(ctx, []string{"test"}, "GET", "https://api.bap.microsoft.com", http.Header{}, nil, []int{http.StatusOK}, nil)
+	if err == nil {
+		t.Error("Expected an authentication error but got nil error")
+	}
+
+	if !strings.HasPrefix(err.Error(), expectedError) {
+		t.Errorf("Expected error message '%s' but got '%s'", expectedError, err.Error())
+	}
+}
+
+// This is technically not possible with the current control flow but it's still worth testing for.
+func TestUnitApiClient_AzDOWorkloadIdentity_NoAzDOServiceConnection(t *testing.T) {
+	expectedError := "the Azure DevOps service connection ID could not be found"
+
+	ctx := context.Background()
+	cfg := config.ProviderConfig{
+		UseOidc:          true,
+		ClientId:         "test",
+		TenantId:         "test",
+		OidcRequestToken: "test",
+	}
+
+	x := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
+	_, err := x.Execute(ctx, []string{"test"}, "GET", "https://api.bap.microsoft.com", http.Header{}, nil, []int{http.StatusOK}, nil)
+	if err == nil {
+		t.Error("Expected an authentication error but got nil error")
+	}
+
+	if !strings.HasPrefix(err.Error(), expectedError) {
+		t.Errorf("Expected error message '%s' but got '%s'", expectedError, err.Error())
+	}
+}
+
+func TestUnitApiClient_AzDOWorkloadIdentity_NoOIDCToken(t *testing.T) {
+	expectedError := "could not obtain an OIDC request token for Azure DevOps Workload Identity Federation"
+
+	ctx := context.Background()
+	cfg := config.ProviderConfig{
+		UseOidc:                 true,
+		ClientId:                "test",
+		TenantId:                "test",
+		AzDOServiceConnectionID: "test",
 	}
 
 	x := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
