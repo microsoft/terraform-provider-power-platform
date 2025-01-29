@@ -28,7 +28,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
-	environment_validators "github.com/microsoft/terraform-provider-power-platform/internal/services/environment/validators"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment/validators"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 )
 
@@ -108,7 +108,10 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				//todo check if this is set then dataverse should be requried
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_group_id must be a valid environment group id guid"),
+					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
+				},
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "Description of the environment",
@@ -245,8 +248,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					},
 					"security_group_id": schema.StringAttribute{
 						MarkdownDescription: "Security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
-						//Required:            true,
-						Optional: true,
+						Optional:            true,
 						Validators: []validator.String{
 							stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "security_group_id must be a valid Microsoft Entra ID Group Object ID guid"),
 							//stringvalidator.ConflictsWith(path.Root("owner_id").Expression()),

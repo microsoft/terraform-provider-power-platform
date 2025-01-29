@@ -59,8 +59,6 @@ func (av OtherFieldRequiredWhenValueOfValidator) ValidateString(ctx context.Cont
 }
 
 func (av OtherFieldRequiredWhenValueOfValidator) Validate(ctx context.Context, req OtherFieldRequiredWhenValueOfValidatorRequest, res *OtherFieldRequiredWhenValueOfValidatorResponse) {
-	// If attribute configuration is null, there is nothing else to validate
-	// If attribute configuration is unknown, delay the validation until it is known.
 	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
 		return
 	}
@@ -81,7 +79,4 @@ func (av OtherFieldRequiredWhenValueOfValidator) Validate(ctx context.Context, r
 			res.Diagnostics.AddError(av.ErrorMessage, av.ErrorMessage)
 		}
 	}
-	// else {
-	// 	res.Diagnostics.AddError(av.ErrorMessage, av.ErrorMessage)
-	// }
 }
