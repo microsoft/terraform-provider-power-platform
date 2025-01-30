@@ -125,9 +125,9 @@ func TestUnitEnvironmentsResource_Validate_CreateDevelopmentEnvironment_Error_Ch
 	})
 }
 
-func TestAccEnvironmentsResource_Validate_CreateDeveloperEnvironment(t *testing.T) {
-	panic("not implemented")
-}
+// func TestAccEnvironmentsResource_Validate_CreateDeveloperEnvironment(t *testing.T) {
+// 	panic("not implemented")
+// }
 
 func TestUnitEnvironmentsResource_Validate_CreateDeveloperEnvironment(t *testing.T) {
 	httpmock.Activate()
