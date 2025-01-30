@@ -157,6 +157,10 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			"owner_id": schema.StringAttribute{
 				MarkdownDescription: "Entra ID  user id (guid) of the environment owner when creating developer environment",
 				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.String{
 					stringvalidator.ConflictsWith(path.Root("dataverse").AtName("security_group_id").Expression()),
 					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
@@ -390,7 +394,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
 
-	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, plan.OwnerId.ValueStringPointer(), templateMetadata, templates, plan.Timeouts)
 
 	if !plan.AzureRegion.IsNull() && plan.AzureRegion.ValueString() != "" && (plan.AzureRegion.ValueString() != newState.AzureRegion.ValueString()) {
 		resp.Diagnostics.AddAttributeError(path.Root("azure_region"), fmt.Sprintf("Provisioning environment in azure region '%s' failed", plan.AzureRegion.ValueString()), "Provisioning environment in azure region was not successful, please try other region in that location or try again later")
@@ -458,7 +462,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 			templates = dv.Templates
 		}
 	}
-	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, state.Timeouts)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, state.OwnerId.ValueStringPointer(), templateMetadata, templates, state.Timeouts)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
@@ -581,7 +585,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, state.OwnerId.ValueStringPointer(), templateMetadata, templates, plan.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -608,8 +612,11 @@ func updateExistingDataverse(ctx context.Context, plan *SourceModel, environment
 	plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 	environmentDto.Properties.LinkedEnvironmentMetadata = &LinkedEnvironmentMetadataDto{
-		SecurityGroupId: dataverseSourcePlanModel.SecurityGroupId.ValueString(),
-		DomainName:      dataverseSourcePlanModel.Domain.ValueString(),
+		DomainName: dataverseSourcePlanModel.Domain.ValueString(),
+	}
+
+	if plan.EnvironmentType.ValueString() != "Developer" {
+		environmentDto.Properties.LinkedEnvironmentMetadata.SecurityGroupId = types.StringNull().ValueString()
 	}
 
 	if !dataverseSourcePlanModel.AdministrationMode.IsNull() && !dataverseSourcePlanModel.AdministrationMode.IsUnknown() {

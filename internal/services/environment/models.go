@@ -167,7 +167,7 @@ func convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 	return nil, fmt.Errorf("dataverse object is null or unknown")
 }
 
-func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode *string, templateMetadata *createTemplateMetadataDto, templates []string, timeout timeouts.Value) (*SourceModel, error) {
+func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode, ownerId *string, templateMetadata *createTemplateMetadataDto, templates []string, timeout timeouts.Value) (*SourceModel, error) {
 	model := &SourceModel{
 		Timeouts:        timeout,
 		Description:     types.StringValue(environmentDto.Properties.Description),
@@ -222,6 +222,10 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["language_code"] = types.Int64Value(int64(environmentDto.Properties.LinkedEnvironmentMetadata.BaseLanguage))
 		attrValuesProductProperties["version"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.Version)
 		attrValuesProductProperties["unique_name"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.UniqueName)
+		if environmentDto.Properties.EnvironmentSku == "Developer" {
+			attrValuesProductProperties["security_group_id"] = types.StringNull()
+			model.OwnerId = types.StringPointerValue(ownerId)
+		}
 		if environmentDto.Properties.States != nil && environmentDto.Properties.States.Runtime != nil && environmentDto.Properties.States.Runtime.Id == "AdminMode" {
 			attrValuesProductProperties["administration_mode_enabled"] = types.BoolValue(true)
 		} else {

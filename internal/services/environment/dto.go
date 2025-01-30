@@ -93,7 +93,7 @@ type LinkedEnvironmentMetadataDto struct {
 	DomainName                string                     `json:"domainName,omitempty"`
 	InstanceURL               string                     `json:"instanceUrl"`
 	BaseLanguage              int                        `json:"baseLanguage"`
-	SecurityGroupId           string                     `json:"securityGroupId"`
+	SecurityGroupId           string                     `json:"securityGroupId,omitempty"`
 	ResourceId                string                     `json:"resourceId"`
 	Version                   string                     `json:"version"`
 	Templates                 []string                   `json:"template,omitempty"`
