@@ -33,19 +33,28 @@ provider "powerplatform" {
   use_cli = true
 }
 
+// when env type == dev then owner_id is required
+// when ower_id is provider then env type should be developer
+// when owner_id is provider then dataverse should be provided
+// when owner_id is provided then security_group_id should not be 
+// when environemt_group_id is provided then dataverse should be provided
+// when security_group_id is provided then owner_id should not be provided
+// validate that ownerid and security_group_id are valid guids
+
 resource "powerplatform_environment" "development" {
-  display_name         = "example_environment"
-  description          = "example environment description"
-  location             = "europe"
-  azure_region         = "northeurope"
-  environment_type     = "Sandbox"
-  cadence              = "Moderate"
-  environment_group_id = ""
-  dataverse = {
-    language_code     = "1033"
-    currency_code     = "USD"
-    security_group_id = "00000000-0000-0000-0000-000000000000"
-  }
+  display_name     = "example_environment"
+  description      = "example environment description"
+  location         = "europe"
+  azure_region     = "northeurope"
+  environment_type = "Sandbox"
+  cadence          = "Moderate"
+  //environment_group_id = ""
+  //owner_id             = "00000000-0000-0000-0000-000000000000"
+  # dataverse = {
+  #   language_code = "1033"
+  #   currency_code = "USD"
+  #   //security_group_id = "00000000-0000-0000-0000-000000000000"
+  # }
 }
 ```
 
@@ -66,6 +75,7 @@ resource "powerplatform_environment" "development" {
 - `dataverse` (Attributes) Dataverse environment details (see [below for nested schema](#nestedatt--dataverse))
 - `description` (String) Description of the environment
 - `environment_group_id` (String) Environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information.
+- `owner_id` (String) Entra ID  user id (guid) of the environment owner when creating developer environment
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
@@ -80,13 +90,13 @@ Required:
 
 - `currency_code` (String) Currency name
 - `language_code` (Number) Language LCID (integer)
-- `security_group_id` (String) Security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`
 
 Optional:
 
 - `administration_mode_enabled` (Boolean) Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information.
 - `background_operation_enabled` (Boolean) Indicates if background operation is enabled
 - `domain` (String) Domain name of the environment
+- `security_group_id` (String) Security group id (guid). For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`
 - `template_metadata` (String) Additional D365 environment template metadata (if any)
 - `templates` (List of String) The selected instance provisioning template (if any). See [ERP-based template](https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/tutorial-deploy-new-environment-with-erp-template?tabs=PPAC) for more information.
 
