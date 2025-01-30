@@ -109,7 +109,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_group_id must be a valid environment group id guid"),
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidOrEmptyValueRegex), "environment_group_id must be a valid environment group id guid"),
 					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
 				},
 			},
@@ -151,16 +151,16 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(EnvironmentTypes...),
-					environment_validators.OtherFieldRequiredWhenValueOf(path.Root("owner_id").Expression(), nil, regexp.MustCompile(`^Developer$`), "owner_id must be set when environment_type is `Developer`"),
+					validators.OtherFieldRequiredWhenValueOf(path.Root("owner_id").Expression(), nil, regexp.MustCompile(EnvironmentTypesDeveloperOnlyRegex), "owner_id must be set when environment_type is `Developer`"),
 				},
 			},
 			"owner_id": schema.StringAttribute{
 				MarkdownDescription: "Entra ID  user id (guid) of the environment owner when creating developer environment",
 				Optional:            true,
 				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.Root("dataverse").AtName("security_group_id").Expression()),
 					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
-					environment_validators.OtherFieldRequiredWhenValueOf(path.Root("environment_type").Expression(), regexp.MustCompile(`^Developer$`), nil, "environment_type must be `Developer` when owner_id is set"),
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "owner_id must be a valid Microsoft Entra ID user Object ID guid"),
+					validators.OtherFieldRequiredWhenValueOf(path.Root("environment_type").Expression(), regexp.MustCompile(EnvironmentTypesDeveloperOnlyRegex), nil, "owner_id can be used only when environment_type is `Developer`"),
 				},
 			},
 			"display_name": schema.StringAttribute{
@@ -247,13 +247,10 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						},
 					},
 					"security_group_id": schema.StringAttribute{
-						MarkdownDescription: "Security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
+						MarkdownDescription: "Security group id (guid). For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
 						Optional:            true,
 						Validators: []validator.String{
-							stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "security_group_id must be a valid Microsoft Entra ID Group Object ID guid"),
-							//stringvalidator.ConflictsWith(path.Root("owner_id").Expression()),
-							//todo custom validator to make it requried unless owner_id is sets
-
+							validators.MakeFieldRequiredWhenOtherFieldDoesNotHaveValue(path.Root("environment_type").Expression(), regexp.MustCompile(EnvironmentTypesExceptDeveloperRegex), "dataverse.security_group_id is required for all environemt_type values except `Developer`"),
 						},
 					},
 					"language_code": schema.Int64Attribute{

@@ -8,7 +8,9 @@ import (
 )
 
 var (
-	EnvironmentTypes = []string{"Sandbox", "Production", "Trial", "Developer", "Default"}
+	EnvironmentTypes                     = []string{"Sandbox", "Production", "Trial", "Developer", "Default"}
+	EnvironmentTypesDeveloperOnlyRegex   = `^(Developer)$`
+	EnvironmentTypesExceptDeveloperRegex = `^(Sandbox|Production|Trial|Default)$`
 )
 
 type EnvironmentDto struct {
