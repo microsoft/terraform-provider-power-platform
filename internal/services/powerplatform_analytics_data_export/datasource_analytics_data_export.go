@@ -22,6 +22,12 @@ var (
 	_ datasource.DataSourceWithConfigure = &AnalyticsExportDataSource{}
 )
 
+type AnalyticsExportDataSource struct {
+	ProviderTypeName    string
+	TypeInfo            helpers.TypeInfo
+	AnalyticsExportData Client
+}
+
 func NewAnalyticsExportDataSource() datasource.DataSource {
 	return &AnalyticsExportDataSource{
 		TypeInfo: helpers.TypeInfo{
@@ -38,7 +44,6 @@ func (d *AnalyticsExportDataSource) Metadata(ctx context.Context, req datasource
 	defer exitContext()
 
 	// Set the type name for the resource to providername_resourcename.
-	resp.TypeName = d.FullTypeName()
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 

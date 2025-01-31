@@ -135,16 +135,17 @@ func getAnalyticsUrlMap() map[string]string {
 		"ZAF":  "https://zaf.csanalytics.powerplatform.microsoft.com/",
 		"SGP":  "https://sgp.csanalytics.powerplatform.microsoft.com/",
 		"SWE":  "https://swe.csanalytics.powerplatform.microsoft.com/",
-		"GOV":  "https://gcc.csanalytics.powerplatform.microsoft.com/",
-		"HIGH": "https://high.csanalytics.powerplatform.microsoft.com/",
+		"GOV":  "https://gcc.csanalytics.powerplatform.microsoft.us/",
+		"HIGH": "https://high.csanalytics.powerplatform.microsoft.us/",
+		"DOD":  "https://dod.csanalytics.csanalytics.appsplatform.us/",
 	}
 }
 
 func getAnalyticsUrl(region string) (string, error) {
 	urlMap := getAnalyticsUrlMap()
-	url, exists := urlMap[region]
+	analyticDataUrl, exists := urlMap[region]
 	if !exists {
 		return "", fmt.Errorf("invalid region: %s", region)
 	}
-	return url, nil
+	return analyticDataUrl, nil
 }

@@ -49,11 +49,6 @@ type AnalyticsExportDatasourceModel struct {
 	AiType           string        `tfsdk:"aiType"`
 }
 
-type AnalyticsExportDataSource struct {
-	helpers.TypeInfo
-	AnalyticsExportData Client
-}
-
 type ResourceAnalyticsDataExport struct {
 	helpers.TypeInfo
 	ResourceAnalyticsDataExport Client
