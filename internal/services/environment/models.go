@@ -222,7 +222,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["language_code"] = types.Int64Value(int64(environmentDto.Properties.LinkedEnvironmentMetadata.BaseLanguage))
 		attrValuesProductProperties["version"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.Version)
 		attrValuesProductProperties["unique_name"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.UniqueName)
-		if environmentDto.Properties.EnvironmentSku == "Developer" {
+		if environmentDto.Properties.EnvironmentSku == EnvironmentTypesDeveloper {
 			attrValuesProductProperties["security_group_id"] = types.StringNull()
 			model.OwnerId = types.StringPointerValue(ownerId)
 		}

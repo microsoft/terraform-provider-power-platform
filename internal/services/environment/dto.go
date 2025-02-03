@@ -4,13 +4,22 @@
 package environment
 
 import (
+	"fmt"
 	"time"
 )
 
+const (
+	EnvironmentTypesDeveloper  = "Developer"
+	EnvironmentTypesSandbox    = "Sandbox"
+	EnvironmentTypesProduction = "Production"
+	EnvironmentTypesTrial      = "Trial"
+	EnvironmentTypesDefault    = "Default"
+)
+
 var (
-	EnvironmentTypes                     = []string{"Sandbox", "Production", "Trial", "Developer", "Default"}
-	EnvironmentTypesDeveloperOnlyRegex   = `^(Developer)$`
-	EnvironmentTypesExceptDeveloperRegex = `^(Sandbox|Production|Trial|Default)$`
+	EnvironmentTypes                     = []string{EnvironmentTypesDeveloper, EnvironmentTypesSandbox, EnvironmentTypesProduction, EnvironmentTypesTrial, EnvironmentTypesDefault}
+	EnvironmentTypesDeveloperOnlyRegex   = fmt.Sprintf(`^(%s)$`, EnvironmentTypesDeveloper)
+	EnvironmentTypesExceptDeveloperRegex = fmt.Sprintf(`^(%s|%s|%s|%s)$`, EnvironmentTypesSandbox, EnvironmentTypesProduction, EnvironmentTypesTrial, EnvironmentTypesDefault)
 )
 
 type EnvironmentDto struct {
