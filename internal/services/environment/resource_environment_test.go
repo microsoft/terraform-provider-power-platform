@@ -14,9 +14,69 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
+
+func TestAccEnvironmentsResource_Validate_CreateDeveloperEnvironment(t *testing.T) {
+	t.Skip("creating dev environments with SP is NOT yet supported")
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+			"random": {
+				VersionConstraint: constants.RANDOM_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/random",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				data "azuread_domains" "aad_domains" {
+					only_initial = true
+				}
+
+				locals {
+					domain_name = data.azuread_domains.aad_domains.domains[0].domain_name
+				}
+
+				resource "random_password" "passwords" {
+				    min_lower = 1
+					min_upper        = 1
+					min_numeric      = 1
+					min_special      = 1
+					length           = 16
+					special          = true
+					override_special = "_%@"
+				}
+
+				resource "azuread_user" "test_user" {
+					user_principal_name = "` + mocks.TestName() + `@${local.domain_name}"
+					display_name        = "` + mocks.TestName() + `"
+					mail_nickname       = "` + mocks.TestName() + `"
+					password            = random_password.passwords.result
+					usage_location      = "US"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name         = "` + mocks.TestName() + `"
+					location             = "europe"
+					environment_type     = "Developer"
+					owner_id = azuread_user.test_user.id
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "USD"
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(),
+			},
+		},
+	})
+}
 
 func TestUnitEnvironmentsResource_Validate_Create_Error_Check_Environment_Group(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -125,9 +185,28 @@ func TestUnitEnvironmentsResource_Validate_CreateDevelopmentEnvironment_Error_Ch
 	})
 }
 
-// func TestAccEnvironmentsResource_Validate_CreateDeveloperEnvironment(t *testing.T) {
-// 	panic("not implemented")
-// }
+func TestUnitEnvironmentsResource_Validate_CreateDevelopmentEnvironment_Error_Check_Empty_OwnerId(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*owner_id must be set when environment_type is `Developer`.*"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Developer"
+					owner_id = ""
+					dataverse = {
+						language_code = "1033"
+						currency_code = "PLN"
+					}
+				}`,
+			},
+		},
+	})
+}
 
 func TestUnitEnvironmentsResource_Validate_CreateDeveloperEnvironment(t *testing.T) {
 	httpmock.Activate()

@@ -6,6 +6,7 @@ package validators
 import (
 	"context"
 	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -73,9 +74,15 @@ func (av OtherFieldRequiredWhenValueOfValidator) Validate(ctx context.Context, r
 			return
 		}
 
-		otherFieldValue := ""
-		_ = req.Config.GetAttribute(ctx, paths[0], &otherFieldValue)
-		if av.OtherFieldValueRegex != nil && !av.OtherFieldValueRegex.MatchString(otherFieldValue) || av.OtherFieldValueRegex == nil && otherFieldValue == "" {
+		otherFieldValue := new(string)
+		d := req.Config.GetAttribute(ctx, paths[0], &otherFieldValue)
+
+		isUnknown := false
+		if d.HasError() {
+			isUnknown = strings.Contains(d.Errors()[0].Detail(), "Received unknown value") || strings.Contains(d.Errors()[0].Summary(), "Received unknown value")
+		}
+
+		if av.OtherFieldValueRegex != nil && !av.OtherFieldValueRegex.MatchString(*otherFieldValue) || av.OtherFieldValueRegex == nil && (otherFieldValue == nil || *otherFieldValue == "") && !isUnknown {
 			res.Diagnostics.AddError(av.ErrorMessage, av.ErrorMessage)
 		}
 	}
