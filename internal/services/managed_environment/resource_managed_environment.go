@@ -120,15 +120,6 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				Description:         "Send emails only when a solution is blocked. If 'False', you'll also get emails when there are warnings",
 				Required:            true,
 			},
-			"solution_checker_rule_overrides": schema.SetAttribute{
-				MarkdownDescription: "List of rules to exclude from solution checker.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.",
-				Description:         "List of rules to exclude from solution checker",
-				ElementType:         types.StringType,
-				Required:            true,
-				Validators: []validator.Set{
-					setvalidator.ValueStringsAre(stringvalidator.OneOf("meta-remove-dup-reg", "meta-avoid-reg-no-attribute", "meta-avoid-reg-retrieve", "meta-remove-inactive", "web-avoid-unpub-api", "web-avoid-modals", "web-avoid-crm2011-service-odata", "web-avoid-crm2011-service-soap", "web-avoid-browser-specific-api", "web-avoid-2011-api", "web-use-relative-uri", "web-use-async", "web-avoid-window-top", "web-use-client-context", "web-use-navigation-api", "web-use-offline", "web-use-grid-api", "web-avoid-isactivitytype", "meta-avoid-silverlight", "meta-avoid-retrievemultiple-annotation", "web-remove-debug-script", "web-use-strict-mode", "web-use-strict-equality-operators", "web-avoid-eval", "app-formula-issues-high", "app-formula-issues-medium", "app-formula-issues-low", "app-use-delayoutput-text-input", "app-reduce-screen-controls", "app-include-accessible-label", "app-include-alternative-input", "app-avoid-autostart", "app-include-captions", "app-make-focusborder-visible", "app-include-helpful-control-setting", "app-avoid-interactive-html", "app-include-readable-screen-name", "app-include-state-indication-text", "app-include-tab-order", "app-include-tab-index", "flow-avoid-recursive-loop", "flow-avoid-invalid-reference", "flow-outlook-attachment-missing-info", "meta-include-missingunmanageddependencies", "web-remove-alert", "web-remove-console", "web-use-global-context", "web-use-org-setting", "app-testformula-issues-high", "app-testformula-issues-medium", "app-testformula-issues-low", "flow-avoid-connection-mode", "web-avoid-with", "web-avoid-loadtheme", "web-use-getsecurityroleprivilegesinfo", "web-sdl-no-cookies", "web-sdl-no-document-domain", "web-sdl-no-document-write", "web-sdl-no-html-method", "web-sdl-no-inner-html", "web-sdl-no-insecure-url", "web-sdl-no-msapp-exec-unsafe", "web-sdl-no-postmessage-star-origin", "web-sdl-no-winjs-html-unsafe", "connector-validate-brandcolor", "connector-validate-iconimage", "connector-validate-swagger-isproperjson", "connector-validate-swagger", "connector-validate-swagger-extended", "connector-validate-title", "connector-validate-connectionparam-isproperjson", "connector-validate-connectionparameters", "connector-validate-connectionparam-oauth2idp", "meta-license-sales-sdkmessages", "meta-license-sales-entity-operations", "meta-license-sales-customcontrols", "web-use-appsidepane-api", "meta-license-fieldservice-sdkmessages", "meta-license-fieldservice-entity-operations", "meta-license-fieldservice-customcontrols", "meta-avoid-managed-entity-assets", "meta-include-unmanaged-entity-assets", "connector-validate-hexadecimalbrandcolor", "connector-validate-pngiconimage", "connector-validate-iconsize", "connector-validate-backgroundwithbrandiconcolor", "web-unsupported-syntax")),
-				},
-			},
 			"maker_onboarding_markdown": schema.StringAttribute{
 				MarkdownDescription: "First-time Power Apps makers will see this content in the Studio.  See [Maker welcome content](https://learn.microsoft.com/power-platform/admin/welcome-content) for more details.",
 				Description:         "First-time Power Apps makers will see this content in the Studio",
@@ -138,6 +129,15 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				MarkdownDescription: "Maker onboarding 'Learn more' URL. See [Maker welcome content](https://learn.microsoft.com/power-platform/admin/welcome-content) for more details.",
 				Description:         "Maker onboarding 'Learn more' URL",
 				Required:            true,
+			},
+			"solution_checker_rule_overrides": schema.SetAttribute{
+				MarkdownDescription: "List of rules to exclude from solution checker.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.",
+				Description:         "List of rules to exclude from solution checker",
+				ElementType:         types.StringType,
+				Required:            true,
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(stringvalidator.OneOf("meta-remove-dup-reg", "meta-avoid-reg-no-attribute", "meta-avoid-reg-retrieve", "meta-remove-inactive", "web-avoid-unpub-api", "web-avoid-modals", "web-avoid-crm2011-service-odata", "web-avoid-crm2011-service-soap", "web-avoid-browser-specific-api", "web-avoid-2011-api", "web-use-relative-uri", "web-use-async", "web-avoid-window-top", "web-use-client-context", "web-use-navigation-api", "web-use-offline", "web-use-grid-api", "web-avoid-isactivitytype", "meta-avoid-silverlight", "meta-avoid-retrievemultiple-annotation", "web-remove-debug-script", "web-use-strict-mode", "web-use-strict-equality-operators", "web-avoid-eval", "app-formula-issues-high", "app-formula-issues-medium", "app-formula-issues-low", "app-use-delayoutput-text-input", "app-reduce-screen-controls", "app-include-accessible-label", "app-include-alternative-input", "app-avoid-autostart", "app-include-captions", "app-make-focusborder-visible", "app-include-helpful-control-setting", "app-avoid-interactive-html", "app-include-readable-screen-name", "app-include-state-indication-text", "app-include-tab-order", "app-include-tab-index", "flow-avoid-recursive-loop", "flow-avoid-invalid-reference", "flow-outlook-attachment-missing-info", "meta-include-missingunmanageddependencies", "web-remove-alert", "web-remove-console", "web-use-global-context", "web-use-org-setting", "app-testformula-issues-high", "app-testformula-issues-medium", "app-testformula-issues-low", "flow-avoid-connection-mode", "web-avoid-with", "web-avoid-loadtheme", "web-use-getsecurityroleprivilegesinfo", "web-sdl-no-cookies", "web-sdl-no-document-domain", "web-sdl-no-document-write", "web-sdl-no-html-method", "web-sdl-no-inner-html", "web-sdl-no-insecure-url", "web-sdl-no-msapp-exec-unsafe", "web-sdl-no-postmessage-star-origin", "web-sdl-no-winjs-html-unsafe", "connector-validate-brandcolor", "connector-validate-iconimage", "connector-validate-swagger-isproperjson", "connector-validate-swagger", "connector-validate-swagger-extended", "connector-validate-title", "connector-validate-connectionparam-isproperjson", "connector-validate-connectionparameters", "connector-validate-connectionparam-oauth2idp", "meta-license-sales-sdkmessages", "meta-license-sales-entity-operations", "meta-license-sales-customcontrols", "web-use-appsidepane-api", "meta-license-fieldservice-sdkmessages", "meta-license-fieldservice-entity-operations", "meta-license-fieldservice-customcontrols", "meta-avoid-managed-entity-assets", "meta-include-unmanaged-entity-assets", "connector-validate-hexadecimalbrandcolor", "connector-validate-pngiconimage", "connector-validate-iconsize", "connector-validate-backgroundwithbrandiconcolor", "web-unsupported-syntax")),
+				},
 			},
 		},
 	}
@@ -197,6 +197,7 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
 				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
 				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
+				SolutionCheckerRuleOverrides:   strings.Join(helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides), ","),
 			},
 		},
 	}
@@ -224,6 +225,7 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
 	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
+	plan.SolutionCheckerRuleOverrides = helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -262,6 +264,7 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		state.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
 		state.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 		state.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
+		state.SolutionCheckerRuleOverrides = helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
 	} else {
 		state.IsGroupSharingDisabled = types.BoolUnknown()
 		state.IsUsageInsightsDisabled = types.BoolUnknown()
@@ -271,6 +274,7 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		state.SuppressValidationEmails = types.BoolUnknown()
 		state.MakerOnboardingUrl = types.StringUnknown()
 		state.MakerOnboardingMarkdown = types.StringUnknown()
+		state.SolutionCheckerRuleOverrides = types.SetUnknown(types.StringType)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
