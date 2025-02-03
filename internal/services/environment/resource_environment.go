@@ -28,8 +28,8 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
-	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment/validators"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
+	"github.com/microsoft/terraform-provider-power-platform/internal/validators"
 )
 
 var _ resource.Resource = &Resource{}

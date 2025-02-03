@@ -43,7 +43,7 @@ func TestUnitEnvironmentsResource_Validate_CreateDevelopmentEnvironment_Error_Ch
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ExpectError: regexp.MustCompile(".*dataverse.security_group_id is required for all environemt_type values except `Developer`.*"),
+				ExpectError: regexp.MustCompile(".*Attribute \"dataverse.security_group_id\" cannot be specified when \"owner_id\".*"),
 				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "displayname"
