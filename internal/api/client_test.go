@@ -164,7 +164,7 @@ func TestUnitApiClient_AzDOWorkloadIdentity_NoClientId(t *testing.T) {
 
 // This is technically not possible with the current control flow but it's still worth testing for.
 func TestUnitApiClient_AzDOWorkloadIdentity_NoAzDOServiceConnection(t *testing.T) {
-	expectedError := "the Azure DevOps service connection ID could not be found"
+	expectedError := "request URL is required for OIDC credential"
 
 	ctx := context.Background()
 	cfg := config.ProviderConfig{
@@ -187,7 +187,7 @@ func TestUnitApiClient_AzDOWorkloadIdentity_NoAzDOServiceConnection(t *testing.T
 
 // This should fall through to base OIDC.
 func TestUnitApiClient_AzDOWorkloadIdentity_NoOIDCToken(t *testing.T) {
-	expectedError := "request URL is required for OIDC credential"
+	expectedError := "could not obtain an OIDC request token for Azure DevOps Workload Identity Federation"
 
 	ctx := context.Background()
 	cfg := config.ProviderConfig{
