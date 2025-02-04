@@ -182,6 +182,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 	convertBillingPolicyModelFromDto(environmentDto, model)
 	convertEnvironmentGroupFromDto(environmentDto, model)
 	convertEnterprisePolicyModelFromDto(environmentDto, model)
+	convertOwnerIdFromDto(environmentDto, model)
 
 	attrTypesDataverseObject := map[string]attr.Type{
 		"url":                          types.StringType,
@@ -224,7 +225,6 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["unique_name"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.UniqueName)
 		if environmentDto.Properties.EnvironmentSku == EnvironmentTypesDeveloper {
 			attrValuesProductProperties["security_group_id"] = types.StringNull()
-			model.OwnerId = types.StringPointerValue(ownerId)
 		}
 		if environmentDto.Properties.States != nil && environmentDto.Properties.States.Runtime != nil && environmentDto.Properties.States.Runtime.Id == "AdminMode" {
 			attrValuesProductProperties["administration_mode_enabled"] = types.BoolValue(true)
@@ -308,6 +308,14 @@ func convertBillingPolicyModelFromDto(environmentDto EnvironmentDto, model *Sour
 		model.BillingPolicyId = types.StringValue(environmentDto.Properties.BillingPolicy.Id)
 	} else {
 		model.BillingPolicyId = types.StringValue("")
+	}
+}
+
+func convertOwnerIdFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	if environmentDto.Properties.UsedBy != nil {
+		model.OwnerId = types.StringValue(environmentDto.Properties.UsedBy.Id)
+	} else {
+		model.OwnerId = types.StringNull()
 	}
 }
 

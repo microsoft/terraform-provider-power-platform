@@ -47,6 +47,13 @@ type EnviromentPropertiesDto struct {
 	UpdateCadence             *UpdateCadenceDto                 `json:"updateCadence,omitempty"`
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 	EnterprisePolicies        *EnvironmentEnterprisePoliciesDto `json:"enterprisePolicies,omitempty"`
+	UsedBy                    *UsedByDto                        `json:"usedBy,omitempty"`
+}
+
+type UsedByDto struct {
+	Id       string `json:"id"`
+	Type     string `json:"type"`
+	TenantId string `json:"tenantId"`
 }
 
 type EnvironmentEnterprisePoliciesDto struct {
