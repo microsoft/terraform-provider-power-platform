@@ -306,6 +306,7 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
 				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
 				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
+				SolutionCheckerRuleOverrides:   strings.Join(helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides), ","),
 			},
 		},
 	}
@@ -333,6 +334,7 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
 	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
+	plan.SolutionCheckerRuleOverrides = helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
