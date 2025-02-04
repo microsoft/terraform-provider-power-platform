@@ -68,7 +68,7 @@ func TestAccCopilotStudioApplicationInsights_Validate_Create(t *testing.T) {
 
 					resource "powerplatform_solution" "solution" {
 						environment_id = powerplatform_environment.environment.id
-						solution_file  = "tests/Test_Files/exampleagent_1_0_0_1_managed.zip"
+						solution_file  = "tests/Test_Files/testagent_1_0_0_1_managed.zip"
 					}
 
 					resource "time_sleep" "wait_60_seconds" {
@@ -79,7 +79,7 @@ func TestAccCopilotStudioApplicationInsights_Validate_Create(t *testing.T) {
 					data "powerplatform_data_records" "bot_data_query" {
 						environment_id    = powerplatform_environment.environment.id
 						entity_collection = "bots"
-						filter            = "name eq 'Agent'"
+						filter            = "name eq 'Test Agent'"
 						select            = ["botid", "name"]
 						top               = 1
 
