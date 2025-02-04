@@ -79,7 +79,7 @@ func TestUnitSleepWithContext_HappyPath(t *testing.T) {
 	cancel()
 }
 
-func TestUnitApiClient_SystemManagedIdentity_NoIdentity(t *testing.T) {
+func TestUnitApiClient_SystemManagedIdentity_No_Identity(t *testing.T) {
 	expectedError := "ManagedIdentityCredential: failed to authenticate a system assigned identity."
 
 	ctx := context.Background()
