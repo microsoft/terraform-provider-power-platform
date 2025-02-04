@@ -186,7 +186,7 @@ func TestUnitApiClient_AzDOWorkloadIdentity_NoAzDOServiceConnection(t *testing.T
 }
 
 // This should fall through to base OIDC.
-func TestUnitApiClient_AzDOWorkloadIdentity_NoOIDCToken(t *testing.T) {
+func TestUnitApiClient_AzDOWorkloadIdentity_No_OIDC_Token(t *testing.T) {
 	expectedError := "could not obtain an OIDC request token for Azure DevOps Workload Identity Federation"
 
 	ctx := context.Background()
