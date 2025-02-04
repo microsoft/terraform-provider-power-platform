@@ -25,7 +25,7 @@ type ManagedEnvironmentResourceModel struct {
 	LimitSharingMode             types.String   `tfsdk:"limit_sharing_mode"`
 	SolutionCheckerMode          types.String   `tfsdk:"solution_checker_mode"`
 	SuppressValidationEmails     types.Bool     `tfsdk:"suppress_validation_emails"`
-	SolutionCheckerRuleOverrides types.Set      `tfsdk:"solution_checker_rule_overrides"`
 	MakerOnboardingUrl           types.String   `tfsdk:"maker_onboarding_url"`
 	MakerOnboardingMarkdown      types.String   `tfsdk:"maker_onboarding_markdown"`
+	SolutionCheckerRuleOverrides types.Set      `tfsdk:"solution_checker_rule_overrides"`
 }
