@@ -167,7 +167,7 @@ func convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 	return nil, fmt.Errorf("dataverse object is null or unknown")
 }
 
-func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode, ownerId *string, templateMetadata *createTemplateMetadataDto, templates []string, timeout timeouts.Value) (*SourceModel, error) {
+func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode *string, templateMetadata *createTemplateMetadataDto, templates []string, timeout timeouts.Value) (*SourceModel, error) {
 	model := &SourceModel{
 		Timeouts:        timeout,
 		Description:     types.StringValue(environmentDto.Properties.Description),
