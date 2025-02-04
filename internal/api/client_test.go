@@ -140,7 +140,7 @@ func TestUnitApiClient_AzDOWorkloadIdentity_NoTenantId(t *testing.T) {
 	}
 }
 
-func TestUnitApiClient_AzDOWorkloadIdentity_NoClientId(t *testing.T) {
+func TestUnitApiClient_AzDOWorkloadIdentity_No_ClientId(t *testing.T) {
 	expectedError := "client ID must be provided to use Azure DevOps Workload Identity Federation"
 
 	ctx := context.Background()
