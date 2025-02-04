@@ -98,7 +98,7 @@ func TestUnitApiClient_SystemManagedIdentity_No_Identity(t *testing.T) {
 	}
 }
 
-func TestUnitApiClient_UserManagedIdentity_NoIdentity(t *testing.T) {
+func TestUnitApiClient_UserManagedIdentity_No_Identity(t *testing.T) {
 	expectedError := "ManagedIdentityCredential authentication failed. the requested identity isn't assigned to this resource"
 
 	ctx := context.Background()
