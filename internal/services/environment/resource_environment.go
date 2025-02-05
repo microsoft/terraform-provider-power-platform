@@ -6,6 +6,7 @@ package environment
 import (
 	"context"
 	"fmt"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
@@ -28,6 +29,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
+	"github.com/microsoft/terraform-provider-power-platform/internal/validators"
 )
 
 var _ resource.Resource = &Resource{}
@@ -106,6 +108,10 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidOrEmptyValueRegex), "environment_group_id must be a valid environment group id guid"),
+					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
+				},
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "Description of the environment",
@@ -156,6 +162,20 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(EnvironmentTypes...),
+					validators.OtherFieldRequiredWhenValueOf(path.Root("owner_id").Expression(), nil, regexp.MustCompile(EnvironmentTypesDeveloperOnlyRegex), "owner_id must be set when environment_type is `Developer`"),
+				},
+			},
+			"owner_id": schema.StringAttribute{
+				MarkdownDescription: "Entra ID  user id (guid) of the environment owner when creating developer environment",
+				Optional:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.Root("dataverse").AtName("security_group_id").Expression()),
+					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
+					validators.OtherFieldRequiredWhenValueOf(path.Root("environment_type").Expression(), regexp.MustCompile(EnvironmentTypesDeveloperOnlyRegex), nil, "owner_id can be used only when environment_type is `Developer`"),
 				},
 			},
 			"display_name": schema.StringAttribute{
@@ -242,8 +262,11 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						},
 					},
 					"security_group_id": schema.StringAttribute{
-						MarkdownDescription: "Security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
-						Required:            true,
+						MarkdownDescription: "Security group id (guid). For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
+						Optional:            true,
+						Validators: []validator.String{
+							validators.MakeFieldRequiredWhenOtherFieldDoesNotHaveValue(path.Root("environment_type").Expression(), regexp.MustCompile(EnvironmentTypesExceptDeveloperRegex), "dataverse.security_group_id is required for all environment_type values except `Developer`"),
+						},
 					},
 					"language_code": schema.Int64Attribute{
 						MarkdownDescription: "Language LCID (integer)",
@@ -382,7 +405,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
 
-	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, plan.OwnerId.ValueStringPointer(), templateMetadata, templates, plan.Timeouts)
 
 	if !plan.AzureRegion.IsNull() && plan.AzureRegion.ValueString() != "" && (plan.AzureRegion.ValueString() != newState.AzureRegion.ValueString()) {
 		resp.Diagnostics.AddAttributeError(path.Root("azure_region"), fmt.Sprintf("Provisioning environment in azure region '%s' failed", plan.AzureRegion.ValueString()), "Provisioning environment in azure region was not successful, please try other region in that location or try again later")
@@ -450,7 +473,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 			templates = dv.Templates
 		}
 	}
-	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, state.Timeouts)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, state.OwnerId.ValueStringPointer(), templateMetadata, templates, state.Timeouts)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
@@ -573,7 +596,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, state.OwnerId.ValueStringPointer(), templateMetadata, templates, plan.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return
@@ -600,8 +623,11 @@ func updateExistingDataverse(ctx context.Context, plan *SourceModel, environment
 	plan.Dataverse.As(ctx, &dataverseSourcePlanModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 	environmentDto.Properties.LinkedEnvironmentMetadata = &LinkedEnvironmentMetadataDto{
-		SecurityGroupId: dataverseSourcePlanModel.SecurityGroupId.ValueString(),
-		DomainName:      dataverseSourcePlanModel.Domain.ValueString(),
+		DomainName: dataverseSourcePlanModel.Domain.ValueString(),
+	}
+
+	if plan.EnvironmentType.ValueString() != EnvironmentTypesDeveloper {
+		environmentDto.Properties.LinkedEnvironmentMetadata.SecurityGroupId = types.StringNull().ValueString()
 	}
 
 	if !dataverseSourcePlanModel.AdministrationMode.IsNull() && !dataverseSourcePlanModel.AdministrationMode.IsUnknown() {

@@ -135,6 +135,10 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 								Attributes: policyAttributeSchema,
 							},
 						},
+						"owner_id": schema.StringAttribute{
+							MarkdownDescription: "Entra ID  user id (guid) of the environment owner when creating developer environment",
+							Computed:            true,
+						},
 						"dataverse": schema.SingleNestedAttribute{
 							MarkdownDescription: "Dataverse environment details",
 							Computed:            true,
@@ -259,7 +263,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 			currencyCode = defaultCurrency.IsoCurrencyCode
 		}
 
-		env, err := convertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil, timeouts.Value{})
+		env, err := convertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil, nil, timeouts.Value{})
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Error when converting environment %s", env.DisplayName), err.Error())
 			return
