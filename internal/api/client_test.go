@@ -163,7 +163,7 @@ func TestUnitApiClient_AzDOWorkloadIdentity_No_ClientId(t *testing.T) {
 }
 
 // This is technically not possible with the current control flow but it's still worth testing for.
-func TestUnitApiClient_AzDOWorkloadIdentity_NoAzDOServiceConnection(t *testing.T) {
+func TestUnitApiClient_AzDOWorkloadIdentity_No_AzDOServiceConnection(t *testing.T) {
 	expectedError := "request URL is required for OIDC credential"
 
 	ctx := context.Background()
