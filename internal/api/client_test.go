@@ -118,7 +118,7 @@ func TestUnitApiClient_UserManagedIdentity_No_Identity(t *testing.T) {
 	}
 }
 
-func TestUnitApiClient_AzDOWorkloadIdentity_NoTenantId(t *testing.T) {
+func TestUnitApiClient_AzDOWorkloadIdentity_No_TenantId(t *testing.T) {
 	expectedError := "tenant ID must be provided to use Azure DevOps Workload Identity Federation"
 
 	ctx := context.Background()
