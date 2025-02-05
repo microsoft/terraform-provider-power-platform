@@ -67,6 +67,7 @@ resource "powerplatform_environment" "development" {
 - `description` (String) Description of the environment
 - `environment_group_id` (String) Environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information.
 - `owner_id` (String) Entra ID  user id (guid) of the environment owner when creating developer environment
+- `release_cycle` (String) Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
