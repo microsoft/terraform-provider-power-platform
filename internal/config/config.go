@@ -8,6 +8,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+const (
+	CloudTypePublic  = "public"
+	CloudTypeGcc     = "gcc"
+	CloudTypeGccHigh = "gcchigh"
+	CloudTypeDod     = "dod"
+	CloudTypeChina   = "china"
+	CloudTypeEx      = "ex"
+	CloudTypeRx      = "rx"
+)
+
 type ProviderConfig struct {
 	UseCli  bool
 	UseOidc bool
@@ -23,6 +33,8 @@ type ProviderConfig struct {
 	OidcRequestUrl    string
 	OidcToken         string
 	OidcTokenFilePath string
+
+	CloudType string
 
 	// internal runtime configuration values
 	TestMode         bool

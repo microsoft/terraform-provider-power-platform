@@ -129,15 +129,16 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"relase_cycle": schema.StringAttribute{
-				MarkdownDescription: "",
+			"release_cycle": schema.StringAttribute{
+				MarkdownDescription: "Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).",
 				Optional:            true,
 				Computed:            true,
 				Validators: []validator.String{
-					stringvalidator.OneOf(EnvironmentTypes...),
+					stringvalidator.OneOf(ReleaseCycleTypes...),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"location": schema.StringAttribute{
@@ -349,6 +350,7 @@ func (r *Resource) Configure(ctx context.Context, req resource.ConfigureRequest,
 	r.EnvironmentClient = NewEnvironmentClient(clientApi)
 	r.LicensingClient = licensing.NewLicensingClient(clientApi)
 	tflog.Debug(ctx, "Successfully created clients")
+
 }
 
 func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -362,7 +364,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	envToCreate, err := convertCreateEnvironmentDtoFromSourceModel(ctx, *plan)
+	envToCreate, err := convertCreateEnvironmentDtoFromSourceModel(ctx, *r.EnvironmentClient.Api.Config, *plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting source model to create environment dto", err.Error())
 	}

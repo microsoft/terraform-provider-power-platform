@@ -7,11 +7,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/microsoft/terraform-provider-power-platform/internal/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 )
@@ -42,6 +44,7 @@ type SourceModel struct {
 	BillingPolicyId    types.String   `tfsdk:"billing_policy_id"`
 	Description        types.String   `tfsdk:"description"`
 	Cadence            types.String   `tfsdk:"cadence"`
+	ReleaseCycle       types.String   `tfsdk:"release_cycle"`
 	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
 	OwnerId            types.String   `tfsdk:"owner_id"`
 
@@ -83,7 +86,7 @@ func isDataverseEnvironmentEmpty(ctx context.Context, environment *SourceModel) 
 	return dataverseSourceModel.CurrencyCode.IsNull() || dataverseSourceModel.CurrencyCode.ValueString() == ""
 }
 
-func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource SourceModel) (*environmentCreateDto, error) {
+func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, conf config.ProviderConfig, environmentSource SourceModel) (*environmentCreateDto, error) {
 	environmentDto := &environmentCreateDto{
 		Location: environmentSource.Location.ValueString(),
 		Properties: environmentCreatePropertiesDto{
@@ -109,6 +112,16 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != "" {
 		environmentDto.Properties.BillingPolicy = BillingPolicyDto{
 			Id: environmentSource.BillingPolicyId.ValueString(),
+		}
+	}
+
+	if environmentSource.ReleaseCycle.ValueString() == ReleaseCycleTypesEarly {
+		category := ReleaseCycleFirstReleasePublicDto
+		if conf.CloudType == config.CloudTypeGcc {
+			category = ReleaseCycleFirstReleaseGovDto
+		}
+		environmentDto.Properties.Cluster = &ClusterDto{
+			Catergory: category,
 		}
 	}
 
@@ -182,6 +195,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 	convertBillingPolicyModelFromDto(environmentDto, model)
 	convertEnvironmentGroupFromDto(environmentDto, model)
 	convertEnterprisePolicyModelFromDto(environmentDto, model)
+	convertReleaseCycleModelFromDto(environmentDto, model)
 
 	attrTypesDataverseObject := map[string]attr.Type{
 		"url":                          types.StringType,
@@ -308,6 +322,15 @@ func convertBillingPolicyModelFromDto(environmentDto EnvironmentDto, model *Sour
 		model.BillingPolicyId = types.StringValue(environmentDto.Properties.BillingPolicy.Id)
 	} else {
 		model.BillingPolicyId = types.StringValue("")
+	}
+}
+
+func convertReleaseCycleModelFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	isMatch, _ := regexp.MatchString(ReleaseCycleFirstReleaseOnlyRegex, environmentDto.Properties.Cluster.Catergory)
+	if environmentDto.Properties.Cluster != nil && isMatch {
+		model.ReleaseCycle = types.StringValue(ReleaseCycleTypesEarly)
+	} else {
+		model.ReleaseCycle = types.StringValue(ReleaseCycleTypesStandard)
 	}
 }
 

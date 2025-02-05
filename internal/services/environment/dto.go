@@ -14,12 +14,21 @@ const (
 	EnvironmentTypesProduction = "Production"
 	EnvironmentTypesTrial      = "Trial"
 	EnvironmentTypesDefault    = "Default"
+
+	ReleaseCycleTypesStandard = "Standard"
+	ReleaseCycleTypesEarly    = "Early"
+
+	ReleaseCycleFirstReleasePublicDto = "FirstRelease"
+	ReleaseCycleFirstReleaseGovDto    = "GovFR"
 )
 
 var (
 	EnvironmentTypes                     = []string{EnvironmentTypesDeveloper, EnvironmentTypesSandbox, EnvironmentTypesProduction, EnvironmentTypesTrial, EnvironmentTypesDefault}
 	EnvironmentTypesDeveloperOnlyRegex   = fmt.Sprintf(`^(%s)$`, EnvironmentTypesDeveloper)
 	EnvironmentTypesExceptDeveloperRegex = fmt.Sprintf(`^(%s|%s|%s|%s)$`, EnvironmentTypesSandbox, EnvironmentTypesProduction, EnvironmentTypesTrial, EnvironmentTypesDefault)
+
+	ReleaseCycleTypes                 = []string{ReleaseCycleTypesStandard, ReleaseCycleTypesEarly}
+	ReleaseCycleFirstReleaseOnlyRegex = fmt.Sprintf(`^(%s|%s)$`, ReleaseCycleFirstReleasePublicDto, ReleaseCycleFirstReleaseGovDto)
 )
 
 type EnvironmentDto struct {
@@ -47,6 +56,11 @@ type EnviromentPropertiesDto struct {
 	UpdateCadence             *UpdateCadenceDto                 `json:"updateCadence,omitempty"`
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 	EnterprisePolicies        *EnvironmentEnterprisePoliciesDto `json:"enterprisePolicies,omitempty"`
+	Cluster                   *ClusterDto                       `json:"cluster,omitempty"`
+}
+
+type ClusterDto struct {
+	Catergory string `json:"category"`
 }
 
 type EnvironmentEnterprisePoliciesDto struct {
@@ -163,6 +177,7 @@ type environmentCreatePropertiesDto struct {
 	LinkedEnvironmentMetadata *createLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 	UsedBy                    *usedBy                           `json:"usedBy,omitempty"`
+	Cluster                   *ClusterDto                       `json:"cluster,omitempty"`
 }
 
 type usedBy struct {

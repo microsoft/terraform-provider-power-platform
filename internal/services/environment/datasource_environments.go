@@ -120,6 +120,10 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 								stringvalidator.OneOf("Frequent", "Moderate"),
 							},
 						},
+						"release_cycle": schema.StringAttribute{
+							MarkdownDescription: "Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).",
+							Computed:            true,
+						},
 						"billing_policy_id": &schema.StringAttribute{
 							MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 							Computed:            true,
