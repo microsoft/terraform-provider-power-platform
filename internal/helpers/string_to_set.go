@@ -6,7 +6,6 @@ import (
 )
 
 // StringSliceToSet converts a slice of strings to a Terraform set of strings.
-
 func StringSliceToSet(slice []string) types.Set {
 	values := make([]attr.Value, len(slice))
 	for i, v := range slice {

@@ -5,7 +5,6 @@ import (
 )
 
 // SetToStringSlice converts a set of strings to a slice of strings.
-
 func SetToStringSlice(set types.Set) []string {
 	var result []string
 	for _, v := range set.Elements() {
