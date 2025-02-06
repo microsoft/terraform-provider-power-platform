@@ -107,7 +107,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.environment_type", "Developer"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.language_code", "1033"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.organization_id", "6450637c-f9a8-4988-8cf7-b03723d51ab7"),
-					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.security_group_id", ""),
+					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.security_group_id"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.dataverse.url", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.location", "europe"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.0.azure_region", "northeurope"),
