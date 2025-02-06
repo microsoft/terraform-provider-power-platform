@@ -125,7 +125,7 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			"solution_checker_rule_overrides": schema.SetAttribute{
 				MarkdownDescription: "List of rules to exclude from solution checker.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.",
 				Description:         "List of rules to exclude from solution checker",
-				Required:            true,
+				Optional:            true,
 				ElementType:         types.StringType,
 				Validators: []validator.Set{
 					setvalidator.ValueStringsAre(stringvalidator.OneOf(append([]string{""}, strings.Split(SOLUTION_CHECKER_RULES, ", ")...)...)),
@@ -185,9 +185,10 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	solutionCheckerRuleOverrides := ""
+	var solutionCheckerRuleOverrides *string
 	if !plan.SolutionCheckerRuleOverrides.IsNull() {
-		solutionCheckerRuleOverrides = strings.Join(helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides), ",")
+		value := strings.Join(helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides), ",")
+		solutionCheckerRuleOverrides = &value
 	}
 
 	managedEnvironmentDto := environment.GovernanceConfigurationDto{
@@ -202,11 +203,15 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 				LimitSharingMode:               strings.ToLower(plan.LimitSharingMode.ValueString()[:1]) + plan.LimitSharingMode.ValueString()[1:],
 				SolutionCheckerMode:            strings.ToLower(plan.SolutionCheckerMode.ValueString()),
 				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
-				SolutionCheckerRuleOverrides:   solutionCheckerRuleOverrides,
+				SolutionCheckerRuleOverrides:   "",
 				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
 				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
 			},
 		},
+	}
+
+	if solutionCheckerRuleOverrides != nil {
+		managedEnvironmentDto.Settings.ExtendedSettings.SolutionCheckerRuleOverrides = *solutionCheckerRuleOverrides
 	}
 
 	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
@@ -299,10 +304,12 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	solutionCheckerRuleOverrides := ""
+	var solutionCheckerRuleOverrides *string
 	if !plan.SolutionCheckerRuleOverrides.IsNull() {
-		solutionCheckerRuleOverrides = strings.Join(helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides), ",")
+		value := strings.Join(helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides), ",")
+		solutionCheckerRuleOverrides = &value
 	}
+
 	managedEnvironmentDto := environment.GovernanceConfigurationDto{
 		ProtectionLevel: "Standard",
 		Settings: &environment.SettingsDto{
@@ -317,9 +324,13 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
 				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
 				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
-				SolutionCheckerRuleOverrides:   solutionCheckerRuleOverrides,
+				SolutionCheckerRuleOverrides:   "",
 			},
 		},
+	}
+
+	if solutionCheckerRuleOverrides != nil {
+		managedEnvironmentDto.Settings.ExtendedSettings.SolutionCheckerRuleOverrides = *solutionCheckerRuleOverrides
 	}
 
 	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
