@@ -14,9 +14,275 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
+
+func TestAccEnvironmentsResource_Validate_CreateDeveloperEnvironment(t *testing.T) {
+	t.Skip("creating dev environments with SP is NOT yet supported")
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+			"random": {
+				VersionConstraint: constants.RANDOM_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/random",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				data "azuread_domains" "aad_domains" {
+					only_initial = true
+				}
+
+				locals {
+					domain_name = data.azuread_domains.aad_domains.domains[0].domain_name
+				}
+
+				resource "random_password" "passwords" {
+				    min_lower = 1
+					min_upper        = 1
+					min_numeric      = 1
+					min_special      = 1
+					length           = 16
+					special          = true
+					override_special = "_%@"
+				}
+
+				resource "azuread_user" "test_user" {
+					user_principal_name = "` + mocks.TestName() + `@${local.domain_name}"
+					display_name        = "` + mocks.TestName() + `"
+					mail_nickname       = "` + mocks.TestName() + `"
+					password            = random_password.passwords.result
+					usage_location      = "US"
+				}
+
+				resource "powerplatform_environment" "development" {
+					display_name         = "` + mocks.TestName() + `"
+					location             = "europe"
+					environment_type     = "Developer"
+					owner_id = azuread_user.test_user.id
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "USD"
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_Create_Error_Check_Environment_Group(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*Attribute \"dataverse\" must be specified when \"environment_group_id\".*"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Sandbox"
+					environment_group_id = "00000000-0000-0000-0000-000000000001"
+				}`,
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_CreateDevelopmentEnvironment_Error_Check_Security_Group(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*Attribute \"dataverse.security_group_id\" cannot be specified when \"owner_id\".*"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Developer"
+					owner_id = "00000000-0000-0000-0000-000000000001"
+					dataverse = {
+						language_code = "1033"
+						currency_code = "PLN"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_CreateDevelopmentEnvironment_Error_Check_No_Dataverse(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*Attribute \"dataverse\" must be specified when \"owner_id\" is specified.*"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Developer"
+					owner_id = "00000000-0000-0000-0000-000000000001"
+				}`,
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_CreateDevelopmentEnvironment_Error_Check_No_Developer_Env(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*owner_id can be used only when environment_type is `Developer`.*"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Sandbox"
+					owner_id = "00000000-0000-0000-0000-000000000001"
+					dataverse = {
+						language_code = "1033"
+						currency_code = "PLN"
+					}
+				}`,
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_CreateDevelopmentEnvironment_Error_Check_No_OwnerId(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*owner_id must be set when environment_type is `Developer`.*"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Developer"
+					dataverse = {
+						language_code = "1033"
+						currency_code = "PLN"
+					}
+				}`,
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_CreateDevelopmentEnvironment_Error_Check_Empty_OwnerId(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*owner_id must be set when environment_type is `Developer`.*"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Developer"
+					owner_id = ""
+					dataverse = {
+						language_code = "1033"
+						currency_code = "PLN"
+					}
+				}`,
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_CreateDeveloperEnvironment(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Dev_Env/get_lifecycle_delete.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			id := httpmock.MustGetSubmatch(req, 1)
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Validate_Create_Dev_Env/get_environment_%s.json", id)).String()), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_Dev_Env/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					azure_region     = "westeurope"
+					environment_type = "Developer"
+					cadence          = "Frequent"
+					owner_id = "00000000-0000-0000-0000-000000000001"
+					dataverse = {
+						language_code = "1033"
+						currency_code = "PLN"
+					}
+				}`,
+
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "displayname"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.url", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.domain", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Developer"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "owner_id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.language_code", "1033"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.currency_code", "PLN"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.organization_id", "orgid"),
+					resource.TestCheckNoResourceAttr("powerplatform_environment.development", "dataverse.security_group_id"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.version", "9.2.23092.00206"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.unique_name", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", ""),
+				),
+			},
+		},
+	})
+}
 
 func TestAccEnvironmentsResource_Validate_Update(t *testing.T) {
 	domainName := fmt.Sprintf("terraformprovidertest%d", rand.Intn(100000))
