@@ -17,6 +17,14 @@ type environmentSettingsDto struct {
 	BoundDashboardDefaultCardExpanded        *bool   `json:"bounddashboarddefaultcardexpanded,omitempty"`
 	OrganizationId                           *string `json:"organizationid,omitempty"`
 	PowerAppsComponentFrameworkForCanvasApps *bool   `json:"iscustomcontrolsincanvasappsenabled,omitempty"`
+
+	EnableIpBasedFirewallRule            *bool   `json:"enableipbasedfirewallrule,omitempty"`     //enable disable whole thing
+	AllowedIpRangeForFirewall            *string `json:"allowediprangeforfirewall,omitempty"`     //ip ranges
+	AllowedServiceTagsForFirewall        *string `json:"allowedservicetagsforfirewall,omitempty"` //service tags
+	AllowApplicationUserAccess           *bool   `json:"allowapplicationuseraccess,omitempty"`
+	AllowMicrosoftTrustedServiceTags     *bool   `json:"allowmicrosofttrustedservicetags,omitempty"`
+	EnableIpBasedFirewallRuleInAuditMode *bool   `json:"enableipbasedfirewallruleinauditmode,omitempty"`
+	ReverseProxyIpAddresses              *string `json:"reverseproxyipaddresses,omitempty"`
 }
 
 type environmentIdDto struct {

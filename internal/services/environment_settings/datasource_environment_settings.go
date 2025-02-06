@@ -183,8 +183,41 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"power_apps_component_framework_for_canvas_apps": schema.BoolAttribute{
-								Description:         "Power Apps component framework for canvas apps",
 								MarkdownDescription: "Power Apps component framework for canvas apps",
+								Optional:            true,
+							},
+						},
+					},
+					"security": schema.SingleNestedAttribute{
+						MarkdownDescription: "Security. See [Security Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-privacy-security) for more details.",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"enable_ip_based_firewall_rule": schema.BoolAttribute{
+								MarkdownDescription: "Enable IP based firewall rule",
+								Optional:            true,
+							},
+							"allowed_ip_range_for_firewall": schema.StringAttribute{
+								MarkdownDescription: "Allowed IP range for firewall",
+								Optional:            true,
+							},
+							"allowed_service_tags_for_firewall": schema.StringAttribute{
+								MarkdownDescription: "Allowed service tags for firewall",
+								Optional:            true,
+							},
+							"allow_application_user_access": schema.BoolAttribute{
+								MarkdownDescription: "Allow application user access",
+								Optional:            true,
+							},
+							"allow_microsoft_trusted_service_tags": schema.BoolAttribute{
+								MarkdownDescription: "Allow Microsoft trusted service tags",
+								Optional:            true,
+							},
+							"enable_ip_based_firewall_rule_in_audit_mode": schema.BoolAttribute{
+								MarkdownDescription: "Enable IP based firewall rule in audit mode",
+								Optional:            true,
+							},
+							"reverse_proxy_ip_addresses": schema.StringAttribute{
+								MarkdownDescription: "Reverse proxy IP addresses",
 								Optional:            true,
 							},
 						},

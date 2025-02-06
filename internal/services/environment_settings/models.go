@@ -64,6 +64,7 @@ type EmailSettingsSourceModel struct {
 type ProductSourceModel struct {
 	BehaviorSettings types.Object `tfsdk:"behavior_settings"`
 	Features         types.Object `tfsdk:"features"`
+	Security         types.Object `tfsdk:"security"`
 }
 
 type BehaviorSettingsSourceModel struct {
@@ -72,6 +73,16 @@ type BehaviorSettingsSourceModel struct {
 
 type FeaturesSourceModel struct {
 	PowerAppsComponentFrameworkForCanvasApps types.Bool `tfsdk:"power_apps_component_framework_for_canvas_apps"`
+}
+
+type SecuritySourceModel struct {
+	EnableIpBasedFirewallRule            types.Bool   `tfsdk:"enable_ip_based_firewall_rule"`
+	AllowedIpRangeForFirewall            types.String `tfsdk:"allowed_ip_range_for_firewall"`
+	AllowedServiceTagsForFirewall        types.String `tfsdk:"allowed_service_tags_for_firewall"`
+	AllowApplicationUserAccess           types.Bool   `tfsdk:"allow_application_user_access"`
+	AllowMicrosoftTrustedServiceTags     types.Bool   `tfsdk:"allow_microsoft_trusted_service_tags"`
+	EnableIpBasedFirewallRuleInAuditMode types.Bool   `tfsdk:"enable_ip_based_firewall_rule_in_audit_mode"`
+	ReverseProxyIpAddresses              types.String `tfsdk:"reverse_proxy_ip_addresses"`
 }
 
 func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel) (*environmentSettingsDto, error) {
@@ -115,6 +126,7 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 	convertFromEnvironmentEmailSettings(ctx, environmentSettings, environmentSettingsDto)
 	convertFromEnvironmentBehaviorSettings(ctx, environmentSettings, environmentSettingsDto)
 	convertFromEnvironmentFeatureSettings(ctx, environmentSettings, environmentSettingsDto)
+	convertFromEnvironmentSecuritySettings(ctx, environmentSettings, environmentSettingsDto)
 	return environmentSettingsDto, nil
 }
 
@@ -152,6 +164,36 @@ func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSetti
 
 		if !featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.IsNull() && !featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.IsUnknown() {
 			environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps = featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.ValueBoolPointer()
+		}
+	}
+}
+
+func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) {
+	security := environmentSettings.Product.Attributes()["security"]
+	if security != nil && !security.IsNull() && !security.IsUnknown() {
+		var securitySourceModel SecuritySourceModel
+		security.(basetypes.ObjectValue).As(ctx, &securitySourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+
+		if !securitySourceModel.EnableIpBasedFirewallRule.IsNull() && !securitySourceModel.EnableIpBasedFirewallRule.IsUnknown() {
+			environmentSettingsDto.EnableIpBasedFirewallRule = securitySourceModel.EnableIpBasedFirewallRule.ValueBoolPointer()
+		}
+		if !securitySourceModel.AllowedIpRangeForFirewall.IsNull() && !securitySourceModel.AllowedIpRangeForFirewall.IsUnknown() {
+			environmentSettingsDto.AllowedIpRangeForFirewall = securitySourceModel.AllowedIpRangeForFirewall.ValueStringPointer()
+		}
+		if !securitySourceModel.AllowedServiceTagsForFirewall.IsNull() && !securitySourceModel.AllowedServiceTagsForFirewall.IsUnknown() {
+			environmentSettingsDto.AllowedServiceTagsForFirewall = securitySourceModel.AllowedServiceTagsForFirewall.ValueStringPointer()
+		}
+		if !securitySourceModel.AllowApplicationUserAccess.IsNull() && !securitySourceModel.AllowApplicationUserAccess.IsUnknown() {
+			environmentSettingsDto.AllowApplicationUserAccess = securitySourceModel.AllowApplicationUserAccess.ValueBoolPointer()
+		}
+		if !securitySourceModel.AllowMicrosoftTrustedServiceTags.IsNull() && !securitySourceModel.AllowMicrosoftTrustedServiceTags.IsUnknown() {
+			environmentSettingsDto.AllowMicrosoftTrustedServiceTags = securitySourceModel.AllowMicrosoftTrustedServiceTags.ValueBoolPointer()
+		}
+		if !securitySourceModel.EnableIpBasedFirewallRuleInAuditMode.IsNull() && !securitySourceModel.EnableIpBasedFirewallRuleInAuditMode.IsUnknown() {
+			environmentSettingsDto.EnableIpBasedFirewallRuleInAuditMode = securitySourceModel.EnableIpBasedFirewallRuleInAuditMode.ValueBoolPointer()
+		}
+		if !securitySourceModel.ReverseProxyIpAddresses.IsNull() && !securitySourceModel.ReverseProxyIpAddresses.IsUnknown() {
+			environmentSettingsDto.ReverseProxyIpAddresses = securitySourceModel.ReverseProxyIpAddresses.ValueStringPointer()
 		}
 	}
 }
@@ -220,9 +262,20 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		"power_apps_component_framework_for_canvas_apps": types.BoolType,
 	}
 
+	attrTypesSecurityObject := map[string]attr.Type{
+		"enable_ip_based_firewall_rule":               types.BoolType,
+		"allowed_ip_range_for_firewall":               types.StringType,
+		"allowed_service_tags_for_firewall":           types.StringType,
+		"allow_application_user_access":               types.BoolType,
+		"allow_microsoft_trusted_service_tags":        types.BoolType,
+		"enable_ip_based_firewall_rule_in_audit_mode": types.BoolType,
+		"reverse_proxy_ip_addresses":                  types.StringType,
+	}
+
 	attrTypesProductObject := map[string]attr.Type{
 		"behavior_settings": types.ObjectType{AttrTypes: attrBahaviorSettingsObject},
 		"features":          types.ObjectType{AttrTypes: attrFeaturesObject},
+		"security":          types.ObjectType{AttrTypes: attrTypesSecurityObject},
 	}
 
 	attrValuesProductProperties := map[string]attr.Value{
@@ -231,6 +284,15 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		}),
 		"features": types.ObjectValueMust(attrFeaturesObject, map[string]attr.Value{
 			"power_apps_component_framework_for_canvas_apps": types.BoolValue(*environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps),
+		}),
+		"security": types.ObjectValueMust(attrTypesSecurityObject, map[string]attr.Value{
+			"enable_ip_based_firewall_rule":               types.BoolValue(*environmentSettingsDto.EnableIpBasedFirewallRule),
+			"allowed_ip_range_for_firewall":               types.StringValue(*environmentSettingsDto.AllowedIpRangeForFirewall),
+			"allowed_service_tags_for_firewall":           types.StringValue(*environmentSettingsDto.AllowedServiceTagsForFirewall),
+			"allow_application_user_access":               types.BoolValue(*environmentSettingsDto.AllowApplicationUserAccess),
+			"allow_microsoft_trusted_service_tags":        types.BoolValue(*environmentSettingsDto.AllowMicrosoftTrustedServiceTags),
+			"enable_ip_based_firewall_rule_in_audit_mode": types.BoolValue(*environmentSettingsDto.EnableIpBasedFirewallRuleInAuditMode),
+			"reverse_proxy_ip_addresses":                  types.StringValue(*environmentSettingsDto.ReverseProxyIpAddresses),
 		}),
 	}
 
