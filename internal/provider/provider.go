@@ -163,6 +163,16 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				MarkdownDescription: "Flag to indicate whether to opt out of telemetry. Default is `false`",
 				Optional:            true,
 			},
+			"use_msi": schema.BoolAttribute{
+				Description:         "Flag to indicate whether to use managed identity for authentication",
+				MarkdownDescription: "Flag to indicate whether to use managed identity for authentication",
+				Optional:            true,
+			},
+			"azdo_service_connection_id": schema.StringAttribute{
+				Description:         "The service connection id of the Azure DevOps service connection. For use in workload identity federation.",
+				MarkdownDescription: "The service connection id of the Azure DevOps service connection. For use in workload identity federation.",
+				Optional:            true,
+			},
 		},
 	}
 }
@@ -188,6 +198,8 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	clientCertificate := helpers.GetConfigString(ctx, configValue.ClientCertificate, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE, "")
 	clientCertificateFilePath := helpers.GetConfigString(ctx, configValue.ClientCertificateFilePath, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH, "")
 	clientCertificatePassword := helpers.GetConfigString(ctx, configValue.ClientCertificatePassword, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD, "")
+	useMsi := helpers.GetConfigBool(ctx, configValue.UseMsi, constants.ENV_VAR_POWER_PLATFORM_USE_MSI, false)
+	azdoServiceConnectionId := helpers.GetConfigString(ctx, configValue.AzDOServiceConnectionID, constants.ENV_VAR_POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID, "")
 
 	// Check for AzDO and GitHub environment variables
 	oidcRequestUrl := helpers.GetConfigMultiString(ctx, configValue.OidcRequestUrl, []string{constants.ENV_VAR_ARM_OIDC_REQUEST_URL, constants.ENV_VAR_ACTIONS_ID_TOKEN_REQUEST_URL}, "")
@@ -201,46 +213,17 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	// Set the configuration values
 
 	if p.Config.TestMode {
-		tflog.Info(ctx, "Test mode enabled. Authentication requests will not be sent to the backend APIs.")
+		configureTestMode(ctx)
 	} else if useCli {
-		tflog.Info(ctx, "Using CLI for authentication")
-		p.Config.UseCli = true
+		configureUseCli(ctx, p)
 	} else if useOidc {
-		tflog.Info(ctx, "Using OpenID Connect for authentication")
-		validateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
-		validateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID)
-
-		p.Config.UseOidc = true
-		p.Config.TenantId = tenantId
-		p.Config.ClientId = clientId
-		p.Config.OidcRequestToken = oidcRequestToken
-		p.Config.OidcRequestUrl = oidcRequestUrl
-		p.Config.OidcToken = oidcToken
-		p.Config.OidcTokenFilePath = oidcTokenFilePath
+		configureUseOidc(ctx, p, tenantId, clientId, oidcRequestToken, azdoServiceConnectionId, oidcRequestUrl, oidcToken, oidcTokenFilePath, resp)
+	} else if useMsi {
+		configureUseMsi(ctx, p, clientId)
 	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
-		tflog.Info(ctx, "Using client certificate for authentication")
-		validateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
-		validateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID)
-
-		cert, err := helpers.GetCertificateRawFromCertOrFilePath(clientCertificate, clientCertificateFilePath)
-		if err != nil {
-			resp.Diagnostics.AddAttributeError(path.Root("client_certificate"), "Error getting certificate", err.Error())
-		}
-		p.Config.ClientCertificateRaw = cert
-		p.Config.ClientCertificatePassword = clientCertificatePassword
-		p.Config.TenantId = tenantId
-		p.Config.ClientId = clientId
+		configureClientCertificate(ctx, p, tenantId, clientId, clientCertificate, clientCertificateFilePath, clientCertificatePassword, resp)
 	} else {
-		tflog.Info(ctx, "Using client id and secret for authentication")
-		if tenantId != "" && clientId != "" && clientSecret != "" {
-			p.Config.TenantId = tenantId
-			p.Config.ClientId = clientId
-			p.Config.ClientSecret = clientSecret
-		} else {
-			validateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
-			validateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID)
-			validateProviderAttribute(resp, path.Root("client_secret"), "client secret", clientSecret, constants.ENV_VAR_POWER_PLATFORM_CLIENT_SECRET)
-		}
+		configureClientSecret(ctx, p, tenantId, clientId, clientSecret, resp)
 	}
 
 	var providerConfigUrls *config.ProviderConfigUrls
@@ -280,6 +263,71 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	}
 	resp.DataSourceData = &providerClient
 	resp.ResourceData = &providerClient
+}
+
+func configureTestMode(ctx context.Context) {
+	tflog.Info(ctx, "Test mode enabled. Authentication requests will not be sent to the backend APIs.")
+}
+
+func configureUseCli(ctx context.Context, p *PowerPlatformProvider) {
+	tflog.Info(ctx, "Using CLI for authentication")
+	p.Config.UseCli = true
+}
+
+func configureUseOidc(ctx context.Context, p *PowerPlatformProvider, tenantId, clientId, oidcRequestToken, azdoServiceConnectionId, oidcRequestUrl, oidcToken, oidcTokenFilePath string, resp *provider.ConfigureResponse) {
+	// Shared properties
+	p.Config.UseOidc = true
+	p.Config.TenantId = tenantId
+	p.Config.ClientId = clientId
+	p.Config.OidcRequestToken = oidcRequestToken
+
+	if azdoServiceConnectionId != "" { // Workload identity federation
+		tflog.Info(ctx, "Using Workload Identity Federation for Azure Pipelines")
+
+		p.Config.AzDOServiceConnectionID = azdoServiceConnectionId
+	} else { // OIDC
+		tflog.Info(ctx, "Using OpenID Connect for authentication")
+		validateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
+		validateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID)
+
+		p.Config.OidcRequestUrl = oidcRequestUrl
+		p.Config.OidcToken = oidcToken
+		p.Config.OidcTokenFilePath = oidcTokenFilePath
+	}
+}
+
+func configureUseMsi(ctx context.Context, p *PowerPlatformProvider, clientId string) {
+	tflog.Info(ctx, "Using Managed Identity for authentication")
+	p.Config.ClientId = clientId // No client ID validation, as it could be blank for system-managed or populated for user-managed.
+	p.Config.UseMsi = true
+}
+
+func configureClientCertificate(ctx context.Context, p *PowerPlatformProvider, tenantId, clientId, clientCertificate, clientCertificateFilePath, clientCertificatePassword string, resp *provider.ConfigureResponse) {
+	tflog.Info(ctx, "Using client certificate for authentication")
+	validateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
+	validateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID)
+
+	cert, err := helpers.GetCertificateRawFromCertOrFilePath(clientCertificate, clientCertificateFilePath)
+	if err != nil {
+		resp.Diagnostics.AddAttributeError(path.Root("client_certificate"), "Error getting certificate", err.Error())
+	}
+	p.Config.ClientCertificateRaw = cert
+	p.Config.ClientCertificatePassword = clientCertificatePassword
+	p.Config.TenantId = tenantId
+	p.Config.ClientId = clientId
+}
+
+func configureClientSecret(ctx context.Context, p *PowerPlatformProvider, tenantId, clientId, clientSecret string, resp *provider.ConfigureResponse) {
+	tflog.Info(ctx, "Using client id and secret for authentication")
+	if tenantId != "" && clientId != "" && clientSecret != "" {
+		p.Config.TenantId = tenantId
+		p.Config.ClientId = clientId
+		p.Config.ClientSecret = clientSecret
+	} else {
+		validateProviderAttribute(resp, path.Root("tenant_id"), "tenant id", tenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID)
+		validateProviderAttribute(resp, path.Root("client_id"), "client id", clientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID)
+		validateProviderAttribute(resp, path.Root("client_secret"), "client secret", clientSecret, constants.ENV_VAR_POWER_PLATFORM_CLIENT_SECRET)
+	}
 }
 
 func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource.Resource {
