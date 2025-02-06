@@ -135,6 +135,10 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 								Attributes: policyAttributeSchema,
 							},
 						},
+						"owner_id": schema.StringAttribute{
+							MarkdownDescription: "Entra ID  user id (guid) of the environment owner when creating developer environment",
+							Computed:            true,
+						},
 						"dataverse": schema.SingleNestedAttribute{
 							MarkdownDescription: "Dataverse environment details",
 							Computed:            true,

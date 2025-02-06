@@ -4,11 +4,22 @@
 package environment
 
 import (
+	"fmt"
 	"time"
 )
 
+const (
+	EnvironmentTypesDeveloper  = "Developer"
+	EnvironmentTypesSandbox    = "Sandbox"
+	EnvironmentTypesProduction = "Production"
+	EnvironmentTypesTrial      = "Trial"
+	EnvironmentTypesDefault    = "Default"
+)
+
 var (
-	EnvironmentTypes = []string{"Sandbox", "Production", "Trial", "Developer", "Default"}
+	EnvironmentTypes                     = []string{EnvironmentTypesDeveloper, EnvironmentTypesSandbox, EnvironmentTypesProduction, EnvironmentTypesTrial, EnvironmentTypesDefault}
+	EnvironmentTypesDeveloperOnlyRegex   = fmt.Sprintf(`^(%s)$`, EnvironmentTypesDeveloper)
+	EnvironmentTypesExceptDeveloperRegex = fmt.Sprintf(`^(%s|%s|%s|%s)$`, EnvironmentTypesSandbox, EnvironmentTypesProduction, EnvironmentTypesTrial, EnvironmentTypesDefault)
 )
 
 type EnvironmentDto struct {
@@ -36,6 +47,13 @@ type EnviromentPropertiesDto struct {
 	UpdateCadence             *UpdateCadenceDto                 `json:"updateCadence,omitempty"`
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 	EnterprisePolicies        *EnvironmentEnterprisePoliciesDto `json:"enterprisePolicies,omitempty"`
+	UsedBy                    *UsedByDto                        `json:"usedBy,omitempty"`
+}
+
+type UsedByDto struct {
+	Id       string `json:"id"`
+	Type     string `json:"type"`
+	TenantId string `json:"tenantId"`
 }
 
 type EnvironmentEnterprisePoliciesDto struct {
@@ -91,7 +109,7 @@ type LinkedEnvironmentMetadataDto struct {
 	DomainName                string                     `json:"domainName,omitempty"`
 	InstanceURL               string                     `json:"instanceUrl"`
 	BaseLanguage              int                        `json:"baseLanguage"`
-	SecurityGroupId           string                     `json:"securityGroupId"`
+	SecurityGroupId           string                     `json:"securityGroupId,omitempty"`
 	ResourceId                string                     `json:"resourceId"`
 	Version                   string                     `json:"version"`
 	Templates                 []string                   `json:"template,omitempty"`
@@ -151,6 +169,13 @@ type environmentCreatePropertiesDto struct {
 	EnvironmentSku            string                            `json:"environmentSku"`
 	LinkedEnvironmentMetadata *createLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
+	UsedBy                    *usedBy                           `json:"usedBy,omitempty"`
+}
+
+type usedBy struct {
+	Id       string `json:"id"`
+	Type     int    `json:"type"`
+	TenantID string `json:"tenantID"`
 }
 
 type createLinkEnvironmentMetadataDto struct {
