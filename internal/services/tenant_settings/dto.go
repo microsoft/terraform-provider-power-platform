@@ -179,11 +179,21 @@ func convertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 	return tenantSettingsDto
 }
 
-func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
+func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) error {
 	searchObject := powerPlatformAttributes["search"]
 	if !searchObject.IsNull() && !searchObject.IsUnknown() {
+		objectValue, ok := searchObject.(basetypes.ObjectValue)
+		if !ok {
+			return fmt.Errorf("failed to convert search settings to ObjectValue")
+		}
+
 		var searchSettings SearchSettingsModel
-		searchObject.(basetypes.ObjectValue).As(ctx, &searchSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		if err := objectValue.As(ctx, &searchSettings, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		}); err != nil {
+			return fmt.Errorf("failed to convert search settings: %v", err)
+		}
 
 		if tenantSettingsDto.PowerPlatform == nil {
 			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
@@ -199,6 +209,7 @@ func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]
 			tenantSettingsDto.PowerPlatform.Search.DisableBingVideoSearch = searchSettings.DisableBingVideoSearch.ValueBoolPointer()
 		}
 	}
+	return nil
 }
 
 func convertTeamsIntegrationModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
