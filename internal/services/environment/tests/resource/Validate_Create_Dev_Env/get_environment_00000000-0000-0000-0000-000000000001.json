@@ -16,6 +16,11 @@
             "tenantId": "123",
             "userPrincipalName": "admin"
         },
+        "usedBy": {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "tenantId": "123",
+            "type": "User"
+        },
         "billingPolicy": {
             "id": ""
         },

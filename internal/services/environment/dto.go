@@ -57,10 +57,17 @@ type EnviromentPropertiesDto struct {
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 	EnterprisePolicies        *EnvironmentEnterprisePoliciesDto `json:"enterprisePolicies,omitempty"`
 	Cluster                   *ClusterDto                       `json:"cluster,omitempty"`
+  UsedBy                    *UsedByDto                        `json:"usedBy,omitempty"`
 }
 
 type ClusterDto struct {
 	Catergory string `json:"category"`
+}
+
+type UsedByDto struct {
+	Id       string `json:"id"`
+	Type     string `json:"type"`
+	TenantId string `json:"tenantId"`
 }
 
 type EnvironmentEnterprisePoliciesDto struct {

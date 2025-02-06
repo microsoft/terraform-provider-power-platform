@@ -196,6 +196,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 	convertEnvironmentGroupFromDto(environmentDto, model)
 	convertEnterprisePolicyModelFromDto(environmentDto, model)
 	convertReleaseCycleModelFromDto(environmentDto, model)
+	convertOwnerIdFromDto(environmentDto, model)
 
 	attrTypesDataverseObject := map[string]attr.Type{
 		"url":                          types.StringType,
@@ -325,12 +326,21 @@ func convertBillingPolicyModelFromDto(environmentDto EnvironmentDto, model *Sour
 	}
 }
 
+
 func convertReleaseCycleModelFromDto(environmentDto EnvironmentDto, model *SourceModel) {
 	isMatch, _ := regexp.MatchString(ReleaseCycleFirstReleaseOnlyRegex, environmentDto.Properties.Cluster.Catergory)
 	if environmentDto.Properties.Cluster != nil && isMatch {
 		model.ReleaseCycle = types.StringValue(ReleaseCycleTypesEarly)
 	} else {
 		model.ReleaseCycle = types.StringValue(ReleaseCycleTypesStandard)
+  }  
+}
+    
+func convertOwnerIdFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	if environmentDto.Properties.UsedBy != nil {
+		model.OwnerId = types.StringValue(environmentDto.Properties.UsedBy.Id)
+	} else {
+		model.OwnerId = types.StringNull()
 	}
 }
 
