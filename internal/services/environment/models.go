@@ -43,6 +43,7 @@ type SourceModel struct {
 	Description        types.String   `tfsdk:"description"`
 	Cadence            types.String   `tfsdk:"cadence"`
 	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
+	OwnerId            types.String   `tfsdk:"owner_id"`
 
 	EnterprisePolicies basetypes.SetValue `tfsdk:"enterprise_policies"`
 
@@ -181,6 +182,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 	convertBillingPolicyModelFromDto(environmentDto, model)
 	convertEnvironmentGroupFromDto(environmentDto, model)
 	convertEnterprisePolicyModelFromDto(environmentDto, model)
+	convertOwnerIdFromDto(environmentDto, model)
 
 	attrTypesDataverseObject := map[string]attr.Type{
 		"url":                          types.StringType,
@@ -221,6 +223,9 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["language_code"] = types.Int64Value(int64(environmentDto.Properties.LinkedEnvironmentMetadata.BaseLanguage))
 		attrValuesProductProperties["version"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.Version)
 		attrValuesProductProperties["unique_name"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.UniqueName)
+		if environmentDto.Properties.EnvironmentSku == EnvironmentTypesDeveloper {
+			attrValuesProductProperties["security_group_id"] = types.StringNull()
+		}
 		if environmentDto.Properties.States != nil && environmentDto.Properties.States.Runtime != nil && environmentDto.Properties.States.Runtime.Id == "AdminMode" {
 			attrValuesProductProperties["administration_mode_enabled"] = types.BoolValue(true)
 		} else {
@@ -303,6 +308,14 @@ func convertBillingPolicyModelFromDto(environmentDto EnvironmentDto, model *Sour
 		model.BillingPolicyId = types.StringValue(environmentDto.Properties.BillingPolicy.Id)
 	} else {
 		model.BillingPolicyId = types.StringValue("")
+	}
+}
+
+func convertOwnerIdFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	if environmentDto.Properties.UsedBy != nil {
+		model.OwnerId = types.StringValue(environmentDto.Properties.UsedBy.Id)
+	} else {
+		model.OwnerId = types.StringNull()
 	}
 }
 

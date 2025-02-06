@@ -201,6 +201,76 @@ func (client *Auth) AuthenticateOIDC(ctx context.Context, scopes []string) (stri
 	return accessToken.Token, accessToken.ExpiresOn, nil
 }
 
+func (client *Auth) AuthenticateUserManagedIdentity(ctx context.Context, scopes []string) (string, time.Time, error) {
+	userManagedIdentityCredential, err := azidentity.NewManagedIdentityCredential(&azidentity.ManagedIdentityCredentialOptions{
+		ID: azidentity.ClientID(client.config.ClientId),
+		ClientOptions: azcore.ClientOptions{
+			Cloud: client.config.Cloud,
+		},
+	})
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	accessToken, err := userManagedIdentityCredential.GetToken(ctx, policy.TokenRequestOptions{Scopes: scopes})
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	return accessToken.Token, accessToken.ExpiresOn, nil
+}
+
+func (client *Auth) AuthenticateSystemManagedIdentity(ctx context.Context, scopes []string) (string, time.Time, error) {
+	systemManagedIdentityCredential, err := azidentity.NewManagedIdentityCredential(&azidentity.ManagedIdentityCredentialOptions{
+		ClientOptions: azcore.ClientOptions{
+			Cloud: client.config.Cloud,
+		},
+	})
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	accessToken, err := systemManagedIdentityCredential.GetToken(ctx, policy.TokenRequestOptions{Scopes: scopes})
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	return accessToken.Token, accessToken.ExpiresOn, nil
+}
+
+func (client *Auth) AuthenticateAzDOWorkloadIdentityFederation(ctx context.Context, scopes []string) (string, time.Time, error) {
+	if client.config.TenantId == "" {
+		return "", time.Time{}, fmt.Errorf("tenant ID must be provided to use Azure DevOps Workload Identity Federation")
+	}
+	if client.config.ClientId == "" {
+		return "", time.Time{}, fmt.Errorf("client ID must be provided to use Azure DevOps Workload Identity Federation")
+	}
+	if client.config.AzDOServiceConnectionID == "" {
+		return "", time.Time{}, fmt.Errorf("the Azure DevOps service connection ID could not be found")
+	}
+	if client.config.OidcRequestToken == "" {
+		return "", time.Time{}, fmt.Errorf("could not obtain an OIDC request token for Azure DevOps Workload Identity Federation")
+	}
+
+	azdoWorkloadIdentityCredential, err := azidentity.NewAzurePipelinesCredential(
+		client.config.TenantId,
+		client.config.ClientId,
+		client.config.AzDOServiceConnectionID,
+		client.config.OidcRequestToken,
+		&azidentity.AzurePipelinesCredentialOptions{}, // Auxiliary tenants could be defined here
+	)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	accessToken, err := azdoWorkloadIdentityCredential.GetToken(ctx, policy.TokenRequestOptions{Scopes: scopes})
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	return accessToken.Token, accessToken.ExpiresOn, nil
+}
+
 func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 	if w.token != "" {
 		return w.token, nil
@@ -281,10 +351,16 @@ func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*st
 		token, tokenExpiry, err = client.AuthenticateClientSecret(ctx, scopes)
 	case client.config.IsCliProvided():
 		token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes)
+	case client.config.IsAzDOWorkloadIdentityFederationProvided():
+		token, tokenExpiry, err = client.AuthenticateAzDOWorkloadIdentityFederation(ctx, scopes)
 	case client.config.IsOidcProvided():
 		token, tokenExpiry, err = client.AuthenticateOIDC(ctx, scopes)
 	case client.config.IsClientCertificateCredentialsProvided():
 		token, tokenExpiry, err = client.AuthenticateClientCertificate(ctx, scopes)
+	case client.config.IsUserManagedIdentityProvided():
+		token, tokenExpiry, err = client.AuthenticateUserManagedIdentity(ctx, scopes)
+	case client.config.IsSystemManagedIdentityProvided():
+		token, tokenExpiry, err = client.AuthenticateSystemManagedIdentity(ctx, scopes)
 	default:
 		return nil, errors.New("no credentials provided")
 	}

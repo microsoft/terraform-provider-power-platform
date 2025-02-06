@@ -1,12 +1,12 @@
 ---
 page_title: "powerplatform_environment Resource - powerplatform"
 description: |-
-  This resource manages a PowerPlatform environment
+  This resource manages a PowerPlatform environment. Known Issue: Creating developer environment by specifying `owner_id` attribute, only works with a user context and can not be used at this time with a service principal. This is a limitation of the underlying API.
 ---
 
 # powerplatform_environment (Resource)
 
-This resource manages a PowerPlatform environment
+This resource manages a PowerPlatform environment. Known Issue: Creating developer environment by specifying `owner_id` attribute, only works with a user context and can not be used at this time with a service principal. This is a limitation of the underlying API.
 
 A Power Platform environment is a space in which you can store, manage, and share your organization's business data, apps, chatbots, and flows. It also serves as a container to separate apps that may have different roles, security requirements, or target audiences. Each environment is created under an Azure Active Directory tenant and is bound to a geographic location. You can create different types of environments, such as production, sandbox, trial, or developer, depending on your license and permissions. You can also move resources between environments and set data loss prevention policies. A Power Platform environment can have zero or one Microsoft Dataverse database, which provides storage for your apps and chatbots. You can only connect to the data sources that are deployed in the same environment as your app or chatbot. For more information, you can check out the following links:
 
@@ -66,6 +66,7 @@ resource "powerplatform_environment" "development" {
 - `dataverse` (Attributes) Dataverse environment details (see [below for nested schema](#nestedatt--dataverse))
 - `description` (String) Description of the environment
 - `environment_group_id` (String) Environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information.
+- `owner_id` (String) Entra ID  user id (guid) of the environment owner when creating developer environment
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
@@ -80,13 +81,13 @@ Required:
 
 - `currency_code` (String) Currency name
 - `language_code` (Number) Language LCID (integer)
-- `security_group_id` (String) Security group id (guid).  For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`
 
 Optional:
 
 - `administration_mode_enabled` (Boolean) Select to enable administration mode for the environment. See [Admin mode](https://learn.microsoft.com/en-us/power-platform/admin/admin-mode) for more information.
 - `background_operation_enabled` (Boolean) Indicates if background operation is enabled
 - `domain` (String) Domain name of the environment
+- `security_group_id` (String) Security group id (guid). For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`
 - `template_metadata` (String) Additional D365 environment template metadata (if any)
 - `templates` (List of String) The selected instance provisioning template (if any). See [ERP-based template](https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/tutorial-deploy-new-environment-with-erp-template?tabs=PPAC) for more information.
 
