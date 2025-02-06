@@ -140,7 +140,9 @@ func convertBackupRetention(ctx context.Context, attrs map[string]attr.Value, dt
 	backupRetentionObj := attrs["backup_retention"]
 	if !backupRetentionObj.IsNull() && !backupRetentionObj.IsUnknown() {
 		var backupRetention environmentGroupRuleSetBackupRetentionModel
-		backupRetentionObj.(basetypes.ObjectValue).As(ctx, &backupRetention, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		if err := backupRetentionObj.(basetypes.ObjectValue).As(ctx, &backupRetention, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
+			return
+		}
 
 		hasStatedChanges := true
 

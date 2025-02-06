@@ -134,25 +134,40 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 			}
 		}
 	}
-	convertFromEnvironmentEmailSettings(ctx, environmentSettings, environmentSettingsDto)
-	convertFromEnvironmentBehaviorSettings(ctx, environmentSettings, environmentSettingsDto)
-	convertFromEnvironmentFeatureSettings(ctx, environmentSettings, environmentSettingsDto)
+	if err := convertFromEnvironmentEmailSettings(ctx, environmentSettings, environmentSettingsDto); err != nil {
+		return nil, err
+	}
+	if err := convertFromEnvironmentBehaviorSettings(ctx, environmentSettings, environmentSettingsDto); err != nil {
+		return nil, err
+	}
+	if err := convertFromEnvironmentFeatureSettings(ctx, environmentSettings, environmentSettingsDto); err != nil {
+		return nil, err
+	}
 	convertFromEnvironmentSecuritySettings(ctx, environmentSettings, environmentSettingsDto)
 	return environmentSettingsDto, nil
 }
 
-func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) {
+func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) error {
 	emailSettingsObject := environmentSettings.Email.Attributes()["email_settings"]
 	if emailSettingsObject != nil && !emailSettingsObject.IsNull() && !emailSettingsObject.IsUnknown() {
+		objectValue, ok := emailSettingsObject.(basetypes.ObjectValue)
+		if !ok {
+			return fmt.Errorf("failed to convert email settings to ObjectValue")
+		}
+
 		var emailSourceModel EmailSettingsSourceModel
-		if err := emailSettingsObject.(basetypes.ObjectValue).As(ctx, &emailSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return
+		if err := objectValue.As(ctx, &emailSourceModel, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		}); err != nil {
+			return fmt.Errorf("failed to convert email settings: %v", err)
 		}
 
 		if !emailSourceModel.MaxUploadFileSize.IsNull() && !emailSourceModel.MaxUploadFileSize.IsUnknown() {
 			environmentSettingsDto.MaxUploadFileSize = emailSourceModel.MaxUploadFileSize.ValueInt64Pointer()
 		}
 	}
+	return nil
 }
 
 func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) error {
