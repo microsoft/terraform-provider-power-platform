@@ -71,7 +71,7 @@ func (client *client) UpdateEnvironmentSettings(ctx context.Context, environment
 	}
 
 	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environmentSettings, []int{http.StatusNoContent, http.StatusInternalServerError}, nil)
-	if resp.HttpResponse.StatusCode == http.StatusInternalServerError {
+	if resp != nil && resp.HttpResponse.StatusCode == http.StatusInternalServerError {
 		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_SETTINGS_FAILED, string(resp.BodyAsBytes))
 	}
 	if err != nil {
