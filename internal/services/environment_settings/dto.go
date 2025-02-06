@@ -18,9 +18,9 @@ type environmentSettingsDto struct {
 	OrganizationId                           *string `json:"organizationid,omitempty"`
 	PowerAppsComponentFrameworkForCanvasApps *bool   `json:"iscustomcontrolsincanvasappsenabled,omitempty"`
 
-	EnableIpBasedFirewallRule            *bool   `json:"enableipbasedfirewallrule,omitempty"`     //enable disable whole thing
-	AllowedIpRangeForFirewall            *string `json:"allowediprangeforfirewall,omitempty"`     //ip ranges
-	AllowedServiceTagsForFirewall        *string `json:"allowedservicetagsforfirewall,omitempty"` //service tags
+	EnableIpBasedFirewallRule            *bool   `json:"enableipbasedfirewallrule,omitempty"`
+	AllowedIpRangeForFirewall            *string `json:"allowediprangeforfirewall,omitempty"`
+	AllowedServiceTagsForFirewall        *string `json:"allowedservicetagsforfirewall,omitempty"`
 	AllowApplicationUserAccess           *bool   `json:"allowapplicationuseraccess,omitempty"`
 	AllowMicrosoftTrustedServiceTags     *bool   `json:"allowmicrosofttrustedservicetags,omitempty"`
 	EnableIpBasedFirewallRuleInAuditMode *bool   `json:"enableipbasedfirewallruleinauditmode,omitempty"`

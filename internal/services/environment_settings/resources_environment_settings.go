@@ -6,9 +6,11 @@ package environment_settings
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -19,8 +21,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
@@ -36,6 +40,8 @@ func NewEnvironmentSettingsResource() resource.Resource {
 		},
 	}
 }
+
+const SERVICE_TAGS_NAMES = "ApiManagement,AppConfiguration,AppService,ActionGroup,AppServiceManagement,ApplicationInsightsAvailability,AutonomousDevelopmentPlatform,AzureActiveDirectory,AzureAdvancedThreatProtection,AzureArcInfrastructure,AzureAttestation,AzureBackup,AzureBotService,AzureCognitiveSearch,AzureConnectors,AzureContainerRegistry,AzureCosmosDB,AzureDataExplorerManagement,AzureDataLake,AzureDatabricks,AzureDevOps,AzureDevSpaces,AzureDeviceUpdate,AzureDigitalTwins,AzureEventGrid,AzureHealthcareAPIs,AzureInformationProtection,AzureIoTHub,AzureKeyVault,AzureLoadTestingInstanceManagement,AzureMachineLearning,AzureMachineLearningInference,AzureManagedGrafana,AzureMonitorForSAP,AzureMonitor,AzureOpenDatasets,AzurePortal,AzureRemoteRendering,AzureResourceManager,AzureSecurityCenter,AzureSentinel,AzureSignalR,AzureSiteRecovery,AzureSphere,AzureSpringCloud,AzureStack,AzureTrafficManager,AzureUpdateDelivery,AzureWebPubSub,BatchNodeManagement,ChaosStudio,CognitiveServicesFrontend,CognitiveServicesManagement,ContainerAppsManagement,DataFactory,Dynamics365BusinessCentral,Dynamics365ForMarketingEmail,Dynamics365FraudProtection,EOPExternalPublishedIPs,EventHub,GatewayManager,Grafana,GuestAndHybridManagement,HDInsight,KustoAnalytics,LogicApps,M365ManagementActivityApi,M365ManagementActivityApiWebhook,Marketplace,MicrosoftAzureFluidRelay,MicrosoftCloudAppSecurity,MicrosoftContainerRegistry,MicrosoftDefenderForEndpoint,MicrosoftPurviewPolicyDistribution,OneDsCollector,PowerBI,PowerPlatformPlex,PowerQueryOnline,SCCservice,Scuba,SecurityCopilot,SerialConsole,ServiceBus,ServiceFabric,Sql,SqlManagement,Storage,StorageMover,StorageSyncService,VideoIndexer,WindowsAdminCenter,WindowsVirtualDesktop"
 
 func (r *EnvironmentSettingsResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	// update our own internal storage of the provider type name.
@@ -184,6 +190,67 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 								Optional:            true, Computed: true,
 								PlanModifiers: []planmodifier.Bool{
 									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+						},
+					},
+					"security": schema.SingleNestedAttribute{
+						MarkdownDescription: "Security. See [Security Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-privacy-security) for more details.",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"enable_ip_based_firewall_rule": schema.BoolAttribute{
+								MarkdownDescription: "Enable IP based firewall rule",
+								Optional:            true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"allowed_ip_range_for_firewall": schema.SetAttribute{
+								MarkdownDescription: "Allowed IP range for firewall",
+								Optional:            true, Computed: true,
+								ElementType: types.StringType,
+								PlanModifiers: []planmodifier.Set{
+									setplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"allowed_service_tags_for_firewall": schema.SetAttribute{
+								MarkdownDescription: "Allowed service tags for firewall",
+								Optional:            true, Computed: true,
+								ElementType: types.StringType,
+								PlanModifiers: []planmodifier.Set{
+									setplanmodifier.UseStateForUnknown(),
+								},
+								Validators: []validator.Set{
+									setvalidator.ValueStringsAre(stringvalidator.OneOf(append([]string{""}, strings.Split(SERVICE_TAGS_NAMES, ",")...)...)),
+								},
+							},
+							"allow_application_user_access": schema.BoolAttribute{
+								MarkdownDescription: "Allow application user access",
+								Optional:            true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"allow_microsoft_trusted_service_tags": schema.BoolAttribute{
+								MarkdownDescription: "Allow Microsoft trusted service tags",
+								Optional:            true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"enable_ip_based_firewall_rule_in_audit_mode": schema.BoolAttribute{
+								MarkdownDescription: "Enable IP based firewall rule in audit mode",
+								Optional:            true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"reverse_proxy_ip_addresses": schema.SetAttribute{
+								MarkdownDescription: "Reverse proxy IP addresses",
+								Optional:            true, Computed: true,
+								ElementType: types.StringType,
+								PlanModifiers: []planmodifier.Set{
+									setplanmodifier.UseStateForUnknown(),
 								},
 							},
 						},

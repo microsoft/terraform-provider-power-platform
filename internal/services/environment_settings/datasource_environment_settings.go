@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
@@ -39,7 +40,14 @@ func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datas
 		return
 	}
 
-	client := req.ProviderData.(*api.ProviderClient).Api
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected ProviderData Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
 
 	if client == nil {
 		resp.Diagnostics.AddError(
@@ -48,7 +56,7 @@ func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datas
 		)
 		return
 	}
-	d.EnvironmentSettingsClient = newEnvironmentSettingsClient(client)
+	d.EnvironmentSettingsClient = newEnvironmentSettingsClient(client.Api)
 }
 
 func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -196,13 +204,15 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 								MarkdownDescription: "Enable IP based firewall rule",
 								Optional:            true,
 							},
-							"allowed_ip_range_for_firewall": schema.StringAttribute{
+							"allowed_ip_range_for_firewall": schema.SetAttribute{
 								MarkdownDescription: "Allowed IP range for firewall",
 								Optional:            true,
+								ElementType:         types.StringType,
 							},
-							"allowed_service_tags_for_firewall": schema.StringAttribute{
+							"allowed_service_tags_for_firewall": schema.SetAttribute{
 								MarkdownDescription: "Allowed service tags for firewall",
 								Optional:            true,
+								ElementType:         types.StringType,
 							},
 							"allow_application_user_access": schema.BoolAttribute{
 								MarkdownDescription: "Allow application user access",
@@ -216,8 +226,9 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 								MarkdownDescription: "Enable IP based firewall rule in audit mode",
 								Optional:            true,
 							},
-							"reverse_proxy_ip_addresses": schema.StringAttribute{
+							"reverse_proxy_ip_addresses": schema.SetAttribute{
 								MarkdownDescription: "Reverse proxy IP addresses",
+								ElementType:         types.StringType,
 								Optional:            true,
 							},
 						},

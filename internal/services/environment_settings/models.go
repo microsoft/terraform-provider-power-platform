@@ -6,6 +6,7 @@ package environment_settings
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -76,13 +77,13 @@ type FeaturesSourceModel struct {
 }
 
 type SecuritySourceModel struct {
-	EnableIpBasedFirewallRule            types.Bool   `tfsdk:"enable_ip_based_firewall_rule"`
-	AllowedIpRangeForFirewall            types.String `tfsdk:"allowed_ip_range_for_firewall"`
-	AllowedServiceTagsForFirewall        types.String `tfsdk:"allowed_service_tags_for_firewall"`
-	AllowApplicationUserAccess           types.Bool   `tfsdk:"allow_application_user_access"`
-	AllowMicrosoftTrustedServiceTags     types.Bool   `tfsdk:"allow_microsoft_trusted_service_tags"`
-	EnableIpBasedFirewallRuleInAuditMode types.Bool   `tfsdk:"enable_ip_based_firewall_rule_in_audit_mode"`
-	ReverseProxyIpAddresses              types.String `tfsdk:"reverse_proxy_ip_addresses"`
+	EnableIpBasedFirewallRule            types.Bool `tfsdk:"enable_ip_based_firewall_rule"`
+	AllowedIpRangeForFirewall            types.Set  `tfsdk:"allowed_ip_range_for_firewall"`
+	AllowedServiceTagsForFirewall        types.Set  `tfsdk:"allowed_service_tags_for_firewall"`
+	AllowApplicationUserAccess           types.Bool `tfsdk:"allow_application_user_access"`
+	AllowMicrosoftTrustedServiceTags     types.Bool `tfsdk:"allow_microsoft_trusted_service_tags"`
+	EnableIpBasedFirewallRuleInAuditMode types.Bool `tfsdk:"enable_ip_based_firewall_rule_in_audit_mode"`
+	ReverseProxyIpAddresses              types.Set  `tfsdk:"reverse_proxy_ip_addresses"`
 }
 
 func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel) (*environmentSettingsDto, error) {
@@ -178,10 +179,12 @@ func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSett
 			environmentSettingsDto.EnableIpBasedFirewallRule = securitySourceModel.EnableIpBasedFirewallRule.ValueBoolPointer()
 		}
 		if !securitySourceModel.AllowedIpRangeForFirewall.IsNull() && !securitySourceModel.AllowedIpRangeForFirewall.IsUnknown() {
-			environmentSettingsDto.AllowedIpRangeForFirewall = securitySourceModel.AllowedIpRangeForFirewall.ValueStringPointer()
+			value := strings.Join(helpers.SetToStringSlice(securitySourceModel.AllowedIpRangeForFirewall), ",")
+			environmentSettingsDto.AllowedIpRangeForFirewall = &value
 		}
 		if !securitySourceModel.AllowedServiceTagsForFirewall.IsNull() && !securitySourceModel.AllowedServiceTagsForFirewall.IsUnknown() {
-			environmentSettingsDto.AllowedServiceTagsForFirewall = securitySourceModel.AllowedServiceTagsForFirewall.ValueStringPointer()
+			value := strings.Join(helpers.SetToStringSlice(securitySourceModel.AllowedServiceTagsForFirewall), ",")
+			environmentSettingsDto.AllowedServiceTagsForFirewall = &value
 		}
 		if !securitySourceModel.AllowApplicationUserAccess.IsNull() && !securitySourceModel.AllowApplicationUserAccess.IsUnknown() {
 			environmentSettingsDto.AllowApplicationUserAccess = securitySourceModel.AllowApplicationUserAccess.ValueBoolPointer()
@@ -193,7 +196,8 @@ func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSett
 			environmentSettingsDto.EnableIpBasedFirewallRuleInAuditMode = securitySourceModel.EnableIpBasedFirewallRuleInAuditMode.ValueBoolPointer()
 		}
 		if !securitySourceModel.ReverseProxyIpAddresses.IsNull() && !securitySourceModel.ReverseProxyIpAddresses.IsUnknown() {
-			environmentSettingsDto.ReverseProxyIpAddresses = securitySourceModel.ReverseProxyIpAddresses.ValueStringPointer()
+			value := strings.Join(helpers.SetToStringSlice(securitySourceModel.ReverseProxyIpAddresses), ",")
+			environmentSettingsDto.ReverseProxyIpAddresses = &value
 		}
 	}
 }
@@ -264,18 +268,39 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 
 	attrTypesSecurityObject := map[string]attr.Type{
 		"enable_ip_based_firewall_rule":               types.BoolType,
-		"allowed_ip_range_for_firewall":               types.StringType,
-		"allowed_service_tags_for_firewall":           types.StringType,
+		"allowed_ip_range_for_firewall":               types.SetType{ElemType: types.StringType},
+		"allowed_service_tags_for_firewall":           types.SetType{ElemType: types.StringType},
 		"allow_application_user_access":               types.BoolType,
 		"allow_microsoft_trusted_service_tags":        types.BoolType,
 		"enable_ip_based_firewall_rule_in_audit_mode": types.BoolType,
-		"reverse_proxy_ip_addresses":                  types.StringType,
+		"reverse_proxy_ip_addresses":                  types.SetType{ElemType: types.StringType},
 	}
 
 	attrTypesProductObject := map[string]attr.Type{
 		"behavior_settings": types.ObjectType{AttrTypes: attrBahaviorSettingsObject},
 		"features":          types.ObjectType{AttrTypes: attrFeaturesObject},
 		"security":          types.ObjectType{AttrTypes: attrTypesSecurityObject},
+	}
+
+	reverseProxyAdresses := []attr.Value{}
+	if environmentSettingsDto.ReverseProxyIpAddresses != nil {
+		for _, proxy := range strings.Split(*environmentSettingsDto.ReverseProxyIpAddresses, ",") {
+			reverseProxyAdresses = append(reverseProxyAdresses, types.StringValue(proxy))
+		}
+	}
+
+	allowedIpRangeForFirewall := []attr.Value{}
+	if environmentSettingsDto.AllowedIpRangeForFirewall != nil {
+		for _, ip := range strings.Split(*environmentSettingsDto.AllowedIpRangeForFirewall, ",") {
+			allowedIpRangeForFirewall = append(allowedIpRangeForFirewall, types.StringValue(ip))
+		}
+	}
+
+	allowedServiceTags := []attr.Value{}
+	if environmentSettingsDto.AllowedServiceTagsForFirewall != nil {
+		for _, tag := range strings.Split(*environmentSettingsDto.AllowedServiceTagsForFirewall, ",") {
+			allowedServiceTags = append(allowedServiceTags, types.StringValue(tag))
+		}
 	}
 
 	attrValuesProductProperties := map[string]attr.Value{
@@ -287,12 +312,12 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		}),
 		"security": types.ObjectValueMust(attrTypesSecurityObject, map[string]attr.Value{
 			"enable_ip_based_firewall_rule":               types.BoolValue(*environmentSettingsDto.EnableIpBasedFirewallRule),
-			"allowed_ip_range_for_firewall":               types.StringValue(*environmentSettingsDto.AllowedIpRangeForFirewall),
-			"allowed_service_tags_for_firewall":           types.StringValue(*environmentSettingsDto.AllowedServiceTagsForFirewall),
+			"allowed_ip_range_for_firewall":               types.SetValueMust(types.StringType, allowedIpRangeForFirewall),
+			"allowed_service_tags_for_firewall":           types.SetValueMust(types.StringType, allowedServiceTags),
 			"allow_application_user_access":               types.BoolValue(*environmentSettingsDto.AllowApplicationUserAccess),
 			"allow_microsoft_trusted_service_tags":        types.BoolValue(*environmentSettingsDto.AllowMicrosoftTrustedServiceTags),
 			"enable_ip_based_firewall_rule_in_audit_mode": types.BoolValue(*environmentSettingsDto.EnableIpBasedFirewallRuleInAuditMode),
-			"reverse_proxy_ip_addresses":                  types.StringValue(*environmentSettingsDto.ReverseProxyIpAddresses),
+			"reverse_proxy_ip_addresses":                  types.SetValueMust(types.StringType, reverseProxyAdresses),
 		}),
 	}
 
