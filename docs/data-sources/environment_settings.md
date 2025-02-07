@@ -69,6 +69,7 @@ Optional:
 
 - `behavior_settings` (Attributes) Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/power-platform/admin/settings-behavior) for more details. (see [below for nested schema](#nestedatt--product--behavior_settings))
 - `features` (Attributes) Features. See [Features Overview](https://learn.microsoft.com/power-platform/admin/settings-features) for more details. (see [below for nested schema](#nestedatt--product--features))
+- `security` (Attributes) Security. See [Security Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-privacy-security) for more details. (see [below for nested schema](#nestedatt--product--security))
 
 <a id="nestedatt--product--behavior_settings"></a>
 ### Nested Schema for `product.behavior_settings`
@@ -84,6 +85,20 @@ Optional:
 Optional:
 
 - `power_apps_component_framework_for_canvas_apps` (Boolean) Power Apps component framework for canvas apps
+
+
+<a id="nestedatt--product--security"></a>
+### Nested Schema for `product.security`
+
+Optional:
+
+- `allow_application_user_access` (Boolean) Allow application user access
+- `allow_microsoft_trusted_service_tags` (Boolean) Allow Microsoft trusted service tags
+- `allowed_ip_range_for_firewall` (Set of String) Allowed IP range for firewall
+- `allowed_service_tags_for_firewall` (Set of String) Allowed service tags for firewall
+- `enable_ip_based_firewall_rule` (Boolean) Enable IP based firewall rule
+- `enable_ip_based_firewall_rule_in_audit_mode` (Boolean) Enable IP based firewall rule in audit mode
+- `reverse_proxy_ip_addresses` (Set of String) Reverse proxy IP addresses
 
 
 

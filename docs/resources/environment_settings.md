@@ -36,7 +36,22 @@ resource "powerplatform_environment" "example_environment_settings" {
   }
 }
 
+resource "powerplatform_managed_environment" "managed_environment" {
+  environment_id                  = powerplatform_environment.example_environment_settings.id
+  is_usage_insights_disabled      = true
+  is_group_sharing_disabled       = true
+  limit_sharing_mode              = "ExcludeSharingToSecurityGroups"
+  max_limit_user_sharing          = 10
+  solution_checker_mode           = "Warn"
+  suppress_validation_emails      = true
+  solution_checker_rule_overrides = toset(["meta-remove-dup-reg"])
+  maker_onboarding_markdown       = "this is example markdown"
+  maker_onboarding_url            = "https://www.microsoft.com"
+}
+
 resource "powerplatform_environment_settings" "settings" {
+  depends_on = [powerplatform_managed_environment.managed_environment]
+
   environment_id = powerplatform_environment.example_environment_settings.id
 
   audit_and_logs = {
@@ -59,6 +74,15 @@ resource "powerplatform_environment_settings" "settings" {
     }
     features = {
       power_apps_component_framework_for_canvas_apps = false
+    }
+    security = {
+      allow_application_user_access               = true
+      allow_microsoft_trusted_service_tags        = true
+      allowed_ip_range_for_firewall               = toset(["10.10.0.0/16", "192.168.0.0/24"])
+      allowed_service_tags_for_firewall           = toset(["ApiManagement", "AppService"])
+      enable_ip_based_firewall_rule               = true
+      enable_ip_based_firewall_rule_in_audit_mode = true
+      reverse_proxy_ip_addresses                  = toset(["10.10.1.1", "192.168.1.1"])
     }
   }
 }
@@ -125,6 +149,7 @@ Optional:
 
 - `behavior_settings` (Attributes) Behavior Settings.See [Behavior Settings Overview](https://learn.microsoft.com/power-platform/admin/settings-behavior) for more details. (see [below for nested schema](#nestedatt--product--behavior_settings))
 - `features` (Attributes) Features. See [Features Overview](https://learn.microsoft.com/power-platform/admin/settings-features) for more details. (see [below for nested schema](#nestedatt--product--features))
+- `security` (Attributes) Security. See [Security Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-privacy-security) for more details. (see [below for nested schema](#nestedatt--product--security))
 
 <a id="nestedatt--product--behavior_settings"></a>
 ### Nested Schema for `product.behavior_settings`
@@ -140,6 +165,20 @@ Optional:
 Optional:
 
 - `power_apps_component_framework_for_canvas_apps` (Boolean) Power Apps component framework for canvas apps
+
+
+<a id="nestedatt--product--security"></a>
+### Nested Schema for `product.security`
+
+Optional:
+
+- `allow_application_user_access` (Boolean) Allow application user access
+- `allow_microsoft_trusted_service_tags` (Boolean) Allow Microsoft trusted service tags
+- `allowed_ip_range_for_firewall` (Set of String) Allowed IP range for firewall
+- `allowed_service_tags_for_firewall` (Set of String) Allowed service tags for firewall
+- `enable_ip_based_firewall_rule` (Boolean) Enable IP based firewall rule
+- `enable_ip_based_firewall_rule_in_audit_mode` (Boolean) Enable IP based firewall rule in audit mode
+- `reverse_proxy_ip_addresses` (Set of String) Reverse proxy IP addresses
 
 
 
