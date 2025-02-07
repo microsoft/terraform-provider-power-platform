@@ -163,7 +163,11 @@ func (r *ShareResource) Create(ctx context.Context, req resource.CreateRequest, 
 		resp.Diagnostics.AddError("Error getting connection share", "Connection share not found")
 	}
 
-	state := convertFromConnectionResourceSharesDto(plan, share)
+	state, err := convertFromConnectionResourceSharesDto(plan, share)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting connection share", err.Error())
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -189,7 +193,11 @@ func (r *ShareResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		resp.Diagnostics.AddError("Error getting connection share", "Connection share not found")
 	}
 
-	newState := convertFromConnectionResourceSharesDto(state, share)
+	newState, err := convertFromConnectionResourceSharesDto(state, share)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting connection share", err.Error())
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
@@ -242,7 +250,11 @@ func (r *ShareResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		resp.Diagnostics.AddError("Error getting connection share", "Connection share not found")
 	}
 
-	newState := convertFromConnectionResourceSharesDto(plan, newShare)
+	newState, err := convertFromConnectionResourceSharesDto(plan, newShare)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting connection share", err.Error())
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
@@ -271,8 +283,17 @@ func (r *ShareResource) ImportState(ctx context.Context, req resource.ImportStat
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func convertFromConnectionResourceSharesDto(oldPlan *ShareResourceModel, connection *shareConnectionResponseDto) ShareResourceModel {
-	share := ShareResourceModel{
+func convertFromConnectionResourceSharesDto(oldPlan *ShareResourceModel, connection *shareConnectionResponseDto) (*ShareResourceModel, error) {
+	entraObjectId, err := getPrincipalString(connection.Properties.Principal, "id")
+	if err != nil {
+		return nil, err
+	}
+	displayName, err := getPrincipalString(connection.Properties.Principal, "displayName")
+	if err != nil {
+		return nil, err
+	}
+
+	share := &ShareResourceModel{
 		Timeouts:      oldPlan.Timeouts,
 		EnvironmentId: oldPlan.EnvironmentId,
 		ConnectorName: oldPlan.ConnectorName,
@@ -280,9 +301,9 @@ func convertFromConnectionResourceSharesDto(oldPlan *ShareResourceModel, connect
 		Id:            types.StringValue(connection.Name),
 		RoleName:      types.StringValue(connection.Properties.RoleName),
 		Principal: SharePrincipalResourceModel{
-			EntraObjectId: types.StringValue(connection.Properties.Principal["id"].(string)),
-			DisplayName:   types.StringValue(connection.Properties.Principal["displayName"].(string)),
+			EntraObjectId: types.StringValue(entraObjectId),
+			DisplayName:   types.StringValue(displayName),
 		},
 	}
-	return share
+	return share, nil
 }
