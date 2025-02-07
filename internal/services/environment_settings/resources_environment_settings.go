@@ -183,7 +183,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 					},
 					"features": schema.SingleNestedAttribute{
 						MarkdownDescription: "Features. See [Features Overview](https://learn.microsoft.com/power-platform/admin/settings-features) for more details.",
-						Optional:            true,
+						Optional:            true, Computed: true,
 						Attributes: map[string]schema.Attribute{
 							"power_apps_component_framework_for_canvas_apps": schema.BoolAttribute{
 								MarkdownDescription: "Power Apps component framework for canvas apps",
@@ -197,6 +197,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 					"security": schema.SingleNestedAttribute{
 						MarkdownDescription: "Security. See [Security Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-privacy-security) for more details.",
 						Optional:            true,
+						Computed:            true,
 						Attributes: map[string]schema.Attribute{
 							"enable_ip_based_firewall_rule": schema.BoolAttribute{
 								MarkdownDescription: "Enable IP based firewall rule",
