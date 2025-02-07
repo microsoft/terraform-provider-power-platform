@@ -15,6 +15,12 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
+func TestUnitTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *testing.T) {
+}
+
+func TestAccTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *testing.T) {
+}
+
 func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
@@ -165,6 +171,15 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						}
 						features = {
 						  power_apps_component_framework_for_canvas_apps = false
+						}
+						security = {
+						  allow_application_user_access               = true
+						  allow_microsoft_trusted_service_tags        = true
+						  allowed_ip_range_for_firewall               = toset(["10.10.0.0/16", "192.168.0.0/24"])
+						  allowed_service_tags_for_firewall           = toset(["ApiManagement", "AppService"])
+						  enable_ip_based_firewall_rule               = true
+						  enable_ip_based_firewall_rule_in_audit_mode = true
+						  reverse_proxy_ip_addresses                  = toset(["10.10.1.1", "192.168.1.1"])
 						}
 					  }
 				  }`,
