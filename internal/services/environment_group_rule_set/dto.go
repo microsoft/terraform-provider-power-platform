@@ -228,7 +228,7 @@ func convertMakerWelcomeContent(ctx context.Context, attrs map[string]attr.Value
 		})
 		rule.Value = append(rule.Value, environmentGroupRuleSetValueDto{
 			Id:    MAKER_ONBOARDING_TIMESTAMP,
-			Value: strings.Replace(time.Now().Format(time.RFC1123), "UTC", "GMT", -1),
+			Value: time.Now().UTC().Format(time.RFC3339),
 		})
 	}
 }
