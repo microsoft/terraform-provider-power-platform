@@ -11,6 +11,7 @@ import (
 type ProviderConfig struct {
 	UseCli  bool
 	UseOidc bool
+	UseMsi  bool
 
 	TenantId     string
 	ClientId     string
@@ -23,6 +24,8 @@ type ProviderConfig struct {
 	OidcRequestUrl    string
 	OidcToken         string
 	OidcTokenFilePath string
+
+	AzDOServiceConnectionID string
 
 	// internal runtime configuration values
 	TestMode         bool
@@ -39,6 +42,18 @@ type ProviderConfigUrls struct {
 	PowerPlatformUrl   string
 	PowerPlatformScope string
 	LicensingUrl       string
+}
+
+func (model *ProviderConfig) IsUserManagedIdentityProvided() bool {
+	return model.UseMsi && model.ClientId != ""
+}
+
+func (model *ProviderConfig) IsSystemManagedIdentityProvided() bool {
+	return model.UseMsi && model.ClientId == "" // The switch that consumes this could be structured to avoid the second check, but we don't have a guarantee of what's consuming this.
+}
+
+func (model *ProviderConfig) IsAzDOWorkloadIdentityFederationProvided() bool {
+	return model.UseOidc && model.AzDOServiceConnectionID != ""
 }
 
 func (model *ProviderConfig) IsClientSecretCredentialsProvided() bool {
@@ -61,6 +76,7 @@ func (model *ProviderConfig) IsOidcProvided() bool {
 type ProviderConfigModel struct {
 	UseCli  types.Bool `tfsdk:"use_cli"`
 	UseOidc types.Bool `tfsdk:"use_oidc"`
+	UseMsi  types.Bool `tfsdk:"use_msi"`
 
 	Cloud           types.String `tfsdk:"cloud"`
 	TelemetryOptout types.Bool   `tfsdk:"telemetry_optout"`
@@ -77,4 +93,6 @@ type ProviderConfigModel struct {
 	OidcRequestUrl    types.String `tfsdk:"oidc_request_url"`
 	OidcToken         types.String `tfsdk:"oidc_token"`
 	OidcTokenFilePath types.String `tfsdk:"oidc_token_file_path"`
+
+	AzDOServiceConnectionID types.String `tfsdk:"azdo_service_connection_id"`
 }

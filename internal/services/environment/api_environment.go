@@ -18,16 +18,19 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
 )
 
 func NewEnvironmentClient(apiClient *api.Client) Client {
 	return Client{
+		tenantClient:   tenant.NewTenantClient(apiClient),
 		solutionClient: solution.NewSolutionClient(apiClient),
 		Api:            apiClient,
 	}
 }
 
 type Client struct {
+	tenantClient   tenant.Client
 	solutionClient solution.Client
 	Api            *api.Client
 }
