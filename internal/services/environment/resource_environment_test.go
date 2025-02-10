@@ -2317,7 +2317,6 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_A
 }
 
 func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Env_Group(t *testing.T) {
-	t.Setenv("TF_ACC", "1")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
