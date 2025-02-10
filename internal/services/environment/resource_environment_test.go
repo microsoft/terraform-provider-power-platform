@@ -2317,6 +2317,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_A
 }
 
 func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Env_Group(t *testing.T) {
+	t.Setenv("TF_ACC", "1")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -2333,7 +2334,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Env_Group(t
 					environment_type                          = "Sandbox"
 					environment_group_id					  = powerplatform_environment_group.env_group.id
 				}`,
-				ExpectError: regexp.MustCompile(".*UnlinkedEnvironmentWithGroupId.*"),
+				ExpectError: regexp.MustCompile(".*Attribute \"dataverse\" must be specified when \"environment_group_id\".*"),
 				Check:       resource.ComposeAggregateTestCheckFunc(),
 			},
 		},
