@@ -129,7 +129,7 @@ type tenantSettingsDto struct {
 	PowerPlatform                                  *powerPlatformSettingsDto `json:"powerPlatform,omitempty"`
 }
 
-func convertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSettingsResourceModel) tenantSettingsDto {
+func convertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSettingsResourceModel) (tenantSettingsDto, error) {
 	tenantSettingsDto := tenantSettingsDto{}
 
 	if !tenantSettings.WalkMeOptOut.IsNull() && !tenantSettings.WalkMeOptOut.IsUnknown() {
@@ -162,7 +162,10 @@ func convertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 
 	if !tenantSettings.PowerPlatform.IsNull() && !tenantSettings.PowerPlatform.IsUnknown() {
 		powerPlatformAttributes := tenantSettings.PowerPlatform.Attributes()
-		convertSearchModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		err := convertSearchModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
+		if err != nil {
+			return tenantSettingsDto, err
+		}
 		convertTeamsIntegrationModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
 		convertPowerAppsModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
 		convertPowerAutomateModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
@@ -176,7 +179,7 @@ func convertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 		convertCatalogSettingsModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
 		convertUserManagementSettingsModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
 	}
-	return tenantSettingsDto
+	return tenantSettingsDto, nil
 }
 
 func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) error {
