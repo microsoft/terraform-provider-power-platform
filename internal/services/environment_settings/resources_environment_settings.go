@@ -68,6 +68,9 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Id of the read operation",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "Environment Id",
