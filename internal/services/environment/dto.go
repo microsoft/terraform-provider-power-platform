@@ -57,7 +57,7 @@ type EnviromentPropertiesDto struct {
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 	EnterprisePolicies        *EnvironmentEnterprisePoliciesDto `json:"enterprisePolicies,omitempty"`
 	Cluster                   *ClusterDto                       `json:"cluster,omitempty"`
-  UsedBy                    *UsedByDto                        `json:"usedBy,omitempty"`
+	UsedBy                    *UsedByDto                        `json:"usedBy,omitempty"`
 }
 
 type ClusterDto struct {

@@ -6,16 +6,25 @@ package config
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
+type CloudType string
+
 const (
-	CloudTypePublic  = "public"
-	CloudTypeGcc     = "gcc"
-	CloudTypeGccHigh = "gcchigh"
-	CloudTypeDod     = "dod"
-	CloudTypeChina   = "china"
-	CloudTypeEx      = "ex"
-	CloudTypeRx      = "rx"
+	CloudTypePublic  CloudType = "public"
+	CloudTypeGcc     CloudType = "gcc"
+	CloudTypeGccHigh CloudType = "gcchigh"
+	CloudTypeDod     CloudType = "dod"
+	CloudTypeChina   CloudType = "china"
+	CloudTypeEx      CloudType = "ex"
+	CloudTypeRx      CloudType = "rx"
+)
+
+type CloudTypeConfigurationKey string
+
+const (
+	FirstRealseClusterName CloudTypeConfigurationKey = "release_cycle"
 )
 
 type ProviderConfig struct {
@@ -35,8 +44,7 @@ type ProviderConfig struct {
 	OidcToken         string
 	OidcTokenFilePath string
 
-
-	CloudType string
+	CloudType               CloudType
 	AzDOServiceConnectionID string
 
 	// internal runtime configuration values
@@ -54,6 +62,35 @@ type ProviderConfigUrls struct {
 	PowerPlatformUrl   string
 	PowerPlatformScope string
 	LicensingUrl       string
+}
+
+func (model *ProviderConfig) GetCurrentCloudConfiguration(key CloudTypeConfigurationKey) *string {
+	configuration := map[string]map[string]*string{
+		string(CloudTypePublic): {
+			string(FirstRealseClusterName): helpers.StringPtr("FirstRelease"),
+			// Add more cloud specific configurations here
+		},
+		string(CloudTypeGcc): {
+			string(FirstRealseClusterName): helpers.StringPtr("GovFR"),
+		},
+		string(CloudTypeGccHigh): {
+			string(FirstRealseClusterName): nil,
+		},
+		string(CloudTypeDod): {
+			string(FirstRealseClusterName): nil,
+		},
+		string(CloudTypeChina): {
+			string(FirstRealseClusterName): nil,
+		},
+		string(CloudTypeEx): {
+			string(FirstRealseClusterName): nil,
+		},
+		string(CloudTypeRx): {
+			string(FirstRealseClusterName): nil,
+		},
+	}
+
+	return configuration[string(model.CloudType)][string(key)]
 }
 
 func (model *ProviderConfig) IsUserManagedIdentityProvided() bool {

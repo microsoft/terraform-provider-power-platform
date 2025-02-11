@@ -286,8 +286,6 @@ func TestUnitEnvironmentsResource_Validate_CreateDeveloperEnvironment(t *testing
 }
 
 func TestAccEnvironmentsResource_Validate_Create_Early_Release_Cycle(t *testing.T) {
-	t.Setenv("TF_ACC", "1")
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

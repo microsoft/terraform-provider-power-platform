@@ -7,7 +7,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -86,7 +85,7 @@ func isDataverseEnvironmentEmpty(ctx context.Context, environment *SourceModel) 
 	return dataverseSourceModel.CurrencyCode.IsNull() || dataverseSourceModel.CurrencyCode.ValueString() == ""
 }
 
-func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, conf config.ProviderConfig, environmentSource SourceModel) (*environmentCreateDto, error) {
+func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource SourceModel, conf config.ProviderConfig) (*environmentCreateDto, error) {
 	environmentDto := &environmentCreateDto{
 		Location: environmentSource.Location.ValueString(),
 		Properties: environmentCreatePropertiesDto{
@@ -116,12 +115,11 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, conf config
 	}
 
 	if environmentSource.ReleaseCycle.ValueString() == ReleaseCycleTypesEarly {
-		category := ReleaseCycleFirstReleasePublicDto
-		if conf.CloudType == config.CloudTypeGcc {
-			category = ReleaseCycleFirstReleaseGovDto
-		}
-		environmentDto.Properties.Cluster = &ClusterDto{
-			Catergory: category,
+		value := conf.GetCurrentCloudConfiguration(config.FirstRealseClusterName)
+		if value != nil {
+			environmentDto.Properties.Cluster = &ClusterDto{
+				Catergory: *value,
+			}
 		}
 	}
 
@@ -180,7 +178,7 @@ func convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 	return nil, fmt.Errorf("dataverse object is null or unknown")
 }
 
-func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode, ownerId *string, templateMetadata *createTemplateMetadataDto, templates []string, timeout timeouts.Value) (*SourceModel, error) {
+func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode, ownerId *string, templateMetadata *createTemplateMetadataDto, templates []string, timeout timeouts.Value, providerConfig config.ProviderConfig) (*SourceModel, error) {
 	model := &SourceModel{
 		Timeouts:        timeout,
 		Description:     types.StringValue(environmentDto.Properties.Description),
@@ -195,7 +193,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 	convertBillingPolicyModelFromDto(environmentDto, model)
 	convertEnvironmentGroupFromDto(environmentDto, model)
 	convertEnterprisePolicyModelFromDto(environmentDto, model)
-	convertReleaseCycleModelFromDto(environmentDto, model)
+	convertReleaseCycleModelFromDto(environmentDto, model, providerConfig)
 	convertOwnerIdFromDto(environmentDto, model)
 
 	attrTypesDataverseObject := map[string]attr.Type{
@@ -326,16 +324,15 @@ func convertBillingPolicyModelFromDto(environmentDto EnvironmentDto, model *Sour
 	}
 }
 
-
-func convertReleaseCycleModelFromDto(environmentDto EnvironmentDto, model *SourceModel) {
-	isMatch, _ := regexp.MatchString(ReleaseCycleFirstReleaseOnlyRegex, environmentDto.Properties.Cluster.Catergory)
-	if environmentDto.Properties.Cluster != nil && isMatch {
+func convertReleaseCycleModelFromDto(environmentDto EnvironmentDto, model *SourceModel, providerConfig config.ProviderConfig) {
+	value := providerConfig.GetCurrentCloudConfiguration(config.FirstRealseClusterName)
+	if environmentDto.Properties.Cluster != nil && value != nil && environmentDto.Properties.Cluster.Catergory == *value {
 		model.ReleaseCycle = types.StringValue(ReleaseCycleTypesEarly)
 	} else {
 		model.ReleaseCycle = types.StringValue(ReleaseCycleTypesStandard)
-  }  
+	}
 }
-    
+
 func convertOwnerIdFromDto(environmentDto EnvironmentDto, model *SourceModel) {
 	if environmentDto.Properties.UsedBy != nil {
 		model.OwnerId = types.StringValue(environmentDto.Properties.UsedBy.Id)

@@ -228,21 +228,21 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 
 	var providerConfigUrls *config.ProviderConfigUrls
 	var cloudConfiguration *cloud.Configuration
-	p.Config.CloudType = cloudType
+	p.Config.CloudType = config.CloudType(cloudType)
 	switch cloudType {
-	case config.CloudTypePublic:
+	case string(config.CloudTypePublic):
 		providerConfigUrls, cloudConfiguration = getCloudPublicUrls()
-	case config.CloudTypeGcc:
+	case string(config.CloudTypeGcc):
 		providerConfigUrls, cloudConfiguration = getGccUrls()
-	case config.CloudTypeGccHigh:
+	case string(config.CloudTypeGccHigh):
 		providerConfigUrls, cloudConfiguration = getGccHighUrls()
-	case config.CloudTypeDod:
+	case string(config.CloudTypeDod):
 		providerConfigUrls, cloudConfiguration = getDodUrls()
-	case config.CloudTypeChina:
+	case string(config.CloudTypeChina):
 		providerConfigUrls, cloudConfiguration = getChinaUrls()
-	case config.CloudTypeEx:
+	case string(config.CloudTypeEx):
 		providerConfigUrls, cloudConfiguration = getExUrls()
-	case config.CloudTypeRx:
+	case string(config.CloudTypeRx):
 		providerConfigUrls, cloudConfiguration = getRxUrls()
 	default:
 		resp.Diagnostics.AddAttributeError(
