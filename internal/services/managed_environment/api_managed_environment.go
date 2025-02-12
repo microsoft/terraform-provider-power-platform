@@ -88,3 +88,21 @@ func (client *client) DisableManagedEnvironment(ctx context.Context, environment
 	}
 	return nil
 }
+
+func (client *client) GetSolutionCheckerRules(ctx context.Context, environmentId string) (*SolutionCheckerRulesArrayDto, error) {
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/governanceConfiguration", environmentId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2021-04-01")
+	apiUrl.RawQuery = values.Encode()
+
+	solutioncheckerrulesarray := SolutionCheckerRulesArrayDto{}
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutioncheckerrulesarray)
+	if err != nil {
+		return nil, err
+	}
+	return &solutioncheckerrulesarray, nil
+}
