@@ -1,6 +1,7 @@
 BRANCH := $(shell git rev-parse --abbrev-ref HEAD)
 
 deps:
+	go version
 	go mod tidy
 
 build:
@@ -14,6 +15,7 @@ install:
 	go install
 
 clean:
+	go version
 	go clean -testcache
 	rm -rf ./bin
 	rm -rf /go/bin/terraform-provider-power-platform
@@ -41,6 +43,7 @@ test:
 
 lint:
 	clear
+	golangci-lint --version
 	golangci-lint run
 
 precommit:
