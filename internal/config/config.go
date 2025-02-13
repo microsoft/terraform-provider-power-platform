@@ -24,7 +24,7 @@ const (
 type CloudTypeConfigurationKey string
 
 const (
-	FirstRealseClusterName CloudTypeConfigurationKey = "release_cycle"
+	FirstReleaseClusterName CloudTypeConfigurationKey = "release_cycle"
 )
 
 type ProviderConfig struct {
