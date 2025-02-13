@@ -115,7 +115,7 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 	}
 
 	if environmentSource.ReleaseCycle.ValueString() == ReleaseCycleTypesEarly {
-		value := conf.GetCurrentCloudConfiguration(config.FirstRealseClusterName)
+		value := conf.GetCurrentCloudConfiguration(config.FirstReleaseClusterName)
 		if value != nil {
 			environmentDto.Properties.Cluster = &ClusterDto{
 				Catergory: *value,
