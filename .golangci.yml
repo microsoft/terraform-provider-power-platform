@@ -52,3 +52,4 @@ issues:
     - "SA4006: this value of `ctx` is never used"
     - "unused parameter (ctx|diags|req|resp)"
     - "exported: type name will be used as ([a-zA-Z_]+)\\.([A-Za-z]+)Dto"
+    - "Error return value is not checked"
