@@ -89,12 +89,12 @@ func (client *client) DisableManagedEnvironment(ctx context.Context, environment
 	return nil
 }
 
-func (client *client) GetSolutionCheckerRules(ctx context.Context, environmentLocation environment.EnvironmentDto) (*SolutionCheckerRulesArrayDto, error) {
+func (client *client) GetSolutionCheckerRules(ctx context.Context, location string) (*SolutionCheckerRulesArrayDto, error) {
 	// Extract the base host
 	baseHost := client.Api.GetConfig().Urls.PowerAppsAdvisor
 
 	// Prepend the environment location to the host
-	fullHost := fmt.Sprintf("%s.%s", environmentLocation.Location, baseHost)
+	fullHost := fmt.Sprintf("%s.%s", location, baseHost)
 
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
