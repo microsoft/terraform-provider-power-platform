@@ -411,9 +411,13 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 	values := url.Values{}
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
-	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentToCreate, []int{http.StatusAccepted, http.StatusCreated}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentToCreate, []int{http.StatusAccepted, http.StatusCreated, http.StatusInternalServerError}, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	if apiResponse.HttpResponse.StatusCode == http.StatusInternalServerError {
+		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_CREATION, string(apiResponse.BodyAsBytes))
 	}
 
 	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
