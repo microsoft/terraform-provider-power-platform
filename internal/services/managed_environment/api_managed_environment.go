@@ -89,11 +89,11 @@ func (client *client) DisableManagedEnvironment(ctx context.Context, environment
 	return nil
 }
 
-func (client *client) GetSolutionCheckerRules(ctx context.Context, environmentId string) (*SolutionCheckerRulesArrayDto, error) {
+func (client *client) GetSolutionCheckerRules(ctx context.Context, environmentLocation environment.LocationDto) (*SolutionCheckerRulesArrayDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   client.Api.GetConfig().Urls.BapiUrl,
-		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/governanceConfiguration", environmentId),
+		Host:   client.Api.GetConfig().Urls.PowerAppsAdvisor,
+		Path:   fmt.Sprintf("/api/rule?ruleset=%s&api-version=2.0", constants.POWER_APPS_ADVISOR_SCOPE),
 	}
 	values := url.Values{}
 	values.Add("api-version", "2021-04-01")
