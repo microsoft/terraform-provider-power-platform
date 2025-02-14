@@ -107,6 +107,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *te
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_ip_range_for_firewall.#", "0"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_service_tags_for_firewall.#", "0"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.#", "0"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.enable_ip_based_cookie_binding", "false"),
 				),
 			},
 		},
@@ -175,6 +176,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						  enable_ip_based_firewall_rule               = true
 						  enable_ip_based_firewall_rule_in_audit_mode = true
 						  reverse_proxy_ip_addresses                  = toset(["10.10.1.1", "192.168.1.1"])
+						  enable_ip_based_cookie_binding              = true
 						}
 					}
 				  }`,
@@ -201,6 +203,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.#", "2"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.0", "10.10.1.1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.1", "192.168.1.1"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.enable_ip_based_cookie_binding", "true"),
 				),
 			},
 		},
@@ -309,6 +312,7 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						  enable_ip_based_firewall_rule               = true
 						  enable_ip_based_firewall_rule_in_audit_mode = true
 						  reverse_proxy_ip_addresses                  = toset(["10.10.1.1", "192.168.1.1"])
+						  enable_ip_based_cookie_binding              = true
 						}
 					  }
 				  }`,
@@ -335,6 +339,7 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.#", "2"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.0", "10.10.1.1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.1", "192.168.1.1"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.enable_ip_based_cookie_binding", "true"),
 				),
 			},
 		},

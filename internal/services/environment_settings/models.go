@@ -77,6 +77,7 @@ type FeaturesSourceModel struct {
 }
 
 type SecuritySourceModel struct {
+	EnableIpBasedCookieBinding           types.Bool `tfsdk:"enable_ip_based_cookie_binding"`
 	EnableIpBasedFirewallRule            types.Bool `tfsdk:"enable_ip_based_firewall_rule"`
 	AllowedIpRangeForFirewall            types.Set  `tfsdk:"allowed_ip_range_for_firewall"`
 	AllowedServiceTagsForFirewall        types.Set  `tfsdk:"allowed_service_tags_for_firewall"`
@@ -143,7 +144,9 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 	if err := convertFromEnvironmentFeatureSettings(ctx, environmentSettings, environmentSettingsDto); err != nil {
 		return nil, err
 	}
-	convertFromEnvironmentSecuritySettings(ctx, environmentSettings, environmentSettingsDto)
+	if err := convertFromEnvironmentSecuritySettings(ctx, environmentSettings, environmentSettingsDto); err != nil {
+		return nil, err
+	}
 	return environmentSettingsDto, nil
 }
 
@@ -200,12 +203,17 @@ func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSetti
 	return nil
 }
 
-func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) {
+func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) error {
 	security := environmentSettings.Product.Attributes()["security"]
 	if security != nil && !security.IsNull() && !security.IsUnknown() {
 		var securitySourceModel SecuritySourceModel
-		security.(basetypes.ObjectValue).As(ctx, &securitySourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		if err := security.(basetypes.ObjectValue).As(ctx, &securitySourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
+			return fmt.Errorf("failed to convert audit settings: %v", err)
+		}
 
+		if !securitySourceModel.EnableIpBasedCookieBinding.IsNull() && !securitySourceModel.EnableIpBasedCookieBinding.IsUnknown() {
+			environmentSettingsDto.EnableIpBasedCookieBinding = securitySourceModel.EnableIpBasedCookieBinding.ValueBoolPointer()
+		}
 		if !securitySourceModel.EnableIpBasedFirewallRule.IsNull() && !securitySourceModel.EnableIpBasedFirewallRule.IsUnknown() {
 			environmentSettingsDto.EnableIpBasedFirewallRule = securitySourceModel.EnableIpBasedFirewallRule.ValueBoolPointer()
 		}
@@ -231,6 +239,7 @@ func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSett
 			environmentSettingsDto.ReverseProxyIpAddresses = &value
 		}
 	}
+	return nil
 }
 
 func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | EnvironmentSettingsDataSourceModel](environmentSettingsDto *environmentSettingsDto, timeout timeouts.Value) T {
@@ -298,6 +307,7 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 	}
 
 	attrTypesSecurityObject := map[string]attr.Type{
+		"enable_ip_based_cookie_binding":              types.BoolType,
 		"enable_ip_based_firewall_rule":               types.BoolType,
 		"allowed_ip_range_for_firewall":               types.SetType{ElemType: types.StringType},
 		"allowed_service_tags_for_firewall":           types.SetType{ElemType: types.StringType},
@@ -342,6 +352,7 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 			"power_apps_component_framework_for_canvas_apps": types.BoolValue(*environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps),
 		}),
 		"security": types.ObjectValueMust(attrTypesSecurityObject, map[string]attr.Value{
+			"enable_ip_based_cookie_binding":              types.BoolValue(*environmentSettingsDto.EnableIpBasedCookieBinding),
 			"enable_ip_based_firewall_rule":               types.BoolValue(*environmentSettingsDto.EnableIpBasedFirewallRule),
 			"allowed_ip_range_for_firewall":               types.SetValueMust(types.StringType, allowedIpRangeForFirewall),
 			"allowed_service_tags_for_firewall":           types.SetValueMust(types.StringType, allowedServiceTags),

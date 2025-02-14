@@ -192,6 +192,10 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 						MarkdownDescription: "Security. See [Security Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-privacy-security) for more details.",
 						Optional:            true,
 						Attributes: map[string]schema.Attribute{
+							"enable_ip_based_cookie_binding": schema.BoolAttribute{
+								MarkdownDescription: "Enable IP based cookie binding",
+								Optional:            true,
+							},
 							"enable_ip_based_firewall_rule": schema.BoolAttribute{
 								MarkdownDescription: "Enable IP based firewall rule",
 								Optional:            true,

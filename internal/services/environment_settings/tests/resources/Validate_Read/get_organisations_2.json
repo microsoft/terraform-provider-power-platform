@@ -328,7 +328,7 @@
             "isexternalsearchindexenabled": false,
             "currentcasenumber": 1,
             "isreadauditenabled": true,
-            "enableipbasedcookiebinding": false,
+            "enableipbasedcookiebinding": true,
             "enableunifiedclientcdn": false,
             "isduplicatedetectionenabledforofflinesync": true,
             "bulkoperationprefix": "BO",

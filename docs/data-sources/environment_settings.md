@@ -96,6 +96,7 @@ Optional:
 - `allow_microsoft_trusted_service_tags` (Boolean) Allow Microsoft trusted service tags
 - `allowed_ip_range_for_firewall` (Set of String) Allowed IP range for firewall
 - `allowed_service_tags_for_firewall` (Set of String) Allowed service tags for firewall
+- `enable_ip_based_cookie_binding` (Boolean) Enable IP based cookie binding
 - `enable_ip_based_firewall_rule` (Boolean) Enable IP based firewall rule
 - `enable_ip_based_firewall_rule_in_audit_mode` (Boolean) Enable IP based firewall rule in audit mode
 - `reverse_proxy_ip_addresses` (Set of String) Reverse proxy IP addresses

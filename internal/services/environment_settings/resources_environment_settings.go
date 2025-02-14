@@ -202,6 +202,13 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 						Optional:            true,
 						Computed:            true,
 						Attributes: map[string]schema.Attribute{
+							"enable_ip_based_cookie_binding": schema.BoolAttribute{
+								MarkdownDescription: "Enable IP based cookie binding",
+								Optional:            true, Computed: true,
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
 							"enable_ip_based_firewall_rule": schema.BoolAttribute{
 								MarkdownDescription: "Enable IP based firewall rule",
 								Optional:            true, Computed: true,
