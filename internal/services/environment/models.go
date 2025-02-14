@@ -325,7 +325,7 @@ func convertBillingPolicyModelFromDto(environmentDto EnvironmentDto, model *Sour
 }
 
 func convertReleaseCycleModelFromDto(environmentDto EnvironmentDto, model *SourceModel, providerConfig config.ProviderConfig) {
-	value := providerConfig.GetCurrentCloudConfiguration(config.FirstRealseClusterName)
+	value := providerConfig.GetCurrentCloudConfiguration(config.FirstReleaseClusterName)
 	if environmentDto.Properties.Cluster != nil && value != nil && environmentDto.Properties.Cluster.Catergory == *value {
 		model.ReleaseCycle = types.StringValue(ReleaseCycleTypesEarly)
 	} else {

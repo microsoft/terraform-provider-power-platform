@@ -67,26 +67,26 @@ type ProviderConfigUrls struct {
 func (model *ProviderConfig) GetCurrentCloudConfiguration(key CloudTypeConfigurationKey) *string {
 	configuration := map[string]map[string]*string{
 		string(CloudTypePublic): {
-			string(FirstRealseClusterName): helpers.StringPtr("FirstRelease"),
+			string(FirstReleaseClusterName): helpers.StringPtr("FirstRelease"),
 			// Add more cloud specific configurations here
 		},
 		string(CloudTypeGcc): {
-			string(FirstRealseClusterName): helpers.StringPtr("GovFR"),
+			string(FirstReleaseClusterName): helpers.StringPtr("GovFR"),
 		},
 		string(CloudTypeGccHigh): {
-			string(FirstRealseClusterName): nil,
+			string(FirstReleaseClusterName): nil,
 		},
 		string(CloudTypeDod): {
-			string(FirstRealseClusterName): nil,
+			string(FirstReleaseClusterName): nil,
 		},
 		string(CloudTypeChina): {
-			string(FirstRealseClusterName): nil,
+			string(FirstReleaseClusterName): nil,
 		},
 		string(CloudTypeEx): {
-			string(FirstRealseClusterName): nil,
+			string(FirstReleaseClusterName): nil,
 		},
 		string(CloudTypeRx): {
-			string(FirstRealseClusterName): nil,
+			string(FirstReleaseClusterName): nil,
 		},
 	}
 
