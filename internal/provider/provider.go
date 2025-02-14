@@ -417,6 +417,7 @@ func getCloudPublicUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 		PowerPlatformUrl:   constants.PUBLIC_POWERPLATFORM_API_DOMAIN,
 		PowerPlatformScope: constants.PUBLIC_POWERPLATFORM_API_SCOPE,
 		LicensingUrl:       constants.PUBLIC_LICENSING_API_DOMAIN,
+		PowerAppsAdvisor:   constants.PUBLIC_POWERAPPS_ADVISOR_API_DOMAIN,
 	}, &cloud.AzurePublic
 }
 

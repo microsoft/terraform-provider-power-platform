@@ -42,6 +42,7 @@ type ProviderConfigUrls struct {
 	PowerPlatformUrl   string
 	PowerPlatformScope string
 	LicensingUrl       string
+	PowerAppsAdvisor   string
 }
 
 func (model *ProviderConfig) IsUserManagedIdentityProvided() bool {

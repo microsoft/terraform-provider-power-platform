@@ -17,13 +17,14 @@ import "time"
 const ZERO_UUID = "00000000-0000-0000-0000-000000000000"
 
 const (
-	PUBLIC_OAUTH_AUTHORITY_URL      = "https://login.microsoftonline.com/"
-	PUBLIC_BAPI_DOMAIN              = "api.bap.microsoft.com"
-	PUBLIC_POWERAPPS_API_DOMAIN     = "api.powerapps.com"
-	PUBLIC_POWERAPPS_SCOPE          = "https://service.powerapps.com/.default"
-	PUBLIC_POWERPLATFORM_API_DOMAIN = "api.powerplatform.com"
-	PUBLIC_POWERPLATFORM_API_SCOPE  = "https://api.powerplatform.com/.default"
-	PUBLIC_LICENSING_API_DOMAIN     = "licensing.powerplatform.microsoft.com"
+	PUBLIC_OAUTH_AUTHORITY_URL          = "https://login.microsoftonline.com/"
+	PUBLIC_BAPI_DOMAIN                  = "api.bap.microsoft.com"
+	PUBLIC_POWERAPPS_API_DOMAIN         = "api.powerapps.com"
+	PUBLIC_POWERAPPS_SCOPE              = "https://service.powerapps.com/.default"
+	PUBLIC_POWERPLATFORM_API_DOMAIN     = "api.powerplatform.com"
+	PUBLIC_POWERPLATFORM_API_SCOPE      = "https://api.powerplatform.com/.default"
+	PUBLIC_LICENSING_API_DOMAIN         = "licensing.powerplatform.microsoft.com"
+	PUBLIC_POWERAPPS_ADVISOR_API_DOMAIN = "api.advisor.powerapps.com"
 )
 
 const (
@@ -89,7 +90,8 @@ const (
 )
 
 const (
-	COPILOT_SCOPE = "96ff4394-9197-43aa-b393-6a41652e21f8"
+	COPILOT_SCOPE            = "96ff4394-9197-43aa-b393-6a41652e21f8"
+	POWER_APPS_ADVISOR_SCOPE = "0ad12346-e108-40b8-a956-9a8f95ea18c9"
 )
 
 const (

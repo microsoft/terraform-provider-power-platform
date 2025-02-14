@@ -88,3 +88,27 @@ func (client *client) DisableManagedEnvironment(ctx context.Context, environment
 	}
 	return nil
 }
+
+func (client *client) GetSolutionCheckerRules(ctx context.Context, location string) (*SolutionCheckerRulesArrayDto, error) {
+	// Extract the base host
+	baseHost := client.Api.GetConfig().Urls.PowerAppsAdvisor
+
+	// Prepend the environment location to the host
+	fullHost := fmt.Sprintf("%s.%s", location, baseHost)
+
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   fullHost,
+		Path:   fmt.Sprintf("/api/rule?ruleset=%s", constants.POWER_APPS_ADVISOR_SCOPE),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2.0")
+	apiUrl.RawQuery = values.Encode()
+
+	solutioncheckerrulesarray := SolutionCheckerRulesArrayDto{}
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutioncheckerrulesarray)
+	if err != nil {
+		return nil, err
+	}
+	return &solutioncheckerrulesarray, nil
+}

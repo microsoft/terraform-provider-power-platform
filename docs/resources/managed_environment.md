@@ -37,15 +37,16 @@ resource "powerplatform_environment" "development" {
 }
 
 resource "powerplatform_managed_environment" "managed_development" {
-  environment_id             = powerplatform_environment.development.id
-  is_usage_insights_disabled = true
-  is_group_sharing_disabled  = true
-  limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
-  max_limit_user_sharing     = 10
-  solution_checker_mode      = "None"
-  suppress_validation_emails = true
-  maker_onboarding_markdown  = "this is example markdown"
-  maker_onboarding_url       = "https://www.microsoft.com"
+  environment_id                  = powerplatform_environment.development.id
+  is_usage_insights_disabled      = true
+  is_group_sharing_disabled       = true
+  limit_sharing_mode              = "ExcludeSharingToSecurityGroups"
+  max_limit_user_sharing          = 10
+  solution_checker_mode           = "Warn"
+  suppress_validation_emails      = true
+  solution_checker_rule_overrides = toset(["meta-remove-dup-reg", "meta-avoid-reg-no-attribute"])
+  maker_onboarding_markdown       = "this is example markdown"
+  maker_onboarding_url            = "https://www.microsoft.com"
 }
 ```
 
@@ -66,6 +67,10 @@ resource "powerplatform_managed_environment" "managed_development" {
 
 ### Optional
 
+- `solution_checker_rule_overrides` (Set of String) List of rules to exclude from solution checker
+				See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.
+				Posible values are:
+				meta-remove-dup-reg, meta-avoid-reg-no-attribute, meta-avoid-reg-retrieve, meta-remove-inactive, web-avoid-unpub-api, web-avoid-modals, web-avoid-crm2011-service-odata, web-avoid-crm2011-service-soap, web-avoid-browser-specific-api, web-avoid-2011-api, web-use-relative-uri, web-use-async, web-avoid-window-top, web-use-client-context, web-use-navigation-api, web-use-offline, web-use-grid-api, web-avoid-isactivitytype, meta-avoid-silverlight, meta-avoid-retrievemultiple-annotation, web-remove-debug-script, web-use-strict-mode, web-use-strict-equality-operators, web-avoid-eval, app-formula-issues-high, app-formula-issues-medium, app-formula-issues-low, app-use-delayoutput-text-input, app-reduce-screen-controls, app-include-accessible-label, app-include-alternative-input, app-avoid-autostart, app-include-captions, app-make-focusborder-visible, app-include-helpful-control-setting, app-avoid-interactive-html, app-include-readable-screen-name, app-include-state-indication-text, app-include-tab-order, app-include-tab-index, flow-avoid-recursive-loop, flow-avoid-invalid-reference, flow-outlook-attachment-missing-info, meta-include-missingunmanageddependencies, web-remove-alert, web-remove-console, web-use-global-context, web-use-org-setting, app-testformula-issues-high, app-testformula-issues-medium, app-testformula-issues-low, flow-avoid-connection-mode, web-avoid-with, web-avoid-loadtheme, web-use-getsecurityroleprivilegesinfo, web-sdl-no-cookies, web-sdl-no-document-domain, web-sdl-no-document-write, web-sdl-no-html-method, web-sdl-no-inner-html, web-sdl-no-insecure-url, web-sdl-no-msapp-exec-unsafe, web-sdl-no-postmessage-star-origin, web-sdl-no-winjs-html-unsafe, connector-validate-brandcolor, connector-validate-iconimage, connector-validate-swagger-isproperjson, connector-validate-swagger, connector-validate-swagger-extended, connector-validate-title, connector-validate-connectionparam-isproperjson, connector-validate-connectionparameters, connector-validate-connectionparam-oauth2idp, meta-license-sales-sdkmessages, meta-license-sales-entity-operations, meta-license-sales-customcontrols, web-use-appsidepane-api, meta-license-fieldservice-sdkmessages, meta-license-fieldservice-entity-operations, meta-license-fieldservice-customcontrols, meta-avoid-managed-entity-assets, meta-include-unmanaged-entity-assets, connector-validate-hexadecimalbrandcolor, connector-validate-pngiconimage, connector-validate-iconsize, connector-validate-backgroundwithbrandiconcolor, web-unsupported-syntax
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

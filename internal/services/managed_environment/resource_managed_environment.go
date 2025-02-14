@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -27,6 +28,8 @@ import (
 
 var _ resource.Resource = &ManagedEnvironmentResource{}
 var _ resource.ResourceWithImportState = &ManagedEnvironmentResource{}
+
+const SOLUTION_CHECKER_RULES = "meta-remove-dup-reg, meta-avoid-reg-no-attribute, meta-avoid-reg-retrieve, meta-remove-inactive, web-avoid-unpub-api, web-avoid-modals, web-avoid-crm2011-service-odata, web-avoid-crm2011-service-soap, web-avoid-browser-specific-api, web-avoid-2011-api, web-use-relative-uri, web-use-async, web-avoid-window-top, web-use-client-context, web-use-navigation-api, web-use-offline, web-use-grid-api, web-avoid-isactivitytype, meta-avoid-silverlight, meta-avoid-retrievemultiple-annotation, web-remove-debug-script, web-use-strict-mode, web-use-strict-equality-operators, web-avoid-eval, app-formula-issues-high, app-formula-issues-medium, app-formula-issues-low, app-use-delayoutput-text-input, app-reduce-screen-controls, app-include-accessible-label, app-include-alternative-input, app-avoid-autostart, app-include-captions, app-make-focusborder-visible, app-include-helpful-control-setting, app-avoid-interactive-html, app-include-readable-screen-name, app-include-state-indication-text, app-include-tab-order, app-include-tab-index, flow-avoid-recursive-loop, flow-avoid-invalid-reference, flow-outlook-attachment-missing-info, meta-include-missingunmanageddependencies, web-remove-alert, web-remove-console, web-use-global-context, web-use-org-setting, app-testformula-issues-high, app-testformula-issues-medium, app-testformula-issues-low, flow-avoid-connection-mode, web-avoid-with, web-avoid-loadtheme, web-use-getsecurityroleprivilegesinfo, web-sdl-no-cookies, web-sdl-no-document-domain, web-sdl-no-document-write, web-sdl-no-html-method, web-sdl-no-inner-html, web-sdl-no-insecure-url, web-sdl-no-msapp-exec-unsafe, web-sdl-no-postmessage-star-origin, web-sdl-no-winjs-html-unsafe, connector-validate-brandcolor, connector-validate-iconimage, connector-validate-swagger-isproperjson, connector-validate-swagger, connector-validate-swagger-extended, connector-validate-title, connector-validate-connectionparam-isproperjson, connector-validate-connectionparameters, connector-validate-connectionparam-oauth2idp, meta-license-sales-sdkmessages, meta-license-sales-entity-operations, meta-license-sales-customcontrols, web-use-appsidepane-api, meta-license-fieldservice-sdkmessages, meta-license-fieldservice-entity-operations, meta-license-fieldservice-customcontrols, meta-avoid-managed-entity-assets, meta-include-unmanaged-entity-assets, connector-validate-hexadecimalbrandcolor, connector-validate-pngiconimage, connector-validate-iconsize, connector-validate-backgroundwithbrandiconcolor, web-unsupported-syntax"
 
 func NewManagedEnvironmentResource() resource.Resource {
 	return &ManagedEnvironmentResource{
@@ -119,6 +122,20 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				Description:         "Send emails only when a solution is blocked. If 'False', you'll also get emails when there are warnings",
 				Required:            true,
 			},
+			"solution_checker_rule_overrides": schema.SetAttribute{
+				MarkdownDescription: `
+				List of rules to exclude from solution checker
+				See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.
+				Posible values are:
+				` + SOLUTION_CHECKER_RULES + `
+				`,
+				Description: "List of rules to exclude from solution checker.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.",
+				Optional:    true,
+				ElementType: types.StringType,
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(stringvalidator.OneOf(append([]string{""}, strings.Split(SOLUTION_CHECKER_RULES, ", ")...)...)),
+				},
+			},
 			"maker_onboarding_markdown": schema.StringAttribute{
 				MarkdownDescription: "First-time Power Apps makers will see this content in the Studio.  See [Maker welcome content](https://learn.microsoft.com/power-platform/admin/welcome-content) for more details.",
 				Description:         "First-time Power Apps makers will see this content in the Studio",
@@ -141,7 +158,15 @@ func (r *ManagedEnvironmentResource) Configure(ctx context.Context, req resource
 		return
 	}
 
-	clientApi := req.ProviderData.(*api.ProviderClient).Api
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	clientApi := client.Api
 
 	if clientApi == nil {
 		resp.Diagnostics.AddError(
@@ -165,6 +190,12 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
+	var solutionCheckerRuleOverrides *string
+	if !plan.SolutionCheckerRuleOverrides.IsNull() {
+		value := strings.Join(helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides), ",")
+		solutionCheckerRuleOverrides = &value
+	}
+
 	managedEnvironmentDto := environment.GovernanceConfigurationDto{
 		ProtectionLevel: "Standard",
 		Settings: &environment.SettingsDto{
@@ -177,10 +208,15 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 				LimitSharingMode:               strings.ToLower(plan.LimitSharingMode.ValueString()[:1]) + plan.LimitSharingMode.ValueString()[1:],
 				SolutionCheckerMode:            strings.ToLower(plan.SolutionCheckerMode.ValueString()),
 				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
+				SolutionCheckerRuleOverrides:   "",
 				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
 				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
 			},
 		},
+	}
+
+	if solutionCheckerRuleOverrides != nil {
+		managedEnvironmentDto.Settings.ExtendedSettings.SolutionCheckerRuleOverrides = *solutionCheckerRuleOverrides
 	}
 
 	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
@@ -206,6 +242,12 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
 	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
+
+	if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
+		plan.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
+	} else {
+		plan.SolutionCheckerRuleOverrides = helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -244,6 +286,11 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		state.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
 		state.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 		state.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
+		if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
+			state.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
+		} else {
+			state.SolutionCheckerRuleOverrides = helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
+		}
 	} else {
 		state.IsGroupSharingDisabled = types.BoolUnknown()
 		state.IsUsageInsightsDisabled = types.BoolUnknown()
@@ -253,6 +300,7 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		state.SuppressValidationEmails = types.BoolUnknown()
 		state.MakerOnboardingUrl = types.StringUnknown()
 		state.MakerOnboardingMarkdown = types.StringUnknown()
+		state.SolutionCheckerRuleOverrides = types.SetUnknown(types.StringType)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -270,6 +318,12 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
+	var solutionCheckerRuleOverrides *string
+	if !plan.SolutionCheckerRuleOverrides.IsNull() {
+		value := strings.Join(helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides), ",")
+		solutionCheckerRuleOverrides = &value
+	}
+
 	managedEnvironmentDto := environment.GovernanceConfigurationDto{
 		ProtectionLevel: "Standard",
 		Settings: &environment.SettingsDto{
@@ -284,8 +338,13 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
 				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
 				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
+				SolutionCheckerRuleOverrides:   "",
 			},
 		},
+	}
+
+	if solutionCheckerRuleOverrides != nil {
+		managedEnvironmentDto.Settings.ExtendedSettings.SolutionCheckerRuleOverrides = *solutionCheckerRuleOverrides
 	}
 
 	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
@@ -311,6 +370,12 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
 	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
+
+	if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
+		plan.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
+	} else {
+		plan.SolutionCheckerRuleOverrides = helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }

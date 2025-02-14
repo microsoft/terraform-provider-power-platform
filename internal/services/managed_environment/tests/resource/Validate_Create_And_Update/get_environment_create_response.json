@@ -309,7 +309,7 @@
                     "limitSharingMode": "excludeSharingToSecurityGroups",
                     "solutionCheckerMode": "none",
                     "suppressValidationEmails": "true",
-                    "solutionCheckerRuleOverrides": "",
+                    "solutionCheckerRuleOverrides": "meta-remove-dup-reg,meta-avoid-reg-no-attribute",
                     "makerOnboardingUrl": "http://www.example.com",
                     "makerOnboardingMarkdown": "this is test markdown",
                     "disableAiGeneratedDescriptions": "false"
