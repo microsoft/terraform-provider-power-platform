@@ -166,6 +166,14 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					validators.OtherFieldRequiredWhenValueOf(path.Root("environment_type").Expression(), regexp.MustCompile(EnvironmentTypesDeveloperOnlyRegex), nil, "owner_id can be used only when environment_type is `Developer`"),
 				},
 			},
+			"allow_bing_search": schema.BoolAttribute{
+				MarkdownDescription: "Allow Bing search in the environment",
+				Computed:            true,
+			},
+			"allow_moving_data_across_regions": schema.BoolAttribute{
+				MarkdownDescription: "Allow moving data across regions",
+				Computed:            true,
+			},
 			"display_name": schema.StringAttribute{
 				MarkdownDescription: "Display name",
 				Required:            true,
