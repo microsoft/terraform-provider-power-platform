@@ -53,7 +53,7 @@ type EnviromentPropertiesDto struct {
 }
 
 type CopilotPoliciesDto struct {
-	CrossGeoCopilotDataMovementEnabled bool `json:"crossGeoCopilotDataMovementEnabled"`
+	CrossGeoCopilotDataMovementEnabled *bool `json:"crossGeoCopilotDataMovementEnabled"`
 }
 
 type UsedByDto struct {

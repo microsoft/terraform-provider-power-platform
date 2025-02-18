@@ -512,7 +512,7 @@ func (client *Client) GetEnvironments(ctx context.Context) ([]EnvironmentDto, er
 		Path:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments",
 	}
 	values := url.Values{}
-	values.Add("$expand", "properties/billingPolicy")
+	values.Add("$expand", "properties/billingPolicy,properties/copilotPolicies")
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 

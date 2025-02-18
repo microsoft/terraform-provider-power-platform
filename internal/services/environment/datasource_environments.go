@@ -143,6 +143,10 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 							MarkdownDescription: "Allow Bing search in the environment",
 							Computed:            true,
 						},
+						"allow_moving_data_across_regions": schema.BoolAttribute{
+							MarkdownDescription: "Allow moving data across regions",
+							Computed:            true,
+						},
 						"dataverse": schema.SingleNestedAttribute{
 							MarkdownDescription: "Dataverse environment details",
 							Computed:            true,

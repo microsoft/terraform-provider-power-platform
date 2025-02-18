@@ -33,18 +33,19 @@ type ListDataSourceModel struct {
 }
 
 type SourceModel struct {
-	Timeouts           timeouts.Value `tfsdk:"timeouts"`
-	Id                 types.String   `tfsdk:"id"`
-	Location           types.String   `tfsdk:"location"`
-	AzureRegion        types.String   `tfsdk:"azure_region"`
-	DisplayName        types.String   `tfsdk:"display_name"`
-	EnvironmentType    types.String   `tfsdk:"environment_type"`
-	BillingPolicyId    types.String   `tfsdk:"billing_policy_id"`
-	Description        types.String   `tfsdk:"description"`
-	Cadence            types.String   `tfsdk:"cadence"`
-	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
-	OwnerId            types.String   `tfsdk:"owner_id"`
-	AllowBingSearch    types.Bool     `tfsdk:"allow_bing_search"`
+	Timeouts                     timeouts.Value `tfsdk:"timeouts"`
+	Id                           types.String   `tfsdk:"id"`
+	Location                     types.String   `tfsdk:"location"`
+	AzureRegion                  types.String   `tfsdk:"azure_region"`
+	DisplayName                  types.String   `tfsdk:"display_name"`
+	EnvironmentType              types.String   `tfsdk:"environment_type"`
+	BillingPolicyId              types.String   `tfsdk:"billing_policy_id"`
+	Description                  types.String   `tfsdk:"description"`
+	Cadence                      types.String   `tfsdk:"cadence"`
+	EnvironmentGroupId           types.String   `tfsdk:"environment_group_id"`
+	OwnerId                      types.String   `tfsdk:"owner_id"`
+	AllowBingSearch              types.Bool     `tfsdk:"allow_bing_search"`
+	AllowMovingDataAcrossRegions types.Bool     `tfsdk:"allow_moving_data_across_regions"`
 
 	EnterprisePolicies basetypes.SetValue `tfsdk:"enterprise_policies"`
 
@@ -185,6 +186,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 	convertEnvironmentGroupFromDto(environmentDto, model)
 	convertEnterprisePolicyModelFromDto(environmentDto, model)
 	convertOwnerIdFromDto(environmentDto, model)
+	convertCrossRegionDataMovementFromDto(environmentDto, model)
 
 	attrTypesDataverseObject := map[string]attr.Type{
 		"url":                          types.StringType,
@@ -318,6 +320,14 @@ func convertOwnerIdFromDto(environmentDto EnvironmentDto, model *SourceModel) {
 		model.OwnerId = types.StringValue(environmentDto.Properties.UsedBy.Id)
 	} else {
 		model.OwnerId = types.StringNull()
+	}
+}
+
+func convertCrossRegionDataMovementFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	if environmentDto.Properties.CopilotPolicies != nil && environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled != nil {
+		model.AllowMovingDataAcrossRegions = types.BoolValue(true)
+	} else {
+		model.AllowMovingDataAcrossRegions = types.BoolValue(false)
 	}
 }
 
