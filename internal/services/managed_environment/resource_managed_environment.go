@@ -60,6 +60,35 @@ func (r *ManagedEnvironmentResource) Metadata(ctx context.Context, req resource.
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
+func (r *ManagedEnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
+		return
+	}
+
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	clientApi := client.Api
+
+	if clientApi == nil {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+	r.ManagedEnvironmentClient = newManagedEnvironmentClient(clientApi)
+}
+
 func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
@@ -160,35 +189,6 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			},
 		},
 	}
-}
-
-func (r *ManagedEnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
-	defer exitContext()
-	if req.ProviderData == nil {
-		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
-		return
-	}
-
-	client, ok := req.ProviderData.(*api.ProviderClient)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-		return
-	}
-	clientApi := client.Api
-
-	if clientApi == nil {
-		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
-		return
-	}
-	r.ManagedEnvironmentClient = newManagedEnvironmentClient(clientApi)
 }
 
 func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
