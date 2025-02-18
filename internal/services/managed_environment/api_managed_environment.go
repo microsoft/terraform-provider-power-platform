@@ -5,6 +5,7 @@ package managed_environment
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -89,7 +90,12 @@ func (client *client) DisableManagedEnvironment(ctx context.Context, environment
 	return nil
 }
 
-func (client *client) GetSolutionCheckerRules(ctx context.Context, location *environment.LocationDto) (*SolutionCheckerRulesArrayDto, error) {
+type SolutionCheckerRule struct {
+	Code string `json:"code"`
+}
+
+// Function to fetch solution checker rules and return them as a slice of strings.
+func (client *client) FetchSolutionCheckerRules(ctx context.Context, location *environment.LocationDto) ([]string, error) {
 	// Extract the base host
 	baseHost := client.Api.GetConfig().Urls.PowerAppsAdvisor
 
@@ -105,10 +111,23 @@ func (client *client) GetSolutionCheckerRules(ctx context.Context, location *env
 	values.Add("api-version", "2.0")
 	apiUrl.RawQuery = values.Encode()
 
-	solutioncheckerrulesarray := SolutionCheckerRulesArrayDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutioncheckerrulesarray)
+	httpResponse, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return nil, err
 	}
-	return &solutioncheckerrulesarray, nil
+	defer httpResponse.HttpResponse.Body.Close()
+
+	// Parse the JSON response body
+	var rules []SolutionCheckerRule
+	if err := json.NewDecoder(httpResponse.HttpResponse.Body).Decode(&rules); err != nil {
+		return nil, err
+	}
+
+	// Extract the "code" values
+	var codes []string
+	for _, rule := range rules {
+		codes = append(codes, rule.Code)
+	}
+
+	return codes, nil
 }
