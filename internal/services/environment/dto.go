@@ -48,6 +48,12 @@ type EnviromentPropertiesDto struct {
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 	EnterprisePolicies        *EnvironmentEnterprisePoliciesDto `json:"enterprisePolicies,omitempty"`
 	UsedBy                    *UsedByDto                        `json:"usedBy,omitempty"`
+	BingChatEnabled           bool                              `json:"bingChatEnabled,omitempty"`
+	CopilotPolicies           *CopilotPoliciesDto               `json:"copilotPolicies,omitempty"`
+}
+
+type CopilotPoliciesDto struct {
+	CrossGeoCopilotDataMovementEnabled bool `json:"crossGeoCopilotDataMovementEnabled"`
 }
 
 type UsedByDto struct {

@@ -44,6 +44,7 @@ type SourceModel struct {
 	Cadence            types.String   `tfsdk:"cadence"`
 	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
 	OwnerId            types.String   `tfsdk:"owner_id"`
+	AllowBingSearch    types.Bool     `tfsdk:"allow_bing_search"`
 
 	EnterprisePolicies basetypes.SetValue `tfsdk:"enterprise_policies"`
 
@@ -177,6 +178,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		AzureRegion:     types.StringValue(environmentDto.Properties.AzureRegion),
 		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),
 		Cadence:         types.StringValue(environmentDto.Properties.UpdateCadence.Id),
+		AllowBingSearch: types.BoolValue(environmentDto.Properties.BingChatEnabled),
 	}
 
 	convertBillingPolicyModelFromDto(environmentDto, model)
