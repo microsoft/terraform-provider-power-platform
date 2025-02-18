@@ -70,7 +70,10 @@ func (client *client) UpdateEnvironmentSettings(ctx context.Context, environment
 		Path:   fmt.Sprintf("/api/data/v9.0/organizations(%s)", *settings.OrganizationId),
 	}
 
-	_, err = client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environmentSettings, []int{http.StatusNoContent}, nil)
+	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environmentSettings, []int{http.StatusNoContent, http.StatusInternalServerError}, nil)
+	if resp != nil && resp.HttpResponse.StatusCode == http.StatusInternalServerError {
+		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_SETTINGS_FAILED, string(resp.BodyAsBytes))
+	}
 	if err != nil {
 		return nil, err
 	}

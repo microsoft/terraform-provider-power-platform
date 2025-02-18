@@ -316,7 +316,11 @@ func (r *environmentGroupRuleSetResource) Create(ctx context.Context, req resour
 		return
 	}
 
-	plannedRuleSetDto := convertEnvironmentGroupRuleSetResourceModelToDto(ctx, *plan)
+	plannedRuleSetDto, err := convertEnvironmentGroupRuleSetResourceModelToDto(ctx, *plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Conversion Error", err.Error())
+		return
+	}
 	createdRuleSetDto, err := r.EnvironmentGroupRuleSetClient.CreateEnvironmentGroupRuleSet(ctx, plan.EnvironmentGroupId.ValueString(), plannedRuleSetDto)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to create environment group ruleset", err.Error())
@@ -343,7 +347,11 @@ func (r *environmentGroupRuleSetResource) Update(ctx context.Context, req resour
 		return
 	}
 
-	plannedRuleSetDto := convertEnvironmentGroupRuleSetResourceModelToDto(ctx, *plan)
+	plannedRuleSetDto, err := convertEnvironmentGroupRuleSetResourceModelToDto(ctx, *plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Conversion Error", err.Error())
+		return
+	}
 	updatedRuleSetDto, err := r.EnvironmentGroupRuleSetClient.UpdateEnvironmentGroupRuleSet(ctx, state.Id.ValueString(), plannedRuleSetDto)
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to update environment group ruleset", err.Error())

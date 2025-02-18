@@ -303,15 +303,15 @@
             "settings": {
                 "extendedSettings": {
                     "excludeEnvironmentFromAnalysis": "true",
-                    "isGroupSharingDisabled": "false",
-                    "maxLimitUserSharing": "-1",
+                    "isGroupSharingDisabled": "true",
+                    "maxLimitUserSharing": "10",
                     "includeOnHomepageInsights": "false",
-                    "limitSharingMode": "NoLimit",
-                    "solutionCheckerMode": "Warn",
-                    "suppressValidationEmails": "false",
-                    "solutionCheckerRuleOverrides": "meta-remove-dup-reg,meta-avoid-reg-no-attribute",
-                    "makerOnboardingUrl": "http://www.example2.com",
-                    "makerOnboardingMarkdown": "this is test markdown 2",
+                    "limitSharingMode": "excludeSharingToSecurityGroups",
+                    "solutionCheckerMode": "none",
+                    "suppressValidationEmails": "true",
+                    "solutionCheckerRuleOverrides": "",
+                    "makerOnboardingUrl": "http://www.example.com",
+                    "makerOnboardingMarkdown": "this is test markdown",
                     "disableAiGeneratedDescriptions": "false"
                 }
             }

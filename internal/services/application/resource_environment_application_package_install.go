@@ -84,16 +84,15 @@ func (r *EnvironmentApplicationPackageInstallResource) Configure(ctx context.Con
 		return
 	}
 
-	clientApi := req.ProviderData.(*api.ProviderClient).Api
-	if clientApi == nil {
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			"Unexpected ProviderData Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
-	r.ApplicationClient = newApplicationClient(clientApi)
+	r.ApplicationClient = newApplicationClient(client.Api)
 }
 
 func (r *EnvironmentApplicationPackageInstallResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

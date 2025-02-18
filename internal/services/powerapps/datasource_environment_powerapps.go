@@ -92,18 +92,16 @@ func (d *EnvironmentPowerAppsDataSource) Configure(ctx context.Context, req data
 		return
 	}
 
-	clientApi := req.ProviderData.(*api.ProviderClient).Api
-
-	if clientApi == nil {
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			"Unexpected ProviderData Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
-	d.PowerAppssClient = newPowerAppssClient(clientApi)
+	d.PowerAppssClient = newPowerAppssClient(client.Api)
 }
 
 func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
