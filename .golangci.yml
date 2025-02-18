@@ -42,11 +42,10 @@ linters-settings:
     # Such cases aren't reported by default.
     # Default: false
     check-type-assertions: true
-    issues:
-      max-issues-per-linter: 1
-      max-same-issues: 1
 
 issues:
+  max-issues-per-linter: 1
+  max-same-issues: 1
   exclude:
     - "ineffectual assignment to ctx"
     - "SA4006: this value of `ctx` is never used"
