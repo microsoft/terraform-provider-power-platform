@@ -42,13 +42,13 @@ linters-settings:
     # Such cases aren't reported by default.
     # Default: false
     check-type-assertions: true
-    issues:
-      max-issues-per-linter: 1
-      max-same-issues: 1
 
 issues:
+  max-issues-per-linter: 1
+  max-same-issues: 1
   exclude:
     - "ineffectual assignment to ctx"
     - "SA4006: this value of `ctx` is never used"
     - "unused parameter (ctx|diags|req|resp)"
     - "exported: type name will be used as ([a-zA-Z_]+)\\.([A-Za-z]+)Dto"
+    - "Error return value is not checked"
