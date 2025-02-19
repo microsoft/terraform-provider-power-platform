@@ -350,7 +350,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	envToCreate, err := convertCreateEnvironmentDtoFromSourceModel(ctx, *plan)
+	envToCreate, err := convertCreateEnvironmentDtoFromSourceModel(ctx, r, *plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting source model to create environment dto", err.Error())
 	}
