@@ -35,13 +35,13 @@ type SolutionCheckerRulesArrayDto struct {
 }
 
 type SolutionCheckerRuleDto struct {
-	Description     string `json:"description"`
-	GuidanceUrl     string `json:"guidanceUrl"`
-	Include         string `json:"include"`
-	Code            string `json:"code"`
-	Summary         string `json:"summary"`
-	ComponetType    string `json:"componetType"`
-	PrimaryCategory string `json:"primaryCategory"`
-	Severity        string `json:"severity"`
-	HowToFix        string `json:"howToFix"`
+	Description     string `json:"description,omitempty"`
+	GuidanceUrl     string `json:"guidanceUrl,omitempty"`
+	Include         string `json:"include,omitempty"`
+	Code            string `json:"code,omitempty"`
+	Summary         string `json:"summary,omitempty"`
+	ComponetType    string `json:"componetType,omitempty"`
+	PrimaryCategory string `json:"primaryCategory,omitempty"`
+	Severity        string `json:"severity,omitempty"`
+	HowToFix        string `json:"howToFix,omitempty"`
 }

@@ -5,7 +5,6 @@ package managed_environment
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -95,37 +94,31 @@ type SolutionCheckerRule struct {
 }
 
 // Function to fetch solution checker rules and return them as a slice of strings.
-func (client *client) FetchSolutionCheckerRules(ctx context.Context, location *environment.LocationDto) ([]string, error) {
-	// Extract the base host
-	baseHost := client.Api.GetConfig().Urls.PowerAppsAdvisor
-
-	// Prepend the environment location to the host
-	fullHost := fmt.Sprintf("%s.%s", location.Name, baseHost)
+func (client *client) FetchSolutionCheckerRules(ctx context.Context, environmentId string) ([]string, error) {
+	env, err := client.environmentClient.GetEnvironment(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+	powerAppsAdvisorUrl := env.Properties.RuntimeEndpoints.PowerAppsAdvisor
 
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   fullHost,
+		Host:   powerAppsAdvisorUrl,
 		Path:   fmt.Sprintf("/api/rule?ruleset=%s", constants.POWER_APPS_ADVISOR_SCOPE),
 	}
 	values := url.Values{}
 	values.Add("api-version", "2.0")
 	apiUrl.RawQuery = values.Encode()
 
-	httpResponse, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	solutionCheckerRulesArrayDto := []SolutionCheckerRule{}
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutionCheckerRulesArrayDto)
 	if err != nil {
-		return nil, err
-	}
-	defer httpResponse.HttpResponse.Body.Close()
-
-	// Parse the JSON response body
-	var rules []SolutionCheckerRule
-	if err := json.NewDecoder(httpResponse.HttpResponse.Body).Decode(&rules); err != nil {
 		return nil, err
 	}
 
 	// Extract the "code" values
 	var codes []string
-	for _, rule := range rules {
+	for _, rule := range solutionCheckerRulesArrayDto {
 		codes = append(codes, rule.Code)
 	}
 
