@@ -169,10 +169,10 @@ type environmentCreatePropertiesDto struct {
 	EnvironmentSku            string                            `json:"environmentSku"`
 	LinkedEnvironmentMetadata *createLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
-	UsedBy                    *usedBy                           `json:"usedBy,omitempty"`
+	UsedBy                    *usedByDto                        `json:"usedBy,omitempty"`
 }
 
-type usedBy struct {
+type usedByDto struct {
 	Id       string `json:"id"`
 	Type     int    `json:"type"`
 	TenantID string `json:"tenantID"`
