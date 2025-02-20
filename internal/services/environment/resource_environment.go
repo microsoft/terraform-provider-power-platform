@@ -392,7 +392,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	if !plan.AllowBingSearch.IsNull() {
+	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
 		err := updateEnvironmentAiFeatures(ctx, envDto.Name, plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer(), r)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
@@ -547,7 +547,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	if !plan.AllowBingSearch.IsNull() {
+	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
 		err := updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer(), r)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
