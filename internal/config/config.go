@@ -36,13 +36,14 @@ type ProviderConfig struct {
 }
 
 type ProviderConfigUrls struct {
-	BapiUrl            string
-	PowerAppsUrl       string
-	PowerAppsScope     string
-	PowerPlatformUrl   string
-	PowerPlatformScope string
-	LicensingUrl       string
-	PowerAppsAdvisor   string
+	BapiUrl               string
+	PowerAppsUrl          string
+	PowerAppsScope        string
+	PowerPlatformUrl      string
+	PowerPlatformScope    string
+	LicensingUrl          string
+	PowerAppsAdvisor      string
+	PowerAppsAdvisorScope string
 }
 
 func (model *ProviderConfig) IsUserManagedIdentityProvided() bool {
