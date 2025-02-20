@@ -95,7 +95,6 @@ type SolutionCheckerRule struct {
 
 // Function to fetch solution checker rules and return them as a slice of strings.
 func (client *client) FetchSolutionCheckerRules(ctx context.Context, environmentId string) ([]string, error) {
-//	env, err                := client.environmentClient.GetEnvironment(ctx, environmentId)
 	managedEnvSettings, err := client.environmentClient.GetEnvironment(ctx, environmentId)
 
 	if err != nil {
