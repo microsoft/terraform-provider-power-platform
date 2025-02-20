@@ -52,6 +52,15 @@ type EnviromentPropertiesDto struct {
 	CopilotPolicies           *CopilotPoliciesDto               `json:"copilotPolicies,omitempty"`
 }
 
+type GenerativeAiFeaturesDto struct {
+	Properties GenerativeAiFeaturesPropertiesDto `json:"properties"`
+}
+
+type GenerativeAiFeaturesPropertiesDto struct {
+	CopilotPolicies *CopilotPoliciesDto `json:"copilotPolicies,omitempty"`
+	BingChatEnabled bool                `json:"bingChatEnabled"`
+}
+
 type CopilotPoliciesDto struct {
 	CrossGeoCopilotDataMovementEnabled *bool `json:"crossGeoCopilotDataMovementEnabled"`
 }
@@ -176,6 +185,8 @@ type environmentCreatePropertiesDto struct {
 	LinkedEnvironmentMetadata *createLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 	UsedBy                    *usedBy                           `json:"usedBy,omitempty"`
+	BingChatEnabled           bool                              `json:"bingChatEnabled,omitempty"`
+	CopilotPolicies           *CopilotPoliciesDto               `json:"copilotPolicies,omitempty"`
 }
 
 type usedBy struct {

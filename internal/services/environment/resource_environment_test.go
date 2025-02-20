@@ -19,6 +19,143 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
+func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_US_Region_Expect_Fail(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*unexpected new value: .allow_moving_data_across_regions: was cty.True.*"),
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "unitedstates"
+						environment_type                       	  = "Sandbox"
+
+						allow_bing_search                = false
+						allow_moving_data_across_regions = true
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_US_Region(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*unexpected new value: .allow_moving_data_across_regions: was cty.True.*"),
+				Config: `
+				resource "powerplatform_environment" "development_1" {
+					display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+					location                                  = "unitedstates"
+					environment_type                       	  = "Sandbox"
+
+					allow_bing_search                = true
+  					allow_moving_data_across_regions = true
+				}
+					
+				resource "powerplatform_environment" "development_2" {
+					display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+					location                                  = "unitedstates"
+					environment_type                       	  = "Sandbox"
+
+					allow_bing_search                = false
+					allow_moving_data_across_regions = false
+				}
+					
+				resource "powerplatform_environment" "development_3" {
+					display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+					location                                  = "unitedstates"
+					environment_type                       	  = "Sandbox"
+
+					allow_bing_search                = true
+					allow_moving_data_across_regions = false 
+				}
+				`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development_1", "allow_bing_search", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development_1", "allow_moving_data_across_regions", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development_2", "allow_bing_search", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development_2", "allow_moving_data_across_regions", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development_3", "allow_bing_search", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development_3", "allow_moving_data_across_regions", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Region_Expect_Fail(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*unexpected new value: .allow_bing_search: was cty.True.*"),
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "europe"
+						environment_type                       	  = "Sandbox"
+
+						allow_bing_search                = true
+						allow_moving_data_across_regions = false
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Region(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development_1" {
+					display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+					location                                  = "europe"
+					environment_type                       	  = "Sandbox"
+
+					allow_bing_search                = true
+  					allow_moving_data_across_regions = true
+				}
+					
+				resource "powerplatform_environment" "development_2" {
+					display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+					location                                  = "europe"
+					environment_type                       	  = "Sandbox"
+
+					allow_bing_search                = false
+					allow_moving_data_across_regions = false
+				}
+				
+				resource "powerplatform_environment" "development_3" {
+					display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+					location                                  = "europe"
+					environment_type                       	  = "Sandbox"
+
+					allow_bing_search                = false
+					allow_moving_data_across_regions = true 
+				}
+				`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development_1", "allow_bing_search", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development_1", "allow_moving_data_across_regions", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development_2", "allow_bing_search", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development_2", "allow_moving_data_across_regions", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development_3", "allow_bing_search", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development_3", "allow_moving_data_across_regions", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEnvironmentsResource_Validate_CreateDeveloperEnvironment(t *testing.T) {
 	t.Skip("creating dev environments with SP is NOT yet supported")
 	resource.Test(t, resource.TestCase{

@@ -168,10 +168,12 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			},
 			"allow_bing_search": schema.BoolAttribute{
 				MarkdownDescription: "Allow Bing search in the environment",
+				Optional:            true,
 				Computed:            true,
 			},
 			"allow_moving_data_across_regions": schema.BoolAttribute{
 				MarkdownDescription: "Allow moving data across regions",
+				Optional:            true,
 				Computed:            true,
 			},
 			"display_name": schema.StringAttribute{
@@ -390,6 +392,24 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
+	if !plan.AllowBingSearch.IsNull() {
+		err := updateEnvironmentAiFeatures(ctx, envDto.Name, plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer(), r)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
+
+		envDto, err = r.EnvironmentClient.GetEnvironment(ctx, envDto.Name)
+		if err != nil {
+			if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
+	}
+
 	var currencyCode string
 	var templateMetadata *createTemplateMetadataDto
 	var templates []string
@@ -496,8 +516,9 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	envProp := EnviromentPropertiesDto{
-		DisplayName:    plan.DisplayName.ValueString(),
-		EnvironmentSku: plan.EnvironmentType.ValueString(),
+		DisplayName:     plan.DisplayName.ValueString(),
+		EnvironmentSku:  plan.EnvironmentType.ValueString(),
+		BingChatEnabled: plan.AllowBingSearch.ValueBool(),
 	}
 
 	environmentDto := EnvironmentDto{
@@ -523,6 +544,14 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	if !plan.Cadence.IsNull() && plan.Cadence.ValueString() != "" {
 		environmentDto.Properties.UpdateCadence = &UpdateCadenceDto{
 			Id: plan.Cadence.ValueString(),
+		}
+	}
+
+	if !plan.AllowBingSearch.IsNull() {
+		err := updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer(), r)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
 		}
 	}
 
@@ -599,6 +628,27 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
+}
+
+func updateEnvironmentAiFeatures(ctx context.Context, environmentId string, allowBingSearch bool, AllowMovingData *bool, r *Resource) error {
+	featuresDto := GenerativeAiFeaturesDto{
+		Properties: GenerativeAiFeaturesPropertiesDto{
+			BingChatEnabled: allowBingSearch,
+		},
+	}
+
+	if AllowMovingData != nil {
+		featuresDto.Properties.CopilotPolicies = &CopilotPoliciesDto{
+			CrossGeoCopilotDataMovementEnabled: AllowMovingData,
+		}
+	}
+
+	err := r.EnvironmentClient.UpdateEnvironmentAiFeatures(ctx, environmentId, featuresDto)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, error) {

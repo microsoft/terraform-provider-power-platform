@@ -118,6 +118,10 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{Id: environmentSource.EnvironmentGroupId.ValueString()}
 	}
 
+	if !environmentSource.AllowBingSearch.IsNull() && !environmentSource.AllowBingSearch.IsUnknown() {
+		environmentDto.Properties.BingChatEnabled = environmentSource.AllowBingSearch.ValueBool()
+	}
+
 	if !environmentSource.Dataverse.IsNull() && !environmentSource.Dataverse.IsUnknown() {
 		var dataverseSourceModel DataverseSourceModel
 		environmentSource.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
@@ -324,7 +328,7 @@ func convertOwnerIdFromDto(environmentDto EnvironmentDto, model *SourceModel) {
 }
 
 func convertCrossRegionDataMovementFromDto(environmentDto EnvironmentDto, model *SourceModel) {
-	if environmentDto.Properties.CopilotPolicies != nil && environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled != nil {
+	if environmentDto.Properties.CopilotPolicies != nil && environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled != nil && *environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled {
 		model.AllowMovingDataAcrossRegions = types.BoolValue(true)
 	} else {
 		model.AllowMovingDataAcrossRegions = types.BoolValue(false)
