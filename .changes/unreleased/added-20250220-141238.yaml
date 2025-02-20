@@ -1,0 +1,5 @@
+kind: added
+body: 'powerplatform_environment: adding allow_bing_search and allow_moving_data_across_regions attributes'
+time: 2025-02-20T14:12:38.587209573Z
+custom:
+    Issue: "589"
