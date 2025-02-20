@@ -393,7 +393,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 
 	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
-		err := updateEnvironmentAiFeatures(ctx, envDto.Name, plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer(), r)
+		err := r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 			return
@@ -529,76 +529,34 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		Properties: &envProp,
 	}
 
-	if plan.EnvironmentType.ValueString() != state.EnvironmentType.ValueString() {
-		err := r.EnvironmentClient.ModifyEnvironmentType(ctx, plan.Id.ValueString(), plan.EnvironmentType.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError("Error when updating environment_type", err.Error())
-			return
-		}
+	err := r.updateEnvironmentType(ctx, plan, state)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when updating environment type", err.Error())
+		return
+	}
+	updateDescription(plan, &environmentDto)
+	updateCadence(plan, &environmentDto)
+	err = r.updateAllowBingSearch(ctx, plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when updating allow bing search", err.Error())
+		return
+	}
+	updateEnvironmentGroupId(plan, &environmentDto)
+	updateBillingPolicyId(plan, &environmentDto)
+
+	currencyCode, err := r.updateDataverse(ctx, plan, state, &environmentDto)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when updating dataverse", err.Error())
+		return
 	}
 
-	if !plan.Description.IsNull() && plan.Description.ValueString() != "" {
-		environmentDto.Properties.Description = plan.Description.ValueString()
+	err = r.removeBillingPolicy(ctx, state)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when removing billing policy", err.Error())
 	}
-
-	if !plan.Cadence.IsNull() && plan.Cadence.ValueString() != "" {
-		environmentDto.Properties.UpdateCadence = &UpdateCadenceDto{
-			Id: plan.Cadence.ValueString(),
-		}
-	}
-
-	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
-		err := updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer(), r)
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-			return
-		}
-	}
-
-	if !plan.EnvironmentGroupId.IsNull() && !plan.EnvironmentGroupId.IsUnknown() {
-		envGroupId := constants.ZERO_UUID
-		if plan.EnvironmentGroupId.ValueString() != "" && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
-			envGroupId = plan.EnvironmentGroupId.ValueString()
-		}
-		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
-			Id: envGroupId,
-		}
-	}
-
-	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
-		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
-			Id: plan.BillingPolicyId.ValueString(),
-		}
-	}
-
-	var currencyCode string
-	if !isDataverseEnvironmentEmpty(ctx, state) && !isDataverseEnvironmentEmpty(ctx, plan) {
-		currencyCode = updateExistingDataverse(ctx, plan, &environmentDto, state)
-	} else if isDataverseEnvironmentEmpty(ctx, state) && !isDataverseEnvironmentEmpty(ctx, plan) {
-		code, err := addDataverse(ctx, plan, r)
-		if err != nil {
-			resp.Diagnostics.AddError("Error when creating new dataverse environment", err.Error())
-			return
-		}
-		currencyCode = code
-	}
-
-	if !state.BillingPolicyId.IsNull() && !state.BillingPolicyId.IsUnknown() && state.BillingPolicyId.ValueString() != "" {
-		tflog.Debug(ctx, fmt.Sprintf("Removing environment %s from billing policy %s", state.Id.ValueString(), state.BillingPolicyId.ValueString()))
-		err := r.LicensingClient.RemoveEnvironmentsToBillingPolicy(ctx, state.BillingPolicyId.ValueString(), []string{state.Id.ValueString()})
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error when removing environment %s from billing policy %s", state.Id.ValueString(), state.BillingPolicyId.ValueString()), err.Error())
-			return
-		}
-	}
-
-	if !plan.BillingPolicyId.IsNull() && !plan.BillingPolicyId.IsUnknown() && plan.BillingPolicyId.ValueString() != "" {
-		tflog.Debug(ctx, fmt.Sprintf("Adding environment %s to billing policy %s", plan.Id.ValueString(), plan.BillingPolicyId.ValueString()))
-		err := r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId.ValueString(), []string{plan.Id.ValueString()})
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error when adding environment %s to billing policy %s", plan.Id.ValueString(), plan.BillingPolicyId.ValueString()), err.Error())
-			return
-		}
+	err = r.addBillingPolicy(ctx, plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when adding billing policy", err.Error())
 	}
 
 	envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
@@ -630,16 +588,16 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
-func updateEnvironmentAiFeatures(ctx context.Context, environmentId string, allowBingSearch bool, AllowMovingData *bool, r *Resource) error {
+func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentId string, allowBingSearch bool, allowMovingData *bool) error {
 	featuresDto := GenerativeAiFeaturesDto{
 		Properties: GenerativeAiFeaturesPropertiesDto{
 			BingChatEnabled: allowBingSearch,
 		},
 	}
 
-	if AllowMovingData != nil {
+	if allowMovingData != nil {
 		featuresDto.Properties.CopilotPolicies = &CopilotPoliciesDto{
-			CrossGeoCopilotDataMovementEnabled: AllowMovingData,
+			CrossGeoCopilotDataMovementEnabled: allowMovingData,
 		}
 	}
 
@@ -744,4 +702,94 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 	defer exitContext()
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *Resource) updateEnvironmentType(ctx context.Context, plan *SourceModel, state *SourceModel) error {
+	if plan.EnvironmentType.ValueString() != state.EnvironmentType.ValueString() {
+		err := r.EnvironmentClient.ModifyEnvironmentType(ctx, plan.Id.ValueString(), plan.EnvironmentType.ValueString())
+		if err != nil {
+			return fmt.Errorf("Error when updating environment_type: %s", err.Error())
+		}
+	}
+	return nil
+}
+
+func updateDescription(plan *SourceModel, environmentDto *EnvironmentDto) {
+	if !plan.Description.IsNull() && plan.Description.ValueString() != "" {
+		environmentDto.Properties.Description = plan.Description.ValueString()
+	}
+}
+
+func updateCadence(plan *SourceModel, environmentDto *EnvironmentDto) {
+	if !plan.Cadence.IsNull() && plan.Cadence.ValueString() != "" {
+		environmentDto.Properties.UpdateCadence = &UpdateCadenceDto{
+			Id: plan.Cadence.ValueString(),
+		}
+	}
+}
+
+func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel) error {
+	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
+		err := r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto) {
+	if !plan.EnvironmentGroupId.IsNull() && !plan.EnvironmentGroupId.IsUnknown() {
+		envGroupId := constants.ZERO_UUID
+		if plan.EnvironmentGroupId.ValueString() != "" && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
+			envGroupId = plan.EnvironmentGroupId.ValueString()
+		}
+		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
+			Id: envGroupId,
+		}
+	}
+}
+
+func updateBillingPolicyId(plan *SourceModel, environmentDto *EnvironmentDto) {
+	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
+		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
+			Id: plan.BillingPolicyId.ValueString(),
+		}
+	}
+}
+
+func (r *Resource) updateDataverse(ctx context.Context, plan *SourceModel, state *SourceModel, environmentDto *EnvironmentDto) (string, error) {
+	var currencyCode string
+	if !isDataverseEnvironmentEmpty(ctx, state) && !isDataverseEnvironmentEmpty(ctx, plan) {
+		currencyCode = updateExistingDataverse(ctx, plan, environmentDto, state)
+	} else if isDataverseEnvironmentEmpty(ctx, state) && !isDataverseEnvironmentEmpty(ctx, plan) {
+		code, err := addDataverse(ctx, plan, r)
+		if err != nil {
+			return "", err
+		}
+		currencyCode = code
+	}
+	return currencyCode, nil
+}
+
+func (r *Resource) removeBillingPolicy(ctx context.Context, state *SourceModel) error {
+	if !state.BillingPolicyId.IsNull() && !state.BillingPolicyId.IsUnknown() && state.BillingPolicyId.ValueString() != "" {
+		tflog.Debug(ctx, fmt.Sprintf("Removing environment %s from billing policy %s", state.Id.ValueString(), state.BillingPolicyId.ValueString()))
+		err := r.LicensingClient.RemoveEnvironmentsToBillingPolicy(ctx, state.BillingPolicyId.ValueString(), []string{state.Id.ValueString()})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *Resource) addBillingPolicy(ctx context.Context, plan *SourceModel) error {
+	if !plan.BillingPolicyId.IsNull() && !plan.BillingPolicyId.IsUnknown() && plan.BillingPolicyId.ValueString() != "" {
+		tflog.Debug(ctx, fmt.Sprintf("Adding environment %s to billing policy %s", plan.Id.ValueString(), plan.BillingPolicyId.ValueString()))
+		err := r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId.ValueString(), []string{plan.Id.ValueString()})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
