@@ -1,0 +1,5 @@
+kind: documentation
+body: Correct telemetry_optout documentation about User-Agent header
+time: 2025-02-20T03:21:05.584134094Z
+custom:
+    Issue: "584"
