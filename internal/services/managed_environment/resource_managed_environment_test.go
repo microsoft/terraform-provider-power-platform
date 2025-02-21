@@ -775,7 +775,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update_Wrong_Solution_Checker_
 		Steps: []resource.TestStep{
 			{
 				// Expect an error indicating that the solution checker rule override is invalid
-				ExpectError: regexp.MustCompile(`Invalid Attribute Value Match`),
+				ExpectError: regexp.MustCompile(`Invalid Solution Checker Rule Override`),
 				Config: `
 				resource "powerplatform_managed_environment" "managed_development" {
 					environment_id             = "00000000-0000-0000-0000-000000000001"
@@ -785,14 +785,14 @@ func TestUnitManagedEnvironmentsResource_Validate_Update_Wrong_Solution_Checker_
 					max_limit_user_sharing     = -1
 					solution_checker_mode      = "Warn"
 					suppress_validation_emails = false
-					solution_checker_rule_overrides = toset(["meta-remove-dup-reg", "meta-avoid-reg-no-attribute"])
+					solution_checker_rule_overrides = toset(["invalid-rule", "meta-avoid-reg-no-attribute"])
 					maker_onboarding_markdown  = "this is test markdown 2"
 					maker_onboarding_url       = "http://www.example2.com"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "solution_checker_rule_overrides.#", "2"),
-					resource.TestCheckTypeSetElemAttr("powerplatform_managed_environment.managed_development", "solution_checker_rule_overrides.*", "meta-remove-dup-reg"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_managed_environment.managed_development", "solution_checker_rule_overrides.*", "invalid-rule"),
 					resource.TestCheckTypeSetElemAttr("powerplatform_managed_environment.managed_development", "solution_checker_rule_overrides.*", "meta-avoid-reg-no-attribute"),
 				),
 			},
