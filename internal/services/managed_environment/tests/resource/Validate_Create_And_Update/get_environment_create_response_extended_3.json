@@ -306,7 +306,7 @@
                     "isGroupSharingDisabled": "false",
                     "maxLimitUserSharing": "10",
                     "includeOnHomepageInsights": "false",
-                    "limitSharingMode": "NoLimit",
+                    "limitSharingMode": "excludeSharingToSecurityGroups",
                     "solutionCheckerMode": "none",
                     "suppressValidationEmails": "true",
                     "solutionCheckerRuleOverrides": "meta-remove-dup-reg,meta-avoid-reg-no-attribute",
