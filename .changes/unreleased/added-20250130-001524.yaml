@@ -1,5 +1,5 @@
 kind: added
-body: Implement Solution Checker for Managed Environments
+body: powerplatform_managed_environment: adding `solution_checker_rule_overrides` attribute that allows defining solutin checker rules when enabling managed environment
 time: 2025-01-30T00:15:24.123654017Z
 custom:
     Issue: "116"
