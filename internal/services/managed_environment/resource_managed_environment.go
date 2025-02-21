@@ -150,7 +150,7 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				Required:            true,
 			},
 			"solution_checker_rule_overrides": schema.SetAttribute{
-				MarkdownDescription: "List of rules to exclude from solution checker.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.",
+				MarkdownDescription: SolutionCheckerMarkdown,
 				Description:         "List of rules to exclude from solution checker.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.",
 				Optional:            true,
 				ElementType:         types.StringType,
