@@ -6,7 +6,6 @@ package managed_environment
 import (
 	"context"
 	"fmt"
-	"os"
 	"strconv"
 	"strings"
 
@@ -28,14 +27,6 @@ import (
 
 var _ resource.Resource = &ManagedEnvironmentResource{}
 var _ resource.ResourceWithImportState = &ManagedEnvironmentResource{}
-
-func readMarkdownFile(filepath string) (string, error) {
-	content, err := os.ReadFile(filepath)
-	if err != nil {
-		return "", fmt.Errorf("failed to read Markdown file: %w", err)
-	}
-	return string(content), nil
-}
 
 func NewManagedEnvironmentResource() resource.Resource {
 	return &ManagedEnvironmentResource{
@@ -89,13 +80,6 @@ func (r *ManagedEnvironmentResource) Configure(ctx context.Context, req resource
 func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
-
-	// Read the content of the Markdown file
-	markdownContent, err := readMarkdownFile("/workspaces/terraform-provider-power-platform/internal/services/managed_environment/markdown_description/solution_checker_rule_overrides_rules.md")
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to read Markdown file", err.Error())
-		return
-	}
 
 	resp.Schema = schema.Schema{
 		Description:         "Manages a \"Managed Environment\" and associated settings",
@@ -166,7 +150,7 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				Required:            true,
 			},
 			"solution_checker_rule_overrides": schema.SetAttribute{
-				MarkdownDescription: markdownContent,
+				MarkdownDescription: "List of rules to exclude from solution checker.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.",
 				Description:         "List of rules to exclude from solution checker.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.",
 				Optional:            true,
 				ElementType:         types.StringType,
