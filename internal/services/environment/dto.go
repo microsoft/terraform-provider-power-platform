@@ -32,15 +32,15 @@ type EnvironmentDto struct {
 
 type EnviromentPropertiesDto struct {
 	AzureRegion               string                            `json:"azureRegion,omitempty"`
-	DatabaseType              string                            `json:"databaseType"`
-	DisplayName               string                            `json:"displayName"`
-	EnvironmentSku            string                            `json:"environmentSku"`
+	DatabaseType              string                            `json:"databaseType,omitempty"`
+	DisplayName               string                            `json:"displayName,omitempty"`
+	EnvironmentSku            string                            `json:"environmentSku,omitempty"`
 	LinkedAppMetadata         *LinkedAppMetadataDto             `json:"linkedAppMetadata,omitempty"`
 	RuntimeEndpoints          *RuntimeEndpointsDto              `json:"runtimeEndpoints,omitempty"`
 	LinkedEnvironmentMetadata *LinkedEnvironmentMetadataDto     `json:"linkedEnvironmentMetadata,omitempty"`
-	States                    *StatesEnvironmentDto             `json:"states"`
-	TenantId                  string                            `json:"tenantId"`
-	GovernanceConfiguration   GovernanceConfigurationDto        `json:"governanceConfiguration"`
+	States                    *StatesEnvironmentDto             `json:"states,omitempty"`
+	TenantId                  string                            `json:"tenantId,omitempty"`
+	GovernanceConfiguration   *GovernanceConfigurationDto       `json:"governanceConfiguration,omitempty"`
 	BillingPolicy             *BillingPolicyDto                 `json:"billingPolicy,omitempty"`
 	ProvisioningState         string                            `json:"provisioningState,omitempty"`
 	Description               string                            `json:"description,omitempty"`
@@ -82,7 +82,7 @@ type BillingPolicyDto struct {
 }
 
 type GovernanceConfigurationDto struct {
-	ProtectionLevel string       `json:"protectionLevel"`
+	ProtectionLevel string       `json:"protectionLevel,omitempty"`
 	Settings        *SettingsDto `json:"settings,omitempty"`
 }
 
@@ -107,14 +107,14 @@ type ExtendedSettingsDto struct {
 type LinkedEnvironmentMetadataDto struct {
 	BackgroundOperationsState string                     `json:"backgroundOperationsState,omitempty"`
 	DomainName                string                     `json:"domainName,omitempty"`
-	InstanceURL               string                     `json:"instanceUrl"`
-	BaseLanguage              int                        `json:"baseLanguage"`
+	InstanceURL               string                     `json:"instanceUrl,omitempty"`
+	BaseLanguage              int                        `json:"baseLanguage,omitempty"`
 	SecurityGroupId           string                     `json:"securityGroupId,omitempty"`
-	ResourceId                string                     `json:"resourceId"`
-	Version                   string                     `json:"version"`
+	ResourceId                string                     `json:"resourceId,omitempty"`
+	Version                   string                     `json:"version,omitempty"`
 	Templates                 []string                   `json:"template,omitempty"`
 	TemplateMetadata          *createTemplateMetadataDto `json:"templateMetadata,omitempty"`
-	UniqueName                string                     `json:"uniqueName"`
+	UniqueName                string                     `json:"uniqueName,omitempty"`
 }
 
 type RuntimeEndpointsDto struct {
@@ -134,16 +134,16 @@ type LinkedAppMetadataDto struct {
 }
 
 type StatesEnvironmentDto struct {
-	Management StatesManagementEnvironmentDto `json:"management"`
-	Runtime    *RuntimeEnvironmentDto         `json:"runtime,omitempty"`
+	Management *StatesManagementEnvironmentDto `json:"management,omitempty"`
+	Runtime    *RuntimeEnvironmentDto          `json:"runtime,omitempty"`
 }
 
 type RuntimeEnvironmentDto struct {
-	Id string `json:"id"`
+	Id string `json:"id,omitempty"`
 }
 
 type StatesManagementEnvironmentDto struct {
-	Id string `json:"id"`
+	Id string `json:"id,omitempty"`
 }
 
 type environmentArrayDto struct {
@@ -156,17 +156,17 @@ type environmentCreateDto struct {
 }
 
 type modifySkuDto struct {
-	EnvironmentSku string `json:"environmentSku"`
+	EnvironmentSku string `json:"environmentSku,omitempty"`
 }
 
 type environmentCreatePropertiesDto struct {
 	AzureRegion               string                            `json:"azureRegion,omitempty"`
 	BillingPolicy             BillingPolicyDto                  `json:"billingPolicy,omitempty"`
 	DataBaseType              string                            `json:"databaseType,omitempty"`
-	DisplayName               string                            `json:"displayName"`
+	DisplayName               string                            `json:"displayName,omitempty"`
 	Description               string                            `json:"description,omitempty"`
 	UpdateCadence             *UpdateCadenceDto                 `json:"updateCadence,omitempty"`
-	EnvironmentSku            string                            `json:"environmentSku"`
+	EnvironmentSku            string                            `json:"environmentSku,omitempty"`
 	LinkedEnvironmentMetadata *createLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 	UsedBy                    *usedBy                           `json:"usedBy,omitempty"`
@@ -179,15 +179,15 @@ type usedBy struct {
 }
 
 type createLinkEnvironmentMetadataDto struct {
-	BaseLanguage     int                        `json:"baseLanguage"`
+	BaseLanguage     int                        `json:"baseLanguage,omitempty"`
 	DomainName       string                     `json:"domainName,omitempty"`
-	Currency         createCurrencyDto          `json:"currency"`
+	Currency         *createCurrencyDto         `json:"currency,omitempty"`
 	SecurityGroupId  string                     `json:"securityGroupId,omitempty"`
 	Templates        []string                   `json:"templates,omitempty"`
 	TemplateMetadata *createTemplateMetadataDto `json:"templateMetadata,omitempty"`
 }
 type createCurrencyDto struct {
-	Code string `json:"code"`
+	Code string `json:"code,omitempty"`
 }
 
 type createTemplateMetadataDto struct {

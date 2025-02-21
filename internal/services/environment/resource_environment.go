@@ -518,7 +518,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	if !plan.EnvironmentGroupId.IsNull() && !plan.EnvironmentGroupId.IsUnknown() {
+	if !plan.EnvironmentGroupId.IsNull() && plan.EnvironmentGroupId.ValueString() != "" {
 		envGroupId := constants.ZERO_UUID
 		if plan.EnvironmentGroupId.ValueString() != "" && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
 			envGroupId = plan.EnvironmentGroupId.ValueString()

@@ -27,14 +27,6 @@ type client struct {
 	environmentClient environment.Client
 }
 
-func (client *client) GetManagedEnvironmentSettings(ctx context.Context, environmentId string) (*environment.GovernanceConfigurationDto, error) {
-	managedEnvSettings, err := client.environmentClient.GetEnvironment(ctx, environmentId)
-	if err != nil {
-		return nil, err
-	}
-	return &managedEnvSettings.Properties.GovernanceConfiguration, nil
-}
-
 func (client *client) EnableManagedEnvironment(ctx context.Context, managedEnvSettings environment.GovernanceConfigurationDto, environmentId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
