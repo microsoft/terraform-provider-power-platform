@@ -94,38 +94,6 @@ type SolutionCheckerRule struct {
 }
 
 // Function to fetch solution checker rules and return them as a slice of strings.
-func (client *client) FetchSolutionCheckerRules2(ctx context.Context, environmentId string) ([]string, error) {
-	managedEnvSettings, err := client.environmentClient.GetEnvironment(ctx, environmentId)
-
-	if err != nil {
-		return nil, err
-	}
-	powerAppsAdvisorUrl := managedEnvSettings.Properties.RuntimeEndpoints.PowerAppsAdvisor
-
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   powerAppsAdvisorUrl,
-		Path:   fmt.Sprintf("/api/rule?ruleset=%s", constants.POWER_APPS_ADVISOR_SCOPE),
-	}
-	values := url.Values{}
-	values.Add("api-version", "2.0")
-	apiUrl.RawQuery = values.Encode()
-
-	solutionCheckerRulesArrayDto := []SolutionCheckerRule{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutionCheckerRulesArrayDto)
-	if err != nil {
-		return nil, err
-	}
-
-	// Extract the "code" values
-	var codes []string
-	for _, rule := range solutionCheckerRulesArrayDto {
-		codes = append(codes, rule.Code)
-	}
-
-	return codes, nil
-}
-
 func (client *client) FetchSolutionCheckerRules(ctx context.Context, environmentId string) ([]string, error) {
 	// Add debugging statement to check if environmentClient is initialized
 	if client.environmentClient == (environment.Client{}) {
@@ -156,6 +124,9 @@ func (client *client) FetchSolutionCheckerRules(ctx context.Context, environment
 	values := url.Values{}
 	values.Add("api-version", "2.0")
 	apiUrl.RawQuery = values.Encode()
+
+	// Add debugging statement to check the constructed URL
+	tflog.Debug(ctx, fmt.Sprintf("Constructed API URL: %s", apiUrl.String()))
 
 	solutionCheckerRulesArrayDto := []SolutionCheckerRule{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutionCheckerRulesArrayDto)
