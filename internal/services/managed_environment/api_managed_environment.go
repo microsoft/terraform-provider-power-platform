@@ -93,20 +93,16 @@ type SolutionCheckerRule struct {
 	Code string `json:"code"`
 }
 
-// Function to fetch solution checker rules and return them as a slice of strings.
 func (client *client) FetchSolutionCheckerRules(ctx context.Context, environmentId string) ([]string, error) {
-	// Add debugging statement to check if environmentClient is initialized
 	if client.environmentClient == (environment.Client{}) {
 		return nil, fmt.Errorf("environmentClient is not initialized")
 	}
 
-	// Get the environment details
 	env, err := client.environmentClient.GetEnvironment(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
-	// Add debugging statement to check if env.Properties.RuntimeEndpoints.PowerAppsAdvisor is initialized
 	if env.Properties.RuntimeEndpoints.PowerAppsAdvisor == "" {
 		return nil, fmt.Errorf("PowerAppsAdvisor URL is empty")
 	}
@@ -119,13 +115,14 @@ func (client *client) FetchSolutionCheckerRules(ctx context.Context, environment
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   powerAppsAdvisorUrl.Host,
-		Path:   fmt.Sprintf("/api/rule?ruleset=%s", constants.POWER_APPS_ADVISOR_SCOPE),
+		Path:   "/api/rule",
 	}
 	values := url.Values{}
 	values.Add("api-version", "2.0")
+	// Currently, the ruleset is always the same for all regions
+	values.Add("ruleset", "0ad12346-e108-40b8-a956-9a8f95ea18c9")
 	apiUrl.RawQuery = values.Encode()
 
-	// Add debugging statement to check the constructed URL
 	tflog.Debug(ctx, fmt.Sprintf("Constructed API URL: %s", apiUrl.String()))
 
 	solutionCheckerRulesArrayDto := []SolutionCheckerRule{}
@@ -134,7 +131,6 @@ func (client *client) FetchSolutionCheckerRules(ctx context.Context, environment
 		return nil, err
 	}
 
-	// Extract the "code" values
 	var codes []string
 	for _, rule := range solutionCheckerRulesArrayDto {
 		codes = append(codes, rule.Code)

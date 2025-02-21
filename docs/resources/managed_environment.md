@@ -44,7 +44,7 @@ resource "powerplatform_managed_environment" "managed_development" {
   max_limit_user_sharing          = 10
   solution_checker_mode           = "Warn"
   suppress_validation_emails      = true
-  solution_checker_rule_overrides = toset(["meta-remove-dup-reg", "meta-avoid-reg-no-attribute"])
+  solution_checker_rule_overrides = toset(["meta-avoid-reg-no-attribute", "meta-avoid-reg-retrieve", "app-use-delayoutput-text-input"])
   maker_onboarding_markdown       = "this is example markdown"
   maker_onboarding_url            = "https://www.microsoft.com"
 }

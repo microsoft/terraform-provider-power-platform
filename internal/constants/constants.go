@@ -103,8 +103,7 @@ const (
 )
 
 const (
-	COPILOT_SCOPE            = "96ff4394-9197-43aa-b393-6a41652e21f8"
-	POWER_APPS_ADVISOR_SCOPE = "0ad12346-e108-40b8-a956-9a8f95ea18c9"
+	COPILOT_SCOPE = "96ff4394-9197-43aa-b393-6a41652e21f8"
 )
 
 const (
