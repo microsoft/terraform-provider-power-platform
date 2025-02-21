@@ -40,3 +40,11 @@ PRs for new resources or data sources are expected to meeting the following crit
 - and/or [/templates](/templates/)
 - [Update auto-generated documentation](#updating-documentation) in [/docs](/docs/). (Don't manually edit [/docs](/docs/) or your updates will be overwritten)
 - Ensure the PR description clearly describes the feature you're adding and any known limitations
+
+## Decision Log
+
+The decision log is a record of significant design decisions made during the development of the Terraform Provider for Power Platform. It provides historical context and rationale for these decisions, helping contributors and maintainers understand the reasoning behind certain design choices.  Inspirations for the design decision log are [Microsoft's Engineering Playbook Decision Logs](https://microsoft.github.io/code-with-engineering-playbook/design/design-reviews/decision-log/) and [Hashicorp's Plugin Framework design log](https://github.com/hashicorp/terraform-plugin-framework/tree/main/docs/design).
+
+### List of Decision Log Files
+
+- [Loosely Typed Resources](decision-log/loosely_typed_resources.md)
