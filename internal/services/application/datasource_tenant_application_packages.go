@@ -174,16 +174,16 @@ func (d *TenantApplicationPackagesDataSource) Configure(ctx context.Context, req
 		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
-	clientApi := req.ProviderData.(*api.ProviderClient).Api
-	if clientApi == nil {
-		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
 
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected ProviderData Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
 		return
 	}
-	d.ApplicationClient = newApplicationClient(clientApi)
+	d.ApplicationClient = newApplicationClient(client.Api)
 }
 
 func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

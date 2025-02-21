@@ -173,6 +173,14 @@ func (client *client) ShareConnection(ctx context.Context, environmentId, connec
 	return nil
 }
 
+func getPrincipalString(principal map[string]any, key string) (string, error) {
+	value, ok := principal[key].(string)
+	if !ok {
+		return "", fmt.Errorf("failed to convert principal %s to string", key)
+	}
+	return value, nil
+}
+
 func (client *client) GetConnectionShares(ctx context.Context, environmentId, connectorName, connectionId string) (*shareConnectionResponseArrayDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
@@ -192,7 +200,12 @@ func (client *client) GetConnectionShares(ctx context.Context, environmentId, co
 	}
 
 	sort.SliceStable(share.Value, func(i, j int) bool {
-		return share.Value[i].Properties.Principal["id"].(string) < share.Value[j].Properties.Principal["id"].(string)
+		idI, errI := getPrincipalString(share.Value[i].Properties.Principal, "id")
+		idJ, errJ := getPrincipalString(share.Value[j].Properties.Principal, "id")
+		if errI != nil || errJ != nil {
+			return false
+		}
+		return idI < idJ
 	})
 
 	return &share, nil
@@ -205,16 +218,22 @@ func (client *client) GetConnectionShare(ctx context.Context, environmentId, con
 	}
 
 	for _, share := range shares.Value {
-		if id, ok := share.Properties.Principal["id"].(string); ok && id == principalId {
-			// if user will try to share with PricipalId that does not exist in Entra, share will get created but displayName will be returned empty in response.
-			displayName, ok := share.Properties.Principal["displayName"].(string)
-			if !ok || displayName == "" {
-				return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Share for principal '%s' not found. Display name is empty", principalId))
+		id, err := getPrincipalString(share.Properties.Principal, "id")
+		if err != nil {
+			return nil, err
+		}
+
+		if id == principalId {
+			displayName, err := getPrincipalString(share.Properties.Principal, "displayName")
+			if err != nil || displayName == "" {
+				return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND,
+					fmt.Sprintf("Share for principal '%s' not found. Display name is empty", principalId))
 			}
 			return &share, nil
 		}
 	}
-	return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Share for principal '%s' not found", principalId))
+	return nil, customerrors.WrapIntoProviderError(nil, customerrors.ERROR_OBJECT_NOT_FOUND,
+		fmt.Sprintf("Share for principal '%s' not found", principalId))
 }
 
 func (client *client) UpdateConnectionShare(ctx context.Context, environmentId, connectorName, connectionId string, share shareConnectionRequestDto) error {

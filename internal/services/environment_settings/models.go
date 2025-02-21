@@ -6,6 +6,7 @@ package environment_settings
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -64,6 +65,7 @@ type EmailSettingsSourceModel struct {
 type ProductSourceModel struct {
 	BehaviorSettings types.Object `tfsdk:"behavior_settings"`
 	Features         types.Object `tfsdk:"features"`
+	Security         types.Object `tfsdk:"security"`
 }
 
 type BehaviorSettingsSourceModel struct {
@@ -74,12 +76,33 @@ type FeaturesSourceModel struct {
 	PowerAppsComponentFrameworkForCanvasApps types.Bool `tfsdk:"power_apps_component_framework_for_canvas_apps"`
 }
 
+type SecuritySourceModel struct {
+	EnableIpBasedCookieBinding           types.Bool `tfsdk:"enable_ip_based_cookie_binding"`
+	EnableIpBasedFirewallRule            types.Bool `tfsdk:"enable_ip_based_firewall_rule"`
+	AllowedIpRangeForFirewall            types.Set  `tfsdk:"allowed_ip_range_for_firewall"`
+	AllowedServiceTagsForFirewall        types.Set  `tfsdk:"allowed_service_tags_for_firewall"`
+	AllowApplicationUserAccess           types.Bool `tfsdk:"allow_application_user_access"`
+	AllowMicrosoftTrustedServiceTags     types.Bool `tfsdk:"allow_microsoft_trusted_service_tags"`
+	EnableIpBasedFirewallRuleInAuditMode types.Bool `tfsdk:"enable_ip_based_firewall_rule_in_audit_mode"`
+	ReverseProxyIpAddresses              types.Set  `tfsdk:"reverse_proxy_ip_addresses"`
+}
+
 func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel) (*environmentSettingsDto, error) {
 	environmentSettingsDto := &environmentSettingsDto{}
 	auditSettingsObject := environmentSettings.AuditAndLogs.Attributes()["audit_settings"]
 	if auditSettingsObject != nil && !auditSettingsObject.IsNull() && !auditSettingsObject.IsUnknown() {
+		objectValue, ok := auditSettingsObject.(basetypes.ObjectValue)
+		if !ok {
+			return nil, fmt.Errorf("failed to convert audit settings to ObjectValue")
+		}
+
 		var auditAndLogsSourceModel AuditSettingsSourceModel
-		auditSettingsObject.(basetypes.ObjectValue).As(ctx, &auditAndLogsSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		if err := objectValue.As(ctx, &auditAndLogsSourceModel, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		}); err != nil {
+			return nil, fmt.Errorf("failed to convert audit settings: %v", err)
+		}
 
 		if !auditAndLogsSourceModel.IsAuditEnabled.IsNull() && !auditAndLogsSourceModel.IsAuditEnabled.IsUnknown() {
 			environmentSettingsDto.IsAuditEnabled = auditAndLogsSourceModel.IsAuditEnabled.ValueBoolPointer()
@@ -112,48 +135,111 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 			}
 		}
 	}
-	convertFromEnvironmentEmailSettings(ctx, environmentSettings, environmentSettingsDto)
-	convertFromEnvironmentBehaviorSettings(ctx, environmentSettings, environmentSettingsDto)
-	convertFromEnvironmentFeatureSettings(ctx, environmentSettings, environmentSettingsDto)
+	if err := convertFromEnvironmentEmailSettings(ctx, environmentSettings, environmentSettingsDto); err != nil {
+		return nil, err
+	}
+	if err := convertFromEnvironmentBehaviorSettings(ctx, environmentSettings, environmentSettingsDto); err != nil {
+		return nil, err
+	}
+	if err := convertFromEnvironmentFeatureSettings(ctx, environmentSettings, environmentSettingsDto); err != nil {
+		return nil, err
+	}
+	if err := convertFromEnvironmentSecuritySettings(ctx, environmentSettings, environmentSettingsDto); err != nil {
+		return nil, err
+	}
 	return environmentSettingsDto, nil
 }
 
-func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) {
+func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) error {
 	emailSettingsObject := environmentSettings.Email.Attributes()["email_settings"]
 	if emailSettingsObject != nil && !emailSettingsObject.IsNull() && !emailSettingsObject.IsUnknown() {
+		objectValue, ok := emailSettingsObject.(basetypes.ObjectValue)
+		if !ok {
+			return fmt.Errorf("failed to convert email settings to ObjectValue")
+		}
+
 		var emailSourceModel EmailSettingsSourceModel
-		if err := emailSettingsObject.(basetypes.ObjectValue).As(ctx, &emailSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return
+		if err := objectValue.As(ctx, &emailSourceModel, basetypes.ObjectAsOptions{
+			UnhandledNullAsEmpty:    true,
+			UnhandledUnknownAsEmpty: true,
+		}); err != nil {
+			return fmt.Errorf("failed to convert email settings: %v", err)
 		}
 
 		if !emailSourceModel.MaxUploadFileSize.IsNull() && !emailSourceModel.MaxUploadFileSize.IsUnknown() {
 			environmentSettingsDto.MaxUploadFileSize = emailSourceModel.MaxUploadFileSize.ValueInt64Pointer()
 		}
 	}
+	return nil
 }
 
-func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) {
+func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) error {
 	behaviorSettings := environmentSettings.Product.Attributes()["behavior_settings"]
 	if behaviorSettings != nil && !behaviorSettings.IsNull() && !behaviorSettings.IsUnknown() {
 		var behaviorSettingsSourceModel BehaviorSettingsSourceModel
-		behaviorSettings.(basetypes.ObjectValue).As(ctx, &behaviorSettingsSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		if err := behaviorSettings.(basetypes.ObjectValue).As(ctx, &behaviorSettingsSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
+			return fmt.Errorf("failed to convert audit settings: %v", err)
+		}
 
 		if !behaviorSettingsSourceModel.ShowDashboardCardsInExpandedState.IsNull() && !behaviorSettingsSourceModel.ShowDashboardCardsInExpandedState.IsUnknown() {
 			environmentSettingsDto.BoundDashboardDefaultCardExpanded = behaviorSettingsSourceModel.ShowDashboardCardsInExpandedState.ValueBoolPointer()
 		}
 	}
+	return nil
 }
 
-func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) {
+func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) error {
 	features := environmentSettings.Product.Attributes()["features"]
 	if features != nil && !features.IsNull() && !features.IsUnknown() {
 		var featuresSourceModel FeaturesSourceModel
-		features.(basetypes.ObjectValue).As(ctx, &featuresSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		if err := features.(basetypes.ObjectValue).As(ctx, &featuresSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
+			return fmt.Errorf("failed to convert audit settings: %v", err)
+		}
 
 		if !featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.IsNull() && !featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.IsUnknown() {
 			environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps = featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.ValueBoolPointer()
 		}
 	}
+	return nil
+}
+
+func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) error {
+	security := environmentSettings.Product.Attributes()["security"]
+	if security != nil && !security.IsNull() && !security.IsUnknown() {
+		var securitySourceModel SecuritySourceModel
+		if err := security.(basetypes.ObjectValue).As(ctx, &securitySourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
+			return fmt.Errorf("failed to convert audit settings: %v", err)
+		}
+
+		if !securitySourceModel.EnableIpBasedCookieBinding.IsNull() && !securitySourceModel.EnableIpBasedCookieBinding.IsUnknown() {
+			environmentSettingsDto.EnableIpBasedCookieBinding = securitySourceModel.EnableIpBasedCookieBinding.ValueBoolPointer()
+		}
+		if !securitySourceModel.EnableIpBasedFirewallRule.IsNull() && !securitySourceModel.EnableIpBasedFirewallRule.IsUnknown() {
+			environmentSettingsDto.EnableIpBasedFirewallRule = securitySourceModel.EnableIpBasedFirewallRule.ValueBoolPointer()
+		}
+		if !securitySourceModel.AllowedIpRangeForFirewall.IsNull() && !securitySourceModel.AllowedIpRangeForFirewall.IsUnknown() {
+			value := strings.Join(helpers.SetToStringSlice(securitySourceModel.AllowedIpRangeForFirewall), ",")
+			environmentSettingsDto.AllowedIpRangeForFirewall = &value
+		}
+		if !securitySourceModel.AllowedServiceTagsForFirewall.IsNull() && !securitySourceModel.AllowedServiceTagsForFirewall.IsUnknown() {
+			value := strings.Join(helpers.SetToStringSlice(securitySourceModel.AllowedServiceTagsForFirewall), ",")
+			environmentSettingsDto.AllowedServiceTagsForFirewall = &value
+		}
+		if !securitySourceModel.AllowApplicationUserAccess.IsNull() && !securitySourceModel.AllowApplicationUserAccess.IsUnknown() {
+			environmentSettingsDto.AllowApplicationUserAccess = securitySourceModel.AllowApplicationUserAccess.ValueBoolPointer()
+		}
+		if !securitySourceModel.AllowMicrosoftTrustedServiceTags.IsNull() && !securitySourceModel.AllowMicrosoftTrustedServiceTags.IsUnknown() {
+			environmentSettingsDto.AllowMicrosoftTrustedServiceTags = securitySourceModel.AllowMicrosoftTrustedServiceTags.ValueBoolPointer()
+		}
+		if !securitySourceModel.EnableIpBasedFirewallRuleInAuditMode.IsNull() && !securitySourceModel.EnableIpBasedFirewallRuleInAuditMode.IsUnknown() {
+			environmentSettingsDto.EnableIpBasedFirewallRuleInAuditMode = securitySourceModel.EnableIpBasedFirewallRuleInAuditMode.ValueBoolPointer()
+		}
+		if !securitySourceModel.ReverseProxyIpAddresses.IsNull() && !securitySourceModel.ReverseProxyIpAddresses.IsUnknown() {
+			value := strings.Join(helpers.SetToStringSlice(securitySourceModel.ReverseProxyIpAddresses), ",")
+			environmentSettingsDto.ReverseProxyIpAddresses = &value
+		}
+	}
+	return nil
 }
 
 func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | EnvironmentSettingsDataSourceModel](environmentSettingsDto *environmentSettingsDto, timeout timeouts.Value) T {
@@ -220,9 +306,42 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		"power_apps_component_framework_for_canvas_apps": types.BoolType,
 	}
 
+	attrTypesSecurityObject := map[string]attr.Type{
+		"enable_ip_based_cookie_binding":              types.BoolType,
+		"enable_ip_based_firewall_rule":               types.BoolType,
+		"allowed_ip_range_for_firewall":               types.SetType{ElemType: types.StringType},
+		"allowed_service_tags_for_firewall":           types.SetType{ElemType: types.StringType},
+		"allow_application_user_access":               types.BoolType,
+		"allow_microsoft_trusted_service_tags":        types.BoolType,
+		"enable_ip_based_firewall_rule_in_audit_mode": types.BoolType,
+		"reverse_proxy_ip_addresses":                  types.SetType{ElemType: types.StringType},
+	}
+
 	attrTypesProductObject := map[string]attr.Type{
 		"behavior_settings": types.ObjectType{AttrTypes: attrBahaviorSettingsObject},
 		"features":          types.ObjectType{AttrTypes: attrFeaturesObject},
+		"security":          types.ObjectType{AttrTypes: attrTypesSecurityObject},
+	}
+
+	reverseProxyAdresses := []attr.Value{}
+	if environmentSettingsDto.ReverseProxyIpAddresses != nil {
+		for _, proxy := range strings.Split(*environmentSettingsDto.ReverseProxyIpAddresses, ",") {
+			reverseProxyAdresses = append(reverseProxyAdresses, types.StringValue(proxy))
+		}
+	}
+
+	allowedIpRangeForFirewall := []attr.Value{}
+	if environmentSettingsDto.AllowedIpRangeForFirewall != nil {
+		for _, ip := range strings.Split(*environmentSettingsDto.AllowedIpRangeForFirewall, ",") {
+			allowedIpRangeForFirewall = append(allowedIpRangeForFirewall, types.StringValue(ip))
+		}
+	}
+
+	allowedServiceTags := []attr.Value{}
+	if environmentSettingsDto.AllowedServiceTagsForFirewall != nil {
+		for _, tag := range strings.Split(*environmentSettingsDto.AllowedServiceTagsForFirewall, ",") {
+			allowedServiceTags = append(allowedServiceTags, types.StringValue(tag))
+		}
 	}
 
 	attrValuesProductProperties := map[string]attr.Value{
@@ -231,6 +350,16 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		}),
 		"features": types.ObjectValueMust(attrFeaturesObject, map[string]attr.Value{
 			"power_apps_component_framework_for_canvas_apps": types.BoolValue(*environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps),
+		}),
+		"security": types.ObjectValueMust(attrTypesSecurityObject, map[string]attr.Value{
+			"enable_ip_based_cookie_binding":              types.BoolValue(*environmentSettingsDto.EnableIpBasedCookieBinding),
+			"enable_ip_based_firewall_rule":               types.BoolValue(*environmentSettingsDto.EnableIpBasedFirewallRule),
+			"allowed_ip_range_for_firewall":               types.SetValueMust(types.StringType, allowedIpRangeForFirewall),
+			"allowed_service_tags_for_firewall":           types.SetValueMust(types.StringType, allowedServiceTags),
+			"allow_application_user_access":               types.BoolValue(*environmentSettingsDto.AllowApplicationUserAccess),
+			"allow_microsoft_trusted_service_tags":        types.BoolValue(*environmentSettingsDto.AllowMicrosoftTrustedServiceTags),
+			"enable_ip_based_firewall_rule_in_audit_mode": types.BoolValue(*environmentSettingsDto.EnableIpBasedFirewallRuleInAuditMode),
+			"reverse_proxy_ip_addresses":                  types.SetValueMust(types.StringType, reverseProxyAdresses),
 		}),
 	}
 

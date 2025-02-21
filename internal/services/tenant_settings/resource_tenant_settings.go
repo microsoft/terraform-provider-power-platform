@@ -398,7 +398,12 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 	}
 
 	// Update tenant settings via the API
-	plannedSettingsDto := convertFromTenantSettingsModel(ctx, plan)
+	plannedSettingsDto, err := convertFromTenantSettingsModel(ctx, plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting to tenant settings DTO", err.Error())
+		return
+	}
+
 	tenantSettingsDto, err := r.TenantSettingClient.UpdateTenantSettings(ctx, plannedSettingsDto)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -444,7 +449,11 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 
 	var configuredSettings TenantSettingsResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &configuredSettings)...)
-	oldStateDto := convertFromTenantSettingsModel(ctx, configuredSettings)
+	oldStateDto, err := convertFromTenantSettingsModel(ctx, configuredSettings)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting to tenant settings DTO", err.Error())
+		return
+	}
 	newStateDto := applyCorrections(ctx, oldStateDto, *tenantSettings)
 	newState, _ := convertFromTenantSettingsDto[TenantSettingsResourceModel](*newStateDto, state.Timeouts)
 	newState.Id = types.StringValue(tenant.TenantId)
@@ -465,11 +474,19 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	plannedDto := convertFromTenantSettingsModel(ctx, plan)
+	plannedDto, err := convertFromTenantSettingsModel(ctx, plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting to tenant settings DTO", err.Error())
+		return
+	}
 	// Preprocessing updates is unfortunately needed because Terraform can not treat a zeroed UUID as a null value.
 	// This captures the case where a UUID is changed from known to zeroed/null.  Zeroed UUIDs come back as null from the API.
 	// The plannedDto remembers what the user intended, and the preprocessedDto is what we will send to the API.
-	preprocessedDto := convertFromTenantSettingsModel(ctx, plan)
+	preprocessedDto, err := convertFromTenantSettingsModel(ctx, plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting to tenant settings DTO", err.Error())
+		return
+	}
 
 	needsProcessing := func(p path.Path) bool {
 		var attrPlan customtypes.UUID
@@ -521,14 +538,16 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 
 	resp.Diagnostics.AddWarning("Tenant Settings are not deleted", "Tenant Settings may not be deleted in Power Platform.  Deleting this resource will attempt to restore settings to their previous values and remove this configuration from Terraform state.")
 
-	stateDto := convertFromTenantSettingsModel(ctx, state)
+	stateDto, err := convertFromTenantSettingsModel(ctx, state)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting to tenant settings DTO", err.Error())
+		return
+	}
 
 	// restore to previous state
-	previousBytes, err := req.Private.GetKey(ctx, "original_settings")
-	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error reading original settings", fmt.Sprintf("Error reading original settings: %s", err.Errors()),
-		)
+	previousBytes, diag := req.Private.GetKey(ctx, "original_settings")
+	if diag.HasError() {
+		diag.Append(diag...)
 		return
 	}
 
