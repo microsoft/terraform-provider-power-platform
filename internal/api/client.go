@@ -174,10 +174,10 @@ func tryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (stri
 	case strings.LastIndex(url, cloudConfig.BapiUrl) != -1,
 		strings.LastIndex(url, cloudConfig.PowerAppsUrl) != -1:
 		return cloudConfig.PowerAppsScope, nil
-
 	case strings.LastIndex(url, cloudConfig.PowerPlatformUrl) != -1:
 		return cloudConfig.PowerPlatformScope, nil
-
+	case strings.LastIndex(url, cloudConfig.PowerAppsAdvisor) != -1:
+		return cloudConfig.PowerAppsAdvisorScope, nil
 	default:
 		u, err := neturl.Parse(url)
 		return u.Scheme + "://" + u.Host + "/.default", err
