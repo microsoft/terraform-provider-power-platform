@@ -1,0 +1,5 @@
+kind: fixed
+body: Testing and fix TestUnitManagedEnvironmentsResource_Validate_Update_Wrong_Solution_Checker_Rule_Overrides
+time: 2025-02-24T22:47:08.470603215Z
+custom:
+    Issue: "597"
