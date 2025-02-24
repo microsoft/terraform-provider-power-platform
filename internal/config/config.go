@@ -6,6 +6,25 @@ package config
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+)
+
+type CloudType string
+
+const (
+	CloudTypePublic  CloudType = "public"
+	CloudTypeGcc     CloudType = "gcc"
+	CloudTypeGccHigh CloudType = "gcchigh"
+	CloudTypeDod     CloudType = "dod"
+	CloudTypeChina   CloudType = "china"
+	CloudTypeEx      CloudType = "ex"
+	CloudTypeRx      CloudType = "rx"
+)
+
+type CloudTypeConfigurationKey string
+
+const (
+	FirstReleaseClusterName CloudTypeConfigurationKey = "release_cycle"
 )
 
 type ProviderConfig struct {
@@ -25,6 +44,7 @@ type ProviderConfig struct {
 	OidcToken         string
 	OidcTokenFilePath string
 
+	CloudType               CloudType
 	AzDOServiceConnectionID string
 
 	// internal runtime configuration values
@@ -44,6 +64,35 @@ type ProviderConfigUrls struct {
 	LicensingUrl          string
 	PowerAppsAdvisor      string
 	PowerAppsAdvisorScope string
+}
+
+func (model *ProviderConfig) GetCurrentCloudConfiguration(key CloudTypeConfigurationKey) *string {
+	configuration := map[string]map[string]*string{
+		string(CloudTypePublic): {
+			string(FirstReleaseClusterName): helpers.StringPtr("FirstRelease"),
+			// Add more cloud specific configurations here
+		},
+		string(CloudTypeGcc): {
+			string(FirstReleaseClusterName): helpers.StringPtr("GovFR"),
+		},
+		string(CloudTypeGccHigh): {
+			string(FirstReleaseClusterName): nil,
+		},
+		string(CloudTypeDod): {
+			string(FirstReleaseClusterName): nil,
+		},
+		string(CloudTypeChina): {
+			string(FirstReleaseClusterName): nil,
+		},
+		string(CloudTypeEx): {
+			string(FirstReleaseClusterName): nil,
+		},
+		string(CloudTypeRx): {
+			string(FirstReleaseClusterName): nil,
+		},
+	}
+
+	return configuration[string(model.CloudType)][string(key)]
 }
 
 func (model *ProviderConfig) IsUserManagedIdentityProvided() bool {

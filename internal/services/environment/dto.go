@@ -14,12 +14,21 @@ const (
 	EnvironmentTypesProduction = "Production"
 	EnvironmentTypesTrial      = "Trial"
 	EnvironmentTypesDefault    = "Default"
+
+	ReleaseCycleTypesStandard = "Standard"
+	ReleaseCycleTypesEarly    = "Early"
+
+	ReleaseCycleFirstReleasePublicDto = "FirstRelease"
+	ReleaseCycleFirstReleaseGovDto    = "GovFR"
 )
 
 var (
 	EnvironmentTypes                     = []string{EnvironmentTypesDeveloper, EnvironmentTypesSandbox, EnvironmentTypesProduction, EnvironmentTypesTrial, EnvironmentTypesDefault}
 	EnvironmentTypesDeveloperOnlyRegex   = fmt.Sprintf(`^(%s)$`, EnvironmentTypesDeveloper)
 	EnvironmentTypesExceptDeveloperRegex = fmt.Sprintf(`^(%s|%s|%s|%s)$`, EnvironmentTypesSandbox, EnvironmentTypesProduction, EnvironmentTypesTrial, EnvironmentTypesDefault)
+
+	ReleaseCycleTypes                 = []string{ReleaseCycleTypesStandard, ReleaseCycleTypesEarly}
+	ReleaseCycleFirstReleaseOnlyRegex = fmt.Sprintf(`^(%s|%s)$`, ReleaseCycleFirstReleasePublicDto, ReleaseCycleFirstReleaseGovDto)
 )
 
 type EnvironmentDto struct {
@@ -47,6 +56,7 @@ type EnviromentPropertiesDto struct {
 	UpdateCadence             *UpdateCadenceDto                 `json:"updateCadence,omitempty"`
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 	EnterprisePolicies        *EnvironmentEnterprisePoliciesDto `json:"enterprisePolicies,omitempty"`
+	Cluster                   *ClusterDto                       `json:"cluster,omitempty"`
 	UsedBy                    *UsedByDto                        `json:"usedBy,omitempty"`
 	BingChatEnabled           bool                              `json:"bingChatEnabled,omitempty"`
 	CopilotPolicies           *CopilotPoliciesDto               `json:"copilotPolicies,omitempty"`
@@ -63,6 +73,10 @@ type GenerativeAiFeaturesPropertiesDto struct {
 
 type CopilotPoliciesDto struct {
 	CrossGeoCopilotDataMovementEnabled *bool `json:"crossGeoCopilotDataMovementEnabled"`
+}
+
+type ClusterDto struct {
+	Catergory string `json:"category"`
 }
 
 type UsedByDto struct {
@@ -186,13 +200,8 @@ type environmentCreatePropertiesDto struct {
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 	BingChatEnabled           bool                              `json:"bingChatEnabled,omitempty"`
 	CopilotPolicies           *CopilotPoliciesDto               `json:"copilotPolicies,omitempty"`
-	UsedBy                    *usedByDto                        `json:"usedBy,omitempty"`
-}
-
-type usedByDto struct {
-	Id       string `json:"id"`
-	Type     int    `json:"type"`
-	TenantID string `json:"tenantID"`
+	UsedBy                    *UsedByDto                        `json:"usedBy,omitempty"`
+	Cluster                   *ClusterDto                       `json:"cluster,omitempty"`
 }
 
 type createLinkEnvironmentMetadataDto struct {
