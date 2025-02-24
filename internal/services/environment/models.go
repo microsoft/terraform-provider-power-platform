@@ -135,7 +135,7 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		}
 		environmentDto.Properties.UsedBy = &UsedByDto{
 			Id:       environmentSource.OwnerId.ValueString(),
-			Type:     1,
+			Type:     "1",
 			TenantId: tenantId.TenantId,
 		}
 	}

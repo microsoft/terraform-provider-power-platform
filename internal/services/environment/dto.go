@@ -66,7 +66,7 @@ type ClusterDto struct {
 
 type UsedByDto struct {
 	Id       string `json:"id"`
-	Type     int    `json:"type"`
+	Type     string `json:"type"`
 	TenantId string `json:"tenantId"`
 }
 
