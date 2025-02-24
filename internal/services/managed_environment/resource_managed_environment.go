@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -172,36 +171,6 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 	}
 }
 
-
-func (r *ManagedEnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
-	defer exitContext()
-	if req.ProviderData == nil {
-		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
-		return
-	}
-
-	client, ok := req.ProviderData.(*api.ProviderClient)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-		return
-	}
-	clientApi := client.Api
-
-	if clientApi == nil {
-		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
-		return
-	}
-	r.ManagedEnvironmentClient = newManagedEnvironmentClient(clientApi)
-}
-
 func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
@@ -212,7 +181,6 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 
 	// Fetch the available solution checker rules
 	validRules, err := r.ManagedEnvironmentClient.FetchSolutionCheckerRules(ctx, plan.EnvironmentId.ValueString())
@@ -360,7 +328,6 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 
 	// Fetch the available solution checker rules
 	validRules, err := r.ManagedEnvironmentClient.FetchSolutionCheckerRules(ctx, plan.EnvironmentId.ValueString())
