@@ -29,3 +29,19 @@ type ManagedEnvironmentResourceModel struct {
 	MakerOnboardingMarkdown      types.String   `tfsdk:"maker_onboarding_markdown"`
 	SolutionCheckerRuleOverrides types.Set      `tfsdk:"solution_checker_rule_overrides"`
 }
+
+type SolutionCheckerRulesArrayDto struct {
+	Value []SolutionCheckerRuleDto `json:"value"`
+}
+
+type SolutionCheckerRuleDto struct {
+	Description     string `json:"description,omitempty"`
+	GuidanceUrl     string `json:"guidanceUrl,omitempty"`
+	Include         string `json:"include,omitempty"`
+	Code            string `json:"code,omitempty"`
+	Summary         string `json:"summary,omitempty"`
+	ComponetType    string `json:"componetType,omitempty"`
+	PrimaryCategory string `json:"primaryCategory,omitempty"`
+	Severity        string `json:"severity,omitempty"`
+	HowToFix        string `json:"howToFix,omitempty"`
+}
