@@ -34,20 +34,21 @@ type ListDataSourceModel struct {
 }
 
 type SourceModel struct {
-	Timeouts                     timeouts.Value `tfsdk:"timeouts"`
-	Id                           types.String   `tfsdk:"id"`
-	Location                     types.String   `tfsdk:"location"`
-	AzureRegion                  types.String   `tfsdk:"azure_region"`
-	DisplayName                  types.String   `tfsdk:"display_name"`
-	EnvironmentType              types.String   `tfsdk:"environment_type"`
-	BillingPolicyId              types.String   `tfsdk:"billing_policy_id"`
-	Description                  types.String   `tfsdk:"description"`
-	Cadence                      types.String   `tfsdk:"cadence"`
-	EnvironmentGroupId           types.String   `tfsdk:"environment_group_id"`
-	OwnerId                      types.String   `tfsdk:"owner_id"`
-	AllowBingSearch              types.Bool     `tfsdk:"allow_bing_search"`
-	AllowMovingDataAcrossRegions types.Bool     `tfsdk:"allow_moving_data_across_regions"`
-	EnterprisePolicies basetypes.SetValue `tfsdk:"enterprise_policies"`
+	Timeouts                     timeouts.Value     `tfsdk:"timeouts"`
+	Id                           types.String       `tfsdk:"id"`
+	Location                     types.String       `tfsdk:"location"`
+	AzureRegion                  types.String       `tfsdk:"azure_region"`
+	DisplayName                  types.String       `tfsdk:"display_name"`
+	EnvironmentType              types.String       `tfsdk:"environment_type"`
+	BillingPolicyId              types.String       `tfsdk:"billing_policy_id"`
+	Description                  types.String       `tfsdk:"description"`
+	Cadence                      types.String       `tfsdk:"cadence"`
+	EnvironmentGroupId           types.String       `tfsdk:"environment_group_id"`
+	OwnerId                      types.String       `tfsdk:"owner_id"`
+	ReleaseCycle                 types.String       `tfsdk:"release_cycle"`
+	AllowBingSearch              types.Bool         `tfsdk:"allow_bing_search"`
+	AllowMovingDataAcrossRegions types.Bool         `tfsdk:"allow_moving_data_across_regions"`
+	EnterprisePolicies           basetypes.SetValue `tfsdk:"enterprise_policies"`
 
 	Dataverse types.Object `tfsdk:"dataverse"`
 }
