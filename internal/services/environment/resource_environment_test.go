@@ -19,6 +19,46 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
+func TestAccEnvironmentsResource_Validate_Update_Name_Field(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "aaa"
+					location                                  = "unitedstates"
+					environment_type                       	  = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "aaa1"
+					location                                  = "unitedstates"
+					environment_type                       	  = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "USD"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "aaa1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEnvironmentsResource_Validate_CreateDeveloperEnvironment(t *testing.T) {
 	t.Skip("creating dev environments with SP is NOT yet supported")
 	resource.Test(t, resource.TestCase{

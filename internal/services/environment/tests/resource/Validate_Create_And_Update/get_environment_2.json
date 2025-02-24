@@ -80,7 +80,7 @@
             "resourceId": "orgid",
             "friendlyName": "displayname",
             "uniqueName": "00000000-0000-0000-0000-000000000001",
-            "domainName": "domain123",
+            "domainName": "00000000-0000-0000-0000-000000000001",
             "version": "9.2.23092.00206",
             "instanceUrl": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/",
             "instanceApiUrl": "https://00000000-0000-0000-0000-000000000001.api.crm4.dynamics.com",
