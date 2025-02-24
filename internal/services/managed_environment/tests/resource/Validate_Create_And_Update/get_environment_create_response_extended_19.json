@@ -308,7 +308,7 @@
                     "includeOnHomepageInsights": "false",
                     "limitSharingMode": "noLimit",
                     "solutionCheckerMode": "Warn",
-                    "suppressValidationEmails": "true",
+                    "suppressValidationEmails": "false",
                     "solutionCheckerRuleOverrides": "meta-remove-dup-reg,meta-avoid-reg-no-attribute",
                     "makerOnboardingUrl": "http://www.example.com",
                     "makerOnboardingMarkdown": "this is test markdown",
