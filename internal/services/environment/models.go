@@ -120,8 +120,8 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, r *Resource
 
 	if !environmentSource.AllowBingSearch.IsNull() && !environmentSource.AllowBingSearch.IsUnknown() {
 		environmentDto.Properties.BingChatEnabled = environmentSource.AllowBingSearch.ValueBool()
-  }
-  
+	}
+
 	if !environmentSource.OwnerId.IsNull() && !environmentSource.OwnerId.IsUnknown() {
 		tenantId, err := r.EnvironmentClient.tenantClient.GetTenant(ctx)
 		if err != nil {
