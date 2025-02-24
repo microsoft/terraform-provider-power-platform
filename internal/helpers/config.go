@@ -53,3 +53,7 @@ func GetConfigBool(ctx context.Context, configValue basetypes.BoolValue, environ
 	}
 	return defaultValue
 }
+
+func StringPtr(s string) *string {
+	return &s
+}
