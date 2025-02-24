@@ -131,7 +131,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_US_Region_E
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ExpectError: regexp.MustCompile(".*unexpected new value: .allow_moving_data_across_regions: was cty.True.*"),
+				ExpectError: regexp.MustCompile(".*Moving data across regions is not supported in the unitedstates location.*"),
 				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
@@ -201,7 +201,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ExpectError: regexp.MustCompile(".*unexpected new value: .allow_bing_search: was cty.True.*"),
+				ExpectError: regexp.MustCompile(".*To enable AI generative features, moving data across regions must be enabled.*"),
 				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
@@ -210,7 +210,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 
 						allow_bing_search                = true
 						allow_moving_data_across_regions = false
-					},
+					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(),
 			},

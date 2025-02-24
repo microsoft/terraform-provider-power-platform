@@ -371,6 +371,19 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
+	/*... check if non public cloud ... need PR 572 on main first*/
+	/*if cloud is non public {
+		allow_bing_search = false && allow_moving_data_across_regions = true => exception ("moving data can't be enabled for non public cloud")
+	}*/
+	if plan.Location.ValueString() == "unitedstates" && plan.AllowMovingDataAcrossRegions.ValueBool() {
+		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), "Moving data across regions is not supported in the unitedstates location")
+		return
+	}
+	if plan.Location.ValueString() != "unitedstates" && plan.AllowBingSearch.ValueBool() && !plan.AllowMovingDataAcrossRegions.ValueBool() {
+		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), fmt.Sprintf("To enable AI generative features, moving data across regions must be enabled"))
+		return
+	}
+
 	// If it's dataverse environment, validate the currency and language code
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
 		err = languageCodeValidator(ctx, r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
