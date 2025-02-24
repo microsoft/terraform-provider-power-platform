@@ -85,7 +85,8 @@ func isDataverseEnvironmentEmpty(ctx context.Context, environment *SourceModel) 
 	return dataverseSourceModel.CurrencyCode.IsNull() || dataverseSourceModel.CurrencyCode.ValueString() == ""
 }
 
-func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource SourceModel, conf config.ProviderConfig) (*environmentCreateDto, error) {
+func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource *SourceModel, r *Resource) (*environmentCreateDto, error) {
+	conf := r.EnvironmentClient.Api.Config
 	environmentDto := &environmentCreateDto{
 		Location: environmentSource.Location.ValueString(),
 		Properties: environmentCreatePropertiesDto{
@@ -132,10 +133,10 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		if err != nil {
 			return nil, err
 		}
-		environmentDto.Properties.UsedBy = &usedByDto{
+		environmentDto.Properties.UsedBy = &UsedByDto{
 			Id:       environmentSource.OwnerId.ValueString(),
 			Type:     1,
-			TenantID: tenantId.TenantId,
+			TenantId: tenantId.TenantId,
 		}
 	}
 

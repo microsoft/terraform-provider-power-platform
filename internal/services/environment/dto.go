@@ -66,7 +66,7 @@ type ClusterDto struct {
 
 type UsedByDto struct {
 	Id       string `json:"id"`
-	Type     string `json:"type"`
+	Type     int    `json:"type"`
 	TenantId string `json:"tenantId"`
 }
 
@@ -183,14 +183,8 @@ type environmentCreatePropertiesDto struct {
 	EnvironmentSku            string                            `json:"environmentSku"`
 	LinkedEnvironmentMetadata *createLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
-	UsedBy                    *usedBy                           `json:"usedBy,omitempty"`
+	UsedBy                    *UsedByDto                        `json:"usedBy,omitempty"`
 	Cluster                   *ClusterDto                       `json:"cluster,omitempty"`
-}
-
-type usedByDto struct {
-	Id       string `json:"id"`
-	Type     int    `json:"type"`
-	TenantID string `json:"tenantID"`
 }
 
 type createLinkEnvironmentMetadataDto struct {

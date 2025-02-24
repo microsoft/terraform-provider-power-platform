@@ -362,7 +362,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	envToCreate, err := convertCreateEnvironmentDtoFromSourceModel(ctx, *plan, *r.EnvironmentClient.Api.Config)
+	envToCreate, err := convertCreateEnvironmentDtoFromSourceModel(ctx, plan, r)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting source model to create environment dto", err.Error())
