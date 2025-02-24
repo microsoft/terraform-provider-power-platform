@@ -1,12 +1,12 @@
 ---
 page_title: "powerplatform_environment Resource - powerplatform"
 description: |-
-  This resource manages a PowerPlatform environment. Known Issue: Creating developer environment by specifying `owner_id` attribute, only works with a user context and can not be used at this time with a service principal. This is a limitation of the underlying API.
+  This resource manages a PowerPlatform environment.
 ---
 
 # powerplatform_environment (Resource)
 
-This resource manages a PowerPlatform environment. Known Issue: Creating developer environment by specifying `owner_id` attribute, only works with a user context and can not be used at this time with a service principal. This is a limitation of the underlying API.
+This resource manages a PowerPlatform environment.
 
 A Power Platform environment is a space in which you can store, manage, and share your organization's business data, apps, chatbots, and flows. It also serves as a container to separate apps that may have different roles, security requirements, or target audiences. Each environment is created under an Azure Active Directory tenant and is bound to a geographic location. You can create different types of environments, such as production, sandbox, trial, or developer, depending on your license and permissions. You can also move resources between environments and set data loss prevention policies. A Power Platform environment can have zero or one Microsoft Dataverse database, which provides storage for your apps and chatbots. You can only connect to the data sources that are deployed in the same environment as your app or chatbot. For more information, you can check out the following links:
 

@@ -306,12 +306,12 @@
                     "isGroupSharingDisabled": "false",
                     "maxLimitUserSharing": "-1",
                     "includeOnHomepageInsights": "false",
-                    "limitSharingMode": "NoLimit",
+                    "limitSharingMode": "noLimit",
                     "solutionCheckerMode": "Warn",
-                    "suppressValidationEmails": "false",
-                    "solutionCheckerRuleOverrides": "",
-                    "makerOnboardingUrl": "http://www.example2.com",
-                    "makerOnboardingMarkdown": "this is test markdown 2",
+                    "suppressValidationEmails": "true",
+                    "solutionCheckerRuleOverrides": "meta-remove-dup-reg,meta-avoid-reg-no-attribute",
+                    "makerOnboardingUrl": "http://www.example.com",
+                    "makerOnboardingMarkdown": "this is test markdown",
                     "disableAiGeneratedDescriptions": "false"
                 }
             }

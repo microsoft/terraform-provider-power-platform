@@ -303,13 +303,13 @@
             "settings": {
                 "extendedSettings": {
                     "excludeEnvironmentFromAnalysis": "true",
-                    "isGroupSharingDisabled": "false",
-                    "maxLimitUserSharing": "-1",
+                    "isGroupSharingDisabled": "true",
+                    "maxLimitUserSharing": "10",
                     "includeOnHomepageInsights": "false",
-                    "limitSharingMode": "noLimit",
-                    "solutionCheckerMode": "Warn",
+                    "limitSharingMode": "excludeSharingToSecurityGroups",
+                    "solutionCheckerMode": "none",
                     "suppressValidationEmails": "true",
-                    "solutionCheckerRuleOverrides": "meta-remove-dup-reg,meta-avoid-reg-no-attribute",
+                    "solutionCheckerRuleOverrides": "",
                     "makerOnboardingUrl": "http://www.example.com",
                     "makerOnboardingMarkdown": "this is test markdown",
                     "disableAiGeneratedDescriptions": "false"

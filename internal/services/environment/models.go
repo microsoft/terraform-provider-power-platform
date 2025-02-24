@@ -85,7 +85,7 @@ func isDataverseEnvironmentEmpty(ctx context.Context, environment *SourceModel) 
 	return dataverseSourceModel.CurrencyCode.IsNull() || dataverseSourceModel.CurrencyCode.ValueString() == ""
 }
 
-func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource SourceModel) (*environmentCreateDto, error) {
+func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, r *Resource, environmentSource SourceModel) (*environmentCreateDto, error) {
 	environmentDto := &environmentCreateDto{
 		Location: environmentSource.Location.ValueString(),
 		Properties: environmentCreatePropertiesDto{
@@ -120,6 +120,18 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 
 	if !environmentSource.AllowBingSearch.IsNull() && !environmentSource.AllowBingSearch.IsUnknown() {
 		environmentDto.Properties.BingChatEnabled = environmentSource.AllowBingSearch.ValueBool()
+  }
+  
+	if !environmentSource.OwnerId.IsNull() && !environmentSource.OwnerId.IsUnknown() {
+		tenantId, err := r.EnvironmentClient.tenantClient.GetTenant(ctx)
+		if err != nil {
+			return nil, err
+		}
+		environmentDto.Properties.UsedBy = &usedByDto{
+			Id:       environmentSource.OwnerId.ValueString(),
+			Type:     1,
+			TenantID: tenantId.TenantId,
+		}
 	}
 
 	if !environmentSource.Dataverse.IsNull() && !environmentSource.Dataverse.IsUnknown() {
