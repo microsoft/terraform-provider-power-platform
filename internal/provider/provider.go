@@ -412,67 +412,79 @@ func MultiEnvDefaultFunc(ks []string) string {
 
 func getCloudPublicUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 	return &config.ProviderConfigUrls{
-		BapiUrl:            constants.PUBLIC_BAPI_DOMAIN,
-		PowerAppsUrl:       constants.PUBLIC_POWERAPPS_API_DOMAIN,
-		PowerAppsScope:     constants.PUBLIC_POWERAPPS_SCOPE,
-		PowerPlatformUrl:   constants.PUBLIC_POWERPLATFORM_API_DOMAIN,
-		PowerPlatformScope: constants.PUBLIC_POWERPLATFORM_API_SCOPE,
-		LicensingUrl:       constants.PUBLIC_LICENSING_API_DOMAIN,
+		BapiUrl:               constants.PUBLIC_BAPI_DOMAIN,
+		PowerAppsUrl:          constants.PUBLIC_POWERAPPS_API_DOMAIN,
+		PowerAppsScope:        constants.PUBLIC_POWERAPPS_SCOPE,
+		PowerPlatformUrl:      constants.PUBLIC_POWERPLATFORM_API_DOMAIN,
+		PowerPlatformScope:    constants.PUBLIC_POWERPLATFORM_API_SCOPE,
+		LicensingUrl:          constants.PUBLIC_LICENSING_API_DOMAIN,
+		PowerAppsAdvisor:      constants.PUBLIC_POWERAPPS_ADVISOR_API_DOMAIN,
+		PowerAppsAdvisorScope: constants.PUBLIC_POWERAPPS_ADVISOR_API_SCOPE,
 	}, &cloud.AzurePublic
 }
 
 func getGccUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 	return &config.ProviderConfigUrls{
-		BapiUrl:            constants.USGOV_BAPI_DOMAIN,
-		PowerAppsUrl:       constants.USGOV_POWERAPPS_API_DOMAIN,
-		PowerAppsScope:     constants.USGOV_POWERAPPS_SCOPE,
-		PowerPlatformUrl:   constants.USGOV_POWERPLATFORM_API_DOMAIN,
-		PowerPlatformScope: constants.USGOV_POWERPLATFORM_API_SCOPE,
-		LicensingUrl:       constants.USGOV_LICENSING_API_DOMAIN,
+		BapiUrl:               constants.USGOV_BAPI_DOMAIN,
+		PowerAppsUrl:          constants.USGOV_POWERAPPS_API_DOMAIN,
+		PowerAppsScope:        constants.USGOV_POWERAPPS_SCOPE,
+		PowerPlatformUrl:      constants.USGOV_POWERPLATFORM_API_DOMAIN,
+		PowerPlatformScope:    constants.USGOV_POWERPLATFORM_API_SCOPE,
+		LicensingUrl:          constants.USGOV_LICENSING_API_DOMAIN,
+		PowerAppsAdvisor:      constants.USGOV_POWERAPPS_ADVISOR_API_DOMAIN,
+		PowerAppsAdvisorScope: constants.USGOV_POWERAPPS_ADVISOR_API_SCOPE,
 	}, &cloud.AzurePublic // GCC uses public cloud for authentication.
 }
 
 func getGccHighUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 	return &config.ProviderConfigUrls{
-		BapiUrl:            constants.USGOVHIGH_BAPI_DOMAIN,
-		PowerAppsUrl:       constants.USGOVHIGH_POWERAPPS_API_DOMAIN,
-		PowerAppsScope:     constants.USGOVHIGH_POWERAPPS_SCOPE,
-		PowerPlatformUrl:   constants.USGOVHIGH_POWERPLATFORM_API_DOMAIN,
-		PowerPlatformScope: constants.USGOVHIGH_POWERPLATFORM_API_SCOPE,
-		LicensingUrl:       constants.USGOVHIGH_LICENSING_API_DOMAIN,
+		BapiUrl:               constants.USGOVHIGH_BAPI_DOMAIN,
+		PowerAppsUrl:          constants.USGOVHIGH_POWERAPPS_API_DOMAIN,
+		PowerAppsScope:        constants.USGOVHIGH_POWERAPPS_SCOPE,
+		PowerPlatformUrl:      constants.USGOVHIGH_POWERPLATFORM_API_DOMAIN,
+		PowerPlatformScope:    constants.USGOVHIGH_POWERPLATFORM_API_SCOPE,
+		LicensingUrl:          constants.USGOVHIGH_LICENSING_API_DOMAIN,
+		PowerAppsAdvisor:      constants.USGOVHIGH_POWERAPPS_ADVISOR_API_DOMAIN,
+		PowerAppsAdvisorScope: constants.USGOVHIGH_POWERAPPS_ADVISOR_API_SCOPE,
 	}, &cloud.AzureGovernment
 }
 
 func getDodUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 	return &config.ProviderConfigUrls{
-		BapiUrl:            constants.USDOD_BAPI_DOMAIN,
-		PowerAppsUrl:       constants.USDOD_POWERAPPS_API_DOMAIN,
-		PowerAppsScope:     constants.USDOD_POWERAPPS_SCOPE,
-		PowerPlatformUrl:   constants.USDOD_POWERPLATFORM_API_DOMAIN,
-		PowerPlatformScope: constants.USDOD_POWERPLATFORM_API_SCOPE,
-		LicensingUrl:       constants.USDOD_LICENSING_API_DOMAIN,
+		BapiUrl:               constants.USDOD_BAPI_DOMAIN,
+		PowerAppsUrl:          constants.USDOD_POWERAPPS_API_DOMAIN,
+		PowerAppsScope:        constants.USDOD_POWERAPPS_SCOPE,
+		PowerPlatformUrl:      constants.USDOD_POWERPLATFORM_API_DOMAIN,
+		PowerPlatformScope:    constants.USDOD_POWERPLATFORM_API_SCOPE,
+		LicensingUrl:          constants.USDOD_LICENSING_API_DOMAIN,
+		PowerAppsAdvisor:      constants.USDOD_POWERAPPS_ADVISOR_API_DOMAIN,
+		PowerAppsAdvisorScope: constants.USDOD_POWERAPPS_ADVISOR_API_SCOPE,
 	}, &cloud.AzureGovernment
 }
 
 func getChinaUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 	return &config.ProviderConfigUrls{
-		BapiUrl:            constants.CHINA_BAPI_DOMAIN,
-		PowerAppsUrl:       constants.CHINA_POWERAPPS_API_DOMAIN,
-		PowerAppsScope:     constants.CHINA_POWERAPPS_SCOPE,
-		PowerPlatformUrl:   constants.CHINA_POWERPLATFORM_API_DOMAIN,
-		PowerPlatformScope: constants.CHINA_POWERPLATFORM_API_SCOPE,
-		LicensingUrl:       constants.CHINA_LICENSING_API_DOMAIN,
+		BapiUrl:               constants.CHINA_BAPI_DOMAIN,
+		PowerAppsUrl:          constants.CHINA_POWERAPPS_API_DOMAIN,
+		PowerAppsScope:        constants.CHINA_POWERAPPS_SCOPE,
+		PowerPlatformUrl:      constants.CHINA_POWERPLATFORM_API_DOMAIN,
+		PowerPlatformScope:    constants.CHINA_POWERPLATFORM_API_SCOPE,
+		LicensingUrl:          constants.CHINA_LICENSING_API_DOMAIN,
+		PowerAppsAdvisor:      constants.CHINA_POWERAPPS_ADVISOR_API_DOMAIN,
+		PowerAppsAdvisorScope: constants.CHINA_POWERAPPS_ADVISOR_API_SCOPE,
 	}, &cloud.AzureChina
 }
 
 func getExUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 	return &config.ProviderConfigUrls{
-			BapiUrl:            constants.EX_BAPI_DOMAIN,
-			PowerAppsUrl:       constants.EX_POWERAPPS_API_DOMAIN,
-			PowerAppsScope:     constants.EX_POWERAPPS_SCOPE,
-			PowerPlatformUrl:   constants.EX_POWERPLATFORM_API_DOMAIN,
-			PowerPlatformScope: constants.EX_POWERPLATFORM_API_SCOPE,
-			LicensingUrl:       constants.EX_LICENSING_API_DOMAIN,
+			BapiUrl:               constants.EX_BAPI_DOMAIN,
+			PowerAppsUrl:          constants.EX_POWERAPPS_API_DOMAIN,
+			PowerAppsScope:        constants.EX_POWERAPPS_SCOPE,
+			PowerPlatformUrl:      constants.EX_POWERPLATFORM_API_DOMAIN,
+			PowerPlatformScope:    constants.EX_POWERPLATFORM_API_SCOPE,
+			LicensingUrl:          constants.EX_LICENSING_API_DOMAIN,
+			PowerAppsAdvisor:      constants.EX_POWERAPPS_ADVISOR_API_DOMAIN,
+			PowerAppsAdvisorScope: constants.EX_POWERAPPS_ADVISOR_API_SCOPE,
 		}, &cloud.Configuration{
 			ActiveDirectoryAuthorityHost: constants.EX_AUTHORITY_HOST,
 			Services:                     map[cloud.ServiceName]cloud.ServiceConfiguration{},
@@ -481,12 +493,14 @@ func getExUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 
 func getRxUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 	return &config.ProviderConfigUrls{
-			BapiUrl:            constants.RX_BAPI_DOMAIN,
-			PowerAppsUrl:       constants.RX_POWERAPPS_API_DOMAIN,
-			PowerAppsScope:     constants.RX_POWERAPPS_SCOPE,
-			PowerPlatformUrl:   constants.RX_POWERPLATFORM_API_DOMAIN,
-			PowerPlatformScope: constants.RX_POWERPLATFORM_API_SCOPE,
-			LicensingUrl:       constants.RX_LICENSING_API_DOMAIN,
+			BapiUrl:               constants.RX_BAPI_DOMAIN,
+			PowerAppsUrl:          constants.RX_POWERAPPS_API_DOMAIN,
+			PowerAppsScope:        constants.RX_POWERAPPS_SCOPE,
+			PowerPlatformUrl:      constants.RX_POWERPLATFORM_API_DOMAIN,
+			PowerPlatformScope:    constants.RX_POWERPLATFORM_API_SCOPE,
+			LicensingUrl:          constants.RX_LICENSING_API_DOMAIN,
+			PowerAppsAdvisor:      constants.RX_POWERAPPS_ADVISOR_API_DOMAIN,
+			PowerAppsAdvisorScope: constants.RX_POWERAPPS_ADVISOR_API_SCOPE,
 		}, &cloud.Configuration{
 			ActiveDirectoryAuthorityHost: constants.RX_AUTHORITY_HOST,
 			Services:                     map[cloud.ServiceName]cloud.ServiceConfiguration{},

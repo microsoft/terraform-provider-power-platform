@@ -127,6 +127,18 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{Id: environmentSource.EnvironmentGroupId.ValueString()}
 	}
 
+	if !environmentSource.OwnerId.IsNull() && !environmentSource.OwnerId.IsUnknown() {
+		tenantId, err := r.EnvironmentClient.tenantClient.GetTenant(ctx)
+		if err != nil {
+			return nil, err
+		}
+		environmentDto.Properties.UsedBy = &usedByDto{
+			Id:       environmentSource.OwnerId.ValueString(),
+			Type:     1,
+			TenantID: tenantId.TenantId,
+		}
+	}
+
 	if !environmentSource.Dataverse.IsNull() && !environmentSource.Dataverse.IsUnknown() {
 		var dataverseSourceModel DataverseSourceModel
 		environmentSource.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})

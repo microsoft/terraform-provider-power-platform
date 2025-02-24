@@ -187,7 +187,7 @@ type environmentCreatePropertiesDto struct {
 	Cluster                   *ClusterDto                       `json:"cluster,omitempty"`
 }
 
-type usedBy struct {
+type usedByDto struct {
 	Id       string `json:"id"`
 	Type     int    `json:"type"`
 	TenantID string `json:"tenantID"`

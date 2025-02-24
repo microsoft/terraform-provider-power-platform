@@ -304,12 +304,12 @@
                 "extendedSettings": {
                     "excludeEnvironmentFromAnalysis": "true",
                     "isGroupSharingDisabled": "false",
-                    "maxLimitUserSharing": "-1",
+                    "maxLimitUserSharing": "10",
                     "includeOnHomepageInsights": "false",
-                    "limitSharingMode": "NoLimit",
-                    "solutionCheckerMode": "Warm",
+                    "limitSharingMode": "noLimit",
+                    "solutionCheckerMode": "none",
                     "suppressValidationEmails": "true",
-                    "solutionCheckerRuleOverrides": "",
+                    "solutionCheckerRuleOverrides": "meta-remove-dup-reg,meta-avoid-reg-no-attribute",
                     "makerOnboardingUrl": "http://www.example.com",
                     "makerOnboardingMarkdown": "this is test markdown",
                     "disableAiGeneratedDescriptions": "false"
