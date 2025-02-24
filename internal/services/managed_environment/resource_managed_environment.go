@@ -48,9 +48,39 @@ func (r *ManagedEnvironmentResource) Metadata(ctx context.Context, req resource.
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
+func (r *ManagedEnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
+		return
+	}
+
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	clientApi := client.Api
+
+	if clientApi == nil {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+
+		return
+	}
+	r.ManagedEnvironmentClient = newManagedEnvironmentClient(clientApi)
+}
+
 func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
+
 	resp.Schema = schema.Schema{
 		Description:         "Manages a \"Managed Environment\" and associated settings",
 		MarkdownDescription: "Manages a [Managed Environment](https://learn.microsoft.com/power-platform/admin/managed-environment-overview) and associated settings. A Power Platform Managed Environment is a suite of premium capabilities that allows administrators to manage Power Platform at scale with more control, less effort, and more insights. Once an environment is managed, it unlocks additional features across the Power Platform",
@@ -119,6 +149,12 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				Description:         "Send emails only when a solution is blocked. If 'False', you'll also get emails when there are warnings",
 				Required:            true,
 			},
+			"solution_checker_rule_overrides": schema.SetAttribute{
+				MarkdownDescription: SolutionCheckerMarkdown,
+				Description:         "List of rules to exclude from solution checker.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.",
+				Optional:            true,
+				ElementType:         types.StringType,
+			},
 			"maker_onboarding_markdown": schema.StringAttribute{
 				MarkdownDescription: "First-time Power Apps makers will see this content in the Studio.  See [Maker welcome content](https://learn.microsoft.com/power-platform/admin/welcome-content) for more details.",
 				Description:         "First-time Power Apps makers will see this content in the Studio",
@@ -133,27 +169,6 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 	}
 }
 
-func (r *ManagedEnvironmentResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
-	defer exitContext()
-	if req.ProviderData == nil {
-		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
-		return
-	}
-
-	clientApi := req.ProviderData.(*api.ProviderClient).Api
-
-	if clientApi == nil {
-		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
-		)
-
-		return
-	}
-	r.ManagedEnvironmentClient = newManagedEnvironmentClient(clientApi)
-}
-
 func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
@@ -163,6 +178,30 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 
 	if resp.Diagnostics.HasError() {
 		return
+	}
+
+	// Fetch the available solution checker rules
+	validRules, err := r.ManagedEnvironmentClient.FetchSolutionCheckerRules(ctx, plan.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to fetch solution checker rules", err.Error())
+		return
+	}
+
+	// Validate the provided solutionCheckerRuleOverrides
+	var solutionCheckerRuleOverrides *string
+	if !plan.SolutionCheckerRuleOverrides.IsNull() {
+		overrides := helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides)
+		for _, override := range overrides {
+			if !helpers.Contains(validRules, override) {
+				resp.Diagnostics.AddError(
+					"Invalid Solution Checker Rule Override",
+					fmt.Sprintf("The solution checker rule override '%s' is not valid. Valid rules are: %v", override, validRules),
+				)
+				return
+			}
+		}
+		value := strings.Join(overrides, ",")
+		solutionCheckerRuleOverrides = &value
 	}
 
 	managedEnvironmentDto := environment.GovernanceConfigurationDto{
@@ -177,13 +216,18 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 				LimitSharingMode:               strings.ToLower(plan.LimitSharingMode.ValueString()[:1]) + plan.LimitSharingMode.ValueString()[1:],
 				SolutionCheckerMode:            strings.ToLower(plan.SolutionCheckerMode.ValueString()),
 				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
+				SolutionCheckerRuleOverrides:   "",
 				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
 				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
 			},
 		},
 	}
 
-	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
+	if solutionCheckerRuleOverrides != nil {
+		managedEnvironmentDto.Settings.ExtendedSettings.SolutionCheckerRuleOverrides = *solutionCheckerRuleOverrides
+	}
+
+	err = r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
@@ -206,6 +250,12 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
 	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
+
+	if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
+		plan.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
+	} else {
+		plan.SolutionCheckerRuleOverrides = helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -244,6 +294,11 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		state.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
 		state.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 		state.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
+		if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
+			state.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
+		} else {
+			state.SolutionCheckerRuleOverrides = helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
+		}
 	} else {
 		state.IsGroupSharingDisabled = types.BoolUnknown()
 		state.IsUsageInsightsDisabled = types.BoolUnknown()
@@ -253,6 +308,7 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		state.SuppressValidationEmails = types.BoolUnknown()
 		state.MakerOnboardingUrl = types.StringUnknown()
 		state.MakerOnboardingMarkdown = types.StringUnknown()
+		state.SolutionCheckerRuleOverrides = types.SetUnknown(types.StringType)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -270,6 +326,30 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
+	// Fetch the available solution checker rules
+	validRules, err := r.ManagedEnvironmentClient.FetchSolutionCheckerRules(ctx, plan.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to fetch solution checker rules", err.Error())
+		return
+	}
+
+	// Validate the provided solutionCheckerRuleOverrides
+	var solutionCheckerRuleOverrides *string
+	if !plan.SolutionCheckerRuleOverrides.IsNull() {
+		overrides := helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides)
+		for _, override := range overrides {
+			if !helpers.Contains(validRules, override) {
+				resp.Diagnostics.AddError(
+					"Invalid Solution Checker Rule Override",
+					fmt.Sprintf("The solution checker rule override '%s' is not valid. Valid rules are: %v", override, validRules),
+				)
+				return
+			}
+		}
+		value := strings.Join(overrides, ",")
+		solutionCheckerRuleOverrides = &value
+	}
+
 	managedEnvironmentDto := environment.GovernanceConfigurationDto{
 		ProtectionLevel: "Standard",
 		Settings: &environment.SettingsDto{
@@ -284,11 +364,16 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
 				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
 				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
+				SolutionCheckerRuleOverrides:   "",
 			},
 		},
 	}
 
-	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
+	if solutionCheckerRuleOverrides != nil {
+		managedEnvironmentDto.Settings.ExtendedSettings.SolutionCheckerRuleOverrides = *solutionCheckerRuleOverrides
+	}
+
+	err = r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
@@ -311,6 +396,12 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
 	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
+
+	if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
+		plan.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
+	} else {
+		plan.SolutionCheckerRuleOverrides = helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
