@@ -23,10 +23,10 @@ var (
 )
 
 type EnvironmentDto struct {
-	Id         string                   `json:"id"`
-	Type       string                   `json:"type"`
-	Location   string                   `json:"location"`
-	Name       string                   `json:"name"`
+	Id         string                   `json:"id,omitempty"`
+	Type       string                   `json:"type,omitempty"`
+	Location   string                   `json:"location,omitempty"`
+	Name       string                   `json:"name,omitempty"`
 	Properties *EnviromentPropertiesDto `json:"properties"`
 }
 

@@ -493,10 +493,6 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	environmentDto := EnvironmentDto{
-		Id:         plan.Id.ValueString(),
-		Name:       plan.DisplayName.ValueString(),
-		Type:       plan.EnvironmentType.ValueString(),
-		Location:   plan.Location.ValueString(),
 		Properties: &envProp,
 	}
 
@@ -568,6 +564,14 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
 		return
+	}
+
+	if plan.DisplayName.ValueString() != state.DisplayName.ValueString() {
+		envDto, err = r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
+			return
+		}
 	}
 
 	var templateMetadata *createTemplateMetadataDto
