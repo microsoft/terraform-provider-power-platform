@@ -868,7 +868,7 @@ func TestUnitManagedEnvironmentsResource_Validate_Update_Wrong_Solution_Checker_
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				// Expect an error indicating that the solution checker rule override is invalid
+				// Expect an error indicating that the solution checker rule override is invalid `Invalid Solution Checker Rule Override`.
 				ExpectError: regexp.MustCompile(`Invalid Solution Checker Rule Override`),
 				Config: `
 				resource "powerplatform_managed_environment" "managed_development" {
