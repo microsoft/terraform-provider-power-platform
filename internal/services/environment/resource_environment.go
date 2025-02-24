@@ -566,6 +566,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
+	// This is a temporary fix for the issue in BAPI where the display name is not propagated correctly on environment update
 	if plan.DisplayName.ValueString() != state.DisplayName.ValueString() {
 		envDto, err = r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
 		if err != nil {
