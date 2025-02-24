@@ -128,6 +128,18 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"release_cycle": schema.StringAttribute{
+				MarkdownDescription: "Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).",
+				Optional:            true,
+				Computed:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf(ReleaseCycleTypes...),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"location": schema.StringAttribute{
 				MarkdownDescription: "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source. The region of your Entra tenant may [limit the available locations for Power Platform](https://learn.microsoft.com/power-platform/admin/regions-overview#who-can-create-environments-in-these-regions). Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).",
 				Required:            true,
@@ -350,7 +362,8 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	envToCreate, err := convertCreateEnvironmentDtoFromSourceModel(ctx, r, *plan)
+	envToCreate, err := convertCreateEnvironmentDtoFromSourceModel(ctx, plan, r)
+
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting source model to create environment dto", err.Error())
 	}
@@ -393,7 +406,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		templates = envToCreate.Properties.LinkedEnvironmentMetadata.Templates
 	}
 
-	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, plan.OwnerId.ValueStringPointer(), templateMetadata, templates, plan.Timeouts, *r.EnvironmentClient.Api.Config)
 
 	if !plan.AzureRegion.IsNull() && plan.AzureRegion.ValueString() != "" && (plan.AzureRegion.ValueString() != newState.AzureRegion.ValueString()) {
 		resp.Diagnostics.AddAttributeError(path.Root("azure_region"), fmt.Sprintf("Provisioning environment in azure region '%s' failed", plan.AzureRegion.ValueString()), "Provisioning environment in azure region was not successful, please try other region in that location or try again later")
@@ -461,7 +474,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 			templates = dv.Templates
 		}
 	}
-	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, state.Timeouts)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, state.OwnerId.ValueStringPointer(), templateMetadata, templates, state.Timeouts, *r.EnvironmentClient.Api.Config)
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
@@ -589,7 +602,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, templateMetadata, templates, plan.Timeouts)
+	newState, err := convertSourceModelFromEnvironmentDto(*envDto, &currencyCode, state.OwnerId.ValueStringPointer(), templateMetadata, templates, plan.Timeouts, *r.EnvironmentClient.Api.Config)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting environment to source model", err.Error())
 		return

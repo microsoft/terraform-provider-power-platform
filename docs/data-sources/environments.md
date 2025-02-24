@@ -68,6 +68,7 @@ Read-Only:
 - `id` (String) Environment id (guid)
 - `location` (String) Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source.
 - `owner_id` (String) Entra ID  user id (guid) of the environment owner when creating developer environment
+- `release_cycle` (String) Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).
 
 <a id="nestedatt--environments--timeouts"></a>
 ### Nested Schema for `environments.timeouts`
