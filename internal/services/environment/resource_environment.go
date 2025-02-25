@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
@@ -384,16 +385,9 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	/* ... check if non public cloud ... need PR 572 on main first*/
-	/* if cloud is non public {
-		allow_bing_search = false && allow_moving_data_across_regions = true => exception ("moving data can't be enabled for non public cloud")
-	}*/
-	if plan.Location.ValueString() == "unitedstates" && plan.AllowMovingDataAcrossRegions.ValueBool() {
-		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), "Moving data across regions is not supported in the unitedstates location")
-		return
-	}
-	if plan.Location.ValueString() != "unitedstates" && plan.AllowBingSearch.ValueBool() && !plan.AllowMovingDataAcrossRegions.ValueBool() {
-		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), "To enable AI generative features, moving data across regions must be enabled")
+	err = r.aiGenerativeFeaturesValidaor(plan)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
 
@@ -541,6 +535,12 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
+	err := r.aiGenerativeFeaturesValidaor(plan)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
+
 	envProp := EnviromentPropertiesDto{
 		DisplayName:     plan.DisplayName.ValueString(),
 		EnvironmentSku:  plan.EnvironmentType.ValueString(),
@@ -555,7 +555,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		Properties: &envProp,
 	}
 
-	err := r.updateEnvironmentType(ctx, plan, state)
+	err = r.updateEnvironmentType(ctx, plan, state)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when updating environment type", err.Error())
 		return
@@ -816,6 +816,19 @@ func (r *Resource) addBillingPolicy(ctx context.Context, plan *SourceModel) erro
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (r *Resource) aiGenerativeFeaturesValidaor(plan *SourceModel) error {
+	if r.EnvironmentClient.Api.Config.CloudType != config.CloudTypePublic {
+		return fmt.Errorf("Moving data across regions is not supported in non public clouds")
+	}
+	if plan.Location.ValueString() == "unitedstates" && plan.AllowMovingDataAcrossRegions.ValueBool() {
+		return fmt.Errorf("Moving data across regions is not supported in the unitedstates location")
+	}
+	if plan.Location.ValueString() != "unitedstates" && plan.AllowBingSearch.ValueBool() && !plan.AllowMovingDataAcrossRegions.ValueBool() {
+		return fmt.Errorf("To enable AI generative features, moving data across regions must be enabled")
 	}
 	return nil
 }
