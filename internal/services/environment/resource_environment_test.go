@@ -2420,7 +2420,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Env_Group(t
 					environment_type                          = "Sandbox"
 					environment_group_id					  = powerplatform_environment_group.env_group.id
 				}`,
-				ExpectError: regexp.MustCompile(".*UnlinkedEnvironmentWithGroupId.*"),
+				ExpectError: regexp.MustCompile(".*Attribute \"dataverse\" must be specified when \"environment_group_id\" is.*"),
 				Check:       resource.ComposeAggregateTestCheckFunc(),
 			},
 		},
