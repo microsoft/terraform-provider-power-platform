@@ -34,13 +34,12 @@ provider "powerplatform" {
 }
 
 resource "powerplatform_environment" "development" {
-  display_name         = "example_environment"
-  description          = "example environment description"
-  location             = "europe"
-  azure_region         = "northeurope"
-  environment_type     = "Sandbox"
-  cadence              = "Moderate"
-  environment_group_id = ""
+  display_name     = "example_environment"
+  description      = "example environment description"
+  location         = "europe"
+  azure_region     = "northeurope"
+  environment_type = "Sandbox"
+  cadence          = "Moderate"
   dataverse = {
     language_code     = "1033"
     currency_code     = "USD"
@@ -61,7 +60,6 @@ resource "powerplatform_environment" "development" {
 ### Optional
 
 - `azure_region` (String) Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source. This property should only be set if absolutely necessary like when trying to create an environment in the same Azure region as Azure resources or Fabric capacity.  Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).
-- `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
 - `cadence` (String) Cadence of updates for the environment (Frequent, Moderate). For more information check [here](https://learn.microsoft.com/en-us/power-platform/admin/create-environment#setting-an-environment-refresh-cadence).
 - `dataverse` (Attributes) Dataverse environment details (see [below for nested schema](#nestedatt--dataverse))
 - `description` (String) Description of the environment
@@ -72,6 +70,7 @@ resource "powerplatform_environment" "development" {
 
 ### Read-Only
 
+- `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
 - `enterprise_policies` (Attributes Set) Enterprise policies for the environment. See [Enterprise policies](https://learn.microsoft.com/en-us/power-platform/admin/enterprise-policies) for more details. (see [below for nested schema](#nestedatt--enterprise_policies))
 - `id` (String) Environment id (guid)
 
