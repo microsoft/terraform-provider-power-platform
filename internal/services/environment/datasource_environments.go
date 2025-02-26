@@ -120,6 +120,10 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 								stringvalidator.OneOf("Frequent", "Moderate"),
 							},
 						},
+						"release_cycle": schema.StringAttribute{
+							MarkdownDescription: "Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).",
+							Computed:            true,
+						},
 						"billing_policy_id": &schema.StringAttribute{
 							MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 							Computed:            true,
@@ -221,17 +225,16 @@ func (d *EnvironmentsDataSource) Configure(ctx context.Context, req datasource.C
 		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
-	clientApi := req.ProviderData.(*api.ProviderClient).Api
 
-	if clientApi == nil {
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			"Unexpected ProviderData Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
-	d.EnvironmentClient = NewEnvironmentClient(clientApi)
+	d.EnvironmentClient = NewEnvironmentClient(client.Api)
 }
 
 func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -263,7 +266,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 			currencyCode = defaultCurrency.IsoCurrencyCode
 		}
 
-		env, err := convertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil, timeouts.Value{})
+		env, err := convertSourceModelFromEnvironmentDto(env, &currencyCode, nil, nil, nil, timeouts.Value{}, *d.EnvironmentClient.Api.Config)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Error when converting environment %s", env.DisplayName), err.Error())
 			return
