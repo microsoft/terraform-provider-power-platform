@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
@@ -39,16 +40,15 @@ func (d *EnvironmentSettingsDataSource) Configure(ctx context.Context, req datas
 		return
 	}
 
-	client := req.ProviderData.(*api.ProviderClient).Api
-
-	if client == nil {
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			"Unexpected ProviderData Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
-	d.EnvironmentSettingsClient = newEnvironmentSettingsClient(client)
+	d.EnvironmentSettingsClient = newEnvironmentSettingsClient(client.Api)
 }
 
 func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -183,8 +183,48 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"power_apps_component_framework_for_canvas_apps": schema.BoolAttribute{
-								Description:         "Power Apps component framework for canvas apps",
 								MarkdownDescription: "Power Apps component framework for canvas apps",
+								Optional:            true,
+							},
+						},
+					},
+					"security": schema.SingleNestedAttribute{
+						MarkdownDescription: "Security. See [Security Overview](https://learn.microsoft.com/en-us/power-platform/admin/settings-privacy-security) for more details.",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"enable_ip_based_cookie_binding": schema.BoolAttribute{
+								MarkdownDescription: "Enable IP based cookie binding",
+								Optional:            true,
+							},
+							"enable_ip_based_firewall_rule": schema.BoolAttribute{
+								MarkdownDescription: "Enable IP based firewall rule",
+								Optional:            true,
+							},
+							"allowed_ip_range_for_firewall": schema.SetAttribute{
+								MarkdownDescription: "Allowed IP range for firewall",
+								Optional:            true,
+								ElementType:         types.StringType,
+							},
+							"allowed_service_tags_for_firewall": schema.SetAttribute{
+								MarkdownDescription: "Allowed service tags for firewall",
+								Optional:            true,
+								ElementType:         types.StringType,
+							},
+							"allow_application_user_access": schema.BoolAttribute{
+								MarkdownDescription: "Allow application user access",
+								Optional:            true,
+							},
+							"allow_microsoft_trusted_service_tags": schema.BoolAttribute{
+								MarkdownDescription: "Allow Microsoft trusted service tags",
+								Optional:            true,
+							},
+							"enable_ip_based_firewall_rule_in_audit_mode": schema.BoolAttribute{
+								MarkdownDescription: "Enable IP based firewall rule in audit mode",
+								Optional:            true,
+							},
+							"reverse_proxy_ip_addresses": schema.SetAttribute{
+								MarkdownDescription: "Reverse proxy IP addresses",
+								ElementType:         types.StringType,
 								Optional:            true,
 							},
 						},
