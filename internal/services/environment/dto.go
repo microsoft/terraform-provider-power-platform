@@ -27,6 +27,7 @@ var (
 	EnvironmentTypesDeveloperOnlyRegex   = fmt.Sprintf(`^(%s)$`, EnvironmentTypesDeveloper)
 	EnvironmentTypesExceptDeveloperRegex = fmt.Sprintf(`^(%s|%s|%s|%s)$`, EnvironmentTypesSandbox, EnvironmentTypesProduction, EnvironmentTypesTrial, EnvironmentTypesDefault)
 
+	CadenceTypes                      = []string{"Frequent", "Moderate"}
 	ReleaseCycleTypes                 = []string{ReleaseCycleTypesStandard, ReleaseCycleTypesEarly}
 	ReleaseCycleFirstReleaseOnlyRegex = fmt.Sprintf(`^(%s|%s)$`, ReleaseCycleFirstReleasePublicDto, ReleaseCycleFirstReleaseGovDto)
 )
@@ -52,7 +53,7 @@ type EnviromentPropertiesDto struct {
 	GovernanceConfiguration   *GovernanceConfigurationDto       `json:"governanceConfiguration,omitempty"`
 	BillingPolicy             *BillingPolicyDto                 `json:"billingPolicy,omitempty"`
 	ProvisioningState         string                            `json:"provisioningState,omitempty"`
-	Description               string                            `json:"description,omitempty"`
+	Description               string                            `json:"description"`
 	UpdateCadence             *UpdateCadenceDto                 `json:"updateCadence,omitempty"`
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
 	EnterprisePolicies        *EnvironmentEnterprisePoliciesDto `json:"enterprisePolicies,omitempty"`
