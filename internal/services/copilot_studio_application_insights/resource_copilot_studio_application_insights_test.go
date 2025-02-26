@@ -18,6 +18,7 @@ import (
 )
 
 func TestAccCopilotStudioApplicationInsights_Validate_Create(t *testing.T) {
+	t.Skip("Skipping test due lack of SP support")
 	resource.Test(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
