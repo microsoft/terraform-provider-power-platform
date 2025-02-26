@@ -1,0 +1,5 @@
+kind: changed
+body: 'powerplatfom_environment: billing_policy_id is now read-only. To add environment to billing policy, use powerplatform_billing_policy_environment resource.'
+time: 2025-02-26T15:00:32.611624415Z
+custom:
+    Issue: "602"
