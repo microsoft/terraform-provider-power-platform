@@ -114,7 +114,7 @@ func TestUnitCopilotStudioApplicationInsights_Validate_Create(t *testing.T) {
 
 	mocks.ActivateEnvironmentHttpMocks()
 
-	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01",
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Create/get_environments.json").String()), nil
 		})
@@ -166,7 +166,7 @@ func TestUnitCopilotStudioApplicationInsights_Validate_Update(t *testing.T) {
 	put_app_insights_inx := 0
 	get_app_insights_inx := 0
 
-	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01",
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/Validate_Update/get_environments.json").String()), nil
 		})

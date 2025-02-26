@@ -60,6 +60,8 @@ resource "powerplatform_environment" "development" {
 
 ### Optional
 
+- `allow_bing_search` (Boolean) Allow Bing search in the environment
+- `allow_moving_data_across_regions` (Boolean) Allow moving data across regions
 - `azure_region` (String) Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source. This property should only be set if absolutely necessary like when trying to create an environment in the same Azure region as Azure resources or Fabric capacity.  Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).
 - `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
 - `cadence` (String) Cadence of updates for the environment (Frequent, Moderate). For more information check [here](https://learn.microsoft.com/en-us/power-platform/admin/create-environment#setting-an-environment-refresh-cadence).

@@ -143,6 +143,14 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 							MarkdownDescription: "Entra ID  user id (guid) of the environment owner when creating developer environment",
 							Computed:            true,
 						},
+						"allow_bing_search": schema.BoolAttribute{
+							MarkdownDescription: "Allow Bing search in the environment",
+							Computed:            true,
+						},
+						"allow_moving_data_across_regions": schema.BoolAttribute{
+							MarkdownDescription: "Allow moving data across regions",
+							Computed:            true,
+						},
 						"dataverse": schema.SingleNestedAttribute{
 							MarkdownDescription: "Dataverse environment details",
 							Computed:            true,

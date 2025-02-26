@@ -34,20 +34,21 @@ type ListDataSourceModel struct {
 }
 
 type SourceModel struct {
-	Timeouts           timeouts.Value `tfsdk:"timeouts"`
-	Id                 types.String   `tfsdk:"id"`
-	Location           types.String   `tfsdk:"location"`
-	AzureRegion        types.String   `tfsdk:"azure_region"`
-	DisplayName        types.String   `tfsdk:"display_name"`
-	EnvironmentType    types.String   `tfsdk:"environment_type"`
-	BillingPolicyId    types.String   `tfsdk:"billing_policy_id"`
-	Description        types.String   `tfsdk:"description"`
-	Cadence            types.String   `tfsdk:"cadence"`
-	ReleaseCycle       types.String   `tfsdk:"release_cycle"`
-	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
-	OwnerId            types.String   `tfsdk:"owner_id"`
-
-	EnterprisePolicies basetypes.SetValue `tfsdk:"enterprise_policies"`
+	Timeouts                     timeouts.Value     `tfsdk:"timeouts"`
+	Id                           types.String       `tfsdk:"id"`
+	Location                     types.String       `tfsdk:"location"`
+	AzureRegion                  types.String       `tfsdk:"azure_region"`
+	DisplayName                  types.String       `tfsdk:"display_name"`
+	EnvironmentType              types.String       `tfsdk:"environment_type"`
+	BillingPolicyId              types.String       `tfsdk:"billing_policy_id"`
+	Description                  types.String       `tfsdk:"description"`
+	Cadence                      types.String       `tfsdk:"cadence"`
+	EnvironmentGroupId           types.String       `tfsdk:"environment_group_id"`
+	OwnerId                      types.String       `tfsdk:"owner_id"`
+	ReleaseCycle                 types.String       `tfsdk:"release_cycle"`
+	AllowBingSearch              types.Bool         `tfsdk:"allow_bing_search"`
+	AllowMovingDataAcrossRegions types.Bool         `tfsdk:"allow_moving_data_across_regions"`
+	EnterprisePolicies           basetypes.SetValue `tfsdk:"enterprise_policies"`
 
 	Dataverse types.Object `tfsdk:"dataverse"`
 }
@@ -128,6 +129,10 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{Id: environmentSource.EnvironmentGroupId.ValueString()}
 	}
 
+	if !environmentSource.AllowBingSearch.IsNull() && !environmentSource.AllowBingSearch.IsUnknown() {
+		environmentDto.Properties.BingChatEnabled = environmentSource.AllowBingSearch.ValueBool()
+	}
+
 	if !environmentSource.OwnerId.IsNull() && !environmentSource.OwnerId.IsUnknown() {
 		tenantId, err := r.EnvironmentClient.tenantClient.GetTenant(ctx)
 		if err != nil {
@@ -201,6 +206,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		AzureRegion:     types.StringValue(environmentDto.Properties.AzureRegion),
 		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),
 		Cadence:         types.StringValue(environmentDto.Properties.UpdateCadence.Id),
+		AllowBingSearch: types.BoolValue(environmentDto.Properties.BingChatEnabled),
 	}
 
 	convertBillingPolicyModelFromDto(environmentDto, model)
@@ -208,6 +214,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 	convertEnterprisePolicyModelFromDto(environmentDto, model)
 	convertReleaseCycleModelFromDto(environmentDto, model, providerConfig)
 	convertOwnerIdFromDto(environmentDto, model)
+	convertCrossRegionDataMovementFromDto(environmentDto, model)
 
 	attrTypesDataverseObject := map[string]attr.Type{
 		"url":                          types.StringType,
@@ -351,6 +358,14 @@ func convertOwnerIdFromDto(environmentDto EnvironmentDto, model *SourceModel) {
 		model.OwnerId = types.StringValue(environmentDto.Properties.UsedBy.Id)
 	} else {
 		model.OwnerId = types.StringNull()
+	}
+}
+
+func convertCrossRegionDataMovementFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	if environmentDto.Properties.CopilotPolicies != nil && environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled != nil && *environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled {
+		model.AllowMovingDataAcrossRegions = types.BoolValue(true)
+	} else {
+		model.AllowMovingDataAcrossRegions = types.BoolValue(false)
 	}
 }
 

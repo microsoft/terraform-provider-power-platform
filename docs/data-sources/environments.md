@@ -56,6 +56,8 @@ Optional:
 
 Read-Only:
 
+- `allow_bing_search` (Boolean) Allow Bing search in the environment
+- `allow_moving_data_across_regions` (Boolean) Allow moving data across regions
 - `azure_region` (String) Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source.
 - `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
 - `cadence` (String) Cadence of updates for the environment (Frequent, Moderate)
