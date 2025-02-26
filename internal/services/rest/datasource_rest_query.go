@@ -112,17 +112,16 @@ func (d *DataverseWebApiDatasource) Configure(ctx context.Context, req datasourc
 		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
-	clientApi := req.ProviderData.(*api.ProviderClient).Api
 
-	if clientApi == nil {
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			"Unexpected ProviderData Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
-	d.DataRecordClient = newWebApiClient(clientApi)
+	d.DataRecordClient = newWebApiClient(client.Api)
 }
 
 func (d *DataverseWebApiDatasource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
