@@ -50,7 +50,7 @@ type environmentGroupRuleSetParameterDto struct {
 	Value            []environmentGroupRuleSetValueDto `json:"value"`
 }
 
-func convertEnvironmentGroupRuleSetResourceModelToDto(ctx context.Context, model environmentGroupRuleSetResourceModel) EnvironmentGroupRuleSetValueSetDto {
+func convertEnvironmentGroupRuleSetResourceModelToDto(ctx context.Context, model environmentGroupRuleSetResourceModel) (EnvironmentGroupRuleSetValueSetDto, error) {
 	dto := EnvironmentGroupRuleSetValueSetDto{}
 
 	if !model.Id.IsUnknown() && !model.Id.IsNull() {
@@ -71,18 +71,26 @@ func convertEnvironmentGroupRuleSetResourceModelToDto(ctx context.Context, model
 		convertUsageInsights(ctx, ruleAttrs, &dto)
 		convertMakerWelcomeContent(ctx, ruleAttrs, &dto)
 		convertSolutionCheckerEnforcement(ctx, ruleAttrs, &dto)
-		convertBackupRetention(ctx, ruleAttrs, &dto)
-		convertAiGeneratedDesc(ctx, ruleAttrs, &dto)
-		convertAiGenerativeSettings(ctx, ruleAttrs, &dto)
+		if err := convertBackupRetention(ctx, ruleAttrs, &dto); err != nil {
+			return dto, err
+		}
+		if err := convertAiGeneratedDesc(ctx, ruleAttrs, &dto); err != nil {
+			return dto, err
+		}
+		if err := convertAiGenerativeSettings(ctx, ruleAttrs, &dto); err != nil {
+			return dto, err
+		}
 	}
-	return dto
+	return dto, nil
 }
 
-func convertAiGenerativeSettings(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
+func convertAiGenerativeSettings(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) error {
 	aiGenerativeSettingsObj := attrs["ai_generative_settings"]
 	if !aiGenerativeSettingsObj.IsNull() && !aiGenerativeSettingsObj.IsUnknown() {
 		var aiGenerativeSettings environmentGroupRuleSetAiGenerativeSettingsModel
-		aiGenerativeSettingsObj.(basetypes.ObjectValue).As(ctx, &aiGenerativeSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		if err := aiGenerativeSettingsObj.(basetypes.ObjectValue).As(ctx, &aiGenerativeSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
+			return fmt.Errorf("failed to convert ai generative settings: %v", err)
+		}
 
 		hasStatedChanges := true
 
@@ -107,13 +115,16 @@ func convertAiGenerativeSettings(ctx context.Context, attrs map[string]attr.Valu
 			Value: strconv.FormatBool(aiGenerativeSettings.BingSearchEnabled.ValueBool()),
 		})
 	}
+	return nil
 }
 
-func convertAiGeneratedDesc(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
+func convertAiGeneratedDesc(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) error {
 	aiGeneratedDescObj := attrs["ai_generated_descriptions"]
 	if !aiGeneratedDescObj.IsNull() && !aiGeneratedDescObj.IsUnknown() {
 		var aiGeneratedDesc environmentGroupRuleSetAiGeneratedDescriptionsModel
-		aiGeneratedDescObj.(basetypes.ObjectValue).As(ctx, &aiGeneratedDesc, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		if err := aiGeneratedDescObj.(basetypes.ObjectValue).As(ctx, &aiGeneratedDesc, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
+			return fmt.Errorf("failed to convert ai generated desc: %v", err)
+		}
 
 		hasStatedChanges := true
 
@@ -134,13 +145,16 @@ func convertAiGeneratedDesc(ctx context.Context, attrs map[string]attr.Value, dt
 			Value: strconv.FormatBool(!aiGeneratedDesc.AiDescriptionEnabled.ValueBool()),
 		})
 	}
+	return nil
 }
 
-func convertBackupRetention(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
+func convertBackupRetention(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) error {
 	backupRetentionObj := attrs["backup_retention"]
 	if !backupRetentionObj.IsNull() && !backupRetentionObj.IsUnknown() {
 		var backupRetention environmentGroupRuleSetBackupRetentionModel
-		backupRetentionObj.(basetypes.ObjectValue).As(ctx, &backupRetention, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		if err := backupRetentionObj.(basetypes.ObjectValue).As(ctx, &backupRetention, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
+			return fmt.Errorf("failed to convert backup retention: %v", err)
+		}
 
 		hasStatedChanges := true
 
@@ -161,6 +175,7 @@ func convertBackupRetention(ctx context.Context, attrs map[string]attr.Value, dt
 			Value: fmt.Sprintf("%d.00:00:00", backupRetention.PeriodInDays.ValueInt32()),
 		})
 	}
+	return nil
 }
 
 func convertSolutionCheckerEnforcement(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
