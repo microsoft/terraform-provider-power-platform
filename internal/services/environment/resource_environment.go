@@ -127,6 +127,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					stringvalidator.OneOf(CadenceTypes...),
+				},
 			},
 			"release_cycle": schema.StringAttribute{
 				MarkdownDescription: "Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).",
@@ -181,6 +184,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			"display_name": schema.StringAttribute{
 				MarkdownDescription: "Display name",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"billing_policy_id": &schema.StringAttribute{
 				MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
@@ -252,6 +258,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
 							stringplanmodifier.UseStateForUnknown(),
+						},
+						Validators: []validator.String{
+							stringvalidator.LengthAtLeast(1),
 						},
 					},
 					"organization_id": schema.StringAttribute{
@@ -505,46 +514,19 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	environmentDto := EnvironmentDto{
-		Id:         plan.Id.ValueString(),
-		Name:       plan.DisplayName.ValueString(),
-		Type:       plan.EnvironmentType.ValueString(),
-		Location:   plan.Location.ValueString(),
 		Properties: &envProp,
 	}
 
-	if plan.EnvironmentType.ValueString() != state.EnvironmentType.ValueString() {
-		err := r.EnvironmentClient.ModifyEnvironmentType(ctx, plan.Id.ValueString(), plan.EnvironmentType.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError("Error when updating environment_type", err.Error())
-			return
-		}
+	err := r.updateEnvironmentType(ctx, plan, state)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when updating environment type", err.Error())
+		return
 	}
+	updateDescription(plan, &environmentDto)
+	updateCadence(plan, &environmentDto)
 
-	if !plan.Description.IsNull() && plan.Description.ValueString() != "" {
-		environmentDto.Properties.Description = plan.Description.ValueString()
-	}
-
-	if !plan.Cadence.IsNull() && plan.Cadence.ValueString() != "" {
-		environmentDto.Properties.UpdateCadence = &UpdateCadenceDto{
-			Id: plan.Cadence.ValueString(),
-		}
-	}
-
-	if !plan.EnvironmentGroupId.IsNull() && !plan.EnvironmentGroupId.IsUnknown() {
-		envGroupId := constants.ZERO_UUID
-		if plan.EnvironmentGroupId.ValueString() != "" && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
-			envGroupId = plan.EnvironmentGroupId.ValueString()
-		}
-		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
-			Id: envGroupId,
-		}
-	}
-
-	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
-		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
-			Id: plan.BillingPolicyId.ValueString(),
-		}
-	}
+	updateEnvironmentGroupId(plan, &environmentDto)
+	updateBillingPolicyId(plan, &environmentDto)
 
 	var currencyCode string
 	if !isDataverseEnvironmentEmpty(ctx, state) && !isDataverseEnvironmentEmpty(ctx, plan) {
@@ -580,6 +562,15 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
 		return
+	}
+
+	// This is a temporary fix for the issue in BAPI where the display name is not propagated correctly on environment update
+	if plan.DisplayName.ValueString() != state.DisplayName.ValueString() {
+		envDto, err = r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
+			return
+		}
 	}
 
 	var templateMetadata *createTemplateMetadataDto
@@ -698,4 +689,48 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 	defer exitContext()
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *Resource) updateEnvironmentType(ctx context.Context, plan *SourceModel, state *SourceModel) error {
+	if plan.EnvironmentType.ValueString() != state.EnvironmentType.ValueString() {
+		err := r.EnvironmentClient.ModifyEnvironmentType(ctx, plan.Id.ValueString(), plan.EnvironmentType.ValueString())
+		if err != nil {
+			return fmt.Errorf("Error when updating environment_type: %s", err.Error())
+		}
+	}
+	return nil
+}
+
+func updateDescription(plan *SourceModel, environmentDto *EnvironmentDto) {
+	if !plan.Description.IsNull() && plan.Description.ValueString() != "" {
+		environmentDto.Properties.Description = plan.Description.ValueString()
+	}
+}
+
+func updateCadence(plan *SourceModel, environmentDto *EnvironmentDto) {
+	if !plan.Cadence.IsNull() && plan.Cadence.ValueString() != "" {
+		environmentDto.Properties.UpdateCadence = &UpdateCadenceDto{
+			Id: plan.Cadence.ValueString(),
+		}
+	}
+}
+
+func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto) {
+	if !plan.EnvironmentGroupId.IsNull() && plan.EnvironmentGroupId.ValueString() != "" {
+		envGroupId := constants.ZERO_UUID
+		if plan.EnvironmentGroupId.ValueString() != "" && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
+			envGroupId = plan.EnvironmentGroupId.ValueString()
+		}
+		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
+			Id: envGroupId,
+		}
+	}
+}
+
+func updateBillingPolicyId(plan *SourceModel, environmentDto *EnvironmentDto) {
+	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
+		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
+			Id: plan.BillingPolicyId.ValueString(),
+		}
+	}
 }
