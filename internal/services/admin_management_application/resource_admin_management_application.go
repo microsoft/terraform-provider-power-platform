@@ -74,13 +74,16 @@ func (r *AdminManagementApplicationResource) Configure(ctx context.Context, req 
 		return
 	}
 
-	clientApi := req.ProviderData.(*api.ProviderClient).Api
-	if clientApi == nil {
-		resp.Diagnostics.AddError("Failed to configure AdminManagementApplicationResource", "Failed to configure AdminManagementApplicationResource")
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected ProviderData Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
 		return
 	}
 
-	r.AdminManagementApplicationClient = newAdminManagementApplicationClient(clientApi)
+	r.AdminManagementApplicationClient = newAdminManagementApplicationClient(client.Api)
 }
 
 func (r *AdminManagementApplicationResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

@@ -116,16 +116,15 @@ func (d *EnvironmentTemplatesDataSource) Configure(ctx context.Context, req data
 		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
-	clientApi := req.ProviderData.(*api.ProviderClient).Api
-	if clientApi == nil {
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			"Unexpected ProviderData Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
-	d.EnvironmentTemplatesClient = newEnvironmentTemplatesClient(clientApi)
+	d.EnvironmentTemplatesClient = newEnvironmentTemplatesClient(client.Api)
 }
 
 func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
