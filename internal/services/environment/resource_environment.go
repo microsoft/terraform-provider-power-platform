@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
@@ -180,6 +181,16 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
 					validators.OtherFieldRequiredWhenValueOf(path.Root("environment_type").Expression(), regexp.MustCompile(EnvironmentTypesDeveloperOnlyRegex), nil, "owner_id can be used only when environment_type is `Developer`"),
 				},
+			},
+			"allow_bing_search": schema.BoolAttribute{
+				MarkdownDescription: "Allow Bing search in the environment",
+				Optional:            true,
+				Computed:            true,
+			},
+			"allow_moving_data_across_regions": schema.BoolAttribute{
+				MarkdownDescription: "Allow moving data across regions",
+				Optional:            true,
+				Computed:            true,
 			},
 			"display_name": schema.StringAttribute{
 				MarkdownDescription: "Display name",
@@ -382,6 +393,12 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
+	err = r.aiGenerativeFeaturesValidaor(plan)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
+
 	// If it's dataverse environment, validate the currency and language code
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
 		err = languageCodeValidator(ctx, r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
@@ -401,6 +418,24 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
+	}
+
+	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
+		err := r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
+
+		envDto, err = r.EnvironmentClient.GetEnvironment(ctx, envDto.Name)
+		if err != nil {
+			if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			return
+		}
 	}
 
 	var currencyCode string
@@ -508,16 +543,23 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
+	err := r.aiGenerativeFeaturesValidaor(plan)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		return
+	}
+
 	envProp := EnviromentPropertiesDto{
-		DisplayName:    plan.DisplayName.ValueString(),
-		EnvironmentSku: plan.EnvironmentType.ValueString(),
+		DisplayName:     plan.DisplayName.ValueString(),
+		EnvironmentSku:  plan.EnvironmentType.ValueString(),
+		BingChatEnabled: plan.AllowBingSearch.ValueBool(),
 	}
 
 	environmentDto := EnvironmentDto{
 		Properties: &envProp,
 	}
 
-	err := r.updateEnvironmentType(ctx, plan, state)
+	err = r.updateEnvironmentType(ctx, plan, state)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when updating environment type", err.Error())
 		return
@@ -525,37 +567,28 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	updateDescription(plan, &environmentDto)
 	updateCadence(plan, &environmentDto)
 
-	updateEnvironmentGroupId(plan, &environmentDto)
+	err = r.updateAllowBingSearch(ctx, plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when updating allow bing search", err.Error())
+		return
+	}
+
+  updateEnvironmentGroupId(plan, &environmentDto)
 	updateBillingPolicyId(plan, &environmentDto)
 
-	var currencyCode string
-	if !isDataverseEnvironmentEmpty(ctx, state) && !isDataverseEnvironmentEmpty(ctx, plan) {
-		currencyCode = updateExistingDataverse(ctx, plan, &environmentDto, state)
-	} else if isDataverseEnvironmentEmpty(ctx, state) && !isDataverseEnvironmentEmpty(ctx, plan) {
-		code, err := addDataverse(ctx, plan, r)
-		if err != nil {
-			resp.Diagnostics.AddError("Error when creating new dataverse environment", err.Error())
-			return
-		}
-		currencyCode = code
+	currencyCode, err := r.updateDataverse(ctx, plan, state, &environmentDto)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when updating dataverse", err.Error())
+		return
 	}
 
-	if !state.BillingPolicyId.IsNull() && !state.BillingPolicyId.IsUnknown() && state.BillingPolicyId.ValueString() != "" {
-		tflog.Debug(ctx, fmt.Sprintf("Removing environment %s from billing policy %s", state.Id.ValueString(), state.BillingPolicyId.ValueString()))
-		err := r.LicensingClient.RemoveEnvironmentsToBillingPolicy(ctx, state.BillingPolicyId.ValueString(), []string{state.Id.ValueString()})
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error when removing environment %s from billing policy %s", state.Id.ValueString(), state.BillingPolicyId.ValueString()), err.Error())
-			return
-		}
+	err = r.removeBillingPolicy(ctx, state)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when removing billing policy", err.Error())
 	}
-
-	if !plan.BillingPolicyId.IsNull() && !plan.BillingPolicyId.IsUnknown() && plan.BillingPolicyId.ValueString() != "" {
-		tflog.Debug(ctx, fmt.Sprintf("Adding environment %s to billing policy %s", plan.Id.ValueString(), plan.BillingPolicyId.ValueString()))
-		err := r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId.ValueString(), []string{plan.Id.ValueString()})
-		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error when adding environment %s to billing policy %s", plan.Id.ValueString(), plan.BillingPolicyId.ValueString()), err.Error())
-			return
-		}
+	err = r.addBillingPolicy(ctx, plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when adding billing policy", err.Error())
 	}
 
 	envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
@@ -594,6 +627,27 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
+}
+
+func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentId string, allowBingSearch bool, allowMovingData *bool) error {
+	featuresDto := GenerativeAiFeaturesDto{
+		Properties: GenerativeAiFeaturesPropertiesDto{
+			BingChatEnabled: allowBingSearch,
+		},
+	}
+
+	if allowMovingData != nil {
+		featuresDto.Properties.CopilotPolicies = &CopilotPoliciesDto{
+			CrossGeoCopilotDataMovementEnabled: allowMovingData,
+		}
+	}
+
+	err := r.EnvironmentClient.UpdateEnvironmentAiFeatures(ctx, environmentId, featuresDto)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, error) {
@@ -715,6 +769,17 @@ func updateCadence(plan *SourceModel, environmentDto *EnvironmentDto) {
 	}
 }
 
+
+func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel) error {
+	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
+		err := r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto) {
 	if !plan.EnvironmentGroupId.IsNull() && plan.EnvironmentGroupId.ValueString() != "" {
 		envGroupId := constants.ZERO_UUID
@@ -733,4 +798,53 @@ func updateBillingPolicyId(plan *SourceModel, environmentDto *EnvironmentDto) {
 			Id: plan.BillingPolicyId.ValueString(),
 		}
 	}
+}
+
+func (r *Resource) updateDataverse(ctx context.Context, plan *SourceModel, state *SourceModel, environmentDto *EnvironmentDto) (string, error) {
+	var currencyCode string
+	if !isDataverseEnvironmentEmpty(ctx, state) && !isDataverseEnvironmentEmpty(ctx, plan) {
+		currencyCode = updateExistingDataverse(ctx, plan, environmentDto, state)
+	} else if isDataverseEnvironmentEmpty(ctx, state) && !isDataverseEnvironmentEmpty(ctx, plan) {
+		code, err := addDataverse(ctx, plan, r)
+		if err != nil {
+			return "", err
+		}
+		currencyCode = code
+	}
+	return currencyCode, nil
+}
+
+func (r *Resource) removeBillingPolicy(ctx context.Context, state *SourceModel) error {
+	if !state.BillingPolicyId.IsNull() && !state.BillingPolicyId.IsUnknown() && state.BillingPolicyId.ValueString() != "" {
+		tflog.Debug(ctx, fmt.Sprintf("Removing environment %s from billing policy %s", state.Id.ValueString(), state.BillingPolicyId.ValueString()))
+		err := r.LicensingClient.RemoveEnvironmentsToBillingPolicy(ctx, state.BillingPolicyId.ValueString(), []string{state.Id.ValueString()})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *Resource) addBillingPolicy(ctx context.Context, plan *SourceModel) error {
+	if !plan.BillingPolicyId.IsNull() && !plan.BillingPolicyId.IsUnknown() && plan.BillingPolicyId.ValueString() != "" {
+		tflog.Debug(ctx, fmt.Sprintf("Adding environment %s to billing policy %s", plan.Id.ValueString(), plan.BillingPolicyId.ValueString()))
+		err := r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId.ValueString(), []string{plan.Id.ValueString()})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (r *Resource) aiGenerativeFeaturesValidaor(plan *SourceModel) error {
+	if r.EnvironmentClient.Api.Config.CloudType != config.CloudTypePublic {
+		return fmt.Errorf("Moving data across regions is not supported in non public clouds")
+	}
+	if plan.Location.ValueString() == "unitedstates" && plan.AllowMovingDataAcrossRegions.ValueBool() {
+		return fmt.Errorf("Moving data across regions is not supported in the unitedstates location")
+	}
+	if plan.Location.ValueString() != "unitedstates" && plan.AllowBingSearch.ValueBool() && !plan.AllowMovingDataAcrossRegions.ValueBool() {
+		return fmt.Errorf("To enable AI generative features, moving data across regions must be enabled")
+	}
+	return nil
 }

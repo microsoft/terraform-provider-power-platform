@@ -19,13 +19,13 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
-func TestAccEnvironmentsResource_Validate_Update_Name_Field(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+func TestAccEnvironmentsResource_Validate_Update_Name_Field(t *testing.T) { 
+  	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				resource "powerplatform_environment" "development" {
+  				resource "powerplatform_environment" "development" {
 					display_name                              = "aaa"
 					location                                  = "unitedstates"
 					environment_type                       	  = "Sandbox"
@@ -50,10 +50,160 @@ func TestAccEnvironmentsResource_Validate_Update_Name_Field(t *testing.T) {
 						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
 					}
 				}`,
-
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "aaa1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Region_Update(t *testing.T) {
+    	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "europe"
+						environment_type                       	  = "Sandbox"
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
+				),
+			},
+			{
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "europe"
+						environment_type                       	  = "Sandbox"
+
+						allow_bing_search                = false
+						allow_moving_data_across_regions = true
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
+				),
+			},
+			{
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "europe"
+						environment_type                       	  = "Sandbox"
+
+						allow_bing_search                = false
+						allow_moving_data_across_regions = false
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_US_Region_Update(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "unitedstates"
+						environment_type                       	  = "Sandbox"
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "false"),
+				),
+			},
+			{
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "unitedstates"
+						environment_type                       	  = "Sandbox"
+
+						allow_bing_search                = true
+						//on usa region, moving data across regions is not allowed and always false
+						allow_moving_data_across_regions = false
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "false"),
+				),
+			},
+			{
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "unitedstates"
+						environment_type                       	  = "Sandbox"
+
+						allow_bing_search                = false
+						allow_moving_data_across_regions = false
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_US_Region_Expect_Fail(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*Moving data across regions is not supported in the unitedstates location.*"),
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "unitedstates"
+						environment_type                       	  = "Sandbox"
+
+						allow_bing_search                = false
+						allow_moving_data_across_regions = true
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Region_Expect_Fail(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*To enable AI generative features, moving data across regions must be enabled.*"),
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "europe"
+						environment_type                       	  = "Sandbox"
+
+						allow_bing_search                = true
+						allow_moving_data_across_regions = false
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(),
 			},
 		},
 	})
@@ -987,7 +1137,7 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_With_Billing_Policy/get_lifecycle_delete.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01`,
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01`,
 		func(req *http.Request) (*http.Response, error) {
 			getResponseInx++
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Validate_Update_With_Billing_Policy/get_environment_%d.json", getResponseInx)).String()), nil
