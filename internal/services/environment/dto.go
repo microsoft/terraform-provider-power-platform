@@ -59,6 +59,21 @@ type EnviromentPropertiesDto struct {
 	EnterprisePolicies        *EnvironmentEnterprisePoliciesDto `json:"enterprisePolicies,omitempty"`
 	Cluster                   *ClusterDto                       `json:"cluster,omitempty"`
 	UsedBy                    *UsedByDto                        `json:"usedBy,omitempty"`
+	BingChatEnabled           bool                              `json:"bingChatEnabled,omitempty"`
+	CopilotPolicies           *CopilotPoliciesDto               `json:"copilotPolicies,omitempty"`
+}
+
+type GenerativeAiFeaturesDto struct {
+	Properties GenerativeAiFeaturesPropertiesDto `json:"properties"`
+}
+
+type GenerativeAiFeaturesPropertiesDto struct {
+	CopilotPolicies *CopilotPoliciesDto `json:"copilotPolicies,omitempty"`
+	BingChatEnabled bool                `json:"bingChatEnabled"`
+}
+
+type CopilotPoliciesDto struct {
+	CrossGeoCopilotDataMovementEnabled *bool `json:"crossGeoCopilotDataMovementEnabled"`
 }
 
 type ClusterDto struct {
@@ -184,6 +199,8 @@ type environmentCreatePropertiesDto struct {
 	EnvironmentSku            string                            `json:"environmentSku,omitempty"`
 	LinkedEnvironmentMetadata *createLinkEnvironmentMetadataDto `json:"linkedEnvironmentMetadata,omitempty"`
 	ParentEnvironmentGroup    *ParentEnvironmentGroupDto        `json:"parentEnvironmentGroup,omitempty"`
+	BingChatEnabled           bool                              `json:"bingChatEnabled,omitempty"`
+	CopilotPolicies           *CopilotPoliciesDto               `json:"copilotPolicies,omitempty"`
 	UsedBy                    *UsedByDto                        `json:"usedBy,omitempty"`
 	Cluster                   *ClusterDto                       `json:"cluster,omitempty"`
 }
