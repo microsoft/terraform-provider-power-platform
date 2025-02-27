@@ -443,7 +443,7 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
+	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy,properties/copilotPolicies")
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 

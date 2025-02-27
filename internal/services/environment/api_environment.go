@@ -250,7 +250,7 @@ func (client *Client) GetEnvironment(ctx context.Context, environmentId string) 
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
+	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy,properties/copilotPolicies")
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
@@ -461,6 +461,27 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 	return env, err
 }
 
+func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environmentId string, aaa GenerativeAiFeaturesDto) error {
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
+	}
+	values := url.Values{}
+	values.Add("api-version", "2021-04-01")
+	apiUrl.RawQuery = values.Encode()
+	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, aaa, []int{http.StatusAccepted}, nil)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (client *Client) UpdateEnvironment(ctx context.Context, environmentId string, environment EnvironmentDto) (*EnvironmentDto, error) {
 	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata != nil && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
 		err := client.ValidateUpdateEnvironmentDetails(ctx, environment.Id, environment.Properties.LinkedEnvironmentMetadata.DomainName)
@@ -518,7 +539,7 @@ func (client *Client) GetEnvironments(ctx context.Context) ([]EnvironmentDto, er
 		Path:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments",
 	}
 	values := url.Values{}
-	values.Add("$expand", "properties/billingPolicy")
+	values.Add("$expand", "properties/billingPolicy,properties/copilotPolicies")
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 
