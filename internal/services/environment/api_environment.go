@@ -497,7 +497,9 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 	}
 	values := url.Values{}
 	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
-	values.Add("api-version", "2022-05-01")
+	// Due to a bug in BAPI that triggers managed environment on update of a description field, we need to use the older API version
+	// values.Add("api-version", "2022-05-01")
+	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
 	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
 	if err != nil {

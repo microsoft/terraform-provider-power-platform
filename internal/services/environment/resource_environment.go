@@ -128,6 +128,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					stringvalidator.OneOf(CadenceTypes...),
+				},
 			},
 			"release_cycle": schema.StringAttribute{
 				MarkdownDescription: "Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).",
@@ -192,6 +195,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			"display_name": schema.StringAttribute{
 				MarkdownDescription: "Display name",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"billing_policy_id": &schema.StringAttribute{
 				MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
@@ -263,6 +269,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
 							stringplanmodifier.UseStateForUnknown(),
+						},
+						Validators: []validator.String{
+							stringvalidator.LengthAtLeast(1),
 						},
 					},
 					"organization_id": schema.StringAttribute{
@@ -547,10 +556,6 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	environmentDto := EnvironmentDto{
-		Id:         plan.Id.ValueString(),
-		Name:       plan.DisplayName.ValueString(),
-		Type:       plan.EnvironmentType.ValueString(),
-		Location:   plan.Location.ValueString(),
 		Properties: &envProp,
 	}
 
@@ -561,12 +566,14 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 	updateDescription(plan, &environmentDto)
 	updateCadence(plan, &environmentDto)
+
 	err = r.updateAllowBingSearch(ctx, plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when updating allow bing search", err.Error())
 		return
 	}
-	updateEnvironmentGroupId(plan, &environmentDto)
+
+  updateEnvironmentGroupId(plan, &environmentDto)
 	updateBillingPolicyId(plan, &environmentDto)
 
 	currencyCode, err := r.updateDataverse(ctx, plan, state, &environmentDto)
@@ -588,6 +595,15 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
 		return
+	}
+
+	// This is a temporary fix for the issue in BAPI where the display name is not propagated correctly on environment update
+	if plan.DisplayName.ValueString() != state.DisplayName.ValueString() {
+		envDto, err = r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
+		if err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
+			return
+		}
 	}
 
 	var templateMetadata *createTemplateMetadataDto
@@ -753,6 +769,7 @@ func updateCadence(plan *SourceModel, environmentDto *EnvironmentDto) {
 	}
 }
 
+
 func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel) error {
 	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
 		err := r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
@@ -764,7 +781,7 @@ func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel)
 }
 
 func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto) {
-	if !plan.EnvironmentGroupId.IsNull() && !plan.EnvironmentGroupId.IsUnknown() {
+	if !plan.EnvironmentGroupId.IsNull() && plan.EnvironmentGroupId.ValueString() != "" {
 		envGroupId := constants.ZERO_UUID
 		if plan.EnvironmentGroupId.ValueString() != "" && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
 			envGroupId = plan.EnvironmentGroupId.ValueString()

@@ -178,7 +178,7 @@ func convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 		linkedEnvironmentMetadata := &createLinkEnvironmentMetadataDto{
 			BaseLanguage:    int(dataverseSourceModel.LanguageName.ValueInt64()),
 			SecurityGroupId: dataverseSourceModel.SecurityGroupId.ValueString(),
-			Currency: createCurrencyDto{
+			Currency: &createCurrencyDto{
 				Code: dataverseSourceModel.CurrencyCode.ValueString(),
 			},
 			Templates:        dataverseSourceModel.Templates,
