@@ -108,6 +108,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
 					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidOrEmptyValueRegex), "environment_group_id must be a valid environment group id guid"),
 					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
 				},
