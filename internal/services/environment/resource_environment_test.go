@@ -19,8 +19,8 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
-func TestAccEnvironmentsResource_Validate_Update_Name_Field(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+func TestAccEnvironmentsResource_Validate_Update_Name_Field(t *testing.T) { 
+  	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
