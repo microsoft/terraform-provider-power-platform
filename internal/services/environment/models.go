@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 )
@@ -332,7 +333,7 @@ func convertEnvironmentGroupFromDto(environmentDto EnvironmentDto, model *Source
 	if environmentDto.Properties.ParentEnvironmentGroup != nil {
 		model.EnvironmentGroupId = types.StringValue(environmentDto.Properties.ParentEnvironmentGroup.Id)
 	} else {
-		model.EnvironmentGroupId = types.StringValue("")
+		model.EnvironmentGroupId = types.StringValue(constants.ZERO_UUID)
 	}
 }
 

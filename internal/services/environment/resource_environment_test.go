@@ -19,8 +19,8 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
-func TestAccEnvironmentsResource_Validate_Update_Name_Field(t *testing.T) { 
-  	resource.Test(t, resource.TestCase{
+func TestAccEnvironmentsResource_Validate_Update_Name_Field(t *testing.T) {
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -59,7 +59,7 @@ func TestAccEnvironmentsResource_Validate_Update_Name_Field(t *testing.T) {
 }
 
 func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Region_Update(t *testing.T) {
-    	resource.Test(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -2357,7 +2357,7 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 					display_name                              = "displayname"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
-					environment_group_id					  = ""
+					environment_group_id					  = "00000000-0000-0000-0000-000000000000"
 					dataverse = {
 						language_code                             = "1033"
 						currency_code                             = "PLN"
@@ -2367,7 +2367,7 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", ""),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000000"),
 				),
 			},
 		},
@@ -2447,7 +2447,7 @@ func TestAccEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
-					environment_group_id					  = ""
+					environment_group_id					  = "00000000-0000-0000-0000-000000000000"
 					dataverse = {
 						language_code                             = "1033"
 						currency_code                             = "USD"
@@ -2457,7 +2457,7 @@ func TestAccEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing
 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", ""),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000000"),
 				),
 			},
 		},
@@ -2576,7 +2576,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_A
 					display_name                              = "` + mocks.TestName() + `"
 					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
-					environment_group_id					  = ""
+					environment_group_id					  = "00000000-0000-0000-0000-000000000000"
 					dataverse = {
 						language_code                             = "1033"
 						currency_code                             = "USD"
@@ -2586,7 +2586,7 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_A
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", ""),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000000"),
 				),
 			},
 		},
