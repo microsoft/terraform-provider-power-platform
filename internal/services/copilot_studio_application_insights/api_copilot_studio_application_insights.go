@@ -114,10 +114,14 @@ func (client *client) updateCopilotStudioAppInsightsConfiguration(ctx context.Co
 
 	updatedCopilotStudioAppInsightsConfiguration := CopilotStudioAppInsightsDto{}
 
-	_, err = client.Api.Execute(ctx, []string{constants.COPILOT_SCOPE}, "PUT", apiUrl.String(), http.Header{"x-cci-tenantid": {env.Properties.TenantId}}, copilotStudioAppInsightsConfig, []int{http.StatusOK}, &updatedCopilotStudioAppInsightsConfiguration)
+	resp, err := client.Api.Execute(ctx, []string{constants.COPILOT_SCOPE}, "PUT", apiUrl.String(), http.Header{"x-cci-tenantid": {env.Properties.TenantId}}, copilotStudioAppInsightsConfig, []int{http.StatusOK, http.StatusInternalServerError}, &updatedCopilotStudioAppInsightsConfiguration)
 	if err != nil {
 		return nil, err
 	}
+	if resp.HttpResponse.StatusCode == http.StatusInternalServerError {
+		return nil, fmt.Errorf("Error updating Application Insights configuration: %s", string(resp.BodyAsBytes))
+	}
+
 	if len(updatedCopilotStudioAppInsightsConfiguration.Errors) > 0 {
 		return nil, fmt.Errorf("Error updating Application Insights configuration: %s", updatedCopilotStudioAppInsightsConfiguration.Errors)
 	}
