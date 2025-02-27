@@ -111,7 +111,7 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		environmentDto.Properties.AzureRegion = environmentSource.AzureRegion.ValueString()
 	}
 
-	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != "" {
+	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != constants.ZERO_UUID {
 		environmentDto.Properties.BillingPolicy = BillingPolicyDto{
 			Id: environmentSource.BillingPolicyId.ValueString(),
 		}
@@ -338,10 +338,10 @@ func convertEnvironmentGroupFromDto(environmentDto EnvironmentDto, model *Source
 }
 
 func convertBillingPolicyModelFromDto(environmentDto EnvironmentDto, model *SourceModel) {
-	if environmentDto.Properties.BillingPolicy != nil {
+	if environmentDto.Properties.BillingPolicy != nil && environmentDto.Properties.BillingPolicy.Id != "" {
 		model.BillingPolicyId = types.StringValue(environmentDto.Properties.BillingPolicy.Id)
 	} else {
-		model.BillingPolicyId = types.StringValue("")
+		model.BillingPolicyId = types.StringValue(constants.ZERO_UUID)
 	}
 }
 

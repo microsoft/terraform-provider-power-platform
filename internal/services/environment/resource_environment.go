@@ -25,6 +25,7 @@ import (
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
@@ -109,7 +110,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtLeast(1),
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidOrEmptyValueRegex), "environment_group_id must be a valid environment group id guid"),
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_group_id must be a valid environment group id guid"),
 					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
 				},
 			},
@@ -206,6 +207,10 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "billing_policy_id must be a valid billing policy id guid"),
+				},
 			},
 			"enterprise_policies": schema.SetNestedAttribute{
 				MarkdownDescription: "Enterprise policies for the environment. See [Enterprise policies](https://learn.microsoft.com/en-us/power-platform/admin/enterprise-policies) for more details.",
@@ -285,6 +290,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						MarkdownDescription: "Security group id (guid). For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
 						Optional:            true,
 						Validators: []validator.String{
+							stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "security_group_id must be a valid security group guid id"),
 							validators.MakeFieldRequiredWhenOtherFieldDoesNotHaveValue(path.Root("environment_type").Expression(), regexp.MustCompile(EnvironmentTypesExceptDeveloperRegex), "dataverse.security_group_id is required for all environment_type values except `Developer`"),
 						},
 					},
@@ -789,7 +795,7 @@ func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto)
 }
 
 func updateBillingPolicyId(plan *SourceModel, environmentDto *EnvironmentDto) {
-	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
+	if !plan.BillingPolicyId.IsNull() {
 		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
 		}
@@ -811,7 +817,7 @@ func (r *Resource) updateDataverse(ctx context.Context, plan *SourceModel, state
 }
 
 func (r *Resource) removeBillingPolicy(ctx context.Context, state *SourceModel) error {
-	if !state.BillingPolicyId.IsNull() && !state.BillingPolicyId.IsUnknown() && state.BillingPolicyId.ValueString() != "" {
+	if !state.BillingPolicyId.IsNull() && !state.BillingPolicyId.IsUnknown() && state.BillingPolicyId.ValueString() != constants.ZERO_UUID {
 		tflog.Debug(ctx, fmt.Sprintf("Removing environment %s from billing policy %s", state.Id.ValueString(), state.BillingPolicyId.ValueString()))
 		err := r.LicensingClient.RemoveEnvironmentsToBillingPolicy(ctx, state.BillingPolicyId.ValueString(), []string{state.Id.ValueString()})
 		if err != nil {
@@ -822,7 +828,7 @@ func (r *Resource) removeBillingPolicy(ctx context.Context, state *SourceModel) 
 }
 
 func (r *Resource) addBillingPolicy(ctx context.Context, plan *SourceModel) error {
-	if !plan.BillingPolicyId.IsNull() && !plan.BillingPolicyId.IsUnknown() && plan.BillingPolicyId.ValueString() != "" {
+	if !plan.BillingPolicyId.IsNull() && !plan.BillingPolicyId.IsUnknown() && plan.BillingPolicyId.ValueString() != constants.ZERO_UUID {
 		tflog.Debug(ctx, fmt.Sprintf("Adding environment %s to billing policy %s", plan.Id.ValueString(), plan.BillingPolicyId.ValueString()))
 		err := r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId.ValueString(), []string{plan.Id.ValueString()})
 		if err != nil {
