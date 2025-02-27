@@ -102,7 +102,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				},
 			},
 			"environment_group_id": schema.StringAttribute{
-				MarkdownDescription: "Environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information. The remove the environment from the environment group, set this attribute to `00000000-0000-0000-0000-000000000000`",
+				MarkdownDescription: "Environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information. To remove the environment from the environment group, set this attribute to `00000000-0000-0000-0000-000000000000`",
 				Computed:            true,
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
@@ -201,7 +201,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				},
 			},
 			"billing_policy_id": &schema.StringAttribute{
-				MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
+				MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing. To remove the environment from the billing policy, set this attribute to `00000000-0000-0000-0000-000000000000`",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
