@@ -61,6 +61,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
+	
 	policyAttributeSchema := map[string]schema.Attribute{
 		"type": schema.StringAttribute{
 			MarkdownDescription: "Type of the policy according to [schema definition](https://learn.microsoft.com/en-us/azure/templates/microsoft.powerplatform/enterprisepolicies?pivots=deployment-language-terraform#enterprisepolicies-2)",
@@ -102,14 +103,15 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				},
 			},
 			"environment_group_id": schema.StringAttribute{
-				MarkdownDescription: "Environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information.",
+				MarkdownDescription: "Environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information. To remove the environment from the environment group, set this attribute to `00000000-0000-0000-0000-000000000000`",
 				Computed:            true,
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidOrEmptyValueRegex), "environment_group_id must be a valid environment group id guid"),
+					stringvalidator.LengthAtLeast(1),
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_group_id must be a valid environment group id guid"),
 					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
 				},
 			},
@@ -200,11 +202,15 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				},
 			},
 			"billing_policy_id": &schema.StringAttribute{
-				MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
+				MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing. To remove the environment from the billing policy, set this attribute to `00000000-0000-0000-0000-000000000000`",
 				Optional:            true,
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "billing_policy_id must be a valid billing policy id guid"),
 				},
 			},
 			"enterprise_policies": schema.SetNestedAttribute{
@@ -285,6 +291,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						MarkdownDescription: "Security group id (guid). For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
 						Optional:            true,
 						Validators: []validator.String{
+							stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "security_group_id must be a valid security group guid id"),
 							validators.MakeFieldRequiredWhenOtherFieldDoesNotHaveValue(path.Root("environment_type").Expression(), regexp.MustCompile(EnvironmentTypesExceptDeveloperRegex), "dataverse.security_group_id is required for all environment_type values except `Developer`"),
 						},
 					},
@@ -573,7 +580,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-  updateEnvironmentGroupId(plan, &environmentDto)
+	updateEnvironmentGroupId(plan, &environmentDto)
 	updateBillingPolicyId(plan, &environmentDto)
 
 	currencyCode, err := r.updateDataverse(ctx, plan, state, &environmentDto)
@@ -733,6 +740,11 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 
 	err := r.EnvironmentClient.DeleteEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
+		// Another delete is already in progress
+		if customerrors.Code(err) == customerrors.ERROR_ENVIRONMENT_OPERATION_CONFLICT {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		return
 	}
@@ -769,7 +781,6 @@ func updateCadence(plan *SourceModel, environmentDto *EnvironmentDto) {
 	}
 }
 
-
 func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel) error {
 	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
 		err := r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
@@ -781,19 +792,16 @@ func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel)
 }
 
 func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto) {
-	if !plan.EnvironmentGroupId.IsNull() && plan.EnvironmentGroupId.ValueString() != "" {
-		envGroupId := constants.ZERO_UUID
-		if plan.EnvironmentGroupId.ValueString() != "" && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
-			envGroupId = plan.EnvironmentGroupId.ValueString()
-		}
+	// if there is no value in the plan, not even empty guid, then we do nothing, attribute stop bing tracked in state
+	if !plan.EnvironmentGroupId.IsNull() {
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
-			Id: envGroupId,
+			Id: plan.EnvironmentGroupId.ValueString(),
 		}
 	}
 }
 
 func updateBillingPolicyId(plan *SourceModel, environmentDto *EnvironmentDto) {
-	if !plan.BillingPolicyId.IsNull() && plan.BillingPolicyId.ValueString() != "" {
+	if !plan.BillingPolicyId.IsNull() {
 		environmentDto.Properties.BillingPolicy = &BillingPolicyDto{
 			Id: plan.BillingPolicyId.ValueString(),
 		}
@@ -815,7 +823,7 @@ func (r *Resource) updateDataverse(ctx context.Context, plan *SourceModel, state
 }
 
 func (r *Resource) removeBillingPolicy(ctx context.Context, state *SourceModel) error {
-	if !state.BillingPolicyId.IsNull() && !state.BillingPolicyId.IsUnknown() && state.BillingPolicyId.ValueString() != "" {
+	if !state.BillingPolicyId.IsNull() && !state.BillingPolicyId.IsUnknown() && state.BillingPolicyId.ValueString() != constants.ZERO_UUID {
 		tflog.Debug(ctx, fmt.Sprintf("Removing environment %s from billing policy %s", state.Id.ValueString(), state.BillingPolicyId.ValueString()))
 		err := r.LicensingClient.RemoveEnvironmentsToBillingPolicy(ctx, state.BillingPolicyId.ValueString(), []string{state.Id.ValueString()})
 		if err != nil {
@@ -826,7 +834,7 @@ func (r *Resource) removeBillingPolicy(ctx context.Context, state *SourceModel) 
 }
 
 func (r *Resource) addBillingPolicy(ctx context.Context, plan *SourceModel) error {
-	if !plan.BillingPolicyId.IsNull() && !plan.BillingPolicyId.IsUnknown() && plan.BillingPolicyId.ValueString() != "" {
+	if !plan.BillingPolicyId.IsNull() && !plan.BillingPolicyId.IsUnknown() && plan.BillingPolicyId.ValueString() != constants.ZERO_UUID {
 		tflog.Debug(ctx, fmt.Sprintf("Adding environment %s to billing policy %s", plan.Id.ValueString(), plan.BillingPolicyId.ValueString()))
 		err := r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId.ValueString(), []string{plan.Id.ValueString()})
 		if err != nil {

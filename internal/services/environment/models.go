@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 )
@@ -110,7 +111,7 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		environmentDto.Properties.AzureRegion = environmentSource.AzureRegion.ValueString()
 	}
 
-	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != "" {
+	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != constants.ZERO_UUID {
 		environmentDto.Properties.BillingPolicy = BillingPolicyDto{
 			Id: environmentSource.BillingPolicyId.ValueString(),
 		}
@@ -332,15 +333,15 @@ func convertEnvironmentGroupFromDto(environmentDto EnvironmentDto, model *Source
 	if environmentDto.Properties.ParentEnvironmentGroup != nil {
 		model.EnvironmentGroupId = types.StringValue(environmentDto.Properties.ParentEnvironmentGroup.Id)
 	} else {
-		model.EnvironmentGroupId = types.StringValue("")
+		model.EnvironmentGroupId = types.StringValue(constants.ZERO_UUID)
 	}
 }
 
 func convertBillingPolicyModelFromDto(environmentDto EnvironmentDto, model *SourceModel) {
-	if environmentDto.Properties.BillingPolicy != nil {
+	if environmentDto.Properties.BillingPolicy != nil && environmentDto.Properties.BillingPolicy.Id != "" {
 		model.BillingPolicyId = types.StringValue(environmentDto.Properties.BillingPolicy.Id)
 	} else {
-		model.BillingPolicyId = types.StringValue("")
+		model.BillingPolicyId = types.StringValue(constants.ZERO_UUID)
 	}
 }
 
