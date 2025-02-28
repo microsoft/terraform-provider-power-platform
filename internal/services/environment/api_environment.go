@@ -290,8 +290,11 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 		Message: "Deleted using Power Platform Terraform Provider",
 	}
 
-	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
+	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted, http.StatusConflict}, nil)
 	if err != nil {
+		if response.HttpResponse.StatusCode == http.StatusConflict {
+			return customerrors.WrapIntoProviderError(err, customerrors.ERROR_ENVIRONMENT_OPERATION_CONFLICT, "operation lifecycle already in progress")
+		}
 		var httpError *customerrors.UnexpectedHttpStatusCodeError
 		if errors.As(err, &httpError) {
 			return fmt.Errorf("Unexpected HTTP Status %s; Body: %s", httpError.StatusText, httpError.Body)
