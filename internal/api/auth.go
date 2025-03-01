@@ -71,6 +71,7 @@ func (client *Auth) AuthenticateClientCertificate(ctx context.Context, scopes []
 		cert,
 		key,
 		&azidentity.ClientCertificateCredentialOptions{
+			AdditionallyAllowedTenants: client.config.AuxiliaryTenantIDs,
 			ClientOptions: azcore.ClientOptions{
 				Cloud: client.config.Cloud,
 			},
@@ -89,7 +90,10 @@ func (client *Auth) AuthenticateClientCertificate(ctx context.Context, scopes []
 }
 
 func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string) (string, time.Time, error) {
-	azureCLICredentials, err := azidentity.NewAzureCLICredential(nil)
+	azureCLICredentials, err := azidentity.NewAzureCLICredential(&azidentity.AzureCLICredentialOptions{
+		AdditionallyAllowedTenants: client.config.AuxiliaryTenantIDs,
+		TenantID:                   client.config.TenantId,
+	})
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -109,6 +113,7 @@ func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []strin
 		client.config.TenantId,
 		client.config.ClientId,
 		client.config.ClientSecret, &azidentity.ClientSecretCredentialOptions{
+			AdditionallyAllowedTenants: client.config.AuxiliaryTenantIDs,
 			ClientOptions: azcore.ClientOptions{
 				Cloud: client.config.Cloud,
 			},
@@ -257,7 +262,9 @@ func (client *Auth) AuthenticateAzDOWorkloadIdentityFederation(ctx context.Conte
 		client.config.ClientId,
 		client.config.AzDOServiceConnectionID,
 		client.config.OidcRequestToken,
-		&azidentity.AzurePipelinesCredentialOptions{}, // Auxiliary tenants could be defined here
+		&azidentity.AzurePipelinesCredentialOptions{
+			AdditionallyAllowedTenants: client.config.AuxiliaryTenantIDs,
+		},
 	)
 	if err != nil {
 		return "", time.Time{}, err
