@@ -33,13 +33,13 @@ These resources use a flexible schema (key-value maps) to support arbitrary Data
 ## Comparison: Strongly Typed vs. Loosely Typed Resources
 
 - **Strongly Typed Approach:**
-    - Each resource has predefined attributes in Terraform’s schema, aligning closely with the API contract.
-    - **Benefits:** Strong validation, better documentation, improved state management.
-    - **Drawbacks:** Requires provider updates for new API features; less flexible for evolving platforms like Dataverse.
+  - Each resource has predefined attributes in Terraform’s schema, aligning closely with the API contract.
+  - **Benefits:** Strong validation, better documentation, improved state management.
+  - **Drawbacks:** Requires provider updates for new API features; less flexible for evolving platforms like Dataverse.
 - **Loosely Typed Approach (used in `powerplatform_rest`, `powerplatform_data_record`, `powerplatform_data_records`):**
-    - Uses a flexible schema, often relying on key-value maps (`map[string]interface{}`) to support arbitrary API attributes.
-    - **Benefits:** Immediate support for all Dataverse settings, faster iteration, and reduced provider maintenance overhead.
-    - **Drawbacks:** Less strict validation; requires users to refer to external API documentation for field definitions; potential for misuse.
+  - Uses a flexible schema, often relying on key-value maps (`map[string]interface{}`) to support arbitrary API attributes.
+  - **Benefits:** Immediate support for all Dataverse settings, faster iteration, and reduced provider maintenance overhead.
+  - **Drawbacks:** Less strict validation; requires users to refer to external API documentation for field definitions; potential for misuse.
 
 ## Consequences
 
