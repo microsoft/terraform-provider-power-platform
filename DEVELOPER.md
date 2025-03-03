@@ -24,6 +24,26 @@ To help you effectively contribute to the Terraform Provider for Power Platform,
 
 We encourage you to explore these resources to familiarize yourself with our development philosophies and best practices. Following these guidelines helps maintain a consistent, secure, and robust provider that benefits the entire community.
 
+## Developer Workflow
+
+Once you decide to contribute back to this repository by fixing a bug or adding a feature, your workflow will be as follows:
+
+1. Fork this repository and open it in codespaces or local devcontainer
+1. Start working in the devcontainer on your changes (commands: `make install`, `terraform plan`, `terraform apply`)
+    - Completely new features should be located in a new `/internal/services/<new_service_name>` folder.
+1. Add and/or update unit and acceptance tests. Tests for new features should be created in a new resource/datasource_test.go file (commands: `make unittest`, `make acctest`)
+    - When working on a bug, remember to add a new unit and acceptance test(s) covering your use case if that test does not exist yet.
+    - When working on a new feature, add unit and acceptance tests covering the [happy path](https://en.wikipedia.org/wiki/Happy_path) for your feature, ideally also some edge cases. If your feature enhances an existing resource/datasource, add/change validation of your new properties in all tests that use that resource/datasource.
+1. Create/Update examples in `/examples/...` folder(s)
+    - When working on enhancement, remember to add new enhancement properties to all existing examples using that resource/datasource, especially if it is a required property.
+    - When creating a new resource/datasource, create new examples showcasing how to use it.
+1. Regenerate the docs (commands: `make userdocs`)
+1. Create a changelog record for your contribution (commands: `changie new`)
+1. Raise a pull request from your fork back to this repository
+
+> [!NOTE]
+> Core maintainers with write access to the `microsoft/terraform-provider-power-platform` repository do not need to fork.  They may create branches in the repository.
+
 ## Development Environment Options
 
 You have two recommended options for setting up your development environment:
@@ -150,8 +170,6 @@ cd examples/data-sources/powerplatform_environments
 terraform plan
 ```
 
-
-
 > [!NOTE]
 > You cannot run `terraform init` when using dev overrides. `terraform init` will validate the versions and provider source, while `terraform plan` will skip those validations when `dev overrides` is part of your config. You can simply run `terraforn plan` and `terrafirn apply` when working in devcontainer.
 
@@ -168,61 +186,34 @@ terraform plan
 1. `cd` to a parent folder where main.tf exists
 1. Run `terraform apply`
 
-## Running Acceptance Tests
+## Testing Guidelines
 
-To run all acceptance tests
+Quality tests are essential to ensure our provider works reliably across different environments and scenarios. As a contributor, you'll be expected to write comprehensive tests for any code you submit.
 
-```bash
-make acctest
-```
+Our testing approach includes both unit tests and acceptance tests:
 
-To run single acceptance test
+- **Unit tests**: Fast-executing tests that verify individual components in isolation
+- **Acceptance tests**: End-to-end tests that validate provider behavior against actual Power Platform APIs
 
-```bash
-TF_ACC=1 go test -v ./... -run TestAcc<test_name>
-```
+The detailed [testing guidelines](/devdocs/testing_guidelines.md) will help you understand our testing patterns, best practices, and expectations. We've designed them to make writing tests straightforward while ensuring they're thorough enough to catch potential issues. You'll find examples of how to use our testing frameworks, how to properly mock external dependencies using `httpmock`, and how to structure your tests for readability and maintainability.
 
-## Running Unit Tests
+Testing is a collaborative effort - if you're unsure about testing approaches for specific scenarios, don't hesitate to ask questions in your PR or discussions.
 
-To run all unit tests
+## Dependencies
 
-```bash
-make unittest
-```
+Managing dependencies carefully is crucial for maintaining both the security and reliability of our provider. Each external dependency introduces potential risks, from security vulnerabilities to licensing issues, and contributes to our software supply chain - the complete set of components and processes that go into our software.
 
-To run single unit test
+To ensure transparency and thoughtful consideration, **any Pull Request that adds a new dependency must include an Architectural Decision Record (ADR)** explaining:
 
-```bash
-TF_ACC=0 go test -v ./... -run TestUnit<test_name>
-```
+- Why the dependency is necessary
+- Alternative options considered
+- Security implications
+- Maintenance considerations
+- Licensing compatibility
 
-> [!NOTE]
-> The tests require permissions on the folders, these permissions are assigned when creating your container. If you have permission problems when running the unit tests, you can rebuild your development container or run the following commands again to assign the permissions to the necessary folders.
+This process helps us maintain a clean dependency tree and reduces potential attack vectors or unexpected behavior in production environments.
 
-```bash
-sudo chown -R vscode /workspaces/terraform-provider-power-platform/
-sudo chown -R vscode /go/pkg
-```
-
-## Writing Tests
-
-All the test for a given resource/datasource are located in `/internal/<resource/datasource_name>_test.go` file. When writing a new feature you should try to create [happy path](https://en.wikipedia.org/wiki/Happy_path) test(s) for you feature covering create, read and deletion of your new feature. For updates you should cover not only update of all properties but situation when a force recreate of a resource is requried (if you have such propeties in you resource).
-
-### Writing Unit Tests
-
-Unit test are created by mocking HTTP request, some of the often used HTTP mocks encapsulated in `ActivateEnvironmentHttpMocks` function, so that you don't have to write them for every test. When implementing new mocks, the mokcked response json files should be located in `/internal/services/<your_service_name>/test/<resource_or_datasource>/<name_of_the_unit_test>` folder
-
-> [!TIP]
-> When creating mocked json responses you can resuse the exising one by **duplicating** then into you `<name_of_the_unit_test>` folder.
-
-> [!CAUTION]
-> Your mocked json response file should not contain any Personally Identifiable Information such as tenantid, usernames, phone numbers, emails, addresses etc. You should anonymize that data.
-
-### Writing Acceptance Tests
-
-Each acceptance test is a copy of an unit test from tested use case perspective. That means for a given unit test we should have an acceptance test that validates the same use case but against a real infrastructure.
-
-## Adding Dependencies
+### Adding Dependencies
 
 This provider uses [Go modules](https://github.com/golang/go/wiki/Modules).
 Please see the Go documentation for the most up to date information about using Go modules.
@@ -234,7 +225,7 @@ go get github.com/author/dependency
 make deps
 ```
 
-## Updating Dependencies
+### Updating Dependencies
 
 Open a terminal in your devcontainer and type
 
@@ -242,69 +233,60 @@ Open a terminal in your devcontainer and type
 make deps
 ```
 
-## Updating Documentation
+## User Documentation
 
-User documentation markdown files in [/docs](/docs/) are auto-generated by the [terraform plugin docs tool](https://github.com/hashicorp/terraform-plugin-docs).
+User documentation markdown files in [/docs](/docs/) are auto-generated by running `make userdocs` which uses the [terraform plugin docs tool](https://github.com/hashicorp/terraform-plugin-docs). It parses information about providers, resources, and data sources directly from the Go code. By eliminating the need to manually maintain separate documentation files, we reduce duplication, keep docs in sync with the schema, and ensure the Terraform Registry always reflects the latest code.  **Do not manually edit the markdown files in [`/docs`](/docs/)**
 
-> [!IMPORTANT]
-> Do not manually edit the markdown files in [/docs](/docs/). If you need to edit documentation edit the following sources:
 
-- schema information in the provider, resource, and data-source golang files that are in [/internal](/internal/)
-- [template files](templates/)
+
+If you need to edit documentation edit the following sources:
+
+1. **Schema Definitions in `/internal`**  
+   - Each resource and data source has a schema defined in the Go code under the [`/internal/`](/internal/) directory. The schema typically includes fields like `Name`, `Description`, and required/optional indicators.
+   - `terraform-plugin-docs` automatically looks for these fields and uses the `MarkdownDescription` metadata in those schema blocks to build out the documentation for each resource or data source.
+   - When possible include links in `MarkdownDescription` to official Microsoft Power Platform Admin Center documenation for the equivalent feature in PPAC.
+   - Terraform provider documentation is served from the Terraform Registry website, which uses a specialized markdown rendering engine. Unlike GitHub markdown, the Registry renderer has specific syntax requirements for features like callouts (which use `-> NOTE:` syntax instead of the GitHub style blockquotes).
+
+1. **Template Files in `/templates`**  
+   - In addition to reading the schema, the tool merges content from the [template files](/templates/). These template files often contain the main structure of the user documentation, placeholders for resource attributes, usage examples, and any provider-level guidance or usage instructions.
+   - If you need to provide custom instructions, additional examples, or overviews, this is done in the templates (rather than in the automatically-generated docs).
+
+1. **Examples in `/examples`**
+   - Data Source examples in `examples/data-sources/{your_data_source}/` should have `data-source.tf`, `outputs.tf`, and optionally `variables.tf` files
+   - Resources examples in `examples/resources/{your_data_source}/` should have `resource.tf`, `outputs.tf` files, and optionally `variables.tf` files.  Including a `import.sh` will signal that your resource is compatible with the `import` command.
+
+Before making your commit, open a terminal in your devcontainer and type
 
 ```sh
 make userdocs
 ```
 
-User documentation is temporarily served on GitHub Pages which requires the [pages.yml GitHub workflow](/.github/workflows/pages.yml) to transform /docs markdown files into a static website.  Once this provider is published to the Terraform registry, documentation will be hosted on the registry instead.
+### Developer Documentation
 
-## Making a Release
+Developer documentation in this repository exists to help other contributors understand design decisions, architecture, and development practices. Unlike user documentation which is auto-generated, developer documentation is maintained manually.
 
-> [!TIP]
-> In you development work flow, you don't have to release the provider in order to test it locally, instread you can use the devcontainer and keep installing it locally in there by using `make install` command.
+Developer documentation primarily lives in two places:
 
-Our releases use [semantic versioning](https://semver.org/).
+- **[/devdocs](/devdocs/)**: Contains detailed guidelines on specific aspects of development
+- **[DEVELOPER.md](/DEVELOPER.md)**: This file, which provides an overview of the development process
 
-Given a version number MAJOR.MINOR.PATCH, increment the:
+You should update or add developer documentation when:
 
-- MAJOR version when you make incompatible API changes
-- MINOR version when you add functionality in a backward compatible manner
-- PATCH version when you make backward compatible bug fixes
+- Adding new features with non-trivial implementation details
+- Changing existing behavior that other developers should be aware of
+- Making architectural decisions that impact the codebase
+- Adding/improving development workflows or tools
 
-Use the `preview` extension to the MAJOR.MINOR.PATCH format for preview release such as `v0.7.0-preview`.
+## Preparing a PR
 
-### Using the CLI
+Before submitting a pull request, ensure your contribution meets all the requirements in our [Pull Request Checklist](/CONTRIBUTING.md#pull-request-checklist). This checklist covers essential aspects such as implementation quality, test coverage, documentation, and schema descriptions.
 
-As a last PR to `main` branch before new release, create documentation using [Changie](https://github.com/miniscruff/changie):
+When your changes are ready:
 
-``` bash
-changie batch 1.0.0-preview
-```
+1. Verify all tests pass with `make unittest` and `make acctest`
+2. Ensure documentation is updated by running `make userdocs`
+3. Create a changelog entry with `changie new`
+4. Write a clear PR description explaining your changes, their purpose, and any limitations
+5. Reference any related issues using GitHub's referencing syntax (#issue-number)
 
-to release, use the `git tag` command on the `main` branch (ensure main is up to date) and then push that release back to origin.
-
-``` bash
-git tag -a v1.0.0-preview -m "v1.0.0-preview"
-git push origin v1.0.0-preview
-```
-
-Once the release is pushed to the repo, the [release.yml](/.github/workflows/release.yml) action pipeline will detect the new tag and create a draft release. After the build completes, you can publish the release if it looks good.
-
-## Developer work flow
-
-Once you decide to contribute back to this reposity by fixing a bug or adding a feature you work flow will be as follows:
-
-1. Fork this repository and open in locally
-1. Start working in devcontainer on your changes. (commands: `make install`, `terraform plan`, `terraform apply`)
-    - Completly new feature should be located in a new `/internal/services/<new_service_name>` folder.
-1. Add and/or update unit and accaptance tests. Tests for new feature should be created in new resource/datasource_test.go file (commands: `make unittest`, `make acctest`)
-    - When working on a bug remember to add a new unit and acceptance test(s) covering your use case if that test does not exist yet.
-    - When working on a new feature add unit and acceptance tests covering [happy path](https://en.wikipedia.org/wiki/Happy_path) for your feature, ideally also some edge cases. If you feature enhances existing resource/datasource, add/change validation of your new properties in all tests that use that resource/datasource
-1. Create/Update examples in `/examples/...` folder(s)
-    - When working on enhacement remeber to add new enhacement properties to all existing examples using that resource/datasource, especially if it is a requried property.
-    - When creating new resource/datasource, create new examples showcasing how to use it.
-1. Regenerate the docs. (commands: `make docs`)
-1. Raise a pull request from your fork back the this repository
-
-> [!NOTE]
-> If your use case requries testing outside local devcontainer like for example running it from a Github action, then you will need to create a realease from your fork repository.
+PRs that follow these guidelines will move through the review process more smoothly. Maintainers may request changes to ensure your contribution aligns with the project's quality standards and design principles.

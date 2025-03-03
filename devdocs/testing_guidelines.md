@@ -1,8 +1,8 @@
-## Testing Guidelines
+# Testing Guidelines
 
 These guidelines detail best practices for testing the Terraform Provider for Microsoft Power Platform, based on official [Terraform Plugin Testing guidance](https://developer.hashicorp.com/terraform/plugin/testing). They cover comprehensive testing strategies, including unit tests, acceptance tests, and various established testing patterns. Additionally, the document outlines specific approaches to ensure consistent test coverage, robust validation of provider behaviors, and effective handling of different authentication and cloud contexts.
 
-### Testing Patterns
+## Testing Patterns
 
 Following established testing patterns ensures consistency and reliability in Terraform provider tests. These patterns help in designing robust test cases that improve maintainability and test quality.
 
@@ -17,7 +17,7 @@ Following established testing patterns ensures consistency and reliability in Te
 
 For more information, refer to [Terraform Plugin Testing Patterns](https://developer.hashicorp.com/terraform/plugin/testing/testing-patterns).
 
-### Unit Tests
+## Unit Tests
 
 Unit tests are critical for fast feedback. They should cover the logic of CRUD operations by mocking out HTTP calls to the Power Platform APIs. All unit tests for a given resource or data source are located in the `/internal/<resource_or_datasource>_test.go` file. JSON for mocked API responses can often be captured using network traces from browser debugging tools. Utilizing features in the Power Platform Admin Center can provide examples of how the Power Platform UI interacts with these APIs. While a test-first approach is not mandatory, it can be beneficial, particularly when using mocked data.&#x20;
 
@@ -29,7 +29,7 @@ Unit tests are critical for fast feedback. They should cover the logic of CRUD o
 - Include **negative tests** for API errors (e.g., 403 Forbidden), invalid inputs, and boundary conditions.
 - When creating mocked JSON responses, you can reuse existing ones by duplicating them into your `<test_name>` folder.
 
-#### Running Unit Tests
+### Running Unit Tests
 
 To run all unit tests:
 
@@ -43,7 +43,7 @@ To run a single unit test:
 TF_ACC=0 go test -v ./... -run TestUnit<test_name>
 ```
 
-### Acceptance Tests (Integration Tests)
+## Acceptance Tests (Integration Tests)
 
 Every unit test covering a new feature or fix should have a corresponding acceptance test validating the same use case against real infrastructure. Acceptance tests ensure provider correctness in actual Power Platform environments.
 
@@ -51,7 +51,9 @@ Every unit test covering a new feature or fix should have a corresponding accept
 - **Tests create real resources** – ensure proper cleanup after execution.
   - Use **CheckDestroy** to verify resource deletion post `terraform destroy`.
 
-#### Test Pre-checks
+
+
+### Test Pre-checks
 
 Acceptance tests require authentication and appropriate test environment setup. This section is particularly useful for testing different authentication styles, ensuring the provider supports various authentication mechanisms reliably.
 
@@ -88,4 +90,3 @@ The project expects **high test coverage (80% or more)** for new contributions.
 sudo chown -R vscode /workspaces/terraform-provider-power-platform/
 sudo chown -R vscode /go/pkg
 ```
-
