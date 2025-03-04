@@ -314,6 +314,38 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "solution_checker_rule_overrides.#", "1"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_managed_environment.managed_development", "solution_checker_rule_overrides.*", "meta-remove-dup-reg"),
+					resource.TestCheckTypeSetElemAttr("powerplatform_managed_environment.managed_development", "solution_checker_rule_overrides.*", "meta-avoid-reg-no-attribute"),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "unitedstates"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code    = "1033"
+						currency_code    = "USD"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}
+				
+				resource "powerplatform_managed_environment" "managed_development" {
+					environment_id             = powerplatform_environment.development.id
+					is_usage_insights_disabled = false
+					is_group_sharing_disabled  = false
+					limit_sharing_mode         = "NoLimit"
+					max_limit_user_sharing     = -1
+					solution_checker_mode      = "None"
+					suppress_validation_emails = false
+					solution_checker_rule_overrides = toset(["meta-remove-dup-reg", "meta-avoid-reg-no-attribute"])
+					maker_onboarding_markdown  = "this is test markdown changed"
+					maker_onboarding_url       = "http://www.example.com"
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "maker_onboarding_markdown", "this is test markdown changed"),
 				),
