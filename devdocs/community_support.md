@@ -12,7 +12,7 @@
 
 ### Q: Where can I find usage examples or documentation for end users?
 
-**A:** End user documentation is available on the [Terraform Registry: Power Platform Provider Docs](https://github.com). It includes detailed resource and data source documentation, examples, and authentication configuration. Additional resources include an [official Microsoft Learn article](https://learn.microsoft.com) and the [QuickStarts repository](https://github.com) containing real-world Terraform configurations.
+**A:** End user documentation is available on the [Terraform Registry: Power Platform Provider Docs](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs). It includes detailed resource and data source documentation, examples, and authentication configuration. Additional resources include an [official Microsoft Learn article](https://learn.microsoft.com/en-us/business-applications/playbook/enterprise-solutions/power-platform-terraform-provider/) and the [QuickStarts repository](https://github.com/microsoft/power-platform-terraform-quickstarts) containing real-world Terraform configurations.
 
 ### Q: I wrote an acceptance test, but it’s failing due to permissions or timeouts.
 
