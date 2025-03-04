@@ -61,7 +61,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	
 	policyAttributeSchema := map[string]schema.Attribute{
 		"type": schema.StringAttribute{
 			MarkdownDescription: "Type of the policy according to [schema definition](https://learn.microsoft.com/en-us/azure/templates/microsoft.powerplatform/enterprisepolicies?pivots=deployment-language-terraform#enterprisepolicies-2)",
@@ -740,13 +739,12 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 
 	err := r.EnvironmentClient.DeleteEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
-		// Another delete is already in progress
-		if customerrors.Code(err) == customerrors.ERROR_ENVIRONMENT_OPERATION_CONFLICT {
+		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+			tflog.Debug(ctx, fmt.Sprintf("Environment %s not found, removing from state", state.Id.ValueString()))
 			resp.State.RemoveResource(ctx)
-			return
+		} else {
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
-		return
 	}
 }
 
