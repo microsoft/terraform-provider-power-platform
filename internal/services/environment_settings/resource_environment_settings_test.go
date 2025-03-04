@@ -117,6 +117,11 @@ func TestAccTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *te
 func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -143,9 +148,14 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					maker_onboarding_markdown       = "this is example markdown"
 					maker_onboarding_url            = "https://www.microsoft.com"
 				}
+
+				resource "time_sleep" "wait_60_seconds" {
+					depends_on = [powerplatform_managed_environment.managed_environment]
+					create_duration = "60s"
+				}
 			
 				resource "powerplatform_environment_settings" "settings" {
-					depends_on = [powerplatform_managed_environment.managed_environment]
+					depends_on = [time_sleep.wait_60_seconds]
 
 					environment_id                         = powerplatform_environment.example_environment_settings.id
 					audit_and_logs = {
