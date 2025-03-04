@@ -13,7 +13,18 @@ The [user documentation](https://microsoft.github.io/terraform-provider-power-pl
 
 Refer to the [Contributing Guide](/CONTRIBUTING.md) to learn about the different types of contributions you can make to the repo.
 
-The [developer documentation](DEVELOPER.md) outlines how to build and develop the provider.
+For developers interested in contributing to the provider, we offer comprehensive documentation to guide you through the development process:
+
+- [Developer Guide](DEVELOPER.md): Main guide covering development environment setup, workflow, and contributing practices
+- [Schema Guidelines](/devdocs/schema_guidelines.md): Best practices for designing resource and data source schemas
+- [Testing Guidelines](/devdocs/testing_guidelines.md): Approaches for writing robust unit and acceptance tests
+- [Security Guidelines](/devdocs/security_guidelines.md): Security best practices and vulnerability reporting
+- [Observability Guidelines](/devdocs/observability_guidelines.md): Implementing proper logging and telemetry
+- [Feature Request Guidelines](/devdocs/feature_request_guidelines.md): Criteria for determining which features belong in the provider
+- [Release Guidelines](/devdocs/release_guidelines.md): Process for releasing new provider versions
+- [Community Support](/devdocs/community_support.md): How to engage with the community and get help
+
+These resources will help you understand our development philosophy, technical requirements, and contribution processes.
 
 ## Security
 
