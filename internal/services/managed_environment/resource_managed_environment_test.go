@@ -314,7 +314,7 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "solution_checker_rule_overrides.#", "1"),
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "solution_checker_rule_overrides.#", "2"),
 					resource.TestCheckTypeSetElemAttr("powerplatform_managed_environment.managed_development", "solution_checker_rule_overrides.*", "meta-remove-dup-reg"),
 					resource.TestCheckTypeSetElemAttr("powerplatform_managed_environment.managed_development", "solution_checker_rule_overrides.*", "meta-avoid-reg-no-attribute"),
 				),
