@@ -453,13 +453,16 @@ func (client *client) ApplyDataRecord(ctx context.Context, recordId, environment
 		return nil, err
 	}
 
+	// we will send create operation as default.
 	method := "POST"
 	apiPath := fmt.Sprintf("/api/data/%s/%s", constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName)
 
 	if val, ok := columns[entityDefinition.PrimaryIDAttribute]; ok {
+		// if one of the sent attributes is the primaryId then send an update.
 		method = "PATCH"
 		apiPath = fmt.Sprintf("%s(%s)", apiPath, val)
 	} else if recordId != "" {
+		// if we are referencing the record by its primaryId and its not empty (update or delete) then we send an update
 		method = "PATCH"
 		apiPath = fmt.Sprintf("%s(%s)", apiPath, recordId)
 	}
@@ -470,9 +473,20 @@ func (client *client) ApplyDataRecord(ctx context.Context, recordId, environment
 		Path:   apiPath,
 	}
 
-	response, err := client.Api.Execute(ctx, nil, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
+	response, err := client.Api.Execute(ctx, nil, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent, http.StatusPreconditionFailed}, nil)
 	if err != nil {
 		return nil, err
+	}
+	if response.HttpResponse.StatusCode == http.StatusPreconditionFailed {
+		// if record was already found then we will try to update it.
+		response, err = client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
+		// if the PATCH URL is not pointing to specific recording using PrimaryIDAttribute then we have to inform a user about it.
+		if response.HttpResponse.StatusCode == http.StatusMethodNotAllowed {
+			return nil, fmt.Errorf("record already exists. To update an existing record, primaryId must be provided in the columns attribute")
+		}
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	if len(response.BodyAsBytes) != 0 {
