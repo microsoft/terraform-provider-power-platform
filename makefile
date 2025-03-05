@@ -14,6 +14,11 @@ install:
 	go fmt ./...
 	go install
 
+debug:
+	$(MAKE) install
+	/usr/bin/env GOPATH=/home/runtimeuser/go TF_ACC=true /home/runtimeuser/go/bin/dlv dap --client-addr=:35119
+	# dlv exec $(GOPATH)/bin/terraform-provider-power-platform --headless --continue --listen=:2345 --api-version=2 --log --accept-multiclient
+
 clean:
 	go version
 	go clean -testcache

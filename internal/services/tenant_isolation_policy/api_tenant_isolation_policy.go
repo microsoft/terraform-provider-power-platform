@@ -62,25 +62,31 @@ func (client *Client) CreateOrUpdateTenantIsolationPolicy(ctx context.Context, t
 	}
 
 	var updatedPolicy TenantIsolationPolicyDto
-	resp, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, policy, []int{http.StatusOK, http.StatusCreated, http.StatusAccepted}, &updatedPolicy)
+	resp, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, policy, []int{http.StatusOK, http.StatusAccepted}, &updatedPolicy)
 	if err != nil {
 		return nil, fmt.Errorf("Could not create tenant isolation policy: %v", err)
 	}
 
 	if resp.HttpResponse.StatusCode == http.StatusAccepted {
 		// Handle async operation
-		updatedPolicy, err := client.DoWaitForLifecycleOperationStatus(ctx, resp)
+		_, err := client.DoWaitForLifecycleOperationStatus(ctx, resp)
 		if err != nil {
 			return nil, fmt.Errorf("Error waiting for tenant isolation policy operation to complete: %v", err)
 		}
 
-		return updatedPolicy, nil
+		// Get fresh state after async operation
+		finalPolicy, err := client.GetTenantIsolationPolicy(ctx, tenantId)
+		if err != nil {
+			return nil, fmt.Errorf("Error getting tenant isolation policy after async operation: %v", err)
+		}
+
+		return finalPolicy, nil
 	}
 
 	return &updatedPolicy, nil
 }
 
-// getRetryAfterDuration extracts the Retry-After header value and converts it to a duration
+// getRetryAfterDuration extracts the Retry-After header value and converts it to a duration.
 func getRetryAfterDuration(resp *http.Response) time.Duration {
 	// Default value if header not present or invalid
 	defaultDuration := 5 * time.Second
@@ -118,27 +124,22 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 		return nil, fmt.Errorf("no Location or Operation-Location header found in async response")
 	}
 
-	// Initial wait time
-	waitTime := getRetryAfterDuration(response.HttpResponse)
-
 	for {
-		// Use the TenantIsolationPolicyDto type directly to unmarshal the response
-		var policyResponse TenantIsolationPolicyDto
-		apiResp, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted}, &policyResponse)
+		apiResp, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted}, nil)
 		if err != nil {
 			return nil, fmt.Errorf("error polling operation status: %v", err)
 		}
 
 		tflog.Debug(ctx, fmt.Sprintf("Operation poll status: %s", apiResp.HttpResponse.Status))
 
-		// If we get a 200 OK, the operation is complete and the response contains the resource
+		// If we get a 200 OK, the operation is complete
 		if apiResp.HttpResponse.StatusCode == http.StatusOK {
-			// Return the unmarshalled policy directly from the response
-			return &policyResponse, nil
+			// Return nil since we'll get the fresh state later
+			return nil, nil
 		}
 
 		// Get the next wait time from the Retry-After header if available
-		waitTime = getRetryAfterDuration(apiResp.HttpResponse)
+		waitTime := getRetryAfterDuration(apiResp.HttpResponse)
 
 		// For safety, ensure we have a minimum wait time and cap the maximum
 		if waitTime < 2*time.Second {

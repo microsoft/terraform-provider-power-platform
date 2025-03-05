@@ -10,11 +10,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -27,6 +30,17 @@ import (
 var _ resource.Resource = &Resource{}
 var _ resource.ResourceWithImportState = &Resource{}
 var _ resource.ResourceWithValidateConfig = &Resource{}
+
+// Define the object type for AllowedTenants set.
+func allowedTenantsObjectType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"tenant_id": types.StringType,
+			"inbound":   types.BoolType,
+			"outbound":  types.BoolType,
+		},
+	}
+}
 
 // NewTenantIsolationPolicyResource creates a new tenant isolation policy resource.
 func NewTenantIsolationPolicyResource() resource.Resource {
@@ -89,6 +103,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Required:            true,
 				Description:         "List of tenants that are allowed to connect with your tenant.",
 				MarkdownDescription: "List of tenants that are allowed to connect with your tenant.",
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"tenant_id": schema.StringAttribute{
@@ -151,7 +168,13 @@ func (r *Resource) ValidateConfig(ctx context.Context, req resource.ValidateConf
 	}
 
 	// Validate that allowed tenants have at least one direction (inbound or outbound) enabled
-	for _, allowedTenant := range data.AllowedTenants {
+	var modelTenants []AllowedTenantModel
+	resp.Diagnostics.Append(data.AllowedTenants.ElementsAs(ctx, &modelTenants, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	for _, allowedTenant := range modelTenants {
 		if !allowedTenant.Inbound.ValueBool() && !allowedTenant.Outbound.ValueBool() {
 			resp.Diagnostics.AddAttributeError(
 				path.Root("allowed_tenants"),
@@ -184,7 +207,11 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 
 	// Convert the Terraform model to the API model
-	policyDto := convertToDto(tenantInfo.TenantId, &plan)
+	policyDto, diags := convertToDto(ctx, tenantInfo.TenantId, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Create the policy
 	policy, err := r.Client.CreateOrUpdateTenantIsolationPolicy(ctx, tenantInfo.TenantId, *policyDto)
@@ -197,7 +224,12 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 
 	// Convert the API response back to the Terraform model
-	state := convertFromDto(policy)
+	state, diags := convertFromDto(ctx, policy)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	state.Id = types.StringValue(tenantInfo.TenantId)
 	state.Timeouts = plan.Timeouts
 
@@ -255,7 +287,12 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	}
 
 	// Convert from DTO and preserve timeouts
-	updatedState := convertFromDto(policy)
+	updatedState, diags := convertFromDto(ctx, policy)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	updatedState.Id = types.StringValue(tenantId)
 	updatedState.Timeouts = timeoutsVal
 
@@ -300,7 +337,11 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	// Convert the Terraform model to the API model
-	policyDto := convertToDto(tenantId, &plan)
+	policyDto, diags := convertToDto(ctx, tenantId, &plan)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	// Update the policy
 	updatedPolicy, err := r.Client.CreateOrUpdateTenantIsolationPolicy(ctx, tenantId, *policyDto)
@@ -313,7 +354,12 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	// Convert from DTO and preserve timeouts
-	updatedState := convertFromDto(updatedPolicy)
+	updatedState, diags := convertFromDto(ctx, updatedPolicy)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	updatedState.Id = types.StringValue(tenantId)
 	updatedState.Timeouts = timeoutsVal
 
@@ -354,7 +400,8 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 	// To delete the policy, we update it with an empty policy
 	emptyPolicy := TenantIsolationPolicyDto{
 		Properties: TenantIsolationPolicyPropertiesDto{
-			TenantId:       state.Id.ValueString(),
+			TenantId:       tenantId,
+			IsDisabled:     types.BoolValue(false).ValueBoolPointer(),
 			AllowedTenants: []AllowedTenantDto{},
 		},
 	}
@@ -367,6 +414,9 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 		)
 		return
 	}
+
+	// Remove the resource from state
+	resp.State.RemoveResource(ctx)
 
 	tflog.Info(ctx, fmt.Sprintf("Deleted tenant isolation policy with ID %s", tenantId))
 }
@@ -403,37 +453,49 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 // Helper functions
 
 // convertToDto converts the Terraform model to the API DTO.
-func convertToDto(tenantId string, model *TenantIsolationPolicyResourceModel) *TenantIsolationPolicyDto {
-	return &TenantIsolationPolicyDto{
-		Properties: TenantIsolationPolicyPropertiesDto{
-			TenantId:       tenantId,
-			IsDisabled:     model.IsDisabled.ValueBoolPointer(),
-			AllowedTenants: convertAllowedTenantsToDto(model.AllowedTenants),
-		},
+func convertToDto(ctx context.Context, tenantId string, model *TenantIsolationPolicyResourceModel) (*TenantIsolationPolicyDto, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var tenantsModel []AllowedTenantModel
+	diags.Append(model.AllowedTenants.ElementsAs(ctx, &tenantsModel, false)...)
+	if diags.HasError() {
+		return nil, diags
 	}
-}
 
-func convertAllowedTenantsToDto(modelTenants []AllowedTenantModel) []AllowedTenantDto {
-	dtoTenants := make([]AllowedTenantDto, 0, len(modelTenants))
-	for _, modelTenant := range modelTenants {
-		inbound := modelTenant.Inbound.ValueBool()
-		outbound := modelTenant.Outbound.ValueBool()
+	// Sort the tenant list for consistency
+	sort.Slice(tenantsModel, func(i, j int) bool {
+		return tenantsModel[i].TenantId.ValueString() < tenantsModel[j].TenantId.ValueString()
+	})
+
+	// Convert AllowedTenants to DTO
+	dtoTenants := make([]AllowedTenantDto, 0, len(tenantsModel))
+	for _, allowedTenant := range tenantsModel {
+		inbound := allowedTenant.Inbound.ValueBool()
+		outbound := allowedTenant.Outbound.ValueBool()
 
 		dtoTenants = append(dtoTenants, AllowedTenantDto{
-			TenantId: modelTenant.TenantId.ValueString(),
+			TenantId: allowedTenant.TenantId.ValueString(),
 			Direction: DirectionDto{
 				Inbound:  &inbound,
 				Outbound: &outbound,
 			},
 		})
 	}
-	return dtoTenants
+
+	return &TenantIsolationPolicyDto{
+		Properties: TenantIsolationPolicyPropertiesDto{
+			TenantId:       tenantId,
+			IsDisabled:     model.IsDisabled.ValueBoolPointer(),
+			AllowedTenants: dtoTenants,
+		},
+	}, diags
 }
 
 // convertFromDto converts the API DTO to the Terraform model.
-func convertFromDto(dto *TenantIsolationPolicyDto) TenantIsolationPolicyResourceModel {
+func convertFromDto(ctx context.Context, dto *TenantIsolationPolicyDto) (TenantIsolationPolicyResourceModel, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
 	if dto == nil {
-		return TenantIsolationPolicyResourceModel{}
+		return TenantIsolationPolicyResourceModel{}, diags
 	}
 
 	// Set defaults in case Properties is nil
@@ -451,11 +513,58 @@ func convertFromDto(dto *TenantIsolationPolicyDto) TenantIsolationPolicyResource
 		allowedTenants = dto.Properties.AllowedTenants
 	}
 
+	// Convert AllowedTenants to model objects
+	modelTenants := convertAllowedTenantsFromDto(allowedTenants)
+
+	// Create allowed_tenants as types.Set with explicit value mapping
+	var allowedTenantsSet types.Set
+
+	// If we have tenants, create the set with values
+	if len(modelTenants) > 0 {
+		// Convert model tenants to object values
+		elements := make([]attr.Value, 0, len(modelTenants))
+		for _, modelTenant := range modelTenants {
+			elements = append(elements, createObjectFromAllowedTenant(modelTenant))
+		}
+
+		// Create set with proper element type and values
+		var setDiags diag.Diagnostics
+		allowedTenantsSet, setDiags = types.SetValue(allowedTenantsObjectType(ctx), elements)
+		diags.Append(setDiags...)
+		if diags.HasError() {
+			return TenantIsolationPolicyResourceModel{}, diags
+		}
+	} else {
+		// Create empty set with proper element type
+		var setDiags diag.Diagnostics
+		allowedTenantsSet, setDiags = types.SetValue(allowedTenantsObjectType(ctx), []attr.Value{})
+		diags.Append(setDiags...)
+		if diags.HasError() {
+			return TenantIsolationPolicyResourceModel{}, diags
+		}
+	}
+
 	return TenantIsolationPolicyResourceModel{
 		Id:             types.StringValue(tenantId),
 		IsDisabled:     types.BoolValue(isDisabled != nil && *isDisabled),
-		AllowedTenants: convertAllowedTenantsFromDto(allowedTenants),
-	}
+		AllowedTenants: allowedTenantsSet,
+	}, diags
+}
+
+// createObjectFromAllowedTenant creates an object value from an AllowedTenantModel.
+func createObjectFromAllowedTenant(allowedTenant AllowedTenantModel) attr.Value {
+	return types.ObjectValueMust(
+		map[string]attr.Type{
+			"tenant_id": types.StringType,
+			"inbound":   types.BoolType,
+			"outbound":  types.BoolType,
+		},
+		map[string]attr.Value{
+			"tenant_id": allowedTenant.TenantId,
+			"inbound":   allowedTenant.Inbound,
+			"outbound":  allowedTenant.Outbound,
+		},
+	)
 }
 
 func convertAllowedTenantsFromDto(dtoTenants []AllowedTenantDto) []AllowedTenantModel {
@@ -485,6 +594,7 @@ func convertAllowedTenantsFromDto(dtoTenants []AllowedTenantDto) []AllowedTenant
 			continue
 		}
 
+		// Create a consistent model from the DTO with all fields explicitly set
 		modelTenants = append(modelTenants, AllowedTenantModel{
 			TenantId: types.StringValue(dtoTenant.TenantId),
 			Inbound:  types.BoolValue(inbound),

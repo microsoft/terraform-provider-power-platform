@@ -8,12 +8,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-// Resource model for tenant isolation policy
+// Resource model for tenant isolation policy.
 type TenantIsolationPolicyResourceModel struct {
-	Timeouts       timeouts.Value       `tfsdk:"timeouts"`
-	Id             types.String         `tfsdk:"id"`
-	IsDisabled     types.Bool           `tfsdk:"is_disabled"`
-	AllowedTenants []AllowedTenantModel `tfsdk:"allowed_tenants"`
+	Timeouts       timeouts.Value `tfsdk:"timeouts"`
+	Id             types.String   `tfsdk:"id"`
+	IsDisabled     types.Bool     `tfsdk:"is_disabled"`
+	AllowedTenants types.Set      `tfsdk:"allowed_tenants"`
 }
 
 type AllowedTenantModel struct {
