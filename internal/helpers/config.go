@@ -7,7 +7,10 @@ import (
 	"context"
 	"os"
 	"strconv"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
@@ -37,6 +40,29 @@ func GetConfigMultiString(ctx context.Context, configValue basetypes.StringValue
 	}
 
 	return defaultValue
+}
+
+func GetListStringValues(value types.List, environmentVariableNames []string, defaultValue []string) types.List {
+	// Populate the list with environment variable values or default values if the list is empty.
+	if value.IsUnknown() || value.IsNull() {
+		values := []attr.Value{}
+
+		for _, k := range environmentVariableNames {
+			if value, ok := os.LookupEnv(k); ok && value != "" {
+				values = append(values, types.StringValue(strings.TrimSpace(value)))
+			}
+		}
+
+		if len(values) == 0 {
+			for _, v := range defaultValue {
+				values = append(values, types.StringValue(strings.TrimSpace(v)))
+			}
+		}
+
+		return types.ListValueMust(types.StringType, values)
+	}
+
+	return value
 }
 
 // GetConfigBool returns the value of the configValue if it is not null, otherwise it returns the value of the default value.
