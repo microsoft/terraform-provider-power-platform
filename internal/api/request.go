@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"runtime"
 	"time"
@@ -92,7 +91,7 @@ func retryAfter(ctx context.Context, resp *http.Response) time.Duration {
 	retryAfter, err := time.ParseDuration(retryHeader)
 	if err != nil {
 		// default retry after 5-10 seconds
-		return time.Duration((rand.Intn(5) + 5)) * time.Second
+		return DefaultRetryAfter()
 	}
 
 	return retryAfter

@@ -758,8 +758,7 @@ func TestAccManagedEnvironmentsResource_Validate_No_Dataverse(t *testing.T) {
 					maker_onboarding_markdown  = "this is test markdown"
 					maker_onboarding_url       = "http://www.example.com"
 				}`,
-				ExpectError: regexp.MustCompile("InvalidLifecycleOperationRequest"),
-				Check:       resource.ComposeAggregateTestCheckFunc(),
+				ExpectError: regexp.MustCompile(".*EnableGovernanceConfiguration.*"),
 			},
 		},
 	})
