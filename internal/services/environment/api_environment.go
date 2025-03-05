@@ -292,9 +292,7 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 
 	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusNoContent, http.StatusAccepted, http.StatusConflict}, nil)
 
-	if response.HttpResponse.StatusCode == http.StatusNoContent {
-		return customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, "environment not found")
-	} else if response.HttpResponse.StatusCode == http.StatusConflict {
+	if response.HttpResponse.StatusCode == http.StatusConflict {
 		// the is another operation in progress, let's wait for it to complete, and try again
 		tflog.Debug(ctx, "Another operation is in progress, waiting for it to complete")
 		err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
