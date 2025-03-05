@@ -573,7 +573,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-  updateEnvironmentGroupId(plan, &environmentDto)
+	updateEnvironmentGroupId(plan, &environmentDto)
 	updateBillingPolicyId(plan, &environmentDto)
 
 	currencyCode, err := r.updateDataverse(ctx, plan, state, &environmentDto)
@@ -768,7 +768,6 @@ func updateCadence(plan *SourceModel, environmentDto *EnvironmentDto) {
 		}
 	}
 }
-
 
 func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel) error {
 	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
