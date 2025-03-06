@@ -137,6 +137,9 @@ Regardless of your chosen environment, you'll need access to a Power Platform te
 
 Ensure you have access to a tenant where you can create and delete Power Platform environments and resources. Follow the [bootstrap readme](https://github.com/microsoft/power-platform-terraform-quickstarts/blob/main/bootstrap/README.md) from our quickstarts repository to set up your tenant.
 
+### Licensing
+Verify that you have the necessary licenses for the users and services you want to create, adding users to the power platform environments requires licensing, you can verify your licenses following the [View license consumption for Power Apps and Power Automate (preview)](https://learn.microsoft.com/power-platform/admin/view-license-consumption-issues)
+
 ### Credentials and Authentication
 
 Refer to the [provider's user documentation](https://microsoft.github.io/terraform-provider-power-platform#authentication) for detailed instructions on authenticating to the provider.  When getting started we recommend authenticating with a user-context using `az login` command from az cli and `use_cli` provider configuration.
