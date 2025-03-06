@@ -2,6 +2,36 @@
 
 Releasing a new version of the Power Platform Terraform Provider involves careful version management, automated builds/signing, and a final review before publishing. This guide breaks down the GitHub release workflow, the use of **Changie** for semantic versioning, the end-to-end release process, and best practices to ensure a secure and smooth release. Core maintainers can follow these steps and tips to confidently cut a new provider release.
 
+## Step-by-Step Release Process
+
+Releasing a new version involves a sequence of steps that tie together Changie, git tagging, GitHub Actions, and Terraform Registry publication. Below is a step-by-step guide:
+
+1. **Accumulate and Review Changes:** As contributions are merged into `main`, ensure each user-facing change has a corresponding changelog entry or PR label denoting its impact (Breaking, Added, Fixed, etc.). This makes it clear what version bump will be needed. Review the `.changes/unreleased` fragments or PR labels to see what has accumulated for the next release.
+
+2. **Generate Changelog with Changie:** When you decide to cut a release, run the Changie bash commands to prepare the changelog. Changie will create a new section in `CHANGELOG.md` for version 3.4.0 with all changes categorized. Open and review the `CHANGELOG.md` to ensure all notable changes are included and categorized correctly. This step is typically done in a final PR into `main` – so you would commit the updated changelog (and possibly a version bump in code if applicable) and get that PR approved and merged. Now the `main` branch has the latest changelog and is ready for tagging.
+
+3. **Tag the Release in Git:** On the `main` branch, create a new Git tag for the version. The tag should start with `v` followed by the version number, for example `v3.4.0` ([the `v` prefix is required by Terraform conventions](https://developer.hashicorp.com/terraform/registry/providers/publishing)). From the command line, you can tag and push:
+
+    ```bash
+    VERSION="v$(changie version)"
+    git tag -a $VERSION -m "Release $VERSION" 
+    git push origin $VERSION
+    ```
+
+   Pushing the tag triggers the GitHub Actions **release workflow**.
+
+4. **Automated Build and Release (GitHub Actions):** Once the tag is pushed, the `release.yml` workflow detects the new version tag and begins executing. This workflow will set up a Go environment and run **GoReleaser**, which compiles the provider. No manual intervention is needed here; you can monitor the progress on the GitHub Actions page. GoReleaser will build binaries for all supported OS/arch, create the `ProjectName_Version_SHA256SUMS` file (with checksums of all binaries) and sign that file using the GPG key provided via secrets. The GPG key’s fingerprint is configured so that GoReleaser knows which key to use for signing the checksums. When GoReleaser finishes, it creates a **draft release** on GitHub named “v3.4.0” (populated with default release notes, which may just be a list of commits or an empty template) and uploads all the artifacts. According to the developer docs, the workflow “will detect the new tag and create a draft release” after the build completes . At this point, you should see a draft release in the GitHub repository’s Releases page, with assets like `terraform-provider-powerplatform_3.4.0_windows_amd64.zip`, etc., and the `SHA256SUMS` and its `.sig` file attached.
+
+5. **Review the Draft Release:** Before making the release public, **take time to verify everything**. Download a couple of the attached binaries (if you want) and run basic checks, or verify the checksums. Open the draft release notes – by default, GoReleaser might have populated them using commit messages (because the config uses `changelog: use: github-native`) or it might be blank. You should replace or edit this description with the curated changelog you generated. An easy way is to copy the relevant section from `CHANGELOG.md` (which Changie just created for 3.4.0) into the release notes field. This ensures the release notes are human-friendly and comprehensive. Double-check that the version number is correct (no typos in tag or title), and that all expected changes are listed. Also verify that the assets list looks complete (e.g., all OS builds are present, the manifest JSON is attached, etc.). This review acts as a **quality control checkpoint** so that any issues can be caught before users see the release.
+
+6. **Publish the Release on GitHub:** Once satisfied with the draft, hit the **“Publish release”** button on GitHub. This will take the release out of draft status and officially publish version 3.4.0 on GitHub. At this moment, the release becomes visible to the public and the GitHub webhook will notify the Terraform Registry of the new version. (If for some reason you realize something is wrong *before* publishing, you can delete or edit the draft and even delete the tag if you must start over – see Troubleshooting below.)
+
+7. **Terraform Registry Ingestion:** Publishing the release triggers the pre-configured webhook to Terraform Registry. The registry receives an event that version v3.4.0 was released, and it reaches out to GitHub to fetch the release artifacts. The registry will find the provider binaries and the signed checksums, and then verify the signature using the public key you uploaded in the Terraform Registry settings (during initial setup). If everything is in order, the new version will be listed on the Terraform Registry under the provider’s page. Within a few minutes, you should see version 3.4.0 appear on the registry (you can check [registry.terraform.io/providers/microsoft/power-platform](https://registry.terraform.io/providers/microsoft/power-platform) for the list of versions). At this point, users can download the new version by specifying it in their Terraform configuration or by running `terraform init` (Terraform will automatically find the latest version unless it’s a prerelease). **Note:** Prerelease versions (like those with “-preview”) will not be selected by default; a user must explicitly require that version, as per SemVer rules.
+
+8. **Post-release tasks:** Announce the new release (if you have a mailing list or GitHub discussion for releases). Monitor for any unexpected issues. It’s good practice to try a quick `terraform init` with the new provider to ensure installation works. Also, tag the documentation if needed (for example, if using a separate docs site repo). Most of the heavy lifting is automated, so ideally at this point the provider version is live and documented via the changelog.
+
+By following these steps, releasing a new version becomes a repeatable process. The key triggers are the **git tag** (to start automation) and the **Publish** action (to finalize and notify the registry). Everything in between is handled by automation, with you supervising.
+
 ## GitHub Release Workflow Overview (release.yml)
 
 The provider’s release is automated via a GitHub Actions workflow defined in **`.github/workflows/release.yml`**. This workflow’s purpose is to build the provider binaries for all supported platforms, create a release on GitHub with those assets, and prepare the release for Terraform Registry publication. It is structured according to [HashiCorp’s recommended template for Terraform providers](https://developer.hashicorp.com/terraform/registry/providers/publishing), meaning it triggers whenever a new **Git tag** matching a semantic version (e.g. `v1.2.3` or `v1.2.3-preview`) is pushed to the repository.
@@ -46,35 +76,6 @@ Changie will gather all files in `.changes/unreleased`, group them under heading
 
 In summary, **Changie** ensures every change is accounted for and categorized. Maintainers should make sure PR titles or labels reflect the change type (to ease writing the fragment), and that the fragments are properly added. By doing so, the version bump is predictable and follows **Semantic Versioning** rules, and the generated changelog clearly communicates what’s in the release.
 
-## Step-by-Step Release Process
-
-Releasing a new version involves a sequence of steps that tie together Changie, git tagging, GitHub Actions, and Terraform Registry publication. Below is a step-by-step guide:
-
-1. **Accumulate and Review Changes:** As contributions are merged into `main`, ensure each user-facing change has a corresponding changelog entry or PR label denoting its impact (Breaking, Added, Fixed, etc.). This makes it clear what version bump will be needed. Review the `.changes/unreleased` fragments or PR labels to see what has accumulated for the next release.
-
-2. **Generate Changelog with Changie:** When you decide to cut a release, run the Changie bash commands to prepare the changelog. Changie will create a new section in `CHANGELOG.md` for version 3.4.0 with all changes categorized. Open and review the `CHANGELOG.md` to ensure all notable changes are included and categorized correctly. This step is typically done in a final PR into `main` – so you would commit the updated changelog (and possibly a version bump in code if applicable) and get that PR approved and merged. Now the `main` branch has the latest changelog and is ready for tagging.
-
-3. **Tag the Release in Git:** On the `main` branch, create a new Git tag for the version. The tag should start with `v` followed by the version number, for example `v3.4.0` ([the `v` prefix is required by Terraform conventions](https://developer.hashicorp.com/terraform/registry/providers/publishing)). From the command line, you can tag and push:
-
-    ```bash
-    VERSION="v$(changie version)"
-    git tag -a $VERSION -m "Release $VERSION" 
-    git push origin $VERSION
-    ```
-
-   Pushing the tag triggers the GitHub Actions **release workflow**.
-
-4. **Automated Build and Release (GitHub Actions):** Once the tag is pushed, the `release.yml` workflow detects the new version tag and begins executing. This workflow will set up a Go environment and run **GoReleaser**, which compiles the provider. No manual intervention is needed here; you can monitor the progress on the GitHub Actions page. GoReleaser will build binaries for all supported OS/arch, create the `ProjectName_Version_SHA256SUMS` file (with checksums of all binaries) and sign that file using the GPG key provided via secrets. The GPG key’s fingerprint is configured so that GoReleaser knows which key to use for signing the checksums. When GoReleaser finishes, it creates a **draft release** on GitHub named “v3.4.0” (populated with default release notes, which may just be a list of commits or an empty template) and uploads all the artifacts. According to the developer docs, the workflow “will detect the new tag and create a draft release” after the build completes . At this point, you should see a draft release in the GitHub repository’s Releases page, with assets like `terraform-provider-powerplatform_3.4.0_windows_amd64.zip`, etc., and the `SHA256SUMS` and its `.sig` file attached.
-
-5. **Review the Draft Release:** Before making the release public, **take time to verify everything**. Download a couple of the attached binaries (if you want) and run basic checks, or verify the checksums. Open the draft release notes – by default, GoReleaser might have populated them using commit messages (because the config uses `changelog: use: github-native`) or it might be blank. You should replace or edit this description with the curated changelog you generated. An easy way is to copy the relevant section from `CHANGELOG.md` (which Changie just created for 3.4.0) into the release notes field. This ensures the release notes are human-friendly and comprehensive. Double-check that the version number is correct (no typos in tag or title), and that all expected changes are listed. Also verify that the assets list looks complete (e.g., all OS builds are present, the manifest JSON is attached, etc.). This review acts as a **quality control checkpoint** so that any issues can be caught before users see the release.
-
-6. **Publish the Release on GitHub:** Once satisfied with the draft, hit the **“Publish release”** button on GitHub. This will take the release out of draft status and officially publish version 3.4.0 on GitHub. At this moment, the release becomes visible to the public and the GitHub webhook will notify the Terraform Registry of the new version. (If for some reason you realize something is wrong *before* publishing, you can delete or edit the draft and even delete the tag if you must start over – see Troubleshooting below.)
-
-7. **Terraform Registry Ingestion:** Publishing the release triggers the pre-configured webhook to Terraform Registry. The registry receives an event that version v3.4.0 was released, and it reaches out to GitHub to fetch the release artifacts. The registry will find the provider binaries and the signed checksums, and then verify the signature using the public key you uploaded in the Terraform Registry settings (during initial setup). If everything is in order, the new version will be listed on the Terraform Registry under the provider’s page. Within a few minutes, you should see version 3.4.0 appear on the registry (you can check [registry.terraform.io/providers/microsoft/power-platform](https://registry.terraform.io/providers/microsoft/power-platform) for the list of versions). At this point, users can download the new version by specifying it in their Terraform configuration or by running `terraform init` (Terraform will automatically find the latest version unless it’s a prerelease). **Note:** Prerelease versions (like those with “-preview”) will not be selected by default; a user must explicitly require that version, as per SemVer rules.
-
-8. **Post-release tasks:** Announce the new release (if you have a mailing list or GitHub discussion for releases). Monitor for any unexpected issues. It’s good practice to try a quick `terraform init` with the new provider to ensure installation works. Also, tag the documentation if needed (for example, if using a separate docs site repo). Most of the heavy lifting is automated, so ideally at this point the provider version is live and documented via the changelog.
-
-By following these steps, releasing a new version becomes a repeatable process. The key triggers are the **git tag** (to start automation) and the **Publish** action (to finalize and notify the registry). Everything in between is handled by automation, with you supervising.
 
 ## Security, Automation, and Quality Safeguards in the Workflow
 
