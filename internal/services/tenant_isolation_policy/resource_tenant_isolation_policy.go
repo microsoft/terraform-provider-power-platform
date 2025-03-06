@@ -559,6 +559,7 @@ func createObjectFromAllowedTenant(allowedTenant AllowedTenantModel) attr.Value 
 	)
 }
 
+// convertAllowedTenantsFromDto converts the API DTO to the Terraform model.
 func convertAllowedTenantsFromDto(dtoTenants []AllowedTenantDto) []AllowedTenantModel {
 	if dtoTenants == nil {
 		return []AllowedTenantModel{}
