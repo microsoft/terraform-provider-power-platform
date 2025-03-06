@@ -131,7 +131,7 @@ docker exec -u vscode -w /workspaces/terraform-provider-power-platform -it <your
 
 ## Power Platform Prerequisites
 
-Regardless of your chosen environment, you'll need access to a Power Platform tenant and appropriate credentials.
+Regardless of your chosen environment, you'll need access to a Power Platform tenant, licenses, and appropriate credentials.
 
 ### Tenant Setup
 
