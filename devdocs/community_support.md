@@ -19,7 +19,6 @@
 **A:** Ensure your test environment has appropriate permissions. For instance, testing environment creation requires admin credentials. Timeouts can be adjusted via Terraform Plugin SDK’s testing framework. Ensure no leftover resources from previous tests are causing conflicts. For persistent issues, open a discussion or issue marked related to testing on GitHub.
 
 
-
 ### Q: The provider build or tests are failing on my machine. What can I do?
 
 **A:** Update your code (`main` branch), run `make deps`, and rebuild your Dev Container if necessary. Use verbose testing (`-v`) for clearer output. Ensure environment variables are properly configured, especially in the Dev Container. Check file permissions, running the provided `chown` commands if necessary. If issues persist, consult or file GitHub issues.
