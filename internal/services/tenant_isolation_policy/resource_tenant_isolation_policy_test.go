@@ -16,7 +16,7 @@ import (
 
 const testTenantID = "00000000-0000-0000-0000-000000000001"
 
-func setupEnvironmentHttpMocks() {
+func setupTenantHttpMocks() {
 	// Mock tenant endpoint that's called before CRUD operations.
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/tenant?api-version=2021-04-01",
 		func(req *http.Request) (*http.Response, error) {
@@ -123,7 +123,7 @@ func TestUnitTenantIsolationPolicyResource_Validate_Create(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	setupEnvironmentHttpMocks()
+	setupTenantHttpMocks()
 
 	// Initial state for first response.
 	firstResponseJson := fmt.Sprintf(`{
@@ -322,7 +322,7 @@ func TestUnitTenantIsolationPolicyResource_Validate_Delete(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	setupEnvironmentHttpMocks()
+	setupTenantHttpMocks()
 
 	// Create a consistent response to use in both PUT and GET.
 	policyJson := fmt.Sprintf(`{
@@ -387,7 +387,7 @@ func TestUnitTenantIsolationPolicyResource_Validate_Create_Error(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	setupEnvironmentHttpMocks()
+	setupTenantHttpMocks()
 
 	httpmock.RegisterResponder("PUT", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
 		func(req *http.Request) (*http.Response, error) {
@@ -476,7 +476,7 @@ func TestUnitTenantIsolationPolicyValidation_Invalid_TenantId(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	setupEnvironmentHttpMocks()
+	setupTenantHttpMocks()
 
 	httpmock.RegisterResponder("PUT", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
 		func(req *http.Request) (*http.Response, error) {
@@ -509,6 +509,65 @@ func TestUnitTenantIsolationPolicyValidation_Invalid_TenantId(t *testing.T) {
 		},
 	})
 }
+
+// func TestUnitTenantIsolationPolicyResource_Validate_Import(t *testing.T) {
+// 	httpmock.Activate()
+// 	defer httpmock.DeactivateAndReset()
+
+// 	setupTenantHttpMocks()
+
+// 	// Register GET responder with the expected state
+// 	policyJson := fmt.Sprintf(`{
+// 		"properties": {
+// 			"tenantId": "%s",
+// 			"isDisabled": false,
+// 			"allowedTenants": [
+// 				{
+// 					"tenantId": "11111111-1111-1111-1111-111111111111",
+// 					"direction": {
+// 						"inbound": true,
+// 						"outbound": false
+// 					}
+// 				}
+// 			]
+// 		}
+// 	}`, testTenantID)
+
+// 	httpmock.RegisterResponder("GET",
+// 		fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
+// 		func(req *http.Request) (*http.Response, error) {
+// 			return httpmock.NewStringResponse(http.StatusOK, policyJson), nil
+// 		})
+
+// 	resource.Test(t, resource.TestCase{
+// 		IsUnitTest:               true,
+// 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: getProviderConfig() + `
+// 				import {
+// 					to: powerplatform_tenant_isolation_policy.test
+// 					id: "00000000-0000-0000-0000-000000000001"
+// 				}
+
+// 				resource "powerplatform_tenant_isolation_policy" "test" {
+// 					is_disabled = false
+// 					allowed_tenants = toset([
+// 						{
+// 							tenant_id = "11111111-1111-1111-1111-111111111111"
+// 							inbound = true
+// 							outbound = false
+// 						}
+// 					])
+// 				}`,
+// 				ResourceName:      "powerplatform_tenant_isolation_policy.test",
+// 				ImportState:       true,
+// 				ImportStateId:     testTenantID,
+// 				ImportStateVerify: true,
+// 			},
+// 		},
+// 	})
+// }
 
 // Helper functions for acceptance tests.
 func _testAccTenantIsolationPolicy_basic() string {
