@@ -1,5 +1,0 @@
-kind: fixed
-body: Fixed issues with powerplatform_environment_group_rule_set throwing RuleSetInvalid error
-time: 2025-01-24T15:36:18.528435757Z
-custom:
-    Issue: "565"
