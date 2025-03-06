@@ -4,11 +4,11 @@
 
 ### Q: Can I develop on this provider without using the VS Code Dev Container?
 
-**A:** It's not recommended to develop this provider outside the provided Dev Container. GitHub Codespaces is the preferred environment due to consistency, controlled dependencies, and reproducibility. Using the Dev Container locally is acceptable, but manually setting up a local environment can introduce risks such as mismatched dependencies, version conflicts, and environmental inconsistencies that could complicate development and troubleshooting.
+**A:** It's not recommended to develop this provider outside the provided Dev Container. GitHub Codespaces is the preferred environment due to consistency, controlled dependencies, and reproducibility. Using the Dev Container locally is acceptable. Manually setting up a local environment outside of the devcontainer is discouraged because it can introduce risks such as mismatched dependencies, version conflicts, and environmental inconsistencies that could complicate development and troubleshooting.
 
 ### Q: After building the provider locally, terraform init fails or doesn’t use my changes.
 
-**A:** When using a dev build, configure Terraform to use the local plugin binary. The repository provides a `.terraformrc` file with a dev override for the provider. If you are in the Dev Container, this is likely already set up. Instead of `terraform init`, simply run `terraform plan`. Terraform will skip the usual provider download and use your locally installed provider binary. However, if your examples also include other providers such as `azapi` or `azurerm`, running `terraform init` may still be necessary. You can safely ignore any errors related specifically to the Power Platform provider when executing `terraform init`. If Terraform still attempts to download the provider, verify the dev override in `.terraformrc` in your home or working directory, and ensure you've executed `make install`.
+**A:** When using a dev build, configure Terraform to use the local plugin binary. The repository provides a `.terraformrc` file with a dev override for the provider. If you are in the Dev Container, this is likely already set up. Instead of `terraform init`, simply run `terraform plan`. Terraform will skip the usual provider download and use your locally installed provider binary. However, if your examples also include other providers such as `azapi` or `azurerm`, running `terraform init` may still be necessary. You can safely ignore any errors related specifically to the Power Platform provider when executing `terraform init`. If Terraform still attempts to download the provider, verify the dev override in `.terraformrc` in your home or working directory, and ensure you've executed `make install`. Hashicorp documentation has [a good tutorial](https://developer.hashicorp.com/terraform/tutorials/providers-plugin-framework/providers-plugin-framework-provider) to get familiar with these concepts.
 
 ### Q: Where can I find usage examples or documentation for end users?
 
@@ -44,4 +44,3 @@ When engaging maintainers (e.g., PR code reviews), follow these best practices:
 - **Understand Priorities:** Accept feedback constructively, aligning with the project roadmap or considering maintaining a fork if your contribution is niche.
 
 Support the community by answering questions, reviewing PRs, and mentoring newcomers.
-

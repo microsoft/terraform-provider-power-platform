@@ -8,7 +8,7 @@ Accepted
 
 Our Terraform provider interacts extensively with external HTTP APIs. Reliable and isolated unit tests require mocking these HTTP interactions to avoid dependencies on external services, ensure test determinism, and improve test execution speed.
 
-Previously, unit tests loaded data directly into DTOs, bypassing actual HTTP request-response cycles. This approach had several limitations:
+Previously, unit tests loaded data directly into data transfer objects (DTOs), bypassing actual HTTP request-response cycles. This approach had several limitations:
 
 - Wire serialization and deserialization logic was not exercised, potentially hiding serialization-related bugs.
 - Difficulty in simulating specific HTTP responses, error conditions, and network failures.

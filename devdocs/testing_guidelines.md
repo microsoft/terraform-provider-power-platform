@@ -40,7 +40,7 @@ make unittest
 To run a single unit test:
 
 ```bash
-TF_ACC=0 go test -v ./... -run TestUnit<test_name>
+make unittest TEST=<test_name>
 ```
 
 ## Acceptance Tests (Integration Tests)
@@ -50,8 +50,6 @@ Every unit test covering a new feature or fix should have a corresponding accept
 - Acceptance tests (files with `TestAcc...`) call real APIs and require valid credentials and a test tenant.
 - **Tests create real resources** – ensure proper cleanup after execution.
   - Use **CheckDestroy** to verify resource deletion post `terraform destroy`.
-
-
 
 ### Test Pre-checks
 
@@ -72,7 +70,7 @@ make acctest
 To run a single acceptance test:
 
 ```bash
-TF_ACC=1 go test -v ./... -run TestAcc<test_name>
+make acctest TEST=<test_name>
 ```
 
 ### Test Coverage
