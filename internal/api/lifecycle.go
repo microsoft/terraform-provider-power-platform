@@ -5,7 +5,6 @@ package api
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"net/url"
 
@@ -77,13 +76,11 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 			return nil, err
 		}
 
-		tflog.Debug(ctx, "Environment Operation State: '"+lifecycleResponse.State.Id+"'")
-		tflog.Debug(ctx, "Environment Operation HTTP Status: '"+response.HttpResponse.Status+"'")
+		tflog.Debug(ctx, "Lifecycle Operation State: '"+lifecycleResponse.State.Id+"'")
+		tflog.Debug(ctx, "Lifecycle Operation HTTP Status: '"+response.HttpResponse.Status+"'")
 
-		if lifecycleResponse.State.Id == "Succeeded" {
+		if lifecycleResponse.State.Id == "Succeeded" || lifecycleResponse.State.Id == "Failed" {
 			return &lifecycleResponse, nil
-		} else if lifecycleResponse.State.Id == "Failed" {
-			return &lifecycleResponse, errors.New("environment operation failed. provisioning state: " + lifecycleResponse.State.Id)
 		}
 	}
 }

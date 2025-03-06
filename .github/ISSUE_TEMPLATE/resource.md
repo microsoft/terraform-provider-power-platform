@@ -6,16 +6,17 @@ assignees: ""
 
 ---
 
-## Description
+## User Story
 
-<!-- Short description here describing the new resource or data source that you're requesting.  Include a use case for why users need this resource. -->
+As a **Terraform user**, I want to manage **[resource type]** through Terraform so that I can **[benefit/business value]**.
 
-### Resource
+Use case: [Describe specific scenario where this resource would be valuable in infrastructure automation]
 
-- Resource Name: powerplatform_[your resource name]
-- API documentation: <!-- links to API documentation (if public).  What APIs are needed for create, read, update, delete? What APIs are relevant? -->
-- Estimated complexity/effort: <!--  (e.g., easy, moderate, hard). and why?-->
-- Related resources/data sources: <!-- are there any existing or potential data sources that are related to this one -->
+## Resource
+
+- **Resource Name:** `powerplatform_[your resource name]`
+- **Service Name:** `[service name]`
+- **Documentation Link:**
 
 ### Potential Terraform Configuration
 
@@ -23,28 +24,47 @@ assignees: ""
 # Sample Terraform config that describes how the new resource might look.
 
 resource "example_resource" {
-  name = "example"
+  name = "example" # required
   parameter1 = "value1"
-  parameter2 = "value2"
+  enabled = false
+  items = toset([
+    { 
+      name = "item name" # required, must be 3 characters or more
+    }
+  ])
 }
 
 ```
 
+### Additional Validation Rules
+
+## API documentation
+
+| Action | Verb | URL | Status Codes | Comments |
+|--------|------|-----|----------------------|----------|
+| Create | POST | /api/v1/resources | 201 | |
+| Read   | GET  | /api/v1/resources/{id} | 200 | |
+| Update | PUT  | /api/v1/resources/{id} | 200 | |
+| Delete | DELETE | /api/v1/resources/{id} | 204 | |
+
+### JSON
+
+```json
+{}
+```
+
 ## Definition of Done
 
-- [ ] Data Transfer Objects (dtos)
-- [ ] Data Client functions
-- [ ] Resource Implementation
-- [ ] Resource Added to Provider
-- [ ] Unit Tests for Happy Path
-- [ ] Unit Tests for error path
-- [ ] Acceptance Tests
-- [ ] Example in the /examples folder
-- [ ] Schema Documentation in code
-- [ ] Updated auto-generated provider docs with `make docs`
-
-## Contributions
-
-Do you plan to raise a PR to address this issue? YES / NO?
+- [ ] Data Transfer Objects (dtos) in `dto.go`
+- [ ] Resource Model in `model.go`
+- [ ] API Client functions in `api_{name}.go`
+- [ ] Resource Implementation in `resource_{name}.go`
+- [ ] Unit Tests in `resource_{name}_test.go` for Happy Path, Error conditions, boundry cases
+- [ ] Acceptance Tests in `resource_{name}_test.go` for Happy Path
+- [ ] Resource Added to `provider.go` and `provider_test.go`
+- [ ] Example in the `/examples` folder
+- [ ] Schema documented using `MarkdownDescription`
+- [ ] Change log entry `changie new -k added`
+- [ ] Run `make precommit` before PR
 
 See the [contributing guide](/CONTRIBUTING.md?) for more information about what's expected for contributions.
