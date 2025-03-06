@@ -64,6 +64,7 @@ resource "example_resource" {
 - [ ] Resource Added to `provider.go` and `provider_test.go`
 - [ ] Example in the `/examples` folder
 - [ ] Schema documented using `MarkdownDescription`
-- [ ] Updated auto-generated provider docs with `make docs`
+- [ ] Change log entry `changie new -k added`
+- [ ] Run `make precommit` before PR
 
 See the [contributing guide](/CONTRIBUTING.md?) for more information about what's expected for contributions.

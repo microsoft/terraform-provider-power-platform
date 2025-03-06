@@ -14,7 +14,9 @@ A clear and concise description of what the bug is.
 ### Sample Terraform Code
 
 ```hcl
-
+resource powerplatform_xyz example {
+    
+}
 ```
 
 **REMINDER: REMOVE SENSITIVE DATA SUCH AS SECRETS, USER NAMES, EMAILS, TENANT INFORMATION, ETC.**

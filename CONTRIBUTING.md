@@ -43,6 +43,15 @@ PRs for new resources or data sources are expected to meeting the following crit
 - [Update auto-generated documentation](./DEVELOPER.md#updating-documentation) in [/docs](/docs/). (Don't manually edit [/docs](/docs/) or your updates will be overwritten)
 - Ensure the PR description clearly describes the feature you're adding and any known limitations (We recommend using GitHub Copilot for PR descriptions)
 
+## Inclusion in Code Review
+Below are some points which emphasize why inclusivity in code reviews is important:
+- Code reviews are an important part of our job as software professionals.
+- We work with cross cultural teams from across the globe.
+- How we communicate affects team morale.
+- Inclusive code reviews welcome new developers and make them comfortable with the team.
+- Rude or personal attacks doing code reviews alienate - people can unknowingly make rude comments when reviewing pull requests (PRs).
+We consider it important to be inclusive when reviewing PRs. If you want to see how to apply this practice and find some examples, you can check the following link: [Inclusion in Code Review](https://microsoft.github.io/code-with-engineering-playbook/code-reviews/inclusion-in-code-review/)
+
 ## Getting Started
 
 Ready to contribute? Check out our [Developer Guide](./DEVELOPER.md) for detailed instructions on setting up your development environment, building the provider, and running tests. We look forward to your contributions!

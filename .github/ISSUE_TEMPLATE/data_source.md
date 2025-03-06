@@ -69,6 +69,7 @@ data "example_data_source" {
 - [ ] Data Source added to `provider.go` and `provider_test.go`
 - [ ] Working example in the `/examples` folder
 - [ ] Schema documented using `MarkdownDescription` with relevant links to product documentation
+- [ ] Change log entry `changie new -k added`
 - [ ] Run `make precommit` before PR
 
 See the [contributing guide](/CONTRIBUTING.md?) for more information about what's expected for contributions.
