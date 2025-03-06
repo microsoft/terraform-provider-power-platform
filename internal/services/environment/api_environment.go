@@ -290,14 +290,23 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 		Message: "Deleted using Power Platform Terraform Provider",
 	}
 
-	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
-	if err != nil {
-		var httpError *customerrors.UnexpectedHttpStatusCodeError
-		if errors.As(err, &httpError) {
-			return fmt.Errorf("Unexpected HTTP Status %s; Body: %s", httpError.StatusText, httpError.Body)
+	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusNoContent, http.StatusAccepted, http.StatusConflict}, nil)
+
+	if response.HttpResponse.StatusCode == http.StatusConflict {
+		// the is another operation in progress, let's wait for it to complete, and try again
+		tflog.Debug(ctx, "Another operation is in progress, waiting for it to complete")
+		err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
+		if err != nil {
+			return err
 		}
-		return err
+		return client.DeleteEnvironment(ctx, environmentId)
 	}
+
+	var httpError *customerrors.UnexpectedHttpStatusCodeError
+	if errors.As(err, &httpError) {
+		return fmt.Errorf("Unexpected HTTP Status %s; Body: %s", httpError.StatusText, httpError.Body)
+	}
+
 	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.HttpResponse.Status+"'")
 
 	tflog.Debug(ctx, "Waiting for environment deletion operation to complete")
