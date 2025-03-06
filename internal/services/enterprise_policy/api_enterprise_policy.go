@@ -50,9 +50,16 @@ func (client *Client) LinkEnterprisePolicy(ctx context.Context, environmentId, e
 	tflog.Debug(ctx, "Policy Linking Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 	tflog.Debug(ctx, "Waiting for operation to complete")
 
-	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return err
+	}
+	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
+		}
+		tflog.Info(ctx, "Policy Linking Operation failed. Retrying...")
+		return client.LinkEnterprisePolicy(ctx, environmentId, environmentType, systemId)
 	}
 	return nil
 }
@@ -79,9 +86,16 @@ func (client *Client) UnLinkEnterprisePolicy(ctx context.Context, environmentId,
 	tflog.Debug(ctx, "Policy Unlinking Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 	tflog.Debug(ctx, "Waiting for operation to complete")
 
-	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return err
+	}
+	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
+		}
+		tflog.Info(ctx, "Policy Unlinking Operation failed. Retrying...")
+		return client.UnLinkEnterprisePolicy(ctx, environmentId, environmentType, systemId)
 	}
 	return nil
 }
