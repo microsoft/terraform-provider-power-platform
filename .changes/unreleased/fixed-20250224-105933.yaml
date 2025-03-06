@@ -1,5 +1,0 @@
-kind: fixed
-body: 'powerplatform_environment: fixing bug that updating display_name field triggers manager environment to enable itself'
-time: 2025-02-24T10:59:33.757532305Z
-custom:
-    Issue: "595"

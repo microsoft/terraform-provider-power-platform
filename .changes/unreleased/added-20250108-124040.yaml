@@ -1,5 +1,0 @@
-kind: added
-body: powerplatform_environment added explicit error when cannot provision new environment in a selected azure region
-time: 2025-01-08T12:40:40.628701431Z
-custom:
-    Issue: "548"
