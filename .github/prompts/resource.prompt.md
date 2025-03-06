@@ -34,7 +34,7 @@ Your task is to implement a new Terraform resource for the Power Platform Terraf
 
 - Each attribute includes a detailed `MarkdownDescription` with links to official documentation
 - Attributes clearly marked as `Required`, `Optional`, or `Computed`
-- Nested schemas for complex data structures (objects, lists, sets)
+- Nested schemas for complex data structures (objects, lists, sets). Prefer sets over lists.
 - Plan modifiers control behavior during state transitions:
   - `RequiresReplace()` for attributes that force resource recreation
   - `UseStateForUnknown()` for computed values that shouldn't be reset
