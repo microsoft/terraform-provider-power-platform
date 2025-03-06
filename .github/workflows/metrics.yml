@@ -1,0 +1,54 @@
+name: Repository Metrics
+
+on:
+  schedule:
+    # Run weekly on Monday at 9:00 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  metrics:
+    name: Repository Metrics Collection
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Issue Metrics
+        id: issue-metrics
+        uses: github/issue-metrics@v2
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+        with:
+          repository: ${{ github.repository }}
+          period: 7 # Last 7 days
+          create-issue: false # We'll create the issue in another repo
+
+      - name: Create Metrics Issue
+        uses: octokit/request-action@v2.x
+        env:
+          GITHUB_TOKEN: ${{ secrets.METRICS_PAT }}
+        with:
+          route: POST /repos/microsoft/IaC-for-Everything/issues
+          title: "Weekly Metrics Report for terraform-provider-power-platform"
+          body: |
+            ## Weekly Repository Metrics Report
+            
+            Repository: ${{ github.repository }}
+            Period: Last 7 days
+            
+            ### Issues
+            - Open issues: ${{ fromJson(steps.issue-metrics.outputs.json).issues.open }}
+            - Closed issues: ${{ fromJson(steps.issue-metrics.outputs.json).issues.closed }}
+            - Average time to first response: ${{ fromJson(steps.issue-metrics.outputs.json).issues.time_to_first_response.mean }}
+            - Median time to first response: ${{ fromJson(steps.issue-metrics.outputs.json).issues.time_to_first_response.median }}
+            
+            ### Pull Requests
+            - Open PRs: ${{ fromJson(steps.issue-metrics.outputs.json).pull_requests.open }}
+            - Merged PRs: ${{ fromJson(steps.issue-metrics.outputs.json).pull_requests.merged }}
+            - Average time to first review: ${{ fromJson(steps.issue-metrics.outputs.json).pull_requests.time_to_first_review.mean }}
+            - Median time to first review: ${{ fromJson(steps.issue-metrics.outputs.json).pull_requests.time_to_first_review.median }}
+            
+            [View full metrics](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
