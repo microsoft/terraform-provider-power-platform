@@ -1,0 +1,5 @@
+kind: added
+body: Add powerplatform_solution_checker_rules data source for retrieving solution checker validation rules
+time: 2025-03-06T22:45:22.313020365Z
+custom:
+    Issue: "574"
