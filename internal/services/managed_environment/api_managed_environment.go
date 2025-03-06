@@ -45,9 +45,16 @@ func (client *client) EnableManagedEnvironment(ctx context.Context, managedEnvSe
 	tflog.Debug(ctx, "Managed Environment Enablement Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 
 	tflog.Debug(ctx, "Waiting for Managed Environment Enablement Operation to complete")
-	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return err
+	}
+	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
+		}
+		tflog.Info(ctx, "Managed Environment Enablement Operation failed. Retrying...")
+		return client.EnableManagedEnvironment(ctx, managedEnvSettings, environmentId)
 	}
 	return nil
 }
@@ -74,9 +81,16 @@ func (client *client) DisableManagedEnvironment(ctx context.Context, environment
 	tflog.Debug(ctx, "Managed Environment Disablement Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 	tflog.Debug(ctx, "Waiting for Managed Environment Disablement Operation to complete")
 
-	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return err
+	}
+	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
+		}
+		tflog.Info(ctx, "Managed Environment Disablement Operation failed. Retrying...")
+		return client.DisableManagedEnvironment(ctx, environmentId)
 	}
 	return nil
 }

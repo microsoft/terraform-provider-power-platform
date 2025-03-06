@@ -161,6 +161,13 @@ func (client *client) GetDataverseUserByAadObjectId(ctx context.Context, environ
 
 		return nil, err
 	}
+
+	if len(user.Value) == 0 {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return nil, err
+		}
+		return client.GetDataverseUserByAadObjectId(ctx, environmentId, aadObjectId)
+	}
 	return &user.Value[0], nil
 }
 
