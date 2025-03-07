@@ -36,5 +36,4 @@ jobs:
           retention-days: 30
       - name: Add metrics to job summary
         run: |
-          echo "## Issue Metrics" >> $GITHUB_STEP_SUMMARY
           cat ./issue_metrics.md >> $GITHUB_STEP_SUMMARY
