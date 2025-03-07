@@ -37,5 +37,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.METRICS_PAT }}
         with:
           route: POST /repos/microsoft/IaC-for-Everything/issues
+          owner: microsoft
+          repo: IaC-for-Everything
           title: "Weekly Metrics Report for terraform-provider-power-platform"
-          body: "[View full metrics](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          body: ${{ toJson( steps.issue-metrics.outputs.metrics ) }}
