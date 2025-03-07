@@ -86,7 +86,6 @@ Read-Only:
 
 - `code` (String) The unique code of the rule
 - `component_type` (Number) The type of component this rule applies to
-- `component_type_description` (String) Description of the component type
 - `description` (String) A detailed description of the rule
 - `guidance_url` (String) URL to detailed guidance on addressing the issue
 - `how_to_fix` (String) Instructions on how to fix issues identified by the rule
