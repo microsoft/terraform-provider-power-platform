@@ -27,7 +27,6 @@ type RuleModel struct {
 	HowToFix                   types.String `tfsdk:"how_to_fix"`
 	GuidanceUrl                types.String `tfsdk:"guidance_url"`
 	ComponentType              types.Int64  `tfsdk:"component_type"`
-	ComponentTypeDescription   types.String `tfsdk:"component_type_description"`
 	PrimaryCategory            types.Int64  `tfsdk:"primary_category"`
 	PrimaryCategoryDescription types.String `tfsdk:"primary_category_description"`
 	Include                    types.Bool   `tfsdk:"include"`
@@ -43,29 +42,10 @@ func convertFromRuleDto(rule ruleDto) RuleModel {
 		HowToFix:                   types.StringValue(rule.HowToFix),
 		GuidanceUrl:                types.StringValue(rule.GuidanceUrl),
 		ComponentType:              types.Int64Value(int64(rule.ComponentType)),
-		ComponentTypeDescription:   types.StringValue(getComponentTypeDescription(rule.ComponentType)),
 		PrimaryCategory:            types.Int64Value(int64(rule.PrimaryCategory)),
 		PrimaryCategoryDescription: types.StringValue(getPrimaryCategoryDescription(rule.PrimaryCategory)),
 		Include:                    types.BoolValue(rule.Include),
 		Severity:                   types.Int64Value(int64(rule.Severity)),
-	}
-}
-
-// Helper function to get component type description.
-func getComponentTypeDescription(componentType int) string {
-	switch componentType {
-	case 0:
-		return "General"
-	case 1:
-		return "Plugin"
-	case 2:
-		return "Workflow"
-	case 3:
-		return "WebResource"
-	case 4:
-		return "CustomControl"
-	default:
-		return "Unknown"
 	}
 }
 

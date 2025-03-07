@@ -46,7 +46,6 @@ func TestAccSolutionCheckerRulesDataSource_Basic(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_solution_checker_rules.test", "rules.0.description", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_solution_checker_rules.test", "rules.0.summary", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_solution_checker_rules.test", "rules.0.guidance_url", regexp.MustCompile(helpers.UrlValidStringRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_solution_checker_rules.test", "rules.0.component_type_description", regexp.MustCompile(helpers.StringRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_solution_checker_rules.test", "rules.0.primary_category_description", regexp.MustCompile(helpers.StringRegex)),
 				),
 			},
@@ -71,6 +70,7 @@ func TestUnitSolutionCheckerRulesDataSource_Validate_Read(t *testing.T) {
 		httpmock.NewStringResponder(http.StatusOK, httpmock.File("tests/datasource/Validate_Read/get_rules.json").String()))
 
 	resource.UnitTest(t, resource.TestCase{
+		IsUnitTest:               true,
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -86,7 +86,6 @@ func TestUnitSolutionCheckerRulesDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_solution_checker_rules.test", "rules.0.how_to_fix", ""),
 					resource.TestCheckResourceAttr("data.powerplatform_solution_checker_rules.test", "rules.0.guidance_url", "https://learn.microsoft.com/powerapps/developer/data-platform/best-practices/business-logic/do-not-duplicate-plugin-step-registration"),
 					resource.TestCheckResourceAttr("data.powerplatform_solution_checker_rules.test", "rules.0.component_type", "0"),
-					resource.TestCheckResourceAttr("data.powerplatform_solution_checker_rules.test", "rules.0.component_type_description", "General"),
 					resource.TestCheckResourceAttr("data.powerplatform_solution_checker_rules.test", "rules.0.primary_category", "1"),
 					resource.TestCheckResourceAttr("data.powerplatform_solution_checker_rules.test", "rules.0.primary_category_description", "Performance"),
 					resource.TestCheckResourceAttr("data.powerplatform_solution_checker_rules.test", "rules.0.include", "true"),

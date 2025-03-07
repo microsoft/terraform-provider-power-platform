@@ -89,11 +89,6 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 							MarkdownDescription: "The type of component this rule applies to",
 							Computed:            true,
 						},
-						"component_type_description": schema.StringAttribute{
-							Description:         "Description of the component type",
-							MarkdownDescription: "Description of the component type",
-							Computed:            true,
-						},
 						"primary_category": schema.Int64Attribute{
 							Description:         "The primary category of the rule",
 							MarkdownDescription: "The primary category of the rule",
