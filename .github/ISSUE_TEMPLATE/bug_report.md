@@ -13,13 +13,13 @@ A clear and concise description of what the bug is.
 
 ### Sample Terraform Code
 
-If applicable, add terraform code to help explain your problem.  
+```hcl
+resource powerplatform_xyz example {
+    
+}
+```
 
 **REMINDER: REMOVE SENSITIVE DATA SUCH AS SECRETS, USER NAMES, EMAILS, TENANT INFORMATION, ETC.**
-
-```hcl
-
-```
 
 ### Expected behavior
 
@@ -33,7 +33,3 @@ A clear and concise description of what you expected to happen.
 ## Additional context
 
 Add any other context about the problem here.
-
-## Contribution
-
-Do you plan to raise a PR to address this issue?  YES / NO?

@@ -1,5 +1,0 @@
-kind: changed
-body: 'powerplatform_environment: attributes `environment_group_id` and `billing_policy_id` uses empty guid `00000000-0000-0000-0000-000000000000` as no value, instead of ""'
-time: 2025-02-27T16:14:15.118950739Z
-custom:
-    Issue: "604"

@@ -193,8 +193,7 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 	}
 
 	// pull for solution import completion.
-	err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
-	if err != nil {
+	if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 		return nil, err
 	}
 
@@ -220,8 +219,7 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 			}
 			return solution, nil
 		}
-		err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
-		if err != nil {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return nil, err
 		}
 	}

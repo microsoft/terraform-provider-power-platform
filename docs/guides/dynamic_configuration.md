@@ -1,0 +1,158 @@
+---
+page_title: "Dynamic Dataverse Configuration"
+subcategory: "Guides"
+description: |-
+  <no value>
+---
+
+# Managing Dataverse Configuration Data with Terraform Power Platform Provider
+
+## Introduction to Managing Configuration Data in Dataverse
+
+Microsoft Dataverse (the data platform behind Power Platform environments) stores all configuration settings as records in tables. For example, environment components like Business Units, Teams, and Security Roles are stored as rows in Dataverse tables. The Terraform **Power Platform** provider includes resources to treat these configuration records as infrastructure-as-code. In particular, the `powerplatform_data_record` resource and `powerplatform_data_records` data source let you manage Dataverse-stored settings via Terraform. Under the hood, these use the Dataverse Web API (an OData-based REST API) to retrieve and modify records. This means any operation you perform in Terraform is equivalent to an OData call to Dataverse.
+
+**Important:** The **Data Record** resource is intended for environment configuration data and not for day-to-day business transactional data. You should **not** use it to manage records that end-users frequently create or update (such as customer records), because those can drift from Terraform state with regular user activity. Instead, focus on relatively static configuration entities (e.g. security roles, business unit hierarchy, reference data).
+
+## Finding Table Schema and Logical Names
+
+Before using these Terraform resources, you need to know the **logical names** of the Dataverse table and columns you want to manage. Dataverse tables have multiple names: a display name (friendly name in the UI), a schema name, and a logical name (used in the API). Typically, the logical name is the schema name in lowercase . For example, the **Business Unit** table has a schema name “BusinessUnit” and logical name **`businessunit`**, and its OData entity set name is **`businessunits`** (usually the plural of the logical name). Many out-of-the-box tables follow this pattern, though some custom tables may have specific plural forms. Column (field) names work similarly: what appears as “Business Unit Name” in the UI has a logical name `name`, and “Parent Business Unit” has logical name `parentbusinessunitid`.
+
+To find these names:
+
+- **Using Power Platform UI (Maker Portal):** Open the table in Power Apps (make.powerapps.com), and view its properties or schema. The table **Properties** pane will show *Name* (display name) and may show the schema name. The new table designer also has a **Tools** menu with options to copy the logical name and the entity set name. For example, for the **Account** table (display name “Account”), the tools can copy its logical name (`account`), schema name (`Account`), or set name (`accounts`). Use the logical name for `table_logical_name` in Terraform, and the set name for the `entity_collection` when querying data. For columns, click on the column in the table’s Columns list and view its details; the **Name** field shown is the logical name. You can also use the “Copy logical name” tool for columns in the maker portal.
+
+- **Using OData Metadata:** As an alternative, you can query the Dataverse Web API metadata to discover names. For instance, you can GET `/<organization_url>/api/data/v9.2/EntityDefinitions(LogicalName='businessunit')` to retrieve the Business Unit table’s definition, or use `$metadata` to list all entities. The metadata will show the `LogicalName` of tables and their attributes. This approach is more advanced, but useful if you prefer an API method or need to script the discovery of schema details. (See Microsoft’s documentation on retrieving metadata by name ([Retrieve table definitions by name or MetadataId (Microsoft Dataverse) - Power Apps | Microsoft Learn](https://learn.microsoft.com/en-us/power-apps/developer/data-platform/webapi/retrieve-metadata-name-metadataid)) for reference.)
+
+Having the correct table logical name and column logical names is crucial — if these are wrong, your Terraform calls will fail because Dataverse won’t recognize the targets. Once you’ve identified the names, you can proceed to use the Terraform data source and resource.
+
+## Using `powerplatform_data_records` (Reading Data)
+
+The `powerplatform_data_records` **data source** is used to **query and read** data from a Dataverse table (entity) without creating or modifying anything. This is useful for retrieving configuration data to use elsewhere in your Terraform configuration or just to output for information. For example, you might retrieve all Business Units in an environment to get their IDs and names.
+
+Key attributes for this data source include:
+
+- **`environment_id`:** The target environment (Dataverse environment) to query, identified by its GUID. You can supply this via a known GUID or from another Terraform resource/data (for example, `data.powerplatform_environments` or an environment resource).
+- **`entity_collection`:** The OData collection name of the table (usually the plural logical name, e.g. `"businessunits"` for Business Unit table).
+- **Query options:** You can specify OData query parameters through Terraform arguments:
+  - **`filter`:** An OData filter string to narrow results (similar to WHERE in SQL). For example, `filter = "statecode eq 0"` would retrieve only active records (where `statecode` is 0) ([powerplatform_data_records (Data Source) - Power Platform Terraform Provider](https://microsoft.github.io/terraform-provider-power-platform/data-sources/data_records/#:~:text=More%20information%20on%20%28OData%20Filter%29%5Bhttps%3A%2F%2Flearn.microsoft.com%2Fen,Order%20the%20data%20records)). If omitted, all records in the entity are retrieved (be cautious if the table is large).
+  - **`select`:** A list of columns to retrieve (by logical name). If omitted, the query may return all columns by default. It’s good practice to specify only needed fields to reduce data size. For example, `select = ["name", "businessunitid", "parentbusinessunitid"]` might be used to get each Business Unit’s name, its GUID, and its parent’s GUID.
+  - **`top`:** An integer to limit how many records to return (equivalent to OData `$top`).
+  - **`order_by`:** Specify sorting, e.g. `"name asc"` or `"modifiedon desc"` (maps to `$orderby` in OData).
+  - **`expand`:** Use this to include related entities via navigation properties (similar to a JOIN). For instance, you could expand `"parentbusinessunitid"` on a Business Unit to get details of the parent BU in one query. (This requires knowing the navigation property name for the relationship.)
+
+**Example – Retrieving all Business Units:** Suppose you want to list all business units in your environment. You can use the data source without any filter (or with a filter if you only want certain ones). For example:
+
+```hcl
+data "powerplatform_data_records" "business_units" {
+  environment_id    = var.environment_id               # GUID of the environment
+  entity_collection = "businessunits"                  # Dataverse entity set name
+  select            = ["businessunitid", "name", "parentbusinessunitid"]
+  # filter            = "parentbusinessunitid eq null"  # (optional) example filter to get only the root BU
+}
+```
+
+In this snippet, Terraform will query the **Business Unit** table (entity set "businessunits") for all records, returning each record’s ID, name, and parent BU ID. You could add a filter such as `parentbusinessunitid eq null` to get only the root business unit (the top of the hierarchy) ([powerplatform_data_record (Resource) - Power Platform Terraform Provider](https://microsoft.github.io/terraform-provider-power-platform/resources/data_record/#:~:text=data%20,)), or a filter like `name eq 'Sales'` to find a specific BU by name. The filter string must use OData syntax – for strings, wrap the value in single quotes, and for GUIDs use literal format without quotes (e.g., `businessunitid eq 12345678-1234-1234-1234-123456789012`). More complex filters (and combinations with `and`/`or`) are supported as documented in Microsoft’s OData filter guide ([powerplatform_data_records (Data Source) - Power Platform Terraform Provider](https://microsoft.github.io/terraform-provider-power-platform/data-sources/data_records/#:~:text=More%20information%20on%20%28OData%20Filter%29%5Bhttps%3A%2F%2Flearn.microsoft.com%2Fen,Order%20the%20data%20records)).
+
+After you run `terraform apply`, you can reference the fetched data via the data source’s attributes. The `powerplatform_data_records` data source outputs a list of **rows** matching your query. Each row is a map of the columns you selected. For example, to get the name of the first Business Unit in the list, you could use:
+
+```hcl
+${data.powerplatform_data_records.business_units.rows[0].name}
+```
+
+Similarly, `${data.powerplatform_data_records.business_units.rows[0].businessunitid}` would give the GUID of that first Business Unit. You can use these values to feed into other Terraform resources. For instance, you might use the root Business Unit’s ID from a query as the parent when creating a new Business Unit (as shown in the next section). If the table has many records and you need to iterate, you could combine the data source with Terraform’s `for_each` or `count` in your configuration, but remember that the data source itself just fetches data and doesn’t create resources by itself.
+
+## Using `powerplatform_data_record` (Creating, Updating, Deleting Data)
+
+The `powerplatform_data_record` **resource** allows you to **create** new Dataverse records, **update** existing ones, and **delete** them, all through Terraform. Each `powerplatform_data_record` in your Terraform config corresponds to a single Dataverse record (row). This is powerful for automating the setup of environment configuration like creating required Business Units, Teams, or other settings records as part of your deployment.
+
+**Key arguments:**
+
+- **`environment_id`:** The target environment GUID (same as in the data source, specifying where to create the record).
+- **`table_logical_name`:** The logical name of the table (entity) where the record will reside (e.g., `"businessunit"` or `"team"`).
+- **`columns`:** A map (Terraform dynamic block) of column values for the new or updated record. The keys are column logical names, and the values are the values to set. You can provide text, numbers, booleans, etc., matching the Dataverse field types. For lookup fields (relationships), instead of a simple value you will provide an object with a target `table_logical_name` and a `data_record_id` (GUID of the related record). The provider will translate that into the appropriate OData bind operation to link the lookup ([powerplatform_data_record (Resource) - Power Platform Terraform Provider](https://microsoft.github.io/terraform-provider-power-platform/resources/data_record/#:~:text=columns%20%3D%20,my%20custom%20role)). For multi-record relationships (e.g., many-to-many associations), you provide a list of such objects.
+
+When you `apply` a config with a `powerplatform_data_record` resource, Terraform will call the Dataverse Web API to create a new record with the specified columns (if an existing record with those key values isn’t already tracked). Terraform then stores the record’s unique ID in the state (the resource’s `id` attribute). On subsequent applies, if you change the `columns`, Terraform will send an update for those changes. If you remove the resource from your configuration or run `terraform destroy`, Terraform will delete the record from Dataverse. (Note: some system records cannot be deleted or have constraints – Terraform will surface an error from the API in those cases.)
+
+**Example – Creating a new Business Unit:** In Dataverse, each environment has a root Business Unit (created by default). Let’s say you want to create a child Business Unit (e.g., for a department) via Terraform. You’ll need the ID of the parent Business Unit (likely the root). We can use the data source from the previous section to get the root BU. Then:
+
+```hcl
+# Data source to get the root business unit (parentbusinessunitid is null for root)
+data "powerplatform_data_records" "root_bu" {
+  environment_id    = var.environment_id
+  entity_collection = "businessunits"
+  filter            = "parentbusinessunitid eq null"
+  select            = ["businessunitid"]
+}
+
+# Create a new Business Unit record in Dataverse
+resource "powerplatform_data_record" "child_bu" {
+  environment_id     = var.environment_id
+  table_logical_name = "businessunit"
+  columns = {
+    name = "Contoso Sales Unit"                   # Name of the new Business Unit
+    parentbusinessunitid = {                      # Lookup to the parent Business Unit
+      table_logical_name = "businessunit"
+      data_record_id     = data.powerplatform_data_records.root_bu.rows[0].businessunitid
+    }
+    // You can set other fields like "costcenter" or address fields if required, using their logical names.
+  }
+}
+```
+
+In this configuration, the data source `root_bu` finds the existing root Business Unit, and then the `child_bu` resource creates a new Business Unit named "Contoso Sales Unit" under that parent. The `parentbusinessunitid` is a lookup field on the Business Unit table, so we provide it as an object with the target table (`businessunit`) and the GUID of the parent record. Terraform will handle the API call to bind the relationship (using OData binding syntax) for us. After applying, the new Business Unit is created in Dataverse, and its properties (including its new GUID) are now tracked in Terraform state. If we want to update this Business Unit later (for example, change its name or cost center), we can change the `columns` values in Terraform and apply again – Terraform will perform an update operation on that record.
+
+**Example – Creating related records and associations:** You can create various types of records similarly by changing the `table_logical_name` and columns. For instance, to create a new **Security Role**, you might use `table_logical_name = "role"` and provide the role `name` and a `businessunitid` reference (roles must belong to a business unit). To create a **Team**, use `table_logical_name = "team"` with columns like `name` and possibly an association to a security role. For example, the provider allows setting many-to-many relationships by using a special field with `_association`. In the case of Team to Role (many-to-many relation), you could include something like:
+
+```hcl
+columns = {
+  name = "New Team"
+  teamroles_association = [
+    {
+      table_logical_name = "role"
+      data_record_id     = powerplatform_data_record.role.id  # assuming you've created a role resource
+    }
+  ]
+}
+```
+
+This would associate the new Team with an existing Role (whose Terraform resource id is referenced) at creation time ([powerplatform_data_record (Resource) - Power Platform Terraform Provider](https://microsoft.github.io/terraform-provider-power-platform/resources/data_record/#:~:text=teamroles_association%20%3D%20%5B%20,)). The exact name of the association field (like `teamroles_association`) can be found via Dataverse metadata or the provider docs; it usually follows the pattern of `<relationshipname>_association`. Creating such links via Terraform saves you from having to manually assign roles to teams in the Power Platform admin UI.
+
+**Updating records:** To update a record managed by Terraform, simply change the desired fields in the `columns` map and run `terraform apply` again. The provider will issue a PATCH request via the Web API to update only those fields. For example, if you want to rename the Business Unit created above, you would change the `name` value in the config to a new value and apply. Terraform’s plan will show the `name` field changing, and the apply will carry it out. Make sure that any required fields remain present in your config. (If you remove a field from `columns` that is not required, Terraform might interpret that as clearing the value or leaving it unchanged depending on how the provider handles sparse updates. Currently, the provider’s `columns` is dynamic and generally sends what is in your config.)
+
+If you want to start managing an **existing** Dataverse record that was not originally created by Terraform, you can do so by using Terraform’s import capability. For example, if there's already a Business Unit that you want to manage, you would write a `powerplatform_data_record` resource for it (with the correct table and perhaps the intended values) and then run `terraform import <resource_address> <environmentID>/<table_logical_name>(<record_guid>)`. The provider’s documentation or `terraform import` help can show the exact import ID format. Once imported, Terraform state will track that record’s GUID, and you can then use Terraform to change or delete it going forward.
+
+**Deleting records:** Removing the resource from your configuration or running `terraform destroy` will attempt to delete the Dataverse record (via an OData DELETE request). Use this with caution, as deleting certain configuration records can have wide impact. Dataverse enforces integrity constraints; for example, you cannot delete a Business Unit if it has users or child business units still associated with it. In such cases, you must first remove or reassign those dependencies (which in Terraform might mean modeling those dependencies so Terraform destroys them in the correct order). Always review the Terraform plan to ensure that deletions are intentional. If a delete operation violates a Dataverse rule, the API will return an error (which Terraform will report). For instance, trying to delete the root Business Unit or a default security role will fail because those cannot be deleted.
+
+In summary, treat `powerplatform_data_record` as the Terraform way to declaratively ensure certain config records exist (or don’t exist) in your environment. It brings the benefits of IaC (tracking changes, review through plan, etc.) to Dataverse configuration.
+
+## Troubleshooting and Best Practices
+
+**Common Issues and Errors:**
+
+- *Incorrect Names or Identifiers:* The most frequent issues come from using the wrong table or column logical names. If Terraform returns an error like “**Resource not found for segment ...**” or similar 404 errors, it means the API endpoint was not recognized – double-check that your `table_logical_name` and `columns` keys exactly match the Dataverse logical names (e.g., use `schema name` in lowercase for entities, and ensure no typos). For example, using `"BusinessUnit"` instead of `"businessunit"` or `"ParentBusinessUnitId"` instead of `"parentbusinessunitid"` would cause an error. Always verify names via the Power Platform UI or metadata as described earlier.
+
+- *Permission Issues:* If you get an error containing HTML (e.g., an error mentioning `<html>` or “invalid character '<' looking for value” in Terraform output), it often indicates an authentication or permission problem (the provider might have received an HTML error page). Ensure that the credentials used by the Terraform provider have adequate privileges in the Dataverse environment. Typically, the provider runs under a service principal (app registration) or user context – that principal/user must have a security role with permissions to read/write the given table. For managing high-level environment settings, being a System Administrator or Power Platform Admin in that environment is recommended. If using an app registration, assign it a suitable role (you may need to create a custom role that grants Dataverse read/write on the specific tables, or use an existing role with broad access). Also ensure the environment ID is correct – if not, the request might be hitting a wrong URL and resulting in an authentication error.
+
+- *OData Query Syntax:* If your data source `filter` is not formatted correctly, the API will return a bad request error. Terraform will show an error message from Dataverse that can help pinpoint the issue (e.g., "Error in query filter near ..."). Make sure to follow OData conventions for filters: property names are case-sensitive (use logical names exactly as given), string values in single quotes, GUIDs without quotes (or wrapped in guid'...' if needed), etc. Refer to Microsoft’s OData query documentation for complex filters (e.g., wildcard searches require `contains(field,'value')`, date comparisons need specific formats, etc.). If needed, test your filter by calling the Web API in a tool like Postman or your browser (for GET queries) to see if it returns results.
+
+- *No Results in Data Source:* If `powerplatform_data_records` returns an empty list (`rows` is empty) when you expected data, check the filter criteria (it might be too restrictive or referencing values that don’t exist in that environment). Also consider case sensitivity (Dataverse string filters are usually case-insensitive, but GUIDs must match exactly). If you did not specify a `filter` and got no results, verify the `entity_collection` name. Also note that the Terraform provider’s data source may not retrieve more than a certain number of records if paging isn’t implemented ([powerplatform_data_records (Data Source) - Power Platform Terraform Provider](https://microsoft.github.io/terraform-provider-power-platform/data-sources/data_records/#:~:text=Resource%20for%20retrieving%20data%20records,results)). As of initial releases, paging was not supported, meaning if the table had thousands of records, the data source might only return the first page (5000 by default in Dataverse). If you need to handle large sets, you may have to use the OData `$top` and `$skip` manually or use multiple data sources with different filters. Check the provider documentation or updates if this is a concern.
+
+- *Creating Duplicate Records:* The provider tries to use an “upsert” approach for creation. However, Dataverse requires a defined alternate key for true upsert. In most cases, if you run Terraform twice, it won’t create a duplicate because the record’s GUID is stored in state. But if you deliberately remove the state or create a resource with the same attributes in a fresh state, you might create a duplicate entry since Dataverse might not know it’s the same item (unless an alternate key like a unique name is in place). To avoid duplicates, either import existing records or define alternate keys in Dataverse for important config tables and use those in Terraform (the provider will utilize alternate keys if available to do an upsert ([Resource: `powerplatform_data_record` · Issue #45 · microsoft/terraform-provider-power-platform · GitHub](https://github.com/microsoft/terraform-provider-power-platform/issues/45#:~:text=,api))). Always prefer importing if the record already exists, rather than just re-defining it, to keep Terraform state aligned with reality.
+
+- *Dataverse Business Rules and Constraints:* Remember that Dataverse may have business rules or required columns that the provider doesn’t automatically handle. For example, some tables might have required fields that you must include in `columns` or else the create/update will fail. The error message from the API will usually indicate which field is missing. Always consult Dataverse documentation for the entity to know if there are mandatory fields (e.g., `name` is required on many tables). Another example: if a record is inactive (statuscode/statecode), you might need to set those fields if you intend to deactivate via Terraform, and some tables don’t allow direct deletion if they are referenced by others (you might have to delete child records first). These constraints are the same as if you were using the Dataverse API outside Terraform, so troubleshooting might involve checking Dataverse documentation or adjusting the order of operations in Terraform config (you can use `depends_on` to sequence resources if needed).
+
+**Best Practices:**
+
+- **Plan and Import for Existing Config:** For existing environments, do an audit of what configuration records (BUs, roles, teams, etc.) already exist and consider importing them into Terraform state. This avoids Terraform attempting to create duplicates or failing because an item (with the same name) already exists. Use `terraform import` for each record you want to bring under management. Once imported, remove any attributes from `columns` that you don’t want Terraform to constantly reconcile (perhaps only manage critical fields to avoid churn).
+
+- **Use Data Sources to Link Records:** Instead of hard-coding GUIDs in your Terraform configs, use `powerplatform_data_records` data sources to look up records by some query (name or other attribute) and then use those IDs in `powerplatform_data_record` resources. This not only makes your code clearer but also adapts to different environments (for example, retrieving the “root” business unit or a default security role ID dynamically). In our examples, we fetched the root Business Unit rather than hard-coding its GUID. This approach is safer and more maintainable.
+
+- **Avoid Managing Volatile Data:** As noted, do not use `powerplatform_data_record` for data that is frequently edited by users or processes. A Terraform run will not continuously poll for external changes, so if someone changes a record in the Power Platform admin center or an app, Terraform won’t know until you manually run a plan/apply (at which point it may detect drift and try to revert the change). This can cause confusion or unintended overwrites. If you must have a configuration item that might also be changed outside Terraform, establish a clear source of truth and process – for example, treat Terraform as the source of truth and instruct admins not to manually change those items (or vice versa, manage that item outside of Terraform).  
+
+- **Leverage OData Query Knowledge:** Since the provider essentially uses OData Web API calls, understanding OData query options is very helpful. Microsoft’s documentation on querying data with the Web API ([powerplatform_data_records (Data Source) - Power Platform Terraform Provider](https://microsoft.github.io/terraform-provider-power-platform/data-sources/data_records/#:~:text=More%20information%20on%20%28OData%20Filter%29%5Bhttps%3A%2F%2Flearn.microsoft.com%2Fen,Order%20the%20data%20records)) and creating/updating records via Web API ([Resource: `powerplatform_data_record` · Issue #45 · microsoft/terraform-provider-power-platform · GitHub](https://github.com/microsoft/terraform-provider-power-platform/issues/45#:~:text=,api)) is a great reference. If you encounter complex scenarios (like needing to use `$expand` to get related data or using `$apply` for aggregation), check if the Terraform data source supports those (the provider has some support for `$expand` as shown in its schema ([powerplatform_data_records (Data Source) - Power Platform Terraform Provider](https://microsoft.github.io/terraform-provider-power-platform/data-sources/data_records/#:~:text=%7B%20navigation_property%20%3D%20,%7D))). You might also use the `powerplatform_rest_query` data source or `powerplatform_rest` resource (if available in the provider) for advanced queries not directly exposed by the high-level resources.
+
+- **Test Changes in a Sandbox:** Just as you would with other IaC changes, test your Terraform config in a non-production environment first. This is especially true for delete operations – ensure that removing a resource from Terraform does what you expect in Dataverse. Some configuration records (like certain roles or the root BU) should never be deleted; protect them by not managing those via Terraform or using Terraform’s `prevent_destroy` lifecycle rule if necessary to avoid accidental deletion.
+
+- **Review Provider Docs and Updates:** The Power Platform Terraform provider is evolving. New resources or improvements (like better paging in data sources, or new supported entities) may be added. Refer to the official provider documentation for the exact syntax and capabilities of `powerplatform_data_record` and `powerplatform_data_records`. The examples in the docs (such as creating a custom security role and team ([powerplatform_data_record (Resource) - Power Platform Terraform Provider](https://microsoft.github.io/terraform-provider-power-platform/resources/data_record/#:~:text=resource%20,role)) ([powerplatform_data_record (Resource) - Power Platform Terraform Provider](https://microsoft.github.io/terraform-provider-power-platform/resources/data_record/#:~:text=teamroles_association%20%3D%20%5B%20,))) provide good patterns. Also, keep an eye on the provider’s GitHub issues for known bugs or limitations (for example, earlier versions had a bug creating business units that has since been fixed). Upgrading to the latest provider version will ensure you have those fixes.
+
+By following this guide, Power Platform administrators can confidently manage Dataverse configuration data with Terraform. This approach brings repeatability and version control to environment setup — for instance, you could spin up a new sandbox and use Terraform to configure the same business unit structure, teams, and roles as another environment in an automated way. Always validate the changes via Terraform plan, use the richness of OData queries to target the right data, and enjoy the benefits of Infrastructure as Code for your Power Platform environments!
