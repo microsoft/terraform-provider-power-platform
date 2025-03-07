@@ -26,7 +26,7 @@ provider "powerplatform" {
 }
 
 data "powerplatform_environment_settings" "example" {
-  environment_id = "00000000-0000-0000-0000-000000000001" # Replace with your environment ID
+  environment_id = "00000000-0000-0000-0000-000000000001"
 }
 ```
 
