@@ -32,7 +32,7 @@ jobs:
           SEARCH_QUERY: "repo:${{ github.repository }} is:issue is:pr created:>${{ steps.date.outputs.last_week }}"
         
       - name: Upload metrics file as artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: issue-metrics
           path: ./issue_metrics.md
