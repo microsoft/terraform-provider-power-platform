@@ -18,13 +18,18 @@ jobs:
     name: Repository Metrics Collection
     runs-on: ubuntu-latest
     steps:
+      - name: Get date for query
+        id: date
+        run: |
+          echo "last_week=$(date -d '7 days ago' '+%Y-%m-%d')" >> $GITHUB_OUTPUT
+          
       - name: Get Issue Metrics
         id: issue-metrics
         uses: github/issue-metrics@v2
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.repository }}
-          SEARCH_QUERY: "repo:${{ github.repository }} is:issue is:pr created:>{{ date 'YYYY-MM-DD' '-7 days' }}"
+          SEARCH_QUERY: "repo:${{ github.repository }} is:issue is:pr created:>${{ steps.date.outputs.last_week }}"
         
       - name: Create Metrics Issue
         uses: octokit/request-action@v2.x
@@ -37,7 +42,7 @@ jobs:
             ## Weekly Repository Metrics Report
             
             Repository: ${{ github.repository }}
-            Period: Last 7 days
+            Period: Last 7 days (since ${{ steps.date.outputs.last_week }})
             
             ### Issues
             - Open issues: ${{ fromJson(steps.issue-metrics.outputs.json).issues.open }}
