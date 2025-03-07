@@ -38,4 +38,4 @@ jobs:
         with:
           route: POST /repos/microsoft/IaC-for-Everything/issues
           title: "Weekly Metrics Report for terraform-provider-power-platform"
-          body: [View full metrics](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          body: "[View full metrics](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
