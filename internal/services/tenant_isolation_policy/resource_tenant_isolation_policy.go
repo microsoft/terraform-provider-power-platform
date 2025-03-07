@@ -231,7 +231,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("Created tenant isolation policy with ID %s", state.Id.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("Created tenant isolation policy with ID %s", state.Id.ValueString()))
 }
 
 // Read refreshes the Terraform state with the latest data.
