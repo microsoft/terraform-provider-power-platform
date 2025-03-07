@@ -26,20 +26,30 @@ jobs:
         with:
           # Allow goreleaser to access older tag information.
           fetch-depth: 0
+      
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
           cache: true
+      
       - name: Import GPG key
         uses: crazy-max/ghaction-import-gpg@cb9bde2e2525e640591a934b1fd28eef1dcaf5e5 # v6.2.0
         id: import_gpg
         with:
           gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
           passphrase: ${{ secrets.PASSPHRASE }}
+      
+      - name: Set version without 'v' prefix
+        id: version
+        run: |
+          VERSION=${GITHUB_REF_NAME#v}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version without v prefix: $VERSION"
+      
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@90a3faa9d0182683851fbfa97ca1a2cb983bfca3 # v6.2.1
         with:
-          args: release --clean --release-notes=.changes/${{ replace(github.ref_name, 'v', '') }}.md
+          args: release --clean --release-notes=.changes/${{ steps.version.outputs.VERSION }}.md
         env:
           # GitHub sets the GITHUB_TOKEN secret automatically.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
