@@ -31,13 +31,20 @@ jobs:
           REPOSITORY: ${{ github.repository }}
           SEARCH_QUERY: "repo:${{ github.repository }} is:issue is:pr created:>${{ steps.date.outputs.last_week }}"
         
-      - name: Create Metrics Issue
-        uses: octokit/request-action@v2.x
-        env:
-          GITHUB_TOKEN: ${{ secrets.METRICS_PAT }}
+      - name: Upload metrics file as artifact
+        uses: actions/upload-artifact@v3
         with:
-          route: POST /repos/microsoft/IaC-for-Everything/issues
-          owner: microsoft
-          repo: IaC-for-Everything
-          title: "Weekly Metrics Report for terraform-provider-power-platform"
-          body: ${{ toJson( steps.issue-metrics.outputs.metrics ) }}
+          name: issue-metrics
+          path: ./issue_metrics.md
+          retention-days: 30
+        
+      # - name: Create Metrics Issue
+      #   uses: octokit/request-action@v2.x
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.METRICS_PAT }}
+      #   with:
+      #     route: POST /repos/microsoft/IaC-for-Everything/issues
+      #     owner: microsoft
+      #     repo: IaC-for-Everything
+      #     title: "Weekly Metrics Report for terraform-provider-power-platform"
+      #     body: ${{ toJson( steps.issue-metrics.outputs.metrics ) }}
