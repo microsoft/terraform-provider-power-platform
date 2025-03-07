@@ -37,7 +37,11 @@ jobs:
           name: issue-metrics
           path: ./issue_metrics.md
           retention-days: 30
-        
+      - name: Add metrics to job summary
+        run: |
+          echo "## Issue Metrics" >> $GITHUB_STEP_SUMMARY
+          cat ./issue_metrics.md >> $GITHUB_STEP_SUMMARY
+          
       # - name: Create Metrics Issue
       #   uses: octokit/request-action@v2.x
       #   env:
