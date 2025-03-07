@@ -24,11 +24,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.repository }}
-        with:
-          repository: ${{ github.repository }}
-          period: 7 # Last 7 days
-          create-issue: false # We'll create the issue in another repo
-
+          SEARCH_QUERY: "repo:${{ github.repository }} is:issue is:pr created:>{{ date 'YYYY-MM-DD' '-7 days' }}"
+        
       - name: Create Metrics Issue
         uses: octokit/request-action@v2.x
         env:
