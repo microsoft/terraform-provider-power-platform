@@ -12,39 +12,40 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
 )
 
-func NewTelemetryExport(apiClient *api.Client) Client {
+func NewTelemetryExport(apiClient *api.Client, tenantClient tenant.Client) Client {
 	return Client{
-		Api: apiClient,
+		Api:       apiClient,
+		TenantApi: tenantClient,
 	}
 }
 
 type Client struct {
-	Api *api.Client
+	Api       *api.Client
+	TenantApi tenant.Client
 }
-
-
 
 // GetGatewayCluster retrieves information about a gateway cluster
 func (client *Client) GetGatewayCluster(ctx context.Context) (*GatewayClusterDto, error) {
 
-	// Get tenant information using the API client
-	tenant, err := client.Api.GetTenant(ctx)
+	// Get tenant information using the tenant client
+	tenant, err := client.TenantApi.GetTenant(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tenant information: %w", err)
 	}
 
 	tenantApiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildTenantHostUri(tenant.ID, client.Api.Config.Urls.PowerPlatformUrl),
-		Path: "gateway/cluster",
+		Host:   helpers.BuildTenantHostUri(tenant.TenantId, client.Api.Config.Urls.PowerPlatformUrl),
+		Path:   "gateway/cluster",
 		RawQuery: url.Values{
 			"api-version": []string{"1"},
 		}.Encode(),
 	}
 
-	gatewayCluster := GatewayClusterDto{	}
+	gatewayCluster := GatewayClusterDto{}
 
 	_, err = client.Api.Execute(ctx, nil, "GET", tenantApiUrl.String(), nil, nil, []int{http.StatusOK}, &gatewayCluster)
 	if err != nil {
@@ -56,7 +57,7 @@ func (client *Client) GetGatewayCluster(ctx context.Context) (*GatewayClusterDto
 
 func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*AnalyticsDataDto, error) {
 
-	// Get the gateway cluster 
+	// Get the gateway cluster
 	gatewayCluster, err := client.GetGatewayCluster(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get gateway cluster: %w", err)
