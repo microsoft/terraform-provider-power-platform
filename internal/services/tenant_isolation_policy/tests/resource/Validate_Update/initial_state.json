@@ -1,0 +1,14 @@
+{
+    "id": "/providers/PowerPlatform.Governance/v1/tenants/00000000-0000-0000-0000-000000000001/tenantIsolationPolicy",
+    "tenantId": "00000000-0000-0000-0000-000000000001",
+    "isDisabled": false,
+    "allowedTenants": [
+        {
+            "tenantId": "11111111-1111-1111-1111-111111111111",
+            "direction": {
+                "inbound": true,
+                "outbound": false
+            }
+        }
+    ]
+}
