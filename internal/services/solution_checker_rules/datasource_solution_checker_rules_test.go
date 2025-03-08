@@ -5,7 +5,6 @@ package solution_checker_rules_test
 
 import (
 	"net/http"
-	"os"
 	"regexp"
 	"testing"
 
@@ -15,13 +14,9 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
-func TestAccSolutionCheckerRulesDataSource_Basic(t *testing.T) {
-	// Skip unless in acceptance test mode
-	if os.Getenv("TF_ACC") != "1" {
-		t.Skip("Skipping acceptance test")
-	}
+func TestAccSolutionCheckerRulesDataSource_Validate_Read(t *testing.T) {
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
