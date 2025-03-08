@@ -41,11 +41,11 @@ func setupTenantHttpMocks() {
 		})
 }
 
-// TestAccTenantIsolationPolicy_basic tests the basic creation and import of a tenant isolation policy.
+// TestAccTenantIsolationPolicy_Validate_Create tests the basic creation and import of a tenant isolation policy.
 // It verifies:
 // 1. Creation of a policy with a single allowed tenant (inbound and outbound access)
 // 2. The ability to import an existing policy and verify its attributes match the configuration.
-func TestAccTenantIsolationPolicy_basic(t *testing.T) {
+func TestAccTenantIsolationPolicy_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -75,14 +75,14 @@ func TestAccTenantIsolationPolicy_basic(t *testing.T) {
 	})
 }
 
-// TestAccTenantIsolationPolicy_update tests the update functionality of a tenant isolation policy.
+// TestAccTenantIsolationPolicy_Validate_Update tests the update functionality of a tenant isolation policy.
 // It verifies:
 // 1. Initial creation of a policy with one allowed tenant
 // 2. Updating the policy to:
 //   - Enable the disabled flag
 //   - Add a second allowed tenant
 //   - Both tenants have different inbound/outbound settings.
-func TestAccTenantIsolationPolicy_update(t *testing.T) {
+func TestAccTenantIsolationPolicy_Validate_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -129,12 +129,12 @@ func TestAccTenantIsolationPolicy_update(t *testing.T) {
 	})
 }
 
-// TestAccTenantIsolationPolicy_remove tests the removal of all allowed tenants from a policy.
+// TestAccTenantIsolationPolicy_Validate_Delete tests the removal of all allowed tenants from a policy.
 // It verifies:
 // 1. Initial creation of a policy with one allowed tenant
 // 2. Updating the policy to remove all allowed tenants
 // 3. The policy exists but has an empty allowed_tenants list.
-func TestAccTenantIsolationPolicy_remove(t *testing.T) {
+func TestAccTenantIsolationPolicy_Validate_Delete(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
