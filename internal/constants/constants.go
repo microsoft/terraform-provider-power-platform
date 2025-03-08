@@ -26,6 +26,7 @@ const (
 	PUBLIC_LICENSING_API_DOMAIN         = "licensing.powerplatform.microsoft.com"
 	PUBLIC_POWERAPPS_ADVISOR_API_DOMAIN = "api.advisor.powerapps.com"
 	PUBLIC_POWERAPPS_ADVISOR_API_SCOPE  = "https://advisor.powerapps.com/.default"
+	PUBLIC_ANALYTICS_SCOPE              = "https://adminanalytics.powerplatform.microsoft.com/.default"
 )
 
 const (
@@ -38,6 +39,7 @@ const (
 	USDOD_LICENSING_API_DOMAIN         = "licensing.appsplatform.us"
 	USDOD_POWERAPPS_ADVISOR_API_DOMAIN = "api.advisor.powerapps.us"
 	USDOD_POWERAPPS_ADVISOR_API_SCOPE  = "https://advisor.powerapps.us/.default"
+	USDOD_ANALYTICS_SCOPE              = "https://adminanalytics.appsplatform.us/.default"
 )
 
 const (
@@ -50,6 +52,7 @@ const (
 	USGOV_LICENSING_API_DOMAIN         = "gov.licensing.powerplatform.microsoft.us"
 	USGOV_POWERAPPS_ADVISOR_API_DOMAIN = "gov.api.advisor.powerapps.us"
 	USGOV_POWERAPPS_ADVISOR_API_SCOPE  = "https://gov.advisor.powerapps.us/.default"
+	USGOV_ANALYTICS_SCOPE              = "https://gcc.adminanalytics.powerplatform.microsoft.us//.default"
 )
 
 const (
@@ -62,6 +65,7 @@ const (
 	USGOVHIGH_LICENSING_API_DOMAIN         = "high.licensing.powerplatform.microsoft.us"
 	USGOVHIGH_POWERAPPS_ADVISOR_API_DOMAIN = "high.api.advisor.powerapps.us"
 	USGOVHIGH_POWERAPPS_ADVISOR_API_SCOPE  = "https://high.advisor.powerapps.us/.default"
+	USGOVHIGH_ANALYTICS_SCOPE              = "https://high.adminanalytics.powerplatform.microsoft.us/.default"
 )
 
 const (
@@ -74,6 +78,7 @@ const (
 	CHINA_LICENSING_API_DOMAIN         = "licensing.partner.microsoftonline.cn"
 	CHINA_POWERAPPS_ADVISOR_API_DOMAIN = "api.advisor.powerapps.cn"
 	CHINA_POWERAPPS_ADVISOR_API_SCOPE  = "https://advisor.powerapps.cn/.default"
+	CHINA_ANALYTICS_SCOPE              = ""
 )
 
 const (
@@ -87,6 +92,7 @@ const (
 	EX_LICENSING_API_DOMAIN         = "licensing.eaglex.ic.gov"
 	EX_POWERAPPS_ADVISOR_API_DOMAIN = "api.advisor.powerapps.eaglex.ic.gov"
 	EX_POWERAPPS_ADVISOR_API_SCOPE  = "https://advisor.powerapps.eaglex.ic.gov/.default"
+	EX_ANALYTICS_SCOPE              = ""
 )
 
 const (
@@ -100,6 +106,7 @@ const (
 	RX_LICENSING_API_DOMAIN         = "licensing.microsoft.scloud"
 	RX_POWERAPPS_ADVISOR_API_DOMAIN = "api.advisor.powerapps.eaglex.ic.gov"
 	RX_POWERAPPS_ADVISOR_API_SCOPE  = "https://advisor.powerapps.eaglex.ic.gov/.default"
+	RX_ANALYTICS_SCOPE              = ""
 )
 
 const (

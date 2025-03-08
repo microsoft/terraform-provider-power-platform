@@ -78,7 +78,7 @@ func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*AnalyticsDat
 	apiUrl.Path = "api/v2/connections"
 
 	analyticdatalinks := AnalyticsDataDto{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 
 	return &analyticdatalinks, err
 }

@@ -422,6 +422,7 @@ func getCloudPublicUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 		LicensingUrl:          constants.PUBLIC_LICENSING_API_DOMAIN,
 		PowerAppsAdvisor:      constants.PUBLIC_POWERAPPS_ADVISOR_API_DOMAIN,
 		PowerAppsAdvisorScope: constants.PUBLIC_POWERAPPS_ADVISOR_API_SCOPE,
+		AnalyticsScope:        constants.PUBLIC_ANALYTICS_SCOPE,
 	}, &cloud.AzurePublic
 }
 
@@ -435,6 +436,7 @@ func getGccUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 		LicensingUrl:          constants.USGOV_LICENSING_API_DOMAIN,
 		PowerAppsAdvisor:      constants.USGOV_POWERAPPS_ADVISOR_API_DOMAIN,
 		PowerAppsAdvisorScope: constants.USGOV_POWERAPPS_ADVISOR_API_SCOPE,
+		AnalyticsScope:        constants.USGOV_ANALYTICS_SCOPE,
 	}, &cloud.AzurePublic // GCC uses public cloud for authentication.
 }
 
@@ -448,6 +450,7 @@ func getGccHighUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 		LicensingUrl:          constants.USGOVHIGH_LICENSING_API_DOMAIN,
 		PowerAppsAdvisor:      constants.USGOVHIGH_POWERAPPS_ADVISOR_API_DOMAIN,
 		PowerAppsAdvisorScope: constants.USGOVHIGH_POWERAPPS_ADVISOR_API_SCOPE,
+		AnalyticsScope:        constants.USGOVHIGH_ANALYTICS_SCOPE,
 	}, &cloud.AzureGovernment
 }
 
@@ -461,6 +464,7 @@ func getDodUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 		LicensingUrl:          constants.USDOD_LICENSING_API_DOMAIN,
 		PowerAppsAdvisor:      constants.USDOD_POWERAPPS_ADVISOR_API_DOMAIN,
 		PowerAppsAdvisorScope: constants.USDOD_POWERAPPS_ADVISOR_API_SCOPE,
+		AnalyticsScope:        constants.USDOD_ANALYTICS_SCOPE,
 	}, &cloud.AzureGovernment
 }
 
@@ -474,6 +478,7 @@ func getChinaUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 		LicensingUrl:          constants.CHINA_LICENSING_API_DOMAIN,
 		PowerAppsAdvisor:      constants.CHINA_POWERAPPS_ADVISOR_API_DOMAIN,
 		PowerAppsAdvisorScope: constants.CHINA_POWERAPPS_ADVISOR_API_SCOPE,
+		AnalyticsScope:        constants.CHINA_ANALYTICS_SCOPE,
 	}, &cloud.AzureChina
 }
 
@@ -487,6 +492,7 @@ func getExUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 			LicensingUrl:          constants.EX_LICENSING_API_DOMAIN,
 			PowerAppsAdvisor:      constants.EX_POWERAPPS_ADVISOR_API_DOMAIN,
 			PowerAppsAdvisorScope: constants.EX_POWERAPPS_ADVISOR_API_SCOPE,
+			AnalyticsScope:        constants.EX_ANALYTICS_SCOPE,
 		}, &cloud.Configuration{
 			ActiveDirectoryAuthorityHost: constants.EX_AUTHORITY_HOST,
 			Services:                     map[cloud.ServiceName]cloud.ServiceConfiguration{},
@@ -503,6 +509,7 @@ func getRxUrls() (*config.ProviderConfigUrls, *cloud.Configuration) {
 			LicensingUrl:          constants.RX_LICENSING_API_DOMAIN,
 			PowerAppsAdvisor:      constants.RX_POWERAPPS_ADVISOR_API_DOMAIN,
 			PowerAppsAdvisorScope: constants.RX_POWERAPPS_ADVISOR_API_SCOPE,
+			AnalyticsScope:        constants.RX_ANALYTICS_SCOPE,
 		}, &cloud.Configuration{
 			ActiveDirectoryAuthorityHost: constants.RX_AUTHORITY_HOST,
 			Services:                     map[cloud.ServiceName]cloud.ServiceConfiguration{},
