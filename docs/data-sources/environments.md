@@ -56,6 +56,8 @@ Optional:
 
 Read-Only:
 
+- `allow_bing_search` (Boolean) Allow Bing search in the environment
+- `allow_moving_data_across_regions` (Boolean) Allow moving data across regions
 - `azure_region` (String) Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source.
 - `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
 - `cadence` (String) Cadence of updates for the environment (Frequent, Moderate)
@@ -68,6 +70,7 @@ Read-Only:
 - `id` (String) Environment id (guid)
 - `location` (String) Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source.
 - `owner_id` (String) Entra ID  user id (guid) of the environment owner when creating developer environment
+- `release_cycle` (String) Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).
 
 <a id="nestedatt--environments--timeouts"></a>
 ### Nested Schema for `environments.timeouts`

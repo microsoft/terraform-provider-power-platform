@@ -46,7 +46,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages the [Application Insights configuration for a Copilot](https://learn.microsoft.com/en-us/microsoft-copilot-studio/advanced-bot-framework-composer-capture-telemetry?tabs=webApp).",
+		MarkdownDescription: "Manages the [Application Insights configuration for a Copilot](https://learn.microsoft.com/en-us/microsoft-copilot-studio/advanced-bot-framework-composer-capture-telemetry?tabs=webApp). Known Limitation: This resource currently does not work when authenticated using service principal.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id of the Copilot Studio Application Insights configuration",
@@ -107,17 +107,16 @@ func (r *Resource) Configure(ctx context.Context, req resource.ConfigureRequest,
 		return
 	}
 
-	clientApi := req.ProviderData.(*api.ProviderClient).Api
-	if clientApi == nil {
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			"Unexpected ProviderData Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
-	r.CopilotStudioApplicationInsightsClient = newCopilotStudioClient(clientApi)
+	r.CopilotStudioApplicationInsightsClient = newCopilotStudioClient(client.Api)
 
 	tflog.Debug(ctx, "Successfully created clients")
 }

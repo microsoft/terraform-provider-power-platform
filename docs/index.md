@@ -226,7 +226,7 @@ In addition to the authentication options, the following options are also suppor
 
 | Name | Description | Default Value |
 |------|-------------|---------------|
-| `telemetry_optout` | Opting out of telemetry will remove the hostheader and session id headers from the requests made to the Power Platform service.  There is no other telemetry data collected by the provider.  This may affect the ability to identify and troubleshoot issues with the provider. | `false` |
+| `telemetry_optout` | Opting out of telemetry will remove the User-Agent and session id headers from the requests made to the Power Platform service.  There is no other telemetry data collected by the provider.  This may affect the ability to identify and troubleshoot issues with the provider. | `false` |
 
 ## Resources and Data Sources
 

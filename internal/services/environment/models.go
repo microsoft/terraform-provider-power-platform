@@ -12,6 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/microsoft/terraform-provider-power-platform/internal/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 )
@@ -33,19 +35,21 @@ type ListDataSourceModel struct {
 }
 
 type SourceModel struct {
-	Timeouts           timeouts.Value `tfsdk:"timeouts"`
-	Id                 types.String   `tfsdk:"id"`
-	Location           types.String   `tfsdk:"location"`
-	AzureRegion        types.String   `tfsdk:"azure_region"`
-	DisplayName        types.String   `tfsdk:"display_name"`
-	EnvironmentType    types.String   `tfsdk:"environment_type"`
-	BillingPolicyId    types.String   `tfsdk:"billing_policy_id"`
-	Description        types.String   `tfsdk:"description"`
-	Cadence            types.String   `tfsdk:"cadence"`
-	EnvironmentGroupId types.String   `tfsdk:"environment_group_id"`
-	OwnerId            types.String   `tfsdk:"owner_id"`
-
-	EnterprisePolicies basetypes.SetValue `tfsdk:"enterprise_policies"`
+	Timeouts                     timeouts.Value     `tfsdk:"timeouts"`
+	Id                           types.String       `tfsdk:"id"`
+	Location                     types.String       `tfsdk:"location"`
+	AzureRegion                  types.String       `tfsdk:"azure_region"`
+	DisplayName                  types.String       `tfsdk:"display_name"`
+	EnvironmentType              types.String       `tfsdk:"environment_type"`
+	BillingPolicyId              types.String       `tfsdk:"billing_policy_id"`
+	Description                  types.String       `tfsdk:"description"`
+	Cadence                      types.String       `tfsdk:"cadence"`
+	EnvironmentGroupId           types.String       `tfsdk:"environment_group_id"`
+	OwnerId                      types.String       `tfsdk:"owner_id"`
+	ReleaseCycle                 types.String       `tfsdk:"release_cycle"`
+	AllowBingSearch              types.Bool         `tfsdk:"allow_bing_search"`
+	AllowMovingDataAcrossRegions types.Bool         `tfsdk:"allow_moving_data_across_regions"`
+	EnterprisePolicies           basetypes.SetValue `tfsdk:"enterprise_policies"`
 
 	Dataverse types.Object `tfsdk:"dataverse"`
 }
@@ -83,7 +87,8 @@ func isDataverseEnvironmentEmpty(ctx context.Context, environment *SourceModel) 
 	return dataverseSourceModel.CurrencyCode.IsNull() || dataverseSourceModel.CurrencyCode.ValueString() == ""
 }
 
-func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource SourceModel) (*environmentCreateDto, error) {
+func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environmentSource *SourceModel, r *Resource) (*environmentCreateDto, error) {
+	conf := r.EnvironmentClient.Api.Config
 	environmentDto := &environmentCreateDto{
 		Location: environmentSource.Location.ValueString(),
 		Properties: environmentCreatePropertiesDto{
@@ -106,14 +111,39 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		environmentDto.Properties.AzureRegion = environmentSource.AzureRegion.ValueString()
 	}
 
-	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != "" {
+	if !environmentSource.BillingPolicyId.IsNull() && environmentSource.BillingPolicyId.ValueString() != constants.ZERO_UUID {
 		environmentDto.Properties.BillingPolicy = BillingPolicyDto{
 			Id: environmentSource.BillingPolicyId.ValueString(),
 		}
 	}
 
+	if environmentSource.ReleaseCycle.ValueString() == ReleaseCycleTypesEarly {
+		value := conf.GetCurrentCloudConfiguration(config.FirstReleaseClusterName)
+		if value != nil {
+			environmentDto.Properties.Cluster = &ClusterDto{
+				Catergory: *value,
+			}
+		}
+	}
+
 	if !environmentSource.EnvironmentGroupId.IsNull() && !environmentSource.EnvironmentGroupId.IsUnknown() {
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{Id: environmentSource.EnvironmentGroupId.ValueString()}
+	}
+
+	if !environmentSource.AllowBingSearch.IsNull() && !environmentSource.AllowBingSearch.IsUnknown() {
+		environmentDto.Properties.BingChatEnabled = environmentSource.AllowBingSearch.ValueBool()
+	}
+
+	if !environmentSource.OwnerId.IsNull() && !environmentSource.OwnerId.IsUnknown() {
+		tenantId, err := r.EnvironmentClient.tenantClient.GetTenant(ctx)
+		if err != nil {
+			return nil, err
+		}
+		environmentDto.Properties.UsedBy = &UsedByDto{
+			Id:       environmentSource.OwnerId.ValueString(),
+			Type:     "1",
+			TenantId: tenantId.TenantId,
+		}
 	}
 
 	if !environmentSource.Dataverse.IsNull() && !environmentSource.Dataverse.IsUnknown() {
@@ -149,7 +179,7 @@ func convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 		linkedEnvironmentMetadata := &createLinkEnvironmentMetadataDto{
 			BaseLanguage:    int(dataverseSourceModel.LanguageName.ValueInt64()),
 			SecurityGroupId: dataverseSourceModel.SecurityGroupId.ValueString(),
-			Currency: createCurrencyDto{
+			Currency: &createCurrencyDto{
 				Code: dataverseSourceModel.CurrencyCode.ValueString(),
 			},
 			Templates:        dataverseSourceModel.Templates,
@@ -167,7 +197,7 @@ func convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 	return nil, fmt.Errorf("dataverse object is null or unknown")
 }
 
-func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode *string, templateMetadata *createTemplateMetadataDto, templates []string, timeout timeouts.Value) (*SourceModel, error) {
+func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode, ownerId *string, templateMetadata *createTemplateMetadataDto, templates []string, timeout timeouts.Value, providerConfig config.ProviderConfig) (*SourceModel, error) {
 	model := &SourceModel{
 		Timeouts:        timeout,
 		Description:     types.StringValue(environmentDto.Properties.Description),
@@ -177,12 +207,15 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		AzureRegion:     types.StringValue(environmentDto.Properties.AzureRegion),
 		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),
 		Cadence:         types.StringValue(environmentDto.Properties.UpdateCadence.Id),
+		AllowBingSearch: types.BoolValue(environmentDto.Properties.BingChatEnabled),
 	}
 
 	convertBillingPolicyModelFromDto(environmentDto, model)
 	convertEnvironmentGroupFromDto(environmentDto, model)
 	convertEnterprisePolicyModelFromDto(environmentDto, model)
+	convertReleaseCycleModelFromDto(environmentDto, model, providerConfig)
 	convertOwnerIdFromDto(environmentDto, model)
+	convertCrossRegionDataMovementFromDto(environmentDto, model)
 
 	attrTypesDataverseObject := map[string]attr.Type{
 		"url":                          types.StringType,
@@ -225,6 +258,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		attrValuesProductProperties["unique_name"] = types.StringValue(environmentDto.Properties.LinkedEnvironmentMetadata.UniqueName)
 		if environmentDto.Properties.EnvironmentSku == EnvironmentTypesDeveloper {
 			attrValuesProductProperties["security_group_id"] = types.StringNull()
+			model.OwnerId = types.StringPointerValue(ownerId)
 		}
 		if environmentDto.Properties.States != nil && environmentDto.Properties.States.Runtime != nil && environmentDto.Properties.States.Runtime.Id == "AdminMode" {
 			attrValuesProductProperties["administration_mode_enabled"] = types.BoolValue(true)
@@ -299,15 +333,24 @@ func convertEnvironmentGroupFromDto(environmentDto EnvironmentDto, model *Source
 	if environmentDto.Properties.ParentEnvironmentGroup != nil {
 		model.EnvironmentGroupId = types.StringValue(environmentDto.Properties.ParentEnvironmentGroup.Id)
 	} else {
-		model.EnvironmentGroupId = types.StringValue("")
+		model.EnvironmentGroupId = types.StringValue(constants.ZERO_UUID)
 	}
 }
 
 func convertBillingPolicyModelFromDto(environmentDto EnvironmentDto, model *SourceModel) {
-	if environmentDto.Properties.BillingPolicy != nil {
+	if environmentDto.Properties.BillingPolicy != nil && environmentDto.Properties.BillingPolicy.Id != "" {
 		model.BillingPolicyId = types.StringValue(environmentDto.Properties.BillingPolicy.Id)
 	} else {
-		model.BillingPolicyId = types.StringValue("")
+		model.BillingPolicyId = types.StringValue(constants.ZERO_UUID)
+	}
+}
+
+func convertReleaseCycleModelFromDto(environmentDto EnvironmentDto, model *SourceModel, providerConfig config.ProviderConfig) {
+	value := providerConfig.GetCurrentCloudConfiguration(config.FirstReleaseClusterName)
+	if environmentDto.Properties.Cluster != nil && value != nil && environmentDto.Properties.Cluster.Catergory == *value {
+		model.ReleaseCycle = types.StringValue(ReleaseCycleTypesEarly)
+	} else {
+		model.ReleaseCycle = types.StringValue(ReleaseCycleTypesStandard)
 	}
 }
 
@@ -316,6 +359,14 @@ func convertOwnerIdFromDto(environmentDto EnvironmentDto, model *SourceModel) {
 		model.OwnerId = types.StringValue(environmentDto.Properties.UsedBy.Id)
 	} else {
 		model.OwnerId = types.StringNull()
+	}
+}
+
+func convertCrossRegionDataMovementFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	if environmentDto.Properties.CopilotPolicies != nil && environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled != nil && *environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled {
+		model.AllowMovingDataAcrossRegions = types.BoolValue(true)
+	} else {
+		model.AllowMovingDataAcrossRegions = types.BoolValue(false)
 	}
 }
 

@@ -37,7 +37,7 @@ jobs:
     steps:
 
     - name: Harden Runner
-      uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+      uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
       with:
         egress-policy: audit
 
@@ -45,7 +45,7 @@ jobs:
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
     - name: Set up Go
-      uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+      uses: actions/setup-go@v5
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -68,7 +68,7 @@ jobs:
     steps:
 
     - name: Harden Runner
-      uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+      uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
       with:
         egress-policy: audit
 
@@ -76,7 +76,7 @@ jobs:
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
     - name: Set up Go
-      uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+      uses: actions/setup-go@v5
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -98,7 +98,7 @@ jobs:
     steps:
     
     - name: Harden Runner
-      uses: step-security/harden-runner@cb605e52c26070c328afc4562f0b4ada7618a84e # v2.10.4
+      uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
       with:
         egress-policy: audit
 
@@ -106,7 +106,7 @@ jobs:
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
     - name: Set up Go
-      uses: actions/setup-go@0a12ed9d6a96ab950c8f026ed9f722fe0da7ef32 # v5.0.2
+      uses: actions/setup-go@v5
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -114,7 +114,7 @@ jobs:
 
     - name: Get dependencies
       run: |
-        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.49.0
+        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2
         go mod download
     
     - name: "Set up Terraform"
@@ -130,9 +130,9 @@ jobs:
       run: |
         dotnet tool install --global Microsoft.PowerApps.CLI.Tool
         pac auth create --githubFederated --tenant ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }} --applicationId ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
-        $environmentsList = (pac admin list --name "TestAcc" --json | ConvertFrom-Json)
+        $environmentsList = (pac admin list --name "Test" --json | ConvertFrom-Json)
         $environmentsList | ForEach-Object -Parallel {
-            if ($_.DisplayName.StartsWith("TestAcc")){
+            if ($_.DisplayName.StartsWith("Test")){
                 Write-Output $_.DisplayName
                 pac admin delete -env $_.EnvironmentID
             }
@@ -156,7 +156,7 @@ jobs:
 
     - name: Upload Coverage Artifacts
       if: success() || failure()
-      uses: actions/upload-artifact@65c4c4a1ddee5b72f698fdd19549f0f0fb45cf08 # v4.6.0
+      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
       with:
         name: Test Coverage
         path: test-coverage.cov.html

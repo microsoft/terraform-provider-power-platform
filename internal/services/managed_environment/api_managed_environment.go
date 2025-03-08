@@ -27,14 +27,6 @@ type client struct {
 	environmentClient environment.Client
 }
 
-func (client *client) GetManagedEnvironmentSettings(ctx context.Context, environmentId string) (*environment.GovernanceConfigurationDto, error) {
-	managedEnvSettings, err := client.environmentClient.GetEnvironment(ctx, environmentId)
-	if err != nil {
-		return nil, err
-	}
-	return &managedEnvSettings.Properties.GovernanceConfiguration, nil
-}
-
 func (client *client) EnableManagedEnvironment(ctx context.Context, managedEnvSettings environment.GovernanceConfigurationDto, environmentId string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
@@ -53,9 +45,16 @@ func (client *client) EnableManagedEnvironment(ctx context.Context, managedEnvSe
 	tflog.Debug(ctx, "Managed Environment Enablement Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 
 	tflog.Debug(ctx, "Waiting for Managed Environment Enablement Operation to complete")
-	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return err
+	}
+	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
+		}
+		tflog.Info(ctx, "Managed Environment Enablement Operation failed. Retrying...")
+		return client.EnableManagedEnvironment(ctx, managedEnvSettings, environmentId)
 	}
 	return nil
 }
@@ -82,9 +81,66 @@ func (client *client) DisableManagedEnvironment(ctx context.Context, environment
 	tflog.Debug(ctx, "Managed Environment Disablement Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 	tflog.Debug(ctx, "Waiting for Managed Environment Disablement Operation to complete")
 
-	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return err
 	}
+	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
+		}
+		tflog.Info(ctx, "Managed Environment Disablement Operation failed. Retrying...")
+		return client.DisableManagedEnvironment(ctx, environmentId)
+	}
 	return nil
+}
+
+type SolutionCheckerRule struct {
+	Code string `json:"code"`
+}
+
+func (client *client) FetchSolutionCheckerRules(ctx context.Context, environmentId string) ([]string, error) {
+	if client.environmentClient == (environment.Client{}) {
+		return nil, fmt.Errorf("environmentClient is not initialized")
+	}
+
+	env, err := client.environmentClient.GetEnvironment(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	if env.Properties.RuntimeEndpoints.PowerAppsAdvisor == "" {
+		return nil, fmt.Errorf("PowerAppsAdvisor URL is empty")
+	}
+
+	powerAppsAdvisorUrl, err := url.Parse(env.Properties.RuntimeEndpoints.PowerAppsAdvisor)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse PowerAppsAdvisor URL: %v", err)
+	}
+
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   powerAppsAdvisorUrl.Host,
+		Path:   "/api/rule",
+	}
+	values := url.Values{}
+	values.Add("api-version", "2.0")
+	// Currently, the ruleset is always the same for all regions
+	values.Add("ruleset", "0ad12346-e108-40b8-a956-9a8f95ea18c9")
+	apiUrl.RawQuery = values.Encode()
+
+	tflog.Debug(ctx, fmt.Sprintf("Constructed API URL: %s", apiUrl.String()))
+
+	solutionCheckerRulesArrayDto := []SolutionCheckerRule{}
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutionCheckerRulesArrayDto)
+	if err != nil {
+		return nil, err
+	}
+
+	var codes []string
+	for _, rule := range solutionCheckerRulesArrayDto {
+		codes = append(codes, rule.Code)
+	}
+
+	return codes, nil
 }

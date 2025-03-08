@@ -1,12 +1,12 @@
 ---
 page_title: "powerplatform_environment Resource - powerplatform"
 description: |-
-  This resource manages a PowerPlatform environment. Known Issue: Creating developer environment by specifying `owner_id` attribute, only works with a user context and can not be used at this time with a service principal. This is a limitation of the underlying API.
+  This resource manages a PowerPlatform environment.
 ---
 
 # powerplatform_environment (Resource)
 
-This resource manages a PowerPlatform environment. Known Issue: Creating developer environment by specifying `owner_id` attribute, only works with a user context and can not be used at this time with a service principal. This is a limitation of the underlying API.
+This resource manages a PowerPlatform environment.
 
 A Power Platform environment is a space in which you can store, manage, and share your organization's business data, apps, chatbots, and flows. It also serves as a container to separate apps that may have different roles, security requirements, or target audiences. Each environment is created under an Azure Active Directory tenant and is bound to a geographic location. You can create different types of environments, such as production, sandbox, trial, or developer, depending on your license and permissions. You can also move resources between environments and set data loss prevention policies. A Power Platform environment can have zero or one Microsoft Dataverse database, which provides storage for your apps and chatbots. You can only connect to the data sources that are deployed in the same environment as your app or chatbot. For more information, you can check out the following links:
 
@@ -34,13 +34,12 @@ provider "powerplatform" {
 }
 
 resource "powerplatform_environment" "development" {
-  display_name         = "example_environment"
-  description          = "example environment description"
-  location             = "europe"
-  azure_region         = "northeurope"
-  environment_type     = "Sandbox"
-  cadence              = "Moderate"
-  environment_group_id = ""
+  display_name     = "example_environment"
+  description      = "example environment description"
+  location         = "europe"
+  azure_region     = "northeurope"
+  environment_type = "Sandbox"
+  cadence          = "Moderate"
   dataverse = {
     language_code     = "1033"
     currency_code     = "USD"
@@ -60,13 +59,16 @@ resource "powerplatform_environment" "development" {
 
 ### Optional
 
+- `allow_bing_search` (Boolean) Allow Bing search in the environment
+- `allow_moving_data_across_regions` (Boolean) Allow moving data across regions
 - `azure_region` (String) Azure region of the environment (westeurope, eastus etc.). Can be queried using the `powerplatform_locations` data source. This property should only be set if absolutely necessary like when trying to create an environment in the same Azure region as Azure resources or Fabric capacity.  Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).
-- `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing
+- `billing_policy_id` (String) Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing. To remove the environment from the billing policy, set this attribute to `00000000-0000-0000-0000-000000000000`
 - `cadence` (String) Cadence of updates for the environment (Frequent, Moderate). For more information check [here](https://learn.microsoft.com/en-us/power-platform/admin/create-environment#setting-an-environment-refresh-cadence).
 - `dataverse` (Attributes) Dataverse environment details (see [below for nested schema](#nestedatt--dataverse))
 - `description` (String) Description of the environment
-- `environment_group_id` (String) Environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information.
+- `environment_group_id` (String) Environment group id (guid) that the environment belongs to. See [Environment groups](https://learn.microsoft.com/en-us/power-platform/admin/environment-groups) for more information. To remove the environment from the environment group, set this attribute to `00000000-0000-0000-0000-000000000000`
 - `owner_id` (String) Entra ID  user id (guid) of the environment owner when creating developer environment
+- `release_cycle` (String) Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

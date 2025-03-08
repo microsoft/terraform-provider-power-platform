@@ -1,0 +1,321 @@
+{
+    "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+    "type": "Microsoft.BusinessAppPlatform/scopes/environments",
+    "location": "europe",
+    "name": "00000000-0000-0000-0000-000000000001",
+    "properties": {
+        "tenantId": "123",
+        "azureRegion": "westeurope",
+        "displayName": "Example1",
+        "createdTime": "2023-10-24T09:37:26.8124738Z",
+        "createdBy": {
+            "id": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+            "displayName": "admin",
+            "email": "admin",
+            "type": "User",
+            "tenantId": "123",
+            "userPrincipalName": "admin"
+        },
+        "lastModifiedTime": "2023-11-01T20:13:20.5781436Z",
+        "provisioningState": "Succeeded",
+        "creationType": "User",
+        "environmentSku": "Sandbox",
+        "isDefault": false,
+        "capacity": [
+            {
+                "capacityType": "Database",
+                "actualConsumption": 931.8438,
+                "ratedConsumption": 1024.0,
+                "capacityUnit": "MB",
+                "updatedOn": "2023-11-01T16:19:10Z"
+            },
+            {
+                "capacityType": "File",
+                "actualConsumption": 1193.554,
+                "ratedConsumption": 1193.554,
+                "capacityUnit": "MB",
+                "updatedOn": "2023-11-01T16:19:10Z"
+            },
+            {
+                "capacityType": "Log",
+                "actualConsumption": 0.0,
+                "ratedConsumption": 0.0,
+                "capacityUnit": "MB",
+                "updatedOn": "2023-11-01T16:19:10Z"
+            },
+            {
+                "capacityType": "FinOpsDatabase",
+                "actualConsumption": 0.0,
+                "ratedConsumption": 0.0,
+                "capacityUnit": "MB",
+                "updatedOn": "2023-11-01T16:19:10Z"
+            },
+            {
+                "capacityType": "FinOpsFile",
+                "actualConsumption": 0.0,
+                "ratedConsumption": 0.0,
+                "capacityUnit": "MB",
+                "updatedOn": "2023-11-01T16:19:10Z"
+            }
+        ],
+        "addons": [],
+        "clientUris": {
+            "admin": "https://admin.powerplatform.microsoft.com/environments/environment/00000000-0000-0000-0000-000000000001/hub",
+            "maker": "https://make.powerapps.com/environments/00000000-0000-0000-0000-000000000001/home"
+        },
+        "runtimeEndpoints": {
+            "microsoft.BusinessAppPlatform": "https://europe.api.bap.microsoft.com",
+            "microsoft.CommonDataModel": "https://europe.api.cds.microsoft.com",
+            "microsoft.PowerApps": "https://europe.api.powerapps.com",
+            "microsoft.PowerAppsAdvisor": "https://europe.api.advisor.powerapps.com",
+            "microsoft.PowerVirtualAgents": "https://powervamg.ch-il101.gateway.prod.island.powerapps.com",
+            "microsoft.ApiManagement": "https://management.europe.azure-apihub.net",
+            "microsoft.Flow": "https://europe.api.flow.microsoft.com"
+        },
+        "databaseType": "CommonDataService",
+        "linkedEnvironmentMetadata": {
+            "resourceId": "orgid",
+            "friendlyName": "displayName",
+            "uniqueName": "00000000-0000-0000-0000-000000000001",
+            "domainName": "00000000-0000-0000-0000-000000000001",
+            "version": "9.2.23103.00196",
+            "instanceUrl": "https://00000000-0000-0000-0000-000000000001.crm17.dynamics.com/",
+            "instanceApiUrl": "https://00000000-0000-0000-0000-000000000001.api.crm17.dynamics.com",
+            "baseLanguage": 1033,
+            "instanceState": "Ready",
+            "createdTime": "2023-10-24T09:54:46.523Z",
+            "backgroundOperationsState": "Enabled",
+            "scaleGroup": "EURCRMLIVESG705",
+            "platformSku": "Standard",
+            "schemaType": "Standard"
+        },
+        "trialScenarioType": "None",
+        "notificationMetadata": {
+            "state": "NotSpecified",
+            "branding": "NotSpecific"
+        },
+        "retentionPeriod": "P7D",
+        "states": {
+            "management": {
+                "id": "Ready"
+            },
+            "runtime": {
+                "runtimeReasonCode": "NotSpecified",
+                "requestedBy": {
+                    "displayName": "SYSTEM",
+                    "type": "NotSpecified"
+                },
+                "id": "Enabled"
+            }
+        },
+        "updateCadence": {
+            "id": "Frequent"
+        },
+        "retentionDetails": {
+            "retentionPeriod": "P7D",
+            "backupsAvailableFromDateTime": "2023-10-25T20:36:48.5480817Z"
+        },
+        "protectionStatus": {
+            "keyManagedBy": "Microsoft"
+        },
+        "cluster": {
+            "category": "Prod",
+            "number": "107",
+            "uriSuffix": "eu-il107.gateway.prod.island",
+            "geoShortName": "EU",
+            "environment": "Prod"
+        },
+        "connectedGroups": [],
+        "lifecycleOperationsEnforcement": {
+            "allowedOperations": [
+                {
+                    "type": {
+                        "id": "Move"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "Backup"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "Convert"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "Copy"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "Delete"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "Edit"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "Recover"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "Reset"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "Restore"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "UpdateProtectionStatus"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "NewCustomerManagedKey"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "NewNetworkInjection"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "SwapNetworkInjection"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "RevertNetworkInjection"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "NewIdentity"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "SwapIdentity"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "RevertIdentity"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "Enable"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "Disable"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "DisableGovernanceConfiguration"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "UpdateGovernanceConfiguration"
+                    }
+                }
+            ],
+            "disallowedOperations": [
+                {
+                    "type": {
+                        "id": "Provision"
+                    },
+                    "reason": {
+                        "message": "Provision cannot be performed because there is no linked CDS instance or the CDS instance version is not supported.",
+                        "type": "CdsLink"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "Unlock"
+                    },
+                    "reason": {
+                        "message": "Unlock cannot be performed because there is no linked CDS instance or the CDS instance version is not supported.",
+                        "type": "CdsLink"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "Promote"
+                    },
+                    "reason": {
+                        "message": "Promote cannot be performed on environment of type Sandbox.",
+                        "type": "EnvironmentSkuType"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "ForceFailover"
+                    },
+                    "reason": {
+                        "message": "ForceFailover cannot be performed on environment of type Sandbox.",
+                        "type": "EnvironmentSkuType"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "RotateCustomerManagedKey"
+                    },
+                    "reason": {
+                        "type": "EnvironmentCmkLinked"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "RevertToMicrosoftKey"
+                    },
+                    "reason": {
+                        "type": "EnvironmentCmkLinked"
+                    }
+                },
+                {
+                    "type": {
+                        "id": "EnableGovernanceConfiguration"
+                    },
+                    "reason": {
+                        "message": "EnableGovernanceConfiguration cannot be performed on Power Platform environment because of the governance configuration.",
+                        "type": "GovernanceConfig"
+                    }
+                }
+            ]
+        },
+        "governanceConfiguration": {
+            "protectionLevel": "Standard",
+            "settings": {
+                "extendedSettings": {
+                    "excludeEnvironmentFromAnalysis": "true",
+                    "isGroupSharingDisabled": "false",
+                    "maxLimitUserSharing": "-1",
+                    "includeOnHomepageInsights": "false",
+                    "limitSharingMode": "noLimit",
+                    "solutionCheckerMode": "Warn",
+                    "suppressValidationEmails": "false",
+                    "solutionCheckerRuleOverrides": "meta-remove-dup-reg,meta-avoid-reg-no-attribute",
+                    "makerOnboardingUrl": "http://www.example.com",
+                    "makerOnboardingMarkdown": "this is test markdown",
+                    "disableAiGeneratedDescriptions": "false"
+                }
+            }
+        },
+        "bingChatEnabled": false
+    }
+}

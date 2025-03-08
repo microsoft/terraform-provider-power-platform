@@ -161,6 +161,13 @@ func (client *client) GetDataverseUserByAadObjectId(ctx context.Context, environ
 
 		return nil, err
 	}
+
+	if len(user.Value) == 0 {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return nil, err
+		}
+		return client.GetDataverseUserByAadObjectId(ctx, environmentId, aadObjectId)
+	}
 	return &user.Value[0], nil
 }
 
@@ -443,7 +450,7 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
+	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy,properties/copilotPolicies")
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
 

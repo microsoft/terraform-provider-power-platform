@@ -220,19 +220,16 @@ func (r *DataLossPreventionPolicyResource) Configure(ctx context.Context, req re
 		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
-
-	client := req.ProviderData.(*api.ProviderClient).Api
-
-	if client == nil {
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			"Unexpected ProviderData Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
-	r.DlpPolicyClient = newDlpPolicyClient(client)
+	r.DlpPolicyClient = newDlpPolicyClient(client.Api)
 }
 
 func (r DataLossPreventionPolicyResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {

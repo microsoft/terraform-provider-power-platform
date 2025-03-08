@@ -144,9 +144,9 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 	}
 }
 
-// RetryAfterDefault returns a random duration between 5 and 10 seconds.
+// RetryAfterDefault returns a random duration between 10 and 20 seconds.
 func DefaultRetryAfter() time.Duration {
-	return time.Duration((rand.Intn(5) + 5)) * time.Second
+	return time.Duration((rand.Intn(10) + 10)) * time.Second
 }
 
 // SleepWithContext sleeps for the given duration or until the context is canceled.
@@ -174,10 +174,10 @@ func tryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (stri
 	case strings.LastIndex(url, cloudConfig.BapiUrl) != -1,
 		strings.LastIndex(url, cloudConfig.PowerAppsUrl) != -1:
 		return cloudConfig.PowerAppsScope, nil
-
 	case strings.LastIndex(url, cloudConfig.PowerPlatformUrl) != -1:
 		return cloudConfig.PowerPlatformScope, nil
-
+	case strings.LastIndex(url, cloudConfig.PowerAppsAdvisor) != -1:
+		return cloudConfig.PowerAppsAdvisorScope, nil
 	default:
 		u, err := neturl.Parse(url)
 		return u.Scheme + "://" + u.Host + "/.default", err

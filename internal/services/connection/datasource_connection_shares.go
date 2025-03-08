@@ -106,18 +106,17 @@ func (d *SharesDataSource) Configure(ctx context.Context, req datasource.Configu
 		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
-	client := req.ProviderData.(*api.ProviderClient).Api
 
-	if client == nil {
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			"Unexpected ProviderData Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
-	d.ConnectionsClient = newConnectionsClient(client)
+	d.ConnectionsClient = newConnectionsClient(client.Api)
 }
 func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
@@ -148,10 +147,19 @@ func ConvertFromConnectionSharesDto(connection shareConnectionResponseDto) Share
 	share := SharesDataSourceModel{
 		Id:       types.StringValue(connection.Name),
 		RoleName: types.StringValue(connection.Properties.RoleName),
-		Principal: SharesPrincipalDataSourceModel{
-			EntraId:     types.StringValue(connection.Properties.Principal["id"].(string)),
-			DisplayName: types.StringValue(connection.Properties.Principal["displayName"].(string)),
-		},
 	}
+
+	if displayName, ok := connection.Properties.Principal["displayName"].(string); ok {
+		share.Principal.DisplayName = types.StringValue(displayName)
+	} else {
+		share.Principal.DisplayName = types.StringValue("")
+	}
+
+	if entraId, ok := connection.Properties.Principal["id"].(string); ok {
+		share.Principal.EntraId = types.StringValue(entraId)
+	} else {
+		share.Principal.EntraId = types.StringValue("")
+	}
+
 	return share
 }

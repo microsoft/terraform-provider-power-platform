@@ -21,7 +21,22 @@ resource "powerplatform_environment" "example_environment_settings" {
   }
 }
 
+resource "powerplatform_managed_environment" "managed_environment" {
+  environment_id                  = powerplatform_environment.example_environment_settings.id
+  is_usage_insights_disabled      = true
+  is_group_sharing_disabled       = true
+  limit_sharing_mode              = "ExcludeSharingToSecurityGroups"
+  max_limit_user_sharing          = 10
+  solution_checker_mode           = "Warn"
+  suppress_validation_emails      = true
+  solution_checker_rule_overrides = toset(["meta-remove-dup-reg"])
+  maker_onboarding_markdown       = "this is example markdown"
+  maker_onboarding_url            = "https://www.microsoft.com"
+}
+
 resource "powerplatform_environment_settings" "settings" {
+  depends_on = [powerplatform_managed_environment.managed_environment]
+
   environment_id = powerplatform_environment.example_environment_settings.id
 
   audit_and_logs = {
@@ -44,6 +59,15 @@ resource "powerplatform_environment_settings" "settings" {
     }
     features = {
       power_apps_component_framework_for_canvas_apps = false
+    }
+    security = {
+      allow_application_user_access               = true
+      allow_microsoft_trusted_service_tags        = true
+      allowed_ip_range_for_firewall               = toset(["10.10.0.0/16", "192.168.0.0/24"])
+      allowed_service_tags_for_firewall           = toset(["ApiManagement", "AppService"])
+      enable_ip_based_firewall_rule               = true
+      enable_ip_based_firewall_rule_in_audit_mode = true
+      reverse_proxy_ip_addresses                  = toset(["10.10.1.1", "192.168.1.1"])
     }
   }
 }

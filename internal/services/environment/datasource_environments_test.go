@@ -73,7 +73,7 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 
 	mocks.ActivateEnvironmentHttpMocks()
 
-	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01`,
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/Validate_Read/get_environments.json").String()), nil
 		})
@@ -129,8 +129,8 @@ func TestUnitEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.environment_type", "Sandbox"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.location", "europe"),
 					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.azure_region", "westeurope"),
-					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.billing_policy_id", ""),
-					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.environment_group_id", ""),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.billing_policy_id", "00000000-0000-0000-0000-000000000000"),
+					resource.TestCheckResourceAttr("data.powerplatform_environments.all", "environments.1.environment_group_id", "00000000-0000-0000-0000-000000000000"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.dataverse.domain"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.dataverse.language_code"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environments.all", "environments.1.dataverse.organization_id"),
