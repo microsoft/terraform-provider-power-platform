@@ -11,7 +11,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
 )
 
 var (
@@ -21,7 +23,7 @@ var (
 
 type AnalyticsExportDataSource struct {
 	helpers.TypeInfo
-	AnalyticsExportData Client
+	analyticsExportClient Client
 }
 
 func NewAnalyticsExportDataSource() datasource.DataSource {
@@ -112,15 +114,15 @@ func (d *AnalyticsExportDataSource) Schema(ctx context.Context, req datasource.S
 								},
 								"type": schema.StringAttribute{
 									MarkdownDescription: "The type of the sink",
-									Required:            true,
+									Computed:            true,
 								},
 								"subscription_id": schema.StringAttribute{
 									MarkdownDescription: "The Azure subscription ID",
-									Optional:            true,
+									Computed:            true,
 								},
 								"resource_group_name": schema.StringAttribute{
 									MarkdownDescription: "The Azure resource group name",
-									Optional:            true,
+									Computed:            true,
 								},
 								"resource_name": schema.StringAttribute{
 									MarkdownDescription: "The name of the sink resource",
@@ -143,7 +145,7 @@ func (d *AnalyticsExportDataSource) Schema(ctx context.Context, req datasource.S
 						},
 						"resource_provider": schema.StringAttribute{
 							MarkdownDescription: "The resource provider for the analytics data",
-							Required:            true,
+							Computed:            true,
 						},
 						"ai_type": schema.StringAttribute{
 							MarkdownDescription: "The AI type for the analytics data",
@@ -160,9 +162,21 @@ func (d *AnalyticsExportDataSource) Configure(ctx context.Context, req datasourc
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 
-	// Here we should set d.AnalyticsExportData from the provider client (missing)
-	// e.g., client, ok := req.ProviderData.(*api.ProviderClient); if ok { d.AnalyticsExportData = client.AnalyticsExportData }
-	tflog.Debug(ctx, "CONFIGURE: completed")
+	if req.ProviderData == nil {
+		// ProviderData will be null when Configure is called from ValidateConfig. It's ok.
+		return
+	}
+
+	client, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected ProviderData Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+
+	d.analyticsExportClient = NewAnalyticsExportClient(client.Api, tenant.NewTenantClient(client.Api))
 }
 
 // mapAnalyticsDataDtoToModel converts an AnalyticsDataDto to AnalyticsDataExportModel.
@@ -231,9 +245,8 @@ func (d *AnalyticsExportDataSource) Read(ctx context.Context, req datasource.Rea
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
 	// Fetch the analytics data export
-	analyticsDataExport, err := d.AnalyticsExportData.GetAnalyticsDataExport(ctx)
+	analyticsDataExport, err := d.analyticsExportClient.GetAnalyticsDataExport(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error fetching analytics data export",

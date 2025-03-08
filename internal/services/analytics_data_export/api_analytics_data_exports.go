@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
@@ -15,7 +16,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
 )
 
-func NewTelemetryExport(apiClient *api.Client, tenantClient tenant.Client) Client {
+func NewAnalyticsExportClient(apiClient *api.Client, tenantClient tenant.Client) Client {
 	return Client{
 		Api:       apiClient,
 		TenantApi: tenantClient,
@@ -70,11 +71,11 @@ func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*AnalyticsDat
 		return nil, err
 	}
 
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   analyticsUrl,
-		Path:   "api/v2/connections",
+	apiUrl, err := url.Parse(analyticsUrl)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse analytics URL: %w", err)
 	}
+	apiUrl.Path = "api/v2/connections"
 
 	analyticdatalinks := AnalyticsDataDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
@@ -181,7 +182,7 @@ func getAnalyticsUrlMap() map[string]string {
 
 func getAnalyticsUrl(region string) (string, error) {
 	urlMap := getAnalyticsUrlMap()
-	analyticDataUrl, exists := urlMap[region]
+	analyticDataUrl, exists := urlMap[strings.ToUpper(region)]
 	if !exists {
 		return "", fmt.Errorf("invalid region: %s", region)
 	}

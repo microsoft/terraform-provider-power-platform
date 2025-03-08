@@ -21,6 +21,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/admin_management_application"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/analytics_data_export"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/application"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/authorization"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/capacity"
@@ -358,6 +359,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 
 func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
+		func() datasource.DataSource { return analytics_data_export.NewAnalyticsExportDataSource() },
 		func() datasource.DataSource { return connectors.NewConnectorsDataSource() },
 		func() datasource.DataSource { return application.NewEnvironmentApplicationPackagesDataSource() },
 		func() datasource.DataSource { return powerapps.NewEnvironmentPowerAppsDataSource() },

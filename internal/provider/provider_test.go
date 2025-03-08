@@ -16,6 +16,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 	"github.com/microsoft/terraform-provider-power-platform/internal/provider"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/admin_management_application"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/analytics_data_export"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/application"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/authorization"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/capacity"
@@ -45,6 +46,7 @@ import (
 
 func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 	expectedDataSources := []datasource.DataSource{
+		analytics_data_export.NewAnalyticsExportDataSource(),
 		powerapps.NewEnvironmentPowerAppsDataSource(),
 		environment.NewEnvironmentsDataSource(),
 		environment_templates.NewEnvironmentTemplatesDataSource(),
