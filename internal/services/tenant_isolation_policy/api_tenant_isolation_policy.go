@@ -29,7 +29,7 @@ type Client struct {
 	TenantApi tenant.Client
 }
 
-// GetTenantIsolationPolicy retrieves the tenant isolation policy for the specified tenant.
+// getTenantIsolationPolicy retrieves the tenant isolation policy for the specified tenant.
 // If no policy exists, it returns nil without error (HTTP 404).
 //
 // Parameters:
@@ -39,7 +39,7 @@ type Client struct {
 // Returns:
 //   - *TenantIsolationPolicyDto: The retrieved policy or nil if not found
 //   - error: Any error encountered during the API operation
-func (client *Client) GetTenantIsolationPolicy(ctx context.Context, tenantId string) (*TenantIsolationPolicyDto, error) {
+func (client *Client) getTenantIsolationPolicy(ctx context.Context, tenantId string) (*TenantIsolationPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -60,7 +60,7 @@ func (client *Client) GetTenantIsolationPolicy(ctx context.Context, tenantId str
 	return &policy, nil
 }
 
-// CreateOrUpdateTenantIsolationPolicy applies a new or updates an existing tenant isolation policy.
+// createOrUpdateTenantIsolationPolicy applies a new or updates an existing tenant isolation policy.
 // This operation may be asynchronous (HTTP 202) or synchronous (HTTP 200).
 // For asynchronous operations, it polls until completion before returning the result.
 //
@@ -72,7 +72,7 @@ func (client *Client) GetTenantIsolationPolicy(ctx context.Context, tenantId str
 // Returns:
 //   - *TenantIsolationPolicyDto: The created or updated policy
 //   - error: Any error from the operation or polling process
-func (client *Client) CreateOrUpdateTenantIsolationPolicy(ctx context.Context, tenantId string, policy TenantIsolationPolicyDto) (*TenantIsolationPolicyDto, error) {
+func (client *Client) createOrUpdateTenantIsolationPolicy(ctx context.Context, tenantId string, policy TenantIsolationPolicyDto) (*TenantIsolationPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -94,7 +94,7 @@ func (client *Client) CreateOrUpdateTenantIsolationPolicy(ctx context.Context, t
 		}
 
 		// Get fresh state after async operation
-		finalPolicy, err := client.GetTenantIsolationPolicy(ctx, tenantId)
+		finalPolicy, err := client.getTenantIsolationPolicy(ctx, tenantId)
 		if err != nil {
 			return nil, fmt.Errorf("Error getting tenant isolation policy after async operation: %v", err)
 		}
@@ -149,7 +149,7 @@ func (client *Client) doWaitForLifecycleOperationStatus(ctx context.Context, res
 	if locationHeader == "" {
 		locationHeader = response.GetHeader(constants.HEADER_OPERATION_LOCATION)
 	}
-	tflog.Debug(ctx, "Location Header: "+locationHeader)
+	tflog.Debug(ctx, fmt.Sprintf("Location Header: %s", locationHeader))
 
 	if locationHeader == "" {
 		return nil, fmt.Errorf("no Location or Operation-Location header found in async response")

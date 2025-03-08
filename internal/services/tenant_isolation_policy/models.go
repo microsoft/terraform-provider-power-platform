@@ -6,7 +6,14 @@ package tenant_isolation_policy
 import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
+
+// Resource represents the tenant isolation policy resource.
+type Resource struct {
+	helpers.TypeInfo
+	Client Client
+}
 
 // Resource model for tenant isolation policy.
 type TenantIsolationPolicyResourceModel struct {

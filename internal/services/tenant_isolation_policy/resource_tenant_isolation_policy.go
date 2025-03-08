@@ -29,17 +29,6 @@ var _ resource.Resource = &Resource{}
 var _ resource.ResourceWithImportState = &Resource{}
 var _ resource.ResourceWithValidateConfig = &Resource{}
 
-// Define the object type for AllowedTenants set.
-func allowedTenantsObjectType(ctx context.Context) types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"tenant_id": types.StringType,
-			"inbound":   types.BoolType,
-			"outbound":  types.BoolType,
-		},
-	}
-}
-
 // NewTenantIsolationPolicyResource creates a new tenant isolation policy resource.
 func NewTenantIsolationPolicyResource() resource.Resource {
 	return &Resource{
@@ -47,12 +36,6 @@ func NewTenantIsolationPolicyResource() resource.Resource {
 			TypeName: "tenant_isolation_policy",
 		},
 	}
-}
-
-// Resource represents the tenant isolation policy resource.
-type Resource struct {
-	helpers.TypeInfo
-	Client Client
 }
 
 // Metadata returns the resource type name.
@@ -74,16 +57,14 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		Description: "Manages a Power Platform tenant isolation policy. Tenant isolation can be used to block external tenants " +
+		MarkdownDescription: "Manages a Power Platform tenant isolation policy. Tenant isolation can be used to block external tenants " +
 			"from establishing connections into your tenant (inbound isolation) as well as block your tenant from " +
 			"establishing connections to external tenants (outbound isolation). " +
 			"Learn more: https://docs.microsoft.com/en-us/power-platform/admin/cross-tenant-restrictions",
-
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{}),
 			"id": schema.StringAttribute{
 				Computed:            true,
-				Description:         "The ID of the tenant isolation policy.",
 				MarkdownDescription: "The ID of the tenant isolation policy.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -91,18 +72,15 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			},
 			"is_disabled": schema.BoolAttribute{
 				Required:            true,
-				Description:         "Whether the tenant isolation policy is disabled.",
 				MarkdownDescription: "Whether the tenant isolation policy is disabled.",
 			},
 			"allowed_tenants": schema.SetNestedAttribute{
 				Required:            true,
-				Description:         "List of tenants that are allowed to connect with your tenant.",
 				MarkdownDescription: "List of tenants that are allowed to connect with your tenant.",
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"tenant_id": schema.StringAttribute{
 							Required:            true,
-							Description:         "ID of the tenant that is allowed to connect.",
 							MarkdownDescription: "ID of the tenant that is allowed to connect.",
 							Validators: []validator.String{
 								stringvalidator.LengthAtLeast(1),
@@ -110,12 +88,10 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						},
 						"inbound": schema.BoolAttribute{
 							Required:            true,
-							Description:         "Whether inbound connections from this tenant are allowed.",
 							MarkdownDescription: "Whether inbound connections from this tenant are allowed.",
 						},
 						"outbound": schema.BoolAttribute{
 							Required:            true,
-							Description:         "Whether outbound connections to this tenant are allowed.",
 							MarkdownDescription: "Whether outbound connections to this tenant are allowed.",
 						},
 					},
@@ -206,7 +182,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	}
 
 	// Create the policy
-	policy, err := r.Client.CreateOrUpdateTenantIsolationPolicy(ctx, tenantInfo.TenantId, *policyDto)
+	policy, err := r.Client.createOrUpdateTenantIsolationPolicy(ctx, tenantInfo.TenantId, *policyDto)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error creating tenant isolation policy",
@@ -250,20 +226,15 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 
 	tenantId := state.Id.ValueString()
 	if tenantId == "" {
-		// Get the current tenant ID if not set
-		tenantInfo, err := r.Client.TenantApi.GetTenant(ctx)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error retrieving tenant information",
-				fmt.Sprintf("Could not retrieve tenant information: %s", err.Error()),
-			)
-			return
-		}
-		tenantId = tenantInfo.TenantId
+		resp.Diagnostics.AddError(
+			"Missing tenant ID",
+			"The tenant ID is unexpectedly missing from state. This is a provider error.",
+		)
+		return
 	}
 
 	// Get the current policy
-	policy, err := r.Client.GetTenantIsolationPolicy(ctx, tenantId)
+	policy, err := r.Client.getTenantIsolationPolicy(ctx, tenantId)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error reading tenant isolation policy",
@@ -274,6 +245,9 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 
 	// If the policy doesn't exist, remove from state
 	if policy == nil {
+		// follows best practice of removing the resource from state
+		// https://developer.hashicorp.com/terraform/plugin/framework/resources/read#recommendations
+		tflog.Debug(ctx, fmt.Sprintf("Removing tenant isolation policy with ID %s from state because it no longer exists", tenantId))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -315,17 +289,13 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	timeoutsVal := plan.Timeouts
 
 	tenantId := state.Id.ValueString()
+	// We can be confident the ID exists in state for an update operation
 	if tenantId == "" {
-		// Get the current tenant ID if not set
-		tenantInfo, err := r.Client.TenantApi.GetTenant(ctx)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error retrieving tenant information",
-				fmt.Sprintf("Could not retrieve tenant information: %s", err.Error()),
-			)
-			return
-		}
-		tenantId = tenantInfo.TenantId
+		resp.Diagnostics.AddError(
+			"Missing tenant ID",
+			"The tenant ID is unexpectedly missing from state. This is a provider error.",
+		)
+		return
 	}
 
 	// Convert the Terraform model to the API model
@@ -336,7 +306,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	}
 
 	// Update the policy
-	updatedPolicy, err := r.Client.CreateOrUpdateTenantIsolationPolicy(ctx, tenantId, *policyDto)
+	updatedPolicy, err := r.Client.createOrUpdateTenantIsolationPolicy(ctx, tenantId, *policyDto)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating tenant isolation policy",
@@ -361,7 +331,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	tflog.Info(ctx, fmt.Sprintf("Updated tenant isolation policy with ID %s", updatedState.Id.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("Updated tenant isolation policy with ID %s", updatedState.Id.ValueString()))
 }
 
 // Delete deletes the resource and removes the Terraform state on success.
@@ -377,16 +347,11 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 
 	tenantId := state.Id.ValueString()
 	if tenantId == "" {
-		// Get the current tenant ID if not set
-		tenantInfo, err := r.Client.TenantApi.GetTenant(ctx)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				"Error retrieving tenant information",
-				fmt.Sprintf("Could not retrieve tenant information: %s", err.Error()),
-			)
-			return
-		}
-		tenantId = tenantInfo.TenantId
+		resp.Diagnostics.AddError(
+			"Missing tenant ID",
+			"The tenant ID is unexpectedly missing from state. This is likely a provider bug.",
+		)
+		return
 	}
 
 	// To delete the policy, we update it with an empty policy
@@ -398,7 +363,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 		},
 	}
 
-	_, err := r.Client.CreateOrUpdateTenantIsolationPolicy(ctx, tenantId, emptyPolicy)
+	_, err := r.Client.createOrUpdateTenantIsolationPolicy(ctx, tenantId, emptyPolicy)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error deleting tenant isolation policy",
@@ -595,4 +560,15 @@ func convertAllowedTenantsFromDto(dtoTenants []AllowedTenantDto) []AllowedTenant
 		})
 	}
 	return modelTenants
+}
+
+// Define the object type for AllowedTenants set.
+func allowedTenantsObjectType(ctx context.Context) types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"tenant_id": types.StringType,
+			"inbound":   types.BoolType,
+			"outbound":  types.BoolType,
+		},
+	}
 }

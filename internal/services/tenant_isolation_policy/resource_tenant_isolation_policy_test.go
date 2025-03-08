@@ -41,19 +41,6 @@ func setupTenantHttpMocks() {
 		})
 }
 
-func getProviderConfig() string {
-	return `
-provider "powerplatform" {
-	tenant_id = "` + testTenantID + `"
-	use_cli = false
-	client_id = "test-client-id"
-	client_secret = "test-client-secret"
-}
-`
-}
-
-// Test functions with updated API paths...
-
 // TestAccTenantIsolationPolicy_basic tests the basic creation and import of a tenant isolation policy.
 // It verifies:
 // 1. Creation of a policy with a single allowed tenant (inbound and outbound access)
@@ -63,7 +50,17 @@ func TestAccTenantIsolationPolicy_basic(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: _testAccTenantIsolationPolicy_basic(),
+				Config: `
+				resource "powerplatform_tenant_isolation_policy" "test" {
+					is_disabled = false
+					allowed_tenants = toset([
+						{
+							tenant_id = "11111111-1111-1111-1111-111111111111"
+							inbound  = true
+							outbound = true
+						}
+					])
+				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_tenant_isolation_policy.test", "is_disabled", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_isolation_policy.test", "allowed_tenants.#", "1"),
@@ -90,14 +87,39 @@ func TestAccTenantIsolationPolicy_update(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: _testAccTenantIsolationPolicy_basic(),
+				Config: `
+				resource "powerplatform_tenant_isolation_policy" "test" {
+					is_disabled = false
+					allowed_tenants = toset([
+						{
+							tenant_id = "11111111-1111-1111-1111-111111111111"
+							inbound = true
+							outbound = true
+						}
+					])
+				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_tenant_isolation_policy.test", "is_disabled", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_isolation_policy.test", "allowed_tenants.#", "1"),
 				),
 			},
 			{
-				Config: _testAccTenantIsolationPolicy_update(),
+				Config: `
+				resource "powerplatform_tenant_isolation_policy" "test" {
+					is_disabled = true
+					allowed_tenants = toset([
+						{
+							tenant_id = "11111111-1111-1111-1111-111111111111"
+							inbound = true
+							outbound = true
+						},
+						{
+							tenant_id = "22222222-2222-2222-2222-222222222222"
+							inbound = true
+							outbound = false
+						}
+					])
+				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_tenant_isolation_policy.test", "is_disabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_isolation_policy.test", "allowed_tenants.#", "2"),
@@ -117,13 +139,27 @@ func TestAccTenantIsolationPolicy_remove(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: _testAccTenantIsolationPolicy_basic(),
+				Config: `
+				resource "powerplatform_tenant_isolation_policy" "test" {
+					is_disabled = false
+					allowed_tenants = toset([
+						{
+							tenant_id = "11111111-1111-1111-1111-111111111111"
+							inbound = true
+							outbound = true
+						}
+					])
+				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_tenant_isolation_policy.test", "allowed_tenants.#", "1"),
 				),
 			},
 			{
-				Config: _testAccTenantIsolationPolicy_empty(),
+				Config: `
+				resource "powerplatform_tenant_isolation_policy" "test" {
+					is_disabled = false
+					allowed_tenants = toset([])
+				}`,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_tenant_isolation_policy.test", "allowed_tenants.#", "0"),
 				),
@@ -188,7 +224,7 @@ func TestUnitTenantIsolationPolicyResource_Validate_Create(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: getProviderConfig() + `
+				Config: `
 				resource "powerplatform_tenant_isolation_policy" "test" {
 					is_disabled = false
 					allowed_tenants = toset([
@@ -344,7 +380,7 @@ func TestUnitTenantIsolationPolicyResource_Validate_Update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				// Step 1: Create initial policy.
-				Config: getProviderConfig() + `
+				Config: `
 				resource "powerplatform_tenant_isolation_policy" "test" {
 					is_disabled = false
 					allowed_tenants = toset([
@@ -362,7 +398,7 @@ func TestUnitTenantIsolationPolicyResource_Validate_Update(t *testing.T) {
 			},
 			{
 				// Step 2: Update the policy.
-				Config: getProviderConfig() + `
+				Config: `
 				resource "powerplatform_tenant_isolation_policy" "test" {
 					is_disabled = true
 					allowed_tenants = toset([
@@ -489,7 +525,7 @@ func TestUnitTenantIsolationPolicyResource_Validate_Delete(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: getProviderConfig() + `
+				Config: `
 				resource "powerplatform_tenant_isolation_policy" "test" {
 					is_disabled = false
 					allowed_tenants = toset([
@@ -506,7 +542,7 @@ func TestUnitTenantIsolationPolicyResource_Validate_Delete(t *testing.T) {
 				),
 			},
 			{
-				Config: getProviderConfig() + `
+				Config: `
 				resource "powerplatform_tenant_isolation_policy" "test" {
 					is_disabled = false
 					allowed_tenants = toset([])
@@ -551,7 +587,7 @@ func TestUnitTenantIsolationPolicyResource_Validate_Create_Error(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: getProviderConfig() + `
+				Config: `
 				resource "powerplatform_tenant_isolation_policy" "test" {
 					is_disabled = false
 					allowed_tenants = toset([
@@ -566,49 +602,4 @@ func TestUnitTenantIsolationPolicyResource_Validate_Create_Error(t *testing.T) {
 			},
 		},
 	})
-}
-
-// Helper functions for acceptance tests...
-func _testAccTenantIsolationPolicy_basic() string {
-	return getProviderConfig() + `
-resource "powerplatform_tenant_isolation_policy" "test" {
-  is_disabled = false
-  allowed_tenants = toset([
-    {
-      tenant_id = "11111111-1111-1111-1111-111111111111"
-      inbound  = true
-      outbound = true
-    }
-  ])
-}
-`
-}
-
-func _testAccTenantIsolationPolicy_update() string {
-	return getProviderConfig() + `
-resource "powerplatform_tenant_isolation_policy" "test" {
-  is_disabled = true
-  allowed_tenants = toset([
-    {
-      tenant_id = "11111111-1111-1111-1111-111111111111"
-      inbound  = true
-      outbound = true
-    },
-    {
-      tenant_id = "22222222-2222-2222-2222-222222222222"
-      inbound  = true
-      outbound = false
-    }
-  ])
-}
-`
-}
-
-func _testAccTenantIsolationPolicy_empty() string {
-	return getProviderConfig() + `
-resource "powerplatform_tenant_isolation_policy" "test" {
-  is_disabled = false
-  allowed_tenants = toset([])
-}
-`
 }
