@@ -51,7 +51,6 @@ func (d *AnalyticsExportDataSource) Schema(ctx context.Context, req datasource.S
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Data source to retrieve Analytics Data Export information.",
 		MarkdownDescription: "Data source to retrieve Analytics Data Export information.\n\nThis functionality allows you to connect your Power Platform org to App Insights instance and export the telemetry.\n\n* [Export Data to Application Insights](https://learn.microsoft.com/en-us/power-platform/admin/set-up-export-application-insights)",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
