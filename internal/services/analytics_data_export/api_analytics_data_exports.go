@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform_analytics_data_export
+package analytics_data_export
 
 import (
 	"context"
@@ -27,18 +27,17 @@ type Client struct {
 	TenantApi tenant.Client
 }
 
-// GetGatewayCluster retrieves information about a gateway cluster
+// GetGatewayCluster retrieves information about a gateway cluster.
 func (client *Client) GetGatewayCluster(ctx context.Context) (*GatewayClusterDto, error) {
-
 	// Get tenant information using the tenant client
-	tenant, err := client.TenantApi.GetTenant(ctx)
+	tenantInfo, err := client.TenantApi.GetTenant(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tenant information: %w", err)
 	}
 
 	tenantApiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   helpers.BuildTenantHostUri(tenant.TenantId, client.Api.Config.Urls.PowerPlatformUrl),
+		Host:   helpers.BuildTenantHostUri(tenantInfo.TenantId, client.Api.Config.Urls.PowerPlatformUrl),
 		Path:   "gateway/cluster",
 		RawQuery: url.Values{
 			"api-version": []string{"1"},
@@ -56,7 +55,6 @@ func (client *Client) GetGatewayCluster(ctx context.Context) (*GatewayClusterDto
 }
 
 func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*AnalyticsDataDto, error) {
-
 	// Get the gateway cluster
 	gatewayCluster, err := client.GetGatewayCluster(ctx)
 	if err != nil {

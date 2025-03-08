@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform_analytics_data_export
+package analytics_data_export
 
 import (
 	"context"
 	"fmt"
-	"net/http"
-	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -22,15 +20,14 @@ var (
 )
 
 type AnalyticsExportDataSource struct {
-	ProviderTypeName    string
-	TypeInfo            helpers.TypeInfo
+	helpers.TypeInfo
 	AnalyticsExportData Client
 }
 
 func NewAnalyticsExportDataSource() datasource.DataSource {
 	return &AnalyticsExportDataSource{
 		TypeInfo: helpers.TypeInfo{
-			TypeName: "Analytics_DataExport",
+			TypeName: "analytics_data_exports",
 		},
 	}
 }
@@ -168,35 +165,96 @@ func (d *AnalyticsExportDataSource) Configure(ctx context.Context, req datasourc
 	tflog.Debug(ctx, "CONFIGURE: completed")
 }
 
+// mapAnalyticsDataDtoToModel converts an AnalyticsDataDto to AnalyticsDataExportModel.
+func mapAnalyticsDataDtoToModel(dto *AnalyticsDataDto) *AnalyticsDataModel {
+	if dto == nil {
+		return nil
+	}
+
+	// Map environments
+	environments := make([]EnvironmentModel, 0, len(dto.Environments))
+	for _, env := range dto.Environments {
+		environments = append(environments, EnvironmentModel{
+			EnvironmentId:  types.StringValue(env.EnvironmentId),
+			OrganizationId: types.StringValue(env.OrganizationId),
+		})
+	}
+
+	// Map status
+	status := make([]StatusModel, 0, len(dto.Status))
+	for _, s := range dto.Status {
+		message := types.StringNull()
+		if s.Message != nil {
+			message = types.StringValue(*s.Message)
+		}
+		status = append(status, StatusModel{
+			Name:      types.StringValue(s.Name),
+			State:     types.StringValue(s.State),
+			LastRunOn: types.StringValue(s.LastRunOn),
+			Message:   message,
+		})
+	}
+
+	// Map scenarios
+	scenarios := make([]types.String, 0, len(dto.Scenarios))
+	for _, s := range dto.Scenarios {
+		scenarios = append(scenarios, types.StringValue(s))
+	}
+
+	return &AnalyticsDataModel{
+		ID:           types.StringValue(dto.ID),
+		Source:       types.StringValue(dto.Source),
+		Environments: environments,
+		Status:       status,
+		Sink: SinkModel{
+			ID:                types.StringValue(dto.Sink.ID),
+			Type:              types.StringValue(dto.Sink.Type),
+			SubscriptionId:    types.StringValue(dto.Sink.SubscriptionId),
+			ResourceGroupName: types.StringValue(dto.Sink.ResourceGroupName),
+			ResourceName:      types.StringValue(dto.Sink.ResourceName),
+			Key:               types.StringValue(dto.Sink.Key),
+		},
+		PackageName:      types.StringValue(dto.PackageName),
+		Scenarios:        scenarios,
+		ResourceProvider: types.StringValue(dto.ResourceProvider),
+		AiType:           types.StringValue(dto.AiType),
+	}
+}
+
 func (d *AnalyticsExportDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state AnalyticsExportDatasourceModel
-	diags := req.Config.Get(ctx, &state)
+	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
+	defer exitContext()
+
+	var config AnalyticsDataExportModel
+	diags := req.Config.Get(ctx, &config)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
-	defer exitContext()
-
-	// Here state.ID is referenced but not defined in the schema. In common implementations,
-	// either the schema defines an input ID or the data source uses a list/filter.
-	id := state.ID.ValueString()
-
-	apiUrl := &url.URL{
-		Scheme: "https",
-		Host:   getAnalyticsUrlMap()[""], // <-- empty key is unusual
-		Path:   fmt.Sprintf("/api/v2/analyticsdataexport/%s", id),
-	}
-
-	var analyticsDataExport AnalyticsExportDatasourceModel
-	_, err := d.AnalyticsExportData.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &analyticsDataExport)
+	// Fetch the analytics data export
+	analyticsDataExport, err := d.AnalyticsExportData.GetAnalyticsDataExport(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError("Error reading Analytics Data Export", fmt.Sprintf("Unable to read analytics data export with ID %s: %s", id, err.Error()))
+		resp.Diagnostics.AddError(
+			"Error fetching analytics data export",
+			fmt.Sprintf("Unable to fetch analytics data export: %s", err),
+		)
+		return
+	}
+	if analyticsDataExport == nil {
+		resp.Diagnostics.AddError(
+			"Analytics data export not found",
+			"Unable to find analytics data export with the specified ID",
+		)
 		return
 	}
 
+	// Map the response to the model
+	model := &AnalyticsDataExportModel{
+		Exports: []AnalyticsDataModel{*mapAnalyticsDataDtoToModel(analyticsDataExport)},
+	}
+
 	// Set state
-	diags = resp.State.Set(ctx, &analyticsDataExport)
+	diags = resp.State.Set(ctx, model)
 	resp.Diagnostics.Append(diags...)
 }

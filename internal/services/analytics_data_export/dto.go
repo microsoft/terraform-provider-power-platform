@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package powerplatform_analytics_data_export
+package analytics_data_export
 
 type AnalyticsDataResponse struct {
 	Value []AnalyticsDataDto `json:"value"`
@@ -49,7 +49,7 @@ type SinkDto struct {
 	Key               string `json:"key"`
 }
 
-// GatewayClusterDto represents a gateway cluster in the Power Platform
+// GatewayClusterDto represents a gateway cluster in the Power Platform.
 type GatewayClusterDto struct {
 	ClusterNumber   string `json:"clusterNumber"`
 	GeoName         string `json:"geoName"`
