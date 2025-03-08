@@ -22,7 +22,7 @@ jobs:
           
       - name: Get Issue Metrics
         id: issue-metrics
-        uses: github/issue-metrics@v2
+        uses: github/issue-metrics@v3
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.repository }}
