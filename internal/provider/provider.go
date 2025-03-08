@@ -43,6 +43,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/powerapps"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/rest"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution_checker_rules"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant_settings"
 )
@@ -380,6 +381,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return connection.NewConnectionSharesDataSource() },
 		func() datasource.DataSource { return capacity.NewTenantCapcityDataSource() },
 		func() datasource.DataSource { return tenant.NewTenantDataSource() },
+		func() datasource.DataSource { return solution_checker_rules.NewSolutionCheckerRulesDataSource() },
 	}
 }
 

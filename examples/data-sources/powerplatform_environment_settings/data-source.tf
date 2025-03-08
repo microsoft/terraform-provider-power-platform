@@ -10,4 +10,6 @@ provider "powerplatform" {
   use_cli = true
 }
 
-data "powerplatform_tenant" "current_tenant" {}
+data "powerplatform_environment_settings" "example" {
+  environment_id = "00000000-0000-0000-0000-000000000001"
+}
