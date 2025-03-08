@@ -11,7 +11,3 @@ provider "powerplatform" {
 }
 
 data "powerplatform_tenant" "current_tenant" {}
-
-output "current_config" {
-  value = data.powerplatform_tenant.current_tenant
-}

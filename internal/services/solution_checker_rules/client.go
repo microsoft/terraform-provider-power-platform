@@ -10,19 +10,19 @@ import (
 	"net/url"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
-type client interface {
-	GetSolutionCheckerRules(ctx context.Context, environmentId string) ([]ruleDto, error)
-}
-
-type clientImpl struct {
-	Api *api.Client
+type client struct {
+	Api               *api.Client
+	environmentClient environment.Client
 }
 
 func newSolutionCheckerRulesClient(apiClient *api.Client) client {
-	return &clientImpl{
-		Api: apiClient,
+	return client{
+		Api:               apiClient,
+		environmentClient: environment.NewEnvironmentClient(apiClient),
 	}
 }
 
@@ -39,39 +39,24 @@ type ruleDto struct {
 	Severity        int    `json:"severity"`
 }
 
-func (c *clientImpl) GetSolutionCheckerRules(ctx context.Context, environmentId string) ([]ruleDto, error) {
-	// Get the environment to find the PowerAppsAdvisor endpoint
-	apiUrl := &url.URL{
-		Scheme: "https",
-		Host:   c.Api.GetConfig().Urls.BapiUrl,
-		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
-	}
-	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
-	apiUrl.RawQuery = values.Encode()
-
-	var environmentResponse map[string]any
-	_, err := c.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &environmentResponse)
+func (c *client) GetSolutionCheckerRules(ctx context.Context, environmentId string) ([]ruleDto, error) {
+	env, err := c.environmentClient.GetEnvironment(ctx, environmentId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get environment details for %s: %w", environmentId, err)
 	}
 
-	// Extract the PowerAppsAdvisor endpoint
-	var advisorEndpoint string
-	if properties, ok := environmentResponse["properties"].(map[string]any); ok {
-		if runtimeEndpoints, ok := properties["runtimeEndpoints"].(map[string]any); ok {
-			if endpoint, ok := runtimeEndpoints["microsoft.PowerAppsAdvisor"].(string); ok {
-				advisorEndpoint = endpoint
-			}
-		}
-	}
-
-	if advisorEndpoint == "" {
+	if env.Properties.RuntimeEndpoints.PowerAppsAdvisor == "" {
 		return nil, fmt.Errorf("could not find PowerAppsAdvisor endpoint for environment %s", environmentId)
 	}
 
+	// Parse and get host from PowerAppsAdvisor URL
+	advisorURL, err := url.Parse(env.Properties.RuntimeEndpoints.PowerAppsAdvisor)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse PowerAppsAdvisor URL: %w", err)
+	}
+
 	// Now get the solution checker rules from the advisor endpoint with required query parameters
-	rulesBaseUrl := fmt.Sprintf("%s/api/rule", advisorEndpoint)
+	rulesBaseUrl := fmt.Sprintf("https://%s/api/rule", advisorURL.Host)
 	rulesUrl, err := url.Parse(rulesBaseUrl)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse rules URL: %w", err)
@@ -79,7 +64,7 @@ func (c *clientImpl) GetSolutionCheckerRules(ctx context.Context, environmentId 
 
 	// Add the required query parameters
 	queryParams := url.Values{}
-	queryParams.Add("ruleset", "0ad12346-e108-40b8-a956-9a8f95ea18c9")
+	queryParams.Add("ruleset", constants.SOLUTION_CHECKER_RULESET_ID)
 	queryParams.Add("api-version", "2.0")
 	rulesUrl.RawQuery = queryParams.Encode()
 
