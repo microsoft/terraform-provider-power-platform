@@ -6,7 +6,6 @@ package tenant_isolation_policy
 import (
 	"context"
 	"fmt"
-	"sort"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -418,17 +417,11 @@ func convertToDto(ctx context.Context, tenantId string, model *TenantIsolationPo
 		return nil, diags
 	}
 
-	// Sort the tenant list for consistency
-	sort.Slice(tenantsModel, func(i, j int) bool {
-		return tenantsModel[i].TenantId.ValueString() < tenantsModel[j].TenantId.ValueString()
-	})
-
 	// Convert AllowedTenants to DTO
 	dtoTenants := make([]AllowedTenantDto, 0, len(tenantsModel))
 	for _, allowedTenant := range tenantsModel {
 		inbound := allowedTenant.Inbound.ValueBool()
 		outbound := allowedTenant.Outbound.ValueBool()
-
 		dtoTenants = append(dtoTenants, AllowedTenantDto{
 			TenantId: allowedTenant.TenantId.ValueString(),
 			Direction: DirectionDto{
@@ -529,11 +522,6 @@ func convertAllowedTenantsFromDto(dtoTenants []AllowedTenantDto) []AllowedTenant
 	if dtoTenants == nil {
 		return []AllowedTenantModel{}
 	}
-
-	// Sort tenants by ID for consistent ordering
-	sort.Slice(dtoTenants, func(i, j int) bool {
-		return dtoTenants[i].TenantId < dtoTenants[j].TenantId
-	})
 
 	modelTenants := make([]AllowedTenantModel, 0, len(dtoTenants))
 	for _, dtoTenant := range dtoTenants {
