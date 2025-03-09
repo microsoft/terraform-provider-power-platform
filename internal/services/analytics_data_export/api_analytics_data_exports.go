@@ -77,10 +77,13 @@ func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*AnalyticsDat
 	}
 	apiUrl.Path = "api/v2/connections"
 
-	analyticdatalinks := AnalyticsDataDto{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	var analyticdatalinks AnalyticsDataDto
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &analyticdatalinks)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get analytics data export: %w", err)
+	}
 
-	return &analyticdatalinks, err
+	return &analyticdatalinks, nil
 }
 
 // func (client *Client) CreateAnalyticsDataExport(ctx context.Context, analyticsdataToCreate AnalyticsDataCreateDto) (*AnalyticsDataDto, error) {

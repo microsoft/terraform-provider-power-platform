@@ -26,7 +26,7 @@ output "status" {
 output "sink_details" {
   description = "The sink configuration details for all exports"
   value = {
-    for idx, export in data.powerplatform_analytics_data_exports.example.exports : idx => {
+    for export in data.powerplatform_analytics_data_exports.example.exports : export.id => {
       id              = export.sink.id
       type            = export.sink.type
       subscription_id = export.sink.subscription_id
