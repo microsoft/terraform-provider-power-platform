@@ -32,7 +32,8 @@
         "GitHub.copilot",
         "DavidAnson.vscode-markdownlint",
         "GitHub.vscode-github-actions",
-        "ms-vscode.makefile-tools"
+        "ms-vscode.makefile-tools",
+        "GitHub.copilot-chat"
       ]
     }
   },
