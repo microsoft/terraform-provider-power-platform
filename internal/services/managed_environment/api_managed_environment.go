@@ -126,7 +126,7 @@ func (client *client) FetchSolutionCheckerRules(ctx context.Context, environment
 	values := url.Values{}
 	values.Add("api-version", "2.0")
 	// Currently, the ruleset is always the same for all regions
-	values.Add("ruleset", "0ad12346-e108-40b8-a956-9a8f95ea18c9")
+	values.Add("ruleset", constants.SOLUTION_CHECKER_RULESET_ID)
 	apiUrl.RawQuery = values.Encode()
 
 	tflog.Debug(ctx, fmt.Sprintf("Constructed API URL: %s", apiUrl.String()))
