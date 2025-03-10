@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/numberplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -110,6 +111,8 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 							"share_max_limit": schema.NumberAttribute{
 								MarkdownDescription: "Maximum total of individual who can be shared to: (-1..99). If `share_mode` is `No limit`, this value must be -1.",
 								Optional:            true,
+								Computed:            true,
+								Default:             numberdefault.StaticBigFloat(big.NewFloat(-1)),
 								PlanModifiers: []planmodifier.Number{
 									numberplanmodifier.UseStateForUnknown(),
 								},

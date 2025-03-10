@@ -15,13 +15,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -86,6 +90,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 					"plugin_trace_log_setting": schema.StringAttribute{
 						MarkdownDescription: "Plugin trace log setting. Available options: Off, Exception, All. See [Plugin Trace Log Settings Overview](https://learn.microsoft.com/power-apps/developer/data-platform/logging-tracing) for more details.",
 						Optional:            true, Computed: true,
+						Default: stringdefault.StaticString("Off"),
 						PlanModifiers: []planmodifier.String{
 							stringplanmodifier.UseStateForUnknown(),
 						},
@@ -103,6 +108,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"is_audit_enabled": schema.BoolAttribute{
 								MarkdownDescription: "Is audit enabled",
 								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(false),
 								PlanModifiers: []planmodifier.Bool{
 									boolplanmodifier.UseStateForUnknown(),
 								},
@@ -110,6 +116,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"is_user_access_audit_enabled": schema.BoolAttribute{
 								MarkdownDescription: "Is user access audit enabled",
 								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(false),
 								PlanModifiers: []planmodifier.Bool{
 									boolplanmodifier.UseStateForUnknown(),
 								},
@@ -117,6 +124,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"is_read_audit_enabled": schema.BoolAttribute{
 								MarkdownDescription: "Is read audit enabled",
 								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(false),
 								PlanModifiers: []planmodifier.Bool{
 									boolplanmodifier.UseStateForUnknown(),
 								},
@@ -153,6 +161,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"max_upload_file_size_in_bytes": schema.Int64Attribute{
 								MarkdownDescription: "Maximum file size that can be uploaded to the environment",
 								Optional:            true, Computed: true,
+								Default: int64default.StaticInt64(5120),
 								PlanModifiers: []planmodifier.Int64{
 									int64planmodifier.UseStateForUnknown(),
 								},
@@ -178,6 +187,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"show_dashboard_cards_in_expanded_state": schema.BoolAttribute{
 								MarkdownDescription: "Show dashboard cards in expanded state",
 								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(false),
 								PlanModifiers: []planmodifier.Bool{
 									boolplanmodifier.UseStateForUnknown(),
 								},
@@ -191,6 +201,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"power_apps_component_framework_for_canvas_apps": schema.BoolAttribute{
 								MarkdownDescription: "Power Apps component framework for canvas apps",
 								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(false),
 								PlanModifiers: []planmodifier.Bool{
 									boolplanmodifier.UseStateForUnknown(),
 								},
@@ -205,6 +216,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"enable_ip_based_cookie_binding": schema.BoolAttribute{
 								MarkdownDescription: "Enable IP based cookie binding",
 								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(false),
 								PlanModifiers: []planmodifier.Bool{
 									boolplanmodifier.UseStateForUnknown(),
 								},
@@ -212,6 +224,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"enable_ip_based_firewall_rule": schema.BoolAttribute{
 								MarkdownDescription: "Enable IP based firewall rule",
 								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(false),
 								PlanModifiers: []planmodifier.Bool{
 									boolplanmodifier.UseStateForUnknown(),
 								},
@@ -219,6 +232,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"allowed_ip_range_for_firewall": schema.SetAttribute{
 								MarkdownDescription: "Allowed IP range for firewall",
 								Optional:            true, Computed: true,
+								Default:     setdefault.StaticValue(types.SetNull(types.StringType)),
 								ElementType: types.StringType,
 								PlanModifiers: []planmodifier.Set{
 									setplanmodifier.UseStateForUnknown(),
@@ -227,6 +241,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"allowed_service_tags_for_firewall": schema.SetAttribute{
 								MarkdownDescription: "Allowed service tags for firewall",
 								Optional:            true, Computed: true,
+								Default:     setdefault.StaticValue(types.SetNull(types.StringType)),
 								ElementType: types.StringType,
 								PlanModifiers: []planmodifier.Set{
 									setplanmodifier.UseStateForUnknown(),
@@ -245,6 +260,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"allow_microsoft_trusted_service_tags": schema.BoolAttribute{
 								MarkdownDescription: "Allow Microsoft trusted service tags",
 								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(false),
 								PlanModifiers: []planmodifier.Bool{
 									boolplanmodifier.UseStateForUnknown(),
 								},
@@ -252,6 +268,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"enable_ip_based_firewall_rule_in_audit_mode": schema.BoolAttribute{
 								MarkdownDescription: "Enable IP based firewall rule in audit mode",
 								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(false),
 								PlanModifiers: []planmodifier.Bool{
 									boolplanmodifier.UseStateForUnknown(),
 								},
@@ -259,6 +276,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"reverse_proxy_ip_addresses": schema.SetAttribute{
 								MarkdownDescription: "Reverse proxy IP addresses",
 								Optional:            true, Computed: true,
+								Default:     setdefault.StaticValue(types.SetNull(types.StringType)),
 								ElementType: types.StringType,
 								PlanModifiers: []planmodifier.Set{
 									setplanmodifier.UseStateForUnknown(),

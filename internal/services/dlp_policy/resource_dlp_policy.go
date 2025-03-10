@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -51,8 +53,8 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 	defer exitContext()
 
 	connectorSchema := schema.NestedAttributeObject{
-		Attributes: map[string]schema.Attribute{
 
+		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "ID of the connector",
 				Optional:            true,
@@ -60,14 +62,16 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 			"default_action_rule_behavior": schema.StringAttribute{
 				MarkdownDescription: "Default action rule behavior for the connector (\"Allow\", \"Block\", \"\")",
 				Optional:            true,
+				Computed:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("Allow", "Block", ""),
 				},
+				Default: stringdefault.StaticString(""),
 			},
 			"action_rules": schema.ListNestedAttribute{
 				MarkdownDescription: "Action rules for the connector",
 				Optional:            true,
-
+				// Default:             listdefault.StaticValue(types.ListNull(types.ObjectType{})),
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"action_id": schema.StringAttribute{
@@ -87,6 +91,7 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 			"endpoint_rules": schema.ListNestedAttribute{
 				MarkdownDescription: "Endpoint rules for the connector",
 				Optional:            true,
+				// Default:             listdefault.StaticValue(types.ListNull(types.ObjectType{})),
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"order": schema.Int64Attribute{
@@ -170,6 +175,7 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 				MarkdownDescription: "Environment to which the policy is applied",
 				ElementType:         types.StringType,
 				Optional:            true,
+				Default:             setdefault.StaticValue(types.SetNull(types.StringType)),
 			},
 			"business_connectors": schema.SetNestedAttribute{
 				MarkdownDescription: "Connectors for sensitive data",
