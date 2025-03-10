@@ -184,7 +184,7 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 					},
 					"environments": schema.SingleNestedAttribute{
 						MarkdownDescription: "Environments",
-						Optional:            true,
+						Optional:            true, Computed: true,
 						Attributes: map[string]schema.Attribute{
 							"disable_preferred_data_location_for_teams_environment": schema.BoolAttribute{
 								MarkdownDescription: "Disable Preferred Data Location For Teams Environment",

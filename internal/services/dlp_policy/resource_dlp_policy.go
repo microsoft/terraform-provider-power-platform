@@ -175,6 +175,7 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 				MarkdownDescription: "Environment to which the policy is applied",
 				ElementType:         types.StringType,
 				Optional:            true,
+				Computed:            true,
 				Default:             setdefault.StaticValue(types.SetNull(types.StringType)),
 			},
 			"business_connectors": schema.SetNestedAttribute{
