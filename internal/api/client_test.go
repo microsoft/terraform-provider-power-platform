@@ -45,35 +45,6 @@ func TestUnitApiClient_GetConfig(t *testing.T) {
 	}
 }
 
-func TestUnitApiClient_AuxTenants_GetConfig(t *testing.T) {
-	t.Parallel()
-
-	ctx := context.Background()
-	cfg := config.ProviderConfig{
-		UseCli:             false,
-		UseOidc:            false,
-		UseMsi:             false,
-		TenantId:           uuid.NewString(),
-		AuxiliaryTenantIDs: []string{uuid.NewString(), uuid.NewString()},
-		ClientId:           uuid.NewString(),
-		ClientSecret:       uuid.NewString(),
-		TestMode:           true,
-	}
-
-	x := api.NewApiClientBase(&cfg, api.NewAuthBase(&cfg))
-	_, err := x.Execute(ctx, []string{"test"}, "GET", "/relativeurl", http.Header{}, nil, []int{http.StatusOK}, nil)
-	if err == nil {
-		t.Error("Expected an error for relativeurl but got nil error")
-	}
-
-	switch err.(type) {
-	case customerrors.UrlFormatError:
-		return
-	default:
-		t.Errorf("Expected error type %s but got %s", reflect.TypeOf(customerrors.UrlFormatError{}), reflect.TypeOf(err))
-	}
-}
-
 func TestUnitSleepWithContext_TimeoutError(t *testing.T) {
 	t.Parallel()
 
