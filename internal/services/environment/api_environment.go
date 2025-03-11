@@ -290,20 +290,37 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 		Message: "Deleted using Power Platform Terraform Provider",
 	}
 
-	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusAccepted}, nil)
-	if err != nil {
-		var httpError *customerrors.UnexpectedHttpStatusCodeError
-		if errors.As(err, &httpError) {
-			return fmt.Errorf("Unexpected HTTP Status %s; Body: %s", httpError.StatusText, httpError.Body)
+	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusNoContent, http.StatusAccepted, http.StatusConflict}, nil)
+
+	if response.HttpResponse.StatusCode == http.StatusConflict {
+		// the is another operation in progress, let's wait for it to complete, and try again
+		tflog.Debug(ctx, "Another operation is in progress, waiting for it to complete")
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
 		}
+
+		return client.DeleteEnvironment(ctx, environmentId)
+	}
+
+	var httpError *customerrors.UnexpectedHttpStatusCodeError
+	if errors.As(err, &httpError) {
+		return fmt.Errorf("Unexpected HTTP Status %s; Body: %s", httpError.StatusText, httpError.Body)
+	}
+
+	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.HttpResponse.Status+"'")
+	tflog.Debug(ctx, "Waiting for environment deletion operation to complete")
+
+	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, response)
+	if err != nil {
 		return err
 	}
-	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.HttpResponse.Status+"'")
 
-	tflog.Debug(ctx, "Waiting for environment deletion operation to complete")
-	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, response)
-	if err != nil {
-		return err
+	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
+		}
+		tflog.Info(ctx, "Environment deletion failed. Retrying")
+		return client.DeleteEnvironment(ctx, environmentId)
 	}
 	return nil
 }
@@ -388,11 +405,14 @@ func (client *Client) ModifyEnvironmentType(ctx context.Context, environmentId, 
 		return err
 	}
 
-	if lifecycleResponse.State.Id == "Succeeded" {
-		tflog.Debug(ctx, "Environment SKU Update Operation Success")
-		return nil
+	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
+		}
+		tflog.Info(ctx, "Environment update failed. Retrying")
+		return client.ModifyEnvironmentType(ctx, environmentId, environmentType)
 	}
-	return errors.New("Environment creation failed. provisioning state: " + lifecycleResponse.State.Id)
+	return nil
 }
 
 func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate environmentCreateDto) (*EnvironmentDto, error) {
@@ -461,7 +481,7 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 	return env, err
 }
 
-func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environmentId string, aaa GenerativeAiFeaturesDto) error {
+func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environmentId string, generativeAIConfig GenerativeAiFeaturesDto) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -470,14 +490,22 @@ func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environme
 	values := url.Values{}
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
-	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, aaa, []int{http.StatusAccepted}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, generativeAIConfig, []int{http.StatusAccepted}, nil)
 	if err != nil {
 		return err
 	}
 
-	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return err
+	}
+
+	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return err
+		}
+		tflog.Info(ctx, "Environment update ai features failed. Retrying")
+		return client.UpdateEnvironmentAiFeatures(ctx, environmentId, generativeAIConfig)
 	}
 	return nil
 }
@@ -507,15 +535,22 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 	}
 
 	// wait for the lifecycle operation to finish.
-	_, err = client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
+	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return nil, err
 	}
 
+	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			return nil, err
+		}
+		tflog.Info(ctx, "Environment update failed. Retrying")
+		return client.UpdateEnvironment(ctx, environmentId, environment)
+	}
+
 	// despite lifecycle operation success, the environment may not be ready yet.
 	for {
-		err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
-		if err != nil {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return nil, err
 		}
 		env, err := client.GetEnvironment(ctx, environmentId)

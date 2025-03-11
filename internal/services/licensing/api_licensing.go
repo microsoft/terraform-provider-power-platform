@@ -221,8 +221,7 @@ func (client *Client) DoWaitForFinalStatus(ctx context.Context, billingPolicyDto
 			return billingPolicy, nil
 		}
 
-		err = client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
-		if err != nil {
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return nil, err
 		}
 

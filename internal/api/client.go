@@ -144,9 +144,9 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 	}
 }
 
-// RetryAfterDefault returns a random duration between 5 and 10 seconds.
+// RetryAfterDefault returns a random duration between 10 and 20 seconds.
 func DefaultRetryAfter() time.Duration {
-	return time.Duration((rand.Intn(5) + 5)) * time.Second
+	return time.Duration((rand.Intn(10) + 10)) * time.Second
 }
 
 // SleepWithContext sleeps for the given duration or until the context is canceled.
