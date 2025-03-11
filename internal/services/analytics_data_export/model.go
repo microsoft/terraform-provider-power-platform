@@ -48,13 +48,3 @@ type SinkModel struct {
 	ResourceName      types.String `tfsdk:"resource_name"`
 	Key               types.String `tfsdk:"key"`
 }
-
-// AnalyticsDataCreateModel represents the model for creating Analytics Data Export.
-type AnalyticsDataCreateModel struct {
-	Source           types.String       `tfsdk:"source"`
-	Environments     []EnvironmentModel `tfsdk:"environments"`
-	Sink             SinkModel          `tfsdk:"sink"`
-	PackageName      types.String       `tfsdk:"package_name"`
-	Scenarios        []types.String     `tfsdk:"scenarios"`
-	ResourceProvider types.String       `tfsdk:"resource_provider"`
-}

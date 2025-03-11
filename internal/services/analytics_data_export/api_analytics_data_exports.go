@@ -55,7 +55,7 @@ func (client *Client) GetGatewayCluster(ctx context.Context) (*GatewayClusterDto
 	return &gatewayCluster, nil
 }
 
-func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*AnalyticsDataDto, error) {
+func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*[]AnalyticsDataDto, error) {
 	// Get the gateway cluster
 	gatewayCluster, err := client.GetGatewayCluster(ctx)
 	if err != nil {
@@ -77,13 +77,13 @@ func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*AnalyticsDat
 	}
 	apiUrl.Path = "api/v2/connections"
 
-	var analyticdatalinks AnalyticsDataDto
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &analyticdatalinks)
+	var adr AnalyticsDataResponse
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adr)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get analytics data export: %w", err)
 	}
 
-	return &analyticdatalinks, nil
+	return &adr.Value, nil
 }
 
 // func (client *Client) CreateAnalyticsDataExport(ctx context.Context, analyticsdataToCreate AnalyticsDataCreateDto) (*AnalyticsDataDto, error) {

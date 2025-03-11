@@ -263,8 +263,16 @@ func (d *AnalyticsExportDataSource) Read(ctx context.Context, req datasource.Rea
 	}
 
 	// Map the response to the model
+	// Map each analytics data export item to a model
+	exports := make([]AnalyticsDataModel, 0, len(*analyticsDataExport))
+	for _, export := range *analyticsDataExport {
+		if model := mapAnalyticsDataDtoToModel(&export); model != nil {
+			exports = append(exports, *model)
+		}
+	}
+
 	model := &AnalyticsDataExportModel{
-		Exports: []AnalyticsDataModel{*mapAnalyticsDataDtoToModel(analyticsDataExport)},
+		Exports: exports,
 	}
 
 	// Set state
