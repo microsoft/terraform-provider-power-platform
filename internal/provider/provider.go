@@ -309,7 +309,6 @@ func configureUseMsi(ctx context.Context, p *PowerPlatformProvider, clientId str
 	tflog.Info(ctx, "Using Managed Identity for authentication")
 	p.Config.ClientId = clientId // No client ID validation, as it could be blank for system-managed or populated for user-managed.
 	// Convert the slice to an array
-	// TODO there has to be a better way than starting with the slice and converting it..
 	auxiliaryTenantIDsList := make([]string, len(auxiliaryTenantIDs.Elements()))
 	for i, v := range auxiliaryTenantIDs.Elements() {
 		auxiliaryTenantIDsList[i] = v.String()
