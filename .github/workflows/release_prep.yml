@@ -39,6 +39,6 @@ jobs:
 
       - name: Create and Push Release Tag
         run: |
-          VERSION="v$(changie version)"
+          VERSION="v$(changie latest)"
           git tag -a $VERSION -m "Release $VERSION"
           git push origin $VERSION
