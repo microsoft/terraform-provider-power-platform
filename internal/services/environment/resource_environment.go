@@ -116,7 +116,8 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_group_id must be a valid environment group id guid"),
 					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
 				},
-				Default: stringdefault.StaticString("00000000-0000-0000-0000-000000000000"),
+				// TODO: because of the bug on the backend default value would trigger managed environment creation, we can use this default value when the bug is fixed
+				// Default: stringdefault.StaticString("00000000-0000-0000-0000-000000000000"),
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "Description of the environment",
@@ -194,11 +195,17 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				MarkdownDescription: "Allow Bing search in the environment",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"allow_moving_data_across_regions": schema.BoolAttribute{
 				MarkdownDescription: "Allow moving data across regions",
 				Optional:            true,
 				Computed:            true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"display_name": schema.StringAttribute{
 				MarkdownDescription: "Display name",
@@ -304,7 +311,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 							stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "security_group_id must be a valid security group guid id"),
 							validators.MakeFieldRequiredWhenOtherFieldDoesNotHaveValue(path.Root("environment_type").Expression(), regexp.MustCompile(EnvironmentTypesExceptDeveloperRegex), "dataverse.security_group_id is required for all environment_type values except `Developer`"),
 						},
-						Default: stringdefault.StaticString("00000000-0000-0000-0000-000000000000"),
 					},
 					"language_code": schema.Int64Attribute{
 						MarkdownDescription: "Language LCID (integer)",
