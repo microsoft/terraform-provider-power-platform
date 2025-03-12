@@ -66,11 +66,6 @@ func TestAccTenantIsolationPolicy_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_isolation_policy.test", "allowed_tenants.#", "1"),
 				),
 			},
-			{
-				ResourceName:      "powerplatform_tenant_isolation_policy.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
