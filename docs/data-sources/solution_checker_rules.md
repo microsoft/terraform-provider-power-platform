@@ -43,15 +43,10 @@ resource "powerplatform_environment" "example" {
   }
 }
 
-# Output to ensure Dataverse URL exists (indicates Dataverse is ready)
-output "dataverse_url" {
-  value = powerplatform_environment.example.dataverse.url
-}
-
 # Use the created environment's ID for solution checker rules
 data "powerplatform_solution_checker_rules" "example" {
   # Only proceed after both environment ID and Dataverse URL are available
-  depends_on = [powerplatform_environment.example]
+  depends_on     = [powerplatform_environment.example]
   environment_id = powerplatform_environment.example.id
 }
 ```
