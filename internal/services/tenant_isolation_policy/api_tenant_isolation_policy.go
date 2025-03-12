@@ -105,9 +105,8 @@ func (client *Client) createOrUpdateTenantIsolationPolicy(ctx context.Context, t
 	return &updatedPolicy, nil
 }
 
-// getRetryAfterDuration parses the Retry-After header from an HTTP response.
-// It converts the header value to a time.Duration, defaulting to 5 seconds
-// if the header is missing or invalid.
+// getRetryAfterDuration handles Retry-After header parsing.
+// TODO: Consider using shared implementation from api package once exported.
 func getRetryAfterDuration(resp *http.Response) time.Duration {
 	// Default value if header not present or invalid
 	defaultDuration := 5 * time.Second
@@ -117,7 +116,7 @@ func getRetryAfterDuration(resp *http.Response) time.Duration {
 	}
 
 	// Check for Retry-After header
-	retryAfter := resp.Header.Get("Retry-After")
+	retryAfter := resp.Header.Get(constants.HEADER_RETRY_AFTER)
 	if retryAfter == "" {
 		return defaultDuration
 	}
@@ -125,7 +124,16 @@ func getRetryAfterDuration(resp *http.Response) time.Duration {
 	// Try to parse as seconds (integer)
 	seconds, err := strconv.Atoi(retryAfter)
 	if err == nil && seconds > 0 {
-		return time.Duration(seconds) * time.Second
+		duration := time.Duration(seconds) * time.Second
+
+		// For safety, ensure we have a minimum wait time and cap the maximum
+		if duration < 2*time.Second {
+			duration = 2 * time.Second
+		} else if duration > 60*time.Second {
+			duration = 60 * time.Second
+		}
+
+		return duration
 	}
 
 	// If header value is not a valid integer, return default
@@ -171,13 +179,6 @@ func (client *Client) doWaitForLifecycleOperationStatus(ctx context.Context, res
 
 		// Get the next wait time from the Retry-After header if available
 		waitTime := getRetryAfterDuration(apiResp.HttpResponse)
-
-		// For safety, ensure we have a minimum wait time and cap the maximum
-		if waitTime < 2*time.Second {
-			waitTime = 2 * time.Second
-		} else if waitTime > 60*time.Second {
-			waitTime = 60 * time.Second
-		}
 
 		tflog.Debug(ctx, fmt.Sprintf("Waiting for %s before polling again", waitTime))
 
