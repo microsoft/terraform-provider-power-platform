@@ -20,24 +20,13 @@ func setupTenantHttpMocks() {
 	// Mock tenant endpoint that's called before CRUD operations.
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/tenant?api-version=2021-04-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{
-                "id": "/providers/Microsoft.BusinessAppPlatform/tenant",
-                "name": "default",
-                "type": "Microsoft.BusinessAppPlatform/tenant",
-                "tenantId": "%s",
-                "state": "Enabled"
-            }`, testTenantID)), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/tenant.json").String()), nil
 		})
 
 	// Mock GET tenant isolation policy endpoint with empty policy.
 	httpmock.RegisterResponder("GET", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-                "properties": {
-                    "isDisabled": false,
-                    "allowedTenants": []
-                }
-            }`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/empty_policy.json").String()), nil
 		})
 }
 
@@ -177,41 +166,13 @@ func TestUnitTenantIsolationPolicyResource_Validate_Create(t *testing.T) {
 	// Setup PUT responder for creating the policy.
 	httpmock.RegisterResponder("PUT", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-                "properties": {
-                    "tenantId": "00000000-0000-0000-0000-000000000001",
-                    "isDisabled": false,
-                    "allowedTenants": [
-                        {
-                            "tenantId": "11111111-1111-1111-1111-111111111111",
-                            "direction": {
-                                "inbound": true,
-                                "outbound": false
-                            }
-                        }
-                    ]
-                }
-            }`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/policy_response.json").String()), nil
 		})
 
 	// Also update the GET responder to match what is returned by PUT.
 	httpmock.RegisterResponder("GET", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-                "properties": {
-                    "tenantId": "00000000-0000-0000-0000-000000000001",
-                    "isDisabled": false,
-                    "allowedTenants": [
-                        {
-                            "tenantId": "11111111-1111-1111-1111-111111111111",
-                            "direction": {
-                                "inbound": true,
-                                "outbound": false
-                            }
-                        }
-                    ]
-                }
-            }`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create/policy_response.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -255,24 +216,13 @@ func TestUnitTenantIsolationPolicyResource_Validate_Update(t *testing.T) {
 	// Initial tenant response.
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/tenant?api-version=2021-04-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-                "id": "/providers/Microsoft.BusinessAppPlatform/tenant",
-                "name": "default",
-                "type": "Microsoft.BusinessAppPlatform/tenant",
-                "tenantId": "00000000-0000-0000-0000-000000000001",
-                "state": "Enabled"
-            }`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/tenant.json").String()), nil
 		})
 
 	// Step 1: Empty initial state, first GET returns empty policy.
 	httpmock.RegisterResponder("GET", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-                "properties": {
-                    "isDisabled": false,
-                    "allowedTenants": []
-                }
-            }`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/empty_policy.json").String()), nil
 		})
 
 	// Step 1: First PUT creates policy with initial state.
@@ -281,21 +231,7 @@ func TestUnitTenantIsolationPolicyResource_Validate_Update(t *testing.T) {
 			// After first PUT, register a new GET to return initial state.
 			httpmock.RegisterResponder("GET", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
 				func(req *http.Request) (*http.Response, error) {
-					return httpmock.NewStringResponse(http.StatusOK, `{
-                        "properties": {
-                            "tenantId": "00000000-0000-0000-0000-000000000001",
-                            "isDisabled": false,
-                            "allowedTenants": [
-                                {
-                                    "tenantId": "11111111-1111-1111-1111-111111111111",
-                                    "direction": {
-                                        "inbound": true,
-                                        "outbound": false
-                                    }
-                                }
-                            ]
-                        }
-                    }`), nil
+					return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update/initial_policy.json").String()), nil
 				})
 
 			// Register a new PUT handler for the update operation.
@@ -304,69 +240,11 @@ func TestUnitTenantIsolationPolicyResource_Validate_Update(t *testing.T) {
 					// After second PUT, register a new GET to return updated state.
 					httpmock.RegisterResponder("GET", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
 						func(req *http.Request) (*http.Response, error) {
-							return httpmock.NewStringResponse(http.StatusOK, `{
-                                "properties": {
-                                    "tenantId": "00000000-0000-0000-0000-000000000001",
-                                    "isDisabled": true,
-                                    "allowedTenants": [
-                                        {
-                                            "tenantId": "11111111-1111-1111-1111-111111111111",
-                                            "direction": {
-                                                "inbound": true,
-                                                "outbound": true
-                                            }
-                                        },
-                                        {
-                                            "tenantId": "22222222-2222-2222-2222-222222222222",
-                                            "direction": {
-                                                "inbound": false,
-                                                "outbound": true
-                                            }
-                                        }
-                                    ]
-                                }
-                            }`), nil
+							return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update/updated_policy.json").String()), nil
 						})
-
-					return httpmock.NewStringResponse(http.StatusOK, `{
-                        "properties": {
-                            "tenantId": "00000000-0000-0000-0000-000000000001",
-                            "isDisabled": true,
-                            "allowedTenants": [
-                                {
-                                    "tenantId": "11111111-1111-1111-1111-111111111111",
-                                    "direction": {
-                                        "inbound": true,
-                                        "outbound": true
-                                    }
-                                },
-                                {
-                                    "tenantId": "22222222-2222-2222-2222-222222222222",
-                                    "direction": {
-                                        "inbound": false,
-                                        "outbound": true
-                                    }
-                                }
-                            ]
-                        }
-                    }`), nil
+					return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update/updated_policy.json").String()), nil
 				})
-
-			return httpmock.NewStringResponse(http.StatusOK, `{
-                "properties": {
-                    "tenantId": "00000000-0000-0000-0000-000000000001",
-                    "isDisabled": false,
-                    "allowedTenants": [
-                        {
-                            "tenantId": "11111111-1111-1111-1111-111111111111",
-                            "direction": {
-                                "inbound": true,
-                                "outbound": false
-                            }
-                        }
-                    ]
-                }
-            }`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update/initial_policy.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -431,24 +309,13 @@ func TestUnitTenantIsolationPolicyResource_Validate_Delete(t *testing.T) {
 	// Initial tenant mocks setup
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/tenant?api-version=2021-04-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{
-                "id": "/providers/Microsoft.BusinessAppPlatform/tenant",
-                "name": "default",
-                "type": "Microsoft.BusinessAppPlatform/tenant",
-                "tenantId": "%s",
-                "state": "Enabled"
-            }`, testTenantID)), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/tenant.json").String()), nil
 		})
 
 	// Step 1: Initial GET returns empty policy
 	httpmock.RegisterResponder("GET", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-                "properties": {
-                    "isDisabled": false,
-                    "allowedTenants": []
-                }
-            }`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/empty_policy.json").String()), nil
 		})
 
 	// First PUT: Create policy with one tenant
@@ -457,21 +324,7 @@ func TestUnitTenantIsolationPolicyResource_Validate_Delete(t *testing.T) {
 			// After first PUT, update the GET handler to return the created policy
 			httpmock.RegisterResponder("GET", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
 				func(req *http.Request) (*http.Response, error) {
-					return httpmock.NewStringResponse(http.StatusOK, `{
-                        "properties": {
-                            "tenantId": "00000000-0000-0000-0000-000000000001",
-                            "isDisabled": false,
-                            "allowedTenants": [
-                                {
-                                    "tenantId": "11111111-1111-1111-1111-111111111111",
-                                    "direction": {
-                                        "inbound": true,
-                                        "outbound": false
-                                    }
-                                }
-                            ]
-                        }
-                    }`), nil
+					return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Delete/initial_policy.json").String()), nil
 				})
 
 			// Register a new handler for the second PUT (empty tenants)
@@ -480,39 +333,11 @@ func TestUnitTenantIsolationPolicyResource_Validate_Delete(t *testing.T) {
 					// After second PUT, update the GET handler to return the empty policy
 					httpmock.RegisterResponder("GET", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
 						func(req *http.Request) (*http.Response, error) {
-							return httpmock.NewStringResponse(http.StatusOK, `{
-                                "properties": {
-                                    "tenantId": "00000000-0000-0000-0000-000000000001",
-                                    "isDisabled": false,
-                                    "allowedTenants": []
-                                }
-                            }`), nil
+							return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Delete/empty_policy.json").String()), nil
 						})
-
-					return httpmock.NewStringResponse(http.StatusOK, `{
-                        "properties": {
-                            "tenantId": "00000000-0000-0000-0000-000000000001",
-                            "isDisabled": false,
-                            "allowedTenants": []
-                        }
-                    }`), nil
+					return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Delete/empty_policy.json").String()), nil
 				})
-
-			return httpmock.NewStringResponse(http.StatusOK, `{
-                "properties": {
-                    "tenantId": "00000000-0000-0000-0000-000000000001",
-                    "isDisabled": false,
-                    "allowedTenants": [
-                        {
-                            "tenantId": "11111111-1111-1111-1111-111111111111",
-                            "direction": {
-                                "inbound": true,
-                                "outbound": false
-                            }
-                        }
-                    ]
-                }
-            }`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Delete/initial_policy.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -563,18 +388,7 @@ func TestUnitTenantIsolationPolicyResource_Validate_Create_Error(t *testing.T) {
 
 	httpmock.RegisterResponder("PUT", fmt.Sprintf("https://api.bap.microsoft.com/providers/PowerPlatform.Governance/v1/tenants/%s/tenantIsolationPolicy", testTenantID),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusBadRequest, `{
-                "error": {
-                    "code": "BadRequest",
-                    "message": "Invalid tenant ID format",
-                    "details": [
-                        {
-                            "code": "ValidationError",
-                            "message": "The tenant ID must be a valid GUID"
-                        }
-                    ]
-                }
-            }`), nil
+			return httpmock.NewStringResponse(http.StatusBadRequest, httpmock.File("tests/resource/Validate_Create_Error/error_response.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
