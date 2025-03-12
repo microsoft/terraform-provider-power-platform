@@ -12,7 +12,8 @@ Do not direcly edit the files under `/docs` because they are auto-generated from
 test files should have `_test` appended to their package name
 To run an example, `cd` to its working directory and run `terraform apply -auto-approve`
 When creating Schema for the resource or datasource, use MarkdownDescription and never use Description attribute
-Methods that are not used outside the namespace scope, should be kept private
+Methods that are not used outside the namespace scope, should be kept private.
+Helper methods that covert DTO to model and model to DTO should be in models.go file
 Use tflog.Debug for logging unless there is something really important (tflog.Info) or an error/warning
 
 When writing unit tests for resources you must register mock responders for every step of the process:
