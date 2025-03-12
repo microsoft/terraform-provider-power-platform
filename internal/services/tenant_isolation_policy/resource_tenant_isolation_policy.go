@@ -357,7 +357,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 	emptyPolicy := TenantIsolationPolicyDto{
 		Properties: TenantIsolationPolicyPropertiesDto{
 			TenantId:       tenantId,
-			IsDisabled:     types.BoolValue(false).ValueBoolPointer(),
+			IsDisabled:     types.BoolValue(true).ValueBoolPointer(),
 			AllowedTenants: []AllowedTenantDto{},
 		},
 	}
@@ -406,7 +406,7 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 	tflog.Info(ctx, fmt.Sprintf("Imported tenant isolation policy with ID %s", tenantId))
 }
 
-// Helper functions
+
 
 // convertToDto converts the Terraform model to the API DTO.
 func convertToDto(ctx context.Context, tenantId string, model *TenantIsolationPolicyResourceModel) (*TenantIsolationPolicyDto, diag.Diagnostics) {
