@@ -112,6 +112,9 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			"protection_level": schema.StringAttribute{
 				MarkdownDescription: "Protection level",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"is_usage_insights_disabled": schema.BoolAttribute{
 				MarkdownDescription: "[Weekly insights digest for the environment](https://learn.microsoft.com/power-platform/admin/managed-environment-usage-insights)",

@@ -161,7 +161,7 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 							"max_upload_file_size_in_bytes": schema.Int64Attribute{
 								MarkdownDescription: "Maximum file size that can be uploaded to the environment",
 								Optional:            true, Computed: true,
-								Default: int64default.StaticInt64(5120),
+								Default: int64default.StaticInt64(5120000),
 								PlanModifiers: []planmodifier.Int64{
 									int64planmodifier.UseStateForUnknown(),
 								},

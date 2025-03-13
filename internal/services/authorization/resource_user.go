@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -99,7 +100,7 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
-				Default:     setdefault.StaticValue(types.SetNull(types.StringType)),
+				Default:     setdefault.StaticValue(types.SetValueMust(types.StringType, []attr.Value{})),
 			},
 			"user_principal_name": schema.StringAttribute{
 				MarkdownDescription: "User principal name",
