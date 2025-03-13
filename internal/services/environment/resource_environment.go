@@ -150,7 +150,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				Default: stringdefault.StaticString(ReleaseCycleTypesStandard),
 			},
 			"location": schema.StringAttribute{
 				MarkdownDescription: "Location of the environment (europe, unitedstates etc.). Can be queried using the `powerplatform_locations` data source. The region of your Entra tenant may [limit the available locations for Power Platform](https://learn.microsoft.com/power-platform/admin/regions-overview#who-can-create-environments-in-these-regions). Changing this property after environment creation will result in a destroy and recreation of the environment (you can use the [`prevent_destroy` lifecycle metatdata](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) as an added safeguard to prevent accidental deletion of environments).",
@@ -804,8 +803,7 @@ func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel)
 }
 
 func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto) {
-	// if there is no value in the plan, not even empty guid, then we do nothing, attribute stop bing tracked in state
-	if !plan.EnvironmentGroupId.IsNull() {
+	if !plan.EnvironmentGroupId.IsNull() && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
 			Id: plan.EnvironmentGroupId.ValueString(),
 		}
