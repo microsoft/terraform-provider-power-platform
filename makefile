@@ -46,8 +46,7 @@ test:
 	TF_ACC=1 go test -p 10 -timeout 300m -v ./...
 
 netdump:
-	mitmdump -p 8080 -w /tmp/mitmproxy.dump &
-	@echo "Started mitmdump in background"
+	mitmdump -p 8080 -w /tmp/mitmproxy.dump
 
 lint:
 	clear
