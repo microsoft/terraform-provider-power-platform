@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
@@ -76,23 +78,29 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			"include_sensitive_information": schema.BoolAttribute{
 				MarkdownDescription: "Whether to log sensitive properties such as user ID, name, and text.",
 				Optional:            true,
+				Computed:            true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
+				Default: booldefault.StaticBool(true),
 			},
 			"include_activities": schema.BoolAttribute{
 				MarkdownDescription: "Whether to log details of incoming/outgoing messages and events.",
 				Optional:            true,
+				Computed:            true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
+				Default: booldefault.StaticBool(true),
 			},
 			"include_actions": schema.BoolAttribute{
 				MarkdownDescription: "Whether to log an event each time a node within a topic is executed.",
 				Optional:            true,
+				Computed:            true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
+				Default: booldefault.StaticBool(true),
 			},
 		},
 	}
@@ -183,7 +191,6 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: Copilot Studio bot ID '%s' in environment ID '%s'", state.BotId.ValueString(), state.EnvironmentId.ValueString()))
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 

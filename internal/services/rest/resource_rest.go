@@ -94,7 +94,6 @@ func (r *DataverseWebApiResource) Schema(ctx context.Context, req resource.Schem
 			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id (guid)",
-				Description:         "Unique id (guid)",
 				Computed:            true,
 				Optional:            true,
 				PlanModifiers: []planmodifier.String{

@@ -15,6 +15,9 @@ const (
 	EnvironmentTypesTrial      = "Trial"
 	EnvironmentTypesDefault    = "Default"
 
+	CadenceTypesFrequent = "Frequent"
+	CadenceTypesModerate = "Moderate"
+
 	ReleaseCycleTypesStandard = "Standard"
 	ReleaseCycleTypesEarly    = "Early"
 
@@ -26,10 +29,9 @@ var (
 	EnvironmentTypes                     = []string{EnvironmentTypesDeveloper, EnvironmentTypesSandbox, EnvironmentTypesProduction, EnvironmentTypesTrial, EnvironmentTypesDefault}
 	EnvironmentTypesDeveloperOnlyRegex   = fmt.Sprintf(`^(%s)$`, EnvironmentTypesDeveloper)
 	EnvironmentTypesExceptDeveloperRegex = fmt.Sprintf(`^(%s|%s|%s|%s)$`, EnvironmentTypesSandbox, EnvironmentTypesProduction, EnvironmentTypesTrial, EnvironmentTypesDefault)
-
-	CadenceTypes                      = []string{"Frequent", "Moderate"}
-	ReleaseCycleTypes                 = []string{ReleaseCycleTypesStandard, ReleaseCycleTypesEarly}
-	ReleaseCycleFirstReleaseOnlyRegex = fmt.Sprintf(`^(%s|%s)$`, ReleaseCycleFirstReleasePublicDto, ReleaseCycleFirstReleaseGovDto)
+	CadenceTypes                         = []string{CadenceTypesFrequent, CadenceTypesModerate}
+	ReleaseCycleTypes                    = []string{ReleaseCycleTypesStandard, ReleaseCycleTypesEarly}
+	ReleaseCycleFirstReleaseOnlyRegex    = fmt.Sprintf(`^(%s|%s)$`, ReleaseCycleFirstReleasePublicDto, ReleaseCycleFirstReleaseGovDto)
 )
 
 type EnvironmentDto struct {

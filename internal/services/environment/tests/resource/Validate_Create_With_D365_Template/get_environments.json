@@ -72,7 +72,7 @@
                     }
                 },
                 "updateCadence": {
-                    "id": "Frequent"
+                    "id": "Moderate"
                 },
                 "retentionDetails": {
                     "retentionPeriod": "P7D",
@@ -161,7 +161,7 @@
                     }
                 },
                 "updateCadence": {
-                    "id": "Frequent"
+                    "id": "Moderate"
                 },
                 "retentionDetails": {
                     "retentionPeriod": "P7D",
