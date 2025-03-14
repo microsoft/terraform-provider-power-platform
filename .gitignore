@@ -84,3 +84,5 @@ makefile
 *.msi
 
 examples/temp
+
+.userstory.prompt.md
