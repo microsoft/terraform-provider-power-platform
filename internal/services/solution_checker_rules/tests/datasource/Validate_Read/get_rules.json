@@ -1,0 +1,24 @@
+[
+  {
+    "description": "Checks for duplicate Dataverse plug-in registrations",
+    "guidanceUrl": "https://learn.microsoft.com/powerapps/developer/data-platform/best-practices/business-logic/do-not-duplicate-plugin-step-registration",
+    "include": true,
+    "code": "meta-remove-dup-reg",
+    "summary": "Duplicate plug-in registration",
+    "componentType": 0,
+    "primaryCategory": 1,
+    "severity": 5,
+    "howToFix": ""
+  },
+  {
+    "description": "Checks for filtering attributes with Dataverse plug-in registrations",
+    "guidanceUrl": "https://learn.microsoft.com/powerapps/developer/data-platform/best-practices/business-logic/include-filtering-attributes-plugin-registration",
+    "include": true,
+    "code": "meta-avoid-reg-no-attribute",
+    "summary": "Check plug-in filtering attributes",
+    "componentType": 0,
+    "primaryCategory": 1,
+    "severity": 3,
+    "howToFix": ""
+  }
+]
