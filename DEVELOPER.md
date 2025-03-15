@@ -189,6 +189,28 @@ terraform plan
 1. `cd` to a parent folder where main.tf exists
 1. Run `terraform apply`
 
+## Debugging network calls
+
+This devcontainer has `mitmproxy` preinstalled.  There are 3 versions available: `mitmproxy` a command line UI, `mitmweb` a web based UI, and `mitmdump` a headless command to dump network traffic to file.  For example, first run:
+
+```bash
+mitmproxy
+```
+
+Then in a **separate terminal** you can either launch acceptance tests with:
+
+```bash
+make acctest TEST=<test_name> USE_PROXY=1
+```
+
+or run an example with:
+
+```bash
+HTTP_PROXY=http://127.0.0.1:8080 HTTPS_PROXY=http://127.0.0.1:8080 terraform apply
+```
+
+Flip back to your `mitmproxy` terminal to inspect the network traffic.
+
 ## Testing Guidelines
 
 Quality tests are essential to ensure our provider works reliably across different environments and scenarios. As a contributor, you'll be expected to write comprehensive tests for any code you submit.

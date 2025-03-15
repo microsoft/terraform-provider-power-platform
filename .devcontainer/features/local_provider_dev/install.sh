@@ -25,3 +25,18 @@ mv /tmp/gh_${GH_VERSION}_linux_amd64/bin/gh /usr/local/bin/
 chmod +x /usr/local/bin/gh
 rm -rf /tmp/gh_${GH_VERSION}_linux_amd64
 rm /tmp/ghcli.tgz
+
+# Install mitmproxy for inspecting HTTP traffic
+MITM_VERSION=11.1.3
+wget https://downloads.mitmproxy.org/${MITM_VERSION}/mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
+tar -xf mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
+mv mitmproxy mitmdump mitmweb /usr/local/bin/
+rm mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
+
+mitmproxy --version
+echo "Start mitmdump so that it generates a client certificate, and kill it after 5 seconds with a successful return code"
+timeout 5s mitmdump -p 8080 || true
+
+install -D ~/.mitmproxy/mitmproxy-ca-cert.pem /usr/local/share/ca-certificates/mitmproxy-ca.crt
+cp /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt.bak
+sh -c 'cat ~/.mitmproxy/mitmproxy-ca-cert.pem >> /etc/ssl/certs/ca-certificates.crt'
