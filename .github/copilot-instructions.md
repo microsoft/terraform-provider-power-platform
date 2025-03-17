@@ -12,6 +12,7 @@ Do not direcly edit the files under `/docs` because they are auto-generated from
 test files should have `_test` appended to their package name
 To run an example, `cd` to its working directory and run `terraform apply -auto-approve`
 Comments on methods should provide information about how to use it, its parameters, and expected results. Omit comments that don't substantially improve the readability of the code.
+The functions to convert Dto and model objects should be always named `convertDtoToModel` and `convertModelToDto` and should be placed in models.go file
 
 ## Testing
 
