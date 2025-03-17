@@ -2548,50 +2548,6 @@ func TestAccEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing
 	})
 }
 
-func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_With_Env_Group(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: `
-				resource "powerplatform_environment" "development" {
-					display_name                              = "` + mocks.TestName() + `"
-					location                                  = "unitedstates"
-					environment_type                          = "Sandbox"
-				}`,
-
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
-				),
-			},
-			{
-				Config: `
-				resource "powerplatform_environment_group" "env_group" {
-					display_name                              = "` + mocks.TestName() + `"
-					description                               = "` + mocks.TestName() + `"
-				}
-
-				resource "powerplatform_environment" "development" {
-					display_name                              = "` + mocks.TestName() + `"
-					location                                  = "unitedstates"
-					environment_type                          = "Sandbox"
-					environment_group_id					  = powerplatform_environment_group.env_group.id
-					dataverse = {
-						language_code                             = "1033"
-						currency_code                             = "USD"
-						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-					}
-				}`,
-
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestMatchResourceAttr("powerplatform_environment.development", "environment_group_id", regexp.MustCompile(helpers.GuidRegex)),
-				),
-			},
-		},
-	})
-}
-
 func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_And_Add_Env_Group(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
