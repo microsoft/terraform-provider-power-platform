@@ -1,0 +1,44 @@
+name: Release Preparation
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Install Changie
+        run: go install github.com/miniscruff/changie@latest
+
+      - name: Batch and Merge Changelog
+        run: |
+          changie batch auto
+          changie merge
+
+      - name: Commit Changelog Changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          git commit -m "Merge changelog entries for release" || echo "No changes to commit"
+          git push origin main
+
+      - name: Create and Push Release Tag
+        run: |
+          VERSION="v$(changie latest)"
+          git tag -a $VERSION -m "Release $VERSION"
+          git push origin $VERSION

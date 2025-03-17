@@ -1,0 +1,32 @@
+{
+  "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+  "name": "00000000-0000-0000-0000-000000000001",
+  "type": "Microsoft.BusinessAppPlatform/scopes/environments",
+  "location": "unitedstates",
+  "properties": {
+    "displayName": "Test Environment",
+    "description": "Environment for testing solution checker rules",
+    "createdTime": "2023-01-01T00:00:00.000Z",
+    "createdBy": {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "displayName": "Test User",
+      "email": "user@example.com",
+      "type": "User"
+    },
+    "lastModifiedTime": "2023-01-01T00:00:00.000Z",
+    "lastModifiedBy": {
+      "id": "00000000-0000-0000-0000-000000000002",
+      "displayName": "Test User",
+      "email": "user@example.com",
+      "type": "User"
+    },
+    "provisioningState": "Succeeded",
+    "creationType": "User",
+    "environmentType": "Trial",
+    "environmentSku": "Trial",
+    "isDefault": false,
+    "runtimeEndpoints": {
+      "microsoft.PowerAppsAdvisor": "https://unitedstates.api.advisor.powerapps.com"
+    }
+  }
+}

@@ -73,6 +73,12 @@ To run a single acceptance test:
 make acctest TEST=<test_name>
 ```
 
+To run a single test with network tracing on:
+
+```bash
+make acctest TEST=<test_name> USE_PROXY=1
+```
+
 ### Test Coverage
 
 The project expects **high test coverage (80% or more)** for new contributions.

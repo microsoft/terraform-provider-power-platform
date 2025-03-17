@@ -33,13 +33,20 @@ acctest:
 	clear
 	$(MAKE) clean
 	$(MAKE) install
+ifeq ($(USE_PROXY),1)
+	HTTP_PROXY=http://127.0.0.1:8080 HTTPS_PROXY=http://127.0.0.1:8080 TF_ACC=1 go test -p 10 -timeout 300m -v ./... -run "^TestAcc$(TEST)"
+else
 	TF_ACC=1 go test -p 10 -timeout 300m -v ./... -run "^TestAcc$(TEST)"
+endif
 
 test:
 	clear
 	$(MAKE) clean
 	$(MAKE) install
 	TF_ACC=1 go test -p 10 -timeout 300m -v ./...
+
+netdump:
+	mitmdump -p 8080 -w /tmp/mitmproxy.dump
 
 lint:
 	clear
