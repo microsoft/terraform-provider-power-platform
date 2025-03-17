@@ -115,6 +115,7 @@ jobs:
     - name: Get dependencies
       run: |
         go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2
+        go install github.com/jstemmer/go-junit-report/v2@2.1.0
         go mod download
     
     - name: "Set up Terraform"
@@ -151,7 +152,7 @@ jobs:
         ARM_SUBSCRIPTION_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}
       run: |
         go clean -testcache
-        go test -p 3 -v ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m
+        go test -p 3 -v 2>&1 ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m | go-junit-report -set-exit-code > junit.xml
         go tool cover -html=test-coverage.out -o test-coverage.cov.html
 
     - name: Upload Coverage Artifacts
@@ -161,8 +162,15 @@ jobs:
         name: Test Coverage
         path: test-coverage.cov.html
 
-    - name: Upload results to Codecov
+    - name: Upload coverage results to Codecov
       uses: codecov/codecov-action@v5
       with:
         file: test-coverage.out
+        token: ${{ secrets.CODECOV_TOKEN }}
+    
+    - name: Upload test results to Codecov
+      if: ${{ !cancelled() }}
+      uses: codecov/test-results-action@v1
+      with:
+        files: junit.xml
         token: ${{ secrets.CODECOV_TOKEN }}
