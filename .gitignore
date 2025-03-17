@@ -69,6 +69,7 @@ test_solution*.zip
 test_settings*.json
 test_solution*.json
 **/solution/*.zip
+junit.xml
 
 # Ignore all files generated during debugging
 *.log
