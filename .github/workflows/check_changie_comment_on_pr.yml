@@ -52,12 +52,14 @@
           - name: Pass if changelog entry exists
             if: steps.changelog_check.outputs.exists == 'true'
             run: |
+              echo "changelog_check.exists=true" >> $GITHUB_OUTPUT
               echo "Changelog entry exists."
               exit 0
     
           - name: Fail if changelog entry is missing and required
             if: steps.changelog_check.outputs.exists == 'false'
             run: |
+              echo "changelog_check.exists=false" >> $GITHUB_OUTPUT
               echo "🛑 Changelog entry required to merge."
               exit 1
     
