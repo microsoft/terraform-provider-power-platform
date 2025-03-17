@@ -85,3 +85,5 @@ makefile
 
 coverage.out
 examples/temp
+
+.userstory.prompt.md

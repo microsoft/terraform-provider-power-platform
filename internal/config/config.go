@@ -32,9 +32,10 @@ type ProviderConfig struct {
 	UseOidc bool
 	UseMsi  bool
 
-	TenantId     string
-	ClientId     string
-	ClientSecret string
+	TenantId           string
+	AuxiliaryTenantIDs []string
+	ClientId           string
+	ClientSecret       string
 
 	ClientCertificatePassword string
 	ClientCertificateRaw      string
@@ -132,9 +133,10 @@ type ProviderConfigModel struct {
 	Cloud           types.String `tfsdk:"cloud"`
 	TelemetryOptout types.Bool   `tfsdk:"telemetry_optout"`
 
-	TenantId     types.String `tfsdk:"tenant_id"`
-	ClientId     types.String `tfsdk:"client_id"`
-	ClientSecret types.String `tfsdk:"client_secret"`
+	TenantId           types.String `tfsdk:"tenant_id"`
+	AuxiliaryTenantIDs types.List   `tfsdk:"auxiliary_tenant_ids"`
+	ClientId           types.String `tfsdk:"client_id"`
+	ClientSecret       types.String `tfsdk:"client_secret"`
 
 	ClientCertificateFilePath types.String `tfsdk:"client_certificate_file_path"`
 	ClientCertificate         types.String `tfsdk:"client_certificate"`

@@ -14,11 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/common"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/admin_management_application"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/application"
@@ -43,6 +45,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/powerapps"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/rest"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution_checker_rules"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant_isolation_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant_settings"
@@ -106,6 +109,12 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 			"tenant_id": schema.StringAttribute{
 				Description:         "The id of the AAD tenant that Power Platform API uses to authenticate with",
 				MarkdownDescription: "The id of the AAD tenant that Power Platform API uses to authenticate with",
+				Optional:            true,
+			},
+			"auxiliary_tenant_ids": schema.ListAttribute{
+				Description:         "The IDs of the additional Entra tenants that Power Platform API uses to authenticate with",
+				MarkdownDescription: "The IDs of the additional Entra tenants that Power Platform API uses to authenticate with",
+				ElementType:         customtypes.UUIDType{},
 				Optional:            true,
 			},
 			"client_id": schema.StringAttribute{
@@ -192,6 +201,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	// Get Provider Configuration from the configuration, environment variables, or defaults.
 	cloudType := helpers.GetConfigString(ctx, configValue.Cloud, constants.ENV_VAR_POWER_PLATFORM_CLOUD, "public")
 	tenantId := helpers.GetConfigString(ctx, configValue.TenantId, constants.ENV_VAR_POWER_PLATFORM_TENANT_ID, "")
+	auxiliaryTenantIDs := helpers.GetListStringValues(configValue.AuxiliaryTenantIDs, []string{constants.ENV_VAR_POWER_PLATFORM_AUXILIARY_TENANT_IDS, constants.ENV_VAR_ARM_AUXILIARY_TENANT_IDS}, []string{})
 	clientId := helpers.GetConfigString(ctx, configValue.ClientId, constants.ENV_VAR_POWER_PLATFORM_CLIENT_ID, "")
 	clientSecret := helpers.GetConfigString(ctx, configValue.ClientSecret, constants.ENV_VAR_POWER_PLATFORM_CLIENT_SECRET, "")
 	useOidc := helpers.GetConfigBool(ctx, configValue.UseOidc, constants.ENV_VAR_POWER_PLATFORM_USE_OIDC, false)
@@ -220,7 +230,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	} else if useOidc {
 		configureUseOidc(ctx, p, tenantId, clientId, oidcRequestToken, azdoServiceConnectionId, oidcRequestUrl, oidcToken, oidcTokenFilePath, resp)
 	} else if useMsi {
-		configureUseMsi(ctx, p, clientId)
+		configureUseMsi(ctx, p, clientId, auxiliaryTenantIDs)
 	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
 		configureClientCertificate(ctx, p, tenantId, clientId, clientCertificate, clientCertificateFilePath, clientCertificatePassword, resp)
 	} else {
@@ -297,9 +307,15 @@ func configureUseOidc(ctx context.Context, p *PowerPlatformProvider, tenantId, c
 	}
 }
 
-func configureUseMsi(ctx context.Context, p *PowerPlatformProvider, clientId string) {
+func configureUseMsi(ctx context.Context, p *PowerPlatformProvider, clientId string, auxiliaryTenantIDs types.List) {
 	tflog.Info(ctx, "Using Managed Identity for authentication")
 	p.Config.ClientId = clientId // No client ID validation, as it could be blank for system-managed or populated for user-managed.
+	// Convert the slice to an array
+	auxiliaryTenantIDsList := make([]string, len(auxiliaryTenantIDs.Elements()))
+	for i, v := range auxiliaryTenantIDs.Elements() {
+		auxiliaryTenantIDsList[i] = v.String()
+	}
+	p.Config.AuxiliaryTenantIDs = auxiliaryTenantIDsList
 	p.Config.UseMsi = true
 }
 
@@ -382,6 +398,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return connection.NewConnectionSharesDataSource() },
 		func() datasource.DataSource { return capacity.NewTenantCapcityDataSource() },
 		func() datasource.DataSource { return tenant.NewTenantDataSource() },
+		func() datasource.DataSource { return solution_checker_rules.NewSolutionCheckerRulesDataSource() },
 	}
 }
 
