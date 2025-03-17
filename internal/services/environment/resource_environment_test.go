@@ -2372,88 +2372,88 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
 				),
 			},
-			// {
-			// 	Config: `
-			// 	resource "powerplatform_environment_group" "env_group" {
-			// 		display_name                              = "test_env_group"
-			// 		description                               = "test env group"
-			// 	}
+			{
+				Config: `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "test_env_group"
+					description                               = "test env group"
+				}
 
-			// 	resource "powerplatform_environment" "development" {
-			// 		display_name                              = "displayname"
-			// 		location                                  = "europe"
-			// 		environment_type                          = "Sandbox"
-			// 		environment_group_id					  = powerplatform_environment_group.env_group.id
-			// 		dataverse = {
-			// 			language_code                             = "1033"
-			// 			currency_code                             = "PLN"
-			// 			security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-			// 		}
-			// 	}`,
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group.id
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
 
-			// 	Check: resource.ComposeAggregateTestCheckFunc(
-			// 		resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
-			// 		resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000001"),
-			// 	),
-			// },
-			// {
-			// 	Config: `
-			// 	resource "powerplatform_environment_group" "env_group" {
-			// 		display_name                              = "test_env_group"
-			// 		description                               = "test env group"
-			// 	}
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000001"),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "test_env_group"
+					description                               = "test env group"
+				}
 
-			// 	resource "powerplatform_environment_group" "env_group_new" {
-			// 		display_name                              = "test_env_group_new"
-			// 		description                               = "test env group new"
-			// 	}
+				resource "powerplatform_environment_group" "env_group_new" {
+					display_name                              = "test_env_group_new"
+					description                               = "test env group new"
+				}
 
-			// 	resource "powerplatform_environment" "development" {
-			// 		display_name                              = "displayname"
-			// 		location                                  = "europe"
-			// 		environment_type                          = "Sandbox"
-			// 		environment_group_id					  = powerplatform_environment_group.env_group_new.id
-			// 		dataverse = {
-			// 			language_code                             = "1033"
-			// 			currency_code                             = "PLN"
-			// 			security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-			// 		}
-			// 	}`,
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = powerplatform_environment_group.env_group_new.id
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
 
-			// 	Check: resource.ComposeAggregateTestCheckFunc(
-			// 		resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
-			// 		resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000002"),
-			// 	),
-			// },
-			// {
-			// 	Config: `
-			// 		resource "powerplatform_environment_group" "env_group" {
-			// 		display_name                              = "test_env_group"
-			// 		description                               = "test env group"
-			// 	}
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000002"),
+				),
+			},
+			{
+				Config: `
+					resource "powerplatform_environment_group" "env_group" {
+					display_name                              = "test_env_group"
+					description                               = "test env group"
+				}
 
-			// 	resource "powerplatform_environment_group" "env_group_new" {
-			// 		display_name                              = "test_env_group_new"
-			// 		description                               = "test env group new"
-			// 	}
+				resource "powerplatform_environment_group" "env_group_new" {
+					display_name                              = "test_env_group_new"
+					description                               = "test env group new"
+				}
 
-			// 	resource "powerplatform_environment" "development" {
-			// 		display_name                              = "displayname"
-			// 		location                                  = "europe"
-			// 		environment_type                          = "Sandbox"
-			// 		environment_group_id					  = "00000000-0000-0000-0000-000000000000"
-			// 		dataverse = {
-			// 			language_code                             = "1033"
-			// 			currency_code                             = "PLN"
-			// 			security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-			// 		}
-			// 	}`,
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					environment_group_id					  = "00000000-0000-0000-0000-000000000000"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
 
-			// 	Check: resource.ComposeAggregateTestCheckFunc(
-			// 		resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
-			// 		resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000000"),
-			// 	),
-			// },
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment.development", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_group_id", "00000000-0000-0000-0000-000000000000"),
+				),
+			},
 		},
 	})
 }
@@ -2532,6 +2532,7 @@ func TestAccEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing
 					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					environment_group_id					  = "00000000-0000-0000-0000-000000000000"
+					allow_bing_search 						  = false
 					dataverse = {
 						language_code                             = "1033"
 						currency_code                             = "USD"
@@ -2617,11 +2618,11 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_A
 					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					environment_group_id					  = "00000000-0000-0000-0000-000000000000"
+					allow_bing_search 						  = false
 					dataverse = {
 						language_code                             = "1033"
 						currency_code                             = "USD"
 						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-						
 					}
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
