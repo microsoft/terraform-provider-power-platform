@@ -803,7 +803,7 @@ func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel)
 }
 
 func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto) {
-	if !plan.EnvironmentGroupId.IsNull() && plan.EnvironmentGroupId.ValueString() != constants.ZERO_UUID {
+	if !plan.EnvironmentGroupId.IsNull() {
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
 			Id: plan.EnvironmentGroupId.ValueString(),
 		}
