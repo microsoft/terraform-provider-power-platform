@@ -1,0 +1,7 @@
+{
+    "id": "/providers/Microsoft.BusinessAppPlatform/tenant",
+    "name": "default",
+    "type": "Microsoft.BusinessAppPlatform/tenant",
+    "tenantId": "00000000-0000-0000-0000-000000000001",
+    "state": "Enabled"
+}
