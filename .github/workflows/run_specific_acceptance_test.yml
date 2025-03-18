@@ -1,0 +1,65 @@
+name: Run Specific Acceptance Test User Context (Certificate Auth)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  acceptance_test:
+    name: Acceptance Test - Certificate Auth
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          cache: true
+          go-version-file: 'go.mod'
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Install Power Platform Tools
+        uses: microsoft/powerplatform-actions/actions-install@v1
+
+      - name: Authenticate using Certificate
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.ACCEPTANCE_TESTS_AZURE_CREDENTIALS }} # Azure credentials for authentication {"clientId":"<your-client-id>","tenantId":"<your-tenant-id>","subscriptionId":"<your-subscription-id>","certificate":"<base64-encoded-certificate>","certificatePassword":"<certificate-password>"}
+
+      - name: Get dependencies
+        working-directory: /workspaces/terraform-provider-power-platform
+        run: |
+          make install
+
+      - name: Run Acceptance Test
+        working-directory: /workspaces/terraform-provider-power-platform
+        run: |
+          make acctest TEST=TestAccEnvironmentsResource_Validate_Create
+
+      - name: Upload Test Results
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Acceptance Test Results
+          path: junit.xml
+
+      - name: Render Test Results
+        if: always()
+        uses: dorny/test-reporter@v2
+        with:
+          name: Acceptance Test Results
+          path: junit.xml
+          reporter: java-junit
+          use-actions-summary: true
