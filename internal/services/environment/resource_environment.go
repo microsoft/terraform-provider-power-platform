@@ -5,6 +5,7 @@ package environment
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 
@@ -856,13 +857,13 @@ func (r *Resource) addBillingPolicy(ctx context.Context, plan *SourceModel) erro
 
 func (r *Resource) aiGenerativeFeaturesValidaor(plan *SourceModel) error {
 	if r.EnvironmentClient.Api.Config.CloudType != config.CloudTypePublic {
-		return fmt.Errorf("Moving data across regions is not supported in non public clouds")
+		return errors.New("Moving data across regions is not supported in non public clouds")
 	}
 	if plan.Location.ValueString() == "unitedstates" && plan.AllowMovingDataAcrossRegions.ValueBool() {
-		return fmt.Errorf("Moving data across regions is not supported in the unitedstates location")
+		return errors.New("Moving data across regions is not supported in the unitedstates location")
 	}
 	if plan.Location.ValueString() != "unitedstates" && plan.AllowBingSearch.ValueBool() && !plan.AllowMovingDataAcrossRegions.ValueBool() {
-		return fmt.Errorf("To enable AI generative features, moving data across regions must be enabled")
+		return errors.New("To enable AI generative features, moving data across regions must be enabled")
 	}
 	return nil
 }

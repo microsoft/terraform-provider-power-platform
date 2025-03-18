@@ -5,6 +5,7 @@ package tenant_isolation_policy
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -160,7 +161,7 @@ func (client *Client) doWaitForLifecycleOperationStatus(ctx context.Context, res
 	tflog.Debug(ctx, fmt.Sprintf("Location Header: %s", locationHeader))
 
 	if locationHeader == "" {
-		return nil, fmt.Errorf("no Location or Operation-Location header found in async response")
+		return nil, errors.New("no Location or Operation-Location header found in async response")
 	}
 
 	for {

@@ -5,6 +5,7 @@ package data_record_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -1520,13 +1521,13 @@ func TestUnitDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					func(_ *terraform.State) error {
 						if !contactDisabledExecuted {
-							return fmt.Errorf("expected mailbox to be disabled on delete")
+							return errors.New("expected mailbox to be disabled on delete")
 						}
 						return nil
 					},
 					func(_ *terraform.State) error {
 						if !businessUnitDisabledExecuted {
-							return fmt.Errorf("expected business unit to be disabled on delete")
+							return errors.New("expected business unit to be disabled on delete")
 						}
 						return nil
 					},
