@@ -21,7 +21,8 @@ The functions to convert Dto and model objects should be always named `convertDt
 
 ## Testing
 
-When writing unit tests for resources you must register mock responders for every step of the process
+When writing unit tests for resources you must register mock responders for every step of the process:
+
 - Test steps will call the `Create`, `Read`, `Update`, and `Delete` methods in the resource.  All the API calls made in those functions need to be mocked for each time the operation is called.
 - First test step will call `Create` then `Read` methods. Test expects that JSON from read include the changes applied in create
 - Subsequent test steps will call `Read`, then `Update`, then `Read`. First read should match what was read at the end of previous step.  The final read should include the changes applied in the update step.
