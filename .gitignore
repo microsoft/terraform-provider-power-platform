@@ -69,6 +69,7 @@ test_solution*.zip
 test_settings*.json
 test_solution*.json
 **/solution/*.zip
+junit.xml
 
 # Ignore all files generated during debugging
 *.log
@@ -83,6 +84,7 @@ makefile
 # MSI files
 *.msi
 
+coverage.out
 examples/temp
 
 .userstory.prompt.md
