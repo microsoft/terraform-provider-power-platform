@@ -63,6 +63,7 @@ func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*[]AnalyticsD
 	}
 	// Get the region from the gateway cluster
 	region := gatewayCluster.GeoName
+
 	// Get the analytics URL based on the region
 	var analyticsUrl string
 	analyticsUrl, err = getAnalyticsUrl(region)
