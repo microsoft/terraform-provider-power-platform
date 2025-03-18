@@ -27,7 +27,7 @@ jobs:
     steps:
       - id: set_acceptance_tests
         name: Only run acceptance tests if necessary
-        run: echo "::set-output name=acceptance_tests::true"
+        run: echo "acceptance_tests=true" >> $GITHUB_OUTPUT
   # ensure go.mod and go.sum are updated
   depscheck:
     name: Check Dependencies

@@ -40,6 +40,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution_checker_rules"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant_isolation_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant_settings"
 	"github.com/stretchr/testify/require"
 )
@@ -99,6 +100,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		environment_group_rule_set.NewEnvironmentGroupRuleSetResource(),
 		enterprise_policy.NewEnterpisePolicyResource(),
 		copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource(),
+		tenant_isolation_policy.NewTenantIsolationPolicyResource(),
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
 

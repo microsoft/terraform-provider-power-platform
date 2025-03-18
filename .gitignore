@@ -84,6 +84,7 @@ makefile
 # MSI files
 *.msi
 
+coverage.out
 examples/temp
 
 .userstory.prompt.md
