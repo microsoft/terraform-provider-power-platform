@@ -27,7 +27,7 @@ unittest:
 	clear
 	$(MAKE) clean
 	$(MAKE) install
-	TF_ACC=0 go test -p 16 -timeout 10m -v ./... -run "^TestUnit$(TEST)"
+	TF_ACC=0 go test -p 16 -timeout 10m -v -cover ./... -run "^TestUnit$(TEST)"
 
 acctest:
 	clear
@@ -43,7 +43,7 @@ test:
 	clear
 	$(MAKE) clean
 	$(MAKE) install
-	TF_ACC=1 go test -p 10 -timeout 300m -v ./...
+	TF_ACC=1 go test -p 10 -timeout 300m -v -cover ./...
 
 netdump:
 	mitmdump -p 8080 -w /tmp/mitmproxy.dump
