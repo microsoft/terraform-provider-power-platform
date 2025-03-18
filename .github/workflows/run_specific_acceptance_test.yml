@@ -43,10 +43,10 @@ jobs:
         run: |
           make install
 
-      - name: Run Acceptance Test
+      - name: Run Acceptance Tests
         working-directory: /workspaces/terraform-provider-power-platform
         run: |
-          make acctest TEST=TestAccEnvironmentsResource_Validate_Create
+          make acctest TEST='TestAccEnvironmentsResource_Validate_Create|TestAccManagedEnvironmentsResource_Validate_Create'
 
       - name: Upload Test Results
         if: success() || failure()
