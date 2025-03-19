@@ -6,6 +6,7 @@ package data_record
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -384,27 +385,27 @@ func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrTy
 
 	relationMap, err := apiClient.GetRelationData(ctx, environmentId, tableLogicalName, recordid, key)
 	if err != nil {
-		return fmt.Errorf("error getting relation data: %s", err.Error())
+		return errors.New("error getting relation data: " + err.Error())
 	}
 
 	for _, rawItem := range relationMap {
 		item, ok := rawItem.(map[string]any)
 		if !ok {
-			return fmt.Errorf("error asserting rawItem to map[string]any")
+			return errors.New("error asserting rawItem to map[string]any")
 		}
 
 		relationTableLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
 		if err != nil {
-			return fmt.Errorf("error getting entity relation definition info: %s", err.Error())
+			return errors.New("error getting entity relation definition info: " + err.Error())
 		}
 		entDefinition, err := getEntityDefinition(ctx, apiClient, environmentId, relationTableLogicalName)
 		if err != nil {
-			return fmt.Errorf("error getting entity definition: %s", err.Error())
+			return errors.New("error getting entity definition: " + err.Error())
 		}
 
 		dataRecordId, ok := item[entDefinition.PrimaryIDAttribute].(string)
 		if !ok {
-			return fmt.Errorf("error asserting dataRecordId to string")
+			return errors.New("error asserting dataRecordId to string")
 		}
 
 		v, _ := types.ObjectValue(objectType, map[string]attr.Value{
@@ -431,7 +432,7 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 
 	mapColumns, err := convertResourceModelToMap(recordColumns)
 	if err != nil {
-		return nil, fmt.Errorf("error converting columns to map: %s", err.Error())
+		return nil, errors.New("error converting columns to map: " + err.Error())
 	}
 
 	attributeTypes := make(map[string]attr.Type)
@@ -450,7 +451,7 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 		case map[string]any:
 			entityLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
 			if err != nil {
-				return nil, fmt.Errorf("error getting entity relation definition info: %s", err.Error())
+				return nil, errors.New("error getting entity relation definition info: " + err.Error())
 			}
 			caseMapStringOfAny(columns[fmt.Sprintf("_%s_value", key)], attributes, attributeTypes, key, entityLogicalName, objectType)
 		case []any:
