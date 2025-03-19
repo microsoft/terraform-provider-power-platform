@@ -40,16 +40,16 @@ func TestUnitAnalyticsDataExportsDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
-	// Register mock responses
+	// Register mock response for tenant API
 	httpmock.RegisterResponder(
 		"GET",
-		"https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/default",
+		"https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/tenant?api-version=2021-04-01",
 		httpmock.NewStringResponder(http.StatusOK, httpmock.File("tests/datasource/Validate_Read/get_tenant.json").String()))
 
-	// Register responder for gateway cluster API
+	// Register responder for gateway cluster API with dynamic hostname pattern
 	httpmock.RegisterResponder(
 		"GET",
-		`=~^https://admin\.powerplatform\.microsoft\.com/gateway/cluster.*`,
+		`=~^https://.*\.tenant\.api\.powerplatform\.com/gateway/cluster.*`,
 		httpmock.NewStringResponder(http.StatusOK, httpmock.File("tests/datasource/Validate_Read/get_gateway_cluster.json").String()))
 
 	// Register responder for analytics data exports API
@@ -67,25 +67,25 @@ func TestUnitAnalyticsDataExportsDataSource_Validate_Read(t *testing.T) {
 				data "powerplatform_analytics_data_exports" "test" {}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.id", "12345678-1234-1234-1234-123456789012"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.source", "Power Platform"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.source", "AppInsight"),
 					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.environments.0.environment_id", "00000000-0000-0000-0000-000000000002"),
 					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.environments.0.organization_id", "00000000-0000-0000-0000-000000000003"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.status.0.name", "DataExport"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.status.0.state", "Active"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.status.0.last_run_on", "2023-01-01T00:00:00Z"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.status.0.message", "Export is operational"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.sink.id", "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-example/providers/Microsoft.Insights/components/app-insights-example"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.sink.type", "ApplicationInsights"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.sink.subscription_id", "12345678-1234-1234-1234-123456789012"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.sink.resource_group_name", "rg-example"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.sink.resource_name", "app-insights-example"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.sink.key", "EXAMPLE_KEY"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.package_name", "PowerPlatform.Analytics"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.scenarios.0", "Telemetry"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.scenarios.1", "Usage"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.resource_provider", "Microsoft.PowerPlatform"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.ai_type", "ApplicationInsights"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.status.0.name", "Plugin executions excep"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.status.0.state", "Connected"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.status.0.last_run_on", "2025-03-08T06:55:56.0481713+00:00"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.status.1.name", "SDK executions excep"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.status.1.state", "Connected"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.status.1.last_run_on", "2025-03-08T06:55:56.0481713+00:00"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.sink.id", "/subscriptions/00000000-0000-0000-0000-000000000005/resourceGroups/analytics/providers/microsoft.insights/components/insights"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.sink.type", "AppInsights"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.sink.key", "00000000-0000-0000-0000-000000000004"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.sink.resource_name", "insights"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.package_name", "dd"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.scenarios.0", "Plugin executions excep"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.scenarios.1", "SDK executions excep"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.resource_provider", "dataverse"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.ai_type", "Local"),
 				),
 			},
 		},
