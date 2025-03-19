@@ -159,7 +159,6 @@ func (d *DataLossPreventionPolicyDataSource) Schema(ctx context.Context, req dat
 							},
 						},
 						"environments": schema.SetAttribute{
-							Description:         "Environment to which the policy is applied",
 							MarkdownDescription: "Environment to which the policy is applied",
 							ElementType:         types.StringType,
 							Computed:            true,

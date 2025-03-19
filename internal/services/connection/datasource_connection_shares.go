@@ -46,13 +46,12 @@ func (d *SharesDataSource) Schema(ctx context.Context, req datasource.SchemaRequ
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "",
+		MarkdownDescription: "Lists connection shares found in an environment. For more information about the connection sharing, see [Share a connection reference](https://learn.microsoft.com/en-us/power-automate/connection-sharing)",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
 			"environment_id": schema.StringAttribute{
-				Description:         "Environment Id. The unique identifier of the environment that the connection are associated with.",
 				MarkdownDescription: "Environment Id. The unique identifier of the environment that the connection are associated with.",
 				Required:            true,
 			},

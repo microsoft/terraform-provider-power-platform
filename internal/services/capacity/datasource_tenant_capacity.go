@@ -45,63 +45,62 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the capacity information for a given tenant.",
 		MarkdownDescription: "Fetches the capacity information for a given tenant.",
 		Attributes: map[string]schema.Attribute{
 			"tenant_id": schema.StringAttribute{
-				Required:    true,
-				Description: "The tenant ID for which the capacity information is to be fetched.",
+				Required:            true,
+				MarkdownDescription: "The tenant ID for which the capacity information is to be fetched.",
 			},
 			"license_model_type": schema.StringAttribute{
-				Computed:    true,
-				Description: "The license model type for which the capacity information is to be fetched.",
+				Computed:            true,
+				MarkdownDescription: "The license model type for which the capacity information is to be fetched.",
 			},
 			"tenant_capacities": schema.ListNestedAttribute{
-				Description: "The list of capacities for the given tenant.",
-				Computed:    true,
+				MarkdownDescription: "The list of capacities for the given tenant.",
+				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"capacity_type": schema.StringAttribute{
-							Computed:    true,
-							Description: "The type of the capacity.",
+							Computed:            true,
+							MarkdownDescription: "The type of the capacity.",
 						},
 						"capacity_units": schema.StringAttribute{
-							Computed:    true,
-							Description: "The units of the capacity.",
+							Computed:            true,
+							MarkdownDescription: "The units of the capacity.",
 						},
 						"total_capacity": schema.Float32Attribute{
-							Computed:    true,
-							Description: "The total capacity.",
+							Computed:            true,
+							MarkdownDescription: "The total capacity.",
 						},
 						"max_capacity": schema.Float32Attribute{
-							Computed:    true,
-							Description: "The maximum capacity.",
+							Computed:            true,
+							MarkdownDescription: "The maximum capacity.",
 						},
 						"consumption": schema.SingleNestedAttribute{
-							Description: "The consumption details.",
-							Computed:    true,
+							MarkdownDescription: "The consumption details.",
+							Computed:            true,
 							Attributes: map[string]schema.Attribute{
 								"actual": schema.Float32Attribute{
-									Computed:    true,
-									Description: "The actual consumption.",
+									Computed:            true,
+									MarkdownDescription: "The actual consumption.",
 								},
 								"rated": schema.Float32Attribute{
-									Computed:    true,
-									Description: "The rated consumption.",
+									Computed:            true,
+									MarkdownDescription: "The rated consumption.",
 								},
 								"actual_updated_on": schema.StringAttribute{
-									Computed:    true,
-									Description: "The actual consumption updated on.",
+									Computed:            true,
+									MarkdownDescription: "The actual consumption updated on.",
 								},
 								"rated_updated_on": schema.StringAttribute{
-									Computed:    true,
-									Description: "The rated consumption updated on.",
+									Computed:            true,
+									MarkdownDescription: "The rated consumption updated on.",
 								},
 							},
 						},
 						"status": schema.StringAttribute{
-							Computed:    true,
-							Description: "The status of the capacity.",
+							Computed:            true,
+							MarkdownDescription: "The status of the capacity.",
 						},
 					},
 				},

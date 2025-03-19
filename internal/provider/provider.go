@@ -98,32 +98,26 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		Description:         "The Power Platform Terraform Provider allows managing environments and other resources within Power Platform",
 		MarkdownDescription: "The Power Platform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/)",
 		Attributes: map[string]schema.Attribute{
 			"use_cli": schema.BoolAttribute{
-				Description:         "Flag to indicate whether to use the CLI for authentication",
 				MarkdownDescription: "Flag to indicate whether to use the CLI for authentication. ",
 				Optional:            true,
 			},
 			"tenant_id": schema.StringAttribute{
-				Description:         "The id of the AAD tenant that Power Platform API uses to authenticate with",
 				MarkdownDescription: "The id of the AAD tenant that Power Platform API uses to authenticate with",
 				Optional:            true,
 			},
 			"auxiliary_tenant_ids": schema.ListAttribute{
-				Description:         "The IDs of the additional Entra tenants that Power Platform API uses to authenticate with",
 				MarkdownDescription: "The IDs of the additional Entra tenants that Power Platform API uses to authenticate with",
 				ElementType:         customtypes.UUIDType{},
 				Optional:            true,
 			},
 			"client_id": schema.StringAttribute{
-				Description:         "The client id of the Power Platform API app registration",
 				MarkdownDescription: "The client id of the Power Platform API app registration",
 				Optional:            true,
 			},
 			"client_secret": schema.StringAttribute{
-				Description:         "The secret of the Power Platform API app registration",
 				MarkdownDescription: "The secret of the Power Platform API app registration",
 				Optional:            true,
 				Sensitive:           true,
@@ -143,43 +137,38 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				Sensitive:           true,
 			},
 			"use_oidc": schema.BoolAttribute{
-				Description:         "Allow OpenID Connect to be used for authentication",
 				MarkdownDescription: "Allow OpenID Connect to be used for authentication",
 				Optional:            true,
 			},
 			"oidc_request_token": schema.StringAttribute{
-				Description: "The bearer token for the request to the OIDC provider. For use When authenticating as a Service Principal using OpenID Connect.",
-				Optional:    true,
+				MarkdownDescription: "The bearer token for the request to the OIDC provider. For use When authenticating as a Service Principal using OpenID Connect.",
+				Optional:            true,
 			},
 			"oidc_request_url": schema.StringAttribute{
-				Description: "The URL for the OIDC provider from which to request an ID token. For use When authenticating as a Service Principal using OpenID Connect.",
-				Optional:    true,
+				MarkdownDescription: "The URL for the OIDC provider from which to request an ID token. For use When authenticating as a Service Principal using OpenID Connect.",
+				Optional:            true,
 			},
 			"oidc_token": schema.StringAttribute{
-				Description: "The OIDC ID token for use when authenticating as a Service Principal using OpenID Connect.",
-				Optional:    true,
+				MarkdownDescription: "The OIDC ID token for use when authenticating as a Service Principal using OpenID Connect.",
+				Optional:            true,
 			},
 			"oidc_token_file_path": schema.StringAttribute{
-				Description: "The path to a file containing an OIDC ID token for use when authenticating as a Service Principal using OpenID Connect.",
-				Optional:    true,
+				MarkdownDescription: "The path to a file containing an OIDC ID token for use when authenticating as a Service Principal using OpenID Connect.",
+				Optional:            true,
 			},
 			"cloud": schema.StringAttribute{
-				Description:         "The cloud to use for authentication and Power Platform API requests. Default is `public`. Valid values are `public`, `gcc`, `gcchigh`, `china`, `dod`, `ex`, `rx`",
 				MarkdownDescription: "The cloud to use for authentication and Power Platform API requests. Default is `public`. Valid values are `public`, `gcc`, `gcchigh`, `china`, `dod`, `ex`, `rx`",
 				Optional:            true,
 			},
 			"telemetry_optout": schema.BoolAttribute{
-				Description:         "Flag to indicate whether to opt out of telemetry. Default is `false`",
 				MarkdownDescription: "Flag to indicate whether to opt out of telemetry. Default is `false`",
 				Optional:            true,
 			},
 			"use_msi": schema.BoolAttribute{
-				Description:         "Flag to indicate whether to use managed identity for authentication",
 				MarkdownDescription: "Flag to indicate whether to use managed identity for authentication",
 				Optional:            true,
 			},
 			"azdo_service_connection_id": schema.StringAttribute{
-				Description:         "The service connection id of the Azure DevOps service connection. For use in workload identity federation.",
 				MarkdownDescription: "The service connection id of the Azure DevOps service connection. For use in workload identity federation.",
 				Optional:            true,
 			},
