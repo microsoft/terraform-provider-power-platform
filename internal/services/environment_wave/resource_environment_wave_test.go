@@ -5,6 +5,8 @@ package environment_wave_test
 
 import (
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"testing"
 
@@ -12,6 +14,15 @@ import (
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
+
+func loadTestResponse(t *testing.T, filename string) string {
+	path := filepath.Join("test", "resource", filename)
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("Failed to read test response file %s: %v", filename, err)
+	}
+	return string(content)
+}
 
 func TestUnitEnvironmentWaveResource_Create(t *testing.T) {
 	httpmock.Activate()
@@ -28,45 +39,13 @@ func TestUnitEnvironmentWaveResource_Create(t *testing.T) {
 	// Register mock for first GET call - returns Upgrading state
 	httpmock.RegisterResponder("GET", `=~^https://api\.admin\.powerplatform\.microsoft\.com/api/environments/00000000-0000-0000-0000-000000000001/features$`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewJsonResponse(http.StatusOK, map[string]interface{}{
-				"values": []map[string]interface{}{
-					{
-						"FeatureName":      "October2024Update",
-						"DisplayName":      "2024 release wave 2",
-						"CanBeReset":       false,
-						"Enabled":          true,
-						"IsAllowed":        true,
-						"NotBefore":        "2024-06-30T00:00:00+00:00",
-						"NotAfter":         "2030-01-01T00:00:00+00:00",
-						"MinVersion":       "9.0",
-						"MaxVersion":       "9.3",
-						"State":            "Upgrading",
-						"AppsUpgradeState": "Upgrading",
-					},
-				},
-			})
+			return httpmock.NewStringResponse(http.StatusOK, loadTestResponse(t, "get_features_upgrading.json")), nil
 		})
 
 	// Register mock for subsequent GET calls - returns ON state
 	httpmock.RegisterResponder("GET", `=~^https://api\.admin\.powerplatform\.microsoft\.com/api/environments/00000000-0000-0000-0000-000000000001/features$`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewJsonResponse(http.StatusOK, map[string]interface{}{
-				"values": []map[string]interface{}{
-					{
-						"FeatureName":      "October2024Update",
-						"DisplayName":      "2024 release wave 2",
-						"CanBeReset":       false,
-						"Enabled":          true,
-						"IsAllowed":        true,
-						"NotBefore":        "2024-06-30T00:00:00+00:00",
-						"NotAfter":         "2030-01-01T00:00:00+00:00",
-						"MinVersion":       "9.0",
-						"MaxVersion":       "9.3",
-						"State":            "ON",
-						"AppsUpgradeState": "ON",
-					},
-				},
-			})
+			return httpmock.NewStringResponse(http.StatusOK, loadTestResponse(t, "get_features_enabled.json")), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -103,23 +82,7 @@ func TestUnitEnvironmentWaveResource_Error(t *testing.T) {
 	// Register mock for GET calls - returns Failed state
 	httpmock.RegisterResponder("GET", `=~^https://api\.admin\.powerplatform\.microsoft\.com/api/environments/00000000-0000-0000-0000-000000000001/features$`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewJsonResponse(http.StatusOK, map[string]interface{}{
-				"values": []map[string]interface{}{
-					{
-						"FeatureName":      "October2024Update",
-						"DisplayName":      "2024 release wave 2",
-						"CanBeReset":       false,
-						"Enabled":          true,
-						"IsAllowed":        true,
-						"NotBefore":        "2024-06-30T00:00:00+00:00",
-						"NotAfter":         "2030-01-01T00:00:00+00:00",
-						"MinVersion":       "9.0",
-						"MaxVersion":       "9.3",
-						"State":            "Failed",
-						"AppsUpgradeState": "Failed",
-					},
-				},
-			})
+			return httpmock.NewStringResponse(http.StatusOK, loadTestResponse(t, "get_features_failed.json")), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -189,35 +152,13 @@ func TestUnitEnvironmentWaveResource_FailedDuringUpgrade(t *testing.T) {
 	// Register mock for first GET call - returns Upgrading state
 	httpmock.RegisterResponder("GET", `=~^https://api\.admin\.powerplatform\.microsoft\.com/api/environments/00000000-0000-0000-0000-000000000001/features$`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewJsonResponse(http.StatusOK, map[string]interface{}{
-				"values": []map[string]interface{}{
-					{
-						"FeatureName":      "October2024Update",
-						"DisplayName":      "2024 release wave 2",
-						"CanBeReset":       false,
-						"Enabled":          true,
-						"IsAllowed":        true,
-						"AppsUpgradeState": "Upgrading",
-					},
-				},
-			})
+			return httpmock.NewStringResponse(http.StatusOK, loadTestResponse(t, "get_features_upgrading.json")), nil
 		})
 
 	// Register mock for subsequent GET calls - returns Failed state
 	httpmock.RegisterResponder("GET", `=~^https://api\.admin\.powerplatform\.microsoft\.com/api/environments/00000000-0000-0000-0000-000000000001/features$`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewJsonResponse(http.StatusOK, map[string]interface{}{
-				"values": []map[string]interface{}{
-					{
-						"FeatureName":      "October2024Update",
-						"DisplayName":      "2024 release wave 2",
-						"CanBeReset":       false,
-						"Enabled":          true,
-						"IsAllowed":        true,
-						"AppsUpgradeState": "Failed",
-					},
-				},
-			})
+			return httpmock.NewStringResponse(http.StatusOK, loadTestResponse(t, "get_features_failed.json")), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -254,18 +195,7 @@ func TestUnitEnvironmentWaveResource_UnsupportedState(t *testing.T) {
 	// Register mock for GET calls - returns unknown state
 	httpmock.RegisterResponder("GET", `=~^https://api\.admin\.powerplatform\.microsoft\.com/api/environments/00000000-0000-0000-0000-000000000001/features$`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewJsonResponse(http.StatusOK, map[string]interface{}{
-				"values": []map[string]interface{}{
-					{
-						"FeatureName":      "October2024Update",
-						"DisplayName":      "2024 release wave 2",
-						"CanBeReset":       false,
-						"Enabled":          true,
-						"IsAllowed":        true,
-						"AppsUpgradeState": "Unknown",
-					},
-				},
-			})
+			return httpmock.NewStringResponse(http.StatusOK, loadTestResponse(t, "get_features_unknown.json")), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -302,18 +232,7 @@ func TestUnitEnvironmentWaveResource_Import(t *testing.T) {
 	// Register mock for GET calls - returns ON state for both creation and import
 	httpmock.RegisterResponder("GET", `=~^https://api\.admin\.powerplatform\.microsoft\.com/api/environments/00000000-0000-0000-0000-000000000001/features$`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewJsonResponse(http.StatusOK, map[string]interface{}{
-				"values": []map[string]interface{}{
-					{
-						"FeatureName":      "October2024Update",
-						"DisplayName":      "2024 release wave 2",
-						"CanBeReset":       false,
-						"Enabled":          true,
-						"IsAllowed":        true,
-						"AppsUpgradeState": "ON",
-					},
-				},
-			})
+			return httpmock.NewStringResponse(http.StatusOK, loadTestResponse(t, "get_features_enabled.json")), nil
 		})
 
 	resource.Test(t, resource.TestCase{
