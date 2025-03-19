@@ -50,52 +50,49 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the list of available Dynamics 365 locations",
 		MarkdownDescription: "Fetches the list of available Dynamics 365 locations. For more information see [Power Platform Geos](https://learn.microsoft.com/power-platform/admin/regions-overview)",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
 			"locations": schema.ListNestedAttribute{
-				Description:         "List of available locations",
 				MarkdownDescription: "List of available locations",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							Description: "Unique identifier of the location",
-							Computed:    true,
+							MarkdownDescription: "Unique identifier of the location",
+							Computed:            true,
 						},
 						"name": schema.StringAttribute{
-							Description: "Name of the location",
-							Computed:    true,
+							MarkdownDescription: "Name of the location",
+							Computed:            true,
 						},
 						"display_name": schema.StringAttribute{
-							Description: "Display name of the location",
-							Computed:    true,
+							MarkdownDescription: "Display name of the location",
+							Computed:            true,
 						},
 						"code": schema.StringAttribute{
-							Description: "Code of the location",
-							Computed:    true,
+							MarkdownDescription: "Code of the location",
+							Computed:            true,
 						},
 						"is_default": schema.BoolAttribute{
-							Description: "Is the location default",
-							Computed:    true,
+							MarkdownDescription: "Is the location default",
+							Computed:            true,
 						},
 						"is_disabled": schema.BoolAttribute{
-							Description: "Is the location disabled",
-							Computed:    true,
+							MarkdownDescription: "Is the location disabled",
+							Computed:            true,
 						},
 						"can_provision_database": schema.BoolAttribute{
-							Description: "Can the location provision a database",
-							Computed:    true,
+							MarkdownDescription: "Can the location provision a database",
+							Computed:            true,
 						},
 						"can_provision_customer_engagement_database": schema.BoolAttribute{
-							Description: "Can the location provision a customer engagement database",
-							Computed:    true,
+							MarkdownDescription: "Can the location provision a customer engagement database",
+							Computed:            true,
 						},
 						"azure_regions": schema.ListAttribute{
-							Description:         "List of Azure regions",
 							MarkdownDescription: "List of Azure regions",
 							Computed:            true,
 							ElementType:         types.StringType,

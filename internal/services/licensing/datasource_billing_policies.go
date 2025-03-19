@@ -45,56 +45,46 @@ func (d *BillingPoliciesDataSource) Schema(ctx context.Context, req datasource.S
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the list of billing policies in a tenant",
 		MarkdownDescription: "Fetches the list of [billing policies](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy) in a tenant. A billing policy is a set of rules that define how a tenant is billed for usage of Power Platform services. A billing policy is associated with a billing instrument, which is a subscription and resource group that is used to pay for usage of Power Platform services.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
 			"billing_policies": schema.ListNestedAttribute{
-				Description:         "Power Platform Billing Policy",
 				MarkdownDescription: "[Power Platform Billing Policy](https://learn.microsoft.com/rest/api/power-platform/licensing/billing-policy/get-billing-policy#billingpolicyresponsemodel)",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							Computed:            true,
-							Description:         "The id of the billing policy",
 							MarkdownDescription: "The id of the billing policy",
 						},
 						"name": schema.StringAttribute{
-							Description:         "The name of the billing policy",
 							MarkdownDescription: "The name of the billing policy",
 							Required:            true,
 						},
 						"location": schema.StringAttribute{
-							Description:         "The location of the billing policy",
 							MarkdownDescription: "The location of the billing policy",
 							Required:            true,
 						},
 						"status": schema.StringAttribute{
-							Description:         "The status of the billing policy",
 							MarkdownDescription: "The status of the billing policy (Enabled, Disabled)",
 							Computed:            true,
 							Optional:            true,
 						},
 						"billing_instrument": schema.SingleNestedAttribute{
-							Description:         "The billing instrument of the billing policy",
 							MarkdownDescription: "The billing instrument of the billing policy",
 							Required:            true,
 							Attributes: map[string]schema.Attribute{
 								"id": schema.StringAttribute{
 									Computed:            true,
-									Description:         "The id of the billing instrument",
 									MarkdownDescription: "The id of the billing instrument",
 								},
 								"resource_group": schema.StringAttribute{
-									Description:         "The resource group of the billing instrument",
 									MarkdownDescription: "The resource group of the billing instrument",
 									Required:            true,
 								},
 								"subscription_id": schema.StringAttribute{
-									Description:         "The subscription id of the billing instrument",
 									MarkdownDescription: "The subscription id of the billing instrument",
 									Required:            true,
 								},

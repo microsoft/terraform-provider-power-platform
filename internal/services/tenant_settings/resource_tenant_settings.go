@@ -52,7 +52,6 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Manages Power Platform Tenant Settings.",
 		MarkdownDescription: "Manages Power Platform Tenant Settings. Power Platform Tenant Settings are configuration options that apply to the entire tenant. They control various aspects of Power Platform features and behaviors, such as security, data protection, licensing, and more. These settings apply to all environments within your tenant. See [Tenant Settings Overview](https://learn.microsoft.com/power-platform/admin/tenant-settings) for more details.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
@@ -62,7 +61,6 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 				Delete: true,
 			}),
 			"id": schema.StringAttribute{
-				Description:         "Tenant ID",
 				MarkdownDescription: "Id of the Power Platform Tenant",
 				Computed:            true, Required: false, Optional: false,
 				PlanModifiers: []planmodifier.String{
@@ -70,255 +68,249 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 				},
 			},
 			"walk_me_opt_out": schema.BoolAttribute{
-				Description: "Walk Me Opt Out",
-				Optional:    true,
+				MarkdownDescription: "Walk Me Opt Out",
+				Optional:            true,
 			},
 			"disable_nps_comments_reachout": schema.BoolAttribute{
-				Description: "Disable NPS Comments Reachout",
-				Optional:    true,
+				MarkdownDescription: "Disable NPS Comments Reachout",
+				Optional:            true,
 			},
 			"disable_newsletter_sendout": schema.BoolAttribute{
-				Description: "Disable Newsletter Sendout",
-				Optional:    true,
+				MarkdownDescription: "Disable Newsletter Sendout",
+				Optional:            true,
 			},
 			"disable_environment_creation_by_non_admin_users": schema.BoolAttribute{
-				Description:         "Disable Environment Creation By Non Admin Users",
 				MarkdownDescription: "Disable Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.",
 				Optional:            true,
 			},
 			"disable_portals_creation_by_non_admin_users": schema.BoolAttribute{
-				Description: "Disable Portals Creation By Non Admin Users",
-				Optional:    true,
+				MarkdownDescription: "Disable Portals Creation By Non Admin Users",
+				Optional:            true,
 			},
 			"disable_survey_feedback": schema.BoolAttribute{
-				Description: "Disable Survey Feedback",
-				Optional:    true,
+				MarkdownDescription: "Disable Survey Feedback",
+				Optional:            true,
 			},
 			"disable_trial_environment_creation_by_non_admin_users": schema.BoolAttribute{
-				Description:         "Disable Trial Environment Creation By Non Admin Users",
 				MarkdownDescription: "Disable Trial Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.",
 				Optional:            true,
 			},
 			"disable_capacity_allocation_by_environment_admins": schema.BoolAttribute{
-				Description:         "Disable Capacity Allocation By Environment Admins",
 				MarkdownDescription: "Disable Capacity Allocation By Environment Admins. See [Add-on capacity management](https://learn.microsoft.com/power-platform/admin/capacity-add-on#control-who-can-allocate-add-on-capacity) for more details.",
 				Optional:            true,
 			},
 			"disable_support_tickets_visible_by_all_users": schema.BoolAttribute{
-				Description: "Disable Support Tickets Visible By All Users",
-				Optional:    true,
+				MarkdownDescription: "Disable Support Tickets Visible By All Users",
+				Optional:            true,
 			},
 			"power_platform": schema.SingleNestedAttribute{
-				Description: "Power Platform",
-				Optional:    true,
+				MarkdownDescription: "Power Platform",
+				Optional:            true,
 				Attributes: map[string]schema.Attribute{
 					"search": schema.SingleNestedAttribute{
-						Description: "Search",
-						Optional:    true,
+						MarkdownDescription: "Search",
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"disable_docs_search": schema.BoolAttribute{
-								Description: "Disable Docs Search",
-								Optional:    true,
+								MarkdownDescription: "Disable Docs Search",
+								Optional:            true,
 							},
 							"disable_community_search": schema.BoolAttribute{
-								Description: "Disable Community Search",
-								Optional:    true,
+								MarkdownDescription: "Disable Community Search",
+								Optional:            true,
 							},
 							"disable_bing_video_search": schema.BoolAttribute{
-								Description: "Disable Bing Video Search",
-								Optional:    true,
+								MarkdownDescription: "Disable Bing Video Search",
+								Optional:            true,
 							},
 						},
 					},
 					"teams_integration": schema.SingleNestedAttribute{
-						Description: "Teams Integration",
-						Optional:    true,
+						MarkdownDescription: "Teams Integration",
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"share_with_colleagues_user_limit": schema.Int64Attribute{
-								Description: "Share With Colleagues User Limit",
-								Optional:    true,
+								MarkdownDescription: "Share With Colleagues User Limit",
+								Optional:            true,
 							},
 						},
 					},
 					"power_apps": schema.SingleNestedAttribute{
-						Description:   "Power Apps",
-						Optional:      true,
-						PlanModifiers: []planmodifier.Object{
-							// objectplanmodifier.UseStateForUnknown(),
-						},
+						MarkdownDescription: "Power Apps",
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"disable_share_with_everyone": schema.BoolAttribute{
-								Description: "Disable Share With Everyone",
-								Optional:    true,
+								MarkdownDescription: "Disable Share With Everyone",
+								Optional:            true,
 							},
 							"enable_guests_to_make": schema.BoolAttribute{
-								Description: "Enable Guests To Make",
-								Optional:    true,
+								MarkdownDescription: "Enable Guests To Make",
+								Optional:            true,
 							},
 							"disable_maker_match": schema.BoolAttribute{
-								Description: "Disable Maker Match",
-								Optional:    true,
+								MarkdownDescription: "Disable Maker Match",
+								Optional:            true,
 							},
 							"disable_unused_license_assignment": schema.BoolAttribute{
-								Description: "Disable Unused License Assignment",
-								Optional:    true,
+								MarkdownDescription: "Disable Unused License Assignment",
+								Optional:            true,
 							},
 							"disable_create_from_image": schema.BoolAttribute{
-								Description: "Disable Create From Image",
-								Optional:    true,
+								MarkdownDescription: "Disable Create From Image",
+								Optional:            true,
 							},
 							"disable_create_from_figma": schema.BoolAttribute{
-								Description: "Disable Create From Figma",
-								Optional:    true,
+								MarkdownDescription: "Disable Create From Figma",
+								Optional:            true,
 							},
 							"disable_connection_sharing_with_everyone": schema.BoolAttribute{
-								Description: "Disable Connection Sharing With Everyone",
-								Optional:    true,
+								MarkdownDescription: "Disable Connection Sharing With Everyone",
+								Optional:            true,
 							},
 						},
 					},
 					"power_automate": schema.SingleNestedAttribute{
-						Description: "Power Automate",
-						Optional:    true,
+						MarkdownDescription: "Power Automate",
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"disable_copilot": schema.BoolAttribute{
-								Description: "Disable Copilot",
-								Optional:    true,
+								MarkdownDescription: "Disable Copilot",
+								Optional:            true,
 							},
 						},
 					},
 					"environments": schema.SingleNestedAttribute{
-						Description: "Environments",
-						Optional:    true,
+						MarkdownDescription: "Environments",
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"disable_preferred_data_location_for_teams_environment": schema.BoolAttribute{
-								Description: "Disable Preferred Data Location For Teams Environment",
-								Optional:    true,
+								MarkdownDescription: "Disable Preferred Data Location For Teams Environment",
+								Optional:            true,
 							},
 						},
 					},
 					"governance": schema.SingleNestedAttribute{
-						Description: "Governance",
-						Optional:    true,
+						MarkdownDescription: "Governance",
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"disable_admin_digest": schema.BoolAttribute{
-								Description: "Disable Admin Digest",
-								Optional:    true,
+								MarkdownDescription: "Disable Admin Digest",
+								Optional:            true,
 							},
 							"disable_developer_environment_creation_by_non_admin_users": schema.BoolAttribute{
-								Description: "Disable Developer Environment Creation By Non Admin Users",
-								Optional:    true,
+								MarkdownDescription: "Disable Developer Environment Creation By Non Admin Users",
+								Optional:            true,
 							},
 							"enable_default_environment_routing": schema.BoolAttribute{
-								Description: "Enable Default Environment Routing",
-								Optional:    true,
+								MarkdownDescription: "Enable Default Environment Routing",
+								Optional:            true,
 							},
 							"environment_routing_all_makers": schema.BoolAttribute{
-								Description: "Select who can be routed to a new personal developer environment. (All Makers = true, New Makers = false)",
-								Optional:    true,
+								MarkdownDescription: "Select who can be routed to a new personal developer environment. (All Makers = true, New Makers = false)",
+								Optional:            true,
 							},
 							"environment_routing_target_environment_group_id": schema.StringAttribute{
-								Description: "Assign newly created personal developer environments to a specific environment group",
-								Optional:    true,
-								CustomType:  customtypes.UUIDType{},
+								MarkdownDescription: "Assign newly created personal developer environments to a specific environment group",
+								Optional:            true,
+								CustomType:          customtypes.UUIDType{},
 							},
 							"environment_routing_target_security_group_id": schema.StringAttribute{
-								Description: "Restrict routing to members of the following security group. (00000000-0000-0000-0000-000000000000 allows all users)",
-								Optional:    true,
-								CustomType:  customtypes.UUIDType{},
+								MarkdownDescription: "Restrict routing to members of the following security group. (00000000-0000-0000-0000-000000000000 allows all users)",
+								Optional:            true,
+								CustomType:          customtypes.UUIDType{},
 							},
 							"policy": schema.SingleNestedAttribute{
-								Description: "Policy",
-								Optional:    true,
+								MarkdownDescription: "Policy",
+								Optional:            true,
 								Attributes: map[string]schema.Attribute{
 									"enable_desktop_flow_data_policy_management": schema.BoolAttribute{
-										Description: "Enable Desktop Flow Data Policy Management",
-										Optional:    true,
+										MarkdownDescription: "Enable Desktop Flow Data Policy Management",
+										Optional:            true,
 									},
 								},
 							},
 						},
 					},
 					"licensing": schema.SingleNestedAttribute{
-						Description: "Licensing",
-						Optional:    true,
+						MarkdownDescription: "Licensing",
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"disable_billing_policy_creation_by_non_admin_users": schema.BoolAttribute{
-								Description: "Disable Billing Policy Creation By Non Admin Users",
-								Optional:    true,
+								MarkdownDescription: "Disable Billing Policy Creation By Non Admin Users",
+								Optional:            true,
 							},
 							"enable_tenant_capacity_report_for_environment_admins": schema.BoolAttribute{
-								Description: "Enable Tenant Capacity Report For Environment Admins",
-								Optional:    true,
+								MarkdownDescription: "Enable Tenant Capacity Report For Environment Admins",
+								Optional:            true,
 							},
 							"storage_capacity_consumption_warning_threshold": schema.Int64Attribute{
-								Description: "Storage Capacity Consumption Warning Threshold",
-								Optional:    true,
+								MarkdownDescription: "Storage Capacity Consumption Warning Threshold",
+								Optional:            true,
 							},
 							"enable_tenant_licensing_report_for_environment_admins": schema.BoolAttribute{
-								Description: "Enable Tenant Licensing Report For Environment Admins",
-								Optional:    true,
+								MarkdownDescription: "Enable Tenant Licensing Report For Environment Admins",
+								Optional:            true,
 							},
 							"disable_use_of_unassigned_ai_builder_credits": schema.BoolAttribute{
-								Description: "Disable Use Of Unassigned AI Builder Credits",
-								Optional:    true,
+								MarkdownDescription: "Disable Use Of Unassigned AI Builder Credits",
+								Optional:            true,
 							},
 						},
 					},
 					"power_pages": schema.SingleNestedAttribute{
-						Description: "Power Pages",
-						Optional:    true,
-						Attributes:  map[string]schema.Attribute{},
+						MarkdownDescription: "Power Pages",
+						Optional:            true,
+						Attributes:          map[string]schema.Attribute{},
 					},
 					"champions": schema.SingleNestedAttribute{
-						Description: "Champions",
-						Optional:    true,
+						MarkdownDescription: "Champions",
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"disable_champions_invitation_reachout": schema.BoolAttribute{
-								Description: "Disable Champions Invitation Reachout",
-								Optional:    true,
+								MarkdownDescription: "Disable Champions Invitation Reachout",
+								Optional:            true,
 							},
 							"disable_skills_match_invitation_reachout": schema.BoolAttribute{
-								Description: "Disable Skills Match Invitation Reachout",
-								Optional:    true,
+								MarkdownDescription: "Disable Skills Match Invitation Reachout",
+								Optional:            true,
 							},
 						},
 					},
 					"intelligence": schema.SingleNestedAttribute{
-						Description: "Intelligence",
-						Optional:    true,
+						MarkdownDescription: "Intelligence",
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"disable_copilot": schema.BoolAttribute{
-								Description: "Disable Copilot",
-								Optional:    true,
+								MarkdownDescription: "Disable Copilot",
+								Optional:            true,
 							},
 							"enable_open_ai_bot_publishing": schema.BoolAttribute{
-								Description: "Enable Open AI Bot Publishing",
-								Optional:    true,
+								MarkdownDescription: "Enable Open AI Bot Publishing",
+								Optional:            true,
 							},
 						},
 					},
 					"model_experimentation": schema.SingleNestedAttribute{
-						Description: "Model Experimentation",
-						Optional:    true,
+						MarkdownDescription: "Model Experimentation",
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"enable_model_data_sharing": schema.BoolAttribute{
-								Description: "Enable Model Data Sharing",
-								Optional:    true,
+								MarkdownDescription: "Enable Model Data Sharing",
+								Optional:            true,
 							},
 							"disable_data_logging": schema.BoolAttribute{
-								Description: "Disable Data Logging",
-								Optional:    true,
+								MarkdownDescription: "Disable Data Logging",
+								Optional:            true,
 							},
 						},
 					},
 					"catalog_settings": schema.SingleNestedAttribute{
-						Description: "Catalog Settings",
-						Optional:    true,
+						MarkdownDescription: "Catalog Settings",
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"power_catalog_audience_setting": schema.StringAttribute{
-								Description: "Power Catalog Audience Setting",
-								Optional:    true,
+								MarkdownDescription: "Power Catalog Audience Setting",
+								Optional:            true,
 								Validators: []validator.String{
 									stringvalidator.OneOf("SpecificAdmin", "All"),
 								},
@@ -326,12 +318,12 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 						},
 					},
 					"user_management_settings": schema.SingleNestedAttribute{
-						Description: "User Management Settings",
-						Optional:    true,
+						MarkdownDescription: "User Management Settings",
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"enable_delete_disabled_user_in_all_environments": schema.BoolAttribute{
-								Description: "Enable Delete Disabled User In All Environments",
-								Optional:    true,
+								MarkdownDescription: "Enable Delete Disabled User In All Environments",
+								Optional:            true,
 							},
 						},
 					},
