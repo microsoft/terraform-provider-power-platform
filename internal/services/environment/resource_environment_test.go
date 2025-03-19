@@ -1308,46 +1308,46 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000001"),
 				),
 			},
-			// {
-			// 	Config: `
-			// 	resource "powerplatform_environment" "development" {
-			// 		display_name                              = "displayname"
-			// 		location                                  = "europe"
-			// 		environment_type                          = "Sandbox"
-			// 		billing_policy_id                         = "00000000-0000-0000-0000-000000000002"
-			// 		dataverse = {
-			// 			language_code                             = "1033"
-			// 			currency_code                             = "PLN"
-			// 			domain                                    = "00000000-0000-0000-0000-000000000001"
-			// 			security_group_id                         = "00000000-0000-0000-0000-000000000000"
-			// 		}
-			// 	}`,
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					billing_policy_id                         = "00000000-0000-0000-0000-000000000002"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
 
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
-			// 		resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000002"),
-			// 	),
-			// },
-			// {
-			// 	Config: `
-			// 	resource "powerplatform_environment" "development" {
-			// 		display_name                              = "displayname"
-			// 		location                                  = "europe"
-			// 		billing_policy_id                         = "00000000-0000-0000-0000-000000000000"
-			// 		environment_type                          = "Sandbox"
-			// 		dataverse = {
-			// 			language_code                             = "1033"
-			// 			currency_code                             = "PLN"
-			// 			domain                                    = "00000000-0000-0000-0000-000000000001"
-			// 			security_group_id                         = "00000000-0000-0000-0000-000000000000"
-			// 		}
-			// 	}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000002"),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					billing_policy_id                         = "00000000-0000-0000-0000-000000000000"
+					environment_type                          = "Sandbox"
+					dataverse = {
+						language_code                             = "1033"
+						currency_code                             = "PLN"
+						domain                                    = "00000000-0000-0000-0000-000000000001"
+						security_group_id                         = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
 
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
-			// 		resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000000"),
-			// 	),
-			// },
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "billing_policy_id", "00000000-0000-0000-0000-000000000000"),
+				),
+			},
 		},
 	})
 }

@@ -194,17 +194,11 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				MarkdownDescription: "Allow Bing search in the environment",
 				Optional:            true,
 				Computed:            true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"allow_moving_data_across_regions": schema.BoolAttribute{
 				MarkdownDescription: "Allow moving data across regions",
 				Optional:            true,
 				Computed:            true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"display_name": schema.StringAttribute{
 				MarkdownDescription: "Display name",

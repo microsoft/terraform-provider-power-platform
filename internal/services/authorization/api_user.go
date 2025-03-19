@@ -297,7 +297,7 @@ func (client *client) CreateDataverseUser(ctx context.Context, environmentId, aa
 
 	// 9 minutes of retries.
 	retryCount := 6 * 9
-	var err error
+	err := errors.New("")
 	for retryCount > 0 {
 		_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, userToCreate, []int{http.StatusOK}, nil)
 		// the license assignment in Entra is async, so we need to wait for that to happen if a user is created in the same terraform run.
