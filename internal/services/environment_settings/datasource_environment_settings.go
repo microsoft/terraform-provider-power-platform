@@ -100,7 +100,7 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Power Platform Environment Settings Data Source",
+		MarkdownDescription: "Power Platform Environment Settings Data Source. Power Platform Settings are configuration options that apply to a specific environment. They control various aspects of Power Platform features and behaviors, See [Environment Settings Overview](https://learn.microsoft.com/power-platform/admin/admin-settings) for more details.  While this data source provides access to some specific environment settings, many environment settings are stored as records in Dataverse.  You may be able to read those settings using the [`powerplatform_data_records` resource](./data_records).",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: false,

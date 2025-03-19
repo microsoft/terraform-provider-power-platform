@@ -72,26 +72,27 @@ func (d *EnvironmentApplicationPackagesDataSource) Schema(ctx context.Context, r
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Fetches the list of Dynamics 365 applications in a tenant",
+		Description:         "Fetches the list of Dynamics 365 applications in a tenant",
+		MarkdownDescription: "Fetches the list of Dynamics 365 applications in a tenant.  The data source can be filtered by name and publisher name.\n\nThis is functionally equivalent to the [Environment-level view of apps](https://learn.microsoft.com/power-platform/admin/manage-apps#environment-level-view-of-apps) in the Power Platform Admin Center or the [`pac application list` command from Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/reference/application#pac-application-list).  This data source uses the [Get Environment Application Package](https://learn.microsoft.com/rest/api/power-platform/appmanagement/applications/get-environment-application-package) endpoint in the Power Platform API.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Id of the read operation",
-				Optional:    true,
+				Optional:            true,
 			},
 			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "Id of the Dynamics 365 environment",
-				Required:    true,
+				Required:            true,
 			},
 			"name": schema.StringAttribute{
 				MarkdownDescription: "Name of the Dynamics 365 application",
-				Optional:    true,
+				Optional:            true,
 			},
 			"publisher_name": schema.StringAttribute{
 				MarkdownDescription: "Publisher Name of the Dynamics 365 application",
-				Optional:    true,
+				Optional:            true,
 			},
 			"applications": schema.ListNestedAttribute{
 				MarkdownDescription: "List of Applications",
