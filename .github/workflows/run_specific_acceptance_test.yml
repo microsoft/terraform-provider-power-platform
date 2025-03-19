@@ -1,4 +1,4 @@
-name: Run Specific Acceptance Test User Context (Certificate Auth)
+name: Run Specific Acceptance Test User Context
 
 on:
   workflow_dispatch:
@@ -9,9 +9,12 @@ permissions:
 
 jobs:
   acceptance_test:
-    name: Acceptance Test - Certificate Auth
+    name: Acceptance Test
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    strategy:
+      matrix:
+        auth-method: [certificate, oidc]
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
@@ -33,11 +36,21 @@ jobs:
       - name: Install Power Platform Tools
         uses: microsoft/powerplatform-actions/actions-install@v1
 
-      - name: Authenticate using Certificate
+      - name: Authenticate
+        if: matrix.auth-method == 'certificate'
         uses: azure/login@v2
         with:
           creds: ${{ secrets.ACCEPTANCE_TESTS_AZURE_CREDENTIALS }} # Azure credentials for authentication {"clientId":"<your-client-id>","tenantId":"<your-tenant-id>","subscriptionId":"<your-subscription-id>","certificate":"<base64-encoded-certificate>","certificatePassword":"<certificate-password>"}
 
+      - name: Authenticate
+        if: matrix.auth-method == 'oidc'
+        uses: azure/login@v2
+        env:
+          ARM_USE_OIDC: true
+          ARM_CLIENT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}
+  
       - name: Get dependencies
         working-directory: /workspaces/terraform-provider-power-platform
         run: |
