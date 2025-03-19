@@ -3,12 +3,12 @@
 page_title: "powerplatform_connections Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Fetches a list of Connection https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/add-manage-connections for a given environment. Each connection represents an connection instance to an external data source or service.
+  Fetches a list of "Connections" for a given environment. Each connection represents an connection instance to an external data source or service.
 ---
 
 # powerplatform_connections (Data Source)
 
-Fetches a list of [Connection](https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/add-manage-connections) for a given environment. Each connection represents an connection instance to an external data source or service.
+Fetches a list of "Connections" for a given environment. Each connection represents an connection instance to an external data source or service.
 
 ## Example Usage
 
