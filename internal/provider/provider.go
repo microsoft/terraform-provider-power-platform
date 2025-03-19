@@ -38,6 +38,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_groups"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_settings"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_templates"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_wave"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/languages"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/locations"
@@ -362,6 +363,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return environment_settings.NewEnvironmentSettingsResource() },
 		func() resource.Resource { return connection.NewConnectionResource() },
 		func() resource.Resource { return rest.NewDataverseWebApiResource() },
+		func() resource.Resource { return environment_wave.NewEnvironmentWaveResource() },
 		func() resource.Resource { return connection.NewConnectionShareResource() },
 		func() resource.Resource { return environment_groups.NewEnvironmentGroupResource() },
 		func() resource.Resource { return admin_management_application.NewAdminManagementApplicationResource() },
