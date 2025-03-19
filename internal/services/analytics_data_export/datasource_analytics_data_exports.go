@@ -49,7 +49,7 @@ func (d *AnalyticsExportDataSource) Schema(ctx context.Context, req datasource.S
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Analytics Data Export configuration",
+		MarkdownDescription: "Analytics Data Export configurations. See [documentation](https://learn.microsoft.com/en-us/power-platform/admin/set-up-export-application-insights) for more details.",
 		Attributes: map[string]schema.Attribute{
 			"exports": schema.SetNestedAttribute{
 				MarkdownDescription: "The collection of analytics data exports",
@@ -179,62 +179,6 @@ func (d *AnalyticsExportDataSource) Configure(ctx context.Context, req datasourc
 	d.analyticsExportClient = NewAnalyticsExportClient(client.Api, tenant.NewTenantClient(client.Api))
 }
 
-// mapAnalyticsDataDtoToModel converts an AnalyticsDataDto to AnalyticsDataExportModel.
-func mapAnalyticsDataDtoToModel(dto *AnalyticsDataDto) *AnalyticsDataModel {
-	if dto == nil {
-		return nil
-	}
-
-	// Map environments
-	environments := make([]EnvironmentModel, 0, len(dto.Environments))
-	for _, env := range dto.Environments {
-		environments = append(environments, EnvironmentModel{
-			EnvironmentId:  types.StringValue(env.EnvironmentId),
-			OrganizationId: types.StringValue(env.OrganizationId),
-		})
-	}
-
-	// Map status
-	status := make([]StatusModel, 0, len(dto.Status))
-	for _, s := range dto.Status {
-		message := types.StringNull()
-		if s.Message != nil {
-			message = types.StringValue(*s.Message)
-		}
-		status = append(status, StatusModel{
-			Name:      types.StringValue(s.Name),
-			State:     types.StringValue(s.State),
-			LastRunOn: types.StringValue(s.LastRunOn),
-			Message:   message,
-		})
-	}
-
-	// Map scenarios
-	scenarios := make([]types.String, 0, len(dto.Scenarios))
-	for _, s := range dto.Scenarios {
-		scenarios = append(scenarios, types.StringValue(s))
-	}
-
-	return &AnalyticsDataModel{
-		ID:           types.StringValue(dto.ID),
-		Source:       types.StringValue(dto.Source),
-		Environments: environments,
-		Status:       status,
-		Sink: SinkModel{
-			ID:                types.StringValue(dto.Sink.ID),
-			Type:              types.StringValue(dto.Sink.Type),
-			SubscriptionId:    types.StringValue(dto.Sink.SubscriptionId),
-			ResourceGroupName: types.StringValue(dto.Sink.ResourceGroupName),
-			ResourceName:      types.StringValue(dto.Sink.ResourceName),
-			Key:               types.StringValue(dto.Sink.Key),
-		},
-		PackageName:      types.StringValue(dto.PackageName),
-		Scenarios:        scenarios,
-		ResourceProvider: types.StringValue(dto.ResourceProvider),
-		AiType:           types.StringValue(dto.AiType),
-	}
-}
-
 func (d *AnalyticsExportDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
@@ -266,7 +210,7 @@ func (d *AnalyticsExportDataSource) Read(ctx context.Context, req datasource.Rea
 	// Map each analytics data export item to a model
 	exports := make([]AnalyticsDataModel, 0, len(*analyticsDataExport))
 	for _, export := range *analyticsDataExport {
-		if model := mapAnalyticsDataDtoToModel(&export); model != nil {
+		if model := convertDtoToModel(&export); model != nil {
 			exports = append(exports, *model)
 		}
 	}

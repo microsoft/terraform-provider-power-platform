@@ -3,12 +3,12 @@
 page_title: "powerplatform_analytics_data_exports Data Source - powerplatform"
 subcategory: ""
 description: |-
-  Analytics Data Export configuration
+  Analytics Data Export configurations. See documentation https://learn.microsoft.com/en-us/power-platform/admin/set-up-export-application-insights for more details.
 ---
 
 # powerplatform_analytics_data_exports (Data Source)
 
-Analytics Data Export configuration
+Analytics Data Export configurations. See [documentation](https://learn.microsoft.com/en-us/power-platform/admin/set-up-export-application-insights) for more details.
 
 ## Example Usage
 

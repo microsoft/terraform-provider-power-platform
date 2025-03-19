@@ -48,3 +48,59 @@ type SinkModel struct {
 	ResourceName      types.String `tfsdk:"resource_name"`
 	Key               types.String `tfsdk:"key"`
 }
+
+// convertDtoToModel converts an AnalyticsDataDto to AnalyticsDataModel.
+func convertDtoToModel(dto *AnalyticsDataDto) *AnalyticsDataModel {
+	if dto == nil {
+		return nil
+	}
+
+	// Map environments
+	environments := make([]EnvironmentModel, 0, len(dto.Environments))
+	for _, env := range dto.Environments {
+		environments = append(environments, EnvironmentModel{
+			EnvironmentId:  types.StringValue(env.EnvironmentId),
+			OrganizationId: types.StringValue(env.OrganizationId),
+		})
+	}
+
+	// Map status
+	status := make([]StatusModel, 0, len(dto.Status))
+	for _, s := range dto.Status {
+		message := types.StringNull()
+		if s.Message != nil {
+			message = types.StringValue(*s.Message)
+		}
+		status = append(status, StatusModel{
+			Name:      types.StringValue(s.Name),
+			State:     types.StringValue(s.State),
+			LastRunOn: types.StringValue(s.LastRunOn),
+			Message:   message,
+		})
+	}
+
+	// Map scenarios
+	scenarios := make([]types.String, 0, len(dto.Scenarios))
+	for _, s := range dto.Scenarios {
+		scenarios = append(scenarios, types.StringValue(s))
+	}
+
+	return &AnalyticsDataModel{
+		ID:           types.StringValue(dto.ID),
+		Source:       types.StringValue(dto.Source),
+		Environments: environments,
+		Status:       status,
+		Sink: SinkModel{
+			ID:                types.StringValue(dto.Sink.ID),
+			Type:              types.StringValue(dto.Sink.Type),
+			SubscriptionId:    types.StringValue(dto.Sink.SubscriptionId),
+			ResourceGroupName: types.StringValue(dto.Sink.ResourceGroupName),
+			ResourceName:      types.StringValue(dto.Sink.ResourceName),
+			Key:               types.StringValue(dto.Sink.Key),
+		},
+		PackageName:      types.StringValue(dto.PackageName),
+		Scenarios:        scenarios,
+		ResourceProvider: types.StringValue(dto.ResourceProvider),
+		AiType:           types.StringValue(dto.AiType),
+	}
+}
