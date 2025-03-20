@@ -1,5 +1,0 @@
-kind: fixed
-body: '`powerplatform_data_record`: added meaningful error when record already exist and HTTP 405 is returned'
-time: 2025-03-05T12:12:34.49163336Z
-custom:
-    Issue: "616"
