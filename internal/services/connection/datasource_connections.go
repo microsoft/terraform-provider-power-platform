@@ -48,7 +48,7 @@ func (d *ConnectionsDataSource) Schema(ctx context.Context, req datasource.Schem
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Fetches a list of \"Connections\" for a given environment. Each connection represents an connection instance to an external data source or service.",
+		MarkdownDescription: "Fetches a list of [Connection](https://learn.microsoft.com/en-us/power-apps/maker/canvas-apps/add-manage-connections) for a given environment. Each connection represents an connection instance to an external data source or service.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
