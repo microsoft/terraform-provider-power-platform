@@ -45,7 +45,7 @@ Required:
 Read-Only:
 
 - `ai_type` (String) The AI type for the analytics data
-- `environments` (Attributes Set) The environments configured for analytics data export (see [below for nested schema](#nestedatt--exports--environments))
+- `environments` (Set of String) The environment IDs configured for analytics data export
 - `id` (String) The unique identifier of the analytics data export
 - `package_name` (String) The package name for the analytics data
 - `resource_provider` (String) The resource provider for the analytics data
@@ -64,15 +64,6 @@ Read-Only:
 - `resource_name` (String) The name of the sink resource
 - `subscription_id` (String) The Azure subscription ID
 - `type` (String) The type of the sink
-
-
-<a id="nestedatt--exports--environments"></a>
-### Nested Schema for `exports.environments`
-
-Read-Only:
-
-- `environment_id` (String) The identifier of the environment
-- `organization_id` (String) The identifier of the organization
 
 
 <a id="nestedatt--exports--status"></a>
