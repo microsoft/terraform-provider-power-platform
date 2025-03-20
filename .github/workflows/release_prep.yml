@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: releasetest
+          ref: main
           ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Setup Go
@@ -39,10 +39,10 @@ jobs:
           >
           >
           skip-checks: true" || echo "No changes to commit"
-          git push origin releasetest
+          git push origin main
 
-      # - name: Create and Push Release Tag
-      #   run: |
-      #     VERSION="v$(changie latest)"
-      #     git tag -a $VERSION -m "Release $VERSION"
-      #     git push origin $VERSION
+      - name: Create and Push Release Tag
+        run: |
+          VERSION="v$(changie latest)"
+          git tag -a $VERSION -m "Release $VERSION"
+          git push origin $VERSION
