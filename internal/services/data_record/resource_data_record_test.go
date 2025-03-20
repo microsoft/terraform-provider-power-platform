@@ -1095,7 +1095,7 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Relationships/get_contact_00000000-0000-0000-0000-000000000011.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000012.crm4.dynamics.com/api/data/v9.2/contacts%2800000000-0000-0000-0000-000000000012%29`,
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/contacts%2800000000-0000-0000-0000-000000000012%29`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Relationships/get_contact_00000000-0000-0000-0000-000000000012.json").String()), nil
 		})
