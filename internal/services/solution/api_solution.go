@@ -136,7 +136,7 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 	}
 
 	if content == nil {
-		err = fmt.Errorf("solution content is nil")
+		err = errors.New("solution content is nil")
 		return nil, err
 	}
 

@@ -5,6 +5,7 @@ package tenant_settings
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -187,7 +188,7 @@ func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]
 	if !searchObject.IsNull() && !searchObject.IsUnknown() {
 		objectValue, ok := searchObject.(basetypes.ObjectValue)
 		if !ok {
-			return fmt.Errorf("failed to convert search settings to ObjectValue")
+			return errors.New("failed to convert search settings to ObjectValue")
 		}
 
 		var searchSettings SearchSettingsModel
