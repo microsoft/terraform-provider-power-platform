@@ -18,8 +18,9 @@
      - They use `testhelpers.RegisterHTTPResponse()` to register HTTP responses
      - They use `testhelpers.TestUnitTestProtoV6ProviderFactories` for provider setup
      - HTTP responses are mocked using `httpmock` from the `jarcoal/httpmock` package
-     - Mock JSON responses are stored in json files in the `tests/` folder of each service rather than embedding JSON responses directly in the test file
+     - Mock JSON responses should only be stored in json files in the `tests/` folder of each service. Do not embed mock JSON responses directly in the _test.go file
      - Calls to httpmock should not be nested.  Register the responders in a serial fashion to improve the readability of the tests.
+     - Do not change mocked json data files to fix a broken test without explicit human instruction to do so
 
 3. **Test structure**:
    - Tests use `resource.UnitTest()` with a `resource.TestCase` structure

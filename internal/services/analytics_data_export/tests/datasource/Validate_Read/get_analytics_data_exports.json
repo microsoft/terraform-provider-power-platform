@@ -1,0 +1,41 @@
+{
+    "value": [
+        {
+            "id": "00000000-0000-0000-0000-000000000001",
+            "source": "AppInsight",
+            "environments": [
+                {
+                    "environmentId": "00000000-0000-0000-0000-000000000002",
+                    "organizationId": "00000000-0000-0000-0000-000000000003"
+                }
+            ],
+            "sink": {
+                "key": "00000000-0000-0000-0000-000000000004",
+                "type": "AppInsights",
+                "id": "/subscriptions/00000000-0000-0000-0000-000000000005/resourceGroups/analytics/providers/microsoft.insights/components/insights",
+                "resourceName": "insights"
+            },
+            "status": [
+                {
+                    "name": "Plugin executions excep",
+                    "state": "Connected",
+                    "lastRunOn": "2025-03-08T06:55:56.0481713+00:00",
+                    "message": null
+                },
+                {
+                    "name": "SDK executions excep",
+                    "state": "Connected",
+                    "lastRunOn": "2025-03-08T06:55:56.0481713+00:00",
+                    "message": null
+                }
+            ],
+            "scenarios": [
+                "Plugin executions excep",
+                "SDK executions excep"
+            ],
+            "packageName": "dd",
+            "resourceProvider": "dataverse",
+            "aiType": "Local"
+        }
+    ]
+}
