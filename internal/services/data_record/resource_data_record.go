@@ -6,6 +6,7 @@ package data_record
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -389,7 +390,7 @@ func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrTy
 	for _, rawItem := range relationMap {
 		item, ok := rawItem.(map[string]any)
 		if !ok {
-			return fmt.Errorf("error asserting rawItem to map[string]any")
+			return errors.New("error asserting rawItem to map[string]any")
 		}
 
 		relationTableLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
@@ -403,7 +404,7 @@ func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrTy
 
 		dataRecordId, ok := item[entDefinition.PrimaryIDAttribute].(string)
 		if !ok {
-			return fmt.Errorf("error asserting dataRecordId to string")
+			return errors.New("error asserting dataRecordId to string")
 		}
 
 		v, _ := types.ObjectValue(objectType, map[string]attr.Value{

@@ -5,6 +5,7 @@ package environment_settings
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -93,7 +94,7 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 	if auditSettingsObject != nil && !auditSettingsObject.IsNull() && !auditSettingsObject.IsUnknown() {
 		objectValue, ok := auditSettingsObject.(basetypes.ObjectValue)
 		if !ok {
-			return nil, fmt.Errorf("failed to convert audit settings to ObjectValue")
+			return nil, errors.New("failed to convert audit settings to ObjectValue")
 		}
 
 		var auditAndLogsSourceModel AuditSettingsSourceModel
@@ -121,7 +122,7 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 		if pluginSettings != nil && !pluginSettings.IsNull() && !pluginSettings.IsUnknown() {
 			pluginSettingsValue, ok := pluginSettings.(basetypes.StringValue)
 			if !ok {
-				return nil, fmt.Errorf("pluginSettings is not of type basetypes.StringValue")
+				return nil, errors.New("pluginSettings is not of type basetypes.StringValue")
 			}
 			var v int64
 			if pluginSettingsValue.ValueString() == "Off" {
@@ -155,7 +156,7 @@ func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSetting
 	if emailSettingsObject != nil && !emailSettingsObject.IsNull() && !emailSettingsObject.IsUnknown() {
 		objectValue, ok := emailSettingsObject.(basetypes.ObjectValue)
 		if !ok {
-			return fmt.Errorf("failed to convert email settings to ObjectValue")
+			return errors.New("failed to convert email settings to ObjectValue")
 		}
 
 		var emailSourceModel EmailSettingsSourceModel
