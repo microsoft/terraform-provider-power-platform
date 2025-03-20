@@ -35,7 +35,7 @@ jobs:
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add .
-          git commit -m "Merge changelog entries for release [no checks]
+          git commit -m "Merge changelog entries for v$(changie latest) release
           >
           >
           skip-checks: true" || echo "No changes to commit"
