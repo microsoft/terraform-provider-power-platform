@@ -65,6 +65,7 @@ type ProviderConfigUrls struct {
 	LicensingUrl          string
 	PowerAppsAdvisor      string
 	PowerAppsAdvisorScope string
+	AnalyticsScope        string
 }
 
 func (model *ProviderConfig) GetCurrentCloudConfiguration(key CloudTypeConfigurationKey) *string {

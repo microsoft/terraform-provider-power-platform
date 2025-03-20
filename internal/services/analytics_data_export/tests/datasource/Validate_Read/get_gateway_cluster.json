@@ -1,0 +1,9 @@
+{
+    "clusterNumber": "001",
+    "geoName": "us",
+    "environment": "Prod",
+    "clusterType": "CustomerManagement",
+    "clusterCategory": "Prod",
+    "clusterName": "prdcm001wus",
+    "geoLongName": "unitedstates"
+}
