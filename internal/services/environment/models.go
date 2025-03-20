@@ -6,6 +6,7 @@ package environment
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -194,7 +195,7 @@ func convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(
 
 		return linkedEnvironmentMetadata, nil
 	}
-	return nil, fmt.Errorf("dataverse object is null or unknown")
+	return nil, errors.New("dataverse object is null or unknown")
 }
 
 func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currencyCode, ownerId *string, templateMetadata *createTemplateMetadataDto, templates []string, timeout timeouts.Value, providerConfig config.ProviderConfig) (*SourceModel, error) {

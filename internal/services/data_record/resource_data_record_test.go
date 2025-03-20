@@ -5,6 +5,7 @@ package data_record_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
@@ -998,7 +999,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					mocks.TestStateValueMatch(primarycontactidStep1, primarycontactidStep2, func(a, b *mocks.StateValue) error {
 						if a.Value == b.Value {
-							return fmt.Errorf("expected primarycontactid from before and after change are equal, but a change was expected. '%s' == '%s'", a.Value, b.Value)
+							return errors.New("expected primarycontactid from before and after change are equal, but a change was expected")
 						}
 						return nil
 					}),
@@ -1520,13 +1521,13 @@ func TestUnitDataRecordResource_Validate_Disable_On_Delete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					func(_ *terraform.State) error {
 						if !contactDisabledExecuted {
-							return fmt.Errorf("expected mailbox to be disabled on delete")
+							return errors.New("expected mailbox to be disabled on delete")
 						}
 						return nil
 					},
 					func(_ *terraform.State) error {
 						if !businessUnitDisabledExecuted {
-							return fmt.Errorf("expected business unit to be disabled on delete")
+							return errors.New("expected business unit to be disabled on delete")
 						}
 						return nil
 					},

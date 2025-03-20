@@ -23,6 +23,9 @@ clean:
 userdocs:
 	go generate
 
+userstory:
+	./scripts/user_story_prompt.sh
+
 unittest:
 	clear
 	$(MAKE) clean

@@ -120,12 +120,12 @@ func (client *client) GetDataRecordsByODataQuery(ctx context.Context, environmen
 	if response["value"] != nil {
 		valueSlice, ok := response["value"].([]any)
 		if !ok {
-			return nil, fmt.Errorf("value field is not of type []any")
+			return nil, errors.New("value field is not of type []any")
 		}
 		for _, item := range valueSlice {
 			value, ok := item.(map[string]any)
 			if !ok {
-				return nil, fmt.Errorf("item is not of type map[string]any")
+				return nil, errors.New("item is not of type map[string]any")
 			}
 			records = append(records, value)
 		}
@@ -214,12 +214,12 @@ func (client *client) GetRelationData(ctx context.Context, environmentId, tableN
 
 	field, ok := result["value"]
 	if !ok {
-		return nil, fmt.Errorf("value field not found in result when retrieving relational data")
+		return nil, errors.New("value field not found in result when retrieving relational data")
 	}
 
 	value, ok := field.([]any)
 	if !ok {
-		return nil, fmt.Errorf("value field is not of type []any in relational data")
+		return nil, errors.New("value field is not of type []any in relational data")
 	}
 
 	return value, nil
@@ -262,7 +262,7 @@ func (client *client) GetTableSingularNameFromPlural(ctx context.Context, enviro
 	} else if logicalName, ok := mapResponse["LogicalName"].(string); ok {
 		result = logicalName
 	} else {
-		return nil, fmt.Errorf("logicalName field not found in result when retrieving table singular name")
+		return nil, errors.New("logicalName field not found in result when retrieving table singular name")
 	}
 	return &result, nil
 }
@@ -271,18 +271,18 @@ func getEntityRelationDefinitionOneToMany(mapResponse map[string]any, entityLogi
 	var tableName string
 	oneToMany, ok := mapResponse["OneToManyRelationships"].([]any)
 	if !ok {
-		return "", fmt.Errorf("OneToManyRelationships field is not of type []any")
+		return "", errors.New("OneToManyRelationships field is not of type []any")
 	}
 	for _, list := range oneToMany {
 		item, ok := list.(map[string]any)
 		if !ok {
-			return "", fmt.Errorf("item is not of type map[string]any")
+			return "", errors.New("item is not of type map[string]any")
 		}
 		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName && item["Entity1LogicalName"] != entityLogicalName {
 			var ok bool
 			tableName, ok = item["ReferencedEntity"].(string)
 			if !ok {
-				return "", fmt.Errorf("ReferencedEntity field is not of type string")
+				return "", errors.New("ReferencedEntity field is not of type string")
 			}
 			break
 		}
@@ -290,7 +290,7 @@ func getEntityRelationDefinitionOneToMany(mapResponse map[string]any, entityLogi
 			var ok bool
 			tableName, ok = item["ReferencingEntity"].(string)
 			if !ok {
-				return "", fmt.Errorf("ReferencedEntity field is not of type string")
+				return "", errors.New("ReferencedEntity field is not of type string")
 			}
 			break
 		}
@@ -302,18 +302,18 @@ func getEntityRelationDefinitionManyToOne(mapResponse map[string]any, relationLo
 	var tableName string
 	manyToOne, ok := mapResponse["ManyToOneRelationships"].([]any)
 	if !ok {
-		return "", fmt.Errorf("ManyToOneRelationships field is not of type []any")
+		return "", errors.New("ManyToOneRelationships field is not of type []any")
 	}
 	for _, list := range manyToOne {
 		item, ok := list.(map[string]any)
 		if !ok {
-			return "", fmt.Errorf("item is not of type map[string]any")
+			return "", errors.New("item is not of type map[string]any")
 		}
 		if item["ReferencingEntityNavigationPropertyName"] == relationLogicalName {
 			var ok bool
 			tableName, ok = item["ReferencedEntity"].(string)
 			if !ok {
-				return "", fmt.Errorf("ReferencedEntity field is not of type string")
+				return "", errors.New("ReferencedEntity field is not of type string")
 			}
 			break
 		}
@@ -321,7 +321,7 @@ func getEntityRelationDefinitionManyToOne(mapResponse map[string]any, relationLo
 			var ok bool
 			tableName, ok = item["ReferencingEntity"].(string)
 			if !ok {
-				return "", fmt.Errorf("ReferencedEntity field is not of type string")
+				return "", errors.New("ReferencedEntity field is not of type string")
 			}
 			break
 		}
@@ -333,24 +333,24 @@ func getEntityRelationDefinitionManyToMany(mapResponse map[string]any, entityLog
 	var tableName string
 	manyToMany, ok := mapResponse["ManyToManyRelationships"].([]any)
 	if !ok {
-		return "", fmt.Errorf("ManyToManyRelationships field is not of type []any")
+		return "", errors.New("ManyToManyRelationships field is not of type []any")
 	}
 	for _, list := range manyToMany {
 		item, ok := list.(map[string]any)
 		if !ok {
-			return "", fmt.Errorf("item is not of type map[string]any")
+			return "", errors.New("item is not of type map[string]any")
 		}
 		if item["Entity1NavigationPropertyName"] == relationLogicalName && item["Entity1LogicalName"] != entityLogicalName {
 			tableName, ok = item["Entity1LogicalName"].(string)
 			if !ok {
-				return "", fmt.Errorf("Entity1LogicalName field is not of type string")
+				return "", errors.New("Entity1LogicalName field is not of type string")
 			}
 			break
 		}
 		if item["Entity2NavigationPropertyName"] == relationLogicalName && item["Entity2LogicalName"] != entityLogicalName {
 			tableName, ok = item["Entity2LogicalName"].(string)
 			if !ok {
-				return "", fmt.Errorf("Entity2LogicalName field is not of type string")
+				return "", errors.New("Entity2LogicalName field is not of type string")
 			}
 			break
 		}
@@ -482,7 +482,7 @@ func (client *client) ApplyDataRecord(ctx context.Context, recordId, environment
 		response, err = client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent}, nil)
 		// if the PATCH URL is not pointing to specific recording using PrimaryIDAttribute then we have to inform a user about it.
 		if response.HttpResponse.StatusCode == http.StatusMethodNotAllowed {
-			return nil, fmt.Errorf("record already exists. To update an existing record, primaryId must be provided in the columns attribute")
+			return nil, errors.New("record already exists. To update an existing record, primaryId must be provided in the columns attribute")
 		}
 		if err != nil {
 			return nil, err
@@ -498,11 +498,11 @@ func (client *client) ApplyDataRecord(ctx context.Context, recordId, environment
 		re := regexp.MustCompile("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")
 		match := re.FindAllStringSubmatch(response.HttpResponse.Header.Get(constants.HEADER_ODATA_ENTITY_ID), -1)
 		if len(match) == 0 {
-			return nil, fmt.Errorf("no entity record id returned from the odata-entityid header")
+			return nil, errors.New("no entity record id returned from the odata-entityid header")
 		}
 		result.Id = match[len(match)-1][0]
 	} else {
-		return nil, fmt.Errorf("no entity record id returned from the API")
+		return nil, errors.New("no entity record id returned from the API")
 	}
 
 	err = applyRelations(ctx, client, relations, environmentId, result.Id, entityDefinition)
@@ -535,12 +535,12 @@ func (client *client) DeleteDataRecord(ctx context.Context, recordId string, env
 			for _, nestedItem := range nestedMapList {
 				nestedMap, ok := nestedItem.(map[string]any)
 				if !ok {
-					return fmt.Errorf("nestedItem is not of type map[string]any")
+					return errors.New("nestedItem is not of type map[string]any")
 				}
 
 				dataRecordId, ok := nestedMap["data_record_id"].(string)
 				if !ok {
-					return fmt.Errorf("data_record_id field is missing or not a string")
+					return errors.New("data_record_id field is missing or not a string")
 				}
 
 				apiUrl := &url.URL{
@@ -550,7 +550,7 @@ func (client *client) DeleteDataRecord(ctx context.Context, recordId string, env
 				}
 				_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent, http.StatusNotFound}, nil)
 				if err != nil {
-					return fmt.Errorf("Error while deleting data record. %w", err)
+					return errors.New("Error while deleting data record. %w")
 				}
 			}
 		}
@@ -573,11 +573,11 @@ func (client *client) DeleteDataRecord(ctx context.Context, recordId string, env
 func getTableLogicalNameAndDataRecordIdFromMap(nestedMap map[string]any) (tableLogicalName string, dataRecordId string, err error) {
 	tableLogicalName, ok := nestedMap["table_logical_name"].(string)
 	if !ok {
-		return "", "", fmt.Errorf("table_logical_name field is missing or not a string")
+		return "", "", errors.New("table_logical_name field is missing or not a string")
 	}
 	id, ok := nestedMap["data_record_id"].(string)
 	if !ok {
-		return "", "", fmt.Errorf("data_record_id field is missing or not a string")
+		return "", "", errors.New("data_record_id field is missing or not a string")
 	}
 	return tableLogicalName, id, nil
 }
@@ -626,7 +626,7 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 		for _, nestedItem := range nestedMapList {
 			nestedMap, ok := nestedItem.(map[string]any)
 			if !ok {
-				return fmt.Errorf("nestedItem is not of type map[string]any")
+				return errors.New("nestedItem is not of type map[string]any")
 			}
 
 			tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
@@ -658,7 +658,7 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 	for _, nestedItem := range nestedMapList {
 		nestedMap, ok := nestedItem.(map[string]any)
 		if !ok {
-			return fmt.Errorf("nestedItem is not of type map[string]any")
+			return errors.New("nestedItem is not of type map[string]any")
 		}
 
 		tableLogicalName, dataRecordId, err := getTableLogicalNameAndDataRecordIdFromMap(nestedMap)
