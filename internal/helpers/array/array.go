@@ -8,23 +8,19 @@ package array
 func Diff(newArr, oldArr []string) (added []string, removed []string) {
 	addedElements := make([]string, 0)
 	removedElements := make([]string, 0)
-
 	oldMap := make(map[string]bool)
 	for _, item := range oldArr {
 		oldMap[item] = true
 	}
-
 	newMap := make(map[string]bool)
 	for _, item := range newArr {
 		newMap[item] = true
 	}
-
 	for _, item := range newArr {
 		if _, found := oldMap[item]; !found {
 			addedElements = append(addedElements, item)
 		}
 	}
-
 	for _, item := range oldArr {
 		if _, found := newMap[item]; !found {
 			removedElements = append(removedElements, item)

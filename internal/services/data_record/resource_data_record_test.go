@@ -999,7 +999,7 @@ func TestAccDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					mocks.TestStateValueMatch(primarycontactidStep1, primarycontactidStep2, func(a, b *mocks.StateValue) error {
 						if a.Value == b.Value {
-							return fmt.Errorf("expected primarycontactid from before and after change are equal, but a change was expected. '%s' == '%s'", a.Value, b.Value)
+							return errors.New("expected primarycontactid from before and after change are equal, but a change was expected")
 						}
 						return nil
 					}),
