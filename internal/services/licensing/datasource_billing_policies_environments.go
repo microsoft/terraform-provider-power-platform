@@ -46,7 +46,6 @@ func (d *BillingPoliciesEnvironmetsDataSource) Schema(ctx context.Context, req d
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the environments associated with a billing policy",
 		MarkdownDescription: "Fetches the environments associated with a [billing policy](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy).\n\nThis data source uses the [List Billing Policy Environments](https://learn.microsoft.com/rest/api/power-platform/licensing/billing-policy-environment/list-billing-policy-environments) endpoint in the Power Platform API.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
@@ -54,11 +53,9 @@ func (d *BillingPoliciesEnvironmetsDataSource) Schema(ctx context.Context, req d
 			}),
 			"billing_policy_id": schema.StringAttribute{
 				Required:            true,
-				Description:         "The id of the billing policy",
 				MarkdownDescription: "The id of the billing policy",
 			},
 			"environments": schema.SetAttribute{
-				Description:         "The environments associated with the billing policy",
 				MarkdownDescription: "The environments associated with the billing policy",
 				ElementType:         types.StringType,
 				Computed:            true,

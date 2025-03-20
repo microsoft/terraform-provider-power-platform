@@ -45,115 +45,95 @@ func (d *TenantApplicationPackagesDataSource) Schema(ctx context.Context, req da
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the list of Dynamics 365 tenant level applications",
 		MarkdownDescription: "Fetches the list of Dynamics 365 tenant level applications",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
 			"name": schema.StringAttribute{
-				Description: "Name of the Dynamics 365 application",
-				Optional:    true,
+				MarkdownDescription: "Name of the Dynamics 365 application",
+				Optional:            true,
 			},
 			"publisher_name": schema.StringAttribute{
-				Description: "Publisher Name of the Dynamics 365 application",
-				Optional:    true,
+				MarkdownDescription: "Publisher Name of the Dynamics 365 application",
+				Optional:            true,
 			},
 			"applications": schema.ListNestedAttribute{
-				Description:         "List of Applications",
 				MarkdownDescription: "List of Applications",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"application_visibility": schema.StringAttribute{
 							MarkdownDescription: "Application Visibility",
-							Description:         "Application Visibility",
 							Computed:            true,
 						},
 						"catalog_visibility": schema.StringAttribute{
 							MarkdownDescription: "Catalog Visibility",
-							Description:         "Catalog Visibility",
 							Computed:            true,
 						},
 						"application_id": schema.StringAttribute{
 							MarkdownDescription: "ApplicaitonId",
-							Description:         "ApplicaitonId",
 							Computed:            true,
 						},
 						"application_descprition": schema.StringAttribute{
 							MarkdownDescription: "Applicaiton Description",
-							Description:         "Applicaiton Description",
 							Computed:            true,
 						},
 						"application_name": schema.StringAttribute{
 							MarkdownDescription: "Name",
-							Description:         "Name",
 							Computed:            true,
 						},
 						"learn_more_url": schema.StringAttribute{
 							MarkdownDescription: "Learn More Url",
-							Description:         "Learn More Url",
 							Computed:            true,
 						},
 						"localized_description": schema.StringAttribute{
 							MarkdownDescription: "Localized Description",
-							Description:         "Localized Description",
 							Computed:            true,
 						},
 						"localized_name": schema.StringAttribute{
 							MarkdownDescription: "Localized Name",
-							Description:         "Localized Name",
 							Computed:            true,
 						},
 						"publisher_id": schema.StringAttribute{
 							MarkdownDescription: "Publisher Id",
-							Description:         "Publisher Id",
 							Computed:            true,
 						},
 						"publisher_name": schema.StringAttribute{
 							MarkdownDescription: "Publisher Name",
-							Description:         "Publisher Name",
 							Computed:            true,
 						},
 						"unique_name": schema.StringAttribute{
 							MarkdownDescription: "Unique Name",
-							Description:         "Unique Name",
 							Computed:            true,
 						},
 						"last_error": schema.ListNestedAttribute{
-							Description:         "Last Error",
 							MarkdownDescription: "Last Error",
 							Computed:            true,
 							NestedObject: schema.NestedAttributeObject{
 								Attributes: map[string]schema.Attribute{
 									"error_code": schema.StringAttribute{
 										MarkdownDescription: "Error Code",
-										Description:         "Error Code",
 										Computed:            true,
 									},
 									"error_name": schema.StringAttribute{
 										MarkdownDescription: "Error Name",
-										Description:         "Error Name",
 										Computed:            true,
 									},
 									"message": schema.StringAttribute{
 										MarkdownDescription: "Message",
-										Description:         "Message",
 										Computed:            true,
 									},
 									"source": schema.StringAttribute{
 										MarkdownDescription: "Source",
-										Description:         "Source",
 										Computed:            true,
 									},
 									"status_code": schema.Int64Attribute{
 										MarkdownDescription: "Status Code",
-										Description:         "Status Code",
 										Computed:            true,
 									},
 									"type": schema.StringAttribute{
 										MarkdownDescription: "Type",
-										Description:         "Type",
 										Computed:            true,
 									},
 								},
