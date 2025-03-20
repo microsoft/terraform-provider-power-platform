@@ -5,6 +5,7 @@ package managed_environment
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -101,7 +102,7 @@ type SolutionCheckerRule struct {
 
 func (client *client) FetchSolutionCheckerRules(ctx context.Context, environmentId string) ([]string, error) {
 	if client.environmentClient == (environment.Client{}) {
-		return nil, fmt.Errorf("environmentClient is not initialized")
+		return nil, errors.New("environmentClient is not initialized")
 	}
 
 	env, err := client.environmentClient.GetEnvironment(ctx, environmentId)
@@ -110,7 +111,7 @@ func (client *client) FetchSolutionCheckerRules(ctx context.Context, environment
 	}
 
 	if env.Properties.RuntimeEndpoints.PowerAppsAdvisor == "" {
-		return nil, fmt.Errorf("PowerAppsAdvisor URL is empty")
+		return nil, errors.New("PowerAppsAdvisor URL is empty")
 	}
 
 	powerAppsAdvisorUrl, err := url.Parse(env.Properties.RuntimeEndpoints.PowerAppsAdvisor)

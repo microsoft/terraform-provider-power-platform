@@ -550,7 +550,7 @@ func (client *client) DeleteDataRecord(ctx context.Context, recordId string, env
 				}
 				_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent, http.StatusNotFound}, nil)
 				if err != nil {
-					return fmt.Errorf("Error while deleting data record. %w", err)
+					return errors.New("Error while deleting data record. %w")
 				}
 			}
 		}
