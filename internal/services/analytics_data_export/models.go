@@ -14,15 +14,15 @@ type AnalyticsDataExportModel struct {
 
 // AnalyticsDataModel represents the model for individual Analytics Data entry.
 type AnalyticsDataModel struct {
-	ID               types.String       `tfsdk:"id"`
-	Source           types.String       `tfsdk:"source"`
-	Environments     []EnvironmentModel `tfsdk:"environments"`
-	Status           []StatusModel      `tfsdk:"status"`
-	Sink             SinkModel          `tfsdk:"sink"`
-	PackageName      types.String       `tfsdk:"package_name"`
-	Scenarios        []types.String     `tfsdk:"scenarios"`
-	ResourceProvider types.String       `tfsdk:"resource_provider"`
-	AiType           types.String       `tfsdk:"ai_type"`
+	ID               types.String   `tfsdk:"id"`
+	Source           types.String   `tfsdk:"source"`
+	Environments     []types.String `tfsdk:"environments"`
+	Status           []StatusModel  `tfsdk:"status"`
+	Sink             SinkModel      `tfsdk:"sink"`
+	PackageName      types.String   `tfsdk:"package_name"`
+	Scenarios        []types.String `tfsdk:"scenarios"`
+	ResourceProvider types.String   `tfsdk:"resource_provider"`
+	AiType           types.String   `tfsdk:"ai_type"`
 }
 
 // StatusModel represents the model for Status entry.
@@ -31,12 +31,6 @@ type StatusModel struct {
 	State     types.String `tfsdk:"state"`
 	LastRunOn types.String `tfsdk:"last_run_on"`
 	Message   types.String `tfsdk:"message"`
-}
-
-// EnvironmentModel represents the model for Environment configuration.
-type EnvironmentModel struct {
-	EnvironmentId  types.String `tfsdk:"environment_id"`
-	OrganizationId types.String `tfsdk:"organization_id"`
 }
 
 // SinkModel represents the model for Sink configuration.
@@ -55,13 +49,10 @@ func convertDtoToModel(dto *AnalyticsDataDto) *AnalyticsDataModel {
 		return nil
 	}
 
-	// Map environments
-	environments := make([]EnvironmentModel, 0, len(dto.Environments))
+	// Map environments to just the environment IDs
+	environments := make([]types.String, 0, len(dto.Environments))
 	for _, env := range dto.Environments {
-		environments = append(environments, EnvironmentModel{
-			EnvironmentId:  types.StringValue(env.EnvironmentId),
-			OrganizationId: types.StringValue(env.OrganizationId),
-		})
+		environments = append(environments, types.StringValue(env.EnvironmentId))
 	}
 
 	// Map status

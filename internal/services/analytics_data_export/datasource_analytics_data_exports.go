@@ -64,21 +64,10 @@ func (d *AnalyticsExportDataSource) Schema(ctx context.Context, req datasource.S
 							MarkdownDescription: "The source of the analytics data",
 							Computed:            true,
 						},
-						"environments": schema.SetNestedAttribute{
-							MarkdownDescription: "The environments configured for analytics data export",
+						"environments": schema.SetAttribute{
+							MarkdownDescription: "The environment IDs configured for analytics data export",
 							Computed:            true,
-							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"environment_id": schema.StringAttribute{
-										MarkdownDescription: "The identifier of the environment",
-										Computed:            true,
-									},
-									"organization_id": schema.StringAttribute{
-										MarkdownDescription: "The identifier of the organization",
-										Computed:            true,
-									},
-								},
-							},
+							ElementType:         types.StringType,
 						},
 						"status": schema.SetNestedAttribute{
 							MarkdownDescription: "The status information for the analytics data export",

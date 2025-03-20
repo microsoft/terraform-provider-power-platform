@@ -69,8 +69,7 @@ func TestUnitAnalyticsDataExportsDataSource_Validate_Read(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.source", "AppInsight"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.environments.0.environment_id", "00000000-0000-0000-0000-000000000002"),
-					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.environments.0.organization_id", "00000000-0000-0000-0000-000000000003"),
+					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.environments.0", "00000000-0000-0000-0000-000000000002"),
 					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.status.0.name", "Plugin executions excep"),
 					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.status.0.state", "Connected"),
 					resource.TestCheckResourceAttr("data.powerplatform_analytics_data_exports.test", "exports.0.status.0.last_run_on", "2025-03-08T06:55:56.0481713+00:00"),
