@@ -44,7 +44,7 @@ func (r *EnvironmentApplicationPackageInstallResource) Schema(ctx context.Contex
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "This resource allows you to install a Dynamics 365 application in an environment.\n\nThis is functionally equivalent to the 'Install' button in the Power Platform admin center or [`pac application install` in the Power Platform CLI](https://docs.microsoft.com/powerapps/developer/data-platform/powerapps-cli#pac-application-install).  This resource uses the [Install Application Package](https://learn.microsoft.com/rest/api/power-platform/appmanagement/applications/install-application-package) endpoint in the Power Platform API.",
+		MarkdownDescription: "This resource allows you to install a Dynamics 365 application in an environment. This is functionally equivalent to the 'Install' button in the Power Platform admin center or [`pac application install` in the Power Platform CLI](https://docs.microsoft.com/powerapps/developer/data-platform/powerapps-cli#pac-application-install).  This resource uses the [Install Application Package](https://learn.microsoft.com/rest/api/power-platform/appmanagement/applications/install-application-package) endpoint in the Power Platform API.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
