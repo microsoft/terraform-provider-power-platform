@@ -9,15 +9,11 @@ import (
 )
 
 type ResourceModel struct {
-	Timeouts      timeouts.Value `tfsdk:"timeouts"`
 	Id            types.String   `tfsdk:"id"`
 	EnvironmentId types.String   `tfsdk:"environment_id"`
 	FeatureName   types.String   `tfsdk:"feature_name"`
 	State         types.String   `tfsdk:"state"`
-}
-
-type FeaturesArrayDto struct {
-	Values []FeatureDto `json:"values"`
+	Timeouts      timeouts.Value `tfsdk:"timeouts"`
 }
 
 type FeatureDto struct {
@@ -33,3 +29,19 @@ type FeatureDto struct {
 	State            string `json:"state"`
 	AppsUpgradeState string `json:"appsUpgradeState"`
 }
+
+type FeaturesArrayDto struct {
+	Values []FeatureDto `json:"values"`
+}
+
+type OrganizationDto struct {
+	TenantId         string `json:"tenantId"`
+	Name             string `json:"name"`
+	Id               string `json:"id"`
+	CrmGeo           string `json:"crmGeo"`
+	RelationType     string `json:"relationType"`
+	OrganizationType int    `json:"organizationType"`
+	Url              string `json:"url"`
+}
+
+type OrganizationsArrayDto []OrganizationDto

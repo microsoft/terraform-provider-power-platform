@@ -18,6 +18,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers/array"
@@ -97,6 +98,12 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 
 	for {
 		token, err := client.BaseAuth.GetTokenForScopes(ctx, scopes)
+
+		// if method == "POST" {
+		// 	// save token to file for debugging
+		// 	err = os.WriteFile("token.txt", []byte(*token), 0644)
+		// }
+
 		if err != nil {
 			return nil, err
 		}
@@ -178,6 +185,8 @@ func tryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (stri
 		return cloudConfig.PowerPlatformScope, nil
 	case strings.LastIndex(url, cloudConfig.PowerAppsAdvisor) != -1:
 		return cloudConfig.PowerAppsAdvisorScope, nil
+	case strings.LastIndex(url, cloudConfig.AdminPowerPlatformUrl) != -1:
+		return constants.PPAC_SCOPE, nil
 	default:
 		u, err := neturl.Parse(url)
 		return u.Scheme + "://" + u.Host + "/.default", err

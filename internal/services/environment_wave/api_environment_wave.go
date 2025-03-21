@@ -24,14 +24,46 @@ func newEnvironmentWaveClient(apiClient *api.Client) *environmentWaveClient {
 	}
 }
 
-func (client *environmentWaveClient) UpdateFeature(ctx context.Context, environmentId string, featureName string) (*FeatureDto, error) {
+func (client *environmentWaveClient) GetGeoFromEnvironment(ctx context.Context, environmentId string) (*string, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   "api.admin.powerplatform.microsoft.com",
+		Host:   client.Api.GetConfig().Urls.AdminPowerPlatformUrl,
+		Path:   "/api/tenants/mytenant/organizations",
+	}
+
+	organizations := OrganizationsArrayDto{}
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &organizations)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, org := range organizations {
+		if org.Id == environmentId {
+			return &org.CrmGeo, nil
+		}
+	}
+	return nil, fmt.Errorf("geo for environment with ID %s not found", environmentId)
+}
+
+func (client *environmentWaveClient) UpdateFeature(ctx context.Context, environmentId string, featureName string) (*FeatureDto, error) {
+	geo, err := client.GetGeoFromEnvironment(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   client.Api.GetConfig().Urls.AdminPowerPlatformUrl,
 		Path:   fmt.Sprintf("/api/environments/%s/features/%s/enable", environmentId, featureName),
 	}
 
-	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	values := url.Values{}
+	values.Add("geo", *geo)
+	apiUrl.RawQuery = values.Encode()
+
+	urlString := apiUrl.String()
+
+	_, err = client.Api.Execute(ctx, nil, "POST", urlString, nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +75,8 @@ func (client *environmentWaveClient) UpdateFeature(ctx context.Context, environm
 			return nil, err
 		}
 
-		if feature.Enabled {
-			tflog.Info(ctx, fmt.Sprintf("Feature %s enabled with state: %s", featureName, feature.AppsUpgradeState))
+		if feature != nil && feature.AppsUpgradeState != "Upgrading" {
+			tflog.Info(ctx, fmt.Sprintf("Feature %s  with state: %s", featureName, feature.AppsUpgradeState))
 			return feature, nil
 		}
 
@@ -58,14 +90,23 @@ func (client *environmentWaveClient) UpdateFeature(ctx context.Context, environm
 }
 
 func (client *environmentWaveClient) GetFeature(ctx context.Context, environmentId string, featureName string) (*FeatureDto, error) {
+	geo, err := client.GetGeoFromEnvironment(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   "api.admin.powerplatform.microsoft.com",
+		Host:   client.Api.GetConfig().Urls.AdminPowerPlatformUrl,
 		Path:   fmt.Sprintf("/api/environments/%s/features", environmentId),
 	}
 
+	values := url.Values{}
+	values.Add("geo", *geo)
+	apiUrl.RawQuery = values.Encode()
+
 	features := FeaturesArrayDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &features)
+	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &features)
 	if err != nil {
 		return nil, err
 	}

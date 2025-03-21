@@ -57,6 +57,7 @@ type ProviderConfig struct {
 }
 
 type ProviderConfigUrls struct {
+	AdminPowerPlatformUrl string
 	BapiUrl               string
 	PowerAppsUrl          string
 	PowerAppsScope        string

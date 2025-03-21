@@ -6,10 +6,8 @@ package environment_wave
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -27,7 +25,6 @@ type Resource struct {
 }
 
 var _ resource.Resource = &Resource{}
-var _ resource.ResourceWithImportState = &Resource{}
 
 func NewEnvironmentWaveResource() resource.Resource {
 	return &Resource{
@@ -47,7 +44,8 @@ func (r *Resource) Metadata(ctx context.Context, req resource.MetadataRequest, r
 
 func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages wave feature installation in a Power Platform environment",
+		MarkdownDescription: "Manages wave feature installation in a Power Platform environment. \n\n" +
+			"**Known Limitations:** This resource is not supported for with service principal authentication.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
@@ -174,20 +172,8 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 }
 
 func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// Wave features cannot be disabled, so we just remove from state
-}
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
-func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	idParts := strings.Split(req.ID, "/")
-	if len(idParts) != 2 {
-		resp.Diagnostics.AddError(
-			"Invalid import ID",
-			"Import ID must be in the format: environment_id/feature_name",
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), idParts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("feature_name"), idParts[1])...)
+	resp.State.RemoveResource(ctx)
 }
