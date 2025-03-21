@@ -187,6 +187,8 @@ func tryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (stri
 		return cloudConfig.PowerAppsAdvisorScope, nil
 	case strings.LastIndex(url, cloudConfig.AdminPowerPlatformUrl) != -1:
 		return constants.PPAC_SCOPE, nil
+	case strings.LastIndex(url, "csanalytics") != -1:
+		return cloudConfig.AnalyticsScope, nil
 	default:
 		u, err := neturl.Parse(url)
 		return u.Scheme + "://" + u.Host + "/.default", err

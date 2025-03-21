@@ -60,7 +60,6 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		Description:         "The Power Platform Data Record Resource allows the management of configuration records that are stored in Dataverse as records. This resource is not recommended for managing business data or other data that may be changed by Dataverse users in the context of normal business activities.",
 		MarkdownDescription: "The Power Platform Data Record Resource allows the management of configuration records that are stored in Dataverse as records. This resource is not recommended for managing business data or other data that may be changed by Dataverse users in the context of normal business activities.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
@@ -385,7 +384,7 @@ func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrTy
 
 	relationMap, err := apiClient.GetRelationData(ctx, environmentId, tableLogicalName, recordid, key)
 	if err != nil {
-		return fmt.Errorf("error getting relation data: %s", err.Error())
+		return errors.New("error getting relation data: " + err.Error())
 	}
 
 	for _, rawItem := range relationMap {
@@ -396,11 +395,11 @@ func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrTy
 
 		relationTableLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
 		if err != nil {
-			return fmt.Errorf("error getting entity relation definition info: %s", err.Error())
+			return errors.New("error getting entity relation definition info: " + err.Error())
 		}
 		entDefinition, err := getEntityDefinition(ctx, apiClient, environmentId, relationTableLogicalName)
 		if err != nil {
-			return fmt.Errorf("error getting entity definition: %s", err.Error())
+			return errors.New("error getting entity definition: " + err.Error())
 		}
 
 		dataRecordId, ok := item[entDefinition.PrimaryIDAttribute].(string)
@@ -432,7 +431,7 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 
 	mapColumns, err := convertResourceModelToMap(recordColumns)
 	if err != nil {
-		return nil, fmt.Errorf("error converting columns to map: %s", err.Error())
+		return nil, errors.New("error converting columns to map: " + err.Error())
 	}
 
 	attributeTypes := make(map[string]attr.Type)
@@ -451,7 +450,7 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 		case map[string]any:
 			entityLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
 			if err != nil {
-				return nil, fmt.Errorf("error getting entity relation definition info: %s", err.Error())
+				return nil, errors.New("error getting entity relation definition info: " + err.Error())
 			}
 			caseMapStringOfAny(columns[fmt.Sprintf("_%s_value", key)], attributes, attributeTypes, key, entityLogicalName, objectType)
 		case []any:

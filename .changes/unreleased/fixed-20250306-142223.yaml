@@ -1,5 +1,0 @@
-kind: fixed
-body: Lifecycle operation will retry if 'Failed' status was return.
-time: 2025-03-06T14:22:23.58911929Z
-custom:
-    Issue: "621"

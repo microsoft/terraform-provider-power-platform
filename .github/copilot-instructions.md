@@ -18,6 +18,9 @@ Helper methods that covert DTO to model and model to DTO should be in models.go 
 The DTO structures should always have `Dto` suffix and be in models.go file
 Use tflog.Debug for logging unless there is something really important (tflog.Info) or an error/warning
 Comments on methods should provide information about how to use it, its parameters, and expected results. Omit comments that don't substantially improve the readability of the code.
+The functions to convert Dto and model objects should be always named `convertDtoToModel` and `convertModelToDto` and should be placed in models.go file
+
+## Testing
 
 When writing unit tests for resources you must register mock responders for every step of the process:
 

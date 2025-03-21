@@ -41,6 +41,7 @@
     "TF_LOG": "ERROR",
     "TF_CLI_CONFIG_FILE": "/workspaces/terraform-provider-power-platform/.terraformrc",
     "POWER_PLATFORM_USE_CLI": "true",
-    "ARM_USE_CLI": "true"
+    "ARM_USE_CLI": "true",
+    "REQUESTS_CA_BUNDLE": "/etc/ssl/certs/ca-certificates.crt"
   }
 }
