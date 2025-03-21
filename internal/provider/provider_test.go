@@ -32,6 +32,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_groups"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_settings"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_templates"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_wave"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/languages"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/locations"
@@ -103,6 +104,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		enterprise_policy.NewEnterpisePolicyResource(),
 		copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource(),
 		tenant_isolation_policy.NewTenantIsolationPolicyResource(),
+		environment_wave.NewEnvironmentWaveResource(),
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
 
