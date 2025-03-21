@@ -14,6 +14,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: main
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -26,15 +27,20 @@ jobs:
 
       - name: Batch and Merge Changelog
         run: |
+          echo "previous_version=v$(changie latest)" >> $GITHUB_OUTPUT
           changie batch auto
           changie merge
+          echo "new_version=v$(changie latest)" >> $GITHUB_OUTPUT
 
       - name: Commit Changelog Changes
         run: |
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
           git add .
-          git commit -m "Merge changelog entries for release" || echo "No changes to commit"
+          git commit -m "Merge changelog entries for v$(changie latest) release
+          >
+          >
+          skip-checks: true" || echo "No changes to commit"
           git push origin main
 
       - name: Create and Push Release Tag
