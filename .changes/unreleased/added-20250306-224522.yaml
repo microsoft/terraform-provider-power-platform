@@ -1,5 +1,0 @@
-kind: added
-body: new `powerplatform_solution_checker_rules` datasource for retrieving solution checker validation rules
-time: 2025-03-06T22:45:22.313020365Z
-custom:
-    Issue: "574"

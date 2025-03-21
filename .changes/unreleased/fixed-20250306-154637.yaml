@@ -1,5 +1,0 @@
-kind: fixed
-body: '`powerplatform_user`: added retry when user is not yet added to the dataverse'
-time: 2025-03-06T15:46:37.000647437Z
-custom:
-    Issue: "622"
