@@ -146,7 +146,7 @@ The `/examples` directory provides usage examples for the provider, resources, a
 
 ### Guidelines for Resources
 
-#### Structure and Interfaces
+#### Resource Structure and Interfaces
 
 - Implement `resource.Resource` interface for all resources.
 - Implement `resource.ResourceWithImportState` for resources supporting import.
@@ -155,7 +155,7 @@ The `/examples` directory provides usage examples for the provider, resources, a
 - Embed `helpers.TypeInfo` in your resource struct to inherit standard functionality.
 - Add required client fields to your resource struct to access APIs.
 
-#### Schema Definition
+#### Resource Schema Definition
 
 - Define complete schemas with proper attribute types (String, Int64, Bool, etc.).
 - Mark attributes explicitly as `Required`, `Optional`, or `Computed`.
@@ -166,7 +166,7 @@ The `/examples` directory provides usage examples for the provider, resources, a
 - Include standard timeouts using `github.com/hashicorp/terraform-plugin-framework-timeouts`.
 - Write clear `MarkdownDescription` for each attribute (do not use the deprecated `Description` field).
 
-#### State Management
+#### Resource State Management
 
 - In `Create`, populate state with all resource attributes after successful creation.
 - In `Read`, refresh the full state based on the current resource values from the API.
@@ -174,7 +174,7 @@ The `/examples` directory provides usage examples for the provider, resources, a
 - In `Update`, apply only the changed attributes and refresh state afterwards.
 - Return early with appropriate diagnostics when operations cannot complete successfully.
 
-#### Validation
+#### Resource Validation
 
 - Apply built-in validators from `github.com/hashicorp/terraform-plugin-framework-validators` for attribute constraints.
 - Implement resource-level validation in the `ValidateConfig` method when validation involves multiple attributes.
@@ -183,7 +183,7 @@ The `/examples` directory provides usage examples for the provider, resources, a
 
 ### Guidelines for Data Sources
 
-#### Structure and Interfaces
+#### Data Source Structure and Interfaces
 
 - Implement the `datasource.DataSource` and `datasource.DataSourceWithConfigure` interfaces for all data sources.
 - Order data source methods consistently: `Metadata`, `Schema`, `Configure`, `Read`.
@@ -191,7 +191,7 @@ The `/examples` directory provides usage examples for the provider, resources, a
 - Add required client fields to your data source struct to access APIs.
 - Name factory functions as `New<DataSourceName>DataSource()` (e.g., `NewSolutionsDataSource`).
 
-#### Schema Definition
+#### Data Source Schema Definition
 
 - Mark all attributes as `Computed: true` since data sources are read-only by design.
 - For optional filter parameters, use `Required: false` and `Optional: true`.
@@ -203,7 +203,7 @@ The `/examples` directory provides usage examples for the provider, resources, a
 - Include output-only fields that will assist users in identifying or using the data in further resources.
 - For primary list attributes (e.g., "applications", "environments"), use the plural form as the attribute name.
 
-#### Query Parameters
+#### Data Source Query Parameters
 
 - For data sources that filter results, define explicit filter attributes:
   - Common patterns include `name`, `publisher_name`, `environment_id`, etc.
@@ -211,7 +211,7 @@ The `/examples` directory provides usage examples for the provider, resources, a
 - Support sensible combinations of filter parameters that match Power Platform API capabilities.
 - Document filter parameters with clear examples in the `MarkdownDescription`.
 
-#### Read Implementation
+#### Data Source Read Implementation
 
 - Parse all input filter parameters from state at the beginning of the Read method.
 - Include context propagation: `ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)` with a matching `defer exitContext()`.
@@ -232,7 +232,7 @@ The `/examples` directory provides usage examples for the provider, resources, a
 - Ensure acceptance tests use non-destructive read-only operations.
 - For data sources that return lists, test accessing list items with collection syntax.
 
-#### Documentation and Examples
+#### Data Source Documentation and Examples
 
 - Include a representative example in the `/examples/data-sources/{data_source_name}/` directory.
 - For data sources with filter parameters, include examples showing different filtering options.
