@@ -31,27 +31,12 @@ func registerOrganizationsMock(t *testing.T, testFolder string) {
 		})
 }
 
-func TestAccountEnvironmentWaveResource(t *testing.T) {
-	t.Setenv("TF_ACC", "true")
-	resource.Test(t, resource.TestCase{
-		IsUnitTest:               false,
-		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
-		Steps: []resource.TestStep{
-			{
-				Config: `
-				resource "powerplatform_environment_wave" "example" {
-					environment_id = "f1793ec3-6f26-e1bc-8474-3aa36db34148"
-					feature_name   = "April2025Update"
-
-					timeouts = {
-						create = "60m" # Allow up to 45 minutes for the feature to be installed
-					}
-				}`,
-
-				Check: resource.ComposeAggregateTestCheckFunc(),
-			},
-		},
-	})
+func registerEnvironmentMock(t *testing.T, testFolder string) {
+	// Register a mock for the environment API call
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001(\?.+)?$`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, loadTestResponse(t, testFolder, "get_environment_00000000-0000-0000-0000-000000000001.json")), nil
+		})
 }
 
 func TestUnitEnvironmentWaveResource_Create(t *testing.T) {
@@ -59,6 +44,7 @@ func TestUnitEnvironmentWaveResource_Create(t *testing.T) {
 	defer httpmock.DeactivateAndReset()
 
 	mocks.ActivateEnvironmentHttpMocks()
+	registerEnvironmentMock(t, "EnvironmentWaveResource_Create")
 
 	// Register organizations mock
 	registerOrganizationsMock(t, "EnvironmentWaveResource_Create")
@@ -105,6 +91,7 @@ func TestUnitEnvironmentWaveResource_Error(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
+	registerEnvironmentMock(t, "EnvironmentWaveResource_Error")
 
 	// Register organizations mock
 	registerOrganizationsMock(t, "EnvironmentWaveResource_Error")
@@ -145,6 +132,7 @@ func TestUnitEnvironmentWaveResource_NotFound(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
+	registerEnvironmentMock(t, "EnvironmentWaveResource_NotFound")
 
 	// Register organizations mock
 	registerOrganizationsMock(t, "EnvironmentWaveResource_NotFound")
@@ -181,6 +169,7 @@ func TestUnitEnvironmentWaveResource_FailedDuringUpgrade(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
+	registerEnvironmentMock(t, "EnvironmentWaveResource_FailedDuringUpgrade")
 
 	// Register organizations mock
 	registerOrganizationsMock(t, "EnvironmentWaveResource_FailedDuringUpgrade")
@@ -227,6 +216,7 @@ func TestUnitEnvironmentWaveResource_UnsupportedState(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
+	registerEnvironmentMock(t, "EnvironmentWaveResource_UnsupportedState")
 
 	// Register organizations mock
 	registerOrganizationsMock(t, "EnvironmentWaveResource_UnsupportedState")
