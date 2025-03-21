@@ -16,7 +16,14 @@ import "time"
 
 const ZERO_UUID = "00000000-0000-0000-0000-000000000000"
 
+// PROD | dac-prod-tm | admin.powerplatform.microsoft.com, api.admin.powerplatform.microsoft.com
+// GCC| dac-gcc-tm | gcc.admin.powerplatform.microsoft.us,api.gcc.admin.powerplatform.microsoft.us
+// GCC-H | dac-usg-tm | high.admin.powerplatform.microsoft.us,api.high.admin.powerplatform.microsoft.us
+
+// Mooncake | dac-mooncake-tm | ppac.partner.microsoftonline.cn, api.ppac.partner.microsoftonline.cn
+
 const (
+	PUBLIC_ADMIN_POWER_PLATFORM_URL     = "api.admin.powerplatform.microsoft.com"
 	PUBLIC_OAUTH_AUTHORITY_URL          = "https://login.microsoftonline.com/"
 	PUBLIC_BAPI_DOMAIN                  = "api.bap.microsoft.com"
 	PUBLIC_POWERAPPS_API_DOMAIN         = "api.powerapps.com"
@@ -30,6 +37,7 @@ const (
 )
 
 const (
+	USDOD_ADMIN_POWER_PLATFORM_URL     = "api.admin.appsplatform.us"
 	USDOD_OAUTH_AUTHORITY_URL          = "https://login.microsoftonline.us/"
 	USDOD_BAPI_DOMAIN                  = "api.bap.appsplatform.us"
 	USDOD_POWERAPPS_API_DOMAIN         = "api.apps.appsplatform.us"
@@ -43,6 +51,7 @@ const (
 )
 
 const (
+	USGOV_ADMIN_POWER_PLATFORM_URL     = "api.gcc.admin.powerplatform.microsoft.us"
 	USGOV_OAUTH_AUTHORITY_URL          = "https://login.microsoftonline.com/"
 	USGOV_BAPI_DOMAIN                  = "gov.api.bap.microsoft.us"
 	USGOV_POWERAPPS_API_DOMAIN         = "gov.api.powerapps.us"
@@ -56,6 +65,7 @@ const (
 )
 
 const (
+	USGOVHIGH_ADMIN_POWER_PLATFORM_URL     = "api.high.admin.powerplatform.microsoft.us"
 	USGOVHIGH_OAUTH_AUTHORITY_URL          = "https://login.microsoftonline.us/"
 	USGOVHIGH_BAPI_DOMAIN                  = "high.api.bap.microsoft.us"
 	USGOVHIGH_POWERAPPS_API_DOMAIN         = "high.api.powerapps.us"
@@ -69,6 +79,7 @@ const (
 )
 
 const (
+	CHINA_ADMIN_POWER_PLATFORM_URL     = "api.ppac.partner.microsoftonline.cn"
 	CHINA_OAUTH_AUTHORITY_URL          = "https://login.chinacloudapi.cn/"
 	CHINA_BAPI_DOMAIN                  = "api.bap.partner.microsoftonline.cn"
 	CHINA_POWERAPPS_API_DOMAIN         = "api.powerapps.cn"
@@ -82,6 +93,7 @@ const (
 )
 
 const (
+	EX_ADMIN_POWER_PLATFORM_URL     = "api.admin.powerplatform.eaglex.ic.gov"
 	EX_OAUTH_AUTHORITY_URL          = "https://login.microsoftonline.eaglex.ic.gov/"
 	EX_BAPI_DOMAIN                  = "api.bap.eaglex.ic.gov"
 	EX_POWERAPPS_API_DOMAIN         = "api.powerapps.eaglex.ic.gov"
@@ -96,6 +108,7 @@ const (
 )
 
 const (
+	RX_ADMIN_POWER_PLATFORM_URL     = "api.admin.powerplatform.microsoft.scloud"
 	RX_OAUTH_AUTHORITY_URL          = "https://login.microsoftonline.microsoft.scloud/"
 	RX_BAPI_DOMAIN                  = "api.bap.microsoft.scloud"
 	RX_POWERAPPS_API_DOMAIN         = "api.powerapps.microsoft.scloud"
@@ -111,6 +124,7 @@ const (
 
 const (
 	COPILOT_SCOPE = "96ff4394-9197-43aa-b393-6a41652e21f8"
+	PPAC_SCOPE    = "065d9450-1e87-434e-ac2f-69af271549ed"
 )
 
 const (
