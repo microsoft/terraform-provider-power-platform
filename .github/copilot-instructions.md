@@ -144,6 +144,9 @@ The `/examples` directory provides usage examples for the provider, resources, a
   - Distinguish between different error types (authentication, validation, not found, etc.).
   - Log API responses and errors at debug level using `tflog.Debug` for troubleshooting.
 
+- **Request Context:**
+  - Resources and Data Sources should call `ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)` and `defer exitContext()` near the beginning of any method from resource or datasource interfaces.
+
 ### Guidelines for Resources
 
 #### Resource Structure and Interfaces
@@ -244,10 +247,11 @@ The `/examples` directory provides usage examples for the provider, resources, a
 
 Use the Terraform plugin logger (`tflog`) for logging within resource implementations.
 
-- **Debug Level:** Add `tflog.Debug` statements to log entry/exit of major operations or key values for troubleshooting. Use debug logs liberally to aid in diagnosing issues during development or when users enable verbose logging.
+- **Debug Level:** Add `tflog.Debug` statements to log major operations or key values for troubleshooting. Use debug logs liberally to aid in diagnosing issues during development or when users enable verbose logging.
 - **Info Level:** Use `tflog.Info` sparingly, only for important events or high-level information that could be useful in normal logs. Too much info-level logging can clutter output, so prefer Debug for most internal details.
 - **No Print/Printf:** Do not use `fmt.Println`/`log.Printf` or similar for logging. The `tflog` system ensures logs are structured and can be filtered by Terraform log level.
 - **Sensitive Data:** Never log sensitive information (credentials, PII, etc.). Ensure that debug logs do not expose secrets or user data.
+- **Request Context:** Do not trace the entry/exit of interface methods in resources or data source.  Instead use `EnterRequestContext` and `exitContext`
 
 ## Testing Best Practices
 
