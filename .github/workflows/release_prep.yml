@@ -27,8 +27,10 @@ jobs:
 
       - name: Batch and Merge Changelog
         run: |
+          echo "previous_version=v$(changie latest)" >> $GITHUB_OUTPUT
           changie batch auto
           changie merge
+          echo "new_version=v$(changie latest)" >> $GITHUB_OUTPUT
 
       - name: Commit Changelog Changes
         run: |
