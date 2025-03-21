@@ -12,19 +12,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
 type environmentWaveClient struct {
-	Api *api.Client
+	Api               *api.Client
+	environmentClient environment.Client
 }
 
 func newEnvironmentWaveClient(apiClient *api.Client) *environmentWaveClient {
 	return &environmentWaveClient{
-		Api: apiClient,
+		Api:               apiClient,
+		environmentClient: environment.NewEnvironmentClient(apiClient),
 	}
 }
 
-func (client *environmentWaveClient) GetGeoFromEnvironment(ctx context.Context, environmentId string) (*string, error) {
+func (client *environmentWaveClient) GetOrgEnvironmentId(ctx context.Context, environmentId string) (*OrganizationDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.AdminPowerPlatformUrl,
@@ -37,16 +40,21 @@ func (client *environmentWaveClient) GetGeoFromEnvironment(ctx context.Context, 
 		return nil, err
 	}
 
+	env, err := client.environmentClient.GetEnvironment(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, org := range organizations {
-		if org.Id == environmentId {
-			return &org.CrmGeo, nil
+		if org.Id == env.Properties.LinkedEnvironmentMetadata.ResourceId {
+			return &org, nil
 		}
 	}
 	return nil, fmt.Errorf("geo for environment with ID %s not found", environmentId)
 }
 
 func (client *environmentWaveClient) UpdateFeature(ctx context.Context, environmentId string, featureName string) (*FeatureDto, error) {
-	geo, err := client.GetGeoFromEnvironment(ctx, environmentId)
+	org, err := client.GetOrgEnvironmentId(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
@@ -54,11 +62,11 @@ func (client *environmentWaveClient) UpdateFeature(ctx context.Context, environm
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.AdminPowerPlatformUrl,
-		Path:   fmt.Sprintf("/api/environments/%s/features/%s/enable", environmentId, featureName),
+		Path:   fmt.Sprintf("/api/environments/%s/features/%s/enable", org.Id, featureName),
 	}
 
 	values := url.Values{}
-	values.Add("geo", *geo)
+	values.Add("geo", org.CrmGeo)
 	apiUrl.RawQuery = values.Encode()
 
 	urlString := apiUrl.String()
@@ -90,7 +98,7 @@ func (client *environmentWaveClient) UpdateFeature(ctx context.Context, environm
 }
 
 func (client *environmentWaveClient) GetFeature(ctx context.Context, environmentId string, featureName string) (*FeatureDto, error) {
-	geo, err := client.GetGeoFromEnvironment(ctx, environmentId)
+	org, err := client.GetOrgEnvironmentId(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
@@ -98,11 +106,11 @@ func (client *environmentWaveClient) GetFeature(ctx context.Context, environment
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.AdminPowerPlatformUrl,
-		Path:   fmt.Sprintf("/api/environments/%s/features", environmentId),
+		Path:   fmt.Sprintf("/api/environments/%s/features", org.Id),
 	}
 
 	values := url.Values{}
-	values.Add("geo", *geo)
+	values.Add("geo", org.CrmGeo)
 	apiUrl.RawQuery = values.Encode()
 
 	features := FeaturesArrayDto{}
