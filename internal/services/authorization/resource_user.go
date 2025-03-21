@@ -67,7 +67,6 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique user id (guid)",
-				Description:         "Unique user id (guid)",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),

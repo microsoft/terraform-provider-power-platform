@@ -53,7 +53,6 @@ func (r *AdminManagementApplicationResource) Schema(ctx context.Context, req res
 			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Client id for the service principal",
-				Description:         "Client id for the service principal",
 				Required:            true,
 				CustomType:          customtypes.UUIDType{},
 				PlanModifiers: []planmodifier.String{

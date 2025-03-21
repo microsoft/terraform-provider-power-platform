@@ -126,8 +126,8 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 						},
 					},
 					"teams_integration": schema.SingleNestedAttribute{
-						MarkdownDescription: "Teams Integration",
-						Optional:            true,
+						Description: "Teams Integration",
+						Optional:    true,
 						Attributes: map[string]schema.Attribute{
 							"share_with_colleagues_user_limit": schema.Int64Attribute{
 								MarkdownDescription: "Share With Colleagues User Limit",
@@ -136,9 +136,9 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 						},
 					},
 					"power_apps": schema.SingleNestedAttribute{
-						MarkdownDescription: "Power Apps",
-						Optional:            true,
-						PlanModifiers:       []planmodifier.Object{
+						Description:   "Power Apps",
+						Optional:      true,
+						PlanModifiers: []planmodifier.Object{
 							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
@@ -173,18 +173,18 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 						},
 					},
 					"power_automate": schema.SingleNestedAttribute{
-						MarkdownDescription: "Power Automate",
-						Optional:            true,
+						Description: "Power Automate",
+						Optional:    true,
 						Attributes: map[string]schema.Attribute{
 							"disable_copilot": schema.BoolAttribute{
-								Description: "Disable Copilot",
-								Optional:    true,
+								MarkdownDescription: "Disable Copilot",
+								Optional:            true,
 							},
 						},
 					},
 					"environments": schema.SingleNestedAttribute{
-						MarkdownDescription: "Environments",
-						Optional:            true, Computed: true,
+						Description: "Environments",
+						Optional:    true,
 						Attributes: map[string]schema.Attribute{
 							"disable_preferred_data_location_for_teams_environment": schema.BoolAttribute{
 								MarkdownDescription: "Disable Preferred Data Location For Teams Environment",
@@ -227,8 +227,8 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								Optional:            true,
 								Attributes: map[string]schema.Attribute{
 									"enable_desktop_flow_data_policy_management": schema.BoolAttribute{
-										Description: "Enable Desktop Flow Data Policy Management",
-										Optional:    true,
+										MarkdownDescription: "Enable Desktop Flow Data Policy Management",
+										Optional:            true,
 									},
 								},
 							},

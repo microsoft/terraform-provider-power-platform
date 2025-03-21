@@ -45,46 +45,37 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the client configuration for the given tenant.",
 		MarkdownDescription: "Fetches the client configuration for the given tenant.",
 		Attributes: map[string]schema.Attribute{
 			"tenant_id": schema.StringAttribute{
-				Description:         "Tenant ID of the application.",
 				MarkdownDescription: "Tenant ID of the application.",
 				Computed:            true,
 			},
 			"state": schema.StringAttribute{
-				Description:         "State of the tenant.",
 				MarkdownDescription: "State of the tenant.",
 				Computed:            true,
 			},
 			"location": schema.StringAttribute{
-				Description:         "Location of the tenant.",
 				MarkdownDescription: "Location of the tenant.",
 				Computed:            true,
 			},
 			"aad_country_geo": schema.StringAttribute{
-				Description:         "AAD country geo.",
 				MarkdownDescription: "AAD country geo.",
 				Computed:            true,
 			},
 			"data_storage_geo": schema.StringAttribute{
-				Description:         "Data storage geo.",
 				MarkdownDescription: "Data storage geo.",
 				Computed:            true,
 			},
 			"default_environment_geo": schema.StringAttribute{
-				Description:         "Default environment geo.",
 				MarkdownDescription: "Default environment geo.",
 				Computed:            true,
 			},
 			"aad_data_boundary": schema.StringAttribute{
-				Description:         "AAD data boundary.",
 				MarkdownDescription: "AAD data boundary.",
 				Computed:            true,
 			},
 			"fed_ramp_high_certification_required": schema.BoolAttribute{
-				Description:         "FedRAMP high certification required.",
 				MarkdownDescription: "FedRAMP high certification required.",
 				Computed:            true,
 			},

@@ -85,7 +85,6 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		Description:         "Manages a \"Managed Environment\" and associated settings",
 		MarkdownDescription: "Manages a [Managed Environment](https://learn.microsoft.com/power-platform/admin/managed-environment-overview) and associated settings. A Power Platform Managed Environment is a suite of premium capabilities that allows administrators to manage Power Platform at scale with more control, less effort, and more insights. Once an environment is managed, it unlocks additional features across the Power Platform",
 
 		Attributes: map[string]schema.Attribute{

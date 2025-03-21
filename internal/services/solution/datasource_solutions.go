@@ -44,66 +44,54 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the list of Solutions in an environment",
 		MarkdownDescription: "Fetches the list of Solutions in an environment.  This is the equivalent of the [`pac solution list`](https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-list) command in the Power Platform CLI.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
 			"environment_id": schema.StringAttribute{
-				Description:         "Unique environment id (guid)",
 				MarkdownDescription: "Unique environment id (guid)",
 				Required:            true,
 			},
 			"solutions": schema.ListNestedAttribute{
-				Description:         "List of Solutions",
 				MarkdownDescription: "List of Solutions",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							MarkdownDescription: "Solution id",
-							Description:         "Solution id",
 							Computed:            true,
 						},
 						"environment_id": schema.StringAttribute{
 							MarkdownDescription: "Unique environment id (guid)",
-							Description:         "Unique environment id (guid)",
 							Computed:            true,
 						},
 						"display_name": schema.StringAttribute{
 							MarkdownDescription: "Display name",
-							Description:         "Display name",
 							Computed:            true,
 						},
 						"name": schema.StringAttribute{
 							MarkdownDescription: "Name",
-							Description:         "Name",
 							Computed:            true,
 						},
 						"created_time": schema.StringAttribute{
 							MarkdownDescription: "Created time",
-							Description:         "Created time",
 							Computed:            true,
 						},
 						"modified_time": schema.StringAttribute{
 							MarkdownDescription: "Created time",
-							Description:         "Created time",
 							Computed:            true,
 						},
 						"install_time": schema.StringAttribute{
 							MarkdownDescription: "Created time",
-							Description:         "Created time",
 							Computed:            true,
 						},
 						"version": schema.StringAttribute{
 							MarkdownDescription: "Created time",
-							Description:         "Created time",
 							Computed:            true,
 						},
 						"is_managed": schema.BoolAttribute{
 							MarkdownDescription: "Is managed",
-							Description:         "Is managed",
 							Computed:            true,
 						},
 					},

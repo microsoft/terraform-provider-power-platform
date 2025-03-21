@@ -3,12 +3,12 @@
 page_title: "powerplatform_connection_shares Data Source - powerplatform"
 subcategory: ""
 description: |-
-  
+  Lists connection shares found in an environment. For more information about the connection sharing, see Share a connection reference https://learn.microsoft.com/en-us/power-automate/connection-sharing
 ---
 
 # powerplatform_connection_shares (Data Source)
 
-
+Lists connection shares found in an environment. For more information about the connection sharing, see [Share a connection reference](https://learn.microsoft.com/en-us/power-automate/connection-sharing)
 
 ## Example Usage
 
