@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -114,6 +116,8 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_group_id must be a valid environment group id guid"),
 					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
 				},
+				// TODO: because of the bug on the backend default value would trigger managed environment creation, we can use this default value when the bug is fixed
+				// Default: stringdefault.StaticString("00000000-0000-0000-0000-000000000000"),
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "Description of the environment",
@@ -122,6 +126,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Default: stringdefault.StaticString(""),
 			},
 			"cadence": schema.StringAttribute{
 				MarkdownDescription: "Cadence of updates for the environment (Frequent, Moderate). For more information check [here](https://learn.microsoft.com/en-us/power-platform/admin/create-environment#setting-an-environment-refresh-cadence).",
@@ -133,6 +138,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Validators: []validator.String{
 					stringvalidator.OneOf(CadenceTypes...),
 				},
+				Default: stringdefault.StaticString(CadenceTypesModerate),
 			},
 			"release_cycle": schema.StringAttribute{
 				MarkdownDescription: "Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).",
@@ -212,6 +218,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					stringvalidator.LengthAtLeast(1),
 					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "billing_policy_id must be a valid billing policy id guid"),
 				},
+				Default: stringdefault.StaticString("00000000-0000-0000-0000-000000000000"),
 			},
 			"enterprise_policies": schema.SetNestedAttribute{
 				MarkdownDescription: "Enterprise policies for the environment. See [Enterprise policies](https://learn.microsoft.com/en-us/power-platform/admin/enterprise-policies) for more details.",
@@ -245,6 +252,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						PlanModifiers: []planmodifier.Bool{
 							boolplanmodifier.UseStateForUnknown(),
 						},
+						Default: booldefault.StaticBool(false),
 					},
 					"background_operation_enabled": schema.BoolAttribute{
 						MarkdownDescription: "Indicates if background operation is enabled",
@@ -253,6 +261,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						PlanModifiers: []planmodifier.Bool{
 							boolplanmodifier.UseStateForUnknown(),
 						},
+						Default: booldefault.StaticBool(true),
 					},
 					"currency_code": schema.StringAttribute{
 						MarkdownDescription: "Currency name",
@@ -290,6 +299,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					"security_group_id": schema.StringAttribute{
 						MarkdownDescription: "Security group id (guid). For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
 						Optional:            true,
+						Computed:            true,
 						Validators: []validator.String{
 							stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "security_group_id must be a valid security group guid id"),
 							validators.MakeFieldRequiredWhenOtherFieldDoesNotHaveValue(path.Root("environment_type").Expression(), regexp.MustCompile(EnvironmentTypesExceptDeveloperRegex), "dataverse.security_group_id is required for all environment_type values except `Developer`"),
@@ -312,6 +322,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					"templates": schema.ListAttribute{
 						MarkdownDescription: "The selected instance provisioning template (if any). See [ERP-based template](https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/tutorial-deploy-new-environment-with-erp-template?tabs=PPAC) for more information.",
 						Optional:            true,
+						Computed:            true,
 						ElementType:         types.StringType,
 					},
 					"template_metadata": schema.StringAttribute{
@@ -787,7 +798,6 @@ func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel)
 }
 
 func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto) {
-	// if there is no value in the plan, not even empty guid, then we do nothing, attribute stop bing tracked in state
 	if !plan.EnvironmentGroupId.IsNull() {
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
 			Id: plan.EnvironmentGroupId.ValueString(),

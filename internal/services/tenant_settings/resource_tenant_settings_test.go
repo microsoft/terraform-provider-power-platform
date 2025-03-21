@@ -29,7 +29,7 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					disable_newsletter_sendout                            = false
 					disable_nps_comments_reachout                         = false
 					disable_survey_feedback                               = false
-				  
+
 					power_platform = {
 					  search = {
 						disable_docs_search       = false
@@ -176,7 +176,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					disable_newsletter_sendout                            = false
 					disable_nps_comments_reachout                         = false
 					disable_survey_feedback                               = false
-				  
+
 					power_platform = {
 					  search = {
 						disable_docs_search       = false
@@ -304,7 +304,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					disable_newsletter_sendout                            = true
 					disable_nps_comments_reachout                         = true
 					disable_survey_feedback                               = true
-				  
+
 					power_platform = {
 					  search = {
 						disable_docs_search       = true
@@ -424,7 +424,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					disable_newsletter_sendout                            = false
 					disable_nps_comments_reachout                         = false
 					disable_survey_feedback                               = false
-				  
+
 					power_platform = {
 					  search = {
 						disable_docs_search       = false
@@ -576,7 +576,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					disable_newsletter_sendout                            = true
 					disable_nps_comments_reachout                         = true
 					disable_survey_feedback                               = true
-				  
+
 					power_platform = {
 					  search = {
 						disable_docs_search       = true

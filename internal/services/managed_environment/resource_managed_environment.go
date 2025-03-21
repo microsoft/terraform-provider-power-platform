@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -110,6 +111,9 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			"protection_level": schema.StringAttribute{
 				MarkdownDescription: "Protection level",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"is_usage_insights_disabled": schema.BoolAttribute{
 				MarkdownDescription: "[Weekly insights digest for the environment](https://learn.microsoft.com/power-platform/admin/managed-environment-usage-insights)",
@@ -144,6 +148,8 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			"solution_checker_rule_overrides": schema.SetAttribute{
 				MarkdownDescription: SolutionCheckerMarkdown,
 				Optional:            true,
+				Computed:            true,
+				Default:             setdefault.StaticValue(types.SetNull(types.StringType)),
 				ElementType:         types.StringType,
 			},
 			"maker_onboarding_markdown": schema.StringAttribute{

@@ -110,6 +110,7 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 							"share_max_limit": schema.NumberAttribute{
 								MarkdownDescription: "Maximum total of individual who can be shared to: (-1..99). If `share_mode` is `No limit`, this value must be -1.",
 								Optional:            true,
+								Computed:            true,
 								PlanModifiers: []planmodifier.Number{
 									numberplanmodifier.UseStateForUnknown(),
 								},
