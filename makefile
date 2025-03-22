@@ -54,7 +54,7 @@ coverage:
 	$(MAKE) clean
 	$(MAKE) install
 	TF_ACC=0 go test -p 16 -timeout 10m -v -cover -coverprofile=test-coverage.out ./... -run "^TestUnit$(TEST)"
-	go tool cover -html=test-coverage.out -o test-coverage.cov.html
+	go tool cover -func=test-coverage.out
 
 netdump:
 	mitmdump -p 8080 -w /tmp/mitmproxy.dump
