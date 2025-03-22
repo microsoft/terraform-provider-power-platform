@@ -53,7 +53,11 @@ coverage:
 	clear
 	$(MAKE) clean
 	$(MAKE) install
+	@echo "Changed files:"
+	@gh pr diff --name-only
+	@echo "Running tests"
 	TF_ACC=0 go test -p 16 -timeout 10m -v -cover -coverprofile=test-coverage.out ./... -run "^TestUnit$(TEST)"
+	@echo "Generating coverage report"
 	go tool cover -func=test-coverage.out
 
 netdump:
