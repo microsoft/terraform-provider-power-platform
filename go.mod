@@ -3,7 +3,7 @@ module github.com/microsoft/terraform-provider-power-platform
 go 1.23.5
 
 require (
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.17.0
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.17.1
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.8.2
 	github.com/hashicorp/terraform-plugin-docs v0.21.0
 	github.com/hashicorp/terraform-plugin-framework v1.14.1
@@ -35,7 +35,7 @@ require (
 	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fatih/color v1.16.0 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
+	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/uuid v1.6.0
