@@ -60,5 +60,6 @@
     "go.lintFlags": [
         "--fast"
     ],
-    "makefile.configureOnOpen": false
+    "makefile.configureOnOpen": false,
+    "chat.mcp.discovery.enabled": true
 }
