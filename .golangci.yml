@@ -21,8 +21,7 @@ linters:
           disabled: true
         - name: unused-parameter
           arguments:
-            - allowRegex: (ctx|diags|req|resp)
-          disabled: false
+            - allowRegex: "^(ctx|diags|req|resp)$"
         - name: cognitive-complexity
           arguments:
             - 40
@@ -46,7 +45,7 @@ linters:
       - path: (.+)\.go$
         text: ineffectual assignment to ctx
       - path: (.+)\.go$
-        text: 'SA4006: this value of `ctx` is never used'
+        text: 'SA4006: this value of ctx is never used'
       - path: (.+)\.go$
         text: unused parameter (ctx|diags|req|resp)
       - path: (.+)\.go$
