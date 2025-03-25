@@ -43,4 +43,6 @@ sh -c 'cat ~/.mitmproxy/mitmproxy-ca-cert.pem >> /etc/ssl/certs/ca-certificates.
 
 tfenv install latest
 
+# we have GOROOT and GOPATH pointing to different locations, we need to do two installations
 go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.0.1
+curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $(go env GOROOT)/bin v2.0.1
