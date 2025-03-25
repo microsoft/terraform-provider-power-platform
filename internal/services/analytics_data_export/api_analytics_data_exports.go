@@ -96,6 +96,7 @@ func getAnalyticsUrlMap() map[string]string {
 		"PAC":  "https://apac.csanalytics.powerplatform.microsoft.com/",
 		"JPN":  "https://jpn.csanalytics.powerplatform.microsoft.com/",
 		"CHE":  "https://che.csanalytics.powerplatform.microsoft.com/",
+		"CH":   "https://che.csanalytics.powerplatform.microsoft.com/",
 		"FRA":  "https://fra.csanalytics.powerplatform.microsoft.com/",
 		"UAE":  "https://uae.csanalytics.powerplatform.microsoft.com/",
 		"GER":  "https://ger.csanalytics.powerplatform.microsoft.com/",
