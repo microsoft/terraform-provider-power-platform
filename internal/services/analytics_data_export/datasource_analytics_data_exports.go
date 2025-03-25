@@ -49,7 +49,8 @@ func (d *AnalyticsExportDataSource) Schema(ctx context.Context, req datasource.S
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Analytics Data Export configurations. See [documentation](https://learn.microsoft.com/en-us/power-platform/admin/set-up-export-application-insights) for more details.",
+		MarkdownDescription: "Analytics Data Export configurations. See [documentation](https://learn.microsoft.com/en-us/power-platform/admin/set-up-export-application-insights) for more details.\n\n" +
+			"**Known Limitations:** This resource is not supported for with service principal authentication.",
 		Attributes: map[string]schema.Attribute{
 			"exports": schema.SetNestedAttribute{
 				MarkdownDescription: "The collection of analytics data exports",
