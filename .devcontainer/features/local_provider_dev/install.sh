@@ -42,3 +42,5 @@ cp /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt.bak
 sh -c 'cat ~/.mitmproxy/mitmproxy-ca-cert.pem >> /etc/ssl/certs/ca-certificates.crt'
 
 tfenv install latest
+
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.0.1
