@@ -1,54 +1,69 @@
+version: "2"
 linters:
   enable:
-    - revive
-    - staticcheck
-    - errcheck
-    - gosimple
-    - govet
-    - ineffassign
-    - unused
     - godot
-linters-settings:
-  revive:
-    enable-all-rules: true
+    - revive
+  settings:
+    errcheck:
+      check-type-assertions: true
+    revive:
+      enable-all-rules: true
+      rules:
+        - name: var-naming
+          disabled: true
+        - name: line-length-limit
+          disabled: true
+        - name: cyclomatic
+          disabled: true
+        - name: add-constant
+          disabled: true
+        - name: function-length
+          disabled: true
+        - name: unused-parameter
+          arguments:
+            - allowRegex: (ctx|diags|req|resp)
+          disabled: false
+        - name: cognitive-complexity
+          arguments:
+            - 40
+          disabled: false
+        - name: unused-receiver
+          disabled: true
+        - name: max-public-structs
+          disabled: true
+        - name: receiver-naming
+          disabled: true
+        - name: argument-limit
+          disabled: true
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
     rules:
-      - name: var-naming
-        disabled: true
-      - name: line-length-limit
-        disabled: true
-      - name: cyclomatic
-        disabled: true
-      - name: add-constant
-        disabled: true
-      - name: function-length
-        disabled: true
-      - name: unused-parameter
-        disabled: false
-        arguments:
-        - allowRegex: "(ctx|diags|req|resp)"
-      - name: cognitive-complexity
-        disabled: false
-        arguments: [40]
-      - name: unused-receiver
-        disabled: true
-      - name: max-public-structs
-        disabled: true
-      - name: receiver-naming
-        disabled: true
-      - name: argument-limit
-        disabled: true
-  errcheck:
-    # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.
-    # Such cases aren't reported by default.
-    # Default: false
-    check-type-assertions: true
-
+      - path: (.+)\.go$
+        text: ineffectual assignment to ctx
+      - path: (.+)\.go$
+        text: 'SA4006: this value of `ctx` is never used'
+      - path: (.+)\.go$
+        text: unused parameter (ctx|diags|req|resp)
+      - path: (.+)\.go$
+        text: 'exported: type name will be used as ([a-zA-Z_]+)\.([A-Za-z]+)Dto'
+      - path: (.+)\.go$
+        text: Error return value is not checked
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
   max-issues-per-linter: 10
   max-same-issues: 10
-  exclude:
-    - "ineffectual assignment to ctx"
-    - "SA4006: this value of `ctx` is never used"
-    - "unused parameter (ctx|diags|req|resp)"
-    - "exported: type name will be used as ([a-zA-Z_]+)\\.([A-Za-z]+)Dto"
-    - "Error return value is not checked"
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
