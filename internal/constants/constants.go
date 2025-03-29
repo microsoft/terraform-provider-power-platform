@@ -176,5 +176,5 @@ const (
 )
 
 const (
-	NO_MANAGEMENT_APPLICATION_ERROR_MSG = "Authorization has been denied for this request. Make sure that your service principal is registered as an admin management appplication: https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application"
+	NO_MANAGEMENT_APPLICATION_ERROR_MSG = "Authorization has been denied for this request. Make sure that your service principal is registered as an admin management application: https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application"
 )
