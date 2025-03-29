@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -99,11 +100,6 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 	for {
 		token, err := client.BaseAuth.GetTokenForScopes(ctx, scopes)
 
-		// if method == "POST" {
-		// 	// save token to file for debugging
-		// 	err = os.WriteFile("token.txt", []byte(*token), 0644)
-		// }
-
 		if err != nil {
 			return nil, err
 		}
@@ -121,6 +117,11 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 		resp, err := client.doRequest(ctx, token, request, headers)
 		if err != nil {
 			return resp, fmt.Errorf("Error making %s request to %s. %w", request.Method, request.RequestURI, err)
+		}
+
+		err = validateNoManagementApplicationPermissionsForBapiRequest(resp)
+		if err != nil {
+			return resp, err
 		}
 
 		isAcceptable := len(acceptableStatusCodes) > 0 && array.Contains(acceptableStatusCodes, resp.HttpResponse.StatusCode)
@@ -149,6 +150,13 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 			return resp, err
 		}
 	}
+}
+
+func validateNoManagementApplicationPermissionsForBapiRequest(resp *Response) error {
+	if resp.HttpResponse.StatusCode == http.StatusForbidden && len(resp.BodyAsBytes) > 0 && strings.Contains(string(resp.BodyAsBytes), "does not have permission to access the path") {
+		return errors.New(constants.NO_MANAGEMENT_APPLICATION_ERROR_MSG)
+	}
+	return nil
 }
 
 // RetryAfterDefault returns a random duration between 10 and 20 seconds.
