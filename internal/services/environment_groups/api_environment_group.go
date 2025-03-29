@@ -69,7 +69,7 @@ func (client *client) DeleteEnvironmentGroup(ctx context.Context, environmentGro
 	if err != nil {
 		if resp.HttpResponse.StatusCode == http.StatusConflict {
 			if len(resp.BodyAsBytes) == 0 {
-				return errors.New("Failed to delete environment group")
+				return errors.New("failed to delete environment group")
 			}
 
 			body := string(resp.BodyAsBytes[:])

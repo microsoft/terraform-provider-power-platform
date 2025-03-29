@@ -671,12 +671,12 @@ func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentI
 func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, error) {
 	linkedMetadataDto, err := convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, plan.Dataverse)
 	if err != nil {
-		return "", fmt.Errorf("Error when converting dataverse source model to create link environment metadata dto: %s", err.Error())
+		return "", fmt.Errorf("error when converting dataverse source model to create link environment metadata dto: %s", err.Error())
 	}
 
 	_, err = r.EnvironmentClient.AddDataverseToEnvironment(ctx, plan.Id.ValueString(), *linkedMetadataDto)
 	if err != nil {
-		return "", fmt.Errorf("Error when adding dataverse to environment %s: %s", plan.Id.ValueString(), err.Error())
+		return "", fmt.Errorf("error when adding dataverse to environment %s: %s", plan.Id.ValueString(), err.Error())
 	}
 	return linkedMetadataDto.Currency.Code, nil
 }
@@ -767,7 +767,7 @@ func (r *Resource) updateEnvironmentType(ctx context.Context, plan *SourceModel,
 	if plan.EnvironmentType.ValueString() != state.EnvironmentType.ValueString() {
 		err := r.EnvironmentClient.ModifyEnvironmentType(ctx, plan.Id.ValueString(), plan.EnvironmentType.ValueString())
 		if err != nil {
-			return fmt.Errorf("Error when updating environment_type: %s", err.Error())
+			return fmt.Errorf("error when updating environment_type: %s", err.Error())
 		}
 	}
 	return nil
@@ -851,13 +851,13 @@ func (r *Resource) addBillingPolicy(ctx context.Context, plan *SourceModel) erro
 
 func (r *Resource) aiGenerativeFeaturesValidaor(plan *SourceModel) error {
 	if r.EnvironmentClient.Api.Config.CloudType != config.CloudTypePublic {
-		return errors.New("Moving data across regions is not supported in non public clouds")
+		return errors.New("moving data across regions is not supported in non public clouds")
 	}
 	if plan.Location.ValueString() == "unitedstates" && plan.AllowMovingDataAcrossRegions.ValueBool() {
-		return errors.New("Moving data across regions is not supported in the unitedstates location")
+		return errors.New("moving data across regions is not supported in the unitedstates location")
 	}
 	if plan.Location.ValueString() != "unitedstates" && plan.AllowBingSearch.ValueBool() && !plan.AllowMovingDataAcrossRegions.ValueBool() {
-		return errors.New("To enable AI generative features, moving data across regions must be enabled")
+		return errors.New("to enable ai generative features, moving data across regions must be enabled")
 	}
 	return nil
 }
