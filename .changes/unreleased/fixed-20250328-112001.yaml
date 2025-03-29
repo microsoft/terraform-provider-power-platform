@@ -1,5 +1,5 @@
 kind: fixed
-body: Added custom error massage for lack of management application permissions
+body: Added custom error message for lack of management application permissions
 time: 2025-03-28T11:20:01.849495183Z
 custom:
     Issue: "670"
