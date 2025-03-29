@@ -74,16 +74,18 @@ func covertDlpPolicyToPolicyModelDto(policy dlpPolicyDto) (*dlpPolicyModelDto, e
 }
 
 func convertConnectorRuleClassificationValues(value string) string {
-	if value == "Business" {
+	switch value {
+	case "Business":
 		return "General"
-	} else if value == "NonBusiness" {
+	case "NonBusiness":
 		return "Confidential"
-	} else if value == "General" {
+	case "General":
 		return "Business"
-	} else if value == "Confidential" {
+	case "Confidential":
 		return "NonBusiness"
+	default:
+		return value
 	}
-	return value
 }
 
 func convertToAttrValueConnectorsGroup(classification string, connectorsGroup []dlpConnectorGroupsModelDto) basetypes.SetValue {
