@@ -175,3 +175,7 @@ const (
 const (
 	SOLUTION_CHECKER_RULESET_ID = "0ad12346-e108-40b8-a956-9a8f95ea18c9"
 )
+
+const (
+	NO_MANAGEMENT_APPLICATION_ERROR_MSG = "authorization has been denied for this request. Make sure that your service principal is registered as an admin management application: https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application"
+)

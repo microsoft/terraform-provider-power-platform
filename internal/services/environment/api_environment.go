@@ -304,7 +304,7 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 
 	var httpError *customerrors.UnexpectedHttpStatusCodeError
 	if errors.As(err, &httpError) {
-		return fmt.Errorf("Unexpected HTTP Status %s; Body: %s", httpError.StatusText, httpError.Body)
+		return fmt.Errorf("unexpected HTTP Status %s; Body: %s", httpError.StatusText, httpError.Body)
 	}
 
 	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.HttpResponse.Status+"'")
@@ -443,7 +443,8 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 
 	createdEnvironmentId := ""
-	if apiResponse.HttpResponse.StatusCode == http.StatusAccepted {
+	switch apiResponse.HttpResponse.StatusCode {
+	case http.StatusAccepted:
 		lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 		if err != nil {
 			return nil, err
@@ -457,9 +458,10 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 			createdEnvironmentId = parts[len(parts)-1]
 			tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
 		}
-	} else if apiResponse.HttpResponse.StatusCode == http.StatusCreated {
+
+	case http.StatusCreated:
 		envCreatedResponse := lifecycleCreatedDto{}
-		err = apiResponse.MarshallTo(&envCreatedResponse)
+		err := apiResponse.MarshallTo(&envCreatedResponse)
 		if err != nil {
 			return nil, err
 		}
