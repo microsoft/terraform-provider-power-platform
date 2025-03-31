@@ -124,7 +124,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	err := r.EnterprisePolicyClient.LinkEnterprisePolicy(ctx, plan.EnvironmentId.ValueString(), plan.PolicyType.ValueString(), plan.SystemId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -154,7 +154,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 
 	env, err := r.EnterprisePolicyClient.EnvironmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment in %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment in %s", r.FullTypeName()), err.Error())
 		return
 	}
 	if env.Properties.EnterprisePolicies != nil {
@@ -199,7 +199,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 
 	err := r.EnterprisePolicyClient.UnLinkEnterprisePolicy(ctx, state.EnvironmentId.ValueString(), state.PolicyType.ValueString(), state.SystemId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
 }

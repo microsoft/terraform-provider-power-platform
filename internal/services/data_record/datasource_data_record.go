@@ -210,7 +210,7 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	var state DataRecordListDataSourceModel
 	var config DataRecordListDataSourceModel
 
-	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ RESOURCE START: %s", d.FullTypeName()))
 
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
@@ -259,7 +259,7 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	rows, _ := types.TupleValue(elementTypes, elements)
 	state.Rows = types.DynamicValue(rows)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.FullTypeName()))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {
