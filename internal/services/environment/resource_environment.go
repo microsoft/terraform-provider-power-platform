@@ -407,13 +407,13 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	err = r.EnvironmentClient.LocationValidator(ctx, envToCreate.Location, envToCreate.Properties.AzureRegion)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s", r.FullTypeName()), err.Error())
 		return
 	}
 
 	err = r.aiGenerativeFeaturesValidaor(plan)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -421,27 +421,27 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
 		err = languageCodeValidator(ctx, r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Language code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Language code validation failed for %s", r.FullTypeName()), err.Error())
 			return
 		}
 
 		err = currencyCodeValidator(ctx, r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Currency code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Currency code validation failed for %s", r.FullTypeName()), err.Error())
 			return
 		}
 	}
 
 	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, *envToCreate)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
 	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
 		err := r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 			return
 		}
 
@@ -451,7 +451,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 				resp.State.RemoveResource(ctx)
 				return
 			}
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 			return
 		}
 	}
@@ -501,7 +501,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -542,7 +542,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s with id %s", r.FullTypeName(), state.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
@@ -563,7 +563,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	err := r.aiGenerativeFeaturesValidaor(plan)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -611,7 +611,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -619,7 +619,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	if plan.DisplayName.ValueString() != state.DisplayName.ValueString() {
 		envDto, err = r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 			return
 		}
 	}
@@ -751,7 +751,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 
 	err := r.EnvironmentClient.DeleteEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 	}
 	resp.State.RemoveResource(ctx)
 }

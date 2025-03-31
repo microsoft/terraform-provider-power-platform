@@ -134,7 +134,7 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	environmentId := state.EnvironmentId.ValueString()
 	rules, err := d.SolutionCheckerRulesClient.GetSolutionCheckerRules(ctx, environmentId)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
 
