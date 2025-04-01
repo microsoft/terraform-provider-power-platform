@@ -228,6 +228,12 @@ In addition to the authentication options, the following options are also suppor
 |------|-------------|---------------|
 | `telemetry_optout` | Opting out of telemetry will remove the User-Agent and session id headers from the requests made to the Power Platform service.  There is no other telemetry data collected by the provider.  This may affect the ability to identify and troubleshoot issues with the provider. | `false` |
 
+
+If you are using Azure CLI for authentication, you can also turn off CLI's telemetry by executing the following [command](https://github.com/Azure/azure-cli?tab=readme-ov-file#telemetry-configuration):
+```bash 
+az config set core.collect_telemetry=false
+```
+
 ## Resources and Data Sources
 
 Use the navigation to the left to read about the available resources and data sources.
