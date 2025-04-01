@@ -2,8 +2,13 @@
 
 The Power Platform Terraform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
-> [!WARNING]
-> This code is made available as a public preview. Features are being actively developed and may have restricted or limited functionality. Future updates may introduce breaking changes, but we follow [Semantic Versioning](https://semver.org/) to help mitigate this. The software may contain bugs, errors, or other issues that could cause service interruption or data loss. We recommend backing up your data and testing in non-production environments. Your feedback is valuable to us, so please share any issues or suggestions you encounter via GitHub issues.
+The following resources are in **public preview**:
+
+- powerplatform_analytics_data_exports
+- powerplatform_copilot_studio_application_insights
+- powerplatform_environment (only when creating developer environment types)
+- powerplatform_environment_group_rule_set
+- powerplatform_environment_wave
 
 ## Using the Provider
 
