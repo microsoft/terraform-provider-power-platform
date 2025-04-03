@@ -88,8 +88,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	}
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "This resource manages a PowerPlatform environment.",
-
+		MarkdownDescription: "This resource manages a PowerPlatform environment.\n\n" +
+			"**Note:** Creating `developer` environments is available as **preview**\n\n" +
+			"**Known Limitations:** Creating `developer type environment is not supported for with service principal authentication.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,

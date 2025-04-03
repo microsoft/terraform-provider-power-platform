@@ -45,6 +45,7 @@ func (r *Resource) Metadata(ctx context.Context, req resource.MetadataRequest, r
 func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages wave feature installation in a Power Platform environment. \n\n" +
+			"**Note:** This resource is available as **preview**\n\n" +
 			"**Known Limitations:** This resource is not supported for with service principal authentication.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
