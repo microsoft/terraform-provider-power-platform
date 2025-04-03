@@ -43,7 +43,6 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 	if !client.GetConfig().TelemetryOptout {
 		ua := client.buildUserAgent(ctx)
 		request.Header.Set("User-Agent", ua)
-
 		sessionId, requestId := client.buildCorrelationHeaders(ctx)
 		request.Header.Set("X-Correlation-Id", sessionId)
 		request.Header.Set("X-Ms-Client-Session-Id", sessionId)
@@ -51,7 +50,6 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 	}
 
 	apiResponse, err := httpClient.Do(request)
-
 	resp := &Response{
 		HttpResponse: apiResponse,
 	}
@@ -63,6 +61,20 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 	defer apiResponse.Body.Close()
 	body, err := io.ReadAll(apiResponse.Body)
 	resp.BodyAsBytes = body
+
+	// Check for CAE challenge response if CAE is enabled
+	if client.Config.EnableContinuousAccessEvaluation && IsCaeChallengeResponse(apiResponse) {
+		caeError := &CaePolicyViolationError{
+			Message:    "Access denied due to Continuous Access Evaluation (CAE) policy. The authentication token was rejected due to a security policy change.",
+			StatusCode: apiResponse.StatusCode,
+			Headers:    apiResponse.Header,
+		}
+		tflog.Warn(ctx, "Detected Continuous Access Evaluation (CAE) challenge response", map[string]any{
+			"url":        request.URL.String(),
+			"statusCode": apiResponse.StatusCode,
+		})
+		return resp, caeError
+	}
 
 	return resp, err
 }
