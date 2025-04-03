@@ -149,7 +149,7 @@ func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequ
 
 	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, plan.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -177,7 +177,7 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -190,7 +190,7 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 	state.Columns = *columns
 
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_data_record with table_name %s", r.ProviderTypeName, state.TableLogicalName.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s with table_name %s", r.FullTypeName(), state.TableLogicalName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -224,7 +224,7 @@ func (r *DataRecordResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -253,7 +253,7 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 	if state.DisableOnDestroy.ValueBool() {
 		entityAttr, err := r.DataRecordClient.GetEntityAttributesDefinition(ctx, state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when getting entity attributes definition %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when getting entity attributes definition %s", r.FullTypeName()), err.Error())
 			return
 		}
 		var containsIsDisableAttr, containsStateCode bool
@@ -273,23 +273,23 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 		} else if containsIsDisableAttr {
 			attributes["isdisabled"] = true
 		} else {
-			tflog.Debug(ctx, fmt.Sprintf("No statecode or isdisabled attribute found for %s_%s", r.ProviderTypeName, r.TypeName))
+			tflog.Debug(ctx, fmt.Sprintf("No statecode or isdisabled attribute found for %s", r.FullTypeName()))
 		}
 
 		if len(attributes) > 0 {
 			_, err = r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), attributes)
 			if err != nil {
-				resp.Diagnostics.AddError(fmt.Sprintf("Client error when disabling %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when disabling %s", r.FullTypeName()), err.Error())
 				return
 			}
 		} else {
-			tflog.Debug(ctx, fmt.Sprintf("No statecode or isdisabled attribute found for %s_%s", r.ProviderTypeName, r.TypeName))
+			tflog.Debug(ctx, fmt.Sprintf("No statecode or isdisabled attribute found for %s", r.FullTypeName()))
 		}
 	}
 
 	err = r.DataRecordClient.DeleteDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
 }

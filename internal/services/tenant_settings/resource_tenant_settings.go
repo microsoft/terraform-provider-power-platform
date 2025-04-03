@@ -453,7 +453,7 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	newState, _ := convertFromTenantSettingsDto[TenantSettingsResourceModel](*newStateDto, state.Timeouts)
 	newState.Id = types.StringValue(tenant.TenantId)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_tenant_settings with id %s", r.ProviderTypeName, newState.Id.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s with id %s", r.FullTypeName(), newState.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }

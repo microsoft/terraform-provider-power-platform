@@ -56,7 +56,7 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 	defer exitContext()
 	var state EnvironmentSettingsDataSourceModel
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS START: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS START: %s", d.FullTypeName()))
 
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -80,7 +80,7 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 
 	envSettings, err := d.EnvironmentSettingsClient.GetEnvironmentSettings(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
 
@@ -88,7 +88,7 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 
 	diags := resp.State.Set(ctx, &state)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS END: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT SETTINGS END: %s", d.FullTypeName()))
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

@@ -178,7 +178,7 @@ func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req data
 
 	applications, err := d.ApplicationClient.GetTenantApplications(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
 

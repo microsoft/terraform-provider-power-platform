@@ -111,7 +111,7 @@ func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasourc
 
 	apps, err := d.PowerAppssClient.GetPowerApps(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
 
