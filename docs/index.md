@@ -8,9 +8,11 @@ description: |-
 
 The Power Platform provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
-!> Some resources/datasources are made available as a public preview. Features are being actively developed and may have restricted or limited functionality. Future updates may introduce breaking changes, but we follow [Semantic Versioning](https://semver.org/) to help mitigate this. Your feedback is valuable to us, so please share any issues or suggestions you encounter via GitHub issues.
+!> Bugs or errors in Infrastructure-as-Code (IaC) software could lead to service interruptions or data loss. We strongly recommend backing up your data and testing thoroughly in non-production environments before using any feature in production. Your feedback is valuable to us, so please share any issues or suggestions you encounter via [GitHub issues](https://github.com/microsoft/terraform-provider-power-platform/issues).
 
-The following resources are in **public preview**:
+~> Some resources and data sources are made available as a preview. Preview features may have restricted or limited functionality. Future updates could include breaking changes; however, we adhere to [Semantic Versioning](https://semver.org/) to clearly communicate these changes. 
+
+The following resources are in **preview**:
 
 - powerplatform_analytics_data_exports
 - powerplatform_copilot_studio_application_insights
