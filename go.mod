@@ -1,6 +1,6 @@
 module github.com/microsoft/terraform-provider-power-platform
 
-go 1.23.5
+go 1.
 toolchain go1.24.1
 
 require (
