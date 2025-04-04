@@ -4,12 +4,15 @@ page_title: "powerplatform_environment_wave Resource - powerplatform"
 subcategory: ""
 description: |-
   Manages wave feature installation in a Power Platform environment.
+  Note: This resource is available as preview
   Known Limitations: This resource is not supported for with service principal authentication.
 ---
 
 # powerplatform_environment_wave (Resource)
 
 Manages wave feature installation in a Power Platform environment. 
+
+**Note:** This resource is available as **preview**
 
 **Known Limitations:** This resource is not supported for with service principal authentication.
 

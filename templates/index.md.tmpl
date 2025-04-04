@@ -8,7 +8,17 @@ description: |-
 
 The Power Platform provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
-!> This code is made available as a public preview. Features are being actively developed and may have restricted or limited functionality. Future updates may introduce breaking changes, but we follow [Semantic Versioning](https://semver.org/) to help mitigate this. The software may contain bugs, errors, or other issues that could cause service interruption or data loss. We recommend backing up your data and testing in non-production environments. Your feedback is valuable to us, so please share any issues or suggestions you encounter via GitHub issues.
+!> Bugs or errors in Infrastructure-as-Code (IaC) software could lead to service interruptions or data loss. We strongly recommend backing up your data and testing thoroughly in non-production environments before using any feature in production. Your feedback is valuable to us, so please share any issues or suggestions you encounter via [GitHub issues](https://github.com/microsoft/terraform-provider-power-platform/issues).
+
+~> Some resources and data sources are made available as a preview. Preview features may have restricted or limited functionality. Future updates could include breaking changes; however, we adhere to [Semantic Versioning](https://semver.org/) to clearly communicate these changes. 
+
+The following resources are in **preview**:
+
+- powerplatform_analytics_data_exports
+- powerplatform_copilot_studio_application_insights
+- powerplatform_environment (only when creating developer environment types)
+- powerplatform_environment_group_rule_set
+- powerplatform_environment_wave
 
 ## Requirements
 
