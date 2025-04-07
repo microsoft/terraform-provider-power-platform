@@ -36,7 +36,7 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 
 	httpClient := http.DefaultClient
 
-	if request.Header["Authorization"] == nil {
+	if request.Header.Get("Authorization") == "" {
 		request.Header.Set("Authorization", "Bearer "+*token)
 	}
 
