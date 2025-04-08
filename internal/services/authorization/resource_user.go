@@ -165,7 +165,7 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	hasEnvDataverse, err := r.UserClient.EnvironmentHasDataverse(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 	tflog.Debug(ctx, fmt.Sprintf("Dataverse exist in eviroment %t", hasEnvDataverse))
@@ -174,13 +174,13 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 	if hasEnvDataverse {
 		user, err := r.UserClient.CreateDataverseUser(ctx, plan.EnvironmentId.ValueString(), plan.AadId.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 			return
 		}
 
 		user, err = r.UserClient.AddDataverseSecurityRoles(ctx, plan.EnvironmentId.ValueString(), user.Id, plan.SecurityRoles)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 			return
 		}
 		newUser = *user
@@ -188,12 +188,12 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 		// todo disalbe delete should be set to false.
 		err := validateEnvironmentSecurityRoles(plan.SecurityRoles)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		}
 
 		user, err := r.UserClient.CreateEnvironmentUser(ctx, plan.EnvironmentId.ValueString(), plan.AadId.ValueString(), plan.SecurityRoles)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 			return
 		}
 
@@ -236,7 +236,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	hasEnvDataverse, err := r.UserClient.EnvironmentHasDataverse(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 	tflog.Debug(ctx, fmt.Sprintf("Dataverse exist in eviroment %t", hasEnvDataverse))
@@ -249,7 +249,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 				resp.State.RemoveResource(ctx)
 				return
 			}
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 			return
 		}
 		updateUser = *user
@@ -266,7 +266,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 				resp.State.RemoveResource(ctx)
 				return
 			}
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 			return
 		}
 
@@ -292,7 +292,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	state.DisableDelete = model.DisableDelete
 	state.BusinessUnitId = model.BusinessUnitId
 
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s with id %s", r.FullTypeName(), state.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -314,7 +314,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 
 	hasEnvDataverse, err := r.UserClient.EnvironmentHasDataverse(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 	tflog.Debug(ctx, fmt.Sprintf("Dataverse exist in eviroment %t", hasEnvDataverse))
@@ -325,7 +325,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		if len(addedSecurityRoles) > 0 {
 			userDto, err := r.UserClient.AddDataverseSecurityRoles(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString(), addedSecurityRoles)
 			if err != nil {
-				resp.Diagnostics.AddError(fmt.Sprintf("Client error when adding security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when adding security roles %s", r.FullTypeName()), err.Error())
 				return
 			}
 			user = *userDto
@@ -333,7 +333,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		if len(removedSecurityRoles) > 0 {
 			userDto, err := r.UserClient.RemoveDataverseSecurityRoles(ctx, plan.EnvironmentId.ValueString(), state.Id.ValueString(), removedSecurityRoles)
 			if err != nil {
-				resp.Diagnostics.AddError(fmt.Sprintf("Client error when removing security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when removing security roles %s", r.FullTypeName()), err.Error())
 				return
 			}
 			user = *userDto
@@ -341,12 +341,12 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	} else {
 		err := validateEnvironmentSecurityRoles(plan.SecurityRoles)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 		}
 		if len(addedSecurityRoles) > 0 {
 			userDto, err := r.UserClient.AddEnvironmentUserSecurityRoles(ctx, plan.EnvironmentId.ValueString(), plan.AadId.ValueString(), addedSecurityRoles)
 			if err != nil {
-				resp.Diagnostics.AddError(fmt.Sprintf("Client error when adding security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when adding security roles %s", r.FullTypeName()), err.Error())
 				return
 			}
 			user = *userDto
@@ -355,19 +355,19 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 			savedRoles := []securityRoleDto{}
 			rolesObj, diag := resp.Private.GetKey(ctx, "role")
 			if diag.HasError() {
-				resp.Diagnostics.AddError(fmt.Sprintf("Error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				resp.Diagnostics.AddError(fmt.Sprintf("Error when updating %s", r.FullTypeName()), err.Error())
 				return
 			}
 
 			err := json.Unmarshal(rolesObj, &savedRoles)
 			if err != nil {
-				resp.Diagnostics.AddError(fmt.Sprintf("Error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				resp.Diagnostics.AddError(fmt.Sprintf("Error when updating %s", r.FullTypeName()), err.Error())
 				return
 			}
 
 			userDto, err := r.UserClient.RemoveEnvironmentUserSecurityRoles(ctx, plan.EnvironmentId.ValueString(), plan.AadId.ValueString(), removedSecurityRoles, savedRoles)
 			if err != nil {
-				resp.Diagnostics.AddError(fmt.Sprintf("Client error when removing security roles %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when removing security roles %s", r.FullTypeName()), err.Error())
 				return
 			}
 			user = *userDto
@@ -409,7 +409,7 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	hasEnvDataverse, err := r.UserClient.EnvironmentHasDataverse(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 	tflog.Debug(ctx, fmt.Sprintf("Dataverse exist in eviroment %t", hasEnvDataverse))
@@ -418,7 +418,7 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		if state.DisableDelete.ValueBool() {
 			err := r.UserClient.DeleteDataverseUser(ctx, state.EnvironmentId.ValueString(), state.Id.ValueString())
 			if err != nil {
-				resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 				return
 			}
 		} else {
@@ -433,17 +433,17 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 		err := json.Unmarshal(rolesObj, &savedRoles)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Error when deleting %s", r.FullTypeName()), err.Error())
 			return
 		}
 
 		_, err = r.UserClient.RemoveEnvironmentUserSecurityRoles(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString(), state.SecurityRoles, savedRoles)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 			return
 		}
 	}
-	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.FullTypeName()))
 }
 
 func (r *UserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

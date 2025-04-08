@@ -48,7 +48,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages the [Application Insights configuration for a Copilot](https://learn.microsoft.com/en-us/microsoft-copilot-studio/advanced-bot-framework-composer-capture-telemetry?tabs=webApp). Known Limitation: This resource currently does not work when authenticated using service principal.",
+		MarkdownDescription: "Manages the [Application Insights configuration for a Copilot](https://learn.microsoft.com/en-us/microsoft-copilot-studio/advanced-bot-framework-composer-capture-telemetry?tabs=webApp).\n\n" +
+			"**Note:** This resource is available as **preview**\n\n" +
+			"**Known Limitation**: This resource currently does not work when authenticated using service principal.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id of the Copilot Studio Application Insights configuration",
@@ -148,7 +150,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	// You can't really create a config, so treat a create as an update
 	appInsightsConfigDto, err := r.CopilotStudioApplicationInsightsClient.updateCopilotStudioAppInsightsConfiguration(ctx, *appInsightsConfigToCreate, plan.BotId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating/updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating/updating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -180,7 +182,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -213,7 +215,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	// You can't really create a config, so treat a create as an update
 	appInsightsConfigDto, err := r.CopilotStudioApplicationInsightsClient.updateCopilotStudioAppInsightsConfiguration(ctx, *appInsightsConfigToCreate, plan.BotId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating/updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating/updating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -251,7 +253,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 
 	_, err = r.CopilotStudioApplicationInsightsClient.updateCopilotStudioAppInsightsConfiguration(ctx, *appInsightsConfigToCreate, state.BotId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
 	resp.State.RemoveResource(ctx)
