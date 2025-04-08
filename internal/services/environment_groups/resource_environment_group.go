@@ -102,7 +102,7 @@ func (r *EnvironmentGroupResource) Read(ctx context.Context, req resource.ReadRe
 
 	environmentGroup, err := r.EnvironmentGroupClient.GetEnvironmentGroup(ctx, state.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -135,7 +135,7 @@ func (r *EnvironmentGroupResource) Create(ctx context.Context, req resource.Crea
 
 	eg, err := r.EnvironmentGroupClient.CreateEnvironmentGroup(ctx, environmentGroupToCreate)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -172,7 +172,7 @@ func (r *EnvironmentGroupResource) Update(ctx context.Context, req resource.Upda
 
 	eg, err := r.EnvironmentGroupClient.UpdateEnvironmentGroup(ctx, state.Id.ValueString(), environmentGroupToUpdate)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -196,19 +196,19 @@ func (r *EnvironmentGroupResource) Delete(ctx context.Context, req resource.Dele
 
 	err := r.EnvironmentGroupClient.DeleteEnvironmentGroup(ctx, state.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
 
 	if customerrors.Code(err) == customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND || customerrors.Code(err) == customerrors.ERROR_POLICY_ASSIGNED_TO_ENV_GROUP {
 		envs, err := r.EnvironmentGroupClient.GetEnvironmentsInEnvironmentGroup(ctx, state.Id.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 			return
 		}
 
 		if len(envs) > 0 {
-			tflog.Debug(ctx, fmt.Sprintf("Environment group %s_%s has %d environments. Removing them.", r.ProviderTypeName, r.TypeName, len(envs)))
+			tflog.Debug(ctx, fmt.Sprintf("Environment group %s has %d environments. Removing them.", r.FullTypeName(), len(envs)))
 			for _, env := range envs {
 				err := r.EnvironmentGroupClient.RemoveEnvironmentFromEnvironmentGroup(ctx, state.Id.ValueString(), env.Name)
 				if err != nil {
@@ -225,7 +225,7 @@ func (r *EnvironmentGroupResource) Delete(ctx context.Context, req resource.Dele
 		}
 
 		if customerrors.Code(err) != customerrors.ERROR_OBJECT_NOT_FOUND && ruleSet != nil && len(ruleSet.Parameters) > 0 {
-			tflog.Debug(ctx, fmt.Sprintf("Environment group %s_%s has %d rule sets. Deleting them.", r.ProviderTypeName, r.TypeName, len(ruleSet.Parameters)))
+			tflog.Debug(ctx, fmt.Sprintf("Environment group %s has %d rule sets. Deleting them.", r.FullTypeName(), len(ruleSet.Parameters)))
 			err := r.EnvironmentGroupClient.RuleSetApi.DeleteEnvironmentGroupRuleSet(ctx, *ruleSet.Id)
 			if err != nil {
 				resp.Diagnostics.AddError("error when deleting rule set", err.Error())
@@ -235,7 +235,7 @@ func (r *EnvironmentGroupResource) Delete(ctx context.Context, req resource.Dele
 
 		err = r.EnvironmentGroupClient.DeleteEnvironmentGroup(ctx, state.Id.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 			return
 		}
 	}

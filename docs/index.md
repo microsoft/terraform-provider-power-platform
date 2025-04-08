@@ -8,7 +8,17 @@ description: |-
 
 The Power Platform provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
-!> This code is made available as a public preview. Features are being actively developed and may have restricted or limited functionality. Future updates may introduce breaking changes, but we follow [Semantic Versioning](https://semver.org/) to help mitigate this. The software may contain bugs, errors, or other issues that could cause service interruption or data loss. We recommend backing up your data and testing in non-production environments. Your feedback is valuable to us, so please share any issues or suggestions you encounter via GitHub issues.
+!> Bugs or errors in Infrastructure-as-Code (IaC) software could lead to service interruptions or data loss. We strongly recommend backing up your data and testing thoroughly in non-production environments before using any feature in production. Your feedback is valuable to us, so please share any issues or suggestions you encounter via [GitHub issues](https://github.com/microsoft/terraform-provider-power-platform/issues).
+
+~> Some resources and data sources are made available as a preview. Preview features may have restricted or limited functionality. Future updates could include breaking changes; however, we adhere to [Semantic Versioning](https://semver.org/) to clearly communicate these changes. 
+
+The following resources are in **preview**:
+
+- powerplatform_analytics_data_exports
+- powerplatform_copilot_studio_application_insights
+- powerplatform_environment (only when creating developer environment types)
+- powerplatform_environment_group_rule_set
+- powerplatform_environment_wave
 
 ## Requirements
 
@@ -227,6 +237,12 @@ In addition to the authentication options, the following options are also suppor
 | Name | Description | Default Value |
 |------|-------------|---------------|
 | `telemetry_optout` | Opting out of telemetry will remove the User-Agent and session id headers from the requests made to the Power Platform service.  There is no other telemetry data collected by the provider.  This may affect the ability to identify and troubleshoot issues with the provider. | `false` |
+
+
+If you are using Azure CLI for authentication, you can also turn off CLI's telemetry by executing the following [command](https://github.com/Azure/azure-cli?tab=readme-ov-file#telemetry-configuration):
+```bash 
+az config set core.collect_telemetry=false
+```
 
 ## Resources and Data Sources
 

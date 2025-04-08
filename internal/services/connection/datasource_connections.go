@@ -121,11 +121,11 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 	var state ConnectionsListDataSourceModel
 	resp.State.Get(ctx, &state)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE START: %s", d.FullTypeName()))
 
 	connections, err := d.ConnectionsClient.GetConnections(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
 
@@ -135,7 +135,7 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 	}
 	diags := resp.State.Set(ctx, &state)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE END: %s", d.FullTypeName()))
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
