@@ -282,7 +282,7 @@ func TestUnitIsCaeChallengeResponse(t *testing.T) {
 			name: "Valid CAE challenge response with complex header",
 			setupResponse: func() *http.Response {
 				header := http.Header{}
-				header.Set("WWW-Authenticate", "Bearer authorization_uri=\"https://login.microsoftonline.com/common/oauth2/authorize\", error=\"invalid_token\", error_description=\"The access token is not valid: access_denied, audience validation failed\", claims=\"eyJhY2Nlc3NfdG9rZW4iOnsiYWRhX3MiOnsiY2xhaW1zIjp7Im5hbWUiOm51bGx9fX19\"")
+				header.Set("WWW-Authenticate", "Bearer authorization_uri=\"https://login.microsoftonline.com/common/oauth2/authorize\", error=\"insufficient_claims\", error_description=\"The access token is not valid: access_denied, audience validation failed\", claims=\"eyJhY2Nlc3NfdG9rZW4iOnsiYWRhX3MiOnsiY2xhaW1zIjp7Im5hbWUiOm51bGx9fX19\"")
 				return &http.Response{
 					StatusCode: http.StatusUnauthorized,
 					Header:     header,

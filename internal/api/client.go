@@ -82,7 +82,7 @@ func IsCaeChallengeResponse(resp *http.Response) bool {
 	if resp.StatusCode == http.StatusUnauthorized {
 		wwwAuthenticate := resp.Header.Get("WWW-Authenticate")
 		if wwwAuthenticate != "" {
-			return strings.Contains(wwwAuthenticate, "claims") &&
+			return strings.Contains(wwwAuthenticate, "claims=") &&
 				strings.Contains(wwwAuthenticate, "insufficient_claims")
 		}
 	}
