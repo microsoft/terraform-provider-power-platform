@@ -246,7 +246,7 @@ func TestUnitIsCaeChallengeResponse(t *testing.T) {
 			name: "401 status with WWW-Authenticate header but missing claims",
 			setupResponse: func() *http.Response {
 				header := http.Header{}
-				header.Set("WWW-Authenticate", "Bearer error=access_denied")
+				header.Set("WWW-Authenticate", "Bearer error=insufficient_claims")
 				return &http.Response{
 					StatusCode: http.StatusUnauthorized,
 					Header:     header,
@@ -255,7 +255,7 @@ func TestUnitIsCaeChallengeResponse(t *testing.T) {
 			expectedResult: false,
 		},
 		{
-			name: "401 status with WWW-Authenticate header but missing access_denied",
+			name: "401 status with WWW-Authenticate header but missing insufficient_claims",
 			setupResponse: func() *http.Response {
 				header := http.Header{}
 				header.Set("WWW-Authenticate", "Bearer claims=something")
@@ -270,7 +270,7 @@ func TestUnitIsCaeChallengeResponse(t *testing.T) {
 			name: "Valid CAE challenge response",
 			setupResponse: func() *http.Response {
 				header := http.Header{}
-				header.Set("WWW-Authenticate", "Bearer error=access_denied, claims=something")
+				header.Set("WWW-Authenticate", "Bearer error=insufficient_claims, claims=something")
 				return &http.Response{
 					StatusCode: http.StatusUnauthorized,
 					Header:     header,

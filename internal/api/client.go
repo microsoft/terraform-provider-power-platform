@@ -83,7 +83,7 @@ func IsCaeChallengeResponse(resp *http.Response) bool {
 		wwwAuthenticate := resp.Header.Get("WWW-Authenticate")
 		if wwwAuthenticate != "" {
 			return strings.Contains(wwwAuthenticate, "claims") &&
-				strings.Contains(wwwAuthenticate, "access_denied")
+				strings.Contains(wwwAuthenticate, "insufficient_claims")
 		}
 	}
 
