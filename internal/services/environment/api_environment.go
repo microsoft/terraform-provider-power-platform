@@ -359,10 +359,15 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 		retryAfter = retryAfter * time.Second
 	}
 	for {
-		lifecycleEnv := EnvironmentDto{}
+		lifecycleEnv := &EnvironmentDto{}
 		lifecycleResponse, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted, 499}, &lifecycleEnv)
 		if err != nil {
 			return nil, err
+		}
+
+		if lifecycleEnv == nil || lifecycleEnv.Properties == nil {
+			tflog.Debug(ctx, fmt.Sprintf("There was an issue getting environment lifecycle response: %s", lifecycleResponse.HttpResponse.Status))
+			continue
 		}
 
 		err = client.Api.SleepWithContext(ctx, retryAfter)
@@ -370,13 +375,13 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 			return nil, err
 		}
 
-		tflog.Debug(ctx, "Dataverse Creation Operation State: '"+lifecycleEnv.Properties.ProvisioningState+"'")
-		tflog.Debug(ctx, "Dataverse Creation Operation HTTP Status: '"+lifecycleResponse.HttpResponse.Status+"'")
+		tflog.Debug(ctx, fmt.Sprintf("Dataverse Creation Operation State: '%s'", lifecycleEnv.Properties.ProvisioningState))
+		tflog.Debug(ctx, fmt.Sprintf("Dataverse Creation Operation HTTP Status: '%s'", lifecycleResponse.HttpResponse.Status))
 
 		if lifecycleEnv.Properties.ProvisioningState == "Succeeded" {
-			return &lifecycleEnv, nil
+			return lifecycleEnv, nil
 		} else if lifecycleEnv.Properties.ProvisioningState != "LinkedDatabaseProvisioning" && lifecycleEnv.Properties.ProvisioningState != "Succeeded" {
-			return &lifecycleEnv, errors.New("dataverse creation failed. provisioning state: " + lifecycleEnv.Properties.ProvisioningState)
+			return lifecycleEnv, errors.New(fmt.Sprintf("dataverse creation failed. provisioning state: %s", lifecycleEnv.Properties.ProvisioningState))
 		}
 	}
 }
