@@ -15,9 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -86,7 +88,16 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	}
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "This resource manages a PowerPlatform environment.",
+		MarkdownDescription: "This resource manages a PowerPlatform environment.\n\n" +
+			"**Note:** Creating developer type environments is available as **preview**.\n\n" +
+			"**Known Limitations:** This resource is not supported for with service principal authentication.\n\n" +
+
+			"A Power Platform environment is a space in which you can store, manage, and share your organization's business data, apps, chatbots, and flows." +
+			"It also serves as a container to separate apps that may have different roles, security requirements, or target audiences. Each environment is created under an Azure Active Directory tenant and is bound to a geographic location. You can create different types of environments, such as production, sandbox, trial, or developer, depending on your license and permissions. You can also move resources between environments and set data loss prevention policies." +
+			"A Power Platform environment can have zero or one Microsoft Dataverse database, which provides storage for your apps and chatbots. You can only connect to the data sources that are deployed in the same environment as your app or chatbot. For more information, you can check out the following links:\n" +
+			"- [Environments overview - Power Platform | Microsoft Learn](https://learn.microsoft.com/power-platform/admin/environments-overview)\n" +
+			"- [Create and manage environments in the Power Platform admin center](https://learn.microsoft.com/power-platform/admin/create-environment)\n" +
+			"- [Establishing an environment strategy - Microsoft Power Platform](https://learn.microsoft.com/power-platform/guidance/adoption/environment-strategy)",
 
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
@@ -114,6 +125,8 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "environment_group_id must be a valid environment group id guid"),
 					stringvalidator.AlsoRequires(path.Root("dataverse").Expression()),
 				},
+				// TODO: because of the bug on the backend default value would trigger managed environment creation, we can use this default value when the bug is fixed
+				// Default: stringdefault.StaticString("00000000-0000-0000-0000-000000000000"),
 			},
 			"description": schema.StringAttribute{
 				MarkdownDescription: "Description of the environment",
@@ -122,6 +135,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+				Default: stringdefault.StaticString(""),
 			},
 			"cadence": schema.StringAttribute{
 				MarkdownDescription: "Cadence of updates for the environment (Frequent, Moderate). For more information check [here](https://learn.microsoft.com/en-us/power-platform/admin/create-environment#setting-an-environment-refresh-cadence).",
@@ -133,6 +147,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Validators: []validator.String{
 					stringvalidator.OneOf(CadenceTypes...),
 				},
+				Default: stringdefault.StaticString(CadenceTypesModerate),
 			},
 			"release_cycle": schema.StringAttribute{
 				MarkdownDescription: "Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).",
@@ -212,6 +227,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					stringvalidator.LengthAtLeast(1),
 					stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "billing_policy_id must be a valid billing policy id guid"),
 				},
+				Default: stringdefault.StaticString("00000000-0000-0000-0000-000000000000"),
 			},
 			"enterprise_policies": schema.SetNestedAttribute{
 				MarkdownDescription: "Enterprise policies for the environment. See [Enterprise policies](https://learn.microsoft.com/en-us/power-platform/admin/enterprise-policies) for more details.",
@@ -245,6 +261,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						PlanModifiers: []planmodifier.Bool{
 							boolplanmodifier.UseStateForUnknown(),
 						},
+						Default: booldefault.StaticBool(false),
 					},
 					"background_operation_enabled": schema.BoolAttribute{
 						MarkdownDescription: "Indicates if background operation is enabled",
@@ -253,6 +270,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						PlanModifiers: []planmodifier.Bool{
 							boolplanmodifier.UseStateForUnknown(),
 						},
+						Default: booldefault.StaticBool(true),
 					},
 					"currency_code": schema.StringAttribute{
 						MarkdownDescription: "Currency name",
@@ -290,6 +308,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					"security_group_id": schema.StringAttribute{
 						MarkdownDescription: "Security group id (guid). For an empty security group, set this property to `0000000-0000-0000-0000-000000000000`",
 						Optional:            true,
+						Computed:            true,
 						Validators: []validator.String{
 							stringvalidator.RegexMatches(regexp.MustCompile(helpers.GuidRegex), "security_group_id must be a valid security group guid id"),
 							validators.MakeFieldRequiredWhenOtherFieldDoesNotHaveValue(path.Root("environment_type").Expression(), regexp.MustCompile(EnvironmentTypesExceptDeveloperRegex), "dataverse.security_group_id is required for all environment_type values except `Developer`"),
@@ -312,6 +331,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 					"templates": schema.ListAttribute{
 						MarkdownDescription: "The selected instance provisioning template (if any). See [ERP-based template](https://learn.microsoft.com/en-us/power-platform/admin/unified-experience/tutorial-deploy-new-environment-with-erp-template?tabs=PPAC) for more information.",
 						Optional:            true,
+						Computed:            true,
 						ElementType:         types.StringType,
 					},
 					"template_metadata": schema.StringAttribute{
@@ -396,13 +416,13 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	err = r.EnvironmentClient.LocationValidator(ctx, envToCreate.Location, envToCreate.Properties.AzureRegion)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s", r.FullTypeName()), err.Error())
 		return
 	}
 
 	err = r.aiGenerativeFeaturesValidaor(plan)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -410,27 +430,27 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	if envToCreate.Properties.LinkedEnvironmentMetadata != nil {
 		err = languageCodeValidator(ctx, r.EnvironmentClient.Api, envToCreate.Location, fmt.Sprintf("%d", envToCreate.Properties.LinkedEnvironmentMetadata.BaseLanguage))
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Language code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Language code validation failed for %s", r.FullTypeName()), err.Error())
 			return
 		}
 
 		err = currencyCodeValidator(ctx, r.EnvironmentClient.Api, envToCreate.Location, envToCreate.Properties.LinkedEnvironmentMetadata.Currency.Code)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Currency code validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Currency code validation failed for %s", r.FullTypeName()), err.Error())
 			return
 		}
 	}
 
 	envDto, err := r.EnvironmentClient.CreateEnvironment(ctx, *envToCreate)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
 	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
 		err := r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 			return
 		}
 
@@ -440,7 +460,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 				resp.State.RemoveResource(ctx)
 				return
 			}
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 			return
 		}
 	}
@@ -490,7 +510,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -531,7 +551,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_environment with id %s", r.ProviderTypeName, state.Id.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s with id %s", r.FullTypeName(), state.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
@@ -552,7 +572,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	err := r.aiGenerativeFeaturesValidaor(plan)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Location validation failed for %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -600,7 +620,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -608,7 +628,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	if plan.DisplayName.ValueString() != state.DisplayName.ValueString() {
 		envDto, err = r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 			return
 		}
 	}
@@ -660,12 +680,12 @@ func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentI
 func addDataverse(ctx context.Context, plan *SourceModel, r *Resource) (string, error) {
 	linkedMetadataDto, err := convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx, plan.Dataverse)
 	if err != nil {
-		return "", fmt.Errorf("Error when converting dataverse source model to create link environment metadata dto: %s", err.Error())
+		return "", fmt.Errorf("error when converting dataverse source model to create link environment metadata dto: %s", err.Error())
 	}
 
 	_, err = r.EnvironmentClient.AddDataverseToEnvironment(ctx, plan.Id.ValueString(), *linkedMetadataDto)
 	if err != nil {
-		return "", fmt.Errorf("Error when adding dataverse to environment %s: %s", plan.Id.ValueString(), err.Error())
+		return "", fmt.Errorf("error when adding dataverse to environment %s: %s", plan.Id.ValueString(), err.Error())
 	}
 	return linkedMetadataDto.Currency.Code, nil
 }
@@ -740,7 +760,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 
 	err := r.EnvironmentClient.DeleteEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 	}
 	resp.State.RemoveResource(ctx)
 }
@@ -756,7 +776,7 @@ func (r *Resource) updateEnvironmentType(ctx context.Context, plan *SourceModel,
 	if plan.EnvironmentType.ValueString() != state.EnvironmentType.ValueString() {
 		err := r.EnvironmentClient.ModifyEnvironmentType(ctx, plan.Id.ValueString(), plan.EnvironmentType.ValueString())
 		if err != nil {
-			return fmt.Errorf("Error when updating environment_type: %s", err.Error())
+			return fmt.Errorf("error when updating environment_type: %s", err.Error())
 		}
 	}
 	return nil
@@ -787,7 +807,6 @@ func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel)
 }
 
 func updateEnvironmentGroupId(plan *SourceModel, environmentDto *EnvironmentDto) {
-	// if there is no value in the plan, not even empty guid, then we do nothing, attribute stop bing tracked in state
 	if !plan.EnvironmentGroupId.IsNull() {
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{
 			Id: plan.EnvironmentGroupId.ValueString(),
@@ -841,13 +860,13 @@ func (r *Resource) addBillingPolicy(ctx context.Context, plan *SourceModel) erro
 
 func (r *Resource) aiGenerativeFeaturesValidaor(plan *SourceModel) error {
 	if r.EnvironmentClient.Api.Config.CloudType != config.CloudTypePublic {
-		return errors.New("Moving data across regions is not supported in non public clouds")
+		return errors.New("moving data across regions is not supported in non public clouds")
 	}
 	if plan.Location.ValueString() == "unitedstates" && plan.AllowMovingDataAcrossRegions.ValueBool() {
-		return errors.New("Moving data across regions is not supported in the unitedstates location")
+		return errors.New("moving data across regions is not supported in the unitedstates location")
 	}
 	if plan.Location.ValueString() != "unitedstates" && plan.AllowBingSearch.ValueBool() && !plan.AllowMovingDataAcrossRegions.ValueBool() {
-		return errors.New("To enable AI generative features, moving data across regions must be enabled")
+		return errors.New("to enable ai generative features, moving data across regions must be enabled")
 	}
 	return nil
 }

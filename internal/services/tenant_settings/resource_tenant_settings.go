@@ -126,8 +126,8 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 						},
 					},
 					"teams_integration": schema.SingleNestedAttribute{
-						MarkdownDescription: "Teams Integration",
-						Optional:            true,
+						Description: "Teams Integration",
+						Optional:    true,
 						Attributes: map[string]schema.Attribute{
 							"share_with_colleagues_user_limit": schema.Int64Attribute{
 								MarkdownDescription: "Share With Colleagues User Limit",
@@ -136,8 +136,11 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 						},
 					},
 					"power_apps": schema.SingleNestedAttribute{
-						MarkdownDescription: "Power Apps",
-						Optional:            true,
+						Description:   "Power Apps",
+						Optional:      true,
+						PlanModifiers: []planmodifier.Object{
+							// objectplanmodifier.UseStateForUnknown(),
+						},
 						Attributes: map[string]schema.Attribute{
 							"disable_share_with_everyone": schema.BoolAttribute{
 								MarkdownDescription: "Disable Share With Everyone",
@@ -170,8 +173,8 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 						},
 					},
 					"power_automate": schema.SingleNestedAttribute{
-						MarkdownDescription: "Power Automate",
-						Optional:            true,
+						Description: "Power Automate",
+						Optional:    true,
 						Attributes: map[string]schema.Attribute{
 							"disable_copilot": schema.BoolAttribute{
 								MarkdownDescription: "Disable Copilot",
@@ -180,8 +183,8 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 						},
 					},
 					"environments": schema.SingleNestedAttribute{
-						MarkdownDescription: "Environments",
-						Optional:            true,
+						Description: "Environments",
+						Optional:    true,
 						Attributes: map[string]schema.Attribute{
 							"disable_preferred_data_location_for_teams_environment": schema.BoolAttribute{
 								MarkdownDescription: "Disable Preferred Data Location For Teams Environment",
@@ -450,7 +453,7 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	newState, _ := convertFromTenantSettingsDto[TenantSettingsResourceModel](*newStateDto, state.Timeouts)
 	newState.Id = types.StringValue(tenant.TenantId)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_tenant_settings with id %s", r.ProviderTypeName, newState.Id.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s with id %s", r.FullTypeName(), newState.Id.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }

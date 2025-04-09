@@ -34,7 +34,7 @@ func (client *client) getCopilotStudioEndpoint(ctx context.Context, environmentI
 		return "", err
 	}
 	if env == nil || env.Properties == nil || env.Properties.RuntimeEndpoints == nil || env.Properties.RuntimeEndpoints.PowerVirtualAgents == "" {
-		return "", errors.New("Power Virtual Agents runtime endpoint is not available in the environment")
+		return "", errors.New("power virtual agents runtime endpoint is not available in the environment")
 	}
 
 	u, err := url.Parse(env.Properties.RuntimeEndpoints.PowerVirtualAgents)
@@ -120,11 +120,11 @@ func (client *client) updateCopilotStudioAppInsightsConfiguration(ctx context.Co
 		return nil, err
 	}
 	if resp.HttpResponse.StatusCode == http.StatusInternalServerError {
-		return nil, fmt.Errorf("Error updating Application Insights configuration: %s", string(resp.BodyAsBytes))
+		return nil, fmt.Errorf("error updating Application Insights configuration: %s", string(resp.BodyAsBytes))
 	}
 
 	if len(updatedCopilotStudioAppInsightsConfiguration.Errors) > 0 {
-		return nil, fmt.Errorf("Error updating Application Insights configuration: %s", updatedCopilotStudioAppInsightsConfiguration.Errors)
+		return nil, fmt.Errorf("error updating Application Insights configuration: %s", updatedCopilotStudioAppInsightsConfiguration.Errors)
 	}
 	updatedCopilotStudioAppInsightsConfiguration.EnvironmentId = copilotStudioAppInsightsConfig.EnvironmentId
 	updatedCopilotStudioAppInsightsConfiguration.BotId = botId

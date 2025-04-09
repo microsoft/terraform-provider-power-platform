@@ -10,10 +10,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
@@ -46,7 +48,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages the [Application Insights configuration for a Copilot](https://learn.microsoft.com/en-us/microsoft-copilot-studio/advanced-bot-framework-composer-capture-telemetry?tabs=webApp). Known Limitation: This resource currently does not work when authenticated using service principal.",
+		MarkdownDescription: "Manages the [Application Insights configuration for a Copilot](https://learn.microsoft.com/en-us/microsoft-copilot-studio/advanced-bot-framework-composer-capture-telemetry?tabs=webApp).\n\n" +
+			"**Note:** This resource is available as **preview**\n\n" +
+			"**Known Limitation**: This resource currently does not work when authenticated using service principal.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id of the Copilot Studio Application Insights configuration",
@@ -76,23 +80,29 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			"include_sensitive_information": schema.BoolAttribute{
 				MarkdownDescription: "Whether to log sensitive properties such as user ID, name, and text.",
 				Optional:            true,
+				Computed:            true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
+				Default: booldefault.StaticBool(true),
 			},
 			"include_activities": schema.BoolAttribute{
 				MarkdownDescription: "Whether to log details of incoming/outgoing messages and events.",
 				Optional:            true,
+				Computed:            true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
+				Default: booldefault.StaticBool(true),
 			},
 			"include_actions": schema.BoolAttribute{
 				MarkdownDescription: "Whether to log an event each time a node within a topic is executed.",
 				Optional:            true,
+				Computed:            true,
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
+				Default: booldefault.StaticBool(true),
 			},
 		},
 	}
@@ -140,7 +150,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	// You can't really create a config, so treat a create as an update
 	appInsightsConfigDto, err := r.CopilotStudioApplicationInsightsClient.updateCopilotStudioAppInsightsConfiguration(ctx, *appInsightsConfigToCreate, plan.BotId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating/updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating/updating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -172,7 +182,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -183,7 +193,6 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	}
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: Copilot Studio bot ID '%s' in environment ID '%s'", state.BotId.ValueString(), state.EnvironmentId.ValueString()))
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
@@ -206,7 +215,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	// You can't really create a config, so treat a create as an update
 	appInsightsConfigDto, err := r.CopilotStudioApplicationInsightsClient.updateCopilotStudioAppInsightsConfiguration(ctx, *appInsightsConfigToCreate, plan.BotId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating/updating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating/updating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -244,7 +253,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 
 	_, err = r.CopilotStudioApplicationInsightsClient.updateCopilotStudioAppInsightsConfiguration(ctx, *appInsightsConfigToCreate, state.BotId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
 	resp.State.RemoveResource(ctx)
