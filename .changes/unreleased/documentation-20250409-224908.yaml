@@ -1,0 +1,5 @@
+kind: documentation
+body: dding documentation and samples for Azure DevOps authentication with Workload Identity Federation.
+time: 2025-04-09T22:49:08.395335117Z
+custom:
+    Issue: "695"
