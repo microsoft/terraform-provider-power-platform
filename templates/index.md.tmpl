@@ -98,7 +98,7 @@ The Power Platform provider can use a Service Principal with Client Secret to au
 1. [Register your app registration with Power Platform](https://learn.microsoft.com/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
 1. Configure the provider to use a Service Principal with a Client Secret with either environment variables or using Terraform variables
 
-### Authenticating to Power Platfomr using Service Principal and certificate
+### Authenticating to Power Platform using Service Principal and certificate
 
 1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
 1. [Register your app registration with Power Platform](https://learn.microsoft.com/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
@@ -172,13 +172,13 @@ The Power Platform provider can use a [Managed Identity](https://learn.microsoft
 
 ### Authenticating to Power Platform Using Azure DevOps Workload Identity Federation
 
-The Power Platform provider can use [Azure DevOps Workload Identity Federation](https://devblogs.microsoft.com/devops/introduction-to-azure-devops-workload-identity-federation-oidc-with-terraform/) with Azure DeOps pipelines to authenticate to Power Platform services.
+The Power Platform provider can use [Azure DevOps Workload Identity Federation](https://devblogs.microsoft.com/devops/introduction-to-azure-devops-workload-identity-federation-oidc-with-terraform/) with Azure DevOps pipelines to authenticate to Power Platform services.
 
 *Note: For similar hands-off authentication in GitHub and Azure DevOps, the Power Platform Provider also supports the [OIDC authentication method](#authenticating-to-power-platform-using-a-service-principal-with-oidc).*
 
 #### Create an app registration with workload identity federation (automatic)
 
-1. Create an Azure Resource Manager Service Connection in Azure DevOps using the [Create an app registration with workload identity federation (automatic)](https://learn.microsoft.com/en-us/azure/devops/pipelines/library/connect-to-azure?view=azure-devops#create-an-app-registration-with-workload-identity-federation-automatic). This will automatically create an App Registration with workload identity federation. Once created, you will need the Service Connection ID number that appears bellow the Service Connection name "ID:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX", you will also need the Azure "Application (client) ID" of the service connection that you just create.
+1. Create an Azure Resource Manager Service Connection in Azure DevOps using the [Create an app registration with workload identity federation (automatic)](https://learn.microsoft.com/en-us/azure/devops/pipelines/library/connect-to-azure?view=azure-devops#create-an-app-registration-with-workload-identity-federation-automatic). This will automatically create an App Registration with workload identity federation. Once created, you will need the Service Connection ID number that appears below the Service Connection name "ID:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX", you will also need the Azure "Application (client) ID" of the service connection that you just create.
 1. Configure the [App Permissions](guides/app_registration.md)
 1. Register the App Registration with the Power Platform. This task can be performed using [the provider itself](/resources/admin_management_application.md) or [PowerShell](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal).
 1. Configure your Azure DevOps pipeline to use the Service Connection you created in step 1. This is done by adding the following variables to your pipeline:
@@ -191,7 +191,7 @@ The Power Platform provider can use [Azure DevOps Workload Identity Federation](
     POWER_PLATFORM_OIDC_REQUEST_URI: $(System.OidcRequestUri)
     POWER_PLATFORM_OIDC_TOKEN: $(System.AccessToken)
     ```
-    Note that the `System.AccessToken`and `System.OidcRequestUri`,  variable is automatically set by Azure DevOps and does not need to be configured manually.
+    Note that the `System.AccessToken`and `System.OidcRequestUri`, variables are automatically set by Azure DevOps.
 
 1. Configure the provider to use Azure DevOps Workload Identity Federation. This authentication option also requires values to be set in the ARM_OIDC_REQUEST_TOKEN and POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID environment variables, which should be configured in the AzDO pipeline itself. Note that this example sets some of the required properties in the provider configuration, but the whole configuration could also be performed using just environment variables.
 
@@ -218,7 +218,7 @@ The Power Platform provider can use [Azure DevOps Workload Identity Federation](
     POWER_PLATFORM_OIDC_REQUEST_URI: $(System.OidcRequestUri)
     POWER_PLATFORM_OIDC_TOKEN: $(System.AccessToken)
     ```
-    Note that the `System.AccessToken`and `System.OidcRequestUri`,  variable is automatically set by Azure DevOps and does not need to be configured manually.
+    Note that the `System.AccessToken`and `System.OidcRequestUri`, variables are automatically set by Azure DevOps and does not need to be configured manually.
 
 1. Configure the provider to use Azure DevOps Workload Identity Federation. This authentication option also requires values to be set in the ARM_OIDC_REQUEST_TOKEN and POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID environment variables, which should be configured in the AzDO pipeline itself. Note that this example sets some of the required properties in the provider configuration, but the whole configuration could also be performed using just environment variables.
 
@@ -329,7 +329,7 @@ In addition to the authentication options, the following options are also suppor
 
 Use the navigation to the left to read about the available resources and data sources.
 
-!> By calling `terraform destroy` all the resources, that you've created, will be deleted permamently deleted. Please be careful with this command when working with production environments. You can use [prevent-destroy](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) lifecycle argument in your resources to prevent accidental deletion.  
+!> By calling `terraform destroy` all the resources, that you've created, will be deleted permanently deleted. Please be careful with this command when working with production environments. You can use [prevent-destroy](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#prevent_destroy) lifecycle argument in your resources to prevent accidental deletion.  
 
 ## Examples
 
