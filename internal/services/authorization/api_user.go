@@ -298,6 +298,7 @@ func (client *client) CreateDataverseUser(ctx context.Context, environmentId, aa
 	// 9 minutes of retries.
 	retryCount := 6 * 9
 	var err error
+
 	for retryCount > 0 {
 		_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, userToCreate, []int{http.StatusOK}, nil)
 		// the license assignment in Entra is async, so we need to wait for that to happen if a user is created in the same terraform run.
@@ -384,7 +385,7 @@ func (client *client) RemoveDataverseSecurityRoles(ctx context.Context, environm
 		_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
 		if err != nil {
 			if strings.Contains(err.Error(), "0x80060888") && strings.Contains(err.Error(), roleId) {
-				return nil, fmt.Errorf("Role with id '%s' is not valid", roleId)
+				return nil, fmt.Errorf("role with id '%s' is not valid", roleId)
 			}
 			return nil, err
 		}
@@ -415,7 +416,7 @@ func (client *client) AddDataverseSecurityRoles(ctx context.Context, environment
 		_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, roleToassociate, []int{http.StatusNoContent}, nil)
 		if err != nil {
 			if strings.Contains(err.Error(), "0x80060888") && strings.Contains(err.Error(), roleId) {
-				return nil, fmt.Errorf("Role with id '%s' is not valid", roleId)
+				return nil, fmt.Errorf("role with id '%s' is not valid", roleId)
 			}
 			return nil, err
 		}

@@ -171,7 +171,7 @@ func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req
 	var state EnvironmentApplicationPackagesListDataSourceModel
 	resp.State.Get(ctx, &state)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES START: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES START: %s", d.FullTypeName()))
 
 	state.EnvironmentId = types.StringValue(state.EnvironmentId.ValueString())
 	state.Name = types.StringValue(state.Name.ValueString())
@@ -189,7 +189,7 @@ func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req
 
 	applications, err := d.ApplicationClient.GetApplicationsByEnvironmentId(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
 
@@ -215,7 +215,7 @@ func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req
 	state.Id = types.StringValue(fmt.Sprintf("%s_%d", state.EnvironmentId.ValueString(), len(applications)))
 	diags := resp.State.Set(ctx, &state)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES END: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES END: %s", d.FullTypeName()))
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

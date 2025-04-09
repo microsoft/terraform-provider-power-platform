@@ -51,8 +51,8 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 	defer exitContext()
 
 	connectorSchema := schema.NestedAttributeObject{
-		Attributes: map[string]schema.Attribute{
 
+		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				MarkdownDescription: "ID of the connector",
 				Optional:            true,
@@ -60,6 +60,7 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 			"default_action_rule_behavior": schema.StringAttribute{
 				MarkdownDescription: "Default action rule behavior for the connector (\"Allow\", \"Block\", \"\")",
 				Optional:            true,
+				Computed:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("Allow", "Block", ""),
 				},
@@ -67,7 +68,6 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 			"action_rules": schema.ListNestedAttribute{
 				MarkdownDescription: "Action rules for the connector",
 				Optional:            true,
-
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"action_id": schema.StringAttribute{
@@ -170,6 +170,7 @@ func (r *DataLossPreventionPolicyResource) Schema(ctx context.Context, req resou
 				MarkdownDescription: "Environment to which the policy is applied",
 				ElementType:         types.StringType,
 				Optional:            true,
+				Computed:            true,
 			},
 			"business_connectors": schema.SetNestedAttribute{
 				MarkdownDescription: "Connectors for sensitive data",
@@ -290,7 +291,7 @@ func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resourc
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -339,7 +340,7 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 
 	policy, err_client := r.DlpPolicyClient.CreatePolicy(ctx, policyToCreate)
 	if err_client != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err_client.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err_client.Error())
 		return
 	}
 
@@ -392,7 +393,7 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 
 	policy, err_client := r.DlpPolicyClient.UpdatePolicy(ctx, policyToUpdate)
 	if err_client != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.TypeName), err_client.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err_client.Error())
 		return
 	}
 
@@ -425,7 +426,7 @@ func (r *DataLossPreventionPolicyResource) Delete(ctx context.Context, req resou
 
 	err := r.DlpPolicyClient.DeletePolicy(ctx, state.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
 }

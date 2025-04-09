@@ -143,7 +143,7 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 
 	solutions, err := d.SolutionClient.GetSolutions(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
 

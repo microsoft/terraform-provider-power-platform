@@ -45,6 +45,7 @@ func (r *Resource) Metadata(ctx context.Context, req resource.MetadataRequest, r
 func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages wave feature installation in a Power Platform environment. \n\n" +
+			"**Note:** This resource is available as **preview**\n\n" +
 			"**Known Limitations:** This resource is not supported for with service principal authentication.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
@@ -124,7 +125,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	feature, err := r.EnvironmentWaveClient.UpdateFeature(ctx, plan.EnvironmentId.ValueString(), plan.FeatureName.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -154,7 +155,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 

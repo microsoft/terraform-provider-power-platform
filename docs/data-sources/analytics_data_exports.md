@@ -4,11 +4,17 @@ page_title: "powerplatform_analytics_data_exports Data Source - powerplatform"
 subcategory: ""
 description: |-
   Analytics Data Export configurations. See documentation https://learn.microsoft.com/en-us/power-platform/admin/set-up-export-application-insights for more details.
+  Note: This resource is available as preview
+  Known Limitations: This resource is not supported for with service principal authentication.
 ---
 
 # powerplatform_analytics_data_exports (Data Source)
 
 Analytics Data Export configurations. See [documentation](https://learn.microsoft.com/en-us/power-platform/admin/set-up-export-application-insights) for more details.
+
+**Note:** This resource is available as **preview**
+
+**Known Limitations:** This resource is not supported for with service principal authentication.
 
 ## Example Usage
 

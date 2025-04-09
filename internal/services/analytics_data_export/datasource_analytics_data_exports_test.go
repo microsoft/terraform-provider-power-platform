@@ -15,6 +15,8 @@ import (
 )
 
 func TestAccAnalyticsDataExportsDataSource_Validate_Read(t *testing.T) {
+	t.Skip("Skipping test due lack of SP support")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

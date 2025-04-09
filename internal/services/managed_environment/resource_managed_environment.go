@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -110,6 +111,9 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			"protection_level": schema.StringAttribute{
 				MarkdownDescription: "Protection level",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"is_usage_insights_disabled": schema.BoolAttribute{
 				MarkdownDescription: "[Weekly insights digest for the environment](https://learn.microsoft.com/power-platform/admin/managed-environment-usage-insights)",
@@ -144,6 +148,8 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			"solution_checker_rule_overrides": schema.SetAttribute{
 				MarkdownDescription: SolutionCheckerMarkdown,
 				Optional:            true,
+				Computed:            true,
+				Default:             setdefault.StaticValue(types.SetNull(types.StringType)),
 				ElementType:         types.StringType,
 			},
 			"maker_onboarding_markdown": schema.StringAttribute{
@@ -218,13 +224,13 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 
 	err = r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s", r.FullTypeName()), err.Error())
 		return
 	}
 
 	env, err := r.ManagedEnvironmentClient.environmentClient.GetEnvironment(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -267,7 +273,7 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -365,13 +371,13 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 
 	err = r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s", r.FullTypeName()), err.Error())
 		return
 	}
 
 	env, err := r.ManagedEnvironmentClient.environmentClient.GetEnvironment(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -409,7 +415,7 @@ func (r *ManagedEnvironmentResource) Delete(ctx context.Context, req resource.De
 
 	err := r.ManagedEnvironmentClient.DisableManagedEnvironment(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when disabling managed environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when disabling managed environment %s", r.FullTypeName()), err.Error())
 		return
 	}
 }

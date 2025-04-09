@@ -160,7 +160,7 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 
 	policy, err := r.LicensingClient.CreateBillingPolicy(ctx, billingPolicyToCreate)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -193,7 +193,7 @@ func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadReque
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -205,7 +205,7 @@ func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadReque
 	state.BillingInstrument.ResourceGroup = types.StringValue(billing.BillingInstrument.ResourceGroup)
 	state.BillingInstrument.SubscriptionId = types.StringValue(billing.BillingInstrument.SubscriptionId)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ %s_%s with Id: %s", r.ProviderTypeName, r.TypeName, billing.Id))
+	tflog.Debug(ctx, fmt.Sprintf("READ %s with Id: %s", r.FullTypeName(), billing.Id))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -235,7 +235,7 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 
 		policy, err := r.LicensingClient.UpdateBillingPolicy(ctx, plan.Id.ValueString(), policyToUpdate)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 			return
 		}
 
@@ -262,7 +262,7 @@ func (r *BillingPolicyResource) Delete(ctx context.Context, req resource.DeleteR
 
 	err := r.LicensingClient.DeleteBillingPolicy(ctx, state.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
 }

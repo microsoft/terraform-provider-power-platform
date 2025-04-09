@@ -121,7 +121,7 @@ func (r *EnvironmentApplicationPackageInstallResource) Create(ctx context.Contex
 
 	applicationId, err := r.ApplicationClient.InstallApplicationInEnvironment(ctx, state.EnvironmentId.ValueString(), state.UniqueName.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -144,7 +144,7 @@ func (r *EnvironmentApplicationPackageInstallResource) Read(ctx context.Context,
 		return
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_application with application_name %s", r.ProviderTypeName, state.UniqueName.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s with application_name %s", r.FullTypeName(), state.UniqueName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
