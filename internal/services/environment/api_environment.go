@@ -381,7 +381,7 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 		if lifecycleEnv.Properties.ProvisioningState == "Succeeded" {
 			return lifecycleEnv, nil
 		} else if lifecycleEnv.Properties.ProvisioningState != "LinkedDatabaseProvisioning" && lifecycleEnv.Properties.ProvisioningState != "Succeeded" {
-			return lifecycleEnv, errors.New(fmt.Sprintf("dataverse creation failed. provisioning state: %s", lifecycleEnv.Properties.ProvisioningState))
+			return lifecycleEnv, fmt.Errorf("dataverse creation failed. provisioning state: %s", lifecycleEnv.Properties.ProvisioningState)
 		}
 	}
 }
