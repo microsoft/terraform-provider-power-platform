@@ -11,16 +11,16 @@
       group: ${{ format('{0}-{1}-{2}-{3}-{4}', github.workflow, github.event_name, github.ref, github.base_ref || null, github.head_ref || null) }}
       cancel-in-progress: true
     
-    permissions:
-      contents: read
-      issues: write
-      pull-requests: write
+
     
     jobs:
       changelog-existence:
         name: Check Changelog
         if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-changelog') && github.actor != 'dependabot[bot]' }}
         runs-on: ubuntu-latest
+        permissions:
+          contents: read
+          pull-requests: write
         steps:
           - name: Checkout
             uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -65,6 +65,10 @@
         name: Check Changelog
         if: ${{ contains(github.event.pull_request.labels.*.name, 'skip-changelog') || github.actor == 'dependabot[bot]' }}
         runs-on: ubuntu-latest
+        permissions:
+          contents: read
+          #issues: write
+          pull-requests: write
         steps:
           - name: Find comment
             if: github.actor != 'dependabot[bot]'
