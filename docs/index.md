@@ -49,7 +49,7 @@ Terraform supports a number of different methods for authenticating to Power Pla
 * [Authenticating to Power Platform using a Service Principal with OIDC](#authenticating-to-power-platform-using-a-service-principal-with-oidc)
 * [Authenticating to Power Platform using a Service Principal and a Client Secret](#authenticating-to-power-platform-using-a-service-principal-and-a-client-secret)
 * [Authenticating to Power Platform using a Managed Identity](#authenticating-to-power-platform-using-a-managed-identity)
-* [Authenticating to Power Platform using a Azure DevOps Workload Identity Federation](#authenticating-to-power-platform-using-a-azure-devops-workload-identity-federation)
+* [Authenticating to Power Platform using a Azure DevOps Workload Identity Federation (OIDC)](#authenticating-to-power-platform-using-a-azure-devops-workload-identity-federation-oidc)
 
 We recommend using either a Service Principal when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
 
@@ -180,7 +180,7 @@ The Power Platform provider can use a [Managed Identity](https://learn.microsoft
     }
     ```
 
-### Authenticating to Power Platform using a Azure DevOps Workload Identity Federation
+### Authenticating to Power Platform using a Azure DevOps Workload Identity Federation (OIDC)
 
 The Power Platform provider can use [Azure DevOps Workload Identity Federation](https://devblogs.microsoft.com/devops/introduction-to-azure-devops-workload-identity-federation-oidc-with-terraform/) with Azure DevOps pipelines to authenticate to Power Platform services.
 Creation of the Service connection in Azure DevOps can be done automatically or manually using an existing APP. Below, we explain both methods.
