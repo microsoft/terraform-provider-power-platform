@@ -49,7 +49,7 @@ Terraform supports a number of different methods for authenticating to Power Pla
 * [Authenticating to Power Platform using a Service Principal with OIDC](#authenticating-to-power-platform-using-a-service-principal-with-oidc)
 * [Authenticating to Power Platform using a Service Principal and a Client Secret](#authenticating-to-power-platform-using-a-service-principal-and-a-client-secret)
 * [Authenticating to Power Platform using a Managed Identity](#authenticating-to-power-platform-using-a-managed-identity)
-* [Authenticating to Power Platform using Azure DevOps Workload Identity Federation](#authenticating-to-power-platform-using-workload-identity-federation)
+* [Authenticating to Power Platform using a Azure DevOps Workload Identity Federation](#authenticating-to-power-platform-using-a-azure-devops-workload-identity-federation)
 
 We recommend using either a Service Principal when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
 
@@ -153,12 +153,12 @@ The Power Platform provider can use a Service Principal with Client Secret to au
 
 ### Authenticating to Power Platform Using a Managed Identity
 
-The Power Platform provider can use a [Managed Identity](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview) (previously called Managed Service Identity, or MSI) to authenticate to Power Platform services for keyless authentication in scenarios where the provider is being executed in select Azure services, such as Microsoft-hosted or self-hosted Azure DevOps pipelines.
+The Power Platform provider can use a [Managed Identity](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview) (previously called Managed Service Identity, or MSI) to authenticate to Power Platform services for keyless authentication in scenarios where the provider is being executed in select Azure services, such as Microsoft-hosted or self-hosted Azure DevOps pipelines.
 
 #### System-Managed Identity
 
-1. [Enable system-managed identity on an Azure resource](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview)
-1. Register the managed identity with the Power Platform using the Application ID from the enterprise application for the system-managed identity resource. This task can be performed using either [the Power Platform Terraform Provider itself](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/resources/admin_management_application), or [PowerShell]([Register the managed identity with the Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal).
+1. [Enable system-managed identity on an Azure resource](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview)
+1. Register the managed identity with the Power Platform using the Application ID from the enterprise application for the system-managed identity resource. This task can be performed using either [the Power Platform Terraform Provider itself](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/resources/admin_management_application), or [PowerShell]([Register the managed identity with the Power Platform](https://learn.microsoft.com/power-platform/admin/powershell-create-service-principal).
 1. Configure the provider to use the system-managed identity. Note that no Client ID is required as the Client ID is derived from the Azure resource running the provider.
 
     ```terraform
@@ -169,8 +169,8 @@ The Power Platform provider can use a [Managed Identity](https://learn.microsoft
 
 #### User-Managed Identity
 
-1. [Create a User-Managed Identity resource](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview)
-1. Register the managed identity with the Power Platform using the Application ID from the enterprise application for the system-managed identity resource. This task can be performed using either [the Power Platform Terraform Provider itself](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/resources/admin_management_application), or [PowerShell]([Register the managed identity with the Power Platform](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal).
+1. [Create a User-Managed Identity resource](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview)
+1. Register the managed identity with the Power Platform using the Application ID from the enterprise application for the system-managed identity resource. This task can be performed using either [the Power Platform Terraform Provider itself](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/resources/admin_management_application), or [PowerShell]([Register the managed identity with the Power Platform](https://learn.microsoft.com/power-platform/admin/powershell-create-service-principal).
 1. Configure the provider to use the System-Managed Identity. Note that this example sets the Client ID in the provider configuration, but it could also be set using the POWER_PLATFORM_CLIENT_ID environment variable.
 
     ```terraform
@@ -180,30 +180,30 @@ The Power Platform provider can use a [Managed Identity](https://learn.microsoft
     }
     ```
 
-### Authenticating to Power Platform Using Azure DevOps Workload Identity Federation
+### Authenticating to Power Platform using a Azure DevOps Workload Identity Federation
 
 The Power Platform provider can use [Azure DevOps Workload Identity Federation](https://devblogs.microsoft.com/devops/introduction-to-azure-devops-workload-identity-federation-oidc-with-terraform/) with Azure DevOps pipelines to authenticate to Power Platform services.
+Creation of the Service connection in Azure DevOps can be done automatically or manually using an existing APP. Below, we explain both methods.
 
 *Note: For similar hands-off authentication in GitHub and Azure DevOps, the Power Platform Provider also supports the [OIDC authentication method](#authenticating-to-power-platform-using-a-service-principal-with-oidc).*
 
 #### Create an app registration with workload identity federation (automatic)
 
-1. Create an Azure Resource Manager Service Connection in Azure DevOps using the [Create an app registration with workload identity federation (automatic)](https://learn.microsoft.com/en-us/azure/devops/pipelines/library/connect-to-azure?view=azure-devops#create-an-app-registration-with-workload-identity-federation-automatic). This will automatically create an App Registration with workload identity federation. Once created, you will need the Service Connection ID number that appears below the Service Connection name "ID:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX", you will also need the Azure "Application (client) ID" of the service connection that you just create.
+1. Create an Azure Resource Manager Service Connection in Azure DevOps using the [Create an app registration with workload identity federation (automatic)](https://learn.microsoft.com/azure/devops/pipelines/library/connect-to-azure?view=azure-devops#create-an-app-registration-with-workload-identity-federation-automatic). This will automatically create an App Registration with workload identity federation. Once created, you will need the Service Connection ID number that appears below the Service Connection name "ID:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX", you will also need the Azure "Application (client) ID" of the service connection that you just create.
 1. Configure the [App Permissions](guides/app_registration.md)
-1. Register the App Registration with the Power Platform. This task can be performed using [the provider itself](/resources/admin_management_application.md) or [PowerShell](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal).
+1. Register the App Registration with the Power Platform. This task can be performed using [the provider itself](/resources/admin_management_application.md) or [PowerShell](https://learn.microsoft.com/power-platform/admin/powershell-create-service-principal).
 1. Configure your Azure DevOps pipeline to use the Service Connection you created in step 1. This is done by adding the following variables to your pipeline:
 
     ```yaml
-  env:
-    ARM_OIDC_REQUEST_TOKEN: $(System.AccessToken)
-    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-    SYSTEM_OIDCREQUESTURI: $(System.OidcRequestUri)
-    POWER_PLATFORM_OIDC_REQUEST_URI: $(System.OidcRequestUri)
-    POWER_PLATFORM_OIDC_TOKEN: $(System.AccessToken)
+    env:
+      ARM_OIDC_REQUEST_TOKEN: $(System.AccessToken)
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      SYSTEM_OIDCREQUESTURI: $(System.OidcRequestUri)
+      POWER_PLATFORM_OIDC_REQUEST_URI: $(System.OidcRequestUri)
+      POWER_PLATFORM_OIDC_TOKEN: $(System.AccessToken)
     ```
-    Note that the `System.AccessToken`and `System.OidcRequestUri`, variables are automatically set by Azure DevOps.
 
-1. Configure the provider to use Azure DevOps Workload Identity Federation. This authentication option also requires values to be set in the ARM_OIDC_REQUEST_TOKEN and POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID environment variables, which should be configured in the AzDO pipeline itself. Note that this example sets some of the required properties in the provider configuration, but the whole configuration could also be performed using just environment variables.
+1. Configure the provider to use Azure DevOps Workload Identity Federation. This authentication option also requires values to be set in the `ARM_OIDC_REQUEST_TOKEN` and `POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID` environment variables, which should be configured in the AzDO pipeline itself. Note that this example sets some of the required properties in the provider configuration, but the whole configuration could also be performed using just environment variables.
 
     ```terraform
     provider "powerplatform" {
@@ -211,24 +211,24 @@ The Power Platform provider can use [Azure DevOps Workload Identity Federation](
       client_id = var.client_id # The client ID for the Azure resource containing the federated credentials for Azure DevOps. Should be an App Registration or a Managed Identity.
     }
     ```
+
 *Note: To Create service connections in Azure DevOps, you need to have the role: "[Application Developer](https://learn.microsoft.com/entra/identity/role-based-access-control/permissions-reference#application-developer)" permission in the project settings. If you don't have this permission, you will need to ask your Azure DevOps administrator to create the service connection for you.*
 
 #### Create an app registration with workload identity federation for an existing App Registration or User-assigned managed identity (manual)
 
-1. Create an [App Registration](guides/app_registration.md) or a [User-Managed Identity](https://learn.microsoft.com/en-us/entra/identity/managed-identities-azure-resources/overview). This resource will be used to manage the identity federation with Azure DevOps.
-1. Register the App Registration or Managed Identity with the Power Platform. This task can be performed using [the provider itself](/resources/admin_management_application.md) or [PowerShell](https://learn.microsoft.com/en-us/power-platform/admin/powershell-create-service-principal).
-1. [Complete the service connection configuration in Azure and Azure DevOps](https://learn.microsoft.com/en-us/azure/devops/pipelines/release/configure-workload-identity?view=azure-devops&tabs=managed-identity). Note that Azure DevOps may automatically generate the federated credential in Azure, depending on your permissions and Azure Subscription configuration.
+1. Create an [App Registration](guides/app_registration.md) or a [User-Managed Identity](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview). This resource will be used to manage the identity federation with Azure DevOps.
+1. Register the App Registration or Managed Identity with the Power Platform. This task can be performed using [the provider itself](/resources/admin_management_application.md) or [PowerShell](https://learn.microsoft.com/power-platform/admin/powershell-create-service-principal).
+1. [Complete the service connection configuration in Azure and Azure DevOps](https://learn.microsoft.com/azure/devops/pipelines/release/configure-workload-identity?view=azure-devops&tabs=managed-identity). Note that Azure DevOps may automatically generate the federated credential in Azure, depending on your permissions and Azure Subscription configuration.
 1. Configure your Azure DevOps pipeline to use the Service Connection you created in step 1. This is done by adding the following variables to your pipeline:
 
     ```yaml
-  env:
-    ARM_OIDC_REQUEST_TOKEN: $(System.AccessToken)
-    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-    SYSTEM_OIDCREQUESTURI: $(System.OidcRequestUri)
-    POWER_PLATFORM_OIDC_REQUEST_URI: $(System.OidcRequestUri)
-    POWER_PLATFORM_OIDC_TOKEN: $(System.AccessToken)
+    env:
+      ARM_OIDC_REQUEST_TOKEN: $(System.AccessToken)
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      SYSTEM_OIDCREQUESTURI: $(System.OidcRequestUri)
+      POWER_PLATFORM_OIDC_REQUEST_URI: $(System.OidcRequestUri)
+      POWER_PLATFORM_OIDC_TOKEN: $(System.AccessToken)
     ```
-    Note that the `System.AccessToken`and `System.OidcRequestUri`, variables are automatically set by Azure DevOps and does not need to be configured manually.
 
 1. Configure the provider to use Azure DevOps Workload Identity Federation. This authentication option also requires values to be set in the ARM_OIDC_REQUEST_TOKEN and POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID environment variables, which should be configured in the AzDO pipeline itself. Note that this example sets some of the required properties in the provider configuration, but the whole configuration could also be performed using just environment variables.
 
@@ -240,16 +240,16 @@ The Power Platform provider can use [Azure DevOps Workload Identity Federation](
     ```
 
 
-#### Example Azure DevOps Pipeline
+#### Azure DevOps Pipeline snippet for using the Power Platform and Azure provider in an Azure DevOps pipeline. This example uses the `AzureCLI@2` task to run Terraform commands. The pipeline is triggered on changes to the `main` branch and uses a self-hosted agent pool named `your-agent-pool-name`. The pipeline also sets up environment variables for authentication.
 
-    ```yaml
+```yaml
 # Terraform pipeline for Azure DevOps and Power Platform using task "AzureCLI@2"
 
 trigger:
 - main
 
 pool: 
-  name: "agent-pool-dema-mgt"
+  name: "your-agent-pool-name"
   vmImage: ubuntu-latest
 
 variables:
@@ -293,7 +293,9 @@ steps:
     POWER_PLATFORM_OIDC_REQUEST_URI: $(System.OidcRequestUri)
     POWER_PLATFORM_OIDC_TOKEN: $(System.AccessToken)
 
-    ```
+```
+
+*Note: The `System.AccessToken`and `System.OidcRequestUri`, variables are automatically set by Azure DevOps and does not need to be configured manually.*
 
 ### Using Environment Variables
 
