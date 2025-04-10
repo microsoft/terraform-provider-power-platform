@@ -6,15 +6,13 @@ on:
   pull_request:
   workflow_dispatch:
 
-permissions:
-  contents: read
-  # Optional: allow read access to pull request. Use with `only-new-issues` option.
-  pull-requests: read
-
 jobs:
   golangci:
     name: lint
     runs-on: ubuntu-latest
+    permissions:
+      contents: read       # Required for checkout
+      pull-requests: read  # Required for reviewing PRs
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
