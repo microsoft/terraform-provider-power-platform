@@ -366,7 +366,7 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 		}
 
 		if lifecycleEnv == nil || lifecycleEnv.Properties == nil {
-			tflog.Debug(ctx, fmt.Sprintf("There was an issue getting environment lifecycle response: %s", lifecycleResponse.HttpResponse.Status))
+			tflog.Debug(ctx, fmt.Sprintf("The environment lifecycle response body did not match expected format. Response status code: %s", lifecycleResponse.HttpResponse.Status))
 			continue
 		}
 
