@@ -6,14 +6,13 @@ on:
     - cron: '0 8 * * 1'
   workflow_dispatch: # Allow manual triggering
 
-permissions:
-  issues: write
-  pull-requests: read
-
 jobs:
   metrics:
     name: Repository Metrics Collection
     runs-on: ubuntu-latest
+    permissions:
+      issues: read      
+      pull-requests: read
     steps:
       - name: Get date for query
         id: date

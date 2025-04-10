@@ -11,6 +11,8 @@ jobs:
   depscheck:
     name: Check Dependencies
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Required for checkout
     steps:
 
     - name: Harden Runner
@@ -40,6 +42,8 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: read  # Required for checkout
     steps:
 
     - name: Harden Runner
@@ -70,6 +74,8 @@ jobs:
     name: Unit Test
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Required for checkout
     steps:
 
     - name: Harden Runner
@@ -109,6 +115,8 @@ jobs:
     name: Check Generated Docs
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Required for checkout
     steps:
 
       - name: Harden Runner
