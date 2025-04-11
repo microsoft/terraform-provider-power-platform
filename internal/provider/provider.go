@@ -174,6 +174,10 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				MarkdownDescription: "The service connection id of the Azure DevOps service connection. For use in workload identity federation.",
 				Optional:            true,
 			},
+			"enable_continuous_access_evaluation": schema.BoolAttribute{
+				MarkdownDescription: "Enables Continuous Access Evaluation (CAE) for authentication tokens. CAE allows for near real-time security policy enforcement such as user termination, password changes, and location policy changes. [Learn more about CAE](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-continuous-access-evaluation).",
+				Optional:            true,
+			},
 		},
 	}
 }
@@ -212,7 +216,8 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	// Check for telemetry opt out
 	telemetryOptOut := helpers.GetConfigBool(ctx, configValue.TelemetryOptout, constants.ENV_VAR_POWER_PLATFORM_TELEMETRY_OPTOUT, false)
 
-	// Set the configuration values
+	// Get CAE configuration
+	enableCae := helpers.GetConfigBool(ctx, configValue.EnableContinuousAccessEvaluation, constants.ENV_VAR_POWER_PLATFORM_ENABLE_CAE, false)
 
 	if p.Config.TestMode {
 		configureTestMode(ctx)
@@ -257,6 +262,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	p.Config.Urls = *providerConfigUrls
 	p.Config.Cloud = *cloudConfiguration
 	p.Config.TelemetryOptout = telemetryOptOut
+	p.Config.EnableContinuousAccessEvaluation = enableCae
 	p.Config.TerraformVersion = req.TerraformVersion
 
 	providerClient := api.ProviderClient{
