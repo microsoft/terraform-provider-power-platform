@@ -27,7 +27,7 @@ func CalculateSHA256(filePath string) (string, error) {
 
 	// Check if the file is a symbolic link
 	if !fileInfo.Mode().IsRegular() {
-		return "", fmt.Errorf("file '%s' is not a regular file", filePath)
+		return "", fmt.Errorf("symbolic links are not allowed '%s'", filePath)
 	}
 
 	// Attempt to open the file directly
