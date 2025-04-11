@@ -1,0 +1,21 @@
+{
+    "servers": {
+        "fetch": {
+            "command": "uv",
+            "args": [
+                "run",
+                "mcp-server-fetch"
+            ]
+        },
+        "ai-mcp": {
+            "type": "stdio",
+            "command": "uv",
+            "args": [
+                "--directory",
+                "/workspaces/terraform-provider-power-platform/.mcp_servers/ai-mcp",
+                "run",
+                "server.py"
+            ]
+        },
+    }
+}

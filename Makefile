@@ -60,8 +60,13 @@ coverage:
 	@echo "Generating coverage report"
 	go tool cover -func=test-coverage.out
 
+netdump_aaa:
+	for pid in $$(cat /proc/[0-9]*/status 2>/dev/null | grep -E "^Name:|^Pid:" | grep -A1 "^Name:[[:space:]]*mitmdump$$" | grep "^Pid:" | awk '{print $$2}'); do kill -9 $$pid; echo "Killed process $$pid"; done && \
+	rm -f mitmproxy.dump && \
+	mitmdump -p 8080 -w mitmproxy.dump
+
 netdump:
-	mitmdump -p 8080 -w /tmp/mitmproxy.dump
+	echo "asdasd"
 
 lint:
 	clear

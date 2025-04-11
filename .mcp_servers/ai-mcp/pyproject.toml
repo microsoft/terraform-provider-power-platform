@@ -1,0 +1,15 @@
+[project]
+name = "ai-mcp"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "autogen-agentchat>=0.5.1",
+    "autogen-core>=0.5.1",
+    "autogen-ext[azure,magentic-one,mcp,openai]>=0.5.1",
+    "httpx>=0.28.1",
+    "json-schema-to-pydantic>=0.2.4",
+    "mcp[cli]>=1.6.0",
+    "uvx>=2.5.1",
+]
