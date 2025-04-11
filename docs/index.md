@@ -86,7 +86,7 @@ The Power Platform provider can use a Service Principal with OpenID Connect (OID
 #### OpenID Connect (OIDC) Authentication Prerequisites for GitHub Actions
 
 1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
-1. Register the App Registration or Managed Identity with the Power Platform. This task can be performed using [the provider itself](/resources/admin_management_application.md) or [PowerShell](https://learn.microsoft.com/power-platform/admin/powershell-create-service-principal).
+1. Register the App Registration with the Power Platform. This task can be performed using [the provider itself](/resources/admin_management_application.md) or [PowerShell](https://learn.microsoft.com/power-platform/admin/powershell-create-service-principal).
 1. [Create a trust relationship between your CI/CD pipeline and the app registration](https://learn.microsoft.com/entra/workload-id/workload-identity-federation-create-trust?pivots=identity-wif-apps-methods-azp)
 1. Configure the provider to use OIDC with the following code:
 
