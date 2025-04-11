@@ -61,5 +61,10 @@
         "--fast"
     ],
     "makefile.configureOnOpen": false,
-    "chat.mcp.discovery.enabled": true
+    "chat.mcp.discovery.enabled": true,
+    "github.copilot.chat.commitMessageGeneration.instructions": [
+        {
+            "file": ".github/copilot-commit-message-instructions.md"
+        }
+    ]
 }

@@ -15,6 +15,21 @@ import (
 // If the file does not exist, it returns an empty string without an error.
 // For other errors (e.g., permission issues), it returns the error.
 func CalculateSHA256(filePath string) (string, error) {
+	fileInfo, err := os.Lstat(filePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			// File does not exist; return empty checksum
+			return "", nil
+		}
+		// An unexpected error occurred; return it
+		return "", fmt.Errorf("failed to stat file '%s': %w", filePath, err)
+	}
+
+	// Check if the file is a symbolic link
+	if !fileInfo.Mode().IsRegular() {
+		return "", fmt.Errorf("file '%s' is not a regular file", filePath)
+	}
+	
 	// Attempt to open the file directly
 	file, err := os.Open(filePath)
 	if err != nil {
