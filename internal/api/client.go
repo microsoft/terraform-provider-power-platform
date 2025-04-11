@@ -59,6 +59,7 @@ var retryableStatusCodes = []int{
 	http.StatusBadGateway,          // 502 is retryable because the server may be overloaded.
 	http.StatusServiceUnavailable,  // 503 is retryable because the server may be overloaded.
 	http.StatusGatewayTimeout,      // 504 is retryable because the server may be overloaded.
+	499,                            // 499 is retryable because the client may have closed the connection.
 }
 
 // CaePolicyViolationError represents an error when a CAE policy violation is detected.
