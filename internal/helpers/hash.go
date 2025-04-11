@@ -29,7 +29,7 @@ func CalculateSHA256(filePath string) (string, error) {
 	if !fileInfo.Mode().IsRegular() {
 		return "", fmt.Errorf("file '%s' is not a regular file", filePath)
 	}
-	
+
 	// Attempt to open the file directly
 	file, err := os.Open(filePath)
 	if err != nil {

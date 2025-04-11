@@ -12,7 +12,6 @@ import (
 
 // FuzzCalculateSHA256 is a fuzz test for the CalculateSHA256 function.
 func FuzzCalculateSHA256(f *testing.F) {
-
 	tmp := f.TempDir()
 	expected := tmp + "/test.txt"
 	err := os.WriteFile(expected, []byte("same"), 0644)
@@ -29,9 +28,9 @@ func FuzzCalculateSHA256(f *testing.F) {
 	f.Add("/path/with/illegal|char")
 	f.Add("/path/with/<>*?")
 	f.Add("/path/with/\\backslashes")
-	f.Add("/dev/null")                    // Reserved name on Linux
-	f.Add("CON")                          // Reserved name on Windows
-	f.Add(string(make([]byte, 300, 300))) // Extremely long path
+	f.Add("/dev/null")               // Reserved name on Linux
+	f.Add("CON")                     // Reserved name on Windows
+	f.Add(string(make([]byte, 300))) // Extremely long path
 	f.Add("../relative/path")
 	f.Add("./current/dir")
 	f.Add(" ")                    // Single space
