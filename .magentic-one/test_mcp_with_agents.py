@@ -22,7 +22,7 @@ async def main() -> None:
         azure_deployment="gpt-4.5-preview",  # Replace with your Azure deployment name
         model="gpt-4.5-preview",  # Replace with your model name
         api_version="2024-12-01-preview",
-        azure_endpoint="https://mawasileazureopenai.openai.azure.com/",  # Replace with your endpoint
+        azure_endpoint="https://<<your_az_foundry_endpoin>>.openai.azure.com/",  # Replace with your endpoint
         azure_ad_token_provider=token_provider,  # Optional if you choose key-based authentication
     )
     agent = AssistantAgent(name="fetcher", model_client=model_client, tools=tools, reflect_on_tool_use=True)  # type: ignore
