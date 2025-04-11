@@ -360,7 +360,7 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 	}
 	for {
 		lifecycleEnv := &EnvironmentDto{}
-		lifecycleResponse, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted, 499}, &lifecycleEnv)
+		lifecycleResponse, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted}, &lifecycleEnv)
 		if err != nil {
 			return nil, err
 		}
@@ -400,7 +400,7 @@ func (client *Client) ModifyEnvironmentType(ctx context.Context, environmentId, 
 		EnvironmentSku: environmentType,
 	}
 
-	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, modifySkuDto, []int{http.StatusAccepted, http.StatusOK, 499}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, modifySkuDto, []int{http.StatusAccepted, http.StatusOK}, nil)
 	if err != nil {
 		return err
 	}
