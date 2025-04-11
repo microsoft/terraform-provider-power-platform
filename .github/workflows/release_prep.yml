@@ -2,12 +2,11 @@ name: Release Preparation
 on:
   workflow_dispatch:
 
-permissions:
-  contents: write
-
 jobs:
   prepare-release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required for committing changes and creating tags
     steps:
       - name: Checkout
         uses: actions/checkout@v4
