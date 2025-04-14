@@ -409,10 +409,10 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	hasEnvDataverse, err := r.UserClient.EnvironmentHasDataverse(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
-	tflog.Debug(ctx, fmt.Sprintf("Dataverse exist in eviroment %t", hasEnvDataverse))
+	tflog.Debug(ctx, fmt.Sprintf("Dataverse exists in environment: %t", hasEnvDataverse))
 
 	if hasEnvDataverse {
 		if state.DisableDelete.ValueBool() {
