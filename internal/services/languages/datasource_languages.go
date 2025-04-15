@@ -45,45 +45,43 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the list of Dynamics 365 languages",
 		MarkdownDescription: "Fetches the list of Dynamics 365 languages. For more information see [Power Platform Enable Languages](https://learn.microsoft.com/power-platform/admin/enable-languages)",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
 			"location": schema.StringAttribute{
-				Description: "Location of the languages",
-				Required:    true,
+				MarkdownDescription: "Location of the languages",
+				Required:            true,
 			},
 			"languages": schema.ListNestedAttribute{
-				Description:         "List of available languages",
 				MarkdownDescription: "List of available languages",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
-							Description: "Name of the location",
-							Computed:    true,
+							MarkdownDescription: "Name of the location",
+							Computed:            true,
 						},
 						"id": schema.StringAttribute{
-							Description: "Unique identifier of the location",
-							Computed:    true,
+							MarkdownDescription: "Unique identifier of the location",
+							Computed:            true,
 						},
 						"display_name": schema.StringAttribute{
-							Description: "Display name of the location",
-							Computed:    true,
+							MarkdownDescription: "Display name of the location",
+							Computed:            true,
 						},
 						"localized_name": schema.StringAttribute{
-							Description: "Localized name of the location",
-							Computed:    true,
+							MarkdownDescription: "Localized name of the location",
+							Computed:            true,
 						},
 						"locale_id": schema.Int64Attribute{
-							Description: "Locale ID of the location",
-							Computed:    true,
+							MarkdownDescription: "Locale ID of the location",
+							Computed:            true,
 						},
 						"is_tenant_default": schema.BoolAttribute{
-							Description: "Is the location the default for the tenant",
-							Computed:    true,
+							MarkdownDescription: "Is the location the default for the tenant",
+							Computed:            true,
 						},
 					},
 				},
@@ -121,11 +119,11 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		return
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LANGUAGES START: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LANGUAGES START: %s", d.FullTypeName()))
 
 	languages, err := d.LanguagesClient.GetLanguagesByLocation(ctx, state.Location.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
 
@@ -144,7 +142,7 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 
 	diags := resp.State.Set(ctx, &state)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LANGUAGES END: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE LANGUAGES END: %s", d.FullTypeName()))
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

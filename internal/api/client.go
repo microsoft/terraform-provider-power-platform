@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers/array"
@@ -57,6 +59,7 @@ var retryableStatusCodes = []int{
 	http.StatusBadGateway,          // 502 is retryable because the server may be overloaded.
 	http.StatusServiceUnavailable,  // 503 is retryable because the server may be overloaded.
 	http.StatusGatewayTimeout,      // 504 is retryable because the server may be overloaded.
+	499,                            // 499 is retryable because the client may have closed the connection.
 }
 
 // Execute executes an HTTP request with the given method, url, headers, and body.
@@ -97,6 +100,7 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 
 	for {
 		token, err := client.BaseAuth.GetTokenForScopes(ctx, scopes)
+
 		if err != nil {
 			return nil, err
 		}
@@ -114,6 +118,11 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 		resp, err := client.doRequest(ctx, token, request, headers)
 		if err != nil {
 			return resp, fmt.Errorf("Error making %s request to %s. %w", request.Method, request.RequestURI, err)
+		}
+
+		err = validateNoManagementApplicationPermissionsForBapiRequest(resp)
+		if err != nil {
+			return resp, err
 		}
 
 		isAcceptable := len(acceptableStatusCodes) > 0 && array.Contains(acceptableStatusCodes, resp.HttpResponse.StatusCode)
@@ -142,6 +151,13 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 			return resp, err
 		}
 	}
+}
+
+func validateNoManagementApplicationPermissionsForBapiRequest(resp *Response) error {
+	if resp.HttpResponse.StatusCode == http.StatusForbidden && len(resp.BodyAsBytes) > 0 && strings.Contains(string(resp.BodyAsBytes), "does not have permission to access the path") {
+		return errors.New(constants.NO_MANAGEMENT_APPLICATION_ERROR_MSG)
+	}
+	return nil
 }
 
 // RetryAfterDefault returns a random duration between 10 and 20 seconds.
@@ -178,6 +194,10 @@ func tryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (stri
 		return cloudConfig.PowerPlatformScope, nil
 	case strings.LastIndex(url, cloudConfig.PowerAppsAdvisor) != -1:
 		return cloudConfig.PowerAppsAdvisorScope, nil
+	case strings.LastIndex(url, cloudConfig.AdminPowerPlatformUrl) != -1:
+		return constants.PPAC_SCOPE, nil
+	case strings.LastIndex(url, "csanalytics") != -1:
+		return cloudConfig.AnalyticsScope, nil
 	default:
 		u, err := neturl.Parse(url)
 		return u.Scheme + "://" + u.Host + "/.default", err

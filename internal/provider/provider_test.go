@@ -16,6 +16,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 	"github.com/microsoft/terraform-provider-power-platform/internal/provider"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/admin_management_application"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/analytics_data_export"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/application"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/authorization"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/capacity"
@@ -31,6 +32,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_groups"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_settings"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_templates"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_wave"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/languages"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/locations"
@@ -47,6 +49,7 @@ import (
 
 func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 	expectedDataSources := []datasource.DataSource{
+		analytics_data_export.NewAnalyticsExportDataSource(),
 		powerapps.NewEnvironmentPowerAppsDataSource(),
 		environment.NewEnvironmentsDataSource(),
 		environment_templates.NewEnvironmentTemplatesDataSource(),
@@ -101,6 +104,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		enterprise_policy.NewEnterpisePolicyResource(),
 		copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource(),
 		tenant_isolation_policy.NewTenantIsolationPolicyResource(),
+		environment_wave.NewEnvironmentWaveResource(),
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
 

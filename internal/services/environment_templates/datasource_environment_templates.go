@@ -45,61 +45,59 @@ func (d *EnvironmentTemplatesDataSource) Schema(ctx context.Context, req datasou
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the list of Dynamics 365 environment templates.",
 		MarkdownDescription: "Fetches the list of Dynamics 365 environment templates.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
 			"location": schema.StringAttribute{
-				Description: "Location of the environment templates",
-				Required:    true,
+				MarkdownDescription: "Location of the environment templates",
+				Required:            true,
 			},
 			"environment_templates": schema.ListNestedAttribute{
-				Description:         "List of available environment templates",
 				MarkdownDescription: "List of available environment templates",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"category": schema.StringAttribute{
-							Description: "Category of the environment template",
-							Computed:    true,
+							MarkdownDescription: "Category of the environment template",
+							Computed:            true,
 						},
 						"id": schema.StringAttribute{
-							Description: "Unique identifier of the environment template",
-							Computed:    true,
+							MarkdownDescription: "Unique identifier of the environment template",
+							Computed:            true,
 						},
 						"name": schema.StringAttribute{
-							Description: "Name of the environment template",
-							Computed:    true,
+							MarkdownDescription: "Name of the environment template",
+							Computed:            true,
 						},
 						"display_name": schema.StringAttribute{
-							Description: "Display name of the environment template",
-							Computed:    true,
+							MarkdownDescription: "Display name of the environment template",
+							Computed:            true,
 						},
 						"location": schema.StringAttribute{
-							Description: "Location of the environment template",
-							Computed:    true,
+							MarkdownDescription: "Location of the environment template",
+							Computed:            true,
 						},
 						"is_disabled": schema.BoolAttribute{
-							Description: "Indicates if the environment template is disabled",
-							Computed:    true,
+							MarkdownDescription: "Indicates if the environment template is disabled",
+							Computed:            true,
 						},
 						"disabled_reason_code": schema.StringAttribute{
-							Description: "Code of the reason why the environment template is disabled",
-							Computed:    true,
+							MarkdownDescription: "Code of the reason why the environment template is disabled",
+							Computed:            true,
 						},
 						"disabled_reason_message": schema.StringAttribute{
-							Description: "Message of the reason why the environment template is disabled",
-							Computed:    true,
+							MarkdownDescription: "Message of the reason why the environment template is disabled",
+							Computed:            true,
 						},
 						"is_customer_engagement": schema.BoolAttribute{
-							Description: "Indicates if the environment template is for customer engagement",
-							Computed:    true,
+							MarkdownDescription: "Indicates if the environment template is for customer engagement",
+							Computed:            true,
 						},
 						"is_supported_for_reset_operation": schema.BoolAttribute{
-							Description: "Indicates if the environment template is supported for reset operation",
-							Computed:    true,
+							MarkdownDescription: "Indicates if the environment template is supported for reset operation",
+							Computed:            true,
 						},
 					},
 				},
@@ -156,7 +154,7 @@ func (d *EnvironmentTemplatesDataSource) Read(ctx context.Context, req datasourc
 
 	environment_templates, err := d.EnvironmentTemplatesClient.GetEnvironmentTemplatesByLocation(ctx, state.Location.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
 

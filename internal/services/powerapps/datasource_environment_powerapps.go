@@ -44,36 +44,30 @@ func (d *EnvironmentPowerAppsDataSource) Schema(ctx context.Context, req datasou
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the list of Power Apps in an environment",
 		MarkdownDescription: "Fetches the list of Power Apps in an environment.  See [Manage Power Apps](https://learn.microsoft.com/power-platform/admin/admin-manage-apps) for more details about how this data is surfaced in Power Platform Admin Center.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
 			"powerapps": schema.ListNestedAttribute{
-				Description:         "List of Power Apps",
 				MarkdownDescription: "List of Power Apps",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
 							MarkdownDescription: "Unique environment id (guid)",
-							Description:         "Unique environment id (guid)",
 							Computed:            true,
 						},
 						"display_name": schema.StringAttribute{
 							MarkdownDescription: "Display name",
-							Description:         "Display name",
 							Computed:            true,
 						},
 						"name": schema.StringAttribute{
 							MarkdownDescription: "Name",
-							Description:         "Name",
 							Computed:            true,
 						},
 						"created_time": schema.StringAttribute{
 							MarkdownDescription: "Created time",
-							Description:         "Created time",
 							Computed:            true,
 						},
 					},
@@ -117,7 +111,7 @@ func (d *EnvironmentPowerAppsDataSource) Read(ctx context.Context, req datasourc
 
 	apps, err := d.PowerAppssClient.GetPowerApps(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
 

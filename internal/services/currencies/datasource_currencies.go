@@ -50,45 +50,43 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the list of available Dynamics 365 currencies",
 		MarkdownDescription: "Fetches the list of available Dynamics 365 currencies. For more information see [Power Platform Currencies](https://learn.microsoft.com/power-platform/admin/manage-transactions-with-multiple-currencies)",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
 			"location": schema.StringAttribute{
-				Description: "Location of the currencies",
-				Required:    true,
+				MarkdownDescription: "Location of the currencies",
+				Required:            true,
 			},
 			"currencies": schema.ListNestedAttribute{
-				Description:         "List of available currencies",
 				MarkdownDescription: "List of available currencies",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"id": schema.StringAttribute{
-							Description: "Unique identifier of the currency",
-							Computed:    true,
+							MarkdownDescription: "Unique identifier of the currency",
+							Computed:            true,
 						},
 						"name": schema.StringAttribute{
-							Description: "Name of the currency",
-							Computed:    true,
+							MarkdownDescription: "Name of the currency",
+							Computed:            true,
 						},
 						"type": schema.StringAttribute{
-							Description: "Type of the currency",
-							Computed:    true,
+							MarkdownDescription: "Type of the currency",
+							Computed:            true,
 						},
 						"code": schema.StringAttribute{
-							Description: "Code of the location",
-							Computed:    true,
+							MarkdownDescription: "Code of the location",
+							Computed:            true,
 						},
 						"symbol": schema.StringAttribute{
-							Description: "Symbol of the currency",
-							Computed:    true,
+							MarkdownDescription: "Symbol of the currency",
+							Computed:            true,
 						},
 						"is_tenant_default": schema.BoolAttribute{
-							Description: "Is the currency the default for the tenant",
-							Computed:    true,
+							MarkdownDescription: "Is the currency the default for the tenant",
+							Computed:            true,
 						},
 					},
 				},
@@ -125,7 +123,7 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 
 	currencies, err := d.CurrenciesClient.GetCurrenciesByLocation(ctx, state.Location.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
 	state.Location = types.StringValue(state.Location.ValueString())

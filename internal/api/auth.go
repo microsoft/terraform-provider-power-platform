@@ -142,16 +142,16 @@ func (client *Auth) NewOidcCredential(options *OidcCredentialOptions) (*OidcCred
 	}
 
 	if c.requestToken == "" {
-		return nil, fmt.Errorf("request Token is required for OIDC credential")
+		return nil, errors.New("request Token is required for OIDC credential")
 	}
 	if c.requestUrl == "" {
-		return nil, fmt.Errorf("request URL is required for OIDC credential")
+		return nil, errors.New("request URL is required for OIDC credential")
 	}
 	if options.TenantID == "" {
-		return nil, fmt.Errorf("tenant is required for OIDC credential")
+		return nil, errors.New("tenant is required for OIDC credential")
 	}
 	if options.ClientID == "" {
-		return nil, fmt.Errorf("client is required for OIDC credential")
+		return nil, errors.New("client is required for OIDC credential")
 	}
 
 	cred, err := azidentity.NewClientAssertionCredential(options.TenantID, options.ClientID, c.getAssertion,
@@ -246,16 +246,16 @@ func (client *Auth) AuthenticateSystemManagedIdentity(ctx context.Context, scope
 
 func (client *Auth) AuthenticateAzDOWorkloadIdentityFederation(ctx context.Context, scopes []string) (string, time.Time, error) {
 	if client.config.TenantId == "" {
-		return "", time.Time{}, fmt.Errorf("tenant ID must be provided to use Azure DevOps Workload Identity Federation")
+		return "", time.Time{}, errors.New("tenant ID must be provided to use Azure DevOps Workload Identity Federation")
 	}
 	if client.config.ClientId == "" {
-		return "", time.Time{}, fmt.Errorf("client ID must be provided to use Azure DevOps Workload Identity Federation")
+		return "", time.Time{}, errors.New("client ID must be provided to use Azure DevOps Workload Identity Federation")
 	}
 	if client.config.AzDOServiceConnectionID == "" {
-		return "", time.Time{}, fmt.Errorf("the Azure DevOps service connection ID could not be found")
+		return "", time.Time{}, errors.New("the Azure DevOps service connection ID could not be found")
 	}
 	if client.config.OidcRequestToken == "" {
-		return "", time.Time{}, fmt.Errorf("could not obtain an OIDC request token for Azure DevOps Workload Identity Federation")
+		return "", time.Time{}, errors.New("could not obtain an OIDC request token for Azure DevOps Workload Identity Federation")
 	}
 
 	azdoWorkloadIdentityCredential, err := azidentity.NewAzurePipelinesCredential(
@@ -295,12 +295,12 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 
 	req, err := http.NewRequestWithContext(ctx, "GET", w.requestUrl, http.NoBody)
 	if err != nil {
-		return "", fmt.Errorf("getAssertion: failed to build request")
+		return "", errors.New("getAssertion: failed to build request")
 	}
 
 	query, err := url.ParseQuery(req.URL.RawQuery)
 	if err != nil {
-		return "", fmt.Errorf("getAssertion: cannot parse URL query")
+		return "", errors.New("getAssertion: cannot parse URL query")
 	}
 
 	if query.Get("audience") == "" {
@@ -336,7 +336,7 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 	}
 
 	if tokenRes.Value == nil {
-		return "", fmt.Errorf("getAssertion: nil JWT assertion received from OIDC provider")
+		return "", errors.New("getAssertion: nil JWT assertion received from OIDC provider")
 	}
 
 	return *tokenRes.Value, nil

@@ -9,9 +9,28 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
+
+func TestNoManagementAppPermissionsMessage(t *testing.T) {
+	t.Skip("Skipping test. This should run with an sp that does not have management app permissions.")
+
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment_group" "test_env_group" {
+					display_name = "test_env_group"
+					description = "test env group"
+				}`,
+				ExpectError: regexp.MustCompile(constants.NO_MANAGEMENT_APPLICATION_ERROR_MSG[:50]),
+			},
+		},
+	})
+}
 
 func TestAccEnvironmentGroupResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{

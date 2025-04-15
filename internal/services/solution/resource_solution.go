@@ -51,7 +51,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Resource for importing solutions in Power Platform environments",
 		MarkdownDescription: "Resource for importing exporting solutions in Power Platform environments.  This is the equivalent of the [`pac solution import`](https://learn.microsoft.com/power-platform/developer/cli/reference/solution#pac-solution-import) command in the Power Platform CLI.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
@@ -62,7 +61,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			}),
 			"solution_file_checksum": schema.StringAttribute{
 				MarkdownDescription: "Checksum of the solution file",
-				Description:         "Checksum of the solution file",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					modifiers.SyncAttributePlanModifier("solution_file"),
@@ -71,12 +69,10 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			},
 			"solution_file": schema.StringAttribute{
 				MarkdownDescription: "Path to the solution file",
-				Description:         "Path to the solution file",
 				Required:            true,
 			},
 			"settings_file_checksum": schema.StringAttribute{
 				MarkdownDescription: "Checksum of the settings file",
-				Description:         "Checksum of the settings file",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					modifiers.SyncAttributePlanModifier("settings_file"),
@@ -85,12 +81,10 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			},
 			"settings_file": schema.StringAttribute{
 				MarkdownDescription: "Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details",
-				Description:         "Path to the settings file. The settings file uses the same format as pac cli. See https://learn.microsoft.com/power-platform/alm/conn-ref-env-variables-build-tools#deployment-settings-file for more details",
 				Optional:            true,
 			},
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique identifier of the solution",
-				Description:         "Unique identifier of the solution",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -98,7 +92,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			},
 			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "Id of the environment where the solution is imported",
-				Description:         "Id of the environment where the solution is imported",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -106,7 +99,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			},
 			"display_name": schema.StringAttribute{
 				MarkdownDescription: "Display name of the solution",
-				Description:         "Display name of the solution",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
@@ -114,7 +106,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			},
 			"is_managed": schema.BoolAttribute{
 				MarkdownDescription: "Indicates whether the solution is managed or not",
-				Description:         "Indicates whether the solution is managed or not",
 				Computed:            true,
 				PlanModifiers: []planmodifier.Bool{
 					modifiers.SetBoolValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
@@ -122,7 +113,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			},
 			"solution_version": schema.StringAttribute{
 				MarkdownDescription: "Version of the solution",
-				Description:         "Version of the solution",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					modifiers.SetStringValueToUnknownIfChecksumsChangeModifier([]string{"solution_file", "solution_file_checksum"}, []string{"settings_file", "settings_file_checksum"}),
@@ -218,7 +208,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -337,7 +327,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 		err := r.SolutionClient.DeleteSolution(ctx, state.EnvironmentId.ValueString(), solutionId)
 
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 			return
 		}
 	}

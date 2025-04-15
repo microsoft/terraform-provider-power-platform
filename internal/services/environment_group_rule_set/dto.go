@@ -5,6 +5,7 @@ package environment_group_rule_set
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -475,11 +476,11 @@ func convertBackupRetentionDtoToModel(dto *environmentGroupRuleSetParameterDto) 
 	// expected format for 14 days would be 14.00:00:00
 	v := strings.Split(periodInDays.Value, ".")
 	if len(v) != 2 {
-		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("Invalid format for period in days")
+		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), errors.New("invalid format for period in days")
 	}
 	period, err := strconv.ParseInt(v[0], 10, 32)
 	if err != nil {
-		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("Invalid format when parsing period in days")
+		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), errors.New("invalid format when parsing period in days")
 	}
 	attrValue["period_in_days"] = types.Int32Value(int32(period))
 

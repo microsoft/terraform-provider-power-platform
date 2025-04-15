@@ -14,13 +14,11 @@ concurrency:
   group: acceptancetests
   cancel-in-progress: false
 
-permissions:
-  id-token: write # This is required for requesting the JWT
-  contents: read  # This is required for actions/checkout
-
 jobs:
   should_run:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Required for checkout
     if: github.event_name != 'pull_request' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-acceptance-tests'))
     outputs:
       acceptance_tests: ${{ steps.set_acceptance_tests.outputs.acceptance_tests }}
@@ -28,16 +26,18 @@ jobs:
       - id: set_acceptance_tests
         name: Only run acceptance tests if necessary
         run: echo "acceptance_tests=true" >> $GITHUB_OUTPUT
-  # ensure go.mod and go.sum are updated
+
   depscheck:
     name: Check Dependencies
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Required for checkout
     needs: should_run
     if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     steps:
 
     - name: Harden Runner
-      uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+      uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
       with:
         egress-policy: audit
 
@@ -58,17 +58,18 @@ jobs:
         git diff --exit-code -- go.mod go.sum || \
         (echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
 
-  # ensure the code builds
   build:
     name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Required for checkout
     needs: should_run
     if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     timeout-minutes: 5
     steps:
 
     - name: Harden Runner
-      uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+      uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
       with:
         egress-policy: audit
 
@@ -95,10 +96,13 @@ jobs:
     needs: [build, should_run]
     if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for OIDC authentication
+      contents: read  # Required for checkout
     steps:
     
     - name: Harden Runner
-      uses: step-security/harden-runner@4d991eb9b905ef189e4c376166672c3f2f230481 # v2.11.0
+      uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
       with:
         egress-policy: audit
 
@@ -114,7 +118,7 @@ jobs:
 
     - name: Get dependencies
       run: |
-        go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.62.2
+        go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.0.1
         go install github.com/jstemmer/go-junit-report/v2@v2.1.0
         go mod download
     

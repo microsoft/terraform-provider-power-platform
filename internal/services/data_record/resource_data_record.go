@@ -6,6 +6,7 @@ package data_record
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -59,7 +60,6 @@ func (r *DataRecordResource) Schema(ctx context.Context, req resource.SchemaRequ
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		Description:         "The Power Platform Data Record Resource allows the management of configuration records that are stored in Dataverse as records. This resource is not recommended for managing business data or other data that may be changed by Dataverse users in the context of normal business activities.",
 		MarkdownDescription: "The Power Platform Data Record Resource allows the management of configuration records that are stored in Dataverse as records. This resource is not recommended for managing business data or other data that may be changed by Dataverse users in the context of normal business activities.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
@@ -149,7 +149,7 @@ func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequ
 
 	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, plan.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -177,7 +177,7 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -190,7 +190,7 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 	}
 	state.Columns = *columns
 
-	tflog.Debug(ctx, fmt.Sprintf("READ: %s_data_record with table_name %s", r.ProviderTypeName, state.TableLogicalName.ValueString()))
+	tflog.Debug(ctx, fmt.Sprintf("READ: %s with table_name %s", r.FullTypeName(), state.TableLogicalName.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -224,7 +224,7 @@ func (r *DataRecordResource) Update(ctx context.Context, req resource.UpdateRequ
 
 	dr, err := r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), plan.EnvironmentId.ValueString(), plan.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -253,7 +253,7 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 	if state.DisableOnDestroy.ValueBool() {
 		entityAttr, err := r.DataRecordClient.GetEntityAttributesDefinition(ctx, state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when getting entity attributes definition %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when getting entity attributes definition %s", r.FullTypeName()), err.Error())
 			return
 		}
 		var containsIsDisableAttr, containsStateCode bool
@@ -273,23 +273,23 @@ func (r *DataRecordResource) Delete(ctx context.Context, req resource.DeleteRequ
 		} else if containsIsDisableAttr {
 			attributes["isdisabled"] = true
 		} else {
-			tflog.Debug(ctx, fmt.Sprintf("No statecode or isdisabled attribute found for %s_%s", r.ProviderTypeName, r.TypeName))
+			tflog.Debug(ctx, fmt.Sprintf("No statecode or isdisabled attribute found for %s", r.FullTypeName()))
 		}
 
 		if len(attributes) > 0 {
 			_, err = r.DataRecordClient.ApplyDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), attributes)
 			if err != nil {
-				resp.Diagnostics.AddError(fmt.Sprintf("Client error when disabling %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+				resp.Diagnostics.AddError(fmt.Sprintf("Client error when disabling %s", r.FullTypeName()), err.Error())
 				return
 			}
 		} else {
-			tflog.Debug(ctx, fmt.Sprintf("No statecode or isdisabled attribute found for %s_%s", r.ProviderTypeName, r.TypeName))
+			tflog.Debug(ctx, fmt.Sprintf("No statecode or isdisabled attribute found for %s", r.FullTypeName()))
 		}
 	}
 
 	err = r.DataRecordClient.DeleteDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString(), mapColumns)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
 }
@@ -384,27 +384,27 @@ func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrTy
 
 	relationMap, err := apiClient.GetRelationData(ctx, environmentId, tableLogicalName, recordid, key)
 	if err != nil {
-		return fmt.Errorf("error getting relation data: %s", err.Error())
+		return errors.New("error getting relation data: " + err.Error())
 	}
 
 	for _, rawItem := range relationMap {
 		item, ok := rawItem.(map[string]any)
 		if !ok {
-			return fmt.Errorf("error asserting rawItem to map[string]any")
+			return errors.New("error asserting rawItem to map[string]any")
 		}
 
 		relationTableLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
 		if err != nil {
-			return fmt.Errorf("error getting entity relation definition info: %s", err.Error())
+			return errors.New("error getting entity relation definition info: " + err.Error())
 		}
 		entDefinition, err := getEntityDefinition(ctx, apiClient, environmentId, relationTableLogicalName)
 		if err != nil {
-			return fmt.Errorf("error getting entity definition: %s", err.Error())
+			return errors.New("error getting entity definition: " + err.Error())
 		}
 
 		dataRecordId, ok := item[entDefinition.PrimaryIDAttribute].(string)
 		if !ok {
-			return fmt.Errorf("error asserting dataRecordId to string")
+			return errors.New("error asserting dataRecordId to string")
 		}
 
 		v, _ := types.ObjectValue(objectType, map[string]attr.Value{
@@ -431,7 +431,7 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 
 	mapColumns, err := convertResourceModelToMap(recordColumns)
 	if err != nil {
-		return nil, fmt.Errorf("error converting columns to map: %s", err.Error())
+		return nil, errors.New("error converting columns to map: " + err.Error())
 	}
 
 	attributeTypes := make(map[string]attr.Type)
@@ -450,7 +450,7 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 		case map[string]any:
 			entityLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
 			if err != nil {
-				return nil, fmt.Errorf("error getting entity relation definition info: %s", err.Error())
+				return nil, errors.New("error getting entity relation definition info: " + err.Error())
 			}
 			caseMapStringOfAny(columns[fmt.Sprintf("_%s_value", key)], attributes, attributeTypes, key, entityLogicalName, objectType)
 		case []any:

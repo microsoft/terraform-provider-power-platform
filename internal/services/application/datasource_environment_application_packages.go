@@ -72,82 +72,70 @@ func (d *EnvironmentApplicationPackagesDataSource) Schema(ctx context.Context, r
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Fetches the list of Dynamics 365 applications in a tenant",
 		MarkdownDescription: "Fetches the list of Dynamics 365 applications in a tenant.  The data source can be filtered by name and publisher name.\n\nThis is functionally equivalent to the [Environment-level view of apps](https://learn.microsoft.com/power-platform/admin/manage-apps#environment-level-view-of-apps) in the Power Platform Admin Center or the [`pac application list` command from Power Platform CLI](https://learn.microsoft.com/power-platform/developer/cli/reference/application#pac-application-list).  This data source uses the [Get Environment Application Package](https://learn.microsoft.com/rest/api/power-platform/appmanagement/applications/get-environment-application-package) endpoint in the Power Platform API.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
 			"id": schema.StringAttribute{
-				Description: "Id of the read operation",
-				Optional:    true,
+				MarkdownDescription: "Id of the read operation",
+				Optional:            true,
 			},
 			"environment_id": schema.StringAttribute{
-				Description: "Id of the Dynamics 365 environment",
-				Required:    true,
+				MarkdownDescription: "Id of the Dynamics 365 environment",
+				Required:            true,
 			},
 			"name": schema.StringAttribute{
-				Description: "Name of the Dynamics 365 application",
-				Optional:    true,
+				MarkdownDescription: "Name of the Dynamics 365 application",
+				Optional:            true,
 			},
 			"publisher_name": schema.StringAttribute{
-				Description: "Publisher Name of the Dynamics 365 application",
-				Optional:    true,
+				MarkdownDescription: "Publisher Name of the Dynamics 365 application",
+				Optional:            true,
 			},
 			"applications": schema.ListNestedAttribute{
-				Description:         "List of Applications",
 				MarkdownDescription: "List of Applications",
 				Computed:            true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
 						"application_id": schema.StringAttribute{
 							MarkdownDescription: "ApplicaitonId",
-							Description:         "ApplicaitonId",
 							Computed:            true,
 						},
 						"application_name": schema.StringAttribute{
 							MarkdownDescription: "Name",
-							Description:         "Name",
 							Computed:            true,
 						},
 						"unique_name": schema.StringAttribute{
 							MarkdownDescription: "Unique Name",
-							Description:         "Unique Name",
 							Computed:            true,
 						},
 						"version": schema.StringAttribute{
 							MarkdownDescription: "Version",
-							Description:         "Version",
 							Computed:            true,
 						},
 						"description": schema.StringAttribute{
 							MarkdownDescription: "Localized Description",
-							Description:         "Localized Description",
 							Computed:            true,
 						},
 						"publisher_id": schema.StringAttribute{
 							MarkdownDescription: "Publisher Id",
-							Description:         "Publisher Id",
 							Computed:            true,
 						},
 						"publisher_name": schema.StringAttribute{
 							MarkdownDescription: "Publisher Name",
-							Description:         "Publisher Name",
 							Computed:            true,
 						},
 						"learn_more_url": schema.StringAttribute{
 							MarkdownDescription: "Learn More Url",
-							Description:         "Learn More Url",
 							Computed:            true,
 						},
 						"state": schema.StringAttribute{
 							MarkdownDescription: "State",
-							Description:         "State",
 							Computed:            true,
 						},
 						"application_visibility": schema.StringAttribute{
 							MarkdownDescription: "Application Visibility",
-							Description:         "Application Visibility",
 							Computed:            true,
 						},
 					},
@@ -183,7 +171,7 @@ func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req
 	var state EnvironmentApplicationPackagesListDataSourceModel
 	resp.State.Get(ctx, &state)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES START: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES START: %s", d.FullTypeName()))
 
 	state.EnvironmentId = types.StringValue(state.EnvironmentId.ValueString())
 	state.Name = types.StringValue(state.Name.ValueString())
@@ -201,7 +189,7 @@ func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req
 
 	applications, err := d.ApplicationClient.GetApplicationsByEnvironmentId(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.ProviderTypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
 
@@ -227,7 +215,7 @@ func (d *EnvironmentApplicationPackagesDataSource) Read(ctx context.Context, req
 	state.Id = types.StringValue(fmt.Sprintf("%s_%d", state.EnvironmentId.ValueString(), len(applications)))
 	diags := resp.State.Set(ctx, &state)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES END: %s", d.ProviderTypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE ENVIRONMENT APPLICATION PACKAGES END: %s", d.FullTypeName()))
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

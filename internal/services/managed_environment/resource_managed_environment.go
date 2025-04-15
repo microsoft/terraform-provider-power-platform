@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -84,7 +85,6 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		Description:         "Manages a \"Managed Environment\" and associated settings",
 		MarkdownDescription: "Manages a [Managed Environment](https://learn.microsoft.com/power-platform/admin/managed-environment-overview) and associated settings. A Power Platform Managed Environment is a suite of premium capabilities that allows administrators to manage Power Platform at scale with more control, less effort, and more insights. Once an environment is managed, it unlocks additional features across the Power Platform",
 
 		Attributes: map[string]schema.Attribute{
@@ -96,7 +96,6 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique managed environment settings id (guid)",
-				Description:         "Unique managed environment settings id (guid)",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -104,7 +103,6 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			},
 			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "Unique environment id (guid), of the environment that is managed by these settings",
-				Description:         "Unique environment id (guid), of the environment that is managed by these settings",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -112,22 +110,21 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			},
 			"protection_level": schema.StringAttribute{
 				MarkdownDescription: "Protection level",
-				Description:         "Protection level",
 				Computed:            true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"is_usage_insights_disabled": schema.BoolAttribute{
 				MarkdownDescription: "[Weekly insights digest for the environment](https://learn.microsoft.com/power-platform/admin/managed-environment-usage-insights)",
-				Description:         "Weekly insights digest for the environment",
 				Required:            true,
 			},
 			"is_group_sharing_disabled": schema.BoolAttribute{
 				MarkdownDescription: "Limits how widely canvas apps can be shared. See [Managed Environment sharing limits](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits) for more details.",
-				Description:         "Limits how widely canvas apps can be shared",
 				Required:            true,
 			},
 			"limit_sharing_mode": schema.StringAttribute{
 				MarkdownDescription: "Limits how widely canvas apps can be shared.  See [Managed Environment sharing limits](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits) for more details",
-				Description:         "Limits how widely canvas apps can be shared.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("ExcludeSharingToSecurityGroups", "NoLimit"),
@@ -135,12 +132,10 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			},
 			"max_limit_user_sharing": schema.Int64Attribute{
 				MarkdownDescription: "Limits how many users can share canvas apps. if 'is_group_sharing_disabled' is 'False', then this values should be '-1'",
-				Description:         "Limits how many users can share canvas apps. if 'is_group_sharing_disabled' is 'False', then this values should be '-1'. See [Managed Environment sharing limits](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits) for more details",
 				Required:            true,
 			},
 			"solution_checker_mode": schema.StringAttribute{
 				MarkdownDescription: "Automatically verify solution checker results for security and reliability issues before solution import.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.",
-				Description:         "Automatically verify solution checker results for security and reliability issues before solution import.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("None", "Warn", "Block"),
@@ -148,23 +143,21 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 			},
 			"suppress_validation_emails": schema.BoolAttribute{
 				MarkdownDescription: "Send emails only when a solution is blocked. If 'False', you'll also get emails when there are warnings",
-				Description:         "Send emails only when a solution is blocked. If 'False', you'll also get emails when there are warnings",
 				Required:            true,
 			},
 			"solution_checker_rule_overrides": schema.SetAttribute{
 				MarkdownDescription: SolutionCheckerMarkdown,
-				Description:         "List of rules to exclude from solution checker.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.",
 				Optional:            true,
+				Computed:            true,
+				Default:             setdefault.StaticValue(types.SetNull(types.StringType)),
 				ElementType:         types.StringType,
 			},
 			"maker_onboarding_markdown": schema.StringAttribute{
 				MarkdownDescription: "First-time Power Apps makers will see this content in the Studio.  See [Maker welcome content](https://learn.microsoft.com/power-platform/admin/welcome-content) for more details.",
-				Description:         "First-time Power Apps makers will see this content in the Studio",
 				Required:            true,
 			},
 			"maker_onboarding_url": schema.StringAttribute{
 				MarkdownDescription: "Maker onboarding 'Learn more' URL. See [Maker welcome content](https://learn.microsoft.com/power-platform/admin/welcome-content) for more details.",
-				Description:         "Maker onboarding 'Learn more' URL",
 				Required:            true,
 			},
 		},
@@ -231,13 +224,13 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 
 	err = r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s", r.FullTypeName()), err.Error())
 		return
 	}
 
 	env, err := r.ManagedEnvironmentClient.environmentClient.GetEnvironment(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -280,7 +273,7 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -378,13 +371,13 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 
 	err = r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s", r.FullTypeName()), err.Error())
 		return
 	}
 
 	env, err := r.ManagedEnvironmentClient.environmentClient.GetEnvironment(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -422,7 +415,7 @@ func (r *ManagedEnvironmentResource) Delete(ctx context.Context, req resource.De
 
 	err := r.ManagedEnvironmentClient.DisableManagedEnvironment(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when disabling managed environment %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when disabling managed environment %s", r.FullTypeName()), err.Error())
 		return
 	}
 }

@@ -44,7 +44,6 @@ func (r *AdminManagementApplicationResource) Schema(ctx context.Context, req res
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		Description:         "Power Platform Admin Management Application",
 		MarkdownDescription: "This resource allows you to register a service principal as an administrator for Power Platform.\n\nThis resource implements the process documented here [Registering an admin management application](https://learn.microsoft.com/power-platform/admin/powerplatform-api-create-service-principal). A service principal can't register itself—by design, the application must be registered by an administrator.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
@@ -54,7 +53,6 @@ func (r *AdminManagementApplicationResource) Schema(ctx context.Context, req res
 			}),
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Client id for the service principal",
-				Description:         "Client id for the service principal",
 				Required:            true,
 				CustomType:          customtypes.UUIDType{},
 				PlanModifiers: []planmodifier.String{

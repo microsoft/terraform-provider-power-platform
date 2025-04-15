@@ -159,7 +159,6 @@ func (d *DataLossPreventionPolicyDataSource) Schema(ctx context.Context, req dat
 							},
 						},
 						"environments": schema.SetAttribute{
-							Description:         "Environment to which the policy is applied",
 							MarkdownDescription: "Environment to which the policy is applied",
 							ElementType:         types.StringType,
 							Computed:            true,
@@ -235,7 +234,7 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 
 	var state policiesListDataSourceModel
 
-	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POLICIES START: %s_%s", d.ProviderTypeName, d.TypeName))
+	tflog.Debug(ctx, fmt.Sprintf("READ DATASOURCE POLICIES START: %s", d.FullTypeName()))
 
 	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -244,7 +243,7 @@ func (d *DataLossPreventionPolicyDataSource) Read(ctx context.Context, req datas
 
 	policies, err := d.DlpPolicyClient.GetPolicies(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", d.ProviderTypeName, d.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
 

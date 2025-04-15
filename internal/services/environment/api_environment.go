@@ -304,7 +304,7 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 
 	var httpError *customerrors.UnexpectedHttpStatusCodeError
 	if errors.As(err, &httpError) {
-		return fmt.Errorf("Unexpected HTTP Status %s; Body: %s", httpError.StatusText, httpError.Body)
+		return fmt.Errorf("unexpected HTTP Status %s; Body: %s", httpError.StatusText, httpError.Body)
 	}
 
 	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.HttpResponse.Status+"'")
@@ -359,10 +359,15 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 		retryAfter = retryAfter * time.Second
 	}
 	for {
-		lifecycleEnv := EnvironmentDto{}
+		lifecycleEnv := &EnvironmentDto{}
 		lifecycleResponse, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted}, &lifecycleEnv)
 		if err != nil {
 			return nil, err
+		}
+
+		if lifecycleEnv == nil || lifecycleEnv.Properties == nil {
+			tflog.Debug(ctx, fmt.Sprintf("The environment lifecycle response body did not match expected format. Response status code: %s", lifecycleResponse.HttpResponse.Status))
+			continue
 		}
 
 		err = client.Api.SleepWithContext(ctx, retryAfter)
@@ -370,13 +375,13 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 			return nil, err
 		}
 
-		tflog.Debug(ctx, "Dataverse Creation Operation State: '"+lifecycleEnv.Properties.ProvisioningState+"'")
-		tflog.Debug(ctx, "Dataverse Creation Operation HTTP Status: '"+lifecycleResponse.HttpResponse.Status+"'")
+		tflog.Debug(ctx, fmt.Sprintf("Dataverse Creation Operation State: '%s'", lifecycleEnv.Properties.ProvisioningState))
+		tflog.Debug(ctx, fmt.Sprintf("Dataverse Creation Operation HTTP Status: '%s'", lifecycleResponse.HttpResponse.Status))
 
 		if lifecycleEnv.Properties.ProvisioningState == "Succeeded" {
-			return &lifecycleEnv, nil
+			return lifecycleEnv, nil
 		} else if lifecycleEnv.Properties.ProvisioningState != "LinkedDatabaseProvisioning" && lifecycleEnv.Properties.ProvisioningState != "Succeeded" {
-			return &lifecycleEnv, errors.New("dataverse creation failed. provisioning state: " + lifecycleEnv.Properties.ProvisioningState)
+			return lifecycleEnv, fmt.Errorf("dataverse creation failed. provisioning state: %s", lifecycleEnv.Properties.ProvisioningState)
 		}
 	}
 }
@@ -443,7 +448,8 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
 
 	createdEnvironmentId := ""
-	if apiResponse.HttpResponse.StatusCode == http.StatusAccepted {
+	switch apiResponse.HttpResponse.StatusCode {
+	case http.StatusAccepted:
 		lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 		if err != nil {
 			return nil, err
@@ -457,9 +463,10 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 			createdEnvironmentId = parts[len(parts)-1]
 			tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
 		}
-	} else if apiResponse.HttpResponse.StatusCode == http.StatusCreated {
+
+	case http.StatusCreated:
 		envCreatedResponse := lifecycleCreatedDto{}
-		err = apiResponse.MarshallTo(&envCreatedResponse)
+		err := apiResponse.MarshallTo(&envCreatedResponse)
 		if err != nil {
 			return nil, err
 		}

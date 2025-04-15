@@ -49,7 +49,6 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		Description:         "Manages a Power Platform Billing Policy",
 		MarkdownDescription: "Manages a Power Platform Billing Policy. \n\nA Power Platform billing policy is a mechanism that allows you to manage the costs associated with your Power Platform usage. It's linked to an Azure subscription and is used to set up pay-as-you-go billing for an environment.\n\nAdditional Resources:\n\n* [What is a billing policy](https://learn.microsoft.com/power-platform/admin/pay-as-you-go-overview#what-is-a-billing-policy)\n* [Power Platform Billing Policy API](https://learn.microsoft.com/rest/api/power-platform/licensing/billing-policy/get-billing-policy)",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
@@ -60,19 +59,16 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 			}),
 			"id": schema.StringAttribute{
 				Computed:            true,
-				Description:         "The id of the billing policy",
 				MarkdownDescription: "The id of the billing policy",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"name": schema.StringAttribute{
-				Description:         "The name of the billing policy",
 				MarkdownDescription: "The name of the billing policy",
 				Required:            true,
 			},
 			"location": schema.StringAttribute{
-				Description:         "The location of the billing policy",
 				MarkdownDescription: "The location of the billing policy",
 				Required:            true,
 				PlanModifiers: []planmodifier.String{
@@ -80,7 +76,6 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 				},
 			},
 			"status": schema.StringAttribute{
-				Description:         "The status of the billing policy",
 				MarkdownDescription: "The status of the billing policy (Enabled, Disabled)",
 				Computed:            true,
 				Optional:            true,
@@ -89,20 +84,17 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 				},
 			},
 			"billing_instrument": schema.SingleNestedAttribute{
-				Description:         "The billing instrument of the billing policy",
 				MarkdownDescription: "The billing instrument of the billing policy",
 				Required:            true,
 				Attributes: map[string]schema.Attribute{
 					"id": schema.StringAttribute{
 						Computed:            true,
-						Description:         "The id of the billing instrument",
 						MarkdownDescription: "The id of the billing instrument",
 						PlanModifiers: []planmodifier.String{
 							stringplanmodifier.UseStateForUnknown(),
 						},
 					},
 					"resource_group": schema.StringAttribute{
-						Description:         "The resource group of the billing instrument",
 						MarkdownDescription: "The resource group of the billing instrument",
 						Required:            true,
 						PlanModifiers: []planmodifier.String{
@@ -110,7 +102,6 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 						},
 					},
 					"subscription_id": schema.StringAttribute{
-						Description:         "The subscription id of the billing instrument",
 						MarkdownDescription: "The subscription id of the billing instrument",
 						Required:            true,
 						PlanModifiers: []planmodifier.String{
@@ -169,7 +160,7 @@ func (r *BillingPolicyResource) Create(ctx context.Context, req resource.CreateR
 
 	policy, err := r.LicensingClient.CreateBillingPolicy(ctx, billingPolicyToCreate)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -202,7 +193,7 @@ func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadReque
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -214,7 +205,7 @@ func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadReque
 	state.BillingInstrument.ResourceGroup = types.StringValue(billing.BillingInstrument.ResourceGroup)
 	state.BillingInstrument.SubscriptionId = types.StringValue(billing.BillingInstrument.SubscriptionId)
 
-	tflog.Debug(ctx, fmt.Sprintf("READ %s_%s with Id: %s", r.ProviderTypeName, r.TypeName, billing.Id))
+	tflog.Debug(ctx, fmt.Sprintf("READ %s with Id: %s", r.FullTypeName(), billing.Id))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -244,7 +235,7 @@ func (r *BillingPolicyResource) Update(ctx context.Context, req resource.UpdateR
 
 		policy, err := r.LicensingClient.UpdateBillingPolicy(ctx, plan.Id.ValueString(), policyToUpdate)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.ProviderTypeName), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 			return
 		}
 
@@ -271,7 +262,7 @@ func (r *BillingPolicyResource) Delete(ctx context.Context, req resource.DeleteR
 
 	err := r.LicensingClient.DeleteBillingPolicy(ctx, state.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s_%s", r.ProviderTypeName, r.TypeName), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
 }

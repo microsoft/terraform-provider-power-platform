@@ -233,7 +233,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_US_Region_E
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ExpectError: regexp.MustCompile(".*Moving data across regions is not supported in the unitedstates location.*"),
+				ExpectError: regexp.MustCompile(".*moving data across regions is not supported in the unitedstates location.*"),
 				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
@@ -255,7 +255,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ExpectError: regexp.MustCompile(".*To enable AI generative features, moving data across regions must be enabled.*"),
+				ExpectError: regexp.MustCompile(".*to enable ai generative features, moving data across regions must be enabled.*"),
 				Config: `
 					resource "powerplatform_environment" "development" {
 						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
@@ -1245,6 +1245,13 @@ func TestUnitEnvironmentsResource_Validate_Update_With_Billing_Policy(t *testing
 			return resp, nil
 		})
 
+	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
 			patchResponseInx++
@@ -1526,7 +1533,7 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 				resource "powerplatform_environment" "development" {
 					display_name                              = "displayname"
 					description                               = "description"
-					cadence								      = "Frequent"
+					cadence								      = "Moderate"
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 				}`,
@@ -1535,7 +1542,7 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", "00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "display_name", "displayname"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "description", "description"),
-					resource.TestCheckResourceAttr("powerplatform_environment.development", "cadence", "Frequent"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "cadence", "Moderate"),
 
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "location", "europe"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "environment_type", "Sandbox"),
@@ -1755,6 +1762,13 @@ func TestUnitEnvironmentsResource_Validate_Create_Environment_And_Dataverse(t *t
 		})
 
 	httpmock.RegisterResponder("PATCH", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("PATCH", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2021-04-01`,
 		func(req *http.Request) (*http.Response, error) {
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
@@ -2324,6 +2338,13 @@ func TestUnitEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testin
 			return resp, nil
 		})
 
+	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
 			resp := httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Create_Environment_And_Add_Env_Group/get_environments_1.json").String())
@@ -2511,6 +2532,7 @@ func TestAccEnvironmentsResource_Create_Environment_And_Add_Env_Group(t *testing
 					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					environment_group_id					  = "00000000-0000-0000-0000-000000000000"
+					allow_bing_search 						  = false
 					dataverse = {
 						language_code                             = "1033"
 						currency_code                             = "USD"
@@ -2596,11 +2618,11 @@ func TestAccEnvironmentsResource_Create_Environment_No_Dataverse_Add_Dataverse_A
 					location                                  = "unitedstates"
 					environment_type                          = "Sandbox"
 					environment_group_id					  = "00000000-0000-0000-0000-000000000000"
+					allow_bing_search 						  = false
 					dataverse = {
 						language_code                             = "1033"
 						currency_code                             = "USD"
 						security_group_id 						  = "00000000-0000-0000-0000-000000000000"
-						
 					}
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
