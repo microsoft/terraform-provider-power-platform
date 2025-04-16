@@ -53,8 +53,14 @@ func (client *Client) GetSolutionUniqueName(ctx context.Context, environmentId, 
 	apiUrl.RawQuery = values.Encode()
 
 	solutions := solutionArrayDto{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutions)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &solutions)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 	if len(solutions.Value) == 0 {
@@ -83,8 +89,14 @@ func (client *Client) GetSolutionById(ctx context.Context, environmentId, soluti
 	apiUrl.RawQuery = values.Encode()
 
 	solutions := solutionArrayDto{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutions)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &solutions)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 	if len(solutions.Value) == 0 {
@@ -114,8 +126,14 @@ func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([
 	apiUrl.RawQuery = values.Encode()
 
 	solutionArray := solutionArrayDto{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &solutionArray)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &solutionArray)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 
@@ -151,8 +169,14 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 	}
 
 	stageSolutionResponse := stageSolutionImportResponseDto{}
-	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, stageSolutionRequestBody, []int{http.StatusOK}, &stageSolutionResponse)
+	resp, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, stageSolutionRequestBody, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &stageSolutionResponse)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 	if stageSolutionResponse.StageSolutionResults.StageSolutionStatus != "Passed" {
@@ -187,8 +211,14 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 		Path:   "/api/data/v9.2/ImportSolutionAsync",
 	}
 	importSolutionResponse := importSolutionResponseDto{}
-	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, importSolutionRequestBody, []int{http.StatusOK}, &importSolutionResponse)
+	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, importSolutionRequestBody, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &importSolutionResponse)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 
@@ -204,8 +234,14 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 	}
 	for {
 		asyncSolutionPullResponse := asyncSolutionPullResponseDto{}
-		_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &asyncSolutionPullResponse)
+		_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &asyncSolutionPullResponse)
 		if err != nil {
+			return nil, err
+		}
+		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+			return nil, err
+		}
+		if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 			return nil, err
 		}
 		if asyncSolutionPullResponse.CompletedOn != "" {
@@ -273,8 +309,14 @@ func (client *Client) validateSolutionImportResult(ctx context.Context, environm
 	}
 
 	validateSolutionImportResponseDto := validateSolutionImportResponseDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &validateSolutionImportResponseDto)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &validateSolutionImportResponseDto)
 	if err != nil {
+		return err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return err
 	}
 	if validateSolutionImportResponseDto.SolutionOperationResult.Status != "Passed" {
@@ -293,8 +335,12 @@ func (client *Client) DeleteSolution(ctx context.Context, environmentId, solutio
 		Host:   environmentHost,
 		Path:   fmt.Sprintf("/api/data/v9.2/solutions(%s)", solutionId),
 	}
-	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+	resp, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 	if err != nil {
+		return err
+	} else if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return err
+	} else if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return err
 	}
 	return nil
@@ -313,8 +359,12 @@ func (client *Client) GetTableData(ctx context.Context, environmentId, tableName
 	if odataQuery != "" {
 		apiUrl.RawQuery = odataQuery
 	}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &responseObj)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &responseObj)
 	if err != nil {
+		return err
+	} else if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return err
+	} else if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return err
 	}
 	return nil
