@@ -594,7 +594,7 @@ func (client *client) DeleteDataRecord(ctx context.Context, recordId string, env
 				}
 				resp, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent, http.StatusNotFound, http.StatusForbidden}, nil)
 				if err != nil {
-					return errors.New("error while deleting data record. %w")
+					return fmt.Errorf("error while deleting data record: %w", err)
 				}
 				if err := client.Api.HandleForbiddenResponse(resp); err != nil {
 					return err
