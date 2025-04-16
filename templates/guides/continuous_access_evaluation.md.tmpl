@@ -72,4 +72,4 @@ security policies are enforced in near real-time. It's especially valuable when:
 
 For more information about Continuous Access Evaluation, see the Microsoft documentation:
 
-- [Continuous Access Evaluation in Microsoft Entra ID](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-continuous-access-evaluation)
+- [Continuous Access Evaluation in Microsoft Entra ID](https://learn.microsoft.com/entra/identity/conditional-access/concept-continuous-access-evaluation)
