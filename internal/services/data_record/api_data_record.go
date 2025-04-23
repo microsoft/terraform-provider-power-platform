@@ -42,8 +42,14 @@ func getEntityDefinition(ctx context.Context, client *client, environmentId, ent
 	}
 
 	entityDefinition := entityDefinitionsDto{}
-	_, err = client.Api.Execute(ctx, nil, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK}, &entityDefinition)
+	resp, err := client.Api.Execute(ctx, nil, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &entityDefinition)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 
@@ -100,8 +106,14 @@ func (client *client) GetDataRecordsByODataQuery(ctx context.Context, environmen
 	apiUrl := fmt.Sprintf("https://%s/api/data/%s/%s", environmentHost, constants.DATAVERSE_API_VERSION, query)
 
 	response := map[string]any{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl, h, nil, []int{http.StatusOK}, &response)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl, h, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &response)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 
@@ -175,12 +187,14 @@ func (client *client) GetDataRecord(ctx context.Context, recordId, environmentId
 
 	result := make(map[string]any, 0)
 
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound}, &result)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound, http.StatusForbidden}, &result)
 	if err != nil {
-		var httpError *customerrors.UnexpectedHttpStatusCodeError
-		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
-			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Data Record '%s' not found", recordId))
-		}
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 
@@ -207,8 +221,14 @@ func (client *client) GetRelationData(ctx context.Context, environmentId, tableN
 
 	result := make(map[string]any, 0)
 
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &result)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &result)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 
@@ -241,8 +261,14 @@ func (client *client) GetTableSingularNameFromPlural(ctx context.Context, enviro
 	q.Add("$select", "PrimaryIdAttribute,LogicalCollectionName,LogicalName")
 	apiUrl.RawQuery = q.Encode()
 
-	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, nil)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(response); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(response); err != nil {
 		return nil, err
 	}
 
@@ -366,8 +392,14 @@ func (client *client) GetEntityAttributesDefinition(ctx context.Context, environ
 	apiUrl := fmt.Sprintf("https://%s/api/data/%s/EntityDefinitions(LogicalName='%s')/Attributes?$select=LogicalName", environmentHost, constants.DATAVERSE_API_VERSION, entityLogicalName)
 
 	results := attributesApiResponseDto{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK}, &results)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &results)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 	return results.Value, nil
@@ -381,8 +413,14 @@ func (client *client) GetEntityRelationDefinitionInfo(ctx context.Context, envir
 
 	apiUrl := fmt.Sprintf("https://%s/api/data/%s/EntityDefinitions(LogicalName='%s')?$expand=OneToManyRelationships,ManyToManyRelationships,ManyToOneRelationships", environmentHost, constants.DATAVERSE_API_VERSION, entityLogicalName)
 
-	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK}, nil)
+	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, nil)
 	if err != nil {
+		return "", err
+	}
+	if err := client.Api.HandleForbiddenResponse(response); err != nil {
+		return "", err
+	}
+	if err := client.Api.HandleNotFoundResponse(response); err != nil {
 		return "", err
 	}
 
@@ -473,7 +511,7 @@ func (client *client) ApplyDataRecord(ctx context.Context, recordId, environment
 		Path:   apiPath,
 	}
 
-	response, err := client.Api.Execute(ctx, nil, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent, http.StatusPreconditionFailed}, nil)
+	response, err := client.Api.Execute(ctx, nil, method, apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent, http.StatusPreconditionFailed, http.StatusForbidden, http.StatusNotFound}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -487,6 +525,12 @@ func (client *client) ApplyDataRecord(ctx context.Context, recordId, environment
 		if err != nil {
 			return nil, err
 		}
+	}
+	if err := client.Api.HandleForbiddenResponse(response); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(response); err != nil {
+		return nil, err
 	}
 
 	if len(response.BodyAsBytes) != 0 {
@@ -548,9 +592,12 @@ func (client *client) DeleteDataRecord(ctx context.Context, recordId string, env
 					Host:   environmentHost,
 					Path:   fmt.Sprintf("/api/data/%s/%s(%s)/%s(%s)/$ref", constants.DATAVERSE_API_VERSION, tableEntityDefinition.LogicalCollectionName, recordId, key, dataRecordId),
 				}
-				_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent, http.StatusNotFound}, nil)
+				resp, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent, http.StatusNotFound, http.StatusForbidden}, nil)
 				if err != nil {
-					return errors.New("error while deleting data record. %w")
+					return fmt.Errorf("error while deleting data record: %w", err)
+				}
+				if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+					return err
 				}
 			}
 		}
@@ -563,8 +610,10 @@ func (client *client) DeleteDataRecord(ctx context.Context, recordId string, env
 	}
 
 	// 200, 201, or 404 are acceptable status codes for delete and not error
-	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent, http.StatusNotFound}, nil)
+	resp, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, columns, []int{http.StatusOK, http.StatusNoContent, http.StatusNotFound, http.StatusForbidden}, nil)
 	if err != nil {
+		return err
+	} else if err := client.Api.HandleForbiddenResponse(resp); err != nil {
 		return err
 	}
 	return nil
@@ -608,8 +657,14 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 
 	existingRelationsResponse := relationApiResponseDto{}
 
-	apiResponse, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 	if err != nil {
+		return err
+	}
+	if err := client.Api.HandleForbiddenResponse(apiResponse); err != nil {
+		return err
+	}
+	if err := client.Api.HandleNotFoundResponse(apiResponse); err != nil {
 		return err
 	}
 
@@ -674,8 +729,14 @@ func applyRelation(ctx context.Context, environmentHost string, entityDefinition
 		relation := relationApiBodyDto{
 			OdataID: fmt.Sprintf("https://%s/api/data/%s/%s(%s)", environmentHost, constants.DATAVERSE_API_VERSION, entityDefinition.LogicalCollectionName, dataRecordId),
 		}
-		_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent}, nil)
+		resp, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, relation, []int{http.StatusOK, http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 		if err != nil {
+			return err
+		}
+		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+			return err
+		}
+		if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 			return err
 		}
 	}

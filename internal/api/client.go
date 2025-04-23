@@ -182,6 +182,20 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 	}
 }
 
+func (client *Client) HandleNotFoundResponse(resp *Response) error {
+	if resp.HttpResponse.StatusCode == http.StatusNotFound {
+		return fmt.Errorf("resource not found at '%s'", resp.HttpResponse.Request.URL)
+	}
+	return nil
+}
+
+func (client *Client) HandleForbiddenResponse(resp *Response) error {
+	if resp.HttpResponse.StatusCode == http.StatusForbidden {
+		return fmt.Errorf("access denied to resource at '%s'. Please validate your permissions", resp.HttpResponse.Request.URL)
+	}
+	return nil
+}
+
 func validateNoManagementApplicationPermissionsForBapiRequest(resp *Response) error {
 	if resp.HttpResponse.StatusCode == http.StatusForbidden && len(resp.BodyAsBytes) > 0 && strings.Contains(string(resp.BodyAsBytes), "does not have permission to access the path") {
 		return errors.New(constants.NO_MANAGEMENT_APPLICATION_ERROR_MSG)
