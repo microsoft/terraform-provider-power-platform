@@ -15,6 +15,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUnitApiClient_GetConfig(t *testing.T) {
@@ -205,5 +206,102 @@ func TestUnitApiClient_AzDOWorkloadIdentity_No_OIDC_Token(t *testing.T) {
 
 	if !strings.HasPrefix(err.Error(), expectedError) {
 		t.Errorf("Expected error message '%s' but got '%s'", expectedError, err.Error())
+	}
+}
+
+func TestUnitIsCaeChallengeResponse(t *testing.T) {
+	testCases := []struct {
+		name           string
+		setupResponse  func() *http.Response
+		expectedResult bool
+	}{
+		{
+			name: "Nil response",
+			setupResponse: func() *http.Response {
+				return nil
+			},
+			expectedResult: false,
+		},
+		{
+			name: "Not 401 status code",
+			setupResponse: func() *http.Response {
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Header:     http.Header{},
+				}
+			},
+			expectedResult: false,
+		},
+		{
+			name: "401 status but no WWW-Authenticate header",
+			setupResponse: func() *http.Response {
+				return &http.Response{
+					StatusCode: http.StatusUnauthorized,
+					Header:     http.Header{},
+				}
+			},
+			expectedResult: false,
+		},
+		{
+			name: "401 status with WWW-Authenticate header but missing claims",
+			setupResponse: func() *http.Response {
+				header := http.Header{}
+				header.Set("WWW-Authenticate", "Bearer error=insufficient_claims")
+				return &http.Response{
+					StatusCode: http.StatusUnauthorized,
+					Header:     header,
+				}
+			},
+			expectedResult: false,
+		},
+		{
+			name: "401 status with WWW-Authenticate header but missing insufficient_claims",
+			setupResponse: func() *http.Response {
+				header := http.Header{}
+				header.Set("WWW-Authenticate", "Bearer claims=something")
+				return &http.Response{
+					StatusCode: http.StatusUnauthorized,
+					Header:     header,
+				}
+			},
+			expectedResult: false,
+		},
+		{
+			name: "Valid CAE challenge response",
+			setupResponse: func() *http.Response {
+				header := http.Header{}
+				header.Set("WWW-Authenticate", "Bearer error=insufficient_claims, claims=something")
+				return &http.Response{
+					StatusCode: http.StatusUnauthorized,
+					Header:     header,
+				}
+			},
+			expectedResult: true,
+		},
+		{
+			name: "Valid CAE challenge response with complex header",
+			setupResponse: func() *http.Response {
+				header := http.Header{}
+				header.Set("WWW-Authenticate", "Bearer authorization_uri=\"https://login.microsoftonline.com/common/oauth2/authorize\", error=\"insufficient_claims\", error_description=\"The access token is not valid: access_denied, audience validation failed\", claims=\"eyJhY2Nlc3NfdG9rZW4iOnsiYWRhX3MiOnsiY2xhaW1zIjp7Im5hbWUiOm51bGx9fX19\"")
+				return &http.Response{
+					StatusCode: http.StatusUnauthorized,
+					Header:     header,
+				}
+			},
+			expectedResult: true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Arrange
+			response := tc.setupResponse()
+
+			// Act
+			result := api.IsCaeChallengeResponse(response)
+
+			// Assert
+			assert.Equal(t, tc.expectedResult, result, "IsCaeChallengeResponse returned unexpected result")
+		})
 	}
 }

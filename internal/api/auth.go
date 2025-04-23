@@ -80,9 +80,7 @@ func (client *Auth) AuthenticateClientCertificate(ctx context.Context, scopes []
 	if err != nil {
 		return "", time.Time{}, err
 	}
-	accessToken, err := azureCertCredentials.GetToken(ctx, policy.TokenRequestOptions{
-		Scopes: scopes,
-	})
+	accessToken, err := azureCertCredentials.GetToken(ctx, client.createTokenRequestOptions(ctx, scopes))
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -98,9 +96,7 @@ func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string) (
 		return "", time.Time{}, err
 	}
 
-	accessToken, err := azureCLICredentials.GetToken(ctx, policy.TokenRequestOptions{
-		Scopes: scopes,
-	})
+	accessToken, err := azureCLICredentials.GetToken(ctx, client.createTokenRequestOptions(ctx, scopes))
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -122,10 +118,7 @@ func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []strin
 		return "", time.Time{}, err
 	}
 
-	accessToken, err := clientSecretCredential.GetToken(ctx, policy.TokenRequestOptions{
-		Scopes:   scopes,
-		TenantID: client.config.TenantId,
-	})
+	accessToken, err := clientSecretCredential.GetToken(ctx, client.createTokenRequestOptions(ctx, scopes))
 
 	if err != nil {
 		return "", time.Time{}, err
@@ -197,9 +190,7 @@ func (client *Auth) AuthenticateOIDC(ctx context.Context, scopes []string) (stri
 		return "", time.Time{}, err
 	}
 
-	accessToken, err := chain.GetToken(ctx, policy.TokenRequestOptions{
-		Scopes: scopes,
-	})
+	accessToken, err := chain.GetToken(ctx, client.createTokenRequestOptions(ctx, scopes))
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -218,7 +209,7 @@ func (client *Auth) AuthenticateUserManagedIdentity(ctx context.Context, scopes 
 		return "", time.Time{}, err
 	}
 
-	accessToken, err := userManagedIdentityCredential.GetToken(ctx, policy.TokenRequestOptions{Scopes: scopes})
+	accessToken, err := userManagedIdentityCredential.GetToken(ctx, client.createTokenRequestOptions(ctx, scopes))
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -236,7 +227,7 @@ func (client *Auth) AuthenticateSystemManagedIdentity(ctx context.Context, scope
 		return "", time.Time{}, err
 	}
 
-	accessToken, err := systemManagedIdentityCredential.GetToken(ctx, policy.TokenRequestOptions{Scopes: scopes})
+	accessToken, err := systemManagedIdentityCredential.GetToken(ctx, client.createTokenRequestOptions(ctx, scopes))
 	if err != nil {
 		return "", time.Time{}, err
 	}
@@ -265,18 +256,41 @@ func (client *Auth) AuthenticateAzDOWorkloadIdentityFederation(ctx context.Conte
 		client.config.OidcRequestToken,
 		&azidentity.AzurePipelinesCredentialOptions{
 			AdditionallyAllowedTenants: client.config.AuxiliaryTenantIDs,
+			ClientOptions: azcore.ClientOptions{
+				Cloud: client.config.Cloud,
+			},
 		},
 	)
 	if err != nil {
 		return "", time.Time{}, err
 	}
 
-	accessToken, err := azdoWorkloadIdentityCredential.GetToken(ctx, policy.TokenRequestOptions{Scopes: scopes})
+	accessToken, err := azdoWorkloadIdentityCredential.GetToken(ctx, client.createTokenRequestOptions(ctx, scopes))
 	if err != nil {
 		return "", time.Time{}, err
 	}
 
 	return accessToken.Token, accessToken.ExpiresOn, nil
+}
+
+// createTokenRequestOptions creates TokenRequestOptions with CAE support when enabled.
+func (client *Auth) createTokenRequestOptions(ctx context.Context, scopes []string) policy.TokenRequestOptions {
+	tokenOptions := policy.TokenRequestOptions{
+		Scopes: scopes,
+	}
+
+	// Add TenantID for ClientSecret authentication if it's available
+	if client.config.TenantId != "" {
+		tokenOptions.TenantID = client.config.TenantId
+	}
+
+	// Enable CAE if configured
+	if client.config.EnableContinuousAccessEvaluation {
+		tokenOptions.EnableCAE = true
+		tflog.Debug(ctx, "Continuous Access Evaluation (CAE) is enabled for token requests")
+	}
+
+	return tokenOptions
 }
 
 func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
