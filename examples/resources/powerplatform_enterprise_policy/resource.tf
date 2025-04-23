@@ -3,15 +3,15 @@ terraform {
   required_providers {
     powerplatform = {
       source  = "microsoft/power-platform"
-      version = "~>3.0"
+      version = "~>3.5.0"
     }
     azapi = {
       source  = "azure/azapi"
-      version = "~>2.0"
+      version = "~>2.2.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>4.8"
+      version = "~>4.16.0"
     }
   }
 }
