@@ -513,7 +513,7 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 		}
 		typedResult, ok := any(dsModel).(T)
 		if !ok {
-			return result, objValue, fmt.Errorf("failed to convert TenantSettingsDataSourceModel to generic type T")
+			return result, objValue, errors.New("failed to convert TenantSettingsDataSourceModel to generic type T")
 		}
 		return typedResult, objValue, nil
 	case TenantSettingsResourceModel:
@@ -533,7 +533,7 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 		}
 		typedResult, ok := any(resModel).(T)
 		if !ok {
-			return result, objValue, fmt.Errorf("failed to convert TenantSettingsResourceModel to generic type T")
+			return result, objValue, errors.New("failed to convert TenantSettingsResourceModel to generic type T")
 		}
 		return typedResult, objValue, nil
 	default:
