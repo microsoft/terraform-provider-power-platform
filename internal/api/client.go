@@ -62,6 +62,35 @@ var retryableStatusCodes = []int{
 	499,                            // 499 is retryable because the client may have closed the connection.
 }
 
+// CaePolicyViolationError represents an error when a CAE policy violation is detected.
+type CaePolicyViolationError struct {
+	Message    string
+	StatusCode int
+	Headers    http.Header
+}
+
+func (e *CaePolicyViolationError) Error() string {
+	return fmt.Sprintf("Continuous Access Evaluation policy violation: %s", e.Message)
+}
+
+// IsCaeChallengeResponse detects if a response contains a CAE challenge.
+func IsCaeChallengeResponse(resp *http.Response) bool {
+	if resp == nil {
+		return false
+	}
+
+	// Check response headers for CAE challenge indicators.
+	if resp.StatusCode == http.StatusUnauthorized {
+		wwwAuthenticate := resp.Header.Get("WWW-Authenticate")
+		if wwwAuthenticate != "" {
+			return strings.Contains(wwwAuthenticate, "claims=") &&
+				strings.Contains(wwwAuthenticate, "insufficient_claims")
+		}
+	}
+
+	return false
+}
+
 // Execute executes an HTTP request with the given method, url, headers, and body.
 //
 // Parameters:
@@ -151,6 +180,20 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 			return resp, err
 		}
 	}
+}
+
+func (client *Client) HandleNotFoundResponse(resp *Response) error {
+	if resp.HttpResponse.StatusCode == http.StatusNotFound {
+		return fmt.Errorf("resource not found at '%s'", resp.HttpResponse.Request.URL)
+	}
+	return nil
+}
+
+func (client *Client) HandleForbiddenResponse(resp *Response) error {
+	if resp.HttpResponse.StatusCode == http.StatusForbidden {
+		return fmt.Errorf("access denied to resource at '%s'. Please validate your permissions", resp.HttpResponse.Request.URL)
+	}
+	return nil
 }
 
 func validateNoManagementApplicationPermissionsForBapiRequest(resp *Response) error {

@@ -1,0 +1,5 @@
+kind: fixed
+body: Enhance error handling for 403 & 404 WebApi responses
+time: 2025-04-15T18:54:54.092381468Z
+custom:
+    Issue: "714"
