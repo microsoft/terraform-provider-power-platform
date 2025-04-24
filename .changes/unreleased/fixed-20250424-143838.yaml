@@ -1,0 +1,5 @@
+kind: fixed
+body: Corrected validator logic in OtherFieldRequiredWhenValueOfValidator to properly handle field comparison cases
+time: 2025-04-24T14:38:38.834036301Z
+custom:
+    Issue: "1"
