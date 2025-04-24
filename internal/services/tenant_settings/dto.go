@@ -464,7 +464,7 @@ func convertUserManagementSettingsModel(ctx context.Context, powerPlatformAttrib
 	}
 }
 
-func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettingsResourceModel](tenantSettingsDto tenantSettingsDto, timeout timeouts.Value) (T, basetypes.ObjectValue) {
+func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettingsResourceModel](tenantSettingsDto tenantSettingsDto, timeout timeouts.Value) (T, basetypes.ObjectValue, error) {
 	objTypePowerPlatformSettings, objValuePowerPlatformSettings := convertPowerPlatformSettings(tenantSettingsDto)
 
 	tenantSettingsProperties := map[string]attr.Type{
@@ -528,12 +528,12 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 			PowerPlatform:                                  objValuePowerPlatformSettings,
 		}).(T)
 	default:
-		panic(fmt.Sprintf("unexpected type %T", result))
+		return result, objValue, fmt.Errorf("unexpected type %T", result)
 	}
 	if !ok {
-		panic(fmt.Sprintf("unexpected type %T", result))
+		return result, objValue, fmt.Errorf("unexpected type %T", result)
 	}
-	return result, objValue
+	return result, objValue, nil
 }
 
 func convertPowerPlatformSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
