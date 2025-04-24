@@ -347,7 +347,11 @@ func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	var state = convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](envSettings, plan.Timeouts)
+	state, err := convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](envSettings, plan.Timeouts)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting environment settings", err.Error())
+		return
+	}
 	state.Id = plan.EnvironmentId
 	state.EnvironmentId = plan.EnvironmentId
 
@@ -376,7 +380,11 @@ func (r *EnvironmentSettingsResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	var newState = convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](envSettings, state.Timeouts)
+	newState, err := convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](envSettings, state.Timeouts)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting environment settings", err.Error())
+		return
+	}
 	newState.Id = state.EnvironmentId
 	newState.EnvironmentId = state.EnvironmentId
 
@@ -418,11 +426,15 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	plan = convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](environmentSettings, plan.Timeouts)
-	plan.Id = state.EnvironmentId
-	plan.EnvironmentId = state.EnvironmentId
+	updatedPlan, err := convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](environmentSettings, plan.Timeouts)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting environment settings", err.Error())
+		return
+	}
+	updatedPlan.Id = state.EnvironmentId
+	updatedPlan.EnvironmentId = state.EnvironmentId
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedPlan)...)
 }
 
 func (r *EnvironmentSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
