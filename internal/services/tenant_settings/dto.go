@@ -496,10 +496,9 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 	objValue := types.ObjectValueMust(tenantSettingsProperties, tenantSettingsValues)
 
 	var result T
-	var ok bool
 	switch any(result).(type) {
 	case TenantSettingsDataSourceModel:
-		result, ok = any(TenantSettingsDataSourceModel{
+		dsModel := TenantSettingsDataSourceModel{
 			Timeouts:                   timeout,
 			WalkMeOptOut:               types.BoolPointerValue(tenantSettingsDto.WalkMeOptOut),
 			DisableNPSCommentsReachout: types.BoolPointerValue(tenantSettingsDto.DisableNPSCommentsReachout),
@@ -511,9 +510,14 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 			DisableCapacityAllocationByEnvironmentAdmins:   types.BoolPointerValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
 			DisableSupportTicketsVisibleByAllUsers:         types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
 			PowerPlatform:                                  objValuePowerPlatformSettings,
-		}).(T)
+		}
+		typedResult, ok := any(dsModel).(T)
+		if !ok {
+			return result, objValue, fmt.Errorf("failed to convert TenantSettingsDataSourceModel to generic type T")
+		}
+		return typedResult, objValue, nil
 	case TenantSettingsResourceModel:
-		result, ok = any(TenantSettingsResourceModel{
+		resModel := TenantSettingsResourceModel{
 			Timeouts:                   timeout,
 			Id:                         types.StringValue(""),
 			WalkMeOptOut:               types.BoolPointerValue(tenantSettingsDto.WalkMeOptOut),
@@ -526,14 +530,15 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 			DisableCapacityAllocationByEnvironmentAdmins:   types.BoolPointerValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
 			DisableSupportTicketsVisibleByAllUsers:         types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
 			PowerPlatform:                                  objValuePowerPlatformSettings,
-		}).(T)
+		}
+		typedResult, ok := any(resModel).(T)
+		if !ok {
+			return result, objValue, fmt.Errorf("failed to convert TenantSettingsResourceModel to generic type T")
+		}
+		return typedResult, objValue, nil
 	default:
 		return result, objValue, fmt.Errorf("unexpected type %T", result)
 	}
-	if !ok {
-		return result, objValue, fmt.Errorf("unexpected type %T", result)
-	}
-	return result, objValue, nil
 }
 
 func convertPowerPlatformSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
