@@ -1,5 +1,0 @@
-kind: fixed
-body: Fixed incorrect error message in `powerplatform_user` delete operation
-time: 2025-04-14T16:56:32.10081838Z
-custom:
-    Issue: "709"
