@@ -1,5 +1,0 @@
-kind: fixed
-body: Add support for HTTP status code 499 in AddDataverseToEnvironment function
-time: 2025-04-09T07:35:56.882987663Z
-custom:
-    Issue: "693"
