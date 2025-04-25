@@ -1,0 +1,5 @@
+kind: fixed
+body: Updated StringSliceToSet function to return an error instead of panicking when conversion fails
+time: 2025-04-24T15:28:06.39247201Z
+custom:
+    Issue: "703"
