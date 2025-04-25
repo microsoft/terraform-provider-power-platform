@@ -4,6 +4,7 @@
 package helpers_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -24,7 +25,7 @@ func TestUnitStringSliceToSet_Success(t *testing.T) {
 	assert.False(t, set.IsUnknown())
 
 	// Verify the set has the expected type and elements
-	assert.Equal(t, types.StringType, set.ElementType(nil))
+	assert.Equal(t, types.StringType, set.ElementType(context.TODO()))
 
 	// Convert set back to slice for comparison
 	elements := helpers.SetToStringSlice(set)
