@@ -14,6 +14,9 @@ concurrency:
   group: acceptancetests
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   should_run:
     runs-on: ubuntu-latest
@@ -23,6 +26,11 @@ jobs:
     outputs:
       acceptance_tests: ${{ steps.set_acceptance_tests.outputs.acceptance_tests }}
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        with:
+          egress-policy: audit
+
       - id: set_acceptance_tests
         name: Only run acceptance tests if necessary
         run: echo "acceptance_tests=true" >> $GITHUB_OUTPUT
@@ -45,7 +53,7 @@ jobs:
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -77,7 +85,7 @@ jobs:
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -110,7 +118,7 @@ jobs:
       uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -123,11 +131,11 @@ jobs:
         go mod download
     
     - name: "Set up Terraform"
-      uses: hashicorp/setup-terraform@v3  
+      uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2  
     
     - name: Install Power Platform Tools
       if: success() || failure()
-      uses: microsoft/powerplatform-actions/actions-install@v1
+      uses: microsoft/powerplatform-actions/actions-install@11af25ee5f752896935d11db7d94557078404674 # v1.8.0
 
     - name: Environments cleanup
       if: success() || failure()
@@ -172,21 +180,21 @@ jobs:
 
     - name: Upload coverage results to Codecov
       if: success() || failure()
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@ad3126e916f78f00edff4ed0317cf185271ccc2d # v5.4.2
       with:
         file: test-coverage.out
         token: ${{ secrets.CODECOV_TOKEN }}
     
     - name: Upload test results to Codecov
       if: ${{ !cancelled() }}
-      uses: codecov/test-results-action@v1
+      uses: codecov/test-results-action@f2dba722c67b86c6caa034178c6e4d35335f6706 # v1.1.0
       with:
         files: junit.xml
         token: ${{ secrets.CODECOV_TOKEN }}
     
     - name: Render test results
       if: always()
-      uses: dorny/test-reporter@v2
+      uses: dorny/test-reporter@6e6a65b7a0bd2c9197df7d0ae36ac5cee784230c # v2.0.0
       with:
         name: Test Results
         path: junit.xml
