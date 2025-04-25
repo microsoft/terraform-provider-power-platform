@@ -1,5 +1,0 @@
-kind: fixed
-body: Improved file hashing to check if file is a real file and not a symbolic link
-time: 2025-04-11T04:34:30.505953343Z
-custom:
-    Issue: "698"
