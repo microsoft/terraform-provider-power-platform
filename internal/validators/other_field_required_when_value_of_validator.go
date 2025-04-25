@@ -69,7 +69,7 @@ func (av OtherFieldRequiredWhenValueOfValidator) Validate(ctx context.Context, r
 
 	if (av.CurrentFieldValueRegex != nil && av.CurrentFieldValueRegex.MatchString(currentFieldValue)) || (av.CurrentFieldValueRegex == nil && currentFieldValue != "") {
 		paths, _ := req.Config.PathMatches(ctx, av.OtherFieldExpression)
-		if paths == nil && len(paths) != 1 {
+		if paths == nil || len(paths) != 1 {
 			res.Diagnostics.AddError("Other field required when value of validator should have exactly one match", "")
 			return
 		}
