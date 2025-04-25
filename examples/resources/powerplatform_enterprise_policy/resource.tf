@@ -102,3 +102,11 @@ resource "powerplatform_enterprise_policy" "network_injection" {
 
   depends_on = [powerplatform_managed_environment.managed_development]
 }
+
+resource "powerplatform_enterprise_policy" "encryption" {
+  environment_id = powerplatform_environment.example_environment.id
+  system_id      = module.encryption.policy_system_id
+  policy_type    = "Encryption"
+
+  depends_on = [powerplatform_managed_environment.managed_development]
+}
