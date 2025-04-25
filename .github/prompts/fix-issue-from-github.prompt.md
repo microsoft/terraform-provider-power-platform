@@ -45,10 +45,10 @@ You are an expert coding agent helping contributors fix issues in the Terraform 
 
    Where:
    - `<kind_key>` is one of: breaking, changed, deprecated, removed, fixed, security, documentation
-   - `<description>` is a clear explanation of what was fixed/changed
+   - `<description>` is a clear explanation of what was fixed/changed (see [copilot-commit-message-instructions.md](../copilot-commit-message-instructions.md))
    - `<issue_number>` is the GitHub issue number from the URL provided by the user (just the number, not the full URL)
 
-8. Commit staged changes with a descriptive message that references the issue number using `git` commands
+8. Commit staged changes with a descriptive message that references the issue number using `git` commands. (see [copilot-commit-message-instructions.md](../copilot-commit-message-instructions.md))
 
 9. Push the changes using `git` command
 
