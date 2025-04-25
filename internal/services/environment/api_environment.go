@@ -360,9 +360,14 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 	}
 	for {
 		lifecycleEnv := &EnvironmentDto{}
-		lifecycleResponse, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted}, &lifecycleEnv)
+		lifecycleResponse, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted, http.StatusConflict}, &lifecycleEnv)
 		if err != nil {
 			return nil, err
+		}
+
+		tflog.Debug(ctx, fmt.Sprintf("Dataverse Creation Operation HTTP Status: '%s'", lifecycleResponse.HttpResponse.Status))
+		if lifecycleResponse.HttpResponse.StatusCode == http.StatusConflict {
+			continue
 		}
 
 		if lifecycleEnv == nil || lifecycleEnv.Properties == nil {
@@ -376,7 +381,6 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 		}
 
 		tflog.Debug(ctx, fmt.Sprintf("Dataverse Creation Operation State: '%s'", lifecycleEnv.Properties.ProvisioningState))
-		tflog.Debug(ctx, fmt.Sprintf("Dataverse Creation Operation HTTP Status: '%s'", lifecycleResponse.HttpResponse.Status))
 
 		if lifecycleEnv.Properties.ProvisioningState == "Succeeded" {
 			return lifecycleEnv, nil

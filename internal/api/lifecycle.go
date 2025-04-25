@@ -66,7 +66,7 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 
 	for {
 		lifecycleResponse := LifecycleDto{}
-		response, err = client.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
+		response, err = client.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusConflict}, &lifecycleResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -76,8 +76,11 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 			return nil, err
 		}
 
-		tflog.Debug(ctx, "Lifecycle Operation State: '"+lifecycleResponse.State.Id+"'")
 		tflog.Debug(ctx, "Lifecycle Operation HTTP Status: '"+response.HttpResponse.Status+"'")
+		if response.HttpResponse.StatusCode == http.StatusConflict {
+			continue
+		}
+		tflog.Debug(ctx, "Lifecycle Operation State: '"+lifecycleResponse.State.Id+"'")
 
 		if lifecycleResponse.State.Id == "Succeeded" || lifecycleResponse.State.Id == "Failed" {
 			return &lifecycleResponse, nil
