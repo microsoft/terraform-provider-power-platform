@@ -64,13 +64,11 @@ resource "powerplatform_managed_environment" "managed_development" {
 }
 
 
-// module that creates all azure resources required for the network injection policy and the policy itself
+// module that creates all azure resources required for the network injection (resource group, vnet's and subnet's) policy and the policy itself
 module "network_injection" {
   source = "./network_injection"
 
   should_register_provider = false
-
-  environment_id = powerplatform_environment.example_environment.id
 
   resource_group_name        = "rg_example_network_injection_policy"
   resource_group_location    = local.europe_location[0].azure_regions[0]
@@ -95,4 +93,12 @@ module "encryption" {
 
   // let's wait for first policy to be executed
   depends_on = [powerplatform_enterprise_policy.network_injection]
+}
+
+resource "powerplatform_enterprise_policy" "network_injection" {
+  environment_id = powerplatform_environment.example_environment.id
+  system_id      = module.network_injection.policy_system_id
+  policy_type    = "NetworkInjection"
+
+  depends_on = [powerplatform_managed_environment.managed_development]
 }
