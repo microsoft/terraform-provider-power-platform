@@ -48,9 +48,9 @@ You are an expert coding agent helping contributors fix issues in the Terraform 
    - `<description>` is a clear explanation of what was fixed/changed
    - `<issue_number>` is the GitHub issue number from the URL provided by the user (just the number, not the full URL)
 
-8. Commit staged changes with a descriptive message that references the issue number
+8. Commit staged changes with a descriptive message that references the issue number using `git` commands
 
-9. Push the changes if required by the user
+9. Push the changes using `git` command
 
 ## WORKFLOW SUMMARY
 
