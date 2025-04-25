@@ -290,7 +290,13 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 		Message: "Deleted using Power Platform Terraform Provider",
 	}
 
-	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusNoContent, http.StatusAccepted, http.StatusConflict}, nil)
+	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusNoContent, http.StatusAccepted, http.StatusConflict, http.StatusNotFound}, nil)
+
+	// Handle HTTP 404 case - if the environment is not found, consider it already deleted
+	if response != nil && response.HttpResponse.StatusCode == http.StatusNotFound {
+		tflog.Info(ctx, fmt.Sprintf("Environment '%s' not found. Treating as successfully deleted.", environmentId))
+		return nil
+	}
 
 	if response.HttpResponse.StatusCode == http.StatusConflict {
 		// the is another operation in progress, let's wait for it to complete, and try again
