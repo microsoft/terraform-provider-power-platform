@@ -1,0 +1,5 @@
+kind: fixed
+body: Potential Nil Dereference in getAssertion Method.
+time: 2025-04-25T20:18:42.603194108Z
+custom:
+    Issue: "730"
