@@ -1,5 +1,0 @@
-kind: fixed
-body: Update authorization header check in doRequest function
-time: 2025-04-07T07:55:19.134489393Z
-custom:
-    Issue: "686"
