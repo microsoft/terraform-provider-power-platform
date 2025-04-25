@@ -349,7 +349,7 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 		return "", fmt.Errorf("getAssertion: cannot unmarshal response: %v", err)
 	}
 
-	if tokenRes.Value == nil {
+	if tokenRes.Value == nil || tokenRes.Count == nil {
 		return "", errors.New("getAssertion: nil JWT assertion received from OIDC provider")
 	}
 
