@@ -6,6 +6,9 @@ on:
     - cron: '0 8 * * 1'
   workflow_dispatch: # Allow manual triggering
 
+permissions:
+  contents: read
+
 jobs:
   metrics:
     name: Repository Metrics Collection
@@ -14,6 +17,11 @@ jobs:
       issues: read      
       pull-requests: read
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        with:
+          egress-policy: audit
+
       - name: Get date for query
         id: date
         run: |
@@ -21,14 +29,14 @@ jobs:
           
       - name: Get Issue Metrics
         id: issue-metrics
-        uses: github/issue-metrics@v3
+        uses: github/issue-metrics@4f29f34d9d831fe224cbc6c8a0d711415ebd01b1 # v3.1.1
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.repository }}
           SEARCH_QUERY: "repo:${{ github.repository }} is:issue is:pr created:>${{ steps.date.outputs.last_week }}"
         
       - name: Upload metrics file as artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: issue-metrics
           path: ./issue_metrics.md
