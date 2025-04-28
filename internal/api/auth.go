@@ -301,7 +301,7 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 	if w.tokenFilePath != "" {
 		idTokenData, err := os.ReadFile(w.tokenFilePath)
 		if err != nil {
-			return "", fmt.Errorf("reading token file: %v", err)
+			return "", fmt.Errorf("reading token file: %w", err)
 		}
 
 		return string(idTokenData), nil
