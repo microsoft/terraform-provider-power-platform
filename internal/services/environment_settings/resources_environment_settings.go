@@ -426,15 +426,15 @@ func (r *EnvironmentSettingsResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	updatedPlan, err := convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](environmentSettings, plan.Timeouts)
+	plan, err = convertFromEnvironmentSettingsDto[EnvironmentSettingsResourceModel](environmentSettings, plan.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Error converting environment settings", err.Error())
 		return
 	}
-	updatedPlan.Id = state.EnvironmentId
-	updatedPlan.EnvironmentId = state.EnvironmentId
+	plan.Id = state.EnvironmentId
+	plan.EnvironmentId = state.EnvironmentId
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &updatedPlan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *EnvironmentSettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
