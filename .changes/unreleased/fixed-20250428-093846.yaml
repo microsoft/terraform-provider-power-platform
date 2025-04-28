@@ -1,0 +1,5 @@
+kind: fixed
+body: 'fix: add http.StatusConflict to API response handling in enterprise and managed environment services'
+time: 2025-04-28T09:38:46.730077628Z
+custom:
+    Issue: "745"
