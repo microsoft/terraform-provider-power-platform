@@ -1,7 +1,7 @@
 from typing import Any
 #import httpx
 from mcp.server.fastmcp import FastMCP
-from magentic_one_agent import init_model_client, init_tools, init_magentic_one_agent
+from init import init_model_client, init_tools, init_magentic_one_agent
 from autogen_agentchat.agents import AssistantAgent
 from autogen_ext.tools.mcp import StdioServerParams, mcp_server_tools
 from autogen_agentchat.conditions import MaxMessageTermination, TextMentionTermination
@@ -66,7 +66,7 @@ async def analyze_code(absolute_file_path: str) -> str:
         model_client=model_client,
         tools=tools,
         system_message="""You are a code quality agent, keep going until the user’s query is completely resolved, before ending your turn and yielding back to the user. Only terminate your turn when you are sure that the problem is solved.
-        Your job is to review the code and provide feedback filling up the following markdown template:
+        Your job is to review the code in the file provided and for every issue found, provide feedback filling up the following markdown template for that issue:
 # Title
 
 <<Title for the issue>>

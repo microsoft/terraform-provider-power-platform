@@ -4,14 +4,16 @@
 
 - python extension for vscode
 
-- pip install "autogen-agentchat" "autogen-ext[magentic-one,openai,azure]"
-- pip install autogen-core
-- pip install -U "autogen-ext[mcp]"
-- pip install mcp
-- pip install json_schema_to_pydantic
-- pip install uvx
-- uvx install mcp-server-fetch
+pip install "autogen-agentchat" "autogen-ext[magentic-one,openai,azure]"
+pip install autogen-core
+pip install -U "autogen-ext[mcp]"
+pip install mcp
+pip install json_schema_to_pydantic
+pip install uvx
+uvx install mcp-server-fetch
+uvx install mcp-shell-server
 
+source .venv/bin/activate
 
 ## Services
 

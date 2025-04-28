@@ -1,13 +1,8 @@
-import asyncio
-import os
 from autogen_ext.auth.azure import AzureTokenProvider
 from autogen_ext.models.openai import AzureOpenAIChatCompletionClient
 from azure.identity import DefaultAzureCredential
 from autogen_agentchat.teams import MagenticOneGroupChat
 from autogen_agentchat.ui import Console
-#from autogen_ext.agents.web_surfer import MultimodalWebSurfer
-from autogen_ext.agents.file_surfer import FileSurfer
-from autogen_ext.agents.magentic_one import MagenticOneCoderAgent
 from autogen_agentchat.agents import CodeExecutorAgent, AssistantAgent
 from autogen_ext.code_executors.local import LocalCommandLineCodeExecutor
 from autogen_ext.tools.mcp import StdioServerParams, mcp_server_tools
@@ -23,7 +18,7 @@ def init_model_client():
         azure_deployment="gpt-4o",  # Replace with your Azure deployment name
         model="gpt-4o",  # Replace with your model name
         api_version="2024-12-01-preview",
-        azure_endpoint="https://<<your_az_foundry_endpoin>>.openai.azure.com/",  # Replace with your endpoint
+        azure_endpoint="https://<<your_az_foundry_endpoint>>.openai.azure.com/",  # Replace with your endpoint
         azure_ad_token_provider=token_provider,  # Optional if you choose key-based authentication
     )
     return model_client
