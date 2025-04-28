@@ -11,6 +11,9 @@ concurrency:
   group: ${{ format('{0}-{1}-{2}-{3}-{4}', github.workflow, github.event_name, github.ref, github.base_ref || null, github.head_ref || null) }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   changelog-existence:
     name: Check Changelog
@@ -20,6 +23,11 @@ jobs:
       contents: read       # Required for checkout
       pull-requests: read  # Only need to read PR info, not write
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        with:
+          egress-policy: audit
+
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -36,7 +44,7 @@ jobs:
 
       - name: Setup Go
         if: steps.changelog_check.outputs.exists == 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
         with:
           go-version-file: go.mod
           cache: true
@@ -67,6 +75,11 @@ jobs:
       contents: read      # Required for checkout
       pull-requests: write # Required for comment deletion
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        with:
+          egress-policy: audit
+
       - name: Find comment
         if: github.actor != 'dependabot[bot]'
         uses: peter-evans/find-comment@3eae4d37986fb5a8592848f6a574fdf654e61f9e # v3.1.0
