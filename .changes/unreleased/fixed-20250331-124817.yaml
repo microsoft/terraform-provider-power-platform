@@ -1,5 +1,0 @@
-kind: fixed
-body: standardize the logging and error messages by replacing `ProviderTypeName` with `FullTypeName`
-time: 2025-03-31T12:48:17.86943761Z
-custom:
-    Issue: "673"

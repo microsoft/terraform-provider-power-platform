@@ -1,0 +1,5 @@
+kind: fixed
+body: Fixed misleading error message and debug log typos in the User resource
+time: 2025-04-28T08:30:52.479403707Z
+custom:
+    Issue: "709"

@@ -59,8 +59,14 @@ func (client *client) GetDataverseUsers(ctx context.Context, environmentId strin
 		Path:   "/api/data/v9.2/systemusers",
 	}
 	userArray := userArrayDto{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &userArray)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &userArray)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 	return userArray.Value, nil
@@ -81,12 +87,14 @@ func (client *client) GetDataverseUserBySystemUserId(ctx context.Context, enviro
 	apiUrl.RawQuery = values.Encode()
 
 	user := userDto{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &user)
 	if err != nil {
-		var unexpectedError *customerrors.UnexpectedHttpStatusCodeError
-		if errors.As(err, &unexpectedError) && unexpectedError.StatusCode == http.StatusNotFound {
-			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with systemUserId %s not found", systemUserId))
-		}
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 	return &user, nil
@@ -152,13 +160,14 @@ func (client *client) GetDataverseUserByAadObjectId(ctx context.Context, environ
 	apiUrl.RawQuery = values.Encode()
 
 	user := userArrayDto{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &user)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &user)
 	if err != nil {
-		var httpError *customerrors.UnexpectedHttpStatusCodeError
-		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
-			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("User with aadObjectId %s not found", aadObjectId))
-		}
-
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 
@@ -336,8 +345,14 @@ func (client *client) UpdateDataverseUser(ctx context.Context, environmentId, sy
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
 	}
 
-	_, err = client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, userUpdate, []int{http.StatusOK}, nil)
+	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, userUpdate, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, nil)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 
@@ -359,10 +374,16 @@ func (client *client) DeleteDataverseUser(ctx context.Context, environmentId, sy
 		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
 	}
 
-	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+	resp, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 	if err != nil {
 		return err
 	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return err
+	} else if err := client.Api.HandleNotFoundResponse(resp); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -382,11 +403,17 @@ func (client *client) RemoveDataverseSecurityRoles(ctx context.Context, environm
 		values.Add("$id", fmt.Sprintf("https://%s/api/data/v9.2/roles(%s)", environmentHost, roleId))
 		apiUrl.RawQuery = values.Encode()
 
-		_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+		resp, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 		if err != nil {
 			if strings.Contains(err.Error(), "0x80060888") && strings.Contains(err.Error(), roleId) {
 				return nil, fmt.Errorf("role with id '%s' is not valid", roleId)
 			}
+			return nil, err
+		}
+		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+			return nil, err
+		}
+		if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 			return nil, err
 		}
 	}
@@ -413,11 +440,17 @@ func (client *client) AddDataverseSecurityRoles(ctx context.Context, environment
 		roleToassociate := map[string]any{
 			"@odata.id": fmt.Sprintf("https://%s/api/data/v9.2/roles(%s)", environmentHost, roleId),
 		}
-		_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, roleToassociate, []int{http.StatusNoContent}, nil)
+		resp, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, roleToassociate, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 		if err != nil {
 			if strings.Contains(err.Error(), "0x80060888") && strings.Contains(err.Error(), roleId) {
 				return nil, fmt.Errorf("role with id '%s' is not valid", roleId)
 			}
+			return nil, err
+		}
+		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+			return nil, err
+		}
+		if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 			return nil, err
 		}
 	}
@@ -484,13 +517,14 @@ func (client *client) GetDataverseSecurityRoles(ctx context.Context, environment
 		apiUrl.RawQuery = values.Encode()
 	}
 	securityRoleArray := securityRoleArrayDto{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &securityRoleArray)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &securityRoleArray)
 	if err != nil {
-		var httpError *customerrors.UnexpectedHttpStatusCodeError
-		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
-			tflog.Debug(ctx, fmt.Sprintf("Error getting security roles: %s", err.Error()))
-			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, "security roles not found")
-		}
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 	return securityRoleArray.Value, nil
