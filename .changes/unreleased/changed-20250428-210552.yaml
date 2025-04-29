@@ -1,0 +1,5 @@
+kind: changed
+body: Include debug symbols in goreleaser builds by removing -s -w flags from ldflags
+time: 2025-04-28T21:05:52.764469281Z
+custom:
+    Issue: "736"

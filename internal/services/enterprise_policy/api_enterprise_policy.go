@@ -42,7 +42,7 @@ func (client *Client) LinkEnterprisePolicy(ctx context.Context, environmentId, e
 		SystemId: systemId,
 	}
 
-	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, linkEnterprosePolicyDto, []int{http.StatusAccepted}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, linkEnterprosePolicyDto, []int{http.StatusAccepted, http.StatusConflict}, nil)
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (client *Client) UnLinkEnterprisePolicy(ctx context.Context, environmentId,
 	linkEnterprosePolicyDto := linkEnterprosePolicyDto{
 		SystemId: systemId,
 	}
-	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, linkEnterprosePolicyDto, []int{http.StatusAccepted}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, linkEnterprosePolicyDto, []int{http.StatusAccepted, http.StatusConflict}, nil)
 	if err != nil {
 		return err
 	}
