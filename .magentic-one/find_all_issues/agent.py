@@ -28,7 +28,7 @@ class CodeQualityAgent:
             azure_deployment="gpt-4o",  # Replace with your Azure deployment name
             model="gpt-4o",  # Replace with your model name
             api_version="2024-12-01-preview",
-            azure_endpoint="https://mawasileazureopenai.openai.azure.com/",  # Replace with your endpoint
+            azure_endpoint="https://<<your_link>>.openai.azure.com/",  # Replace with your endpoint
             azure_ad_token_provider=token_provider,  # Optional if you choose key-based authentication
         )
 
@@ -75,6 +75,7 @@ class CodeQualityAgent:
     - analyze only single file given by the user
     - do not analyze additional files, or execute other actions.
     - do not ask for any clarifications, just start analyzing the file
+    - ignore the comment lines in the file
     """
         await Console(round_robin_team.run_stream(task=prompt))
         #result = await round_robin_team.run(task=prompt, cancellation_token=None)

@@ -13,7 +13,7 @@ async def main() -> None:
     for file_path in go_files:
         absolute_path = os.path.abspath(file_path)
         print(f"ANALYZING: {absolute_path}")
-        await code_agent.run(file_path="/workspaces/terraform-provider-power-platform/internal/api/auth.go")
+        await code_agent.run(file_path=file_path)
 
 if __name__ == "__main__":
     asyncio.run(main())
