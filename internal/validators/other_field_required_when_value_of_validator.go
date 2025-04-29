@@ -82,8 +82,8 @@ func (av OtherFieldRequiredWhenValueOfValidator) Validate(ctx context.Context, r
 			isUnknown = strings.Contains(d.Errors()[0].Detail(), "Received unknown value") || strings.Contains(d.Errors()[0].Summary(), "Received unknown value")
 		}
 
-		if (av.OtherFieldValueRegex != nil && otherFieldValue != nil && !av.OtherFieldValueRegex.MatchString(*otherFieldValue)) || 
-		   (av.OtherFieldValueRegex == nil && (otherFieldValue == nil || *otherFieldValue == "") && !isUnknown) {
+		if (av.OtherFieldValueRegex != nil && otherFieldValue != nil && !av.OtherFieldValueRegex.MatchString(*otherFieldValue)) ||
+			(av.OtherFieldValueRegex == nil && (otherFieldValue == nil || *otherFieldValue == "") && !isUnknown) {
 			res.Diagnostics.AddError(av.ErrorMessage, av.ErrorMessage)
 		}
 	}
