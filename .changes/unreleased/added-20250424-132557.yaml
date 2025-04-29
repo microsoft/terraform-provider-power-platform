@@ -1,5 +1,0 @@
-kind: added
-body: Operation lifecycle operation continue on HTTP 409 responses
-time: 2025-04-24T13:25:57.572972549Z
-custom:
-    Issue: "719"
