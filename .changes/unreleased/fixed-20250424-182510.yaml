@@ -1,5 +1,0 @@
-kind: fixed
-body: Replace panic calls with proper error handling in tenant_settings dto.go
-time: 2025-04-24T18:25:10.404169504Z
-custom:
-    Issue: "706"
