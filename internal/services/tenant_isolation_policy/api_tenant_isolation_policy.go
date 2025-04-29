@@ -165,12 +165,15 @@ func (client *Client) doWaitForLifecycleOperationStatus(ctx context.Context, res
 	}
 
 	for {
-		apiResp, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted}, nil)
+		apiResp, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted, http.StatusConflict}, nil)
 		if err != nil {
 			return nil, fmt.Errorf("error polling operation status: %v", err)
 		}
 
 		tflog.Debug(ctx, fmt.Sprintf("Operation poll status: %s", apiResp.HttpResponse.Status))
+		if apiResp.HttpResponse.StatusCode == http.StatusConflict {
+			continue
+		}
 
 		// If we get a 200 OK, the operation is complete
 		if apiResp.HttpResponse.StatusCode == http.StatusOK {

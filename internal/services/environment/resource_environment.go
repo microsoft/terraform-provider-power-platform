@@ -88,7 +88,16 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 	}
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "This resource manages a PowerPlatform environment.",
+		MarkdownDescription: "This resource manages a PowerPlatform environment.\n\n" +
+			"**Note:** Creating developer type environments is available as **preview**.\n\n" +
+			"**Known Limitations:** This resource is not supported for with service principal authentication.\n\n" +
+
+			"A Power Platform environment is a space in which you can store, manage, and share your organization's business data, apps, chatbots, and flows." +
+			"It also serves as a container to separate apps that may have different roles, security requirements, or target audiences. Each environment is created under an Azure Active Directory tenant and is bound to a geographic location. You can create different types of environments, such as production, sandbox, trial, or developer, depending on your license and permissions. You can also move resources between environments and set data loss prevention policies." +
+			"A Power Platform environment can have zero or one Microsoft Dataverse database, which provides storage for your apps and chatbots. You can only connect to the data sources that are deployed in the same environment as your app or chatbot. For more information, you can check out the following links:\n" +
+			"- [Environments overview - Power Platform | Microsoft Learn](https://learn.microsoft.com/power-platform/admin/environments-overview)\n" +
+			"- [Create and manage environments in the Power Platform admin center](https://learn.microsoft.com/power-platform/admin/create-environment)\n" +
+			"- [Establishing an environment strategy - Microsoft Power Platform](https://learn.microsoft.com/power-platform/guidance/adoption/environment-strategy)",
 
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{

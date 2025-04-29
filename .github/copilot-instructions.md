@@ -8,17 +8,10 @@ These instructions guide GitHub Copilot to follow our project's conventions and 
   - `make install` to compile the provider code.
   - `make lint` to run linters and ensure code style compliance.
   - `make unittest` to run all unit tests (optionally use `TEST=<prefix>` to run tests matching a name prefix, e.g. `make unittest TEST=Environment` to run tests named with that prefix). This filters tests by regex `^(TestAcc|TestUnit)<prefix>`.
-        - Example: `make unittest TEST=Bar_Create` when you want to run unit test named `TestUnitBar_Create`
-  - `make acctest TEST=<prefix>` to run acceptance tests (integration tests) matching a prefix
-        - Always provide a specific test prefix to limit scope, and run these tests **only with user consent** (they run against real cloud resources)
-        - Note that `make acctest` automatically sets `TF_ACC=1` (no need to set it manually)
-        - Example: `make acctest TEST=LanguagesDataSource_Validate_Read` when you want to run named `TestAccLanguagesDataSource_Validate_Read`
-  - `make acctest TEST=<prefix> USE_PROXY=1` to run acceptance tests with a proxy to dump the HTTP traffic. This should be used together with `make netdump`. Always run `make netdump` before uring `USE_PROXY=1` flag.
+  - `make acctest TEST=<prefix>` to run acceptance tests (integration tests) matching a prefix. Always provide a specific test prefix to limit scope, and run these tests **only with user consent** (they run against real cloud resources). Note that `make acctest` automatically sets `TF_ACC=1` (no need to set it manually).
   - `make userdocs` to regenerate documentation
   - `make precommit` to run all checks once code is ready to commit
   - `make coverage` to run all unit tests and output a code coverage report. It also shows the files that have changed on this branch to help target coverage suggestions to files in the current PR.
-  - `make netdump` to start mitmdump to analyze the HTTP traffic
-        - To rerieve flows from the generated dump file use the `list_flows` and `list_flows_details` tools
 - Always run the above `make` commands from the repository root (e.g. in the `/workspaces/terraform-provider-power-platform` directory).
 - **Never run** `terraform init` inside the provider repo. Terraform is only used in examples or tests; initializing in the provider directory is not needed and may cause conflicts.
 - Do not manually edit files under the `/docs` folder. These files are auto-generated from the schema `MarkdownDescription` attributes. Instead, update schema's `MarkdownDescription` in code and run `make userdocs` to regenerate documentation.
@@ -271,15 +264,13 @@ Use the Terraform plugin logger (`tflog`) for logging within resource implementa
     - **Step 3 (Delete):** Call Delete, then Read. After deletion, the final Read should return a "not found" error (e.g. 404) indicating the resource is gone.
     - If the resource supports import, write a dedicated test (single step) that calls the Read (or Import) with a given `ImportStateId` and verifies Terraform state import logic.
   - Include negative test cases: simulate API errors (like 403 Forbidden or 500 Internal Server Error) and ensure the provider surfaces appropriate errors. Also test validation logic (e.g., providing an invalid parameter returns an error).
-  - Place JSON fixtures for mock responses in the appropriate test data directory (e.g. `internal/services/<service>/tests/<resource>/<scenario>/response.json`). **Do not use real customer data** in tests – anonymize any IDs or personal info JSON data.
-  - The JSON response files should be based on real responses. Use `make netdump` and a terraform file or acceptance test to dump real JSON responses. Use the 'list_flows` tools retrieve detailed HTTP request/response data including headers and content in JSON format.
+  - Place JSON fixtures for mock responses in the appropriate test data directory (e.g. `internal/services/<service>/test/<resource>/<scenario>/response.json`). **Do not use real customer data** in tests – anonymize any IDs or personal info in your dummy data.
   - Name unit test functions with the `TestUnit` prefix as mentioned, and keep them in a `_test.go` file using the `<package>_test` package name.
   - All the JSON response for unit tests should be stored in .json files:
     - Files should be placed in a folder with a name corresponding to the Unit Test that is being used. Folder name should omit `UnitTest` in its name.
     - Each Unit Test folder with .json files should be stored at `services\{service_name}\test\resource` or `services\{service_name}\test\datasource` with all other resource and/or datasource .go files.
     - The .json file name should consist of the mock request method (`get`, `post`, `delete`) followed by `_` and name of the returned mock object name or action.
     - The file names have to be sensible without empty spaces and special characters.
-    - use `github.com/jarcoal/httpmock` as http mocking library
 
 - **Acceptance Tests:** Add acceptance tests for any new resource covering the same scenarios as unit tests, but against real Power Platform resources. These tests live in files with the `TestAcc...` prefix and require real credentials.
   - Wrap any acceptance test with appropriate pre-check functions and environment variable checks so it skips if not configured.

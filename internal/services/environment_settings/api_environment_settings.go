@@ -46,8 +46,14 @@ func (client *client) GetEnvironmentSettings(ctx context.Context, environmentId 
 	}
 
 	environmentSettings := environmentSettingsValueDto{}
-	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &environmentSettings)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &environmentSettings)
 	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
 	return &environmentSettings.Value[0], nil
@@ -70,9 +76,15 @@ func (client *client) UpdateEnvironmentSettings(ctx context.Context, environment
 		Path:   fmt.Sprintf("/api/data/v9.0/organizations(%s)", *settings.OrganizationId),
 	}
 
-	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environmentSettings, []int{http.StatusNoContent, http.StatusInternalServerError}, nil)
+	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environmentSettings, []int{http.StatusNoContent, http.StatusInternalServerError, http.StatusForbidden, http.StatusNotFound}, nil)
 	if resp != nil && resp.HttpResponse.StatusCode == http.StatusInternalServerError {
 		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_SETTINGS_FAILED, string(resp.BodyAsBytes))
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
+		return nil, err
 	}
 	if err != nil {
 		return nil, err
