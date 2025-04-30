@@ -123,9 +123,14 @@ func (client *client) InstallApplicationInEnvironment(ctx context.Context, envir
 
 		for {
 			lifecycleResponse := environmentApplicationLifecycleDto{}
-			_, err = client.Api.Execute(ctx, nil, "GET", operationLocationHeader, nil, nil, []int{http.StatusOK}, &lifecycleResponse)
+			response, err := client.Api.Execute(ctx, nil, "GET", operationLocationHeader, nil, nil, []int{http.StatusOK, http.StatusConflict}, &lifecycleResponse)
 			if err != nil {
 				return "", err
+			}
+
+			if response.HttpResponse.StatusCode == http.StatusConflict {
+				tflog.Debug(ctx, "Lifecycle Operation HTTP Status: '"+response.HttpResponse.Status+"'")
+				continue
 			}
 
 			if lifecycleResponse.Status == "Succeeded" {

@@ -15,37 +15,45 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  id-token: write # This is required for requesting the JWT
-  contents: read  # This is required for actions/checkout
+  contents: read
 
 jobs:
   should_run:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Required for checkout
     if: github.event_name != 'pull_request' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'run-acceptance-tests'))
     outputs:
       acceptance_tests: ${{ steps.set_acceptance_tests.outputs.acceptance_tests }}
     steps:
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+        with:
+          egress-policy: audit
+
       - id: set_acceptance_tests
         name: Only run acceptance tests if necessary
         run: echo "acceptance_tests=true" >> $GITHUB_OUTPUT
-  # ensure go.mod and go.sum are updated
+
   depscheck:
     name: Check Dependencies
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Required for checkout
     needs: should_run
     if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     steps:
 
     - name: Harden Runner
-      uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+      uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
       with:
         egress-policy: audit
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -58,25 +66,26 @@ jobs:
         git diff --exit-code -- go.mod go.sum || \
         (echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
 
-  # ensure the code builds
   build:
     name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: read  # Required for checkout
     needs: should_run
     if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     timeout-minutes: 5
     steps:
 
     - name: Harden Runner
-      uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+      uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
       with:
         egress-policy: audit
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -95,18 +104,21 @@ jobs:
     needs: [build, should_run]
     if: ${{ needs.should_run.outputs.acceptance_tests == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for OIDC authentication
+      contents: read  # Required for checkout
     steps:
     
     - name: Harden Runner
-      uses: step-security/harden-runner@c6295a65d1254861815972266d5933fd6e532bdf # v2.11.1
+      uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
       with:
         egress-policy: audit
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: Set up Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@0aaccfd150d50ccaeb58ebd88d36e91967a5f35b # v5.4.0
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -119,11 +131,11 @@ jobs:
         go mod download
     
     - name: "Set up Terraform"
-      uses: hashicorp/setup-terraform@v3  
+      uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2  
     
     - name: Install Power Platform Tools
       if: success() || failure()
-      uses: microsoft/powerplatform-actions/actions-install@v1
+      uses: microsoft/powerplatform-actions/actions-install@11af25ee5f752896935d11db7d94557078404674 # v1.8.0
 
     - name: Environments cleanup
       if: success() || failure()
@@ -161,28 +173,28 @@ jobs:
 
     - name: Upload Coverage Artifacts
       if: success() || failure()
-      uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1 # v4.6.1
+      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
       with:
         name: Test Coverage
         path: test-coverage.cov.html
 
     - name: Upload coverage results to Codecov
       if: success() || failure()
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@ad3126e916f78f00edff4ed0317cf185271ccc2d # v5.4.2
       with:
         file: test-coverage.out
         token: ${{ secrets.CODECOV_TOKEN }}
     
     - name: Upload test results to Codecov
       if: ${{ !cancelled() }}
-      uses: codecov/test-results-action@v1
+      uses: codecov/test-results-action@f2dba722c67b86c6caa034178c6e4d35335f6706 # v1.1.0
       with:
         files: junit.xml
         token: ${{ secrets.CODECOV_TOKEN }}
     
     - name: Render test results
       if: always()
-      uses: dorny/test-reporter@v2
+      uses: dorny/test-reporter@6e6a65b7a0bd2c9197df7d0ae36ac5cee784230c # v2.0.0
       with:
         name: Test Results
         path: junit.xml

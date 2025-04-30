@@ -48,6 +48,9 @@ type ProviderConfig struct {
 	CloudType               CloudType
 	AzDOServiceConnectionID string
 
+	// CAE-related configuration
+	EnableContinuousAccessEvaluation bool
+
 	// internal runtime configuration values
 	TestMode         bool
 	Urls             ProviderConfigUrls
@@ -150,4 +153,7 @@ type ProviderConfigModel struct {
 	OidcTokenFilePath types.String `tfsdk:"oidc_token_file_path"`
 
 	AzDOServiceConnectionID types.String `tfsdk:"azdo_service_connection_id"`
+
+	// CAE-related configuration
+	EnableContinuousAccessEvaluation types.Bool `tfsdk:"enable_continuous_access_evaluation"`
 }

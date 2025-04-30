@@ -1,5 +1,0 @@
-kind: added
-body: new `powerplatform_environment_wave` that allows to install newest wave update in an environment. Currently available only with `user authentication login`
-time: 2025-03-19T15:17:18.485946736Z
-custom:
-    Issue: "652"

@@ -3,12 +3,18 @@
 page_title: "powerplatform_copilot_studio_application_insights Resource - powerplatform"
 subcategory: ""
 description: |-
-  Manages the Application Insights configuration for a Copilot https://learn.microsoft.com/en-us/microsoft-copilot-studio/advanced-bot-framework-composer-capture-telemetry?tabs=webApp. Known Limitation: This resource currently does not work when authenticated using service principal.
+  Manages the Application Insights configuration for a Copilot https://learn.microsoft.com/en-us/microsoft-copilot-studio/advanced-bot-framework-composer-capture-telemetry?tabs=webApp.
+  Note: This resource is available as preview
+  Known Limitation: This resource currently does not work when authenticated using service principal.
 ---
 
 # powerplatform_copilot_studio_application_insights (Resource)
 
-Manages the [Application Insights configuration for a Copilot](https://learn.microsoft.com/en-us/microsoft-copilot-studio/advanced-bot-framework-composer-capture-telemetry?tabs=webApp). Known Limitation: This resource currently does not work when authenticated using service principal.
+Manages the [Application Insights configuration for a Copilot](https://learn.microsoft.com/en-us/microsoft-copilot-studio/advanced-bot-framework-composer-capture-telemetry?tabs=webApp).
+
+**Note:** This resource is available as **preview**
+
+**Known Limitation**: This resource currently does not work when authenticated using service principal.
 
 ## Example Usage
 
