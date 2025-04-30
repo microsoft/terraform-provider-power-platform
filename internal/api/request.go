@@ -124,7 +124,7 @@ func retryAfter(ctx context.Context, resp *http.Response) time.Duration {
 	}
 
 	// Fallback to a default retry duration
-	tflog.Warn(ctx, "Invalid Retry-After header, falling back to default")
+	tflog.Debug(ctx, "Invalid Retry-After header, falling back to default")
 	return DefaultRetryAfter()
 }
 
