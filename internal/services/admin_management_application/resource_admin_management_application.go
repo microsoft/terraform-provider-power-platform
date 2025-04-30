@@ -125,7 +125,7 @@ func (r *AdminManagementApplicationResource) Create(ctx context.Context, req res
 
 	adminApp, err := r.AdminManagementApplicationClient.RegisterAdminApplication(ctx, plan.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to register admin application", fmt.Sprintf("Failed to register admin application: %v", err))
+		resp.Diagnostics.AddError("Failed to register admin application", fmt.Sprintf("Failed to register admin application: %w", err))
 		return
 	}
 
@@ -148,7 +148,7 @@ func (r *AdminManagementApplicationResource) Delete(ctx context.Context, req res
 
 	err := r.AdminManagementApplicationClient.UnregisterAdminApplication(ctx, state.Id.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to unregister admin application", fmt.Sprintf("Failed to unregister admin application: %v", err))
+		resp.Diagnostics.AddError("Failed to unregister admin application", fmt.Sprintf("Failed to unregister admin application: %w", err))
 		return
 	}
 }

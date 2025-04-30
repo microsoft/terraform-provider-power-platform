@@ -116,7 +116,7 @@ func (client *client) FetchSolutionCheckerRules(ctx context.Context, environment
 
 	powerAppsAdvisorUrl, err := url.Parse(env.Properties.RuntimeEndpoints.PowerAppsAdvisor)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse PowerAppsAdvisor URL: %v", err)
+		return nil, fmt.Errorf("failed to parse PowerAppsAdvisor URL: %w", err)
 	}
 
 	apiUrl := &url.URL{
