@@ -84,7 +84,7 @@ func (client *client) ExecuteApiRequest(ctx context.Context, scope *string, url,
 	}
 
 	if scope == nil {
-		return nil, errors.New("invalid input: scope or environment_id must be provided")
+		return nil, errors.New("invalid input: scope must be provided")
 	}
 
 	return client.Api.Execute(ctx, []string{*scope}, method, url, h, body, expectedStatusCodes, nil)
