@@ -224,7 +224,7 @@ func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.Creat
 	if plan.Create != nil {
 		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, plan.Create)
 		if err != nil {
-			resp.Diagnostics.AddError("Error executing create operation", fmt.Errorf("create operation failed: %w", err))
+			resp.Diagnostics.AddError("Error executing create operation", err.Error())
 			return
 		}
 		state.Output = bodyWrapped
@@ -232,7 +232,7 @@ func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.Creat
 		if plan.Read != nil {
 			bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, plan.Read)
 			if err != nil {
-				resp.Diagnostics.AddError("Error executing read operation", fmt.Sprintf("%w", err))
+				resp.Diagnostics.AddError("Error executing read operation", err.Error())
 				return
 			}
 			state.Output = bodyWrapped
@@ -265,7 +265,7 @@ func (r *DataverseWebApiResource) Read(ctx context.Context, req resource.ReadReq
 	if state.Read != nil {
 		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, state.Read)
 		if err != nil {
-			resp.Diagnostics.AddError("Error executing read operation", fmt.Sprintf("%w", err))
+			resp.Diagnostics.AddError("Error executing read operation", err.Error())
 			return
 		}
 
@@ -292,7 +292,7 @@ func (r *DataverseWebApiResource) Update(ctx context.Context, req resource.Updat
 	if plan.Update != nil {
 		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, plan.Update)
 		if err != nil {
-			resp.Diagnostics.AddError("Error executing update operation", fmt.Sprintf("%w", err))
+			resp.Diagnostics.AddError("Error executing update operation", err.Error())
 			return
 		}
 		plan.Output = bodyWrapped
@@ -300,7 +300,7 @@ func (r *DataverseWebApiResource) Update(ctx context.Context, req resource.Updat
 		if plan.Read != nil {
 			bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, plan.Read)
 			if err != nil {
-				resp.Diagnostics.AddError("Error executing read operation", fmt.Sprintf("%w", err))
+				resp.Diagnostics.AddError("Error executing read operation", err.Error())
 				return
 			}
 			plan.Output = bodyWrapped
@@ -323,7 +323,7 @@ func (r *DataverseWebApiResource) Delete(ctx context.Context, req resource.Delet
 	if state.Destroy != nil {
 		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, state.Destroy)
 		if err != nil {
-			resp.Diagnostics.AddError("Error executing destroy operation", fmt.Sprintf("%w", err))
+			resp.Diagnostics.AddError("Error executing destroy operation", err.Error())
 			return
 		}
 		state.Output = bodyWrapped

@@ -65,12 +65,12 @@ func (v UUIDValue) StringSemanticEquals(ctx context.Context, newValuable basetyp
 
 	oldUUID, err := uuid.ParseUUID(v.ValueString())
 	if err != nil {
-		diags.AddError("expected old value to be a valid UUID", fmt.Sprintf("%w", err))
+		diags.AddError("expected old value to be a valid UUID", err.Error())
 	}
 
 	newUUID, err := uuid.ParseUUID(newValue.ValueString())
 	if err != nil {
-		diags.AddError("expected new value to be a valid UUID", fmt.Sprintf("%w", err))
+		diags.AddError("expected new value to be a valid UUID", err.Error())
 	}
 
 	if diags.HasError() {

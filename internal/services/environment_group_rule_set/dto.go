@@ -90,7 +90,7 @@ func convertAiGenerativeSettings(ctx context.Context, attrs map[string]attr.Valu
 	if !aiGenerativeSettingsObj.IsNull() && !aiGenerativeSettingsObj.IsUnknown() {
 		var aiGenerativeSettings environmentGroupRuleSetAiGenerativeSettingsModel
 		if err := aiGenerativeSettingsObj.(basetypes.ObjectValue).As(ctx, &aiGenerativeSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return fmt.Errorf("failed to convert ai generative settings: %w", err)
+			return fmt.Errorf("failed to convert ai generative settings: %s", err.Errors())
 		}
 
 		hasStatedChanges := true
@@ -124,7 +124,7 @@ func convertAiGeneratedDesc(ctx context.Context, attrs map[string]attr.Value, dt
 	if !aiGeneratedDescObj.IsNull() && !aiGeneratedDescObj.IsUnknown() {
 		var aiGeneratedDesc environmentGroupRuleSetAiGeneratedDescriptionsModel
 		if err := aiGeneratedDescObj.(basetypes.ObjectValue).As(ctx, &aiGeneratedDesc, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return fmt.Errorf("failed to convert ai generated desc: %w", err)
+			return fmt.Errorf("failed to convert ai generated desc: %s", err.Errors())
 		}
 
 		hasStatedChanges := true
@@ -154,7 +154,7 @@ func convertBackupRetention(ctx context.Context, attrs map[string]attr.Value, dt
 	if !backupRetentionObj.IsNull() && !backupRetentionObj.IsUnknown() {
 		var backupRetention environmentGroupRuleSetBackupRetentionModel
 		if err := backupRetentionObj.(basetypes.ObjectValue).As(ctx, &backupRetention, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return fmt.Errorf("failed to convert backup retention: %w", err)
+			return fmt.Errorf("failed to convert backup retention: %s", err.Errors())
 		}
 
 		hasStatedChanges := true
