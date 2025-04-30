@@ -224,7 +224,7 @@ func (r *DataverseWebApiResource) Create(ctx context.Context, req resource.Creat
 	if plan.Create != nil {
 		bodyWrapped, err := r.DataRecordClient.SendOperation(ctx, plan.Create)
 		if err != nil {
-			resp.Diagnostics.AddError("Error executing create operation", fmt.Sprintf("%v", err))
+			resp.Diagnostics.AddError("Error executing create operation", fmt.Errorf("create operation failed: %w", err))
 			return
 		}
 		state.Output = bodyWrapped
