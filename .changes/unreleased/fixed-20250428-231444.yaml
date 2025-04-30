@@ -1,0 +1,5 @@
+kind: fixed
+body: Fixed an issue where required field validation could fail incorrectly if the referenced field was missing or not unique in the configuration.
+time: 2025-04-28T23:14:44.206463464Z
+custom:
+    Issue: "687"

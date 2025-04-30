@@ -5,25 +5,25 @@
 
 version: 2
 updates:
-  - package-ecosystem: "gomod" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: gomod # See documentation for possible values
+    directory: / # Location of package manifests
     schedule:
-      interval: "daily"
-  - package-ecosystem: "terraform" # See documentation for possible values
+      interval: daily
+  - package-ecosystem: terraform # See documentation for possible values
     directories: # Location of terraform modules
-    - "/examples/resources/*"
-    - "/examples/data-sources/*"
+    - /examples/resources/*
+    - /examples/data-sources/*
+    - /examples/provider/*
     schedule:
-      interval: "daily"
+      interval: daily
     groups:
       all:
         patterns: ["*"]
-
-  - package-ecosystem: "github-actions" # See documentation for possible values
-    directory: "/.github/workflows" # Location of package manifests
+  - package-ecosystem: devcontainers # See documentation for possible values
+    directory: /
     schedule:
-      interval: "daily"
-  - package-ecosystem: "devcontainers" # See documentation for possible values
-    directory: "/"
+      interval: daily
+  - package-ecosystem: github-actions
+    directory: /
     schedule:
-      interval: "daily"
+      interval: daily
