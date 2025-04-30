@@ -69,7 +69,7 @@ func (av OtherFieldRequiredWhenValueOfValidator) Validate(ctx context.Context, r
 
 	if (av.CurrentFieldValueRegex != nil && av.CurrentFieldValueRegex.MatchString(currentFieldValue)) || (av.CurrentFieldValueRegex == nil && currentFieldValue != "") {
 		paths, _ := req.Config.PathMatches(ctx, av.OtherFieldExpression)
-		if paths == nil && len(paths) != 1 {
+		if paths == nil || len(paths) != 1 {
 			res.Diagnostics.AddError("Other field required when value of validator should have exactly one match", "")
 			return
 		}
@@ -82,7 +82,8 @@ func (av OtherFieldRequiredWhenValueOfValidator) Validate(ctx context.Context, r
 			isUnknown = strings.Contains(d.Errors()[0].Detail(), "Received unknown value") || strings.Contains(d.Errors()[0].Summary(), "Received unknown value")
 		}
 
-		if av.OtherFieldValueRegex != nil && !av.OtherFieldValueRegex.MatchString(*otherFieldValue) || av.OtherFieldValueRegex == nil && (otherFieldValue == nil || *otherFieldValue == "") && !isUnknown {
+		if (av.OtherFieldValueRegex != nil && otherFieldValue != nil && !av.OtherFieldValueRegex.MatchString(*otherFieldValue)) ||
+			(av.OtherFieldValueRegex == nil && (otherFieldValue == nil || *otherFieldValue == "") && !isUnknown) {
 			res.Diagnostics.AddError(av.ErrorMessage, av.ErrorMessage)
 		}
 	}

@@ -409,7 +409,11 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 
 	stateDto := applyCorrections(ctx, plannedSettingsDto, *tenantSettingsDto)
 
-	state, _ := convertFromTenantSettingsDto[TenantSettingsResourceModel](*stateDto, plan.Timeouts)
+	state, _, err := convertFromTenantSettingsDto[TenantSettingsResourceModel](*stateDto, plan.Timeouts)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting tenant settings", err.Error())
+		return
+	}
 	state.Id = plan.Id
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 
@@ -450,7 +454,11 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 	newStateDto := applyCorrections(ctx, oldStateDto, *tenantSettings)
-	newState, _ := convertFromTenantSettingsDto[TenantSettingsResourceModel](*newStateDto, state.Timeouts)
+	newState, _, err := convertFromTenantSettingsDto[TenantSettingsResourceModel](*newStateDto, state.Timeouts)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting tenant settings", err.Error())
+		return
+	}
 	newState.Id = types.StringValue(tenant.TenantId)
 
 	tflog.Debug(ctx, fmt.Sprintf("READ: %s with id %s", r.FullTypeName(), newState.Id.ValueString()))
@@ -516,7 +524,11 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	// need to make corrections from what the API returns to match what terraform expects
 	filteredDto := applyCorrections(ctx, plannedDto, *updatedSettingsDto)
 
-	newState, _ := convertFromTenantSettingsDto[TenantSettingsResourceModel](*filteredDto, plan.Timeouts)
+	newState, _, err := convertFromTenantSettingsDto[TenantSettingsResourceModel](*filteredDto, plan.Timeouts)
+	if err != nil {
+		resp.Diagnostics.AddError("Error converting tenant settings", err.Error())
+		return
+	}
 	newState.Id = plan.Id
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }

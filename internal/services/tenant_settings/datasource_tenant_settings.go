@@ -67,7 +67,12 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 
 	var configuredSettings TenantSettingsDataSourceModel
 	req.Config.Get(ctx, &configuredSettings)
-	state, _ = convertFromTenantSettingsDto[TenantSettingsDataSourceModel](*tenantSettings, state.Timeouts)
+	state, _, err = convertFromTenantSettingsDto[TenantSettingsDataSourceModel](*tenantSettings, state.Timeouts)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error converting tenant settings: %s", d.FullTypeName()), err.Error())
+		return
+	}
+
 	diags := resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {

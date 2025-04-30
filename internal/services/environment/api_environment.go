@@ -290,7 +290,13 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 		Message: "Deleted using Power Platform Terraform Provider",
 	}
 
-	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusNoContent, http.StatusAccepted, http.StatusConflict}, nil)
+	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusNoContent, http.StatusAccepted, http.StatusConflict, http.StatusNotFound}, nil)
+
+	// Handle HTTP 404 case - if the environment is not found, consider it already deleted
+	if response != nil && response.HttpResponse.StatusCode == http.StatusNotFound {
+		tflog.Info(ctx, fmt.Sprintf("Environment '%s' not found. Treating as successfully deleted.", environmentId))
+		return nil
+	}
 
 	if response.HttpResponse.StatusCode == http.StatusConflict {
 		// the is another operation in progress, let's wait for it to complete, and try again
@@ -404,7 +410,7 @@ func (client *Client) ModifyEnvironmentType(ctx context.Context, environmentId, 
 		EnvironmentSku: environmentType,
 	}
 
-	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, modifySkuDto, []int{http.StatusAccepted, http.StatusOK}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, modifySkuDto, []int{http.StatusAccepted, http.StatusOK, http.StatusConflict}, nil)
 	if err != nil {
 		return err
 	}
@@ -440,7 +446,7 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 	values := url.Values{}
 	values.Add("api-version", "2023-06-01")
 	apiUrl.RawQuery = values.Encode()
-	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentToCreate, []int{http.StatusAccepted, http.StatusCreated, http.StatusInternalServerError}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentToCreate, []int{http.StatusAccepted, http.StatusCreated, http.StatusInternalServerError, http.StatusConflict}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -501,7 +507,7 @@ func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environme
 	values := url.Values{}
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
-	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, generativeAIConfig, []int{http.StatusAccepted}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, generativeAIConfig, []int{http.StatusAccepted, http.StatusConflict}, nil)
 	if err != nil {
 		return err
 	}
@@ -540,7 +546,7 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 	// values.Add("api-version", "2022-05-01")
 	values.Add("api-version", "2021-04-01")
 	apiUrl.RawQuery = values.Encode()
-	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted, http.StatusConflict}, nil)
 	if err != nil {
 		return nil, err
 	}
