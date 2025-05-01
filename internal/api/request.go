@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"runtime"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -102,15 +103,33 @@ func (apiResponse *Response) GetHeader(name string) string {
 
 func retryAfter(ctx context.Context, resp *http.Response) time.Duration {
 	retryHeader := resp.Header.Get(constants.HEADER_RETRY_AFTER)
-	tflog.Debug(ctx, "Retry Header: "+retryHeader)
-
-	retryAfter, err := time.ParseDuration(retryHeader)
-	if err != nil {
-		// default retry after 5-10 seconds
+	if retryHeader == "" {
 		return DefaultRetryAfter()
 	}
+	tflog.Debug(ctx, "Retry Header: "+retryHeader)
 
-	return retryAfter
+	// Check if the header is a delta-seconds value (integer)
+	if deltaSeconds, err := strconv.Atoi(retryHeader); err == nil {
+		return time.Duration(deltaSeconds) * time.Second
+	}
+
+	// Check if the header is an HTTP-date
+	if retryTime, err := http.ParseTime(retryHeader); err == nil {
+		// Calculate duration until the retry time
+		duration := time.Until(retryTime)
+		if duration > 0 {
+			return duration
+		}
+	}
+
+	// Try to parse as a duration string (non-standard but sometimes used)
+	if retryAfter, err := time.ParseDuration(retryHeader); err == nil {
+		return retryAfter
+	}
+
+	// Fallback to a default retry duration
+	tflog.Debug(ctx, "Invalid Retry-After header, falling back to default")
+	return DefaultRetryAfter()
 }
 
 func (client *Client) buildCorrelationHeaders(ctx context.Context) (sessionId string, requestId string) {
