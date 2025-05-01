@@ -1,0 +1,5 @@
+kind: fixed
+body: Fix retryAfter function to properly handle all formats of Retry-After HTTP header as defined in RFC 7231
+time: 2025-04-24T15:09:58.885875991Z
+custom:
+    Issue: "702"
