@@ -59,6 +59,10 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 		return resp, err
 	}
 
+	if apiResponse == nil {
+		return resp, errors.New("unexpected nil response without error")
+	}
+
 	defer apiResponse.Body.Close()
 	body, err := io.ReadAll(apiResponse.Body)
 	resp.BodyAsBytes = body

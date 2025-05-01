@@ -1,0 +1,5 @@
+kind: fixed
+body: Added nil check for HTTP response in doRequest method to prevent potential nil pointer dereference
+time: 2025-04-25T07:51:51.248936251Z
+custom:
+    Issue: "707"
