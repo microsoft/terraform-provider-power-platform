@@ -1,0 +1,8 @@
+---
+library: false
+warnOnImplicitThis: false
+compileForOverlayEval: false
+name: microsoft/terraform-providers-go
+version: 1.0.0
+dependencies:
+  codeql/go-all: ^4.2.4
