@@ -164,7 +164,7 @@ func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSetting
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
 		}); err != nil {
-			return fmt.Errorf("failed to convert email settings: %s", err.Errors())
+			return fmt.Errorf("failed to convert email settings: %w", err)
 		}
 
 		if !emailSourceModel.MaxUploadFileSize.IsNull() && !emailSourceModel.MaxUploadFileSize.IsUnknown() {
