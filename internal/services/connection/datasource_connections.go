@@ -125,7 +125,8 @@ func (d *ConnectionsDataSource) Read(ctx context.Context, req datasource.ReadReq
 
 	connections, err := d.ConnectionsClient.GetConnections(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), fmt.Errorf("underlying error: %w", err).Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
+		return
 	}
 
 	for _, connection := range connections {
