@@ -11,7 +11,7 @@ async def save_file(file_path: Union[str, Path], content: Union[str, bytes],
     
     Args:
         file_path: Path where the file should be saved
-        content: Content to write to the file (string or bytes). 
+        content: Content to write to the file (string or bytes). This will overwrite any existing file content.
         encoding: File encoding (default: utf-8, ignored if content is bytes)
     
     Returns:
