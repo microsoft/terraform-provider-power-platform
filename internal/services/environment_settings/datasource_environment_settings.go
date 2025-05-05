@@ -84,7 +84,11 @@ func (d *EnvironmentSettingsDataSource) Read(ctx context.Context, req datasource
 		return
 	}
 
-	state = convertFromEnvironmentSettingsDto[EnvironmentSettingsDataSourceModel](envSettings, state.Timeouts)
+	state, err = convertFromEnvironmentSettingsDto[EnvironmentSettingsDataSourceModel](envSettings, state.Timeouts)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error converting environment settings: %s", d.FullTypeName()), err.Error())
+		return
+	}
 
 	diags := resp.State.Set(ctx, &state)
 

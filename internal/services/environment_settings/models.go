@@ -243,7 +243,7 @@ func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSett
 	return nil
 }
 
-func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | EnvironmentSettingsDataSourceModel](environmentSettingsDto *environmentSettingsDto, timeout timeouts.Value) T {
+func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | EnvironmentSettingsDataSourceModel](environmentSettingsDto *environmentSettingsDto, timeout timeouts.Value) (T, error) {
 	pluginTraceSettings := "Unknown"
 	if environmentSettingsDto.PluginTraceLogSetting != nil {
 		switch *environmentSettingsDto.PluginTraceLogSetting {
@@ -382,10 +382,10 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 			Product:      types.ObjectValueMust(attrTypesProductObject, attrValuesProductProperties),
 		}).(T)
 	default:
-		panic(fmt.Sprintf("unexpected type %T", environmentSettings))
+		return environmentSettings, fmt.Errorf("unexpected type %T", environmentSettings)
 	}
 	if !ok {
-		panic(fmt.Sprintf("unexpected type %T", environmentSettings))
+		return environmentSettings, fmt.Errorf("unexpected type %T", environmentSettings)
 	}
-	return environmentSettings
+	return environmentSettings, nil
 }

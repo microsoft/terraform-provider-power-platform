@@ -1,0 +1,5 @@
+kind: fixed
+body: Replace panic with error handling in environment_settings models.go
+time: 2025-04-24T16:15:48.839049781Z
+custom:
+    Issue: "705"
