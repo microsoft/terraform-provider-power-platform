@@ -90,7 +90,7 @@ func convertAiGenerativeSettings(ctx context.Context, attrs map[string]attr.Valu
 	if !aiGenerativeSettingsObj.IsNull() && !aiGenerativeSettingsObj.IsUnknown() {
 		var aiGenerativeSettings environmentGroupRuleSetAiGenerativeSettingsModel
 		if err := aiGenerativeSettingsObj.(basetypes.ObjectValue).As(ctx, &aiGenerativeSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return fmt.Errorf("failed to convert ai generative settings: %s", err.Errors())
+			return fmt.Errorf("failed to convert ai generative settings: %w", err)
 		}
 
 		hasStatedChanges := true
