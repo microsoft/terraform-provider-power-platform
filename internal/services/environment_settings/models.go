@@ -194,7 +194,7 @@ func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSetti
 	if features != nil && !features.IsNull() && !features.IsUnknown() {
 		var featuresSourceModel FeaturesSourceModel
 		if err := features.(basetypes.ObjectValue).As(ctx, &featuresSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return fmt.Errorf("failed to convert audit settings: %s", err.Errors())
+			return fmt.Errorf("failed to convert audit settings: %w", err)
 		}
 
 		if !featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.IsNull() && !featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.IsUnknown() {
