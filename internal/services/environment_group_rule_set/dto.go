@@ -124,7 +124,7 @@ func convertAiGeneratedDesc(ctx context.Context, attrs map[string]attr.Value, dt
 	if !aiGeneratedDescObj.IsNull() && !aiGeneratedDescObj.IsUnknown() {
 		var aiGeneratedDesc environmentGroupRuleSetAiGeneratedDescriptionsModel
 		if err := aiGeneratedDescObj.(basetypes.ObjectValue).As(ctx, &aiGeneratedDesc, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return fmt.Errorf("failed to convert ai generated desc: %s", err.Errors())
+			return fmt.Errorf("failed to convert ai generated desc: %w", err)
 		}
 
 		hasStatedChanges := true
