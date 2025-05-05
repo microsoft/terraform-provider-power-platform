@@ -196,7 +196,7 @@ func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
 		}); err != nil {
-			return fmt.Errorf("failed to convert search settings: %s", err.Errors())
+			return fmt.Errorf("failed to convert search settings: %w", err)
 		}
 
 		if tenantSettingsDto.PowerPlatform == nil {
