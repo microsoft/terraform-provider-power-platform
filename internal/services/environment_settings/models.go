@@ -209,7 +209,7 @@ func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSett
 	if security != nil && !security.IsNull() && !security.IsUnknown() {
 		var securitySourceModel SecuritySourceModel
 		if err := security.(basetypes.ObjectValue).As(ctx, &securitySourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return fmt.Errorf("failed to convert audit settings: %s", err.Errors())
+			return fmt.Errorf("failed to convert audit settings: %w", err)
 		}
 
 		if !securitySourceModel.EnableIpBasedCookieBinding.IsNull() && !securitySourceModel.EnableIpBasedCookieBinding.IsUnknown() {
