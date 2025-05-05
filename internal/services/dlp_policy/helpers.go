@@ -168,7 +168,7 @@ func getConnectorGroup(ctx context.Context, connectorsAttr basetypes.SetValue) (
 	var connectors []dataLossPreventionPolicyResourceConnectorModel
 	err := connectorsAttr.ElementsAs(ctx, &connectors, true)
 	if err != nil {
-		return nil, fmt.Errorf("error converting elements: %s", err.Errors())
+		return nil, fmt.Errorf("error converting elements: %w", err)
 	}
 
 	connectorGroup := dlpConnectorGroupsModelDto{
