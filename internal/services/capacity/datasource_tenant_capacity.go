@@ -142,7 +142,7 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"error fetching tenant capacity",
-			fmt.Errorf("error fetching tenant capacity: %w", err).Error(),
+			err.Error(),
 		)
 		return
 	}
