@@ -70,5 +70,7 @@
         {
             "file": ".github/copilot-commit-message-instructions.md"
         }
-    ]
+    ],
+    "codeQL.createQuery.qlPackLocation": "/workspaces/terraform-provider-power-platform/.github/codeql/terraform-providers-go",
+    "codeQL.runningQueries.useExtensionPacks": "all"
 }
