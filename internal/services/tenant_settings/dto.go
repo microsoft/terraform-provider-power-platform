@@ -192,11 +192,11 @@ func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]
 		}
 
 		var searchSettings SearchSettingsModel
-		if err := objectValue.As(ctx, &searchSettings, basetypes.ObjectAsOptions{
+		if diags := objectValue.As(ctx, &searchSettings, basetypes.ObjectAsOptions{
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
-		}); err != nil {
-			return fmt.Errorf("failed to convert search settings: %w", err)
+		}); diags != nil {
+			return fmt.Errorf("failed to convert search settings: %v", diags)
 		}
 
 		if tenantSettingsDto.PowerPlatform == nil {

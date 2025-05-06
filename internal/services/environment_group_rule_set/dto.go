@@ -89,8 +89,8 @@ func convertAiGenerativeSettings(ctx context.Context, attrs map[string]attr.Valu
 	aiGenerativeSettingsObj := attrs["ai_generative_settings"]
 	if !aiGenerativeSettingsObj.IsNull() && !aiGenerativeSettingsObj.IsUnknown() {
 		var aiGenerativeSettings environmentGroupRuleSetAiGenerativeSettingsModel
-		if err := aiGenerativeSettingsObj.(basetypes.ObjectValue).As(ctx, &aiGenerativeSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return fmt.Errorf("failed to convert ai generative settings: %w", err)
+		if diags := aiGenerativeSettingsObj.(basetypes.ObjectValue).As(ctx, &aiGenerativeSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
+			return fmt.Errorf("failed to convert ai generative settings: %v", diags)
 		}
 
 		hasStatedChanges := true
@@ -123,8 +123,8 @@ func convertAiGeneratedDesc(ctx context.Context, attrs map[string]attr.Value, dt
 	aiGeneratedDescObj := attrs["ai_generated_descriptions"]
 	if !aiGeneratedDescObj.IsNull() && !aiGeneratedDescObj.IsUnknown() {
 		var aiGeneratedDesc environmentGroupRuleSetAiGeneratedDescriptionsModel
-		if err := aiGeneratedDescObj.(basetypes.ObjectValue).As(ctx, &aiGeneratedDesc, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return fmt.Errorf("failed to convert ai generated desc: %w", err)
+		if diags := aiGeneratedDescObj.(basetypes.ObjectValue).As(ctx, &aiGeneratedDesc, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
+			return fmt.Errorf("failed to convert ai generated desc: %v", diags)
 		}
 
 		hasStatedChanges := true
