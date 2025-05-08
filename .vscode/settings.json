@@ -60,6 +60,10 @@
     "go.lintFlags": [
         "--fast"
     ],
+    //https://github.com/golang/vscode-go/blob/master/docs/debugging.md#switch-to-legacy-debug-adapter
+    "go.delveConfig": {
+        "debugAdapter": "legacy",
+    },
     "makefile.configureOnOpen": false,
     "chat.mcp.discovery.enabled": true,
     "github.copilot.chat.commitMessageGeneration.instructions": [
