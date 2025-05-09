@@ -98,11 +98,11 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 		}
 
 		var auditAndLogsSourceModel AuditSettingsSourceModel
-		if err := objectValue.As(ctx, &auditAndLogsSourceModel, basetypes.ObjectAsOptions{
+		if diags := objectValue.As(ctx, &auditAndLogsSourceModel, basetypes.ObjectAsOptions{
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
-		}); err != nil {
-			return nil, fmt.Errorf("failed to convert audit settings: %w", err)
+		}); diags != nil {
+			return nil, fmt.Errorf("failed to convert audit settings: %w", diags)
 		}
 
 		if !auditAndLogsSourceModel.IsAuditEnabled.IsNull() && !auditAndLogsSourceModel.IsAuditEnabled.IsUnknown() {
