@@ -67,7 +67,7 @@ func (av MakeFieldRequiredWhenOtherFieldDoesNotHaveValueValidator) Validate(ctx 
 	_ = req.Config.GetAttribute(ctx, paths[0], &otherFieldValue)
 
 	doesNotMatchCorrectly := !av.OtherFieldValueRegex.MatchString(otherFieldValue)
-	currentValueNotDefined := req.ConfigValue.IsUnknown() || req.ConfigValue.IsNull()
+	currentValueNotDefined := req.ConfigValue.IsNull()
 
 	if (doesNotMatchCorrectly && !currentValueNotDefined) || (!doesNotMatchCorrectly && currentValueNotDefined) {
 		res.Diagnostics.AddError(av.ErrorMessage, av.ErrorMessage)
