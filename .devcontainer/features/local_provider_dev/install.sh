@@ -27,8 +27,8 @@ rm -rf /tmp/gh_${GH_VERSION}_linux_amd64
 rm /tmp/ghcli.tgz
 
 # Install codeql extension
-#echo "Installing GitHub CodeQL CLI extension..."
-#gh extensions install github/gh-codeql
+echo "Installing GitHub CodeQL CLI extension..."
+gh extensions install github/gh-codeql
 
 # Install mitmproxy for inspecting HTTP traffic
 MITM_VERSION=11.1.3
