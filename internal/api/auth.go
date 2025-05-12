@@ -301,7 +301,7 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 	if w.tokenFilePath != "" {
 		idTokenData, err := os.ReadFile(w.tokenFilePath)
 		if err != nil {
-			return "", fmt.Errorf("reading token file: %v", err)
+			return "", fmt.Errorf("reading token file: %w", err)
 		}
 
 		return string(idTokenData), nil
@@ -328,13 +328,13 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("getAssertion: cannot request token: %v", err)
+		return "", fmt.Errorf("getAssertion: cannot request token: %w", err)
 	}
 
 	defer resp.Body.Close()
 	body, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
 	if err != nil {
-		return "", fmt.Errorf("getAssertion: cannot parse response: %v", err)
+		return "", fmt.Errorf("getAssertion: cannot parse response: %w", err)
 	}
 
 	if statusCode := resp.StatusCode; statusCode < http.StatusOK || statusCode >= http.StatusMultipleChoices {
@@ -346,7 +346,7 @@ func (w *OidcCredential) getAssertion(ctx context.Context) (string, error) {
 		Value *string `json:"value"`
 	}
 	if err := json.Unmarshal(body, &tokenRes); err != nil {
-		return "", fmt.Errorf("getAssertion: cannot unmarshal response: %v", err)
+		return "", fmt.Errorf("getAssertion: cannot unmarshal response: %w", err)
 	}
 
 	if tokenRes.Value == nil {
