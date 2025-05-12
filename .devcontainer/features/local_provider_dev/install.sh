@@ -1,5 +1,5 @@
 #!/bin/sh
-set -e
+set -eux
 
 echo "Setting up local provider install"
 
@@ -26,10 +26,6 @@ chmod +x /usr/local/bin/gh
 rm -rf /tmp/gh_${GH_VERSION}_linux_amd64
 rm /tmp/ghcli.tgz
 
-# Install codeql extension
-echo "Installing GitHub CodeQL CLI extension..."
-gh extensions install github/gh-codeql
-
 # Install mitmproxy for inspecting HTTP traffic
 MITM_VERSION=11.1.3
 wget https://downloads.mitmproxy.org/${MITM_VERSION}/mitmproxy-${MITM_VERSION}-linux-x86_64.tar.gz
@@ -47,8 +43,7 @@ sh -c 'cat ~/.mitmproxy/mitmproxy-ca-cert.pem >> /etc/ssl/certs/ca-certificates.
 
 tfenv install latest
 
-
-go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.1.6
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.0.1
 # Removing the golangci-lint binary from GOROOT/bin to avoid conflicts duplicated binaries
 rm $(go env GOROOT)/bin/golangci-lint
 

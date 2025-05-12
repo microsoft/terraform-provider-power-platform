@@ -98,11 +98,11 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 		}
 
 		var auditAndLogsSourceModel AuditSettingsSourceModel
-		if err := objectValue.As(ctx, &auditAndLogsSourceModel, basetypes.ObjectAsOptions{
+		if diags := objectValue.As(ctx, &auditAndLogsSourceModel, basetypes.ObjectAsOptions{
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
-		}); err != nil {
-			return nil, fmt.Errorf("failed to convert audit settings: %v", err)
+		}); diags != nil {
+			return nil, fmt.Errorf("failed to convert audit settings: %v", diags)
 		}
 
 		if !auditAndLogsSourceModel.IsAuditEnabled.IsNull() && !auditAndLogsSourceModel.IsAuditEnabled.IsUnknown() {
@@ -160,11 +160,11 @@ func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSetting
 		}
 
 		var emailSourceModel EmailSettingsSourceModel
-		if err := objectValue.As(ctx, &emailSourceModel, basetypes.ObjectAsOptions{
+		if diags := objectValue.As(ctx, &emailSourceModel, basetypes.ObjectAsOptions{
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
-		}); err != nil {
-			return fmt.Errorf("failed to convert email settings: %v", err)
+		}); diags != nil {
+			return fmt.Errorf("failed to convert email settings: %v", diags)
 		}
 
 		if !emailSourceModel.MaxUploadFileSize.IsNull() && !emailSourceModel.MaxUploadFileSize.IsUnknown() {
@@ -178,8 +178,8 @@ func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSett
 	behaviorSettings := environmentSettings.Product.Attributes()["behavior_settings"]
 	if behaviorSettings != nil && !behaviorSettings.IsNull() && !behaviorSettings.IsUnknown() {
 		var behaviorSettingsSourceModel BehaviorSettingsSourceModel
-		if err := behaviorSettings.(basetypes.ObjectValue).As(ctx, &behaviorSettingsSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return fmt.Errorf("failed to convert audit settings: %v", err)
+		if diags := behaviorSettings.(basetypes.ObjectValue).As(ctx, &behaviorSettingsSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
+			return fmt.Errorf("failed to convert audit settings: %v", diags)
 		}
 
 		if !behaviorSettingsSourceModel.ShowDashboardCardsInExpandedState.IsNull() && !behaviorSettingsSourceModel.ShowDashboardCardsInExpandedState.IsUnknown() {
@@ -193,8 +193,8 @@ func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSetti
 	features := environmentSettings.Product.Attributes()["features"]
 	if features != nil && !features.IsNull() && !features.IsUnknown() {
 		var featuresSourceModel FeaturesSourceModel
-		if err := features.(basetypes.ObjectValue).As(ctx, &featuresSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return fmt.Errorf("failed to convert audit settings: %v", err)
+		if diags := features.(basetypes.ObjectValue).As(ctx, &featuresSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
+			return fmt.Errorf("failed to convert audit settings: %v", diags)
 		}
 
 		if !featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.IsNull() && !featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.IsUnknown() {
@@ -208,8 +208,8 @@ func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSett
 	security := environmentSettings.Product.Attributes()["security"]
 	if security != nil && !security.IsNull() && !security.IsUnknown() {
 		var securitySourceModel SecuritySourceModel
-		if err := security.(basetypes.ObjectValue).As(ctx, &securitySourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); err != nil {
-			return fmt.Errorf("failed to convert audit settings: %v", err)
+		if diags := security.(basetypes.ObjectValue).As(ctx, &securitySourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
+			return fmt.Errorf("failed to convert audit settings: %v", diags)
 		}
 
 		if !securitySourceModel.EnableIpBasedCookieBinding.IsNull() && !securitySourceModel.EnableIpBasedCookieBinding.IsUnknown() {
