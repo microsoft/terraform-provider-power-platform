@@ -551,10 +551,7 @@ func (client *Client) handleHttpConflict(ctx context.Context, apiResponse *api.R
 		return errors.New("environment failed with HTTP 409. Body: " + body)
 	}
 	tflog.Debug(ctx, "Another lifecycle operation is in progress, waiting for it to complete")
-	if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
-		return err
-	}
-	return nil
+	return client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
 }
 
 func (client *Client) UpdateEnvironment(ctx context.Context, environmentId string, environment EnvironmentDto) (*EnvironmentDto, error) {

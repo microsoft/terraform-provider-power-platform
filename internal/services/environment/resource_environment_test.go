@@ -57,7 +57,6 @@ func TestUnitEnvironmentsResource_Validate_Do_Not_Retry_On_NoCapacity(t *testing
 }
 
 func TestUnitEnvironmentsResource_Validate_Retry_On_Running_LifecycleOperation(t *testing.T) {
-
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -90,11 +89,10 @@ func TestUnitEnvironmentsResource_Validate_Retry_On_Running_LifecycleOperation(t
 				lifecycleOperationInProgressCount--
 				resp := httpmock.NewStringResponse(http.StatusConflict, httpmock.File("tests/resource/Validate_Retry_On_Running_LifecycleOperation/post_environment_operation_in_progress.json").String())
 				return resp, nil
-			} else {
-				resp := httpmock.NewStringResponse(http.StatusAccepted, "")
-				resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
-				return resp, nil
 			}
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
 		})
 
 	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
