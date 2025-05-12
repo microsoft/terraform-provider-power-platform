@@ -13,6 +13,7 @@
   "features": {
     "./features/local_provider_dev": {}
   },
+  "postCreateCommand": "sh .devcontainer/postCreate.sh",
   "customizations": {
     "vscode": {
       "settings": {

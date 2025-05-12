@@ -141,8 +141,8 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	tenantCapacityDto, err := d.CapacityClient.GetTenantCapacity(ctx, tenantId)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error fetching tenant capacity",
-			fmt.Sprintf("Error fetching tenant capacity: %v", err),
+			"error fetching tenant capacity",
+			err.Error(),
 		)
 		return
 	}
