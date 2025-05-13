@@ -1,5 +1,0 @@
-kind: fixed
-body: Nil pointer dereference in regex validation.
-time: 2025-04-29T15:35:04.69551383Z
-custom:
-    Issue: "749"

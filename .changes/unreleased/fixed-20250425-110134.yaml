@@ -1,5 +1,0 @@
-kind: fixed
-body: 'Improve DeleteEnvironment function behavior: Handle 404 responses gracefully and adjust state management in Delete method'
-time: 2025-04-25T11:01:34.761819794Z
-custom:
-    Issue: "708"
