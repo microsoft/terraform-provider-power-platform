@@ -1,0 +1,7 @@
+{
+    "error": {
+        "code": "InsufficientCapacity_StorageDriven",
+        "message": "This environment can't be created because your org (tenant) needs at least 1 GB of database capacity.",
+        "detailUrlType": "NotSpecified"
+    }
+}

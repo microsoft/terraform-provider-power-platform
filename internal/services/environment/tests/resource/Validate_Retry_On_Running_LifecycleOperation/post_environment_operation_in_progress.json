@@ -1,0 +1,7 @@
+{
+    "error": {
+        "code": "OperationNotStartable",
+        "message": "TThis operation cannot be performed because there is an active lifecycle operation on the environment 00000000-0000-0000-0000-000000000000.",
+        "detailUrlType": "NotSpecified"
+    }
+}

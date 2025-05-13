@@ -299,12 +299,10 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 	}
 
 	if response.HttpResponse.StatusCode == http.StatusConflict {
-		// the is another operation in progress, let's wait for it to complete, and try again
-		tflog.Debug(ctx, "Another operation is in progress, waiting for it to complete")
-		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+		err := client.handleHttpConflict(ctx, response)
+		if err != nil {
 			return err
 		}
-
 		return client.DeleteEnvironment(ctx, environmentId)
 	}
 
@@ -451,6 +449,14 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 		return nil, err
 	}
 
+	if apiResponse.HttpResponse.StatusCode == http.StatusConflict {
+		err := client.handleHttpConflict(ctx, apiResponse)
+		if err != nil {
+			return nil, err
+		}
+		return client.CreateEnvironment(ctx, environmentToCreate)
+	}
+
 	if apiResponse.HttpResponse.StatusCode == http.StatusInternalServerError {
 		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_CREATION, string(apiResponse.BodyAsBytes))
 	}
@@ -512,6 +518,14 @@ func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environme
 		return err
 	}
 
+	if apiResponse.HttpResponse.StatusCode == http.StatusConflict {
+		err := client.handleHttpConflict(ctx, apiResponse)
+		if err != nil {
+			return err
+		}
+		return client.UpdateEnvironmentAiFeatures(ctx, environmentId, generativeAIConfig)
+	}
+
 	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return err
@@ -525,6 +539,19 @@ func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environme
 		return client.UpdateEnvironmentAiFeatures(ctx, environmentId, generativeAIConfig)
 	}
 	return nil
+}
+
+func (client *Client) handleHttpConflict(ctx context.Context, apiResponse *api.Response) error {
+	body := string(apiResponse.BodyAsBytes)
+	if body == "" {
+		return errors.New("environment failed with HTTP 409. No body in response")
+	}
+	// if 409 returns anything other than another ongoing lifecycle operation, fail the request and return the body as error to the user
+	if !strings.Contains(body, "OperationNotStartable") {
+		return errors.New("environment failed with HTTP 409. Body: " + body)
+	}
+	tflog.Debug(ctx, "Another lifecycle operation is in progress, waiting for it to complete")
+	return client.Api.SleepWithContext(ctx, api.DefaultRetryAfter())
 }
 
 func (client *Client) UpdateEnvironment(ctx context.Context, environmentId string, environment EnvironmentDto) (*EnvironmentDto, error) {
@@ -549,6 +576,14 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted, http.StatusConflict}, nil)
 	if err != nil {
 		return nil, err
+	}
+
+	if apiResponse.HttpResponse.StatusCode == http.StatusConflict {
+		err := client.handleHttpConflict(ctx, apiResponse)
+		if err != nil {
+			return nil, err
+		}
+		return client.UpdateEnvironment(ctx, environmentId, environment)
 	}
 
 	// wait for the lifecycle operation to finish.

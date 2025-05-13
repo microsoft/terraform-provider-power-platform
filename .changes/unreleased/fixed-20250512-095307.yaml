@@ -1,0 +1,5 @@
+kind: fixed
+body: 'feat: implement conflict handling and retry logic for environment operations'
+time: 2025-05-12T09:53:07.905836797Z
+custom:
+    Issue: "767"
