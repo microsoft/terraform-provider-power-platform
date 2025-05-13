@@ -12,7 +12,7 @@ The purpose of this document is to show how the Terraform Provider for Power Pla
 Complex proposals start as GitHub Discussions to seek community consensus. When consensus emerges, a PR implements the change.
 
 ## Pull-request Workflow
-- Each request needs at least one maintainer review + all CI checks green.
+- Each request needs at least one maintainer review and all CI checks must be green.
 - Breaking changes require explicit approval from a majority of maintainers.
 - If a dispute remains unresolved, a simple majority vote of maintainers breaks the tie.
 
