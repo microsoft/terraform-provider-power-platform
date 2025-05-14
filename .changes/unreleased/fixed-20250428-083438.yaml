@@ -1,5 +1,0 @@
-kind: fixed
-body: Fixed improper error handling by replacing err.Error() calls with properly wrapped errors using fmt.Errorf() with %w verb or directly passing the error object. This preserves error context and enables better debugging.
-time: 2025-04-28T08:34:38.771412994Z
-custom:
-    Issue: "710"
