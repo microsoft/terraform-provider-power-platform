@@ -1,5 +1,0 @@
-kind: fixed
-body: Fixed issue when powerplatform_environment security_group_id validates unknown values incorrectly
-time: 2025-05-16T09:52:07.133508264Z
-custom:
-    Issue: "775"
