@@ -19,7 +19,7 @@ terraform {
       source = "microsoft/power-platform"
     }
     local = {
-      version = "2.5.2"
+      version = "2.5.3"
       source  = "hashicorp/local"
     }
   }
