@@ -6,12 +6,14 @@ package validators
 import (
 	"context"
 	"regexp"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 )
 
 var (
@@ -59,15 +61,24 @@ func (av MakeFieldRequiredWhenOtherFieldDoesNotHaveValueValidator) ValidateStrin
 
 func (av MakeFieldRequiredWhenOtherFieldDoesNotHaveValueValidator) Validate(ctx context.Context, req MakeFieldRequiredWhenOtherFieldDoesNotHaveValueValidatorRequest, res *MakeFieldRequiredWhenOtherFieldDoesNotHaveValueValidatorResponse) {
 	paths, _ := req.Config.PathMatches(ctx, av.OtherFieldExpression)
-	if paths == nil && len(paths) != 1 {
+	if paths == nil || len(paths) != 1 {
 		res.Diagnostics.AddError("Other field required when value of validator should have exactly one match", "")
 		return
 	}
 	otherFieldValue := ""
-	_ = req.Config.GetAttribute(ctx, paths[0], &otherFieldValue)
+	diags := req.Config.GetAttribute(ctx, paths[0], &otherFieldValue)
+	isUnknown := false
+	if diags.HasError() {
+		isUnknown = strings.Contains(diags.Errors()[0].Detail(), "Received unknown value") || strings.Contains(diags.Errors()[0].Summary(), "Received unknown value")
+	}
+
+	if req.ConfigValue.IsUnknown() || isUnknown {
+		tflog.Debug(ctx, "RequiredFieldValidator: Value is unknown, skipping validation")
+		return
+	}
 
 	doesNotMatchCorrectly := !av.OtherFieldValueRegex.MatchString(otherFieldValue)
-	currentValueNotDefined := req.ConfigValue.IsUnknown() || req.ConfigValue.IsNull()
+	currentValueNotDefined := req.ConfigValue.IsNull()
 
 	if (doesNotMatchCorrectly && !currentValueNotDefined) || (!doesNotMatchCorrectly && currentValueNotDefined) {
 		res.Diagnostics.AddError(av.ErrorMessage, av.ErrorMessage)

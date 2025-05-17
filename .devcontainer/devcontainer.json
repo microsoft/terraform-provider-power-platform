@@ -13,6 +13,7 @@
   "features": {
     "./features/local_provider_dev": {}
   },
+  "postCreateCommand": "sh .devcontainer/postCreate.sh",
   "customizations": {
     "vscode": {
       "settings": {
@@ -33,7 +34,8 @@
         "DavidAnson.vscode-markdownlint",
         "GitHub.vscode-github-actions",
         "ms-vscode.makefile-tools",
-        "GitHub.copilot-chat"
+        "GitHub.copilot-chat",
+        "GitHub.vscode-codeql"
       ]
     }
   },

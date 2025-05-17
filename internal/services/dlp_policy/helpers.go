@@ -166,9 +166,8 @@ func convertToAttrValueConnectors(connectorsGroup dlpConnectorGroupsModelDto, co
 
 func getConnectorGroup(ctx context.Context, connectorsAttr basetypes.SetValue) (*dlpConnectorGroupsModelDto, error) {
 	var connectors []dataLossPreventionPolicyResourceConnectorModel
-	err := connectorsAttr.ElementsAs(ctx, &connectors, true)
-	if err != nil {
-		return nil, fmt.Errorf("error converting elements: %v", err)
+	if diags := connectorsAttr.ElementsAs(ctx, &connectors, true); diags != nil {
+		return nil, fmt.Errorf("error converting elements: %v", diags)
 	}
 
 	connectorGroup := dlpConnectorGroupsModelDto{

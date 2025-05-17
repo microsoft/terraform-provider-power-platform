@@ -83,7 +83,7 @@ func (client *Client) createOrUpdateTenantIsolationPolicy(ctx context.Context, t
 	var updatedPolicy TenantIsolationPolicyDto
 	resp, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, policy, []int{http.StatusOK, http.StatusAccepted}, &updatedPolicy)
 	if err != nil {
-		return nil, fmt.Errorf("could not create tenant isolation policy: %v", err)
+		return nil, fmt.Errorf("could not create tenant isolation policy: %w", err)
 	}
 
 	if resp.HttpResponse.StatusCode == http.StatusAccepted {
@@ -91,13 +91,13 @@ func (client *Client) createOrUpdateTenantIsolationPolicy(ctx context.Context, t
 		tflog.Info(ctx, fmt.Sprintf("Tenant isolation policy operation is asynchronous for tenant %s, waiting for completion...", tenantId))
 		_, err := client.doWaitForLifecycleOperationStatus(ctx, resp)
 		if err != nil {
-			return nil, fmt.Errorf("error waiting for tenant isolation policy operation to complete: %v", err)
+			return nil, fmt.Errorf("error waiting for tenant isolation policy operation to complete: %w", err)
 		}
 
 		// Get fresh state after async operation
 		finalPolicy, err := client.getTenantIsolationPolicy(ctx, tenantId)
 		if err != nil {
-			return nil, fmt.Errorf("error getting tenant isolation policy after async operation: %v", err)
+			return nil, fmt.Errorf("error getting tenant isolation policy after async operation: %w", err)
 		}
 
 		return finalPolicy, nil
@@ -167,7 +167,7 @@ func (client *Client) doWaitForLifecycleOperationStatus(ctx context.Context, res
 	for {
 		apiResp, err := client.Api.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusAccepted, http.StatusConflict}, nil)
 		if err != nil {
-			return nil, fmt.Errorf("error polling operation status: %v", err)
+			return nil, fmt.Errorf("error polling operation status: %w", err)
 		}
 
 		tflog.Debug(ctx, fmt.Sprintf("Operation poll status: %s", apiResp.HttpResponse.Status))
@@ -189,7 +189,7 @@ func (client *Client) doWaitForLifecycleOperationStatus(ctx context.Context, res
 		// Wait before polling again
 		err = client.Api.SleepWithContext(ctx, waitTime)
 		if err != nil {
-			return nil, fmt.Errorf("polling interrupted: %v", err)
+			return nil, fmt.Errorf("polling interrupted: %w", err)
 		}
 	}
 }

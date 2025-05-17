@@ -192,11 +192,11 @@ func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]
 		}
 
 		var searchSettings SearchSettingsModel
-		if err := objectValue.As(ctx, &searchSettings, basetypes.ObjectAsOptions{
+		if diags := objectValue.As(ctx, &searchSettings, basetypes.ObjectAsOptions{
 			UnhandledNullAsEmpty:    true,
 			UnhandledUnknownAsEmpty: true,
-		}); err != nil {
-			return fmt.Errorf("failed to convert search settings: %v", err)
+		}); diags != nil {
+			return fmt.Errorf("failed to convert search settings: %v", diags)
 		}
 
 		if tenantSettingsDto.PowerPlatform == nil {
@@ -464,7 +464,7 @@ func convertUserManagementSettingsModel(ctx context.Context, powerPlatformAttrib
 	}
 }
 
-func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettingsResourceModel](tenantSettingsDto tenantSettingsDto, timeout timeouts.Value) (T, basetypes.ObjectValue) {
+func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettingsResourceModel](tenantSettingsDto tenantSettingsDto, timeout timeouts.Value) (T, basetypes.ObjectValue, error) {
 	objTypePowerPlatformSettings, objValuePowerPlatformSettings := convertPowerPlatformSettings(tenantSettingsDto)
 
 	tenantSettingsProperties := map[string]attr.Type{
@@ -496,10 +496,9 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 	objValue := types.ObjectValueMust(tenantSettingsProperties, tenantSettingsValues)
 
 	var result T
-	var ok bool
 	switch any(result).(type) {
 	case TenantSettingsDataSourceModel:
-		result, ok = any(TenantSettingsDataSourceModel{
+		dsModel := TenantSettingsDataSourceModel{
 			Timeouts:                   timeout,
 			WalkMeOptOut:               types.BoolPointerValue(tenantSettingsDto.WalkMeOptOut),
 			DisableNPSCommentsReachout: types.BoolPointerValue(tenantSettingsDto.DisableNPSCommentsReachout),
@@ -511,9 +510,14 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 			DisableCapacityAllocationByEnvironmentAdmins:   types.BoolPointerValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
 			DisableSupportTicketsVisibleByAllUsers:         types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
 			PowerPlatform:                                  objValuePowerPlatformSettings,
-		}).(T)
+		}
+		typedResult, ok := any(dsModel).(T)
+		if !ok {
+			return result, objValue, errors.New("failed to convert TenantSettingsDataSourceModel to generic type T")
+		}
+		return typedResult, objValue, nil
 	case TenantSettingsResourceModel:
-		result, ok = any(TenantSettingsResourceModel{
+		resModel := TenantSettingsResourceModel{
 			Timeouts:                   timeout,
 			Id:                         types.StringValue(""),
 			WalkMeOptOut:               types.BoolPointerValue(tenantSettingsDto.WalkMeOptOut),
@@ -526,14 +530,15 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 			DisableCapacityAllocationByEnvironmentAdmins:   types.BoolPointerValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
 			DisableSupportTicketsVisibleByAllUsers:         types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
 			PowerPlatform:                                  objValuePowerPlatformSettings,
-		}).(T)
+		}
+		typedResult, ok := any(resModel).(T)
+		if !ok {
+			return result, objValue, errors.New("failed to convert TenantSettingsResourceModel to generic type T")
+		}
+		return typedResult, objValue, nil
 	default:
-		panic(fmt.Sprintf("unexpected type %T", result))
+		return result, objValue, fmt.Errorf("unexpected type %T", result)
 	}
-	if !ok {
-		panic(fmt.Sprintf("unexpected type %T", result))
-	}
-	return result, objValue
 }
 
 func convertPowerPlatformSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {

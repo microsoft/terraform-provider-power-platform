@@ -122,8 +122,7 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 
 	connectors, err := d.ConnectorsClient.GetConnectors(ctx)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
-		return
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), fmt.Errorf("error occurred: %w", err).Error())
 	}
 
 	for _, connector := range connectors {
