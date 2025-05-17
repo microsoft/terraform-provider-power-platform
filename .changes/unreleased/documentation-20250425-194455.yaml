@@ -1,0 +1,5 @@
+kind: documentation
+body: 'Fix example deployment for the resource: "powerplatform_enterprise_policy".'
+time: 2025-04-25T19:44:55.476547265Z
+custom:
+    Issue: "728"
