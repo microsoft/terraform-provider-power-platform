@@ -3,7 +3,7 @@ terraform {
   required_providers {
     powerplatform = {
       source  = "microsoft/power-platform"
-      version = "~>3.5.0"
+      version = "~>3.7.2"
     }
     azapi = {
       source  = "azure/azapi"
@@ -87,6 +87,13 @@ resource "azapi_resource" "powerplatform_policy" {
   }
 }
 
+resource "powerplatform_enterprise_policy" "network_injection" {
+  environment_id = var.environment_id
+  system_id      = azapi_resource.powerplatform_policy.output.properties.systemId
+  policy_type    = "NetworkInjection"
+
+  #depends_on = [powerplatform_managed_environment.managed_development]
+}
 
 output "enterprise_policy_system_id" {
   value = azapi_resource.powerplatform_policy.output.properties.systemId

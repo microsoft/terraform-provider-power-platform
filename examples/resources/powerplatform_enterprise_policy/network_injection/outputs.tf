@@ -7,3 +7,8 @@ output "policy_id" {
   description = "The ID of the enterprise policy resource in Azure"
   value       = azapi_resource.powerplatform_policy.output.id
 }
+
+output "policy_resource" {
+  description = "The enterprise policy resource"
+  value       = powerplatform_enterprise_policy.network_injection
+}

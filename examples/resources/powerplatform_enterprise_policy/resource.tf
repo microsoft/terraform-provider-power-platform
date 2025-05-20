@@ -3,7 +3,7 @@ terraform {
   required_providers {
     powerplatform = {
       source  = "microsoft/power-platform"
-      version = "~>3.5.0"
+      version = "~>3.7.2"
     }
     azapi = {
       source  = "azure/azapi"
@@ -69,12 +69,15 @@ module "network_injection" {
   source = "./network_injection"
 
   should_register_provider = false
+  environment_id           = powerplatform_environment.example_environment.id
 
   resource_group_name        = "rg_example_network_injection_policy"
   resource_group_location    = local.europe_location[0].azure_regions[0]
   vnet_locations             = local.europe_location[0].azure_regions
   enterprise_policy_name     = "ep_example_network_injection_policy"
   enterprise_policy_location = local.europe_location[0].name
+
+  depends_on = [powerplatform_managed_environment.managed_development]
 }
 
 // module that creates all azure resources required for the encryption policy and the policy itself
@@ -85,28 +88,12 @@ module "encryption" {
 
   environment_id = powerplatform_environment.example_environment.id
 
-  resource_group_name        = "rg_example_encryption_policy8"
+  resource_group_name        = "rg_example_encryption_policy88"
   resource_group_location    = local.europe_location[0].azure_regions[0]
-  enterprise_policy_name     = "ep_example_encryption_policy8"
+  enterprise_policy_name     = "ep_example_encryption_policy88"
   enterprise_policy_location = "europe"
-  keyvault_name              = "kv-ep-example8"
+  keyvault_name              = "kv-ep-example88"
 
   // let's wait for first policy to be executed
-  depends_on = [powerplatform_enterprise_policy.network_injection]
-}
-
-resource "powerplatform_enterprise_policy" "network_injection" {
-  environment_id = powerplatform_environment.example_environment.id
-  system_id      = module.network_injection.policy_system_id
-  policy_type    = "NetworkInjection"
-
-  depends_on = [powerplatform_managed_environment.managed_development]
-}
-
-resource "powerplatform_enterprise_policy" "encryption" {
-  environment_id = powerplatform_environment.example_environment.id
-  system_id      = module.encryption.policy_system_id
-  policy_type    = "Encryption"
-
-  depends_on = [powerplatform_managed_environment.managed_development]
+  depends_on = [module.network_injection]
 }

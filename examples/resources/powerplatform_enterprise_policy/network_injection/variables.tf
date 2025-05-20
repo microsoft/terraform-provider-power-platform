@@ -50,3 +50,12 @@ variable "enterprise_policy_location" {
     error_message = "The enterprise policy location must not be empty"
   }
 }
+
+variable "environment_id" {
+  description = "The ID of the environment to apply the policy to"
+  type        = string
+  validation {
+    condition     = length(var.environment_id) > 0
+    error_message = "The environment ID must not be empty"
+  }
+}
