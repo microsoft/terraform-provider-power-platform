@@ -35,6 +35,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/dlp_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/enterprise_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_application_admin"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_group_rule_set"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_groups"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_settings"
@@ -369,6 +370,9 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 			return copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource()
 		},
 		func() resource.Resource { return tenant_isolation_policy.NewTenantIsolationPolicyResource() },
+		func() resource.Resource {
+			return environment_application_admin.NewEnvironmentApplicationAdminResource()
+		},
 	}
 }
 
