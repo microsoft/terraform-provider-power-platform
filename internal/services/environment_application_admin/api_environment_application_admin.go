@@ -28,7 +28,7 @@ func (client *client) AddApplicationUser(ctx context.Context, environmentId, app
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
-		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/enroll"),
+		Path:   "/providers/Microsoft.BusinessAppPlatform/scopes/admin/enroll",
 		RawQuery: url.Values{
 			"api-version":   []string{"2020-10-01"},
 			"environmentId": []string{environmentId},

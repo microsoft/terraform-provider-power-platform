@@ -23,7 +23,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-// NewEnvironmentApplicationAdminResource creates a new instance of the resource
+// NewEnvironmentApplicationAdminResource creates a new instance of the resource.
 func NewEnvironmentApplicationAdminResource() resource.Resource {
 	return &EnvironmentApplicationAdminResource{
 		TypeInfo: helpers.TypeInfo{
@@ -141,7 +141,7 @@ func (r *EnvironmentApplicationAdminResource) Read(ctx context.Context, req reso
 		return
 	}
 
-	// Query Dataverse to check if application user exists
+	// Query Dataverse to check if application user exists.
 	exists, err := r.EnvironmentApplicationAdminClient.GetApplicationUser(
 		ctx,
 		state.EnvironmentId.ValueString(),
@@ -153,9 +153,9 @@ func (r *EnvironmentApplicationAdminResource) Read(ctx context.Context, req reso
 		return
 	}
 
-	// If the application user doesn't exist, remove resource from state
+	// If the application user doesn't exist, remove resource from state.
 	if !exists {
-		tflog.Debug(ctx, "Application user not found in Dataverse, removing from state", map[string]interface{}{
+		tflog.Debug(ctx, "Application user not found in Dataverse, removing from state", map[string]any{
 			"environment_id": state.EnvironmentId.ValueString(),
 			"application_id": state.ApplicationId.ValueString(),
 		})
@@ -203,7 +203,7 @@ func (r *EnvironmentApplicationAdminResource) Delete(ctx context.Context, req re
 
 	// Dataverse API does not expose a way to remove application users
 	// Document this as a no-op in the resource description
-	tflog.Info(ctx, "Delete is a no-op for environment_application_admin resource", map[string]interface{}{
+	tflog.Info(ctx, "Delete is a no-op for environment_application_admin resource", map[string]any{
 		"message": "Dataverse does not provide an API to remove application users. The user must be removed manually if needed.",
 	})
 }
