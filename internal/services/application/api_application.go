@@ -139,12 +139,12 @@ func (client *client) GetApplicationUserSystemId(ctx context.Context, environmen
 	// Handle forbidden or not found cases
 	if resp.HttpResponse.StatusCode == http.StatusForbidden || resp.HttpResponse.StatusCode == http.StatusNotFound {
 		tflog.Debug(ctx, fmt.Sprintf("Failed to query application users. Status: %d", resp.HttpResponse.StatusCode))
-		return "", fmt.Errorf("failed to query application users")
+		return "", errors.New("failed to query application users")
 	}
 
 	// Check if the application user exists
 	if len(response.Value) == 0 {
-		return "", fmt.Errorf("application user not found")
+		return "", errors.New("application user not found")
 	}
 
 	return response.Value[0].SystemUserId, nil
@@ -165,7 +165,7 @@ func (client *client) DeactivateSystemUser(ctx context.Context, environmentId st
 	}
 
 	// The request body for the SetState action
-	requestBody := map[string]interface{}{
+	requestBody := map[string]any{
 		"entityMoniker": map[string]string{
 			"@odata.type":  "Microsoft.Dynamics.CRM.systemuser",
 			"systemuserid": systemUserId,
