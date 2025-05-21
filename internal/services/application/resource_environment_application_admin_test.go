@@ -6,9 +6,21 @@ package application_test
 import (
 	"net/http"
 	"regexp"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+		// Common handler for all systemusers endpoints
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			// Check if request is for querying application users
+			values := req.URL.Query()
+			filter := values.Get("$filter")
+			expected := "applicationid eq 00000000-0000-0000-0000-000000000002"
+			if filter == expected {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Delete/get_applicationusers.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
+		})/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
@@ -32,10 +44,10 @@ func TestUnitEnvironmentApplicationAdminResource_Create(t *testing.T) {
 		})
 
 	// Check if application user exists
-	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/applicationusers\?`,
-		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_applicationusers.json").String()), nil
-		})
+	// httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/applicationusers\?`,
+	// 	func(req *http.Request) (*http.Response, error) {
+	// 		return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_applicationusers.json").String()), nil
+	// 	})
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
@@ -154,10 +166,38 @@ func TestUnitEnvironmentApplicationAdminResource_Delete(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, "{}"), nil
 		})
 
-	// Check if application user exists for initial read
-	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/applicationusers\?`,
+	// Common handler for all systemusers endpoints
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Delete/get_applicationusers.json").String()), nil
+			// Check if request is for querying application users - handle both URL-encoded and plus-encoded queries
+			rawQuery := req.URL.RawQuery
+			if strings.Contains(rawQuery, "applicationid+eq+00000000-0000-0000-0000-000000000002") ||
+			   strings.Contains(rawQuery, "applicationid%20eq%2000000000-0000-0000-0000-000000000002") {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Delete/get_applicationusers.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
+		})
+
+	// Mock response for deactivating system user - handle both plain URL and URL-encoded paths
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			urlPath := req.URL.Path
+			if strings.Contains(urlPath, "/Microsoft.Dynamics.CRM.SetState") && 
+			   strings.Contains(urlPath, "00000000-0000-0000-0000-000000000008") {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
+		})
+
+	// Mock response for deleting system user - handle both plain and URL-encoded paths
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			// Check if this is the delete request for our test user
+			urlPath := req.URL.Path
+			if strings.Contains(urlPath, "00000000-0000-0000-0000-000000000008") {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
 		})
 
 	resource.Test(t, resource.TestCase{

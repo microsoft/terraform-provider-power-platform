@@ -223,8 +223,56 @@ func (r *EnvironmentApplicationAdminResource) Delete(ctx context.Context, req re
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	// Deletion is a no-op per requirements
-	tflog.Debug(ctx, "Delete operation is a no-op for environment_application_admin")
+	var state EnvironmentApplicationAdminResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("Deactivating and removing application user for app ID '%s' in environment '%s'",
+		state.ApplicationId.ValueString(), state.EnvironmentId.ValueString()))
+
+	// Get the system user ID for the application user
+	systemUserId, err := r.ApplicationClient.GetApplicationUserSystemId(ctx, state.EnvironmentId.ValueString(), state.ApplicationId.ValueString())
+	if err != nil {
+		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+			// Application user doesn't exist, nothing to delete
+			tflog.Info(ctx, fmt.Sprintf("Application user '%s' not found in environment '%s', nothing to delete",
+				state.ApplicationId.ValueString(), state.EnvironmentId.ValueString()))
+			return
+		}
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Failed to get system user ID for application user '%s' in environment '%s'",
+				state.ApplicationId.ValueString(), state.EnvironmentId.ValueString()),
+			err.Error(),
+		)
+		return
+	}
+
+	// First deactivate the system user
+	err = r.ApplicationClient.DeactivateSystemUser(ctx, state.EnvironmentId.ValueString(), systemUserId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Failed to deactivate system user for application '%s' in environment '%s'",
+				state.ApplicationId.ValueString(), state.EnvironmentId.ValueString()),
+			err.Error(),
+		)
+		return
+	}
+
+	// Now delete the system user
+	err = r.ApplicationClient.DeleteSystemUser(ctx, state.EnvironmentId.ValueString(), systemUserId)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Failed to delete system user for application '%s' in environment '%s'",
+				state.ApplicationId.ValueString(), state.EnvironmentId.ValueString()),
+			err.Error(),
+		)
+		return
+	}
+
+	tflog.Info(ctx, fmt.Sprintf("Successfully removed application user '%s' from environment '%s'",
+		state.ApplicationId.ValueString(), state.EnvironmentId.ValueString()))
 }
 
 func (r *EnvironmentApplicationAdminResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

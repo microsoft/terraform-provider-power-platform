@@ -3,6 +3,7 @@
     {
       "applicationid": "00000000-0000-0000-0000-000000000002",
       "applicationuserid": "00000000-0000-0000-0000-000000000007",
+      "systemuserid": "00000000-0000-0000-0000-000000000008",
       "azureactivedirectoryobjectid": null,
       "userpuid": null
     }

@@ -47,7 +47,7 @@ func (client *client) AddApplicationUser(ctx context.Context, environmentId stri
 
 	// Create the request body
 	requestBody := map[string]string{
-		"applicationId": applicationId,
+		"servicePrincipalAppId": applicationId,
 	}
 
 	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, requestBody, []int{http.StatusOK}, nil)
@@ -88,7 +88,7 @@ func (client *client) ApplicationUserExists(ctx context.Context, environmentId s
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   environmentHost,
-		Path:   "/api/data/v9.2/applicationusers",
+		Path:   "/api/data/v9.2/systemusers",
 	}
 	values := url.Values{}
 	values.Add("$filter", fmt.Sprintf("applicationid eq %s", applicationId))
@@ -109,6 +109,101 @@ func (client *client) ApplicationUserExists(ctx context.Context, environmentId s
 
 	// Check if the application user exists
 	return len(response.Value) > 0, nil
+}
+
+func (client *client) GetApplicationUserSystemId(ctx context.Context, environmentId string, applicationId string) (string, error) {
+	// Get the environment host
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return "", err
+	}
+
+	// Create the Dataverse Web API URL to query for application users
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   "/api/data/v9.2/systemusers",
+	}
+	values := url.Values{}
+	values.Add("$select", "systemuserid")
+	values.Add("$filter", fmt.Sprintf("applicationid eq %s", applicationId))
+	apiUrl.RawQuery = values.Encode()
+
+	// Make the request
+	var response applicationUsersResponseDto
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound, http.StatusForbidden}, &response)
+	if err != nil {
+		return "", err
+	}
+
+	// Handle forbidden or not found cases
+	if resp.HttpResponse.StatusCode == http.StatusForbidden || resp.HttpResponse.StatusCode == http.StatusNotFound {
+		tflog.Debug(ctx, fmt.Sprintf("Failed to query application users. Status: %d", resp.HttpResponse.StatusCode))
+		return "", fmt.Errorf("failed to query application users")
+	}
+
+	// Check if the application user exists
+	if len(response.Value) == 0 {
+		return "", fmt.Errorf("application user not found")
+	}
+
+	return response.Value[0].SystemUserId, nil
+}
+
+func (client *client) DeactivateSystemUser(ctx context.Context, environmentId string, systemUserId string) error {
+	// Get the environment host
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return err
+	}
+
+	// Create the Dataverse Web API URL to deactivate the system user
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   fmt.Sprintf("/api/data/v9.2/systemusers(%s)/Microsoft.Dynamics.CRM.SetState", systemUserId),
+	}
+
+	// The request body for the SetState action
+	requestBody := map[string]interface{}{
+		"entityMoniker": map[string]string{
+			"@odata.type":  "Microsoft.Dynamics.CRM.systemuser",
+			"systemuserid": systemUserId,
+		},
+		"state":  1, // Inactive state
+		"status": 2, // Disabled status
+	}
+
+	// Make the request
+	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, requestBody, []int{http.StatusNoContent, http.StatusOK}, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (client *client) DeleteSystemUser(ctx context.Context, environmentId string, systemUserId string) error {
+	// Get the environment host
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return err
+	}
+
+	// Create the Dataverse Web API URL to delete the system user
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   fmt.Sprintf("/api/data/v9.2/systemusers(%s)", systemUserId),
+	}
+
+	// Make the request
+	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent, http.StatusOK}, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (client *client) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {

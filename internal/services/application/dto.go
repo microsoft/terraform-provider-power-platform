@@ -93,6 +93,8 @@ type applicationUsersResponseDto struct {
 }
 
 type applicationUserDto struct {
+	FullName      string `json:"fullname"`
 	ApplicationId string `json:"applicationid"`
 	Id            string `json:"applicationuserid"`
+	SystemUserId  string `json:"systemuserid"`
 }
