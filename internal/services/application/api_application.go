@@ -34,6 +34,83 @@ func (client *client) DataverseExists(ctx context.Context, environmentId string)
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
+func (client *client) AddApplicationUser(ctx context.Context, environmentId string, applicationId string) error {
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/addAppUser", environmentId),
+	}
+	values := url.Values{
+		"api-version": []string{"2020-10-01"},
+	}
+	apiUrl.RawQuery = values.Encode()
+
+	// Create the request body
+	requestBody := map[string]string{
+		"applicationId": applicationId,
+	}
+
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, requestBody, []int{http.StatusOK}, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (client *client) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
+	env, err := client.getEnvironment(ctx, environmentId)
+	if err != nil {
+		return "", err
+	}
+	if env.Properties.LinkedEnvironmentMetadata.InstanceURL == "" {
+		return "", fmt.Errorf("environment %s does not have Dataverse", environmentId)
+	}
+
+	// Parse the instance URL to get the host
+	instanceURL := env.Properties.LinkedEnvironmentMetadata.InstanceURL
+	instanceURLParsed, err := url.Parse(instanceURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse instance URL %s: %v", instanceURL, err)
+	}
+
+	return instanceURLParsed.Host, nil
+}
+
+func (client *client) ApplicationUserExists(ctx context.Context, environmentId string, applicationId string) (bool, error) {
+	// Get the environment host
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return false, err
+	}
+
+	// Create the Dataverse Web API URL to query for application users
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   "/api/data/v9.2/applicationusers",
+	}
+	values := url.Values{}
+	values.Add("$filter", fmt.Sprintf("applicationid eq %s", applicationId))
+	apiUrl.RawQuery = values.Encode()
+
+	// Make the request
+	var response applicationUsersResponseDto
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound, http.StatusForbidden}, &response)
+	if err != nil {
+		return false, err
+	}
+
+	// Handle forbidden or not found cases
+	if resp.HttpResponse.StatusCode == http.StatusForbidden || resp.HttpResponse.StatusCode == http.StatusNotFound {
+		tflog.Debug(ctx, fmt.Sprintf("Failed to query application users. Status: %d", resp.HttpResponse.StatusCode))
+		return false, nil
+	}
+
+	// Check if the application user exists
+	return len(response.Value) > 0, nil
+}
+
 func (client *client) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
