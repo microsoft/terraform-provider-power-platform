@@ -29,13 +29,13 @@ func NewEnvironmentApplicationAdminResource() resource.Resource {
 	}
 }
 
-// EnvironmentApplicationAdminResource defines the resource implementation
+// EnvironmentApplicationAdminResource defines the resource implementation.
 type EnvironmentApplicationAdminResource struct {
 	helpers.TypeInfo
 	ApplicationClient client
 }
 
-// EnvironmentApplicationAdminResourceModel describes the resource data model
+// EnvironmentApplicationAdminResourceModel describes the resource data model.
 type EnvironmentApplicationAdminResourceModel struct {
 	EnvironmentId types.String   `tfsdk:"environment_id"`
 	ApplicationId types.String   `tfsdk:"application_id"`

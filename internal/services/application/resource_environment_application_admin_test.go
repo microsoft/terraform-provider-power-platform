@@ -103,6 +103,12 @@ func TestUnitEnvironmentApplicationAdminResource_Import(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Import/get_environment.json").String()), nil
 		})
 
+	// Add application user for create step
+	httpmock.RegisterResponder("POST", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/addAppUser`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, "{}"), nil
+		})
+
 	// Check if application user exists
 	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/applicationusers\?`,
 		func(req *http.Request) (*http.Response, error) {
@@ -114,16 +120,18 @@ func TestUnitEnvironmentApplicationAdminResource_Import(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ResourceName:      "powerplatform_environment_application_admin.test",
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateId:     "00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000002",
 				Config: `
 				resource "powerplatform_environment_application_admin" "test" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					application_id = "00000000-0000-0000-0000-000000000002"
 				}
 				`,
+			},
+			{
+				ResourceName:      "powerplatform_environment_application_admin.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     "00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000002",
 			},
 		},
 	})
@@ -169,7 +177,8 @@ func TestUnitEnvironmentApplicationAdminResource_Delete(t *testing.T) {
 			},
 			{
 				Config: ``, // Empty config means the resource will be destroyed
-				Check: func(s *terraform.State) error {
+				RefreshState: true,
+				Check: func(_ *terraform.State) error {
 					// Resource should be destroyed, but the actual deletion is a no-op
 					// Just checking that we don't have errors
 					return nil
