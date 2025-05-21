@@ -176,7 +176,7 @@ func TestUnitEnvironmentApplicationAdminResource_Delete(t *testing.T) {
 				),
 			},
 			{
-				Config: ``, // Empty config means the resource will be destroyed
+				Config:       ``, // Empty config means the resource will be destroyed
 				RefreshState: true,
 				Check: func(_ *terraform.State) error {
 					// Resource should be destroyed, but the actual deletion is a no-op
