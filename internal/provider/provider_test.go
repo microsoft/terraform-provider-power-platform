@@ -105,6 +105,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource(),
 		tenant_isolation_policy.NewTenantIsolationPolicyResource(),
 		environment_wave.NewEnvironmentWaveResource(),
+		application.NewEnvironmentApplicationAdminResource(),
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
 

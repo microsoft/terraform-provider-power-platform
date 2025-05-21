@@ -87,3 +87,14 @@ type environmentIdPropertiesDto struct {
 type linkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
 }
+
+type applicationUsersResponseDto struct {
+	Value []applicationUserDto `json:"value"`
+}
+
+type applicationUserDto struct {
+	FullName      string `json:"fullname"`
+	ApplicationId string `json:"applicationid"`
+	Id            string `json:"applicationuserid"`
+	SystemUserId  string `json:"systemuserid"`
+}

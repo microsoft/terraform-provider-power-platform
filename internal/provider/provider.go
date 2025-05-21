@@ -368,6 +368,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource {
 			return copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource()
 		},
+		func() resource.Resource { return application.NewEnvironmentApplicationAdminResource() },
 		func() resource.Resource { return tenant_isolation_policy.NewTenantIsolationPolicyResource() },
 	}
 }

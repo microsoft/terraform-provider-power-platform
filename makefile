@@ -28,13 +28,11 @@ userstory:
 	./scripts/user_story_prompt.sh
 
 unittest:
-	clear
 	$(MAKE) clean
 	$(MAKE) install
 	TF_ACC=0 go test -p 16 -timeout 10m -v -cover ./... -run "^TestUnit$(TEST)"
 
 acctest:
-	clear
 	$(MAKE) clean
 	$(MAKE) install
 ifeq ($(USE_PROXY),1)
@@ -44,13 +42,11 @@ else
 endif
 
 test:
-	clear
 	$(MAKE) clean
 	$(MAKE) install
 	TF_ACC=1 go test -p 10 -timeout 300m -v -cover ./...
 
 coverage:
-	clear
 	$(MAKE) clean
 	$(MAKE) install
 	@echo "Changed files:"
@@ -64,7 +60,6 @@ netdump:
 	mitmdump -p 8080 -w /tmp/mitmproxy.dump
 
 lint:
-	clear
 	golangci-lint --version
 	golangci-lint run
 
@@ -74,3 +69,29 @@ precommit:
 	$(MAKE) lint
 	$(MAKE) unittest
 	$(MAKE) userdocs
+
+# This command is for copilot agent. When using our devcontainer, you will have all the tools installed already.
+installtools:
+	$(eval OS := linux)
+	$(eval ARCH := amd64)
+	$(eval CHANGIE_VERSION := 1.21.1)
+	$(eval LINTER_VERSION := 2.0.1)
+	$(eval TERRAFORM_VERSION := 1.11.4)
+	$(eval TF_PLUGIN_DOCS_VERSION := 0.21.0)
+	curl -LO https://github.com/miniscruff/changie/releases/download/v$(CHANGIE_VERSION)/changie_$(CHANGIE_VERSION)_linux_amd64.tar.gz
+	tar -xzf changie_$(CHANGIE_VERSION)_linux_amd64.tar.gz changie
+	mv changie /usr/local/bin/
+	rm changie_$(CHANGIE_VERSION)_linux_amd64.tar.gz
+	curl -LO https://github.com/golangci/golangci-lint/releases/download/v$(LINTER_VERSION)/golangci-lint-$(LINTER_VERSION)-linux-amd64.tar.gz
+	tar -xzf golangci-lint-$(LINTER_VERSION)-linux-amd64.tar.gz golangci-lint-$(LINTER_VERSION)-linux-amd64/golangci-lint
+	mv golangci-lint-$(LINTER_VERSION)-linux-amd64/golangci-lint /usr/local/bin/golangci-lint
+	rm -rf golangci-lint-$(LINTER_VERSION)-linux-amd64
+	rm golangci-lint-$(LINTER_VERSION)-linux-amd64.tar.gz
+	curl -LO https://releases.hashicorp.com/terraform/$(TERRAFORM_VERSION)/terraform_$(TERRAFORM_VERSION)_$(OS)_$(ARCH).zip
+	unzip terraform_$(TERRAFORM_VERSION)_$(OS)_$(ARCH).zip terraform
+	mv terraform /usr/local/bin/
+	rm terraform_$(TERRAFORM_VERSION)_$(OS)_$(ARCH).zip
+	curl -LO https://github.com/hashicorp/terraform-plugin-docs/releases/download/v$(TF_PLUGIN_DOCS_VERSION)/tfplugindocs_$(TF_PLUGIN_DOCS_VERSION)_$(OS)_$(ARCH).zip
+	unzip tfplugindocs_$(TF_PLUGIN_DOCS_VERSION)_$(OS)_$(ARCH).zip tfplugindocs
+	mv tfplugindocs /usr/local/bin/
+	rm tfplugindocs_$(TF_PLUGIN_DOCS_VERSION)_$(OS)_$(ARCH).zip
