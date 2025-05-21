@@ -17,7 +17,7 @@ terraform {
   required_version = "> 1.7.0"
   required_providers {
     powerplatform = {
-      source  = "microsoft/power-platform"
+      source = "microsoft/power-platform"
     }
     azapi = {
       source  = "azure/azapi"
@@ -102,11 +102,11 @@ module "encryption" {
 
   environment_id = powerplatform_environment.example_environment.id
 
-  resource_group_name        = "rg_example_encryption_policy88"
+  resource_group_name        = "rg_example_encryption_policy"
   resource_group_location    = local.europe_location[0].azure_regions[0]
-  enterprise_policy_name     = "ep_example_encryption_policy88"
+  enterprise_policy_name     = "ep_example_encryption_policy"
   enterprise_policy_location = "europe"
-  keyvault_name              = "kv-ep-example88"
+  keyvault_name              = "kv-ep-example"
 
   // let's wait for first policy to be executed
   depends_on = [module.network_injection]

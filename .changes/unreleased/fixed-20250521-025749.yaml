@@ -1,5 +1,0 @@
-kind: fixed
-body: Refactors and updates Terraform configurations for Power Platform enterprise policies.
-time: 2025-05-21T02:57:49.896674304Z
-custom:
-    Issue: "728"
