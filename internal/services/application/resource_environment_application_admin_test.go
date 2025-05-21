@@ -9,18 +9,7 @@ import (
 	"strings"
 	"testing"
 
-		// Common handler for all systemusers endpoints
-	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
-		func(req *http.Request) (*http.Response, error) {
-			// Check if request is for querying application users
-			values := req.URL.Query()
-			filter := values.Get("$filter")
-			expected := "applicationid eq 00000000-0000-0000-0000-000000000002"
-			if filter == expected {
-				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Delete/get_applicationusers.json").String()), nil
-			}
-			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
-		})/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
@@ -43,11 +32,30 @@ func TestUnitEnvironmentApplicationAdminResource_Create(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, "{}"), nil
 		})
 
-	// Check if application user exists
-	// httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/applicationusers\?`,
-	// 	func(req *http.Request) (*http.Response, error) {
-	// 		return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_applicationusers.json").String()), nil
-	// 	})
+	// Check if application user exists with any filter parameter version
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			// Check if this is for our test application
+			if strings.Contains(req.URL.RawQuery, "00000000-0000-0000-0000-000000000002") {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_applicationusers.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
+		})
+
+	// Mock response for deactivating system user
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			if strings.Contains(req.URL.Path, "/Microsoft.Dynamics.CRM.SetState") {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
+		})
+
+	// Mock DELETE response for system user
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
 
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               true,
@@ -121,10 +129,29 @@ func TestUnitEnvironmentApplicationAdminResource_Import(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, "{}"), nil
 		})
 
-	// Check if application user exists
-	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/applicationusers\?`,
+	// Check if application user exists with any filter parameter version
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Import/get_applicationusers.json").String()), nil
+			// Check if this is for our test application
+			if strings.Contains(req.URL.RawQuery, "00000000-0000-0000-0000-000000000002") {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Import/get_applicationusers.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
+		})
+
+	// Mock response for deactivating system user
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			if strings.Contains(req.URL.Path, "/Microsoft.Dynamics.CRM.SetState") {
+				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
+		})
+
+	// Mock DELETE response for system user
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -172,7 +199,7 @@ func TestUnitEnvironmentApplicationAdminResource_Delete(t *testing.T) {
 			// Check if request is for querying application users - handle both URL-encoded and plus-encoded queries
 			rawQuery := req.URL.RawQuery
 			if strings.Contains(rawQuery, "applicationid+eq+00000000-0000-0000-0000-000000000002") ||
-			   strings.Contains(rawQuery, "applicationid%20eq%2000000000-0000-0000-0000-000000000002") {
+				strings.Contains(rawQuery, "applicationid%20eq%2000000000-0000-0000-0000-000000000002") {
 				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Delete/get_applicationusers.json").String()), nil
 			}
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
@@ -182,8 +209,8 @@ func TestUnitEnvironmentApplicationAdminResource_Delete(t *testing.T) {
 	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
 			urlPath := req.URL.Path
-			if strings.Contains(urlPath, "/Microsoft.Dynamics.CRM.SetState") && 
-			   strings.Contains(urlPath, "00000000-0000-0000-0000-000000000008") {
+			if strings.Contains(urlPath, "/Microsoft.Dynamics.CRM.SetState") &&
+				strings.Contains(urlPath, "00000000-0000-0000-0000-000000000008") {
 				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 			}
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
