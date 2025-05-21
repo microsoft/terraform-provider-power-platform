@@ -12,7 +12,6 @@ sudo rm changie_${VERSION}_linux_amd64.tar.gz
 VERSION=2.0.1
 curl -sSfL https://github.com/golangci/golangci-lint/releases/download/v${VERSION}/golangci-lint-${VERSION}-linux-amd64.tar.gz | tar xz
 sudo mv golangci-lint-${VERSION}-linux-amd64/golangci-lint /usr/local/bin/golangci-lint
-sudo rm golangci-lint-${VERSION}-linux-amd64.tar.gz
 sudo rm -rf golangci-lint-${VERSION}-linux-amd64
 
 VERSION=1.11.4 
