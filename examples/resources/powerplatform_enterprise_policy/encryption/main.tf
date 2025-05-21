@@ -2,8 +2,7 @@ terraform {
   required_version = "> 1.7.0"
   required_providers {
     powerplatform = {
-      source  = "microsoft/power-platform"
-      version = "~>3.7.2"
+      source = "microsoft/power-platform"
     }
     azapi = {
       source  = "azure/azapi"
@@ -134,7 +133,7 @@ resource "azurerm_role_assignment" "enterprise_policy_system_access" {
 
 resource "azurerm_key_vault_access_policy" "power_platform" {
   key_vault_id = azurerm_key_vault.key_vault.id
-  
+
   // The Power Platform Enterprise Policy service principal
   tenant_id = data.azurerm_client_config.current.tenant_id
   object_id = data.azapi_resource_action.managed_identity_query.output.data[0].identity.principalId
@@ -146,7 +145,7 @@ resource "azurerm_key_vault_access_policy" "power_platform" {
     "UnwrapKey",
     "GetRotationPolicy"
   ]
-  
+
   depends_on = [data.azapi_resource_action.managed_identity_query]
 }
 
@@ -154,7 +153,7 @@ resource "powerplatform_enterprise_policy" "encryption" {
   environment_id = var.environment_id
   system_id      = azapi_resource.powerplatform_policy.output.properties.systemId
   policy_type    = "Encryption"
-  
+
   depends_on = [azurerm_key_vault_access_policy.power_platform]
 }
 
