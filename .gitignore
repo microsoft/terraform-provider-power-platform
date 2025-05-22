@@ -84,6 +84,25 @@ makefile
 # MSI files
 *.msi
 
+# Zip and compressed files
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.gz
+*.bz2
+*.xz
+*.lz
+*.lzma
+*.Z
+*.cab
+*.arj
+*.ace
+*.z01
+*.z02
+
 coverage.out
 examples/temp
 
