@@ -1,0 +1,45 @@
+---
+page_title: "{{.Name}} {{.Type}} - {{.ProviderName}}"
+description: |-
+  {{ .Description }}
+---
+
+# {{.Name}} ({{.Type}})
+
+{{ .Description | trimspace }}
+
+Enterprise Policy environment assignment
+
+## Example Usage
+
+The following examples show how to use the `enterprise_policy` resource to configure encription and networking policies.  These are minimal examples just to show the syntax, and do not include all possible configuration options.  Use these as a starting point if you need to set your enterprise policies.
+
+### Enterprise Policy
+
+This resource example use the [Microsoft Power Platform Enterprise Policies](https://learn.microsoft.com/en-us/azure/templates/microsoft.powerplatform/enterprisepolicies?pivots=deployment-language-terraform) with the AzAPI provider.
+
+Information  [About data encription](https://learn.microsoft.com/power-platform/admin/about-encryption)
+
+{{tffile "examples/resources/enterprise_policy/resource.tf" }}
+{{tffile "examples/resources/enterprise_policy/variables.tf" }}
+{{tffile "examples/resources/enterprise_policy/encription/main.tf" }}
+
+
+### Network Injection
+
+Azure Virtual Network support for Power Platform allows you to integrate Power Platform and Dataverse components with cloud services, or services hosted inside your private enterprise network, without exposing them to the public internet. This article helps you set up virtual network support in your Power Platform environments.
+
+The network Injection Policy example also use the [Microsoft Power Platform Enterprise Policies](https://learn.microsoft.com/en-us/azure/templates/microsoft.powerplatform/enterprisepolicies?pivots=deployment-language-terraform) with the AzAPI provider.
+[Virtual Network support overview for Power Platform](https://learn.microsoft.com/power-platform/admin/vnet-support-overview) 
+
+{{tffile "examples/resources/enterprise_policy/resource.tf" }}
+{{tffile "examples/resources/enterprise_policy/variables.tf" }}
+{{tffile "examples/resources/enterprise_policy/network_injection/main.tf" }}
+
+
+## Import
+
+Import is supported using the following syntax:
+
+{{codefile "shell" .ImportFile }}
+{{- end }}
