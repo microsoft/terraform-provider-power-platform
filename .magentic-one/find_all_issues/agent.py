@@ -25,10 +25,10 @@ class CodeQualityAgent:
 
         # Create an agent that can use the fetch tool.
         model_client = AzureOpenAIChatCompletionClient(
-            azure_deployment="gpt-4o",  # Replace with your Azure deployment name
-            model="gpt-4o",  # Replace with your model name
+            azure_deployment="gpt-4.1",  # Replace with your Azure deployment name
+            model="gpt-4.1",  # Replace with your model name
             api_version="2024-12-01-preview",
-            azure_endpoint="https://<<your_link>>.openai.azure.com/",  # Replace with your endpoint
+            azure_endpoint="https://mawasileazureopenai.openai.azure.com/",  # Replace with your endpoint
             azure_ad_token_provider=token_provider,  # Optional if you choose key-based authentication
         )
 
@@ -73,7 +73,7 @@ class CodeQualityAgent:
         - issues that represent testing and quality assurance should be saved in {folder_path}/issues_found/testing
         - issues that represent type safety, validation, or data consistency should be saved in {folder_path}/issues_found/type_safety
         - any other issues that do not fit the above categories should be saved in {folder_path}/issues_found/other
-    - markdown file name should correspond with the analyzed file name and issue
+    - markdown file name should correspond with the analyzed file name, issue and serverity
     - fix the markdown file content if it is has issues like unclosed code blocks or lack of blank lines under headers
     - always validate that the markdown file has all the content from the tool's output
     - analyze only single file given by the user
