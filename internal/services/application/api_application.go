@@ -78,41 +78,19 @@ func (client *client) GetEnvironmentHostById(ctx context.Context, environmentId 
 }
 
 func (client *client) ApplicationUserExists(ctx context.Context, environmentId string, applicationId string) (bool, error) {
-	// Get the environment host
-	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	// Reuse GetApplicationUserSystemId to check if application user exists
+	_, err := client.GetApplicationUserSystemId(ctx, environmentId, applicationId)
 	if err != nil {
+		// Check if it's a "not found" error, which means the user doesn't exist
+		if strings.Contains(err.Error(), "application user not found") {
+			return false, nil
+		}
+		// For other errors (like forbidden access), propagate the error
 		return false, err
 	}
 
-	// Create the Dataverse Web API URL to query for application users
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   environmentHost,
-		Path:   "/api/data/v9.2/systemusers",
-	}
-	values := url.Values{}
-	values.Add("$filter", fmt.Sprintf("applicationid eq %s", applicationId))
-	apiUrl.RawQuery = values.Encode()
-
-	// Make the request
-	var response applicationUsersResponseDto
-	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound, http.StatusForbidden}, &response)
-	if err != nil {
-		return false, err
-	}
-
-	// Handle forbidden or not found cases
-	if resp.HttpResponse.StatusCode == http.StatusForbidden {
-		tflog.Debug(ctx, fmt.Sprintf("Failed to query application users due to forbidden access. Status: %d", resp.HttpResponse.StatusCode))
-		return false, errors.New(constants.NO_MANAGEMENT_APPLICATION_ERROR_MSG)
-	}
-	if resp.HttpResponse.StatusCode == http.StatusNotFound {
-		tflog.Debug(ctx, fmt.Sprintf("Failed to query application users. Status: %d", resp.HttpResponse.StatusCode))
-		return false, nil
-	}
-
-	// Check if the application user exists
-	return len(response.Value) > 0, nil
+	// If no error, the application user exists
+	return true, nil
 }
 
 func (client *client) GetApplicationUserSystemId(ctx context.Context, environmentId string, applicationId string) (string, error) {
