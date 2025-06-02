@@ -135,7 +135,7 @@ jobs:
     
     - name: Install Power Platform Tools
       if: success() || failure()
-      uses: microsoft/powerplatform-actions/actions-install@11af25ee5f752896935d11db7d94557078404674 # v1.8.0
+      uses: microsoft/powerplatform-actions/actions-install@51f663ea104eb227c3712215ceb2f82827d81c27 # v1.9.0
 
     - name: Environments cleanup
       if: success() || failure()
@@ -187,14 +187,14 @@ jobs:
     
     - name: Upload test results to Codecov
       if: ${{ !cancelled() }}
-      uses: codecov/test-results-action@f2dba722c67b86c6caa034178c6e4d35335f6706 # v1.1.0
+      uses: codecov/test-results-action@47f89e9acb64b76debcd5ea40642d25a4adced9f # v1.1.1
       with:
         files: junit.xml
         token: ${{ secrets.CODECOV_TOKEN }}
     
     - name: Render test results
       if: always()
-      uses: dorny/test-reporter@6e6a65b7a0bd2c9197df7d0ae36ac5cee784230c # v2.0.0
+      uses: dorny/test-reporter@890a17cecf52a379fc869ab770a71657660be727 # v2.1.0
       with:
         name: Test Results
         path: junit.xml

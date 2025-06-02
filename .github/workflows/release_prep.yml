@@ -1,57 +1,96 @@
 name: Release Preparation
-on:
-  workflow_dispatch:
 
-permissions:
-  contents: read
+on:
+  workflow_dispatch:            # manual trigger only
 
 jobs:
   prepare-release:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Required for committing changes and creating tags
+      contents: write               # create commits/refs
+      pull-requests: write
+
     steps:
-      - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
-        with:
-          egress-policy: audit
+    - name: Harden the runner (Audit all outbound calls)
+      uses: step-security/harden-runner@0634a2670c59f64b4a01f0f96f84700a4088b9f0 # v2.12.0
+      with:
+        egress-policy: audit
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with: { fetch-depth: 0 }
 
-      - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-        with:
-          fetch-depth: 0
-          ref: main
-          ssh-key: ${{ secrets.DEPLOY_KEY }}
+    - name: Install jq & Changie
+      run: |
+        sudo apt-get -qq update && sudo apt-get -qq install jq
+        go install github.com/miniscruff/changie@latest
 
-      - name: Setup Go
-        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
-        with:
-          go-version-file: 'go.mod'
-          cache: true
+    # Run Changie; decide next SemVer
+    - name: Generate changelog
+      id: ver
+      run: |
+        set -euo pipefail
+        changie batch auto
+        changie merge
+        if git diff --quiet CHANGELOG.md; then
+          echo "No changelog entries found" >&2
+          exit 1
+        fi
+        echo "next=$(changie latest)" >> "$GITHUB_OUTPUT"
 
-      - name: Install Changie
-        run: go install github.com/miniscruff/changie@latest
+    # Create release-prep branch from main
+    - name: Create branch via gh api
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPO:     ${{ github.repository }}
+        VER:      ${{ steps.ver.outputs.next }}
+      run: |
+        set -euo pipefail
+        MAIN_SHA=$(git rev-parse HEAD)
+        BRANCH="release-prep/$VER"
+        gh api -X POST "/repos/$REPO/git/refs" \
+          -f ref="refs/heads/$BRANCH" \
+          -f sha="$MAIN_SHA"
 
-      - name: Batch and Merge Changelog
-        run: |
-          echo "previous_version=v$(changie latest)" >> $GITHUB_OUTPUT
-          changie batch auto
-          changie merge
-          echo "new_version=v$(changie latest)" >> $GITHUB_OUTPUT
+    # Build ONE Verified commit (blob ➜ tree ➜ commit)
+    - name: Commit changelog via gh api
+      env:
+        GH_TOKEN: ${{ github.token }}
+        REPO:     ${{ github.repository }}
+        VER:      ${{ steps.ver.outputs.next }}
+      run: |
+        set -euo pipefail
+        MSG="chore(release): prep v$VER"
+        BASE_SHA=$(git rev-parse HEAD)
+        BRANCH="release-prep/$VER"
 
-      - name: Commit Changelog Changes
-        run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add .
-          git commit -m "Merge changelog entries for v$(changie latest) release
-          >
-          >
-          skip-checks: true" || echo "No changes to commit"
-          git push origin main
+        mapfile -t FILES < <(git ls-files -m)
+        TREE_ITEMS='[]'
+        for F in "${FILES[@]}"; do
+          BLOB_SHA=$(gh api -X POST "/repos/$REPO/git/blobs" \
+                      -f content="$(base64 -w0 <"$F")" \
+                      -f encoding=base64 --jq '.sha')
+          TREE_ITEMS=$(jq --arg p "$F" --arg s "$BLOB_SHA" \
+                          '. += [{"path":$p,"mode":"100644","type":"blob","sha":$s}]' \
+                          <<<"$TREE_ITEMS")
+        done
 
-      - name: Create and Push Release Tag
-        run: |
-          VERSION="v$(changie latest)"
-          git tag -a $VERSION -m "Release $VERSION"
-          git push origin $VERSION
+        TREE_SHA=$(jq -n --arg base "$BASE_SHA" --argjson items "$TREE_ITEMS" \
+                      '{base_tree:$base, tree:$items}' \
+          | gh api -X POST "/repos/$REPO/git/trees" --input - --jq '.sha')
+
+        COMMIT_SHA=$(jq -n \
+          --arg msg "$MSG" --arg tree "$TREE_SHA" --arg base "$BASE_SHA" \
+          '{message:$msg, tree:$tree, parents:[$base]}' \
+          | gh api -X POST "/repos/$REPO/git/commits" --input - --jq '.sha')
+
+        gh api -X PATCH "/repos/$REPO/git/refs/heads/$BRANCH" \
+          -f sha="$COMMIT_SHA" -F force=false
+
+    - name: Open pull request
+      env: 
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        gh pr create \
+          --base main \
+          --head "release-prep/${{ steps.ver.outputs.next }}" \
+          --title "Release prep v${{ steps.ver.outputs.next }}" \
+          --body  "Automated Changie merge for v${{ steps.ver.outputs.next }}"
