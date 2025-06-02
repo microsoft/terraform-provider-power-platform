@@ -61,7 +61,7 @@ func (r *EnvironmentApplicationAdminResource) Schema(ctx context.Context, req re
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Ensures a Microsoft Entra **service principal** exists in a Dataverse environment as an **application user** with the **System Administrator** role. " +
 			"*Required for imported environments.* Environments created by the SP already include it. " +
-			"**Deletion is a no-op** — Dataverse currently exposes no API to remove application users. If you must revoke access, delete it manually in PPAC or via the Dataverse Web API. " +
+			"**Deletion behavior**: When this resource is destroyed, the application user will be deactivated and then deleted from the Dataverse environment. " +
 			"**Reference**: [Create a Dataverse application user (preview)](https://learn.microsoft.com/en-us/power-platform/admin/create-dataverseapplicationuser)",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{

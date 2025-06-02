@@ -157,25 +157,27 @@ func (client *client) DeactivateSystemUser(ctx context.Context, environmentId st
 		return err
 	}
 
+	// Get the application user to find the application ID
+	appUser, err := client.getApplicationUserBySystemId(ctx, environmentId, systemUserId)
+	if err != nil {
+		return err
+	}
+
 	// Create the Dataverse Web API URL to deactivate the system user
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   environmentHost,
-		Path:   fmt.Sprintf("/api/data/v9.2/systemusers(%s)/Microsoft.Dynamics.CRM.SetState", systemUserId),
+		Path:   fmt.Sprintf("/api/data/v9.0/systemusers(%s)", systemUserId),
 	}
 
-	// The request body for the SetState action
+	// The request body to disable the user
 	requestBody := map[string]any{
-		"entityMoniker": map[string]string{
-			"@odata.type":  "Microsoft.Dynamics.CRM.systemuser",
-			"systemuserid": systemUserId,
-		},
-		"state":  1, // Inactive state
-		"status": 2, // Disabled status
+		"isdisabled":    true,
+		"applicationid": appUser.ApplicationId,
 	}
 
-	// Make the request
-	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, requestBody, []int{http.StatusNoContent, http.StatusOK}, nil)
+	// Make the PATCH request to disable the user
+	_, err = client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, requestBody, []int{http.StatusNoContent, http.StatusOK}, nil)
 	if err != nil {
 		return err
 	}
@@ -330,4 +332,43 @@ func (client *client) InstallApplicationInEnvironment(ctx context.Context, envir
 	}
 
 	return applicationId, nil
+}
+
+func (client *client) getApplicationUserBySystemId(ctx context.Context, environmentId string, systemUserId string) (*applicationUserDto, error) {
+	// Get the environment host
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the Dataverse Web API URL to query for application users by system user ID
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   "/api/data/v9.0/systemusers",
+	}
+	values := url.Values{}
+	values.Add("$select", "applicationid,systemuserid,applicationuserid,fullname")
+	values.Add("$filter", fmt.Sprintf("systemuserid eq %s", systemUserId))
+	apiUrl.RawQuery = values.Encode()
+
+	// Make the request
+	var response applicationUsersResponseDto
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound, http.StatusForbidden}, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	// Handle forbidden or not found cases
+	if resp.HttpResponse.StatusCode == http.StatusForbidden || resp.HttpResponse.StatusCode == http.StatusNotFound {
+		tflog.Debug(ctx, fmt.Sprintf("Failed to query application user by system ID. Status: %d", resp.HttpResponse.StatusCode))
+		return nil, fmt.Errorf("application user not found for system user ID %s", systemUserId)
+	}
+
+	// Check if the application user exists
+	if len(response.Value) == 0 {
+		return nil, fmt.Errorf("application user not found for system user ID %s", systemUserId)
+	}
+
+	return &response.Value[0], nil
 }

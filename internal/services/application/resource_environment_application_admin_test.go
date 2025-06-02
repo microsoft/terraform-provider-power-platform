@@ -42,17 +42,24 @@ func TestUnitEnvironmentApplicationAdminResource_Create(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
 		})
 
-	// Mock response for deactivating system user
-	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+	// Check if application user exists with v9.0 API for the new method
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
-			if strings.Contains(req.URL.Path, "/Microsoft.Dynamics.CRM.SetState") {
-				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			// Check if this is for our test system user ID lookup
+			if strings.Contains(req.URL.RawQuery, "systemuserid+eq") {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_applicationusers.json").String()), nil
 			}
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
 		})
 
-	// Mock DELETE response for system user
-	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+	// Mock response for deactivating system user (now using PATCH)
+	httpmock.RegisterResponder("PATCH", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	// Mock DELETE response for system user (updated to v9.0)
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
@@ -139,17 +146,24 @@ func TestUnitEnvironmentApplicationAdminResource_Import(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
 		})
 
-	// Mock response for deactivating system user
-	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+	// Check if application user exists with v9.0 API for the new method
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
-			if strings.Contains(req.URL.Path, "/Microsoft.Dynamics.CRM.SetState") {
-				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+			// Check if this is for our test system user ID lookup
+			if strings.Contains(req.URL.RawQuery, "systemuserid+eq") {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Import/get_applicationusers.json").String()), nil
 			}
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
 		})
 
-	// Mock DELETE response for system user
-	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+	// Mock response for deactivating system user (now using PATCH)
+	httpmock.RegisterResponder("PATCH", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	// Mock DELETE response for system user (updated to v9.0)
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
@@ -205,19 +219,29 @@ func TestUnitEnvironmentApplicationAdminResource_Delete(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
 		})
 
-	// Mock response for deactivating system user - handle both plain URL and URL-encoded paths
-	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+	// Check if application user exists with v9.0 API for the new method
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
+			// Check if this is for our test system user ID lookup
+			if strings.Contains(req.URL.RawQuery, "systemuserid+eq") {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Delete/get_applicationusers.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
+		})
+
+	// Mock response for deactivating system user (now using PATCH)
+	httpmock.RegisterResponder("PATCH", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			// Check if this is the deactivate request for our test user
 			urlPath := req.URL.Path
-			if strings.Contains(urlPath, "/Microsoft.Dynamics.CRM.SetState") &&
-				strings.Contains(urlPath, "00000000-0000-0000-0000-000000000008") {
+			if strings.Contains(urlPath, "00000000-0000-0000-0000-000000000008") {
 				return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 			}
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
 		})
 
-	// Mock response for deleting system user - handle both plain and URL-encoded paths
-	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+	// Mock response for deleting system user (updated to v9.0)
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
 			// Check if this is the delete request for our test user
 			urlPath := req.URL.Path
@@ -246,7 +270,7 @@ func TestUnitEnvironmentApplicationAdminResource_Delete(t *testing.T) {
 				Config:       ``, // Empty config means the resource will be destroyed
 				RefreshState: true,
 				Check: func(_ *terraform.State) error {
-					// Resource should be destroyed, but the actual deletion is a no-op
+					// Resource should be destroyed - application user deactivated and deleted
 					// Just checking that we don't have errors
 					return nil
 				},
