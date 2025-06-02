@@ -5,7 +5,6 @@ These instructions guide GitHub Copilot to follow our project's conventions and 
 ## Development Setup & Workflow
 
 - Use the provided **Makefile** commands for all build and test tasks:
-  - `make installtools` as copilot agent you want to run this command to install all the tools needed for developmen in your dev environment.
   - `make install` to compile the provider code.
   - `make lint` to run linters and ensure code style compliance.
   - `make unittest` to run all unit tests (optionally use `TEST=<prefix>` to run tests matching a name prefix, e.g. `make unittest TEST=Environment` to run tests named with that prefix). This filters tests by regex `^(TestAcc|TestUnit)<prefix>`.
