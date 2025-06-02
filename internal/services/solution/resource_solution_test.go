@@ -29,22 +29,22 @@ const (
 func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 	solutionFileBytes1, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
 	if err != nil {
-		t.Fatalf("Failed to read solution file: %v", err)
+		t.Fatalf("Failed to read solution file: %s", err.Error())
 	}
 
 	err = os.WriteFile(SOLUTION_1_NAME, solutionFileBytes1, 0644)
 	if err != nil {
-		t.Fatalf("Failed to write solution file: %v", err)
+		t.Fatalf("Failed to write solution file: %s", err.Error())
 	}
 
 	solutionFileBytes2, err := os.ReadFile(filepath.Join(SOLUTION_2_RELATIVE_PATH))
 	if err != nil {
-		t.Fatalf("Failed to read solution file: %v", err)
+		t.Fatalf("Failed to read solution file: %s", err.Error())
 	}
 
 	err = os.WriteFile(SOLUTION_2_NAME, solutionFileBytes2, 0644)
 	if err != nil {
-		t.Fatalf("Failed to write solution file: %v", err)
+		t.Fatalf("Failed to write solution file: %s", err.Error())
 	}
 
 	resource.Test(t, resource.TestCase{
@@ -83,12 +83,12 @@ func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 	solutionFileBytes, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
 	if err != nil {
-		t.Fatalf("Failed to read solution file: %v", err)
+		t.Fatalf("Failed to read solution file: %s", err.Error())
 	}
 
 	err = os.WriteFile(SOLUTION_1_NAME, solutionFileBytes, 0644)
 	if err != nil {
-		t.Fatalf("Failed to write solution file: %v", err)
+		t.Fatalf("Failed to write solution file: %s", err.Error())
 	}
 
 	solutionFileChecksum, _ := helpers.CalculateSHA256(SOLUTION_1_NAME)
@@ -213,12 +213,12 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 
 	solutionFileBytes, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
 	if err != nil {
-		t.Fatalf("Failed to read solution file: %v", err)
+		t.Fatalf("Failed to read solution file: %s", err.Error())
 	}
 
 	err = os.WriteFile(SOLUTION_1_NAME, solutionFileBytes, 0644)
 	if err != nil {
-		t.Fatalf("Failed to write solution file: %v", err)
+		t.Fatalf("Failed to write solution file: %s", err.Error())
 	}
 
 	solutionSettingsContent := []byte(`{
@@ -247,7 +247,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 
 	err = os.WriteFile(solutionSettingsFileName, solutionSettingsContent, 0644)
 	if err != nil {
-		t.Fatalf("Failed to write settings file: %v", err)
+		t.Fatalf("Failed to write settings file: %s", err.Error())
 	}
 
 	solutionFileChecksum, _ := helpers.CalculateSHA256(SOLUTION_1_NAME)
@@ -494,12 +494,12 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 	solutionFileBytes, err := os.ReadFile(SOLUTION_1_RELATIVE_PATH)
 	if err != nil {
-		t.Fatalf("Failed to read solution file: %v", err)
+		t.Fatalf("Failed to read solution file: %s", err.Error())
 	}
 
 	err = os.WriteFile(SOLUTION_1_NAME, solutionFileBytes, 0644)
 	if err != nil {
-		t.Fatalf("Failed to write solution file: %v", err)
+		t.Fatalf("Failed to write solution file: %s", err.Error())
 	}
 
 	resource.Test(t, resource.TestCase{
