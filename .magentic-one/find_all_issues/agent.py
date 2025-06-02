@@ -28,7 +28,7 @@ class CodeQualityAgent:
             azure_deployment="gpt-4.1",  # Replace with your Azure deployment name
             model="gpt-4.1",  # Replace with your model name
             api_version="2024-12-01-preview",
-            azure_endpoint="https://mawasileazureopenai.openai.azure.com/",  # Replace with your endpoint
+            azure_endpoint="https://<<your_link>>.openai.azure.com/",  # Replace with your endpoint
             azure_ad_token_provider=token_provider,  # Optional if you choose key-based authentication
         )
 
