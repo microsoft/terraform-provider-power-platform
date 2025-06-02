@@ -102,7 +102,11 @@ func (client *client) ApplicationUserExists(ctx context.Context, environmentId s
 	}
 
 	// Handle forbidden or not found cases
-	if resp.HttpResponse.StatusCode == http.StatusForbidden || resp.HttpResponse.StatusCode == http.StatusNotFound {
+	if resp.HttpResponse.StatusCode == http.StatusForbidden {
+		tflog.Debug(ctx, fmt.Sprintf("Failed to query application users due to forbidden access. Status: %d", resp.HttpResponse.StatusCode))
+		return false, errors.New(constants.NO_MANAGEMENT_APPLICATION_ERROR_MSG)
+	}
+	if resp.HttpResponse.StatusCode == http.StatusNotFound {
 		tflog.Debug(ctx, fmt.Sprintf("Failed to query application users. Status: %d", resp.HttpResponse.StatusCode))
 		return false, nil
 	}
@@ -137,7 +141,11 @@ func (client *client) GetApplicationUserSystemId(ctx context.Context, environmen
 	}
 
 	// Handle forbidden or not found cases
-	if resp.HttpResponse.StatusCode == http.StatusForbidden || resp.HttpResponse.StatusCode == http.StatusNotFound {
+	if resp.HttpResponse.StatusCode == http.StatusForbidden {
+		tflog.Debug(ctx, fmt.Sprintf("Failed to query application users due to forbidden access. Status: %d", resp.HttpResponse.StatusCode))
+		return "", errors.New(constants.NO_MANAGEMENT_APPLICATION_ERROR_MSG)
+	}
+	if resp.HttpResponse.StatusCode == http.StatusNotFound {
 		tflog.Debug(ctx, fmt.Sprintf("Failed to query application users. Status: %d", resp.HttpResponse.StatusCode))
 		return "", errors.New("failed to query application users")
 	}
@@ -360,7 +368,11 @@ func (client *client) getApplicationUserBySystemId(ctx context.Context, environm
 	}
 
 	// Handle forbidden or not found cases
-	if resp.HttpResponse.StatusCode == http.StatusForbidden || resp.HttpResponse.StatusCode == http.StatusNotFound {
+	if resp.HttpResponse.StatusCode == http.StatusForbidden {
+		tflog.Debug(ctx, fmt.Sprintf("Failed to query application user by system ID due to forbidden access. Status: %d", resp.HttpResponse.StatusCode))
+		return nil, errors.New(constants.NO_MANAGEMENT_APPLICATION_ERROR_MSG)
+	}
+	if resp.HttpResponse.StatusCode == http.StatusNotFound {
 		tflog.Debug(ctx, fmt.Sprintf("Failed to query application user by system ID. Status: %d", resp.HttpResponse.StatusCode))
 		return nil, fmt.Errorf("application user not found for system user ID %s", systemUserId)
 	}
