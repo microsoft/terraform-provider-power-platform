@@ -90,3 +90,8 @@ examples/temp
 .userstory.prompt.md
 
 .codeqldb
+.magentic-one/find_all_issues/__pycache__/agent.cpython-311.pyc
+.magentic-one/find_all_issues/__pycache__/prompts.cpython-311.pyc
+.magentic-one/find_all_issues/tools/__pycache__/__init__.cpython-311.pyc
+.magentic-one/find_all_issues/tools/__pycache__/file_manager.cpython-311.pyc
+.magentic-one/find_all_issues/tools/__pycache__/shell.cpython-311.pyc
