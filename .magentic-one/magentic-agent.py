@@ -111,6 +111,7 @@ Analyze all the .go file under /workspaces/terraform-provider-power-platform/int
 File name should be markdown file based on template located in .github/prompts/ai_bug_report.md
 Template file has elements using "<<>>" that should be replaced, fill all of them
 Validate the markdown file you've create is valid
+Markdown file name should correspond with the analyzed file name, issue and serverity
 Markdown file content should be saved using the following rules:
     - issues that represent error handling, panic, or control flow issue shuld be saved in {folder_path}/issues_found/error_handling
     - issues that represent variable, function, or type naming should be saved in {folder_path}/issues_found/naming
