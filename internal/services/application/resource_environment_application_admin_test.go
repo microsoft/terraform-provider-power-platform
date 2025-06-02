@@ -58,8 +58,7 @@ func TestUnitEnvironmentApplicationAdminResource_Create(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
-	// Mock DELETE response for system user (updated to v9.0)
-	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
@@ -162,8 +161,8 @@ func TestUnitEnvironmentApplicationAdminResource_Import(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
-	// Mock DELETE response for system user (updated to v9.0)
-	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
+	// Mock DELETE response for system user (updated to v9.2)
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
@@ -240,8 +239,8 @@ func TestUnitEnvironmentApplicationAdminResource_Delete(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
 		})
 
-	// Mock response for deleting system user (updated to v9.0)
-	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
+	// Mock response for deleting system user (updated to v9.2)
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
 			// Check if this is the delete request for our test user
 			urlPath := req.URL.Path
