@@ -111,12 +111,15 @@ Analyze all the .go file under /workspaces/terraform-provider-power-platform/int
 File name should be markdown file based on template located in .github/prompts/ai_bug_report.md
 Template file has elements using "<<>>" that should be replaced, fill all of them
 Validate the markdown file you've create is valid
-##Impact part of the issue file should contain severity. Severity should be one of: low, medium, high, critical. Severity should be written in bold font
-Based on the severity each issue markdown file should in a subfolder:
-severity critical in .github/prompts/issues_found/critical
-severity high in .github/prompts/issues_found/high
-severity medium in .github/prompts/issues_found/medium
-severity low in .github/prompts/issues_found/low
+Markdown file content should be saved using the following rules:
+    - issues that represent error handling, panic, or control flow issue shuld be saved in {folder_path}/issues_found/error_handling
+    - issues that represent variable, function, or type naming should be saved in {folder_path}/issues_found/naming
+    - issues that represent resource management, memory leaks and performance should be saved in {folder_path}/issues_found/resource_management
+    - issues that represent API client and HTTP issues should be saved in {folder_path}/issues_found/api_client
+    - issues that represent code structure, maintainability, or readability should be saved in {folder_path}/issues_found/structure
+    - issues that represent testing and quality assurance should be saved in {folder_path}/issues_found/testing
+    - issues that represent type safety, validation, or data consistency should be saved in {folder_path}/issues_found/type_safety
+    - any other issues that do not fit the above categories should be saved in {folder_path}/issues_found/other
                                         
 Analyze all the files that you will find in  /workspaces/terraform-provider-power-platform/internal/
 CodeQualityAssistant should not analyze the files.

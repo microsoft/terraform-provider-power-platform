@@ -64,11 +64,15 @@ class CodeQualityAgent:
     - go to the file {file_path}
     - analyze the file and find all issues
     - for every issue found, provide feedback filling up the following markdown template for that issue:
-    - save each output markdown output from the tool in a separate markdown file beased on the following rule:
-        - severity critical will be saved in {folder_path}/issues_found/critical
-        - severity high will be saved in{folder_path}/issues_found/high
-        - severity medium  will be saved in {folder_path}/issues_found/medium
-        - severity low  will be saved in {folder_path}/issues_found/low
+    - save each output markdown output from the tool in a separate markdown file beased on the following rules:
+        - issues that represent error handling, panic, or control flow issue shuld be saved in {folder_path}/issues_found/error_handling
+        - issues that represent variable, function, or type naming should be saved in {folder_path}/issues_found/naming
+        - issues that represent resource management, memory leaks and performance should be saved in {folder_path}/issues_found/resource_management
+        - issues that represent API client and HTTP issues should be saved in {folder_path}/issues_found/api_client
+        - issues that represent code structure, maintainability, or readability should be saved in {folder_path}/issues_found/structure
+        - issues that represent testing and quality assurance should be saved in {folder_path}/issues_found/testing
+        - issues that represent type safety, validation, or data consistency should be saved in {folder_path}/issues_found/type_safety
+        - any other issues that do not fit the above categories should be saved in {folder_path}/issues_found/other
     - markdown file name should correspond with the analyzed file name and issue
     - fix the markdown file content if it is has issues like unclosed code blocks or lack of blank lines under headers
     - always validate that the markdown file has all the content from the tool's output
