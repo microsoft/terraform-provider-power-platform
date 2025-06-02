@@ -334,7 +334,7 @@ func (client *client) getApplicationUserBySystemId(ctx context.Context, environm
 		Path:   "/api/data/v9.0/systemusers",
 	}
 	values := url.Values{}
-	values.Add("$select", "applicationid,systemuserid,applicationuserid,fullname")
+	values.Add("$select", "applicationid,systemuserid,fullname")
 	values.Add("$filter", fmt.Sprintf("systemuserid eq %s", systemUserId))
 	apiUrl.RawQuery = values.Encode()
 
