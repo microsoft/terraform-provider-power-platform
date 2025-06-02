@@ -1,0 +1,77 @@
+name: "Copilot Setup Steps"
+description: "Install tools needed for Copilot Agent"
+
+on: workflow_dispatch
+
+jobs:
+  # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: "Install Changie (changelog tool)"
+        run: |
+          CHANGIE_VERSION=1.21.1
+          OS=linux
+          ARCH=amd64
+          curl -LO https://github.com/miniscruff/changie/releases/download/v${CHANGIE_VERSION}/changie_${CHANGIE_VERSION}_${OS}_${ARCH}.tar.gz
+          tar -xzf changie_${CHANGIE_VERSION}_${OS}_${ARCH}.tar.gz changie
+          sudo mv changie /usr/local/bin/
+          rm changie_${CHANGIE_VERSION}_${OS}_${ARCH}.tar.gz
+          changie --version
+
+      - name: "Install golangci-lint (Go linter)"
+        run: |
+          LINTER_VERSION=2.0.1
+          OS=linux
+          ARCH=amd64
+          curl -LO https://github.com/golangci/golangci-lint/releases/download/v${LINTER_VERSION}/golangci-lint-${LINTER_VERSION}-${OS}-${ARCH}.tar.gz
+          tar -xzf golangci-lint-${LINTER_VERSION}-${OS}-${ARCH}.tar.gz golangci-lint-${LINTER_VERSION}-${OS}-${ARCH}/golangci-lint
+          sudo mv golangci-lint-${LINTER_VERSION}-${OS}-${ARCH}/golangci-lint /usr/local/bin/golangci-lint
+          rm -rf golangci-lint-${LINTER_VERSION}-${OS}-${ARCH}
+          rm golangci-lint-${LINTER_VERSION}-${OS}-${ARCH}.tar.gz
+          golangci-lint --version
+
+      - name: "Install Terraform"
+        run: |
+          TERRAFORM_VERSION=1.11.4
+          OS=linux
+          ARCH=amd64
+          curl -LO https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_${OS}_${ARCH}.zip
+          unzip terraform_${TERRAFORM_VERSION}_${OS}_${ARCH}.zip terraform
+          sudo mv terraform /usr/local/bin/
+          rm terraform_${TERRAFORM_VERSION}_${OS}_${ARCH}.zip
+          terraform --version
+
+      - name: "Install terraform-plugin-docs"
+        run: |
+          TF_PLUGIN_DOCS_VERSION=0.21.0
+          OS=linux
+          ARCH=amd64
+          curl -LO https://github.com/hashicorp/terraform-plugin-docs/releases/download/v${TF_PLUGIN_DOCS_VERSION}/tfplugindocs_${TF_PLUGIN_DOCS_VERSION}_${OS}_${ARCH}.zip
+          unzip tfplugindocs_${TF_PLUGIN_DOCS_VERSION}_${OS}_${ARCH}.zip tfplugindocs
+          sudo mv tfplugindocs /usr/local/bin/
+          rm tfplugindocs_${TF_PLUGIN_DOCS_VERSION}_${OS}_${ARCH}.zip
+          tfplugindocs --version
+
+      - name: "Install Go tools from tools.go"
+        run: |
+          go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs
+
+      - name: "Verify installation and setup Go modules"
+        run: |
+          echo "=== Installed Tools Verification ==="
+          changie --version
+          golangci-lint --version
+          terraform --version
+          tfplugindocs --version
+          go version
+          echo "=== Setting up Go modules ==="
+          go mod tidy
+          echo "=== Setup complete ==="
