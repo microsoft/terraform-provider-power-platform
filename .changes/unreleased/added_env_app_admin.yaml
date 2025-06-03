@@ -1,4 +1,0 @@
-kind: added
-body: Add powerplatform_environment_application_admin resource to enable adding Entra service principals as application users with System Administrator role in Dataverse environments
-custom:
-  Issue: 782
