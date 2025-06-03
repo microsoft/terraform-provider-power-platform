@@ -34,6 +34,166 @@ func (client *client) DataverseExists(ctx context.Context, environmentId string)
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
+func (client *client) AddApplicationUser(ctx context.Context, environmentId string, applicationId string) error {
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   client.Api.GetConfig().Urls.BapiUrl,
+		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/addAppUser", environmentId),
+	}
+	values := url.Values{
+		"api-version": []string{"2020-10-01"},
+	}
+	apiUrl.RawQuery = values.Encode()
+
+	// Create the request body
+	requestBody := map[string]string{
+		"servicePrincipalAppId": applicationId,
+	}
+
+	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, requestBody, []int{http.StatusOK}, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (client *client) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
+	env, err := client.getEnvironment(ctx, environmentId)
+	if err != nil {
+		return "", err
+	}
+	if env.Properties.LinkedEnvironmentMetadata.InstanceURL == "" {
+		return "", fmt.Errorf("environment %s does not have Dataverse", environmentId)
+	}
+
+	// Parse the instance URL to get the host
+	instanceURL := env.Properties.LinkedEnvironmentMetadata.InstanceURL
+	instanceURLParsed, err := url.Parse(instanceURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse instance URL %s: %v", instanceURL, err)
+	}
+
+	return instanceURLParsed.Host, nil
+}
+
+func (client *client) ApplicationUserExists(ctx context.Context, environmentId string, applicationId string) (bool, error) {
+	// Reuse GetApplicationUserSystemId to check if application user exists
+	_, err := client.GetApplicationUserSystemId(ctx, environmentId, applicationId)
+	if err != nil {
+		// Check if it's a "not found" error, which means the user doesn't exist
+		if strings.Contains(err.Error(), "application user not found") {
+			return false, nil
+		}
+		// For other errors (like forbidden access), propagate the error
+		return false, err
+	}
+
+	// If no error, the application user exists
+	return true, nil
+}
+
+func (client *client) GetApplicationUserSystemId(ctx context.Context, environmentId string, applicationId string) (string, error) {
+	// Get the environment host
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return "", err
+	}
+
+	// Create the Dataverse Web API URL to query for application users
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   "/api/data/v9.2/systemusers",
+	}
+	values := url.Values{}
+	values.Add("$select", "systemuserid")
+	values.Add("$filter", fmt.Sprintf("applicationid eq %s", applicationId))
+	apiUrl.RawQuery = values.Encode()
+
+	// Make the request
+	var response applicationUsersResponseDto
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound, http.StatusForbidden}, &response)
+	if err != nil {
+		return "", err
+	}
+
+	// Handle forbidden or not found cases
+	if resp.HttpResponse.StatusCode == http.StatusForbidden {
+		tflog.Debug(ctx, fmt.Sprintf("Failed to query application users due to forbidden access. Status: %d", resp.HttpResponse.StatusCode))
+		return "", errors.New(constants.NO_MANAGEMENT_APPLICATION_ERROR_MSG)
+	}
+	if resp.HttpResponse.StatusCode == http.StatusNotFound {
+		tflog.Debug(ctx, fmt.Sprintf("Failed to query application users. Status: %d", resp.HttpResponse.StatusCode))
+		return "", errors.New("failed to query application users")
+	}
+
+	// Check if the application user exists
+	if len(response.Value) == 0 {
+		return "", errors.New("application user not found")
+	}
+
+	return response.Value[0].SystemUserId, nil
+}
+
+func (client *client) DeactivateSystemUser(ctx context.Context, environmentId string, systemUserId string) error {
+	// Get the environment host
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return err
+	}
+
+	// Get the application user to find the application ID
+	appUser, err := client.getApplicationUserBySystemId(ctx, environmentId, systemUserId)
+	if err != nil {
+		return err
+	}
+
+	// Create the Dataverse Web API URL to deactivate the system user
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   fmt.Sprintf("/api/data/v9.0/systemusers(%s)", systemUserId),
+	}
+
+	// The request body to disable the user
+	requestBody := map[string]any{
+		"isdisabled":    true,
+		"applicationid": appUser.ApplicationId,
+	}
+
+	// Make the PATCH request to disable the user
+	_, err = client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, requestBody, []int{http.StatusNoContent, http.StatusOK}, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (client *client) DeleteSystemUser(ctx context.Context, environmentId string, systemUserId string) error {
+	// Get the environment host
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return err
+	}
+
+	// Create the Dataverse Web API URL to delete the system user
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   fmt.Sprintf("/api/data/v9.2/systemusers(%s)", systemUserId),
+	}
+
+	// Make the request
+	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent, http.StatusOK}, nil)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (client *client) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
@@ -158,4 +318,47 @@ func (client *client) InstallApplicationInEnvironment(ctx context.Context, envir
 	}
 
 	return applicationId, nil
+}
+
+func (client *client) getApplicationUserBySystemId(ctx context.Context, environmentId string, systemUserId string) (*applicationUserDto, error) {
+	// Get the environment host
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create the Dataverse Web API URL to query for application users by system user ID
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   "/api/data/v9.0/systemusers",
+	}
+	values := url.Values{}
+	values.Add("$select", "applicationid,systemuserid,fullname")
+	values.Add("$filter", fmt.Sprintf("systemuserid eq %s", systemUserId))
+	apiUrl.RawQuery = values.Encode()
+
+	// Make the request
+	var response applicationUsersResponseDto
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound, http.StatusForbidden}, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	// Handle forbidden or not found cases
+	if resp.HttpResponse.StatusCode == http.StatusForbidden {
+		tflog.Debug(ctx, fmt.Sprintf("Failed to query application user by system ID due to forbidden access. Status: %d", resp.HttpResponse.StatusCode))
+		return nil, errors.New(constants.NO_MANAGEMENT_APPLICATION_ERROR_MSG)
+	}
+	if resp.HttpResponse.StatusCode == http.StatusNotFound {
+		tflog.Debug(ctx, fmt.Sprintf("Failed to query application user by system ID. Status: %d", resp.HttpResponse.StatusCode))
+		return nil, fmt.Errorf("application user not found for system user ID %s", systemUserId)
+	}
+
+	// Check if the application user exists
+	if len(response.Value) == 0 {
+		return nil, fmt.Errorf("application user not found for system user ID %s", systemUserId)
+	}
+
+	return &response.Value[0], nil
 }
