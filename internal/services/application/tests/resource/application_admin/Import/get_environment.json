@@ -1,0 +1,33 @@
+{
+  "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+  "name": "00000000-0000-0000-0000-000000000001",
+  "type": "Microsoft.BusinessAppPlatform/scopes/environments",
+  "tags": {},
+  "properties": {
+    "displayName": "Test Environment",
+    "description": "Test Environment Description",
+    "createdTime": "2023-01-01T00:00:00Z",
+    "createdBy": {
+      "id": "00000000-0000-0000-0000-000000000003",
+      "displayName": "Test User",
+      "type": "User"
+    },
+    "lastModifiedTime": "2023-01-01T00:00:00Z",
+    "provisioningState": "Succeeded",
+    "creationType": "UserRequest",
+    "environmentSku": "Production",
+    "environmentType": "Sandbox",
+    "azureRegion": "westus",
+    "friendlyName": "Test Environment",
+    "uniqueName": "org12345",
+    "linkedEnvironmentMetadata": {
+      "instanceUrl": "https://test-env.crm.dynamics.com",
+      "instanceApiUrl": "https://test-env.api.crm.dynamics.com",
+      "instanceId": "00000000-0000-0000-0000-000000000004",
+      "localeId": 1033,
+      "organizationId": "00000000-0000-0000-0000-000000000005",
+      "datacenterId": "00000000-0000-0000-0000-000000000006",
+      "geo": "NAM"
+    }
+  }
+}
