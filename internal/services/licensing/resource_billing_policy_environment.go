@@ -23,7 +23,7 @@ import (
 var _ resource.Resource = &BillingPolicyEnvironmentResource{}
 var _ resource.ResourceWithImportState = &BillingPolicyEnvironmentResource{}
 
-// addClientError is a helper function to centralize error handling
+// addClientError is a helper function to centralize error handling.
 func addClientError(diags interface{ AddError(string, string) }, typeName, action string, err error) {
 	diags.AddError(fmt.Sprintf("Client error when %s %s", action, typeName), err.Error())
 }

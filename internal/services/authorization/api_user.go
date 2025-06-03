@@ -32,7 +32,7 @@ type client struct {
 	environmentClient environment.Client
 }
 
-// buildDataverseApiUrl builds a URL for Dataverse API endpoints
+// buildDataverseApiUrl builds a URL for Dataverse API endpoints.
 func buildDataverseApiUrl(environmentHost, path string, query url.Values) string {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
@@ -45,7 +45,7 @@ func buildDataverseApiUrl(environmentHost, path string, query url.Values) string
 	return apiUrl.String()
 }
 
-// buildBapiUrl builds a URL for BAPI endpoints
+// buildBapiUrl builds a URL for BAPI endpoints.
 func buildBapiUrl(bapiHost, path string, query url.Values) string {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,

@@ -27,7 +27,7 @@ type Client struct {
 	EnvironmentClient environment.Client
 }
 
-// buildEnterprisePolicyURL builds the URL for enterprise policy operations
+// buildEnterprisePolicyURL builds the URL for enterprise policy operations.
 func (client *Client) buildEnterprisePolicyURL(environmentId, environmentType, action string) string {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
@@ -42,7 +42,7 @@ func (client *Client) buildEnterprisePolicyURL(environmentId, environmentType, a
 	return apiUrl.String()
 }
 
-// executePolicyOperation executes a policy operation (link/unlink) with common retry logic
+// executePolicyOperation executes a policy operation (link/unlink) with common retry logic.
 func (client *Client) executePolicyOperation(ctx context.Context, environmentId, environmentType, systemId, action string) error {
 	apiUrl := client.buildEnterprisePolicyURL(environmentId, environmentType, action)
 
