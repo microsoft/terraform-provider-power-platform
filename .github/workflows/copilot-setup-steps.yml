@@ -38,8 +38,10 @@ jobs:
       - name: "Verify installation"
         run: |
           echo "=== Installed Tools Verification ==="
-          cp /home/runner/go/bin/tfplugindocs /usr/local/bin/tfplugindocs
           
+          # We need to copy tfplugindocs to /usr/local/bin for it to be available in the PATH. Adding new path to the PATH variable does not work as copilot agent runs in a separate job.
+          cp /home/runner/go/bin/tfplugindocs /usr/local/bin/tfplugindocs
+
           changie --version
           golangci-lint --version
           terraform --version
