@@ -3,7 +3,6 @@ description: "Install tools needed for Copilot Agent"
 
 on: workflow_dispatch
 
-
 jobs:
   # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
   copilot-setup-steps:
