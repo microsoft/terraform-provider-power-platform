@@ -33,7 +33,7 @@ jobs:
 
       - name: "Install Go tools from tools.go"
         run: |
-          go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@0.21.0
+          go install github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest
 
       - name: "Verify installation"
         run: |
