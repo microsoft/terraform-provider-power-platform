@@ -21,6 +21,11 @@ clean:
 	rm -rf /go/bin/terraform-provider-power-platform
 
 userdocs:
+	# When running this command as Copilot Agent, the PATH will not include /home/runner/go/bin
+	@if ! echo $$PATH | grep -q "/home/runner/go/bin"; then \
+		echo "Adding /home/runner/go/bin to PATH"; \
+		export PATH="/home/runner/go/bin:$$PATH"; \
+	fi
 	go generate
 	tfplugindocs validate --provider-name powerplatform
 
