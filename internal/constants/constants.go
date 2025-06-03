@@ -173,6 +173,10 @@ const (
 )
 
 const (
+	ADMIN_MANAGEMENT_APP_API_VERSION = "2020-10-01"
+)
+
+const (
 	SOLUTION_CHECKER_RULESET_ID = "0ad12346-e108-40b8-a956-9a8f95ea18c9"
 )
 
