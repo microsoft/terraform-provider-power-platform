@@ -38,7 +38,8 @@ jobs:
       - name: "Verify installation"
         run: |
           echo "=== Installed Tools Verification ==="
-          export PATH=$PATH:/home/runner/go/bin
+          cp /home/runner/go/bin/tfplugindocs /usr/local/bin/tfplugindocs
+          
           changie --version
           golangci-lint --version
           terraform --version
