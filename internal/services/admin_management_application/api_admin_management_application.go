@@ -37,6 +37,7 @@ func (client *client) GetAdminApplication(ctx context.Context, clientId string) 
 	var adminApp adminManagementApplicationDto
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
 
+	// Returning pointer to local variable is acceptable for small DTOs
 	return &adminApp, err
 }
 
@@ -53,6 +54,7 @@ func (client *client) RegisterAdminApplication(ctx context.Context, clientId str
 	var adminApp adminManagementApplicationDto
 	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
 
+	// Returning pointer to local variable is acceptable for small DTOs
 	return &adminApp, err
 }
 

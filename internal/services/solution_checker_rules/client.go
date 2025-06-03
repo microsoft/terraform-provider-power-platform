@@ -14,20 +14,20 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
-type client struct {
+type Client struct {
 	Api               *api.Client
 	environmentClient environment.Client
 }
 
-func newSolutionCheckerRulesClient(apiClient *api.Client) client {
-	return client{
+func NewSolutionCheckerRulesClient(apiClient *api.Client) *Client {
+	return &Client{
 		Api:               apiClient,
 		environmentClient: environment.NewEnvironmentClient(apiClient),
 	}
 }
 
 // Data transfer objects.
-type ruleDto struct {
+type RuleDto struct {
 	Code            string `json:"code"`
 	Description     string `json:"description"`
 	Summary         string `json:"summary"`
@@ -39,7 +39,7 @@ type ruleDto struct {
 	Severity        int    `json:"severity"`
 }
 
-func (c *client) GetSolutionCheckerRules(ctx context.Context, environmentId string) ([]ruleDto, error) {
+func (c *Client) GetSolutionCheckerRules(ctx context.Context, environmentId string) ([]RuleDto, error) {
 	env, err := c.environmentClient.GetEnvironment(ctx, environmentId)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get environment details for %s: %w", environmentId, err)
@@ -68,7 +68,7 @@ func (c *client) GetSolutionCheckerRules(ctx context.Context, environmentId stri
 	queryParams.Add("api-version", "2.0")
 	rulesUrl.RawQuery = queryParams.Encode()
 
-	var rules []ruleDto
+	var rules []RuleDto
 	_, err = c.Api.Execute(ctx, nil, "GET", rulesUrl.String(), nil, nil, []int{http.StatusOK}, &rules)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get solution checker rules: %w", err)
