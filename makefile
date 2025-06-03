@@ -25,6 +25,7 @@ userdocs:
 	@if ! echo $$PATH | grep -q "/home/runner/go/bin"; then \
 		echo "Adding /home/runner/go/bin to PATH"; \
 		export PATH="/home/runner/go/bin:$$PATH"; \
+		echo "New PATH: $$PATH"; \
 	fi
 	go generate
 	tfplugindocs validate --provider-name powerplatform
