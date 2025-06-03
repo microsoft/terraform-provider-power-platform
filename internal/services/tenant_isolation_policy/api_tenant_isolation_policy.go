@@ -144,7 +144,8 @@ func getRetryAfterDuration(resp *http.Response) time.Duration {
 // doWaitForLifecycleOperationStatus polls an asynchronous operation until completion.
 // It follows the location header from the initial response, respects Retry-After
 // headers to control polling frequency, and implements exponential backoff with
-// minimum 2s and maximum 60s between attempts.
+// minimum 2s and maximum 60s between attempts. The function respects context
+// cancellation during sleep periods between polling attempts.
 //
 // Parameters:
 //   - ctx: Context for the request with cancellation and timeout capabilities
@@ -186,10 +187,16 @@ func (client *Client) doWaitForLifecycleOperationStatus(ctx context.Context, res
 
 		tflog.Debug(ctx, fmt.Sprintf("Waiting for %s before polling again", waitTime))
 
-		// Wait before polling again
-		err = client.Api.SleepWithContext(ctx, waitTime)
-		if err != nil {
-			return nil, fmt.Errorf("polling interrupted: %w", err)
+		// Check context before sleep for belt-and-suspenders safety
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		default:
+			// Wait before polling again (honors context cancellation)
+			err = client.Api.SleepWithContext(ctx, waitTime)
+			if err != nil {
+				return nil, fmt.Errorf("polling interrupted: %w", err)
+			}
 		}
 	}
 }
