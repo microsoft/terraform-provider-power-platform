@@ -15,6 +15,14 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
 )
 
+// Helper functions to reduce boilerplate for null/unknown checks.
+func getBoolPointer(v basetypes.BoolValue) *bool {
+	if !v.IsNull() && !v.IsUnknown() {
+		return v.ValueBoolPointer()
+	}
+	return nil
+}
+
 type tenantDto struct {
 	TenantId                         string `json:"tenantId,omitempty"`
 	State                            string `json:"state,omitempty"`
@@ -133,33 +141,15 @@ type tenantSettingsDto struct {
 func convertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSettingsResourceModel) (tenantSettingsDto, error) {
 	tenantSettingsDto := tenantSettingsDto{}
 
-	if !tenantSettings.WalkMeOptOut.IsNull() && !tenantSettings.WalkMeOptOut.IsUnknown() {
-		tenantSettingsDto.WalkMeOptOut = tenantSettings.WalkMeOptOut.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableNPSCommentsReachout.IsNull() && !tenantSettings.DisableNPSCommentsReachout.IsUnknown() {
-		tenantSettingsDto.DisableNPSCommentsReachout = tenantSettings.DisableNPSCommentsReachout.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableNewsletterSendout.IsNull() && !tenantSettings.DisableNewsletterSendout.IsUnknown() {
-		tenantSettingsDto.DisableNewsletterSendout = tenantSettings.DisableNewsletterSendout.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableEnvironmentCreationByNonAdminUsers.IsNull() && !tenantSettings.DisableEnvironmentCreationByNonAdminUsers.IsUnknown() {
-		tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers = tenantSettings.DisableEnvironmentCreationByNonAdminUsers.ValueBoolPointer()
-	}
-	if !tenantSettings.DisablePortalsCreationByNonAdminUsers.IsNull() && !tenantSettings.DisablePortalsCreationByNonAdminUsers.IsUnknown() {
-		tenantSettingsDto.DisablePortalsCreationByNonAdminUsers = tenantSettings.DisablePortalsCreationByNonAdminUsers.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableSurveyFeedback.IsNull() && !tenantSettings.DisableSurveyFeedback.IsUnknown() {
-		tenantSettingsDto.DisableSurveyFeedback = tenantSettings.DisableSurveyFeedback.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableTrialEnvironmentCreationByNonAdminUsers.IsNull() && !tenantSettings.DisableTrialEnvironmentCreationByNonAdminUsers.IsUnknown() {
-		tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers = tenantSettings.DisableTrialEnvironmentCreationByNonAdminUsers.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableCapacityAllocationByEnvironmentAdmins.IsNull() && !tenantSettings.DisableCapacityAllocationByEnvironmentAdmins.IsUnknown() {
-		tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins = tenantSettings.DisableCapacityAllocationByEnvironmentAdmins.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableSupportTicketsVisibleByAllUsers.IsNull() && !tenantSettings.DisableSupportTicketsVisibleByAllUsers.IsUnknown() {
-		tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers = tenantSettings.DisableSupportTicketsVisibleByAllUsers.ValueBoolPointer()
-	}
+	tenantSettingsDto.WalkMeOptOut = getBoolPointer(tenantSettings.WalkMeOptOut)
+	tenantSettingsDto.DisableNPSCommentsReachout = getBoolPointer(tenantSettings.DisableNPSCommentsReachout)
+	tenantSettingsDto.DisableNewsletterSendout = getBoolPointer(tenantSettings.DisableNewsletterSendout)
+	tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers = getBoolPointer(tenantSettings.DisableEnvironmentCreationByNonAdminUsers)
+	tenantSettingsDto.DisablePortalsCreationByNonAdminUsers = getBoolPointer(tenantSettings.DisablePortalsCreationByNonAdminUsers)
+	tenantSettingsDto.DisableSurveyFeedback = getBoolPointer(tenantSettings.DisableSurveyFeedback)
+	tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers = getBoolPointer(tenantSettings.DisableTrialEnvironmentCreationByNonAdminUsers)
+	tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins = getBoolPointer(tenantSettings.DisableCapacityAllocationByEnvironmentAdmins)
+	tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers = getBoolPointer(tenantSettings.DisableSupportTicketsVisibleByAllUsers)
 
 	if !tenantSettings.PowerPlatform.IsNull() && !tenantSettings.PowerPlatform.IsUnknown() {
 		powerPlatformAttributes := tenantSettings.PowerPlatform.Attributes()
