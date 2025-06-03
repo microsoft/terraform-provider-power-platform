@@ -38,8 +38,9 @@ jobs:
       - name: "Verify installation"
         run: |
           echo "=== Installed Tools Verification ==="
+          
           export PATH=$PATH:/home/runner/go/bin
-          cp /home/runner/go/bin/tfplugindocs /go/bin/
+          cp /home/runner/go/bin/tfplugindocs /bin/
 
           changie --version
           golangci-lint --version
