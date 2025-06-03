@@ -41,6 +41,5 @@ jobs:
           changie --version
           golangci-lint --version
           terraform --version
-          tfplugindocs --version
           go version
           echo "=== Setup complete ==="
