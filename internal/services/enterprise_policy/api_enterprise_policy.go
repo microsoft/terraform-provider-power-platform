@@ -34,30 +34,30 @@ func (client *Client) buildEnterprisePolicyURL(environmentId, environmentType, a
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/enterprisePolicies/%s/%s", environmentId, environmentType, action),
 	}
-	
+
 	values := url.Values{}
 	values.Add(constants.API_VERSION_PARAM, constants.ENTERPRISE_POLICY_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
-	
+
 	return apiUrl.String()
 }
 
 // executePolicyOperation executes a policy operation (link/unlink) with common retry logic
 func (client *Client) executePolicyOperation(ctx context.Context, environmentId, environmentType, systemId, action string) error {
 	apiUrl := client.buildEnterprisePolicyURL(environmentId, environmentType, action)
-	
+
 	linkEnterprosePolicyDto := linkEnterprosePolicyDto{
 		SystemId: systemId,
 	}
-	
+
 	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl, nil, linkEnterprosePolicyDto, []int{http.StatusAccepted, http.StatusConflict}, nil)
 	if err != nil {
 		return err
 	}
-	
+
 	tflog.Debug(ctx, fmt.Sprintf("Policy %s Operation HTTP Status: '%s'", action, apiResponse.HttpResponse.Status))
 	tflog.Debug(ctx, "Waiting for operation to complete")
-	
+
 	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
 	if err != nil {
 		return err
