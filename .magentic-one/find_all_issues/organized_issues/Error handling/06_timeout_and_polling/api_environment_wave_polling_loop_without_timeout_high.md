@@ -55,7 +55,7 @@ Add context deadline/timeout or a maximum number of retries to prevent infinite 
 
 ```go
 	attempts := 0
-	maxAttempts := 20 // or pick a suitable value
+	maxAttempts := 20
 	retryAfter := api.DefaultRetryAfter()
 
 	for attempts < maxAttempts {
