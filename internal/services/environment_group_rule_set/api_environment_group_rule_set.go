@@ -31,7 +31,7 @@ type Client struct {
 func (client *Client) GetEnvironmentGroupRuleSet(ctx context.Context, environmentGroupId string) (*EnvironmentGroupRuleSetValueSetDto, error) {
 	tenantDto, err := client.TenantApi.GetTenant(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get tenant: %w", err)
 	}
 
 	apiUrl := &url.URL{
@@ -47,11 +47,15 @@ func (client *Client) GetEnvironmentGroupRuleSet(ctx context.Context, environmen
 	environmentGroupRuleSet := environmentGroupRuleSetDto{}
 	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, &environmentGroupRuleSet)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get environment group rule set: %w", err)
 	}
 
 	if resp.HttpResponse.StatusCode == http.StatusNoContent {
-		return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, "rule set '%s' not found")
+		return nil, customerrors.WrapIntoProviderError(
+			fmt.Errorf("rule set '%s' not found", environmentGroupId),
+			customerrors.ERROR_OBJECT_NOT_FOUND,
+			fmt.Sprintf("rule set '%s' not found", environmentGroupId),
+		)
 	}
 
 	if len(environmentGroupRuleSet.Value) == 0 {
@@ -64,7 +68,7 @@ func (client *Client) GetEnvironmentGroupRuleSet(ctx context.Context, environmen
 func (client *Client) CreateEnvironmentGroupRuleSet(ctx context.Context, environmentGroupId string, newEnvironmentGroupRuleSet EnvironmentGroupRuleSetValueSetDto) (*EnvironmentGroupRuleSetValueSetDto, error) {
 	tenantDto, err := client.TenantApi.GetTenant(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get tenant: %w", err)
 	}
 
 	apiUrl := &url.URL{
@@ -81,11 +85,13 @@ func (client *Client) CreateEnvironmentGroupRuleSet(ctx context.Context, environ
 	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, newEnvironmentGroupRuleSet, []int{http.StatusCreated}, &environmentGroupRuleSet)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create environment group rule set: %w", err)
 	}
 
+	// If empty Parameters is a valid API response, remove the following check.
+	// Otherwise, consider clarifying its necessity and error messaging.
 	if len(environmentGroupRuleSet.Parameters) == 0 {
-		return nil, fmt.Errorf("no environment group ruleset found for environment group id %s", environmentGroupId)
+		return nil, fmt.Errorf("no environment group ruleset parameters found for environment group id %s", environmentGroupId)
 	}
 
 	return &environmentGroupRuleSet, nil
@@ -94,7 +100,7 @@ func (client *Client) CreateEnvironmentGroupRuleSet(ctx context.Context, environ
 func (client *Client) UpdateEnvironmentGroupRuleSet(ctx context.Context, environmentGroupId string, newEnvironmentGroupRuleSet EnvironmentGroupRuleSetValueSetDto) (*EnvironmentGroupRuleSetValueSetDto, error) {
 	tenantDto, err := client.TenantApi.GetTenant(ctx)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get tenant: %w", err)
 	}
 
 	apiUrl := &url.URL{
@@ -111,7 +117,7 @@ func (client *Client) UpdateEnvironmentGroupRuleSet(ctx context.Context, environ
 	_, err = client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, newEnvironmentGroupRuleSet, []int{http.StatusOK}, &environmentGroupRuleSet)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update environment group rule set: %w", err)
 	}
 
 	return &environmentGroupRuleSet, nil
@@ -120,7 +126,7 @@ func (client *Client) UpdateEnvironmentGroupRuleSet(ctx context.Context, environ
 func (client *Client) DeleteEnvironmentGroupRuleSet(ctx context.Context, ruleSetId string) error {
 	tenantDto, err := client.TenantApi.GetTenant(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get tenant: %w", err)
 	}
 
 	apiUrl := &url.URL{
@@ -134,6 +140,9 @@ func (client *Client) DeleteEnvironmentGroupRuleSet(ctx context.Context, ruleSet
 	apiUrl.RawQuery = values.Encode()
 
 	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
+	if err != nil {
+		return fmt.Errorf("failed to delete environment group rule set: %w", err)
+	}
 
-	return err
+	return nil
 }
