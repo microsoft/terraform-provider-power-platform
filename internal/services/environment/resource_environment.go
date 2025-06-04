@@ -412,6 +412,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	if err != nil {
 		resp.Diagnostics.AddError("Error when converting source model to create environment dto", err.Error())
+		return
 	}
 
 	err = r.EnvironmentClient.LocationValidator(ctx, envToCreate.Location, envToCreate.Properties.AzureRegion)
@@ -612,10 +613,12 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	err = r.removeBillingPolicy(ctx, state)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when removing billing policy", err.Error())
+		return
 	}
 	err = r.addBillingPolicy(ctx, plan)
 	if err != nil {
 		resp.Diagnostics.AddError("Error when adding billing policy", err.Error())
+		return
 	}
 
 	envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
@@ -761,6 +764,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 	err := r.EnvironmentClient.DeleteEnvironment(ctx, state.Id.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
+		return
 	}
 	resp.State.RemoveResource(ctx)
 }

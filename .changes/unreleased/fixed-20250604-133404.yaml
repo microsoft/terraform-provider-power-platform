@@ -1,0 +1,5 @@
+kind: fixed
+body: Fixed recursive retry loops and missing return statements in environment services that could lead to infinite loops and data corruption. Added proper error wrapping for better debugging context.
+time: 2025-06-04T13:34:04.220409865Z
+custom:
+    Issue: "808"
