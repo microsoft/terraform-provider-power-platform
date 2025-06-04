@@ -2,4 +2,4 @@ kind: added
 body: support partner_id configuration and opt-out for default Terraform partner ID
 time: 2025-05-17T06:29:44.020285595Z
 custom:
-    Issue: "9999"
+    Issue: "781"
