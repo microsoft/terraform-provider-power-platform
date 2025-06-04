@@ -134,6 +134,7 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	dvExits, err := d.SolutionClient.DataverseExists(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when checking if Dataverse exists in environment '%s'", state.EnvironmentId.ValueString()), err.Error())
+		return
 	}
 
 	if !dvExits {
