@@ -76,9 +76,9 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 	}
 	datasources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).DataSources(context.Background())
 
-	require.Equal(t, len(expectedDataSources), len(datasources), "There are an unexpected number of registered data sources")
+	require.Equalf(t, len(expectedDataSources), len(datasources), "Expected %d data sources, got %d", len(expectedDataSources), len(datasources))
 	for _, d := range datasources {
-		require.Contains(t, expectedDataSources, d(), "An unexpected data source was registered")
+		require.Containsf(t, expectedDataSources, d(), "Data source %+v was not expected", d())
 	}
 }
 
@@ -109,9 +109,9 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
 
-	require.Equal(t, len(expectedResources), len(resources), "There are an unexpected number of registered resources")
+	require.Equalf(t, len(expectedResources), len(resources), "Expected %d resources, got %d", len(expectedResources), len(resources))
 	for _, r := range resources {
-		require.Contains(t, expectedResources, r(), "An unexpected resource was registered")
+		require.Containsf(t, expectedResources, r(), "Resource %+v was not expected", r())
 	}
 }
 
