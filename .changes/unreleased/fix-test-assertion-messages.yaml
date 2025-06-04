@@ -1,4 +1,0 @@
-kind: documentation
-body: Enhanced test assertion failure messages to include actual and expected values for better debugging
-custom:
-  Issue: 802
