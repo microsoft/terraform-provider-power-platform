@@ -50,7 +50,7 @@ Add some form of retry limit (e.g., maximum number of tries or a time budget) or
 Pseudo-code example with a retry limit:
 
 ```go
-const maxRetries = 5
+const maxRetries = 10
 func (client *Client) DeleteEnvironment(ctx context.Context, environmentId string, retryCount int) error {
     // ...
     if response.HttpResponse.StatusCode == http.StatusConflict {
