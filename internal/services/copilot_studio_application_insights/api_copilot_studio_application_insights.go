@@ -31,7 +31,7 @@ type client struct {
 func (client *client) getCopilotStudioEndpoint(ctx context.Context, environmentId string) (string, error) {
 	env, err := client.EnvironmentClient.GetEnvironment(ctx, environmentId)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get environment %s: %w", environmentId, err)
 	}
 	if env == nil || env.Properties == nil || env.Properties.RuntimeEndpoints == nil || env.Properties.RuntimeEndpoints.PowerVirtualAgents == "" {
 		return "", errors.New("power virtual agents runtime endpoint is not available in the environment")
@@ -39,7 +39,7 @@ func (client *client) getCopilotStudioEndpoint(ctx context.Context, environmentI
 
 	u, err := url.Parse(env.Properties.RuntimeEndpoints.PowerVirtualAgents)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to parse Power Virtual Agents endpoint: %w", err)
 	}
 
 	return u.Host, nil
@@ -56,7 +56,7 @@ func parseImportId(importId string) (envId string, botId string, err error) {
 func (client *client) getCopilotStudioAppInsightsConfiguration(ctx context.Context, importId string) (*CopilotStudioAppInsightsDto, error) {
 	environmentId, botId, err := parseImportId(importId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to parse import ID: %w", err)
 	}
 	copilotStudioEndpoint, err := client.getCopilotStudioEndpoint(ctx, environmentId)
 	if err != nil {
@@ -83,7 +83,7 @@ func (client *client) getCopilotStudioAppInsightsConfiguration(ctx context.Conte
 	copilotStudioAppInsights := CopilotStudioAppInsightsDto{}
 	_, err = client.Api.Execute(ctx, []string{constants.COPILOT_SCOPE}, "GET", apiUrl.String(), http.Header{"x-cci-tenantid": {env.Properties.TenantId}}, nil, []int{http.StatusOK}, &copilotStudioAppInsights)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get Copilot Studio application insights configuration: %w", err)
 	}
 	copilotStudioAppInsights.EnvironmentId = environmentId
 	copilotStudioAppInsights.BotId = botId
@@ -117,7 +117,7 @@ func (client *client) updateCopilotStudioAppInsightsConfiguration(ctx context.Co
 
 	resp, err := client.Api.Execute(ctx, []string{constants.COPILOT_SCOPE}, "PUT", apiUrl.String(), http.Header{"x-cci-tenantid": {env.Properties.TenantId}}, copilotStudioAppInsightsConfig, []int{http.StatusOK, http.StatusInternalServerError}, &updatedCopilotStudioAppInsightsConfiguration)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update Copilot Studio application insights configuration: %w", err)
 	}
 	if resp.HttpResponse.StatusCode == http.StatusInternalServerError {
 		return nil, fmt.Errorf("error updating Application Insights configuration: %s", string(resp.BodyAsBytes))

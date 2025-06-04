@@ -4,6 +4,7 @@
 package copilot_studio_application_insights
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -26,6 +27,10 @@ type Resource struct {
 }
 
 func createAppInsightsConfigDtoFromSourceModel(appInsightsConfigSource ResourceModel) (*CopilotStudioAppInsightsDto, error) {
+	if appInsightsConfigSource.EnvironmentId.ValueString() == "" {
+		return nil, errors.New("failed to create AppInsightsConfigDto: EnvironmentId cannot be empty")
+	}
+
 	appInsightsConfigDto := &CopilotStudioAppInsightsDto{
 		EnvironmentId:               appInsightsConfigSource.EnvironmentId.ValueString(),
 		BotId:                       appInsightsConfigSource.BotId.ValueString(),
