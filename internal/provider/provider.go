@@ -68,7 +68,7 @@ func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func
 		Cloud:                     *cloudConfig,
 		TerraformVersion:          "unknown",
 		TelemetryOptout:           false,
-		PartnerId:                 DEFAULT_TERRAFORM_PARTNER_ID,
+		PartnerId:                 constants.DEFAULT_TERRAFORM_PARTNER_ID,
 		DisableTerraformPartnerId: false,
 	}
 
