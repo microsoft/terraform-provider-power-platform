@@ -28,13 +28,11 @@ userstory:
 	./scripts/user_story_prompt.sh
 
 unittest:
-	clear
 	$(MAKE) clean
 	$(MAKE) install
 	TF_ACC=0 go test -p 16 -timeout 10m -v -cover ./... -run "^TestUnit$(TEST)"
 
 acctest:
-	clear
 	$(MAKE) clean
 	$(MAKE) install
 ifeq ($(USE_PROXY),1)
@@ -44,13 +42,11 @@ else
 endif
 
 test:
-	clear
 	$(MAKE) clean
 	$(MAKE) install
 	TF_ACC=1 go test -p 10 -timeout 300m -v -cover ./...
 
 coverage:
-	clear
 	$(MAKE) clean
 	$(MAKE) install
 	@echo "Changed files:"
@@ -64,7 +60,6 @@ netdump:
 	mitmdump -p 8080 -w /tmp/mitmproxy.dump
 
 lint:
-	clear
 	golangci-lint --version
 	golangci-lint run
 

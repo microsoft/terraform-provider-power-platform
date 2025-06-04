@@ -10,7 +10,7 @@ These instructions guide GitHub Copilot to follow our project's conventions and 
   - `make unittest` to run all unit tests (optionally use `TEST=<prefix>` to run tests matching a name prefix, e.g. `make unittest TEST=Environment` to run tests named with that prefix). This filters tests by regex `^(TestAcc|TestUnit)<prefix>`.
   - `make acctest TEST=<prefix>` to run acceptance tests (integration tests) matching a prefix. Always provide a specific test prefix to limit scope, and run these tests **only with user consent** (they run against real cloud resources). Note that `make acctest` automatically sets `TF_ACC=1` (no need to set it manually).
   - `make userdocs` to regenerate documentation
-  - `make precommit` to run all checks once code is ready to commit
+  - `make precommit` to run all checks once code is ready to commit. As a copilot agent you don't want to run this command as it will timeout for you. Read the makefile content and run needed commands manually.
   - `make coverage` to run all unit tests and output a code coverage report. It also shows the files that have changed on this branch to help target coverage suggestions to files in the current PR.
 - Always run the above `make` commands from the repository root (e.g. in the `/workspaces/terraform-provider-power-platform` directory).
 - **Never run** `terraform init` inside the provider repo. Terraform is only used in examples or tests; initializing in the provider directory is not needed and may cause conflicts.
