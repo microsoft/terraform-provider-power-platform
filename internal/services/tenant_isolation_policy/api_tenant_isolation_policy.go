@@ -190,7 +190,7 @@ func (client *Client) doWaitForLifecycleOperationStatus(ctx context.Context, res
 		// Check context before sleep for belt-and-suspenders safety
 		select {
 		case <-ctx.Done():
-			return nil, ctx.Err()
+			return nil, fmt.Errorf("polling cancelled: %w", ctx.Err())
 		default:
 			// Wait before polling again (honors context cancellation)
 			err = client.Api.SleepWithContext(ctx, waitTime)
