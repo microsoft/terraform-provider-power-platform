@@ -117,7 +117,11 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadR
 	defer exitContext()
 
 	var state SecurityRolesListDataSourceModel
-	resp.State.Get(ctx, &state)
+	diags := resp.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	if state.EnvironmentId.ValueString() == "" {
 		resp.Diagnostics.AddError("environment_id connot be an empty string", "environment_id connot be an empty string")
@@ -150,7 +154,7 @@ func (d *SecurityRolesDataSource) Read(ctx context.Context, req datasource.ReadR
 		})
 	}
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
