@@ -26,6 +26,10 @@ type Resource struct {
 }
 
 func createAppInsightsConfigDtoFromSourceModel(appInsightsConfigSource ResourceModel) (*CopilotStudioAppInsightsDto, error) {
+	if appInsightsConfigSource.EnvironmentId.ValueString() == "" {
+		return nil, fmt.Errorf("failed to create AppInsightsConfigDto: EnvironmentId cannot be empty")
+	}
+
 	appInsightsConfigDto := &CopilotStudioAppInsightsDto{
 		EnvironmentId:               appInsightsConfigSource.EnvironmentId.ValueString(),
 		BotId:                       appInsightsConfigSource.BotId.ValueString(),
