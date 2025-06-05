@@ -1,7 +1,6 @@
-# Type Assertion Safety Issues
+# Reflection and General Type Safety Issues
 
-This document contains merged type assertion safety issues found in the codebase.
-
+This document contains type assertion safety issues related to reflection usage, general type safety violations, nil checks, and runtime type validation in the codebase.
 
 ## ISSUE 1
 
@@ -29,15 +28,15 @@ Improper reflection use may cause panics at runtime and makes the code less read
 
 ```go
 if body != nil && (reflect.ValueOf(body).Kind() != reflect.Ptr || !reflect.ValueOf(body).IsNil()) {
-	if strp, ok := body.(*string); ok {
-		bodyBuffer = strings.NewReader(*strp)
-	} else {
-		bodyBytes, err := json.Marshal(body)
-		if err != nil {
-			return nil, err
-		}
-		bodyBuffer = bytes.NewBuffer(bodyBytes)
-	}
+ if strp, ok := body.(*string); ok {
+  bodyBuffer = strings.NewReader(*strp)
+ } else {
+  bodyBytes, err := json.Marshal(body)
+  if err != nil {
+   return nil, err
+  }
+  bodyBuffer = bytes.NewBuffer(bodyBytes)
+ }
 }
 ```
 
@@ -47,15 +46,15 @@ Simplify to check if the interface is nil by a safer pattern for optional pointe
 
 ```go
 if body != nil {
-	if strp, ok := body.(*string); ok && strp != nil {
-		bodyBuffer = strings.NewReader(*strp)
-	} else {
-		bodyBytes, err := json.Marshal(body)
-		if err != nil {
-			return nil, err
-		}
-		bodyBuffer = bytes.NewBuffer(bodyBytes)
-	}
+ if strp, ok := body.(*string); ok && strp != nil {
+  bodyBuffer = strings.NewReader(*strp)
+ } else {
+  bodyBytes, err := json.Marshal(body)
+  if err != nil {
+   return nil, err
+  }
+  bodyBuffer = bytes.NewBuffer(bodyBytes)
+ }
 }
 ```
 
@@ -68,6 +67,7 @@ if body != nil {
 Missing Type Validations and Unchecked Nil Returns in Conversion Logic
 
 ##
+
 /workspaces/terraform-provider-power-platform/internal/services/dlp_policy/resource_dlp_policy.go
 
 ## Problem
@@ -108,11 +108,12 @@ policyToCreate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnecto
 ```go
 result := convertToAttrValueConnectorsGroup("Confidential", policy.ConnectorGroups)
 if result == nil {
-	resp.Diagnostics.AddError("Connector Group Conversion Failed", "Failed to convert 'Confidential' connector group to attribute value.")
-	return
+ resp.Diagnostics.AddError("Connector Group Conversion Failed", "Failed to convert 'Confidential' connector group to attribute value.")
+ return
 }
 state.BusinessConnectors = result
 ```
+
 ---
 Save as:  
 /workspaces/terraform-provider-power-platform/.magentic-one/find_all_issues/issues_found/type_safety/resource_dlp_policy_missing_nil_checks_critical.md
@@ -138,18 +139,18 @@ This can lead to fragile error handling logic if the error string or code change
 ## Location
 
 ```go
-	if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
-		resp.State.RemoveResource(ctx)
-		return
-	}
+ if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+  resp.State.RemoveResource(ctx)
+  return
+ }
 ```
 
 ## Code Issue
 
 ```go
 if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
-	resp.State.RemoveResource(ctx)
-	return
+ resp.State.RemoveResource(ctx)
+ return
 }
 ```
 
@@ -161,30 +162,36 @@ Use Go's standard library error wrapping and unwrapping with errors.Is or custom
 import "errors"
 
 if errors.Is(err, customerrors.ErrObjectNotFound) {
-	resp.State.RemoveResource(ctx)
-	return
+ resp.State.RemoveResource(ctx)
+ return
 }
 ```
 
 **Explanation:**
+
 - This approach uses type-safe error handling and supports Go's error-wrapping best practices (introduced in Go 1.13).
 - Adjust `customerrors` to export a proper error variable if not already present (e.g., `var ErrObjectNotFound = errors.New("object not found")`).
 - Benefits include maintainability, improved debugging, and correctness.
+
 ---
 
 # To finish the task you have to
+
 1. Run linter and fix any issues
 2. Run UnitTest and fix any of failing ones
 3. Generate docs
 4. Run Changie
 
 # Changie Instructions
+
 Create only one change log entry. Do not run the changie tool multiple times.
 
 ```bash
 changie new --kind <kind_key> --body "<description>" --custom Issue=<issue_number>
 ```
+
 Where:
+
 - `<kind_key>` is one of: breaking, changed, deprecated, removed, fixed, security, documentation
 - `<description>` is a clear explanation of what was fixed/changed search for 'copilot-commit-message-instructions.md' how to write description.
 - `<issue_number>` pick the issue number or PR number

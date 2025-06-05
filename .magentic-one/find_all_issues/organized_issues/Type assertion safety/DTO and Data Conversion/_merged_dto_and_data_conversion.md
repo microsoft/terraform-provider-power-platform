@@ -1,7 +1,6 @@
-# Type Assertion Safety Issues
+# DTO and Data Conversion Type Safety Issues
 
-This document contains merged type assertion safety issues found in the codebase.
-
+This document contains type assertion safety issues related to Data Transfer Objects (DTOs), model conversions, and data transformation operations in the codebase.
 
 ## ISSUE 1
 
@@ -47,14 +46,14 @@ objectValue.As(ctx, &teamsIntegrationSettings, basetypes.ObjectAsOptions{Unhandl
 
 Apply similar checks in all conversion functions where type assertions are used.
 
-
 ---
 
 ## ISSUE 2
 
 # Unchecked Type Assertions can Panic
 
-## 
+##
+
 /workspaces/terraform-provider-power-platform/internal/services/environment_group_rule_set/dto.go
 
 ## Problem
@@ -214,7 +213,7 @@ Functions: `caseMapStringOfAny`, `caseArrayOfAny`, etc.
 ```go
 value, ok := columnValue.(string)
 if ok {
-	// ...
+ // ...
 }
 ```
 
@@ -259,19 +258,19 @@ Severity: **Medium**
 `func (t UUIDType) Equal(o attr.Type) bool`
 
 ```go
-	other, ok := o.(UUIDType)
-	if !ok {
-		return false
-	}
+ other, ok := o.(UUIDType)
+ if !ok {
+  return false
+ }
 ```
 
 ## Code Issue
 
 ```go
-	other, ok := o.(UUIDType)
-	if !ok {
-		return false
-	}
+ other, ok := o.(UUIDType)
+ if !ok {
+  return false
+ }
 ```
 
 ## Fix
@@ -282,44 +281,48 @@ Example using pointer receiver and asserting both ways:
 
 ```go
 func (t *UUIDType) Equal(o attr.Type) bool {
-	other, ok := o.(*UUIDType)
-	if !ok {
-		return false
-	}
-	return t.StringType.Equal(other.StringType)
+ other, ok := o.(*UUIDType)
+ if !ok {
+  return false
+ }
+ return t.StringType.Equal(other.StringType)
 }
 ```
 
 Or, support both forms:
 
 ```go
-	var other *UUIDType
-	switch v := o.(type) {
-	case UUIDType:
-		other = &v
-	case *UUIDType:
-		other = v
-	default:
-		return false
-	}
-	return t.StringType.Equal(other.StringType)
+ var other *UUIDType
+ switch v := o.(type) {
+ case UUIDType:
+  other = &v
+ case *UUIDType:
+  other = v
+ default:
+  return false
+ }
+ return t.StringType.Equal(other.StringType)
 ```
 
 ---
 
 # To finish the task you have to
+
 1. Run linter and fix any issues
 2. Run UnitTest and fix any of failing ones
 3. Generate docs
 4. Run Changie
 
 # Changie Instructions
+
 Create only one change log entry. Do not run the changie tool multiple times.
 
 ```bash
 changie new --kind <kind_key> --body "<description>" --custom Issue=<issue_number>
 ```
+
 Where:
+
 - `<kind_key>` is one of: breaking, changed, deprecated, removed, fixed, security, documentation
 - `<description>` is a clear explanation of what was fixed/changed search for 'copilot-commit-message-instructions.md' how to write description.
 - `<issue_number>` pick the issue number or PR number

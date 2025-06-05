@@ -1,7 +1,6 @@
-# Type Assertion Safety Issues
+# Provider Data Type Assertion Safety Issues
 
-This document contains merged type assertion safety issues found in the codebase.
-
+This document contains type assertion safety issues related to provider data handling, configuration, and resource provider data type assertions in the codebase.
 
 ## ISSUE 1
 
@@ -68,7 +67,7 @@ ProviderData type assertion error handling silently continues
 
 ## Problem
 
-In the Configure function for the resource, the type assertion for ProviderData to *api.ProviderClient is performed and, if it fails, an error diagnostic is added and return is called. However, for the next type assertion for client.Api, an error is reported that refers to *http.Client, which does not actually match the real client type, causing misleading messages and a possible silent failure if the provider data shape changes. Also, the earlier type assertion for *api.ProviderClient does not panic or halt, but carries on error handling just by message--in future code refactoring, this can make debugging configuration issues hard to diagnose.
+In the Configure function for the resource, the type assertion for ProviderData to *api.ProviderClient is performed and, if it fails, an error diagnostic is added and return is called. However, for the next type assertion for client.Api, an error is reported that refers to*http.Client, which does not actually match the real client type, causing misleading messages and a possible silent failure if the provider data shape changes. Also, the earlier type assertion for *api.ProviderClient does not panic or halt, but carries on error handling just by message--in future code refactoring, this can make debugging configuration issues hard to diagnose.
 
 ## Impact
 
@@ -130,18 +129,22 @@ This prevents confusion and makes diagnostics cleaner for provider maintainers a
 ---
 
 # To finish the task you have to
+
 1. Run linter and fix any issues
 2. Run UnitTest and fix any of failing ones
 3. Generate docs
 4. Run Changie
 
 # Changie Instructions
+
 Create only one change log entry. Do not run the changie tool multiple times.
 
 ```bash
 changie new --kind <kind_key> --body "<description>" --custom Issue=<issue_number>
 ```
+
 Where:
+
 - `<kind_key>` is one of: breaking, changed, deprecated, removed, fixed, security, documentation
 - `<description>` is a clear explanation of what was fixed/changed search for 'copilot-commit-message-instructions.md' how to write description.
 - `<issue_number>` pick the issue number or PR number

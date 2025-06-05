@@ -1,7 +1,6 @@
-# Type Assertion Safety Issues
+# API Response Type Assertion Safety Issues
 
-This document contains merged type assertion safety issues found in the codebase.
-
+This document contains type assertion safety issues related to API response handling, data extraction, and response parsing in the codebase.
 
 ## ISSUE 1
 
@@ -25,11 +24,11 @@ This could cause a program panic during iteration or when extracting data from t
 
 ```go
 func getPrincipalString(principal map[string]any, key string) (string, error) {
-	value, ok := principal[key].(string)
-	if !ok {
-		return "", fmt.Errorf("failed to convert principal %s to string", key)
-	}
-	return value, nil
+ value, ok := principal[key].(string)
+ if !ok {
+  return "", fmt.Errorf("failed to convert principal %s to string", key)
+ }
+ return value, nil
 }
 ```
 
@@ -38,7 +37,7 @@ func getPrincipalString(principal map[string]any, key string) (string, error) {
 ```go
 value, ok := principal[key].(string)
 if !ok {
-	return "", fmt.Errorf("failed to convert principal %s to string", key)
+ return "", fmt.Errorf("failed to convert principal %s to string", key)
 }
 ```
 
@@ -48,15 +47,15 @@ Add an existence check before type assertion:
 
 ```go
 func getPrincipalString(principal map[string]any, key string) (string, error) {
-	raw, exists := principal[key]
-	if !exists {
-		return "", fmt.Errorf("principal key %s does not exist", key)
-	}
-	value, ok := raw.(string)
-	if !ok {
-		return "", fmt.Errorf("failed to convert principal %s to string", key)
-	}
-	return value, nil
+ raw, exists := principal[key]
+ if !exists {
+  return "", fmt.Errorf("principal key %s does not exist", key)
+ }
+ value, ok := raw.(string)
+ if !ok {
+  return "", fmt.Errorf("failed to convert principal %s to string", key)
+ }
+ return value, nil
 }
 ```
 
@@ -80,12 +79,14 @@ Panic risk: unchecked type assertions on interface{} values in map context
 ## Problem
 
 Throughout the file, there are a number of unchecked type assertions from the `any` (i.e. `interface{}`) type, e.g.:
+
 - `response["@odata.context"].(string)`
 - `response["value"].([]any)`
 - `item.(map[string]any)`
 If these type assertions fail (because the map is missing a key, or the value is of a different type), the code will panic.
 
 Examples include:
+
 - `pluralName := strings.Split(response["@odata.context"].(string), "#")[1]`
 - `valueSlice, ok := response["value"].([]any)`
 - `if value, ok := mapResponse["value"].([]any)[0].(map[string]any); ok { ... }`
@@ -102,9 +103,11 @@ In most locations only a basic check for `nil` is present, or in some places, a 
 ## Location
 
 Example location:
+
 ```go
 pluralName := strings.Split(response["@odata.context"].(string), "#")[1]
 ```
+
 But similar issues are present in various locations in the file.
 
 ## Code Issue
@@ -149,6 +152,7 @@ if index := strings.IndexAny(pluralName, "(/"); index != -1 {
 ```
 
 And similarly for usages of slices and maps:
+
 ```go
 if rawVal, ok := response["value"]; ok && rawVal != nil {
     valueSlice, ok := rawVal.([]any)
@@ -271,6 +275,7 @@ Crashing due to a failed type assertion is a critical issue for stability and er
 ## Location
 
 Multiple methods, including:
+
 - `convertColumnsToState`
 - `buildObjectValueFromX`
 - `buildExpandObject`
@@ -315,6 +320,7 @@ default:
     // optionally log or handle unexpected type
 }
 ```
+
 Add similar handling in other relevant methods. This will prevent panics due to unexpected types and let you report or skip unhandled data types without crashing the provider.
 
 ---
@@ -340,6 +346,7 @@ Potential for future control flow bugs or nil pointer dereference if refactoring
 ## Location
 
 Line starting:
+
 ```go
 client, ok := req.ProviderData.(*api.ProviderClient)
 ```
@@ -381,18 +388,22 @@ if client != nil {
 ---
 
 # To finish the task you have to
+
 1. Run linter and fix any issues
 2. Run UnitTest and fix any of failing ones
 3. Generate docs
 4. Run Changie
 
 # Changie Instructions
+
 Create only one change log entry. Do not run the changie tool multiple times.
 
 ```bash
 changie new --kind <kind_key> --body "<description>" --custom Issue=<issue_number>
 ```
+
 Where:
+
 - `<kind_key>` is one of: breaking, changed, deprecated, removed, fixed, security, documentation
 - `<description>` is a clear explanation of what was fixed/changed search for 'copilot-commit-message-instructions.md' how to write description.
 - `<issue_number>` pick the issue number or PR number
