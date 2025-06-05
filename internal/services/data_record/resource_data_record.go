@@ -326,53 +326,63 @@ func convertResourceModelToMap(columnsAsString *string) (mapColumns map[string]a
 
 func caseBool(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
 	value, ok := columnValue.(bool)
-	if ok {
-		attrValue[key] = types.BoolValue(value)
-		attrType[key] = types.BoolType
+	if !ok {
+		tflog.Debug(context.TODO(), "caseBool: failed to cast value to bool", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
+		return
 	}
+	attrValue[key] = types.BoolValue(value)
+	attrType[key] = types.BoolType
 }
 
 func caseInt64(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
 	value, ok := columnValue.(int64)
-	if ok {
-		attrValue[key] = types.Int64Value(value)
-		attrType[key] = types.Int64Type
+	if !ok {
+		tflog.Debug(context.TODO(), "caseInt64: failed to cast value to int64", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
+		return
 	}
+	attrValue[key] = types.Int64Value(value)
+	attrType[key] = types.Int64Type
 }
 
 func caseFloat64(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
 	value, ok := columnValue.(float64)
-	if ok {
-		attrValue[key] = types.Float64Value(value)
-		attrType[key] = types.Float64Type
+	if !ok {
+		tflog.Debug(context.TODO(), "caseFloat64: failed to cast value to float64", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
+		return
 	}
+	attrValue[key] = types.Float64Value(value)
+	attrType[key] = types.Float64Type
 }
 
 func caseString(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
 	value, ok := columnValue.(string)
-	if ok {
-		attrValue[key] = types.StringValue(value)
-		attrType[key] = types.StringType
+	if !ok {
+		tflog.Debug(context.TODO(), "caseString: failed to cast value to string", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
+		return
 	}
+	attrValue[key] = types.StringValue(value)
+	attrType[key] = types.StringType
 }
 
 func caseMapStringOfAny(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key, entityLogicalName string, objectType map[string]attr.Type) {
 	value, ok := columnValue.(string)
-	if ok {
-		dataRecordId := value
-		nestedObjectType := types.ObjectType{
-			AttrTypes: objectType,
-		}
-		nestedObjectValue, _ := types.ObjectValue(
-			objectType,
-			map[string]attr.Value{
-				"table_logical_name": types.StringValue(entityLogicalName),
-				"data_record_id":     types.StringValue(dataRecordId),
-			},
-		)
-		attrType[key] = nestedObjectType
-		attrValue[key] = nestedObjectValue
+	if !ok {
+		tflog.Debug(context.TODO(), "caseMapStringOfAny: failed to cast value to string", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
+		return
 	}
+	dataRecordId := value
+	nestedObjectType := types.ObjectType{
+		AttrTypes: objectType,
+	}
+	nestedObjectValue, _ := types.ObjectValue(
+		objectType,
+		map[string]attr.Value{
+			"table_logical_name": types.StringValue(entityLogicalName),
+			"data_record_id":     types.StringValue(dataRecordId),
+		},
+	)
+	attrType[key] = nestedObjectType
+	attrValue[key] = nestedObjectValue
 }
 
 func caseArrayOfAny(ctx context.Context, attrValue map[string]attr.Value, attrType map[string]attr.Type,

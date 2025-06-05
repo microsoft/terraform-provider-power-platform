@@ -218,9 +218,11 @@ func convertToDlpConnectorGroup(ctx context.Context, diags diag.Diagnostics, cla
 	return connectorGroup
 }
 
-func convertToDlpEnvironment(ctx context.Context, environmentsInPolicy basetypes.SetValue) []dlpEnvironmentDto {
+func convertToDlpEnvironment(ctx context.Context, environmentsInPolicy basetypes.SetValue) ([]dlpEnvironmentDto, error) {
 	envs := []string{}
-	environmentsInPolicy.ElementsAs(ctx, &envs, true)
+	if err := environmentsInPolicy.ElementsAs(ctx, &envs, true); err != nil {
+		return nil, fmt.Errorf("failed to convert environments: %v", err)
+	}
 
 	environments := make([]dlpEnvironmentDto, 0)
 	for _, environment := range envs {
@@ -230,7 +232,7 @@ func convertToDlpEnvironment(ctx context.Context, environmentsInPolicy basetypes
 			Type: "Microsoft.BusinessAppPlatform/scopes/environments",
 		})
 	}
-	return environments
+	return environments, nil
 }
 
 func convertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diags diag.Diagnostics, connectorPatternsAttr basetypes.SetValue) []dlpConnectorUrlPatternsDefinitionDto {
