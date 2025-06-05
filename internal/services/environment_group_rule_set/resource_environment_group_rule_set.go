@@ -262,12 +262,12 @@ func (r *environmentGroupRuleSetResource) ValidateConfig(ctx context.Context, re
 }
 
 func (r *environmentGroupRuleSetResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
-	defer exitContext()
 	if req.ProviderData == nil {
 		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
 	client := req.ProviderData.(*api.ProviderClient).Api
 	if client == nil {

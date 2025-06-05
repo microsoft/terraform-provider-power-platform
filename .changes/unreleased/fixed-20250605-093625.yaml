@@ -1,0 +1,5 @@
+kind: fixed
+body: Fix context and defer issues in Configure methods to avoid unnecessary resource allocation when ProviderData is nil
+time: 2025-06-05T09:36:25.40303494Z
+custom:
+    Issue: "819"

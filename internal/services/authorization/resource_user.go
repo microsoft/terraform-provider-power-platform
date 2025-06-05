@@ -135,12 +135,12 @@ func (r *UserResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 }
 
 func (r *UserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
-	defer exitContext()
 	if req.ProviderData == nil {
 		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
 
 	client, ok := req.ProviderData.(*api.ProviderClient)
 	if !ok {
