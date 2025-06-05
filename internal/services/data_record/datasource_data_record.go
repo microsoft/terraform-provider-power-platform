@@ -275,27 +275,30 @@ func (d *DataRecordDataSource) convertColumnsToState(columns map[string]any) (*b
 	attributes := make(map[string]attr.Value)
 
 	for key, value := range columns {
-		switch value.(type) {
+		switch v := value.(type) {
 		case bool:
-			caseBool(columns[key].(bool), attributes, attributeTypes, key)
+			caseBool(v, attributes, attributeTypes, key)
 		case int64:
-			caseInt64(columns[key].(int64), attributes, attributeTypes, key)
+			caseInt64(v, attributes, attributeTypes, key)
 		case float64:
-			caseFloat64(columns[key].(float64), attributes, attributeTypes, key)
+			caseFloat64(v, attributes, attributeTypes, key)
 		case string:
-			caseString(columns[key].(string), attributes, attributeTypes, key)
+			caseString(v, attributes, attributeTypes, key)
 		case map[string]any:
-			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]any))
+			typ, val, _ := d.buildObjectValueFromX(v)
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
-			v, _ := types.ObjectValue(typ, val)
-			attributes[key] = v
+			objVal, _ := types.ObjectValue(typ, val)
+			attributes[key] = objVal
 			attributeTypes[key] = tupleElementType
 		case []any:
-			typeObj, valObj := d.buildExpandObject(columns[key].([]any))
+			typeObj, valObj := d.buildExpandObject(v)
 			attributeTypes[key] = typeObj
 			attributes[key] = valObj
+		default:
+			// Handle unexpected types gracefully by skipping them
+			continue
 		}
 	}
 
@@ -309,27 +312,30 @@ func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]any) (ma
 	knownObjectValue := map[string]attr.Value{}
 
 	for key, value := range columns {
-		switch value.(type) {
+		switch v := value.(type) {
 		case bool:
-			caseBool(columns[key].(bool), knownObjectValue, knownObjectType, key)
+			caseBool(v, knownObjectValue, knownObjectType, key)
 		case int64:
-			caseInt64(columns[key].(int64), knownObjectValue, knownObjectType, key)
+			caseInt64(v, knownObjectValue, knownObjectType, key)
 		case float64:
-			caseFloat64(columns[key].(float64), knownObjectValue, knownObjectType, key)
+			caseFloat64(v, knownObjectValue, knownObjectType, key)
 		case string:
-			caseString(columns[key].(string), knownObjectValue, knownObjectType, key)
+			caseString(v, knownObjectValue, knownObjectType, key)
 		case map[string]any:
-			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]any))
+			typ, val, _ := d.buildObjectValueFromX(v)
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
-			v, _ := types.ObjectValue(typ, val)
-			knownObjectValue[key] = v
+			objVal, _ := types.ObjectValue(typ, val)
+			knownObjectValue[key] = objVal
 			knownObjectType[key] = tupleElementType
 		case []any:
-			typeObj, valObj := d.buildExpandObject(columns[key].([]any))
+			typeObj, valObj := d.buildExpandObject(v)
 			knownObjectValue[key] = valObj
 			knownObjectType[key] = typeObj
+		default:
+			// Handle unexpected types gracefully by skipping them
+			continue
 		}
 	}
 	return knownObjectType, knownObjectValue, nil

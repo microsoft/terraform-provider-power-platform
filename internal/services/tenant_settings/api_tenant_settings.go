@@ -5,6 +5,7 @@ package tenant_settings
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -82,12 +83,12 @@ func (client *client) UpdateTenantSettings(ctx context.Context, tenantSettings t
 	return &backendSettings, nil
 }
 
-func applyCorrections(ctx context.Context, planned tenantSettingsDto, actual tenantSettingsDto) *tenantSettingsDto {
+func applyCorrections(ctx context.Context, planned tenantSettingsDto, actual tenantSettingsDto) (*tenantSettingsDto, error) {
 	correctedFilter := filterDto(ctx, planned, actual)
 	corrected, ok := correctedFilter.(*tenantSettingsDto)
 	if !ok {
-		tflog.Error(ctx, "Type assertion to failed in applyCorrections")
-		return nil
+		tflog.Error(ctx, "Type assertion failed in applyCorrections")
+		return nil, errors.New("type assertion to *tenantSettingsDto failed in applyCorrections")
 	}
 
 	if planned.PowerPlatform != nil && planned.PowerPlatform.Governance != nil {
@@ -101,7 +102,7 @@ func applyCorrections(ctx context.Context, planned tenantSettingsDto, actual ten
 			corrected.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId = &zu
 		}
 	}
-	return corrected
+	return corrected, nil
 }
 
 // This function is used to filter out the fields that are not opted in to configuration.
