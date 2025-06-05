@@ -298,14 +298,21 @@ func (r *EnvironmentSettingsResource) Configure(ctx context.Context, req resourc
 		return
 	}
 
-	client := req.ProviderData.(*api.ProviderClient).Api
+	providerClient, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
 
+	client := providerClient.Api
 	if client == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			"Provider client Api is nil. Please report this issue to the provider developers.",
 		)
-
 		return
 	}
 
