@@ -118,7 +118,10 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 		)
 		return
 	}
-	d.SolutionCheckerRulesClient = newSolutionCheckerRulesClient(client.Api)
+	// Additional safety check for nil client
+	if client != nil {
+		d.SolutionCheckerRulesClient = newSolutionCheckerRulesClient(client.Api)
+	}
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
