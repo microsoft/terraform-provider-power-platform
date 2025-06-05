@@ -45,6 +45,56 @@ func (d *AnalyticsExportDataSource) Metadata(ctx context.Context, req datasource
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
+func statusNestedAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"name": schema.StringAttribute{
+			MarkdownDescription: "The name of the status entry",
+			Computed:            true,
+		},
+		"state": schema.StringAttribute{
+			MarkdownDescription: "The current state of the analytics component",
+			Computed:            true,
+		},
+		"last_run_on": schema.StringAttribute{
+			MarkdownDescription: "The timestamp of the last execution",
+			Computed:            true,
+		},
+		"message": schema.StringAttribute{
+			MarkdownDescription: "Any message associated with the status",
+			Computed:            true,
+		},
+	}
+}
+
+func sinkNestedAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"id": schema.StringAttribute{
+			MarkdownDescription: "The resource ID of the sink",
+			Computed:            true,
+		},
+		"type": schema.StringAttribute{
+			MarkdownDescription: "The type of the sink",
+			Computed:            true,
+		},
+		"subscription_id": schema.StringAttribute{
+			MarkdownDescription: "The Azure subscription ID",
+			Computed:            true,
+		},
+		"resource_group_name": schema.StringAttribute{
+			MarkdownDescription: "The Azure resource group name",
+			Computed:            true,
+		},
+		"resource_name": schema.StringAttribute{
+			MarkdownDescription: "The name of the sink resource",
+			Computed:            true,
+		},
+		"key": schema.StringAttribute{
+			MarkdownDescription: "The key for accessing the sink",
+			Computed:            true,
+		},
+	}
+}
+
 func (d *AnalyticsExportDataSource) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
@@ -75,55 +125,13 @@ func (d *AnalyticsExportDataSource) Schema(ctx context.Context, req datasource.S
 							MarkdownDescription: "The status information for the analytics data export",
 							Computed:            true,
 							NestedObject: schema.NestedAttributeObject{
-								Attributes: map[string]schema.Attribute{
-									"name": schema.StringAttribute{
-										MarkdownDescription: "The name of the status entry",
-										Computed:            true,
-									},
-									"state": schema.StringAttribute{
-										MarkdownDescription: "The current state of the analytics component",
-										Computed:            true,
-									},
-									"last_run_on": schema.StringAttribute{
-										MarkdownDescription: "The timestamp of the last execution",
-										Computed:            true,
-									},
-									"message": schema.StringAttribute{
-										MarkdownDescription: "Any message associated with the status",
-										Computed:            true,
-									},
-								},
+								Attributes: statusNestedAttributes(),
 							},
 						},
 						"sink": schema.SingleNestedAttribute{
 							MarkdownDescription: "The sink configuration for analytics data",
-							Required:            true,
-							Attributes: map[string]schema.Attribute{
-								"id": schema.StringAttribute{
-									MarkdownDescription: "The resource ID of the sink",
-									Computed:            true,
-								},
-								"type": schema.StringAttribute{
-									MarkdownDescription: "The type of the sink",
-									Computed:            true,
-								},
-								"subscription_id": schema.StringAttribute{
-									MarkdownDescription: "The Azure subscription ID",
-									Computed:            true,
-								},
-								"resource_group_name": schema.StringAttribute{
-									MarkdownDescription: "The Azure resource group name",
-									Computed:            true,
-								},
-								"resource_name": schema.StringAttribute{
-									MarkdownDescription: "The name of the sink resource",
-									Computed:            true,
-								},
-								"key": schema.StringAttribute{
-									MarkdownDescription: "The key for accessing the sink",
-									Computed:            true,
-								},
-							},
+							Computed:            true,
+							Attributes:          sinkNestedAttributes(),
 						},
 						"package_name": schema.StringAttribute{
 							MarkdownDescription: "The package name for the analytics data",
