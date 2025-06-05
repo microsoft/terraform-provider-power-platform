@@ -252,3 +252,43 @@ func TestUnitEnvironmentWaveResource_UnsupportedState(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitEnvironmentWaveResource_Timeout(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+	registerEnvironmentMock(t, "EnvironmentWaveResource_Timeout")
+
+	// Register organizations mock
+	registerOrganizationsMock(t, "EnvironmentWaveResource_Timeout")
+
+	// Register enable endpoint
+	httpmock.RegisterResponder("POST", `=~^https://api\.admin\.powerplatform\.microsoft\.com/api/environments/00000000-0000-0000-0000-000000000001/features/October2024Update/enable$`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	// Register mock for GET calls - always returns Upgrading state (never completes)
+	httpmock.RegisterResponder("GET", `=~^https://api\.admin\.powerplatform\.microsoft\.com/api/environments/00000000-0000-0000-0000-000000000001/features$`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, loadTestResponse(t, "EnvironmentWaveResource_Timeout", "get_features_upgrading.json")), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment_wave" "test" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					feature_name  = "October2024Update"
+					timeouts = {
+						create = "1s"
+					}
+				}`,
+				ExpectError: regexp.MustCompile(`context deadline exceeded`),
+			},
+		},
+	})
+}

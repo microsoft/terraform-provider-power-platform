@@ -78,6 +78,13 @@ func (client *environmentWaveClient) UpdateFeature(ctx context.Context, environm
 
 	retryAfter := api.DefaultRetryAfter()
 	for {
+		// Check if context has been cancelled or deadline exceeded
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("timed out waiting for feature %s to be enabled in environment %s: %w", featureName, environmentId, ctx.Err())
+		default:
+		}
+
 		feature, err := client.GetFeature(ctx, environmentId, featureName)
 		if err != nil {
 			return nil, err
