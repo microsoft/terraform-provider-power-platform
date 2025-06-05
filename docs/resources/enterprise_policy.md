@@ -17,16 +17,15 @@ terraform {
   required_version = "> 1.7.0"
   required_providers {
     powerplatform = {
-      source  = "microsoft/power-platform"
-      version = "~>3.0"
+      source = "microsoft/power-platform"
     }
     azapi = {
       source  = "azure/azapi"
-      version = "~>2.0"
+      version = "~>2.2.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~>4.8"
+      version = "~>4.16.0"
     }
   }
 }
@@ -79,19 +78,20 @@ resource "powerplatform_managed_environment" "managed_development" {
 }
 
 
-// module that creates all azure resources required for the network injection policy and the policy itself
+// module that creates all azure resources required for the network injection (resource group, vnet's and subnet's) policy and the policy itself
 module "network_injection" {
   source = "./network_injection"
 
   should_register_provider = false
-
-  environment_id = powerplatform_environment.example_environment.id
+  environment_id           = powerplatform_environment.example_environment.id
 
   resource_group_name        = "rg_example_network_injection_policy"
   resource_group_location    = local.europe_location[0].azure_regions[0]
   vnet_locations             = local.europe_location[0].azure_regions
   enterprise_policy_name     = "ep_example_network_injection_policy"
   enterprise_policy_location = local.europe_location[0].name
+
+  depends_on = [powerplatform_managed_environment.managed_development]
 }
 
 // module that creates all azure resources required for the encryption policy and the policy itself
@@ -102,14 +102,14 @@ module "encryption" {
 
   environment_id = powerplatform_environment.example_environment.id
 
-  resource_group_name        = "rg_example_encryption_policy8"
+  resource_group_name        = "rg_example_encryption_policy"
   resource_group_location    = local.europe_location[0].azure_regions[0]
-  enterprise_policy_name     = "ep_example_encryption_policy8"
+  enterprise_policy_name     = "ep_example_encryption_policy"
   enterprise_policy_location = "europe"
-  keyvault_name              = "kv-ep-example8"
+  keyvault_name              = "kv-ep-example"
 
   // let's wait for first policy to be executed
-  depends_on = [powerplatform_enterprise_policy.network_injection]
+  depends_on = [module.network_injection]
 }
 ```
 
