@@ -34,7 +34,7 @@ Consider logging or returning an error (if critical), or at minimum, logging via
 ```go
 value, ok := columnValue.(string)
 if !ok {
-    tflog.Warn(context.TODO(), "caseMapStringOfAny: failed to cast value to string", map[string]interface{}{ "key": key })
+    tflog.Debug(context.TODO(), "caseMapStringOfAny: failed to cast value to string", map[string]interface{}{ "key": key })
     return // or capture error for diagnostic
 }
 // ... (continue existing logic)
