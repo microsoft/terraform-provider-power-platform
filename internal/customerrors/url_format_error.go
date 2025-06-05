@@ -7,7 +7,7 @@ import (
 	"fmt"
 )
 
-var _ error = UrlFormatError{}
+var _ error = (*UrlFormatError)(nil)
 
 type UrlFormatError struct {
 	Url string
@@ -15,13 +15,13 @@ type UrlFormatError struct {
 }
 
 func NewUrlFormatError(url string, err error) error {
-	return UrlFormatError{
+	return &UrlFormatError{
 		Err: err,
 		Url: url,
 	}
 }
 
-func (e UrlFormatError) Error() string {
+func (e *UrlFormatError) Error() string {
 	errorMsg := ""
 	if e.Err != nil {
 		errorMsg = e.Err.Error()
@@ -30,6 +30,6 @@ func (e UrlFormatError) Error() string {
 	return fmt.Sprintf("Request url must be an absolute url: '%s' : '%s'", e.Url, errorMsg)
 }
 
-func (e UrlFormatError) Unwrap() error {
+func (e *UrlFormatError) Unwrap() error {
 	return e.Err
 }

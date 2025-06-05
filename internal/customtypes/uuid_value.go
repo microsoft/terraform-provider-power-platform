@@ -18,7 +18,7 @@ import (
 
 const (
 	UUIDTypeErrorInvalidStringHeader  = "Invalid UUID String Value"
-	UUIDTypeErrorInvalidStringDetails = `A string value was provided that is not valid UUID string format.\n\nGiven Value: %s\n`
+	UUIDTypeErrorInvalidStringDetails = "A string value was provided that is not valid UUID string format.\n\nGiven Value: %s\n"
 )
 
 var (

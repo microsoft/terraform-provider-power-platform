@@ -1,0 +1,4 @@
+kind: fixed
+body: Fixed type safety and formatting issues including missing string validation, interface assertions, and escaped newline formatting
+custom:
+  Issue: 825
