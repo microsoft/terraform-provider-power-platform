@@ -332,11 +332,32 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 	}
 
 	policyToCreate.Environments = convertToDlpEnvironment(ctx, plan.Environments)
-	policyToCreate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+
+	customConnectorUrlPatterns, err := convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	if err != nil {
+		return
+	}
+	policyToCreate.CustomConnectorUrlPatternsDefinition = customConnectorUrlPatterns
+
 	policyToCreate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
-	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors))
-	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.NonBusinessConfidentialConnectors))
-	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors))
+
+	confidentialConnectors, err := convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors)
+	if err != nil {
+		return
+	}
+	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, confidentialConnectors)
+
+	generalConnectors, err := convertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.NonBusinessConfidentialConnectors)
+	if err != nil {
+		return
+	}
+	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, generalConnectors)
+
+	blockedConnectors, err := convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors)
+	if err != nil {
+		return
+	}
+	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, blockedConnectors)
 
 	policy, err_client := r.DlpPolicyClient.CreatePolicy(ctx, policyToCreate)
 	if err_client != nil {
@@ -385,11 +406,32 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 	}
 
 	policyToUpdate.Environments = convertToDlpEnvironment(ctx, plan.Environments)
-	policyToUpdate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+
+	customConnectorUrlPatterns, err := convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	if err != nil {
+		return
+	}
+	policyToUpdate.CustomConnectorUrlPatternsDefinition = customConnectorUrlPatterns
+
 	policyToUpdate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
-	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors))
-	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.NonBusinessConfidentialConnectors))
-	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors))
+
+	confidentialConnectors, err := convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors)
+	if err != nil {
+		return
+	}
+	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, confidentialConnectors)
+
+	generalConnectors, err := convertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.NonBusinessConfidentialConnectors)
+	if err != nil {
+		return
+	}
+	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, generalConnectors)
+
+	blockedConnectors, err := convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors)
+	if err != nil {
+		return
+	}
+	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, blockedConnectors)
 
 	policy, err_client := r.DlpPolicyClient.UpdatePolicy(ctx, policyToUpdate)
 	if err_client != nil {
