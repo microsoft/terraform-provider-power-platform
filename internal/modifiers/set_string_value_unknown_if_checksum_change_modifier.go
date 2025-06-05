@@ -57,7 +57,7 @@ func (d *setStringValueToUnknownIfChecksumsChangeModifier) hasChecksumChanged(ct
 	if diags.HasError() {
 		return false
 	}
-	
+
 	var attributeChecksum types.String
 	diags = req.State.GetAttribute(ctx, path.Root(checksumAttributeName), &attributeChecksum)
 	resp.Diagnostics.Append(diags...)

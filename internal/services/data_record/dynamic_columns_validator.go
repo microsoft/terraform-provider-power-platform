@@ -60,8 +60,8 @@ func (v DynamicsColumnsValidator) Validate(ctx context.Context, config tfsdk.Con
 	}
 
 	var dynamicColumns types.Dynamic
-	if err := config.GetAttribute(ctx, matchedPaths[0], &dynamicColumns); err != nil {
-		diags.AddError("Failed to get dynamic columns attribute", err.Error())
+	diags.Append(config.GetAttribute(ctx, matchedPaths[0], &dynamicColumns)...)
+	if diags.HasError() {
 		return diags
 	}
 
