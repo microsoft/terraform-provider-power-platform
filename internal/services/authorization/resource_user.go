@@ -159,7 +159,17 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	var plan *UserResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	if resp.Diagnostics.HasError() || plan == nil {
+		return
+	}
+
+	// Validate required fields before dereferencing
+	if plan.EnvironmentId.IsUnknown() || plan.EnvironmentId.IsNull() {
+		resp.Diagnostics.AddError("Invalid Configuration", "Environment ID is required and cannot be null or unknown")
+		return
+	}
+	if plan.AadId.IsUnknown() || plan.AadId.IsNull() {
+		resp.Diagnostics.AddError("Invalid Configuration", "AAD ID is required and cannot be null or unknown")
 		return
 	}
 
@@ -230,7 +240,13 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	if resp.Diagnostics.HasError() {
+	if resp.Diagnostics.HasError() || state == nil {
+		return
+	}
+
+	// Validate required fields before dereferencing
+	if state.EnvironmentId.IsUnknown() || state.EnvironmentId.IsNull() {
+		resp.Diagnostics.AddError("Invalid State", "Environment ID is required and cannot be null or unknown")
 		return
 	}
 
@@ -308,7 +324,21 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	var state *UserResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	if resp.Diagnostics.HasError() {
+	if resp.Diagnostics.HasError() || plan == nil || state == nil {
+		return
+	}
+
+	// Validate required fields before dereferencing
+	if plan.EnvironmentId.IsUnknown() || plan.EnvironmentId.IsNull() {
+		resp.Diagnostics.AddError("Invalid Configuration", "Environment ID is required and cannot be null or unknown")
+		return
+	}
+	if plan.AadId.IsUnknown() || plan.AadId.IsNull() {
+		resp.Diagnostics.AddError("Invalid Configuration", "AAD ID is required and cannot be null or unknown")
+		return
+	}
+	if state.EnvironmentId.IsUnknown() || state.EnvironmentId.IsNull() {
+		resp.Diagnostics.AddError("Invalid State", "State Environment ID is required and cannot be null or unknown")
 		return
 	}
 
@@ -403,7 +433,13 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	var state *UserResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	if resp.Diagnostics.HasError() {
+	if resp.Diagnostics.HasError() || state == nil {
+		return
+	}
+
+	// Validate required fields before dereferencing
+	if state.EnvironmentId.IsUnknown() || state.EnvironmentId.IsNull() {
+		resp.Diagnostics.AddError("Invalid State", "Environment ID is required and cannot be null or unknown")
 		return
 	}
 

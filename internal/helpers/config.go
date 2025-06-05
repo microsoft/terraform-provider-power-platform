@@ -83,3 +83,9 @@ func GetConfigBool(ctx context.Context, configValue basetypes.BoolValue, environ
 func StringPtr(s string) *string {
 	return &s
 }
+
+// IsKnown returns true if the value is not null and not unknown.
+// This is a helper function to reduce repetitive null/unknown checks.
+func IsKnown(value attr.Value) bool {
+	return !value.IsNull() && !value.IsUnknown()
+}

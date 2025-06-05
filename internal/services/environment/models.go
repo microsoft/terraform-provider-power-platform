@@ -127,15 +127,15 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		}
 	}
 
-	if !environmentSource.EnvironmentGroupId.IsNull() && !environmentSource.EnvironmentGroupId.IsUnknown() {
+	if helpers.IsKnown(environmentSource.EnvironmentGroupId) {
 		environmentDto.Properties.ParentEnvironmentGroup = &ParentEnvironmentGroupDto{Id: environmentSource.EnvironmentGroupId.ValueString()}
 	}
 
-	if !environmentSource.AllowBingSearch.IsNull() && !environmentSource.AllowBingSearch.IsUnknown() {
+	if helpers.IsKnown(environmentSource.AllowBingSearch) {
 		environmentDto.Properties.BingChatEnabled = environmentSource.AllowBingSearch.ValueBool()
 	}
 
-	if !environmentSource.OwnerId.IsNull() && !environmentSource.OwnerId.IsUnknown() {
+	if helpers.IsKnown(environmentSource.OwnerId) {
 		tenantId, err := r.EnvironmentClient.tenantClient.GetTenant(ctx)
 		if err != nil {
 			return nil, err
@@ -147,7 +147,7 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		}
 	}
 
-	if !environmentSource.Dataverse.IsNull() && !environmentSource.Dataverse.IsUnknown() {
+	if helpers.IsKnown(environmentSource.Dataverse) {
 		var dataverseSourceModel DataverseSourceModel
 		environmentSource.Dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
@@ -162,7 +162,7 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 }
 
 func convertEnvironmentCreateLinkEnvironmentMetadataDtoFromDataverseSourceModel(ctx context.Context, dataverse types.Object) (*createLinkEnvironmentMetadataDto, error) {
-	if !dataverse.IsNull() && !dataverse.IsUnknown() {
+	if helpers.IsKnown(dataverse) {
 		var dataverseSourceModel DataverseSourceModel
 		dataverse.As(ctx, &dataverseSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
