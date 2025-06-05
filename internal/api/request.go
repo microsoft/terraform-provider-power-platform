@@ -90,11 +90,7 @@ type Response struct {
 }
 
 func (apiResponse *Response) MarshallTo(obj any) error {
-	err := json.NewDecoder(bytes.NewReader(apiResponse.BodyAsBytes)).Decode(&obj)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.NewDecoder(bytes.NewReader(apiResponse.BodyAsBytes)).Decode(obj)
 }
 
 func (apiResponse *Response) GetHeader(name string) string {
