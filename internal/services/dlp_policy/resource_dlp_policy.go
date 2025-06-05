@@ -331,7 +331,12 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 		CustomConnectorUrlPatternsDefinition: []dlpConnectorUrlPatternsDefinitionDto{},
 	}
 
-	policyToCreate.Environments = convertToDlpEnvironment(ctx, plan.Environments)
+	environments, err := convertToDlpEnvironment(ctx, plan.Environments)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert environments", err.Error())
+		return
+	}
+	policyToCreate.Environments = environments
 	policyToCreate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
 	policyToCreate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors))
@@ -384,7 +389,12 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 		ConnectorGroups:                 []dlpConnectorGroupsModelDto{},
 	}
 
-	policyToUpdate.Environments = convertToDlpEnvironment(ctx, plan.Environments)
+	environments, err := convertToDlpEnvironment(ctx, plan.Environments)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert environments", err.Error())
+		return
+	}
+	policyToUpdate.Environments = environments
 	policyToUpdate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
 	policyToUpdate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
 	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors))
