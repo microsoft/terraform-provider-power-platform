@@ -190,18 +190,16 @@ func (d *DataRecordDataSource) Configure(ctx context.Context, req datasource.Con
 		return
 	}
 
-	client := req.ProviderData.(*api.ProviderClient).Api
-
-	if client == nil {
+	providerClient, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			"Unexpected DataSource Configure Type",
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
-	d.DataRecordClient = newDataRecordClient(client)
+	d.DataRecordClient = newDataRecordClient(providerClient.Api)
 }
 
 func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
