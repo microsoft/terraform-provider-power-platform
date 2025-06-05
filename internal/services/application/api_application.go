@@ -274,11 +274,16 @@ func (client *client) InstallApplicationInEnvironment(ctx context.Context, envir
 	applicationId := ""
 	if response.HttpResponse.StatusCode == http.StatusAccepted {
 		operationLocationHeader := response.GetHeader(constants.HEADER_OPERATION_LOCATION)
+		if operationLocationHeader == "" {
+			tflog.Error(ctx, "Missing operation location header in response")
+			return "", errors.New("missing operation location header in response")
+		}
 		tflog.Debug(ctx, "Opeartion Location Header: "+operationLocationHeader)
 
 		_, err = url.Parse(operationLocationHeader)
 		if err != nil {
 			tflog.Error(ctx, "Error parsing location header: "+err.Error())
+			return "", err
 		}
 
 		for {
