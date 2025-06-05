@@ -1,0 +1,4 @@
+kind: changed
+body: Improved test structure by replacing magic strings with constants for better maintainability in hash_test.go
+custom:
+  Issue: 826
