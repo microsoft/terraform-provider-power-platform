@@ -31,8 +31,7 @@ Wrap the closure in a function and handle or log the error:
 ```go
 defer func() {
     if cerr := response.HttpResponse.Body.Close(); cerr != nil {
-        // Log the error or handle it appropriately
-        // log.Printf("Error closing response body: %v", cerr)
+        // tflog debug
     }
 }()
 ```
