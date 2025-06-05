@@ -310,7 +310,9 @@ func configureUseMsi(ctx context.Context, p *PowerPlatformProvider, clientId str
 	// Convert the slice to an array
 	auxiliaryTenantIDsList := make([]string, len(auxiliaryTenantIDs.Elements()))
 	for i, v := range auxiliaryTenantIDs.Elements() {
-		auxiliaryTenantIDsList[i] = v.String()
+		if str, ok := v.(types.String); ok {
+			auxiliaryTenantIDsList[i] = str.ValueString()
+		}
 	}
 	p.Config.AuxiliaryTenantIDs = auxiliaryTenantIDsList
 	p.Config.UseMsi = true
