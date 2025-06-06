@@ -135,7 +135,7 @@ jobs:
     
     - name: Install Power Platform Tools
       if: success() || failure()
-      uses: microsoft/powerplatform-actions/actions-install@51f663ea104eb227c3712215ceb2f82827d81c27 # v1.9.0
+      uses: microsoft/powerplatform-actions/actions-install@6c7b538671a040d11afd8ab94d77bfe3b3ed87e6 # v1.9.1
 
     - name: Environments cleanup
       if: success() || failure()
