@@ -224,34 +224,25 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	// Get CAE configuration
 	enableCae := helpers.GetConfigBool(ctx, configValue.EnableContinuousAccessEvaluation, constants.ENV_VAR_POWER_PLATFORM_ENABLE_CAE, false)
 
-	if p.Config.TestMode {
+	// Configure authentication method
+	switch {
+	case p.Config.TestMode:
 		configureTestMode(ctx)
-		goto configureUrls
-	}
-	if useCli {
+	case useCli:
 		configureUseCli(ctx, p)
-		goto configureUrls
-	}
-	if useDevCli {
+	case useDevCli:
 		configureUseDevCli(ctx, p)
-		goto configureUrls
-	}
-	if useOidc {
+	case useOidc:
 		configureUseOidc(ctx, p, tenantId, clientId, oidcRequestToken, azdoServiceConnectionId, oidcRequestUrl, oidcToken, oidcTokenFilePath, resp)
-		goto configureUrls
-	}
-	if useMsi {
+	case useMsi:
 		configureUseMsi(ctx, p, clientId, auxiliaryTenantIDs)
-		goto configureUrls
-	}
-	if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
+	case clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != ""):
 		configureClientCertificate(ctx, p, tenantId, clientId, clientCertificate, clientCertificateFilePath, clientCertificatePassword, resp)
-		goto configureUrls
+	default:
+		configureClientSecret(ctx, p, tenantId, clientId, clientSecret, resp)
 	}
-	configureClientSecret(ctx, p, tenantId, clientId, clientSecret, resp)
 
-configureUrls:
-
+	// Configure cloud URLs
 	var providerConfigUrls *config.ProviderConfigUrls
 	var cloudConfiguration *cloud.Configuration
 	p.Config.CloudType = config.CloudType(cloudType)

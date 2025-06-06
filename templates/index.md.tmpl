@@ -46,6 +46,7 @@ See the official Terraform documentation for more information about [requiring p
 Terraform supports a number of different methods for authenticating to Power Platform.
 
 * [Authenticating to Power Platform using the Azure CLI](#authenticating-to-power-platform-using-the-azure-cli)
+* [Authenticating to Power Platform using the Azure Developer CLI](#authenticating-to-power-platform-using-the-azure-developer-cli)
 * [Authenticating to Power Platform using a Service Principal and OpenID Connect (OIDC) GitHub and Azure DevOps](#authenticating-to-power-platform-using-a-service-principal-and-openid-connect-oidc-github-and-azure-devops)
 * [Authenticating to Power Platform using a Service Principal and a Client Secret](#authenticating-to-power-platform-using-a-service-principal-and-a-client-secret)
 * [Authenticating to Power Platform using a Managed Identity](#authenticating-to-power-platform-using-a-managed-identity)
@@ -76,6 +77,28 @@ The Power Platform provider can use the [Azure CLI](https://learn.microsoft.com/
     ```terraform
     provider "powerplatform" {
       use_cli = true
+    }
+    ```
+
+### Authenticating to Power Platform using the Azure Developer CLI
+
+The Power Platform provider can use the [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/) to authenticate to Power Platform services. If you have the Azure Developer CLI installed, you can use it to log in to your Microsoft Entra Id account and the Power Platform provider will use the credentials from the Azure Developer CLI.
+
+#### Prerequisites
+
+1. [Install the Azure Developer CLI](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd)
+1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
+1. Login using the Azure Developer CLI
+
+    ```bash
+    azd auth login
+    ```
+
+    Configure the provider to use the Azure Developer CLI with the following code:
+
+    ```terraform
+    provider "powerplatform" {
+      use_dev_cli = true
     }
     ```
 
@@ -354,6 +377,7 @@ We recommend using Environment Variables to pass the credentials to the provider
 | `POWER_PLATFORM_CLOUD` | override for the cloud used (default is `public`) | |
 | `POWER_PLATFORM_USE_OIDC` | if set to `true` then OIDC authentication will be used | |
 | `POWER_PLATFORM_USE_CLI` | if set to `true` then Azure CLI authentication will be used | |
+| `POWER_PLATFORM_USE_DEV_CLI` | if set to `true` then Azure Developer CLI authentication will be used | |
 | `POWER_PLATFORM_USE_MSI` | if set to `true` then Managed Identity authentication will be used | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE` | The Base64 format of your certificate that will be used for certificate-based authentication | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH` | The path to the certificate that will be used for certificate-based authentication | |
