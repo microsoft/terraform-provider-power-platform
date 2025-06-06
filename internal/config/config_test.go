@@ -260,3 +260,156 @@ func TestUnitProviderConfig_AuthMethods_Independence(t *testing.T) {
 	assert.True(t, config.IsUserManagedIdentityProvided(), "IsUserManagedIdentityProvided should be true (UseMsi=true, ClientId=not empty)")
 	assert.False(t, config.IsSystemManagedIdentityProvided(), "IsSystemManagedIdentityProvided should be false (UseMsi=true, ClientId=not empty)")
 }
+
+func TestUnitProviderConfig_IsAzDOWorkloadIdentityFederationProvided(t *testing.T) {
+	tests := []struct {
+		name     string
+		config   ProviderConfig
+		expected bool
+	}{
+		{
+			name: "IsAzDOWorkloadIdentityFederationProvided returns true when UseOidc is true and AzDOServiceConnectionID is not empty",
+			config: ProviderConfig{
+				UseOidc:                 true,
+				AzDOServiceConnectionID: "test-connection-id",
+			},
+			expected: true,
+		},
+		{
+			name: "IsAzDOWorkloadIdentityFederationProvided returns false when UseOidc is false",
+			config: ProviderConfig{
+				UseOidc:                 false,
+				AzDOServiceConnectionID: "test-connection-id",
+			},
+			expected: false,
+		},
+		{
+			name: "IsAzDOWorkloadIdentityFederationProvided returns false when UseOidc is true but AzDOServiceConnectionID is empty",
+			config: ProviderConfig{
+				UseOidc:                 true,
+				AzDOServiceConnectionID: "",
+			},
+			expected: false,
+		},
+		{
+			name: "IsAzDOWorkloadIdentityFederationProvided returns false when UseOidc is default (false)",
+			config: ProviderConfig{
+				UseCli:                  true,
+				UseDevCli:               true,
+				UseMsi:                  true,
+				AzDOServiceConnectionID: "test-connection-id",
+				// UseOidc not set, should default to false
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.config.IsAzDOWorkloadIdentityFederationProvided()
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestUnitProviderConfig_IsClientSecretCredentialsProvided(t *testing.T) {
+	tests := []struct {
+		name     string
+		config   ProviderConfig
+		expected bool
+	}{
+		{
+			name: "IsClientSecretCredentialsProvided returns true when ClientId, ClientSecret, and TenantId are all provided",
+			config: ProviderConfig{
+				ClientId:     "test-client-id",
+				ClientSecret: "test-client-secret",
+				TenantId:     "test-tenant-id",
+			},
+			expected: true,
+		},
+		{
+			name: "IsClientSecretCredentialsProvided returns false when ClientId is empty",
+			config: ProviderConfig{
+				ClientId:     "",
+				ClientSecret: "test-client-secret",
+				TenantId:     "test-tenant-id",
+			},
+			expected: false,
+		},
+		{
+			name: "IsClientSecretCredentialsProvided returns false when ClientSecret is empty",
+			config: ProviderConfig{
+				ClientId:     "test-client-id",
+				ClientSecret: "",
+				TenantId:     "test-tenant-id",
+			},
+			expected: false,
+		},
+		{
+			name: "IsClientSecretCredentialsProvided returns false when TenantId is empty",
+			config: ProviderConfig{
+				ClientId:     "test-client-id",
+				ClientSecret: "test-client-secret",
+				TenantId:     "",
+			},
+			expected: false,
+		},
+		{
+			name: "IsClientSecretCredentialsProvided returns false when all fields are empty",
+			config: ProviderConfig{
+				ClientId:     "",
+				ClientSecret: "",
+				TenantId:     "",
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.config.IsClientSecretCredentialsProvided()
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestUnitProviderConfig_IsClientCertificateCredentialsProvided(t *testing.T) {
+	tests := []struct {
+		name     string
+		config   ProviderConfig
+		expected bool
+	}{
+		{
+			name: "IsClientCertificateCredentialsProvided returns true when ClientCertificateRaw is not empty",
+			config: ProviderConfig{
+				ClientCertificateRaw: "test-certificate-data",
+			},
+			expected: true,
+		},
+		{
+			name: "IsClientCertificateCredentialsProvided returns false when ClientCertificateRaw is empty",
+			config: ProviderConfig{
+				ClientCertificateRaw: "",
+			},
+			expected: false,
+		},
+		{
+			name: "IsClientCertificateCredentialsProvided returns false when ClientCertificateRaw is default (empty)",
+			config: ProviderConfig{
+				UseCli:    true,
+				UseDevCli: true,
+				UseOidc:   true,
+				UseMsi:    true,
+				// ClientCertificateRaw not set, should default to empty
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.config.IsClientCertificateCredentialsProvided()
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
