@@ -106,6 +106,10 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				MarkdownDescription: "Flag to indicate whether to use the CLI for authentication. ",
 				Optional:            true,
 			},
+			"use_dev_cli": schema.BoolAttribute{
+				MarkdownDescription: "Flag to indicate whether to use the Azure Developer CLI for authentication. ",
+				Optional:            true,
+			},
 			"tenant_id": schema.StringAttribute{
 				MarkdownDescription: "The id of the AAD tenant that Power Platform API uses to authenticate with",
 				Optional:            true,
@@ -201,6 +205,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	clientSecret := helpers.GetConfigString(ctx, configValue.ClientSecret, constants.ENV_VAR_POWER_PLATFORM_CLIENT_SECRET, "")
 	useOidc := helpers.GetConfigBool(ctx, configValue.UseOidc, constants.ENV_VAR_POWER_PLATFORM_USE_OIDC, false)
 	useCli := helpers.GetConfigBool(ctx, configValue.UseCli, constants.ENV_VAR_POWER_PLATFORM_USE_CLI, false)
+	useDevCli := helpers.GetConfigBool(ctx, configValue.UseDevCli, constants.ENV_VAR_POWER_PLATFORM_USE_DEV_CLI, false)
 	clientCertificate := helpers.GetConfigString(ctx, configValue.ClientCertificate, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE, "")
 	clientCertificateFilePath := helpers.GetConfigString(ctx, configValue.ClientCertificateFilePath, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH, "")
 	clientCertificatePassword := helpers.GetConfigString(ctx, configValue.ClientCertificatePassword, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD, "")
@@ -221,17 +226,31 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 
 	if p.Config.TestMode {
 		configureTestMode(ctx)
-	} else if useCli {
-		configureUseCli(ctx, p)
-	} else if useOidc {
-		configureUseOidc(ctx, p, tenantId, clientId, oidcRequestToken, azdoServiceConnectionId, oidcRequestUrl, oidcToken, oidcTokenFilePath, resp)
-	} else if useMsi {
-		configureUseMsi(ctx, p, clientId, auxiliaryTenantIDs)
-	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
-		configureClientCertificate(ctx, p, tenantId, clientId, clientCertificate, clientCertificateFilePath, clientCertificatePassword, resp)
-	} else {
-		configureClientSecret(ctx, p, tenantId, clientId, clientSecret, resp)
+		goto configureUrls
 	}
+	if useCli {
+		configureUseCli(ctx, p)
+		goto configureUrls
+	}
+	if useDevCli {
+		configureUseDevCli(ctx, p)
+		goto configureUrls
+	}
+	if useOidc {
+		configureUseOidc(ctx, p, tenantId, clientId, oidcRequestToken, azdoServiceConnectionId, oidcRequestUrl, oidcToken, oidcTokenFilePath, resp)
+		goto configureUrls
+	}
+	if useMsi {
+		configureUseMsi(ctx, p, clientId, auxiliaryTenantIDs)
+		goto configureUrls
+	}
+	if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
+		configureClientCertificate(ctx, p, tenantId, clientId, clientCertificate, clientCertificateFilePath, clientCertificatePassword, resp)
+		goto configureUrls
+	}
+	configureClientSecret(ctx, p, tenantId, clientId, clientSecret, resp)
+
+configureUrls:
 
 	var providerConfigUrls *config.ProviderConfigUrls
 	var cloudConfiguration *cloud.Configuration
@@ -280,6 +299,11 @@ func configureTestMode(ctx context.Context) {
 func configureUseCli(ctx context.Context, p *PowerPlatformProvider) {
 	tflog.Info(ctx, "Using CLI for authentication")
 	p.Config.UseCli = true
+}
+
+func configureUseDevCli(ctx context.Context, p *PowerPlatformProvider) {
+	tflog.Info(ctx, "Using Azure Developer CLI for authentication")
+	p.Config.UseDevCli = true
 }
 
 func configureUseOidc(ctx context.Context, p *PowerPlatformProvider, tenantId, clientId, oidcRequestToken, azdoServiceConnectionId, oidcRequestUrl, oidcToken, oidcTokenFilePath string, resp *provider.ConfigureResponse) {
