@@ -28,9 +28,10 @@ const (
 )
 
 type ProviderConfig struct {
-	UseCli  bool
-	UseOidc bool
-	UseMsi  bool
+	UseCli    bool
+	UseDevCli bool
+	UseOidc   bool
+	UseMsi    bool
 
 	TenantId           string
 	AuxiliaryTenantIDs []string
@@ -125,15 +126,20 @@ func (model *ProviderConfig) IsCliProvided() bool {
 	return model.UseCli
 }
 
+func (model *ProviderConfig) IsDevCliProvided() bool {
+	return model.UseDevCli
+}
+
 func (model *ProviderConfig) IsOidcProvided() bool {
 	return model.UseOidc
 }
 
 // ProviderConfigModel is a model for the provider configuration.
 type ProviderConfigModel struct {
-	UseCli  types.Bool `tfsdk:"use_cli"`
-	UseOidc types.Bool `tfsdk:"use_oidc"`
-	UseMsi  types.Bool `tfsdk:"use_msi"`
+	UseCli    types.Bool `tfsdk:"use_cli"`
+	UseDevCli types.Bool `tfsdk:"use_dev_cli"`
+	UseOidc   types.Bool `tfsdk:"use_oidc"`
+	UseMsi    types.Bool `tfsdk:"use_msi"`
 
 	Cloud           types.String `tfsdk:"cloud"`
 	TelemetryOptout types.Bool   `tfsdk:"telemetry_optout"`

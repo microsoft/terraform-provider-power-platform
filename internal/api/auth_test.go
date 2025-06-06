@@ -76,3 +76,39 @@ func TestUnitCreateTokenRequestOptions(t *testing.T) {
 		})
 	}
 }
+
+func TestUnitAuthenticateUsingAzureDeveloperCli_ConfigurationCheck(t *testing.T) {
+	// Test that the configuration is set up properly for dev CLI authentication
+	testCases := []struct {
+		name           string
+		useDevCli      bool
+		expectedMethod string
+	}{
+		{
+			name:           "UseDevCli true should trigger dev CLI auth",
+			useDevCli:      true,
+			expectedMethod: "dev_cli",
+		},
+		{
+			name:           "UseDevCli false should not trigger dev CLI auth",
+			useDevCli:      false,
+			expectedMethod: "none",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Arrange
+			providerConfig := &config.ProviderConfig{
+				UseDevCli: tc.useDevCli,
+			}
+
+			// Act & Assert
+			if tc.expectedMethod == "dev_cli" {
+				assert.True(t, providerConfig.IsDevCliProvided(), "IsDevCliProvided should return true")
+			} else {
+				assert.False(t, providerConfig.IsDevCliProvided(), "IsDevCliProvided should return false")
+			}
+		})
+	}
+}
