@@ -32,11 +32,11 @@ type client struct {
 	environmentClient environment.Client
 }
 
-// buildDataverseApiUrl builds a URL for Dataverse API endpoints.
-func buildDataverseApiUrl(environmentHost, path string, query url.Values) string {
+// buildApiUrl builds a URL for API endpoints with a given host, path, and query parameters.
+func buildApiUrl(host, path string, query url.Values) string {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
-		Host:   environmentHost,
+		Host:   host,
 		Path:   path,
 	}
 	if query != nil {
@@ -45,17 +45,14 @@ func buildDataverseApiUrl(environmentHost, path string, query url.Values) string
 	return apiUrl.String()
 }
 
+// buildDataverseApiUrl builds a URL for Dataverse API endpoints.
+func buildDataverseApiUrl(environmentHost, path string, query url.Values) string {
+	return buildApiUrl(environmentHost, path, query)
+}
+
 // buildBapiUrl builds a URL for BAPI endpoints.
 func buildBapiUrl(bapiHost, path string, query url.Values) string {
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   bapiHost,
-		Path:   path,
-	}
-	if query != nil {
-		apiUrl.RawQuery = query.Encode()
-	}
-	return apiUrl.String()
+	return buildApiUrl(bapiHost, path, query)
 }
 
 func (client *client) EnvironmentHasDataverse(ctx context.Context, environmentId string) (bool, error) {
@@ -121,7 +118,7 @@ func (client *client) GetDataverseUserBySystemUserId(ctx context.Context, enviro
 
 func (client *client) GetEnvironmentUserByAadObjectId(ctx context.Context, environmentId, aadObjectId string) (*userDto, error) {
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl := buildBapiUrl(client.Api.GetConfig().Urls.BapiUrl,
 		fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/roleAssignments", environmentId),
 		values)
@@ -199,7 +196,7 @@ func (client *client) RemoveEnvironmentUserSecurityRoles(ctx context.Context, en
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/modifyRoleAssignments", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	userRead, err := client.GetEnvironmentUserByAadObjectId(ctx, environmentId, aadObjectId)
@@ -253,7 +250,7 @@ func (client *client) AddEnvironmentUserSecurityRoles(ctx context.Context, envir
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/modifyRoleAssignments", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	add := EnvironmentUserRequestDto{
@@ -309,7 +306,7 @@ func (client *client) CreateDataverseUser(ctx context.Context, environmentId, aa
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/addUser", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	userToCreate := map[string]any{
@@ -494,7 +491,7 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 	}
 	values := url.Values{}
 	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy,properties/copilotPolicies")
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	env := environmentIdDto{}
