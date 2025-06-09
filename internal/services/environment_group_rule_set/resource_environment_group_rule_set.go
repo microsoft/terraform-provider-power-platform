@@ -273,7 +273,7 @@ func (r *environmentGroupRuleSetResource) Configure(ctx context.Context, req res
 	if client == nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
@@ -331,7 +331,7 @@ func (r *environmentGroupRuleSetResource) Create(ctx context.Context, req resour
 	}
 
 	plan.Id = types.StringPointerValue(createdRuleSetDto.Id)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, *plan)...)
 }
 
 func (r *environmentGroupRuleSetResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
