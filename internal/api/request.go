@@ -146,6 +146,12 @@ func (client *Client) buildCorrelationHeaders(ctx context.Context) (sessionId st
 func (client *Client) buildUserAgent(ctx context.Context) string {
 	userAgent := fmt.Sprintf("terraform-provider-power-platform/%s (%s; %s) terraform/%s go/%s", common.ProviderVersion, runtime.GOOS, runtime.GOARCH, client.Config.TerraformVersion, runtime.Version())
 
+	if client.Config.PartnerId != "" {
+		userAgent += fmt.Sprintf(" pid-%s", client.Config.PartnerId)
+	} else if !client.Config.DisableTerraformPartnerId {
+		userAgent += fmt.Sprintf(" pid-%s", constants.DEFAULT_TERRAFORM_PARTNER_ID)
+	}
+
 	requestContext, ok := ctx.Value(helpers.REQUEST_CONTEXT_KEY).(helpers.RequestContextValue)
 	if ok {
 		userAgent += fmt.Sprintf(" %s %s", requestContext.ObjectName, requestContext.RequestType)
