@@ -117,8 +117,8 @@ const (
 	RX_POWERPLATFORM_API_SCOPE      = "https://api.powerplatform.microsoft.scloud/.default"
 	RX_AUTHORITY_HOST               = "https://login.microsoftonline.microsoft.scloud/"
 	RX_LICENSING_API_DOMAIN         = "licensing.microsoft.scloud"
-	RX_POWERAPPS_ADVISOR_API_DOMAIN = "api.advisor.powerapps.microsoft.scloud"
-	RX_POWERAPPS_ADVISOR_API_SCOPE  = "https://advisor.powerapps.microsoft.scloud/.default"
+	RX_POWERAPPS_ADVISOR_API_DOMAIN = "api.advisor.powerapps.eaglex.ic.gov"
+	RX_POWERAPPS_ADVISOR_API_SCOPE  = "https://advisor.powerapps.eaglex.ic.gov/.default"
 	RX_ANALYTICS_SCOPE              = ""
 )
 
