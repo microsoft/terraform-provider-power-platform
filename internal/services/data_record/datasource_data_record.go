@@ -334,7 +334,11 @@ func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]any) (ma
 			knownObjectValue[key] = valObj
 			knownObjectType[key] = typeObj
 		default:
-			// Handle unexpected types gracefully by skipping them
+			// Log unexpected types for debugging purposes
+			tflog.Debug(context.Background(), "Skipping unhandled type in buildObjectValueFromX", map[string]interface{}{
+				"key":       key,
+				"valueType": fmt.Sprintf("%T", value),
+			})
 			continue
 		}
 	}
