@@ -83,3 +83,12 @@ func GetConfigBool(ctx context.Context, configValue basetypes.BoolValue, environ
 func StringPtr(s string) *string {
 	return &s
 }
+
+// BoolPointer returns a pointer to the bool value if the BoolValue is not null and not unknown, otherwise returns nil.
+// This helper reduces boilerplate for null/unknown checks when converting BoolValue to *bool.
+func BoolPointer(v basetypes.BoolValue) *bool {
+	if !v.IsNull() && !v.IsUnknown() {
+		return v.ValueBoolPointer()
+	}
+	return nil
+}

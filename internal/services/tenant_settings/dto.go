@@ -13,15 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
-
-// Helper functions to reduce boilerplate for null/unknown checks.
-func getBoolPointer(v basetypes.BoolValue) *bool {
-	if !v.IsNull() && !v.IsUnknown() {
-		return v.ValueBoolPointer()
-	}
-	return nil
-}
 
 type tenantDto struct {
 	TenantId                         string `json:"tenantId,omitempty"`
@@ -141,15 +134,15 @@ type tenantSettingsDto struct {
 func convertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSettingsResourceModel) (tenantSettingsDto, error) {
 	tenantSettingsDto := tenantSettingsDto{}
 
-	tenantSettingsDto.WalkMeOptOut = getBoolPointer(tenantSettings.WalkMeOptOut)
-	tenantSettingsDto.DisableNPSCommentsReachout = getBoolPointer(tenantSettings.DisableNPSCommentsReachout)
-	tenantSettingsDto.DisableNewsletterSendout = getBoolPointer(tenantSettings.DisableNewsletterSendout)
-	tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers = getBoolPointer(tenantSettings.DisableEnvironmentCreationByNonAdminUsers)
-	tenantSettingsDto.DisablePortalsCreationByNonAdminUsers = getBoolPointer(tenantSettings.DisablePortalsCreationByNonAdminUsers)
-	tenantSettingsDto.DisableSurveyFeedback = getBoolPointer(tenantSettings.DisableSurveyFeedback)
-	tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers = getBoolPointer(tenantSettings.DisableTrialEnvironmentCreationByNonAdminUsers)
-	tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins = getBoolPointer(tenantSettings.DisableCapacityAllocationByEnvironmentAdmins)
-	tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers = getBoolPointer(tenantSettings.DisableSupportTicketsVisibleByAllUsers)
+	tenantSettingsDto.WalkMeOptOut = helpers.BoolPointer(tenantSettings.WalkMeOptOut)
+	tenantSettingsDto.DisableNPSCommentsReachout = helpers.BoolPointer(tenantSettings.DisableNPSCommentsReachout)
+	tenantSettingsDto.DisableNewsletterSendout = helpers.BoolPointer(tenantSettings.DisableNewsletterSendout)
+	tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers = helpers.BoolPointer(tenantSettings.DisableEnvironmentCreationByNonAdminUsers)
+	tenantSettingsDto.DisablePortalsCreationByNonAdminUsers = helpers.BoolPointer(tenantSettings.DisablePortalsCreationByNonAdminUsers)
+	tenantSettingsDto.DisableSurveyFeedback = helpers.BoolPointer(tenantSettings.DisableSurveyFeedback)
+	tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers = helpers.BoolPointer(tenantSettings.DisableTrialEnvironmentCreationByNonAdminUsers)
+	tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins = helpers.BoolPointer(tenantSettings.DisableCapacityAllocationByEnvironmentAdmins)
+	tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers = helpers.BoolPointer(tenantSettings.DisableSupportTicketsVisibleByAllUsers)
 
 	if !tenantSettings.PowerPlatform.IsNull() && !tenantSettings.PowerPlatform.IsUnknown() {
 		powerPlatformAttributes := tenantSettings.PowerPlatform.Attributes()
