@@ -176,3 +176,45 @@ func TestUnitPowerPlatformProvider_Validate_Telementry_Optout_Is_True(t *testing
 		},
 	})
 }
+
+func TestUnitPowerPlatformProvider_PartnerId_Valid(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("../services/environment/tests/datasource/Validate_Read/get_environments.json").String()), nil
+		})
+
+	test.Test(t, test.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []test.TestStep{
+			{
+				Config: `provider "powerplatform" {
+                                       use_cli = true
+                                       partner_id = "00000000-0000-0000-0000-000000000001"
+                               }
+                               data "powerplatform_environments" "all" {}`,
+			},
+		},
+	})
+}
+
+func TestUnitPowerPlatformProvider_PartnerId_Invalid(t *testing.T) {
+	test.Test(t, test.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []test.TestStep{
+			{
+				Config: `provider "powerplatform" {
+                                       partner_id = "invalid-guid"
+                               }
+                               data "powerplatform_environments" "all" {}`,
+				ExpectError: regexp.MustCompile("Invalid UUID"),
+			},
+		},
+	})
+}
