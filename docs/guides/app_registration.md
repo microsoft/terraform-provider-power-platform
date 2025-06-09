@@ -50,4 +50,4 @@ New-AzureADServicePrincipal -AppId 8578e004-a5c6-46e7-913e-12f58912df43 -Display
 
 ### Authorizing client applications
 
-You will need to preuthorize Azure CLI to access your API by adding client application `04b07795-8ddb-461a-bbee-02f9e1bf7b46`
+You will need to preauthorize Azure CLI to access your API by adding client application `04b07795-8ddb-461a-bbee-02f9e1bf7b46`

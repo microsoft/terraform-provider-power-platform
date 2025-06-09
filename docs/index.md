@@ -51,11 +51,11 @@ Terraform supports a number of different methods for authenticating to Power Pla
 * [Authenticating to Power Platform using a Service Principal and a Client Secret/Certificate](/guides/client_secret.md)
 * [Authenticating to Power Platform using a Managed Identity](/guides/managed_identity.md)
 
-We recommend using either a Service Principal when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
+We recommend using a Service Principal with OIDC federated credentials when running Terraform non-interactively (such as when running Terraform in a CI server) and authenticating using the Azure CLI when running Terraform locally.
 
 ### Using Environment Variables
 
-We recommend using Environment Variables to pass the credentials to the provider.
+You may use Environment Variables to configure the provider.
 
 | Name | Description | Default Value |
 |------|-------------|---------------|
