@@ -79,7 +79,7 @@ You will finially need to preuthorize Azure CLI to access your API by adding cli
 After above steps you should be able to authenticate using Azure CLI:
 
 ```bash
-az login --scope api://powerplatform_provider_terraform/.default
+az login
 ```
 
 If your tenant doesn't have any Azure subscriptions, you can use the `--allow-no-subscriptions` flag to login. If you are working in a web-based devcontainer and you need more control over the interactive login process you can use the `--use-device-code` flag.

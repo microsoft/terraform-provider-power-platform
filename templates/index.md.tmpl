@@ -69,7 +69,7 @@ The Power Platform provider can use the [Azure CLI](https://learn.microsoft.com/
 1. Login using the scope as the "expose API" you configured when creating the app registration
 
     ```bash
-    az login --allow-no-subscriptions --scope api://powerplatform_provider_terraform/.default
+    az login --allow-no-subscriptions
     ```
 
     Configure the provider to use the Azure CLI with the following code:
