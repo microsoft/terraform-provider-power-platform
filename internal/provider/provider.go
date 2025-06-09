@@ -312,6 +312,8 @@ func configureUseMsi(ctx context.Context, p *PowerPlatformProvider, clientId str
 	for i, v := range auxiliaryTenantIDs.Elements() {
 		if str, ok := v.(types.String); ok {
 			auxiliaryTenantIDsList[i] = str.ValueString()
+		} else {
+			tflog.Warn(ctx, fmt.Sprintf("Element at index %d in auxiliaryTenantIDs is not of type types.String. Skipping.", i))
 		}
 	}
 	p.Config.AuxiliaryTenantIDs = auxiliaryTenantIDsList
