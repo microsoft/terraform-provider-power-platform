@@ -41,7 +41,7 @@ func (client *client) CreateEnvironmentGroup(ctx context.Context, environmentGro
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	newEnvironmentGroup := environmentGroupDto{}
@@ -62,7 +62,7 @@ func (client *client) DeleteEnvironmentGroup(ctx context.Context, environmentGro
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	resp, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusConflict}, nil)
@@ -94,7 +94,7 @@ func (client *client) UpdateEnvironmentGroup(ctx context.Context, environmentGro
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	updatedEnvironmentGroup := environmentGroupDto{}
@@ -115,7 +115,7 @@ func (client *client) GetEnvironmentGroup(ctx context.Context, environmentGroupI
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	environmentGroup := environmentGroupDto{}
@@ -137,7 +137,7 @@ func (client *client) GetEnvironmentsInEnvironmentGroup(ctx context.Context, env
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	values.Add("$filter", fmt.Sprintf("properties/parentEnvironmentGroup/id eq %s", environmentGroupId))
 	apiUrl.RawQuery = values.Encode()
 

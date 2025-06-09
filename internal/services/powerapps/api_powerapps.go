@@ -39,7 +39,7 @@ func (client *client) GetPowerApps(ctx context.Context) ([]powerAppBapiDto, erro
 			Path:   fmt.Sprintf("/providers/Microsoft.PowerApps/scopes/admin/environments/%s/apps", env.Name),
 		}
 		values := url.Values{}
-		values.Add("api-version", "2023-06-01")
+		values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 		apiUrl.RawQuery = values.Encode()
 
 		appsArray := powerAppArrayDto{}

@@ -35,7 +35,7 @@ func (client *client) EnableManagedEnvironment(ctx context.Context, managedEnvSe
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/governanceConfiguration", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, managedEnvSettings, []int{http.StatusNoContent, http.StatusAccepted, http.StatusConflict}, nil)
@@ -67,7 +67,7 @@ func (client *client) DisableManagedEnvironment(ctx context.Context, environment
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/governanceConfiguration", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	managedEnv := environment.GovernanceConfigurationDto{

@@ -23,13 +23,14 @@ type client struct {
 }
 
 func (client *client) GetLocations(ctx context.Context) (locationDto, error) {
+	values := url.Values{}
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
+	
 	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   client.Api.GetConfig().Urls.BapiUrl,
-		Path:   "/providers/Microsoft.BusinessAppPlatform/locations",
-		RawQuery: url.Values{
-			"api-version": []string{"2023-06-01"},
-		}.Encode(),
+		Scheme:   constants.HTTPS,
+		Host:     client.Api.GetConfig().Urls.BapiUrl,
+		Path:     "/providers/Microsoft.BusinessAppPlatform/locations",
+		RawQuery: values.Encode(),
 	}
 
 	var locations locationDto
