@@ -16,6 +16,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers/array"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
@@ -30,29 +31,6 @@ func newUserClient(apiClient *api.Client) client {
 type client struct {
 	Api               *api.Client
 	environmentClient environment.Client
-}
-
-// buildApiUrl builds a URL for API endpoints with a given host, path, and query parameters.
-func buildApiUrl(host, path string, query url.Values) string {
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   host,
-		Path:   path,
-	}
-	if query != nil {
-		apiUrl.RawQuery = query.Encode()
-	}
-	return apiUrl.String()
-}
-
-// buildDataverseApiUrl builds a URL for Dataverse API endpoints.
-func buildDataverseApiUrl(environmentHost, path string, query url.Values) string {
-	return buildApiUrl(environmentHost, path, query)
-}
-
-// buildBapiUrl builds a URL for BAPI endpoints.
-func buildBapiUrl(bapiHost, path string, query url.Values) string {
-	return buildApiUrl(bapiHost, path, query)
 }
 
 func (client *client) EnvironmentHasDataverse(ctx context.Context, environmentId string) (bool, error) {
@@ -77,7 +55,7 @@ func (client *client) GetDataverseUsers(ctx context.Context, environmentId strin
 		return nil, err
 	}
 
-	apiUrl := buildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers", nil)
+	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers", nil)
 	userArray := userArrayDto{}
 	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &userArray)
 	if err != nil {
@@ -100,7 +78,7 @@ func (client *client) GetDataverseUserBySystemUserId(ctx context.Context, enviro
 
 	values := url.Values{}
 	values.Add("$expand", "systemuserroles_association($select=roleid,name,ismanaged,_businessunitid_value)")
-	apiUrl := buildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers("+systemUserId+")", values)
+	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers("+systemUserId+")", values)
 
 	user := userDto{}
 	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &user)
@@ -119,7 +97,7 @@ func (client *client) GetDataverseUserBySystemUserId(ctx context.Context, enviro
 func (client *client) GetEnvironmentUserByAadObjectId(ctx context.Context, environmentId, aadObjectId string) (*userDto, error) {
 	values := url.Values{}
 	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
-	apiUrl := buildBapiUrl(client.Api.GetConfig().Urls.BapiUrl,
+	apiUrl := helpers.BuildBapiUrl(client.Api.GetConfig().Urls.BapiUrl,
 		fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/roleAssignments", environmentId),
 		values)
 
@@ -166,7 +144,7 @@ func (client *client) GetDataverseUserByAadObjectId(ctx context.Context, environ
 	values := url.Values{}
 	values.Add("$filter", fmt.Sprintf("azureactivedirectoryobjectid eq %s", aadObjectId))
 	values.Add("$expand", "systemuserroles_association($select=roleid,name,ismanaged,_businessunitid_value)")
-	apiUrl := buildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers", values)
+	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers", values)
 
 	user := userArrayDto{}
 	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &user)
@@ -349,7 +327,7 @@ func (client *client) UpdateDataverseUser(ctx context.Context, environmentId, sy
 		return nil, err
 	}
 
-	apiUrl := buildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers("+systemUserId+")", nil)
+	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers("+systemUserId+")", nil)
 
 	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl, nil, userUpdate, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, nil)
 	if err != nil {

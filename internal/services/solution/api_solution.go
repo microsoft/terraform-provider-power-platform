@@ -16,6 +16,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 func NewSolutionClient(apiClient *api.Client) Client {
@@ -26,19 +27,6 @@ func NewSolutionClient(apiClient *api.Client) Client {
 
 type Client struct {
 	Api *api.Client
-}
-
-// buildApiUrl builds a URL for API endpoints with a given host, path, and query parameters.
-func buildApiUrl(host, path string, query url.Values) string {
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   host,
-		Path:   path,
-	}
-	if query != nil {
-		apiUrl.RawQuery = query.Encode()
-	}
-	return apiUrl.String()
 }
 
 func (client *Client) DataverseExists(ctx context.Context, environmentId string) (bool, error) {
@@ -60,7 +48,7 @@ func (client *Client) GetSolutionUniqueName(ctx context.Context, environmentId, 
 	values.Add("$filter", fmt.Sprintf("uniquename eq '%s'", name))
 
 	solutions := solutionArrayDto{}
-	resp, err := client.Api.Execute(ctx, nil, "GET", buildApiUrl(environmentHost, "/api/data/v9.2/solutions", values), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &solutions)
+	resp, err := client.Api.Execute(ctx, nil, "GET", helpers.BuildApiUrl(environmentHost, "/api/data/v9.2/solutions", values), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &solutions)
 	if err != nil {
 		return nil, err
 	}

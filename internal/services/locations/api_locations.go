@@ -25,7 +25,7 @@ type client struct {
 func (client *client) GetLocations(ctx context.Context) (locationDto, error) {
 	values := url.Values{}
 	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
-	
+
 	apiUrl := &url.URL{
 		Scheme:   constants.HTTPS,
 		Host:     client.Api.GetConfig().Urls.BapiUrl,
