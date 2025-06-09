@@ -1,0 +1,32 @@
+---
+page_title: "Authenticating to Power Platform using the Azure CLI"
+subcategory: "Authentication"
+description: |-
+  <no value>
+---
+
+# Authenticating to Power Platform using the Azure CLI
+
+The Power Platform provider can use the [Azure CLI](https://learn.microsoft.com/cli/azure/) to authenticate to Power Platform services. If you have the Azure CLI installed, you can use it to log in to your Microsoft Entra Id account and the Power Platform provider will use the credentials from the Azure CLI.
+
+## Prerequisites
+
+1. [Install the Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli)
+1. [Create an app registration for the Power Platform Terraform Provider](app_registration.md)
+
+  ```bash
+  az login --allow-no-subscriptions
+  ```
+
+  Configure the provider to use the Azure CLI with the following code:
+
+  ```terraform
+  provider "powerplatform" {
+    use_cli = true
+  }
+  ```
+
+## Important Notes
+
+* Terraform only supports authenticating using the az CLI (and this must be available on your PATH) - authenticating using the older azure CLI or PowerShell Cmdlets are not supported.
+* Authenticating via the Azure CLI is only supported when using a User Account. If you're using a Service Principal (for example via az login --service-principal) you should instead authenticate via the Service Principal directly (either using a Client Secret or OIDC).

@@ -48,38 +48,6 @@ Connect-AzureAD
 New-AzureADServicePrincipal -AppId 8578e004-a5c6-46e7-913e-12f58912df43 -DisplayName "Power Platform API"
 ```
 
-!> Note: The `resourceAppId` values are the application IDs of the services in the Public cloud.  If you are [using a sovereign cloud](./nonpublic_clouds.md) the IDs will be different and you will need to use the appropriate application IDs for those services.
-
-## Expose API
-
-In "Expose an API" menu of your App Registration, you need to define your application ID URI:
-
-- Application ID URI: `api://<client_id>`, for example:
-
-```plaintext
-api://powerplatform_provider_terraform
-```
-
-### Define scopes
-
-1. Scope Name: `access`
-1. Who can consent: `Admins and users`
-1. Admin consent display name: `Work with Power Platform Terraform Provider`
-1. Admin consent description: `Allows connection to backend services of Power Platform Terraform Provider`
-1. User consent display name: `Work with Power Platform Terraform Provider`
-1. User consent description: `Allows connection to backend services of Power Platform Terraform Provider`
-1. State: `Enabled`
-
 ### Authorizing client applications
 
-You will finially need to preuthorize Azure CLI to access your API by adding client application `04b07795-8ddb-461a-bbee-02f9e1bf7b46`
-
-## Usage
-
-After above steps you should be able to authenticate using Azure CLI:
-
-```bash
-az login
-```
-
-If your tenant doesn't have any Azure subscriptions, you can use the `--allow-no-subscriptions` flag to login. If you are working in a web-based devcontainer and you need more control over the interactive login process you can use the `--use-device-code` flag.
+You will need to preuthorize Azure CLI to access your API by adding client application `04b07795-8ddb-461a-bbee-02f9e1bf7b46`
