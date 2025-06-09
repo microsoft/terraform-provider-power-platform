@@ -358,6 +358,10 @@ We recommend using Environment Variables to pass the credentials to the provider
 | `POWER_PLATFORM_CLIENT_CERTIFICATE` | The Base64 format of your certificate that will be used for certificate-based authentication | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH` | The path to the certificate that will be used for certificate-based authentication | |
 | `POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID` | The GUID of the Azure DevOps service connection to be used for Azure DevOps Workload Identity Federation | |
+| `POWER_PLATFORM_PARTNER_ID` | Partner GUID used for Customer Usage Attribution. | |
+| `POWER_PLATFORM_DISABLE_TERRAFORM_PARTNER_ID` | If set to `true`, the default Terraform partner ID will not be sent. | |
+| `ARM_PARTNER_ID` | Alternative environment variable for the partner GUID. | |
+| `ARM_DISABLE_TERRAFORM_PARTNER_ID` | Alternative variable to disable the default Terraform partner ID. | |
 
 -> Variables passed into the provider will override the environment variables.
 
@@ -381,6 +385,8 @@ In addition to the authentication options, the following options are also suppor
 | Name | Description | Default Value |
 |------|-------------|---------------|
 | `telemetry_optout` | Opting out of telemetry will remove the User-Agent and session id headers from the requests made to the Power Platform service.  There is no other telemetry data collected by the provider.  This may affect the ability to identify and troubleshoot issues with the provider. | `false` |
+| `partner_id` | Optional GUID for Customer Usage Attribution. When set, the value is appended to the User-Agent header as `pid-<GUID>`. | |
+| `disable_terraform_partner_id` | When `true`, suppresses the default Terraform partner ID when no custom `partner_id` is provided. | `false` |
 
 
 If you are using Azure CLI for authentication, you can also turn off CLI's telemetry by executing the following [command](https://github.com/Azure/azure-cli?tab=readme-ov-file#telemetry-configuration):
