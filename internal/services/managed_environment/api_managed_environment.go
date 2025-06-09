@@ -33,7 +33,6 @@ func (client *client) EnableManagedEnvironment(ctx context.Context, managedEnvSe
 }
 
 func (client *client) enableManagedEnvironmentWithRetry(ctx context.Context, managedEnvSettings environment.GovernanceConfigurationDto, environmentId string, retryCount int) error {
-	const maxRetries = 10
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -56,8 +55,8 @@ func (client *client) enableManagedEnvironmentWithRetry(ctx context.Context, man
 		return err
 	}
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
-		if retryCount >= maxRetries {
-			return fmt.Errorf("maximum retries (%d) reached for EnableManagedEnvironment on lifecycle failure", maxRetries)
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for EnableManagedEnvironment on lifecycle failure", constants.MAX_RETRY_COUNT)
 		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return err
@@ -73,7 +72,6 @@ func (client *client) DisableManagedEnvironment(ctx context.Context, environment
 }
 
 func (client *client) disableManagedEnvironmentWithRetry(ctx context.Context, environmentId string, retryCount int) error {
-	const maxRetries = 10
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -100,8 +98,8 @@ func (client *client) disableManagedEnvironmentWithRetry(ctx context.Context, en
 		return err
 	}
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
-		if retryCount >= maxRetries {
-			return fmt.Errorf("maximum retries (%d) reached for DisableManagedEnvironment on lifecycle failure", maxRetries)
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for DisableManagedEnvironment on lifecycle failure", constants.MAX_RETRY_COUNT)
 		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return err

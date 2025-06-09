@@ -280,7 +280,6 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 }
 
 func (client *Client) deleteEnvironmentWithRetry(ctx context.Context, environmentId string, retryCount int) error {
-	const maxRetries = 10
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -304,8 +303,8 @@ func (client *Client) deleteEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	if response.HttpResponse.StatusCode == http.StatusConflict {
-		if retryCount >= maxRetries {
-			return fmt.Errorf("maximum retries (%d) reached for DeleteEnvironment on conflict", maxRetries)
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for DeleteEnvironment on conflict", constants.MAX_RETRY_COUNT)
 		}
 		err := client.handleHttpConflict(ctx, response)
 		if err != nil {
@@ -328,8 +327,8 @@ func (client *Client) deleteEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
-		if retryCount >= maxRetries {
-			return fmt.Errorf("maximum retries (%d) reached for DeleteEnvironment on lifecycle failure", maxRetries)
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for DeleteEnvironment on lifecycle failure", constants.MAX_RETRY_COUNT)
 		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return err
@@ -410,7 +409,6 @@ func (client *Client) ModifyEnvironmentType(ctx context.Context, environmentId, 
 }
 
 func (client *Client) modifyEnvironmentTypeWithRetry(ctx context.Context, environmentId, environmentType string, retryCount int) error {
-	const maxRetries = 10
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -435,8 +433,8 @@ func (client *Client) modifyEnvironmentTypeWithRetry(ctx context.Context, enviro
 	}
 
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
-		if retryCount >= maxRetries {
-			return fmt.Errorf("maximum retries (%d) reached for ModifyEnvironmentType on lifecycle failure", maxRetries)
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for ModifyEnvironmentType on lifecycle failure", constants.MAX_RETRY_COUNT)
 		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return err
@@ -452,7 +450,6 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 }
 
 func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmentToCreate environmentCreateDto, retryCount int) (*EnvironmentDto, error) {
-	const maxRetries = 10
 	if environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Location != "" && environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName != "" {
 		err := client.ValidateCreateEnvironmentDetails(ctx, environmentToCreate.Location, environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName)
 		if err != nil {
@@ -474,8 +471,8 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	if apiResponse.HttpResponse.StatusCode == http.StatusConflict {
-		if retryCount >= maxRetries {
-			return nil, fmt.Errorf("maximum retries (%d) reached for CreateEnvironment on conflict", maxRetries)
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return nil, fmt.Errorf("maximum retries (%d) reached for CreateEnvironment on conflict", constants.MAX_RETRY_COUNT)
 		}
 		err := client.handleHttpConflict(ctx, apiResponse)
 		if err != nil {
@@ -536,7 +533,6 @@ func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environme
 }
 
 func (client *Client) updateEnvironmentAiFeaturesWithRetry(ctx context.Context, environmentId string, generativeAIConfig GenerativeAiFeaturesDto, retryCount int) error {
-	const maxRetries = 10
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -551,8 +547,8 @@ func (client *Client) updateEnvironmentAiFeaturesWithRetry(ctx context.Context, 
 	}
 
 	if apiResponse.HttpResponse.StatusCode == http.StatusConflict {
-		if retryCount >= maxRetries {
-			return fmt.Errorf("maximum retries (%d) reached for UpdateEnvironmentAiFeatures on conflict", maxRetries)
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for UpdateEnvironmentAiFeatures on conflict", constants.MAX_RETRY_COUNT)
 		}
 		err := client.handleHttpConflict(ctx, apiResponse)
 		if err != nil {
@@ -567,8 +563,8 @@ func (client *Client) updateEnvironmentAiFeaturesWithRetry(ctx context.Context, 
 	}
 
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
-		if retryCount >= maxRetries {
-			return fmt.Errorf("maximum retries (%d) reached for UpdateEnvironmentAiFeatures on lifecycle failure", maxRetries)
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for UpdateEnvironmentAiFeatures on lifecycle failure", constants.MAX_RETRY_COUNT)
 		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return err
@@ -597,7 +593,6 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 }
 
 func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmentId string, environment EnvironmentDto, retryCount int) (*EnvironmentDto, error) {
-	const maxRetries = 10
 	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata != nil && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
 		err := client.ValidateUpdateEnvironmentDetails(ctx, environment.Id, environment.Properties.LinkedEnvironmentMetadata.DomainName)
 		if err != nil {
@@ -622,8 +617,8 @@ func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	if apiResponse.HttpResponse.StatusCode == http.StatusConflict {
-		if retryCount >= maxRetries {
-			return nil, fmt.Errorf("maximum retries (%d) reached for UpdateEnvironment on conflict", maxRetries)
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return nil, fmt.Errorf("maximum retries (%d) reached for UpdateEnvironment on conflict", constants.MAX_RETRY_COUNT)
 		}
 		err := client.handleHttpConflict(ctx, apiResponse)
 		if err != nil {
@@ -639,8 +634,8 @@ func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmen
 	}
 
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
-		if retryCount >= maxRetries {
-			return nil, fmt.Errorf("maximum retries (%d) reached for UpdateEnvironment on lifecycle failure", maxRetries)
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return nil, fmt.Errorf("maximum retries (%d) reached for UpdateEnvironment on lifecycle failure", constants.MAX_RETRY_COUNT)
 		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return nil, err
