@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
 )
 
@@ -221,6 +222,10 @@ func convertTeamsIntegrationModel(ctx context.Context, powerPlatformAttributes m
 	if !teamIntegrationObject.IsNull() && !teamIntegrationObject.IsUnknown() {
 		objectValue, ok := teamIntegrationObject.(basetypes.ObjectValue)
 		if !ok {
+			tflog.Debug(ctx, "failed to convert teams_integration to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", teamIntegrationObject),
+			})
 			return // Skip conversion if type assertion fails
 		}
 
@@ -242,6 +247,10 @@ func convertPowerAppsModel(ctx context.Context, powerPlatformAttributes map[stri
 	if !powerAppsObject.IsNull() && !powerAppsObject.IsUnknown() {
 		objectValue, ok := powerAppsObject.(basetypes.ObjectValue)
 		if !ok {
+			tflog.Debug(ctx, "failed to convert power_apps to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", powerAppsObject),
+			})
 			return // Skip conversion if type assertion fails
 		}
 
@@ -281,6 +290,10 @@ func convertPowerAutomateModel(ctx context.Context, powerPlatformAttributes map[
 	if !powerAutomateObject.IsNull() && !powerAutomateObject.IsUnknown() {
 		objectValue, ok := powerAutomateObject.(basetypes.ObjectValue)
 		if !ok {
+			tflog.Debug(ctx, "failed to convert power_automate to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", powerAutomateObject),
+			})
 			return // Skip conversion if type assertion fails
 		}
 
@@ -302,6 +315,10 @@ func convertEnvironmentsModel(ctx context.Context, powerPlatformAttributes map[s
 	if !environmentsObject.IsNull() && !environmentsObject.IsUnknown() {
 		objectValue, ok := environmentsObject.(basetypes.ObjectValue)
 		if !ok {
+			tflog.Debug(ctx, "failed to convert environments to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", environmentsObject),
+			})
 			return // Skip conversion if type assertion fails
 		}
 
@@ -323,6 +340,10 @@ func convertGovernanceModel(ctx context.Context, powerPlatformAttributes map[str
 	if !governanceObject.IsNull() && !governanceObject.IsUnknown() {
 		objectValue, ok := governanceObject.(basetypes.ObjectValue)
 		if !ok {
+			tflog.Debug(ctx, "failed to convert governance to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", governanceObject),
+			})
 			return // Skip conversion if type assertion fails
 		}
 
@@ -373,6 +394,10 @@ func convertLicensingModel(ctx context.Context, powerPlatformAttributes map[stri
 	if !licensingObject.IsNull() && !licensingObject.IsUnknown() {
 		objectValue, ok := licensingObject.(basetypes.ObjectValue)
 		if !ok {
+			tflog.Debug(ctx, "failed to convert licensing to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", licensingObject),
+			})
 			return // Skip conversion if type assertion fails
 		}
 
@@ -406,6 +431,10 @@ func convertPowerPagesModel(ctx context.Context, powerPlatformAttributes map[str
 	if !powerPagesObject.IsNull() && !powerPagesObject.IsUnknown() {
 		objectValue, ok := powerPagesObject.(basetypes.ObjectValue)
 		if !ok {
+			tflog.Debug(ctx, "failed to convert power_pages to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", powerPagesObject),
+			})
 			return // Skip conversion if type assertion fails
 		}
 
@@ -424,6 +453,10 @@ func convertChampionsModel(ctx context.Context, powerPlatformAttributes map[stri
 	if !championsObject.IsNull() && !championsObject.IsUnknown() {
 		objectValue, ok := championsObject.(basetypes.ObjectValue)
 		if !ok {
+			tflog.Debug(ctx, "failed to convert champions to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", championsObject),
+			})
 			return // Skip conversion if type assertion fails
 		}
 
@@ -472,6 +505,10 @@ func convertModelExperimentationModel(ctx context.Context, powerPlatformAttribut
 	if !modelExperimentationObject.IsNull() && !modelExperimentationObject.IsUnknown() {
 		objectValue, ok := modelExperimentationObject.(basetypes.ObjectValue)
 		if !ok {
+			tflog.Debug(ctx, "failed to convert model_experimentation to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", modelExperimentationObject),
+			})
 			return // Skip conversion if type assertion fails
 		}
 
@@ -493,6 +530,10 @@ func convertCatalogSettingsModel(ctx context.Context, powerPlatformAttributes ma
 	if !catalogSettingsObject.IsNull() && !catalogSettingsObject.IsUnknown() {
 		objectValue, ok := catalogSettingsObject.(basetypes.ObjectValue)
 		if !ok {
+			tflog.Debug(ctx, "failed to convert catalog_settings to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", catalogSettingsObject),
+			})
 			return // Skip conversion if type assertion fails
 		}
 
@@ -511,6 +552,10 @@ func convertUserManagementSettingsModel(ctx context.Context, powerPlatformAttrib
 	if !userManagementSettingsObject.IsNull() && !userManagementSettingsObject.IsUnknown() {
 		objectValue, ok := userManagementSettingsObject.(basetypes.ObjectValue)
 		if !ok {
+			tflog.Debug(ctx, "failed to convert user_management_settings to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", userManagementSettingsObject),
+			})
 			return // Skip conversion if type assertion fails
 		}
 
