@@ -19,6 +19,11 @@ const (
 	ERROR_ENVIRONMENT_CREATION         ErrorCode = "ENVIRONMENT_CREATION"
 )
 
+// Sentinel errors for Go 1.13+ error handling.
+var (
+	ErrObjectNotFound = ProviderError{ErrorCode: ERROR_OBJECT_NOT_FOUND}
+)
+
 var _ error = ProviderError{}
 
 type ProviderError struct {
@@ -32,6 +37,13 @@ func (e ProviderError) Error() string {
 	}
 
 	return fmt.Sprintf("%s: %s", e.ErrorCode, e.Err.Error())
+}
+
+func (e ProviderError) Is(target error) bool {
+	if t, ok := target.(ProviderError); ok {
+		return e.ErrorCode == t.ErrorCode
+	}
+	return false
 }
 
 func Unwrap(err error) error {

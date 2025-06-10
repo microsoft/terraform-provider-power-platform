@@ -305,6 +305,13 @@ func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resourc
 	state.EnvironmentType = types.StringValue(policy.EnvironmentType)
 	state.Environments = convertToAttrValueEnvironments(policy.Environments)
 	state.CustomConnectorsPatterns = convertToAttrValueCustomConnectorUrlPatternsDefinition(policy.CustomConnectorUrlPatternsDefinition)
+
+	// Validate connector group conversions
+	if policy.ConnectorGroups == nil {
+		resp.Diagnostics.AddError("Connector Group Conversion Failed", "Policy connector groups is nil")
+		return
+	}
+
 	state.BusinessGeneralConnectors = convertToAttrValueConnectorsGroup("Confidential", policy.ConnectorGroups)
 	state.NonBusinessConfidentialConnectors = convertToAttrValueConnectorsGroup("General", policy.ConnectorGroups)
 	state.BlockedConnectors = convertToAttrValueConnectorsGroup("Blocked", policy.ConnectorGroups)
@@ -338,6 +345,11 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.NonBusinessConfidentialConnectors))
 	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors))
 
+	// Check for conversion errors before proceeding
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	policy, err_client := r.DlpPolicyClient.CreatePolicy(ctx, policyToCreate)
 	if err_client != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err_client.Error())
@@ -354,6 +366,13 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 	plan.EnvironmentType = types.StringValue(policy.EnvironmentType)
 	plan.Environments = convertToAttrValueEnvironments(policy.Environments)
 	plan.CustomConnectorsPatterns = convertToAttrValueCustomConnectorUrlPatternsDefinition(policy.CustomConnectorUrlPatternsDefinition)
+
+	// Validate connector group conversions
+	if policy.ConnectorGroups == nil {
+		resp.Diagnostics.AddError("Connector Group Conversion Failed", "Policy connector groups is nil")
+		return
+	}
+
 	plan.BusinessGeneralConnectors = convertToAttrValueConnectorsGroup("Confidential", policy.ConnectorGroups)
 	plan.NonBusinessConfidentialConnectors = convertToAttrValueConnectorsGroup("General", policy.ConnectorGroups)
 	plan.BlockedConnectors = convertToAttrValueConnectorsGroup("Blocked", policy.ConnectorGroups)
@@ -391,6 +410,11 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.NonBusinessConfidentialConnectors))
 	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors))
 
+	// Check for conversion errors before proceeding
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	policy, err_client := r.DlpPolicyClient.UpdatePolicy(ctx, policyToUpdate)
 	if err_client != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err_client.Error())
@@ -407,6 +431,13 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 	plan.EnvironmentType = types.StringValue(policy.EnvironmentType)
 	plan.Environments = convertToAttrValueEnvironments(policy.Environments)
 	plan.CustomConnectorsPatterns = convertToAttrValueCustomConnectorUrlPatternsDefinition(policy.CustomConnectorUrlPatternsDefinition)
+
+	// Validate connector group conversions
+	if policy.ConnectorGroups == nil {
+		resp.Diagnostics.AddError("Connector Group Conversion Failed", "Policy connector groups is nil")
+		return
+	}
+
 	plan.BusinessGeneralConnectors = convertToAttrValueConnectorsGroup("Confidential", policy.ConnectorGroups)
 	plan.NonBusinessConfidentialConnectors = convertToAttrValueConnectorsGroup("General", policy.ConnectorGroups)
 	plan.BlockedConnectors = convertToAttrValueConnectorsGroup("Blocked", policy.ConnectorGroups)
