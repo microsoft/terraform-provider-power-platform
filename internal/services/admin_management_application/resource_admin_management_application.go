@@ -68,7 +68,7 @@ func (r *AdminManagementApplicationResource) Configure(ctx context.Context, req 
 		// ProviderData will be null when Configure is called from ValidateConfig.  It's ok.
 		return
 	}
-	exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
 	client, ok := req.ProviderData.(*api.ProviderClient)
