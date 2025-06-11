@@ -347,6 +347,7 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 
 	// Check for conversion errors before proceeding
 	if resp.Diagnostics.HasError() {
+		tflog.Debug(ctx, "Conversion errors detected during create operation")
 		return
 	}
 
@@ -412,6 +413,7 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 
 	// Check for conversion errors before proceeding
 	if resp.Diagnostics.HasError() {
+		tflog.Debug(ctx, "Conversion errors detected during update operation")
 		return
 	}
 

@@ -13,6 +13,7 @@ import (
 	"math/rand"
 	"net/http"
 	neturl "net/url"
+	"reflect"
 	"strings"
 	"time"
 
@@ -248,8 +249,8 @@ func tryGetScopeFromURL(url string, cloudConfig config.ProviderConfigUrls) (stri
 
 func prepareRequestBody(body any) (io.Reader, error) {
 	var bodyBuffer io.Reader
-	if body != nil {
-		if strp, ok := body.(*string); ok && strp != nil {
+	if body != nil && (reflect.ValueOf(body).Kind() != reflect.Ptr || !reflect.ValueOf(body).IsNil()) {
+		if strp, ok := body.(*string); ok {
 			bodyBuffer = strings.NewReader(*strp)
 		} else {
 			bodyBytes, err := json.Marshal(body)
