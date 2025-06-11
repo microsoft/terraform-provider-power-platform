@@ -36,4 +36,4 @@ if r.ManagedEnvironmentClient == nil {
 }
 ```
 
-Apply this 
+Apply this for the whole codebase
