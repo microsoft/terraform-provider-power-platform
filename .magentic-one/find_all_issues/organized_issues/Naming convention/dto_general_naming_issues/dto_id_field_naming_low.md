@@ -62,4 +62,4 @@ type BillingPolicyEnvironmentsDto struct {
 }
 ```
 
-Keep the JSON tags unchanged if you must adhere to an external API, but update the Go field names for consistency.
+Keep the JSON tags unchanged if you must adhere to an external API, but update the Go field names for consistency. Apply for the whole code base

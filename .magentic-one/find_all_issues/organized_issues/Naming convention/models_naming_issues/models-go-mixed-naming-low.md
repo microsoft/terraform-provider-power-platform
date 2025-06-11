@@ -31,3 +31,5 @@ Rename the field to `SubscriptionID`. Ensure all code referencing this field is 
 ```go
 	SubscriptionID    types.String `tfsdk:"subscription_id"`
 ```
+
+Apply for the whole codebase

@@ -35,3 +35,5 @@ Rename the field from `Id` to `ID` to adhere to Go's naming conventions for acro
 ```go
 	ID          types.String `tfsdk:"id"`
 ```
+
+Apply on the whole codebase 

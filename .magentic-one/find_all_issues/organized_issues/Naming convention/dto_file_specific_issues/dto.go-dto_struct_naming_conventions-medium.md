@@ -61,4 +61,5 @@ type EnvironmentGroupRuleSetParameterDTO struct {
 
 Evaluate if all DTOs need to be exported (used outside package), and refactor accordingly for consistency.
 
+apply for whole code base
 ---

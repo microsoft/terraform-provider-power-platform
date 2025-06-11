@@ -1,4 +1,6 @@
-# Issue 6: Function Naming - StringPtr
+# Title 
+
+Function Naming - StringPtr
 
 ##
 

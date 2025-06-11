@@ -33,9 +33,3 @@ Rename the function to follow Go conventions, such as:
 ```go
 func connectionDtoToModel(connection connectionDto) ConnectionsDataSourceModel
 ```
-
-or
-
-```go
-func toConnectionsDataSourceModel(connection connectionDto) ConnectionsDataSourceModel
-```

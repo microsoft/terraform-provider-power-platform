@@ -54,4 +54,4 @@ func NewURLFormatError(url string, err error) error {
 }
 ```
 
-All usages in the file should be updated to follow this correction.
+All usages should be updated to follow this correction.

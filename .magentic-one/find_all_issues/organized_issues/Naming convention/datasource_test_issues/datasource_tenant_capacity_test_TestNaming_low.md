@@ -31,17 +31,8 @@ func TestAccTenantCapacityDataSource_Validate_Read(t *testing.T) {
 Establish and document a clear testing naming convention (i.e., TestUnit*, TestAcc*, or TestX_Unit, TestX_Acc, etc.). If following the existing scheme, just ensure strict consistency.
 
 ```go
-// For clarity and consistency, perhaps document that each test follows the format:
-// Test<Type><Resource><Operation>
-func TestUnitTenantCapacityDataSource_ValidateRead(t *testing.T) {
-...
-func TestAccTenantCapacityDataSource_ValidateRead(t *testing.T) {
-```
-
-Or, if keeping underscores:
-
-```go
 func Test_Unit_TenantCapacityDataSource_Validate_Read(t *testing.T) {
 ...
 func Test_Acc_TenantCapacityDataSource_Validate_Read(t *testing.T) {
 ```
+apply for whole code base

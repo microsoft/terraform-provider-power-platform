@@ -36,4 +36,4 @@ type client struct {
 }
 ```
 
-And update all usages accordingly.
+And update all usages accordingly in the whole codebase

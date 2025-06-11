@@ -71,6 +71,5 @@ func NewUnexpectedHTTPStatusCodeError(expectedStatusCodes []int, statusCode int,
 }
 ```
 ---
-
-This markdown should be saved to:  
-`/workspaces/terraform-provider-power-platform/.magentic-one/find_all_issues/issues_found/naming/unexpected_http_status_code_error_naming_low.md`
+ 
+Apply for the whole code base

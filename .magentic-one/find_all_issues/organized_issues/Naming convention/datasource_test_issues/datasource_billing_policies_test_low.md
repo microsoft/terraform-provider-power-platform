@@ -41,3 +41,5 @@ func TestBillingPoliciesDataSource_Unit_Read(t *testing.T) {
 Or, simply rely on the file name (ending with `_test.go`), comments, and the usage of `IsUnitTest: true` rather than having `UnitTest` in the function name.
 
 Also, ensure supporting variables/types are named clearly, e.g., `mocks.TestProtoV6ProviderFactories` for the unit variant.
+
+Apply for whole codebase
