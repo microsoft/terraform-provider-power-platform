@@ -104,6 +104,23 @@ func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string) (
 	return accessToken.Token, accessToken.ExpiresOn, nil
 }
 
+func (client *Auth) AuthenticateUsingAzureDeveloperCli(ctx context.Context, scopes []string) (string, time.Time, error) {
+	azureDeveloperCLICredentials, err := azidentity.NewAzureDeveloperCLICredential(&azidentity.AzureDeveloperCLICredentialOptions{
+		AdditionallyAllowedTenants: client.config.AuxiliaryTenantIDs,
+		TenantID:                   client.config.TenantId,
+	})
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	accessToken, err := azureDeveloperCLICredentials.GetToken(ctx, client.createTokenRequestOptions(ctx, scopes))
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	return accessToken.Token, accessToken.ExpiresOn, nil
+}
+
 func (client *Auth) AuthenticateClientSecret(ctx context.Context, scopes []string) (string, time.Time, error) {
 	clientSecretCredential, err := azidentity.NewClientSecretCredential(
 		client.config.TenantId,
@@ -373,6 +390,8 @@ func (client *Auth) GetTokenForScopes(ctx context.Context, scopes []string) (*st
 		token, tokenExpiry, err = client.AuthenticateClientSecret(ctx, scopes)
 	case client.config.IsCliProvided():
 		token, tokenExpiry, err = client.AuthenticateUsingCli(ctx, scopes)
+	case client.config.IsDevCliProvided():
+		token, tokenExpiry, err = client.AuthenticateUsingAzureDeveloperCli(ctx, scopes)
 	case client.config.IsAzDOWorkloadIdentityFederationProvided():
 		token, tokenExpiry, err = client.AuthenticateAzDOWorkloadIdentityFederation(ctx, scopes)
 	case client.config.IsOidcProvided():
