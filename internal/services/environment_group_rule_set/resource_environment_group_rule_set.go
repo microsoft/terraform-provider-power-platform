@@ -5,6 +5,7 @@ package environment_group_rule_set
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -292,7 +293,7 @@ func (r *environmentGroupRuleSetResource) Read(ctx context.Context, req resource
 
 	ruleSetDto, err := r.EnvironmentGroupRuleSetClient.GetEnvironmentGroupRuleSet(ctx, state.EnvironmentGroupId.ValueString())
 	if err != nil {
-		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}

@@ -5,6 +5,7 @@ package dlp_policy
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -287,7 +288,7 @@ func (r *DataLossPreventionPolicyResource) Read(ctx context.Context, req resourc
 
 	policy, err := r.DlpPolicyClient.GetPolicy(ctx, state.Id.ValueString())
 	if err != nil {
-		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}

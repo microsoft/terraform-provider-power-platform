@@ -19,6 +19,16 @@ const (
 	ERROR_ENVIRONMENT_CREATION         ErrorCode = "ENVIRONMENT_CREATION"
 )
 
+// Sentinel errors for use with errors.Is().
+var (
+	ErrObjectNotFound            = ProviderError{ErrorCode: ERROR_OBJECT_NOT_FOUND}
+	ErrEnvironmentUrlNotFound    = ProviderError{ErrorCode: ERROR_ENVIRONMENT_URL_NOT_FOUND}
+	ErrEnvironmentsInEnvGroup    = ProviderError{ErrorCode: ERROR_ENVIRONMENTS_IN_ENV_GROUP}
+	ErrPolicyAssignedToEnvGroup  = ProviderError{ErrorCode: ERROR_POLICY_ASSIGNED_TO_ENV_GROUP}
+	ErrEnvironmentSettingsFailed = ProviderError{ErrorCode: ERROR_ENVIRONMENT_SETTINGS_FAILED}
+	ErrEnvironmentCreation       = ProviderError{ErrorCode: ERROR_ENVIRONMENT_CREATION}
+)
+
 var _ error = ProviderError{}
 
 type ProviderError struct {
@@ -32,6 +42,14 @@ func (e ProviderError) Error() string {
 	}
 
 	return fmt.Sprintf("%s: %s", e.ErrorCode, e.Err.Error())
+}
+
+// Is implements the Is method for error equality checking with errors.Is().
+func (e ProviderError) Is(target error) bool {
+	if t, ok := target.(ProviderError); ok {
+		return e.ErrorCode == t.ErrorCode
+	}
+	return false
 }
 
 func Unwrap(err error) error {
