@@ -5,6 +5,7 @@ package environment_groups
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -200,7 +201,7 @@ func (r *EnvironmentGroupResource) Delete(ctx context.Context, req resource.Dele
 		return
 	}
 
-	if customerrors.Code(err) == customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND || customerrors.Code(err) == customerrors.ERROR_POLICY_ASSIGNED_TO_ENV_GROUP {
+	if errors.Is(err, customerrors.ErrEnvironmentUrlNotFound) || errors.Is(err, customerrors.ErrPolicyAssignedToEnvGroup) {
 		envs, err := r.EnvironmentGroupClient.GetEnvironmentsInEnvironmentGroup(ctx, state.Id.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
@@ -219,12 +220,12 @@ func (r *EnvironmentGroupResource) Delete(ctx context.Context, req resource.Dele
 		}
 
 		ruleSet, err := r.EnvironmentGroupClient.RuleSetApi.GetEnvironmentGroupRuleSet(ctx, state.Id.ValueString())
-		if err != nil && customerrors.Code(err) != customerrors.ERROR_OBJECT_NOT_FOUND {
+		if err != nil && !errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.Diagnostics.AddError("Failed to get environment group ruleset", err.Error())
 			return
 		}
 
-		if customerrors.Code(err) != customerrors.ERROR_OBJECT_NOT_FOUND && ruleSet != nil && len(ruleSet.Parameters) > 0 {
+		if !errors.Is(err, customerrors.ErrObjectNotFound) && ruleSet != nil && len(ruleSet.Parameters) > 0 {
 			tflog.Debug(ctx, fmt.Sprintf("Environment group %s has %d rule sets. Deleting them.", r.FullTypeName(), len(ruleSet.Parameters)))
 			err := r.EnvironmentGroupClient.RuleSetApi.DeleteEnvironmentGroupRuleSet(ctx, *ruleSet.Id)
 			if err != nil {
