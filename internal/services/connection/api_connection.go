@@ -92,7 +92,7 @@ func (client *client) GetConnection(ctx context.Context, environmentId, connecto
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connection)
 	if err != nil {
 		if strings.Contains(err.Error(), "ConnectionNotFound") {
-			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Connection '%s' not found", connectionId))
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("Connection '%s' not found", connectionId))
 		}
 		return nil, fmt.Errorf("failed to get connection: %w", err)
 	}
@@ -226,13 +226,13 @@ func (client *client) GetConnectionShare(ctx context.Context, environmentId, con
 		if id == principalId {
 			displayName, err := getPrincipalString(share.Properties.Principal, "displayName")
 			if err != nil || displayName == "" {
-				return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND,
+				return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND),
 					fmt.Sprintf("Share for principal '%s' not found. Display name is empty", principalId))
 			}
 			return &share, nil
 		}
 	}
-	return nil, customerrors.WrapIntoProviderError(nil, customerrors.ERROR_OBJECT_NOT_FOUND,
+	return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND),
 		fmt.Sprintf("Share for principal '%s' not found", principalId))
 }
 

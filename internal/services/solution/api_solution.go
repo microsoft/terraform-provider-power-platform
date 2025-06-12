@@ -65,7 +65,7 @@ func (client *Client) GetSolutionUniqueName(ctx context.Context, environmentId, 
 	}
 	if len(solutions.Value) == 0 {
 		baseErr := fmt.Errorf("solution with unique name '%s' not found", name)
-		return nil, customerrors.WrapIntoProviderError(baseErr, customerrors.ERROR_OBJECT_NOT_FOUND, baseErr.Error())
+		return nil, customerrors.WrapIntoProviderError(baseErr, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), baseErr.Error())
 	}
 
 	solutions.Value[0].EnvironmentId = environmentId
@@ -102,7 +102,7 @@ func (client *Client) GetSolutionById(ctx context.Context, environmentId, soluti
 	}
 	if len(solutions.Value) == 0 {
 		baseErr := fmt.Errorf("solution with id '%s' not found", solutionId)
-		return nil, customerrors.WrapIntoProviderError(baseErr, customerrors.ERROR_OBJECT_NOT_FOUND, baseErr.Error())
+		return nil, customerrors.WrapIntoProviderError(baseErr, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), baseErr.Error())
 	}
 
 	solutions.Value[0].EnvironmentId = environmentId
@@ -379,7 +379,7 @@ func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId 
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
-		return "", customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+		return "", customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_URL_NOT_FOUND), "environment url not found, please check if the environment has dataverse linked")
 	}
 
 	envUrl, err := url.Parse(environmentUrl)
@@ -405,7 +405,7 @@ func (client *Client) getEnvironment(ctx context.Context, environmentId string) 
 	if err != nil {
 		var httpError *customerrors.UnexpectedHttpStatusCodeError
 		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
-			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment %s not found", environmentId))
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("environment %s not found", environmentId))
 		}
 		return nil, err
 	}

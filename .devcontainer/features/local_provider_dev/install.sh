@@ -50,3 +50,7 @@ rm $(go env GOROOT)/bin/golangci-lint
 # Turn off telemetry for az cli
 # https://github.com/Azure/azure-cli?tab=readme-ov-file#telemetry-configuration
 az config set core.collect_telemetry=false
+
+curl -fsSL https://aka.ms/install-azd.sh | bash
+# Turn off telemetry for azd
+export AZURE_DEV_COLLECT_TELEMETRY=no
