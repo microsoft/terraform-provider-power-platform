@@ -298,6 +298,10 @@ func (d *DataRecordDataSource) convertColumnsToState(columns map[string]any) (*b
 			attributes[key] = valObj
 		default:
 			// Handle unexpected types gracefully by skipping them
+			tflog.Debug(context.Background(), "Skipping unhandled type in convertColumnsToState", map[string]any{
+				"key":       key,
+				"valueType": fmt.Sprintf("%T", value),
+			})
 			continue
 		}
 	}
