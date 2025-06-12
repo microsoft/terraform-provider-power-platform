@@ -151,6 +151,7 @@ const (
 	ENV_VAR_POWER_PLATFORM_CLIENT_SECRET                = "POWER_PLATFORM_CLIENT_SECRET"
 	ENV_VAR_POWER_PLATFORM_USE_OIDC                     = "POWER_PLATFORM_USE_OIDC"
 	ENV_VAR_POWER_PLATFORM_USE_CLI                      = "POWER_PLATFORM_USE_CLI"
+	ENV_VAR_POWER_PLATFORM_USE_DEV_CLI                  = "POWER_PLATFORM_USE_DEV_CLI"
 	ENV_VAR_POWER_PLATFORM_USE_MSI                      = "POWER_PLATFORM_USE_MSI"
 	ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE           = "POWER_PLATFORM_CLIENT_CERTIFICATE"
 	ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH = "POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH"
@@ -185,4 +186,14 @@ const (
 
 const (
 	NO_MANAGEMENT_APPLICATION_ERROR_MSG = "authorization has been denied for this request. Make sure that your service principal is registered as an admin management application: https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application"
+)
+
+// Error codes for provider errors.
+const (
+	ERROR_OBJECT_NOT_FOUND             = "OBJECT_NOT_FOUND"
+	ERROR_ENVIRONMENT_URL_NOT_FOUND    = "ENVIRONMENT_URL_NOT_FOUND"
+	ERROR_ENVIRONMENTS_IN_ENV_GROUP    = "ENVIRONMENTS_IN_ENV_GROUP"
+	ERROR_POLICY_ASSIGNED_TO_ENV_GROUP = "POLICY_ASSIGNED_TO_ENV_GROUP"
+	ERROR_ENVIRONMENT_SETTINGS_FAILED  = "ENVIRONMENT_SETTINGS_FAILED"
+	ERROR_ENVIRONMENT_CREATION         = "ENVIRONMENT_CREATION"
 )
