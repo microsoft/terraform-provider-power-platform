@@ -344,18 +344,16 @@ func (r *TenantSettingsResource) Configure(ctx context.Context, req resource.Con
 		return
 	}
 
-	client := req.ProviderData.(*api.ProviderClient).Api
-
-	if client == nil {
+	providerClient, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
 
-	r.TenantSettingClient = newTenantSettingsClient(client)
+	r.TenantSettingClient = newTenantSettingsClient(providerClient.Api)
 }
 
 func (r *TenantSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

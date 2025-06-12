@@ -5,6 +5,7 @@ package environment_wave
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -151,7 +152,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 
 	feature, err := r.EnvironmentWaveClient.GetFeature(ctx, state.EnvironmentId.ValueString(), state.FeatureName.ValueString())
 	if err != nil {
-		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}

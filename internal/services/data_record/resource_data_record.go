@@ -112,16 +112,15 @@ func (r *DataRecordResource) Configure(ctx context.Context, req resource.Configu
 		return
 	}
 
-	clientApi := req.ProviderData.(*api.ProviderClient).Api
-	if clientApi == nil {
+	providerClient, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
-
 		return
 	}
-	r.DataRecordClient = newDataRecordClient(clientApi)
+	r.DataRecordClient = newDataRecordClient(providerClient.Api)
 }
 
 func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -173,7 +172,7 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 
 	newColumns, err := r.DataRecordClient.GetDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString())
 	if err != nil {
-		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
