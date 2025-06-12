@@ -6,6 +6,7 @@ package provider
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"os"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
@@ -63,10 +64,12 @@ type PowerPlatformProvider struct {
 func NewPowerPlatformProvider(ctx context.Context, testModeEnabled ...bool) func() provider.Provider {
 	cloudUrls, cloudConfig := getCloudPublicUrls()
 	providerConfig := config.ProviderConfig{
-		Urls:             *cloudUrls,
-		Cloud:            *cloudConfig,
-		TerraformVersion: "unknown",
-		TelemetryOptout:  false,
+		Urls:                      *cloudUrls,
+		Cloud:                     *cloudConfig,
+		TerraformVersion:          "unknown",
+		TelemetryOptout:           false,
+		PartnerId:                 constants.DEFAULT_TERRAFORM_PARTNER_ID,
+		DisableTerraformPartnerId: false,
 	}
 
 	if len(testModeEnabled) > 0 && testModeEnabled[0] {
@@ -104,6 +107,10 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 		Attributes: map[string]schema.Attribute{
 			"use_cli": schema.BoolAttribute{
 				MarkdownDescription: "Flag to indicate whether to use the CLI for authentication. ",
+				Optional:            true,
+			},
+			"use_dev_cli": schema.BoolAttribute{
+				MarkdownDescription: "Flag to indicate whether to use the Azure Developer CLI for authentication. ",
 				Optional:            true,
 			},
 			"tenant_id": schema.StringAttribute{
@@ -166,6 +173,15 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				MarkdownDescription: "Flag to indicate whether to opt out of telemetry. Default is `false`",
 				Optional:            true,
 			},
+			"partner_id": schema.StringAttribute{
+				MarkdownDescription: "The GUID of the partner for Customer Usage Attribution (CUA).",
+				Optional:            true,
+				CustomType:          customtypes.UUIDType{},
+			},
+			"disable_terraform_partner_id": schema.BoolAttribute{
+				MarkdownDescription: "Disable sending the default Terraform partner ID when no custom partner_id is provided. Default is `false`",
+				Optional:            true,
+			},
 			"use_msi": schema.BoolAttribute{
 				MarkdownDescription: "Flag to indicate whether to use managed identity for authentication",
 				Optional:            true,
@@ -201,6 +217,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	clientSecret := helpers.GetConfigString(ctx, configValue.ClientSecret, constants.ENV_VAR_POWER_PLATFORM_CLIENT_SECRET, "")
 	useOidc := helpers.GetConfigBool(ctx, configValue.UseOidc, constants.ENV_VAR_POWER_PLATFORM_USE_OIDC, false)
 	useCli := helpers.GetConfigBool(ctx, configValue.UseCli, constants.ENV_VAR_POWER_PLATFORM_USE_CLI, false)
+	useDevCli := helpers.GetConfigBool(ctx, configValue.UseDevCli, constants.ENV_VAR_POWER_PLATFORM_USE_DEV_CLI, false)
 	clientCertificate := helpers.GetConfigString(ctx, configValue.ClientCertificate, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE, "")
 	clientCertificateFilePath := helpers.GetConfigString(ctx, configValue.ClientCertificateFilePath, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH, "")
 	clientCertificatePassword := helpers.GetConfigString(ctx, configValue.ClientCertificatePassword, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD, "")
@@ -216,23 +233,44 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	// Check for telemetry opt out
 	telemetryOptOut := helpers.GetConfigBool(ctx, configValue.TelemetryOptout, constants.ENV_VAR_POWER_PLATFORM_TELEMETRY_OPTOUT, false)
 
+	partnerId := helpers.GetConfigMultiString(ctx, configValue.PartnerId.StringValue, []string{constants.ENV_VAR_POWER_PLATFORM_PARTNER_ID, constants.ENV_VAR_ARM_PARTNER_ID}, "")
+	if partnerId != "" {
+		if _, err := uuid.Parse(partnerId); err != nil {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("partner_id"),
+				"Invalid UUID",
+				fmt.Sprintf("The partner_id must be a valid UUID: %v", err),
+			)
+			return
+		}
+	}
+	disableTerraformPartnerId := helpers.GetConfigBool(ctx, configValue.DisableTerraformPartnerId, constants.ENV_VAR_POWER_PLATFORM_DISABLE_TERRAFORM_PARTNER_ID, false)
+	if !disableTerraformPartnerId {
+		disableTerraformPartnerId = helpers.GetConfigBool(ctx, types.BoolNull(), constants.ENV_VAR_ARM_DISABLE_TERRAFORM_PARTNER_ID, false)
+	}
+
 	// Get CAE configuration
 	enableCae := helpers.GetConfigBool(ctx, configValue.EnableContinuousAccessEvaluation, constants.ENV_VAR_POWER_PLATFORM_ENABLE_CAE, false)
 
-	if p.Config.TestMode {
+	// Configure authentication method
+	switch {
+	case p.Config.TestMode:
 		configureTestMode(ctx)
-	} else if useCli {
+	case useCli:
 		configureUseCli(ctx, p)
-	} else if useOidc {
+	case useDevCli:
+		configureUseDevCli(ctx, p)
+	case useOidc:
 		configureUseOidc(ctx, p, tenantId, clientId, oidcRequestToken, azdoServiceConnectionId, oidcRequestUrl, oidcToken, oidcTokenFilePath, resp)
-	} else if useMsi {
+	case useMsi:
 		configureUseMsi(ctx, p, clientId, auxiliaryTenantIDs)
-	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
+	case clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != ""):
 		configureClientCertificate(ctx, p, tenantId, clientId, clientCertificate, clientCertificateFilePath, clientCertificatePassword, resp)
-	} else {
+	default:
 		configureClientSecret(ctx, p, tenantId, clientId, clientSecret, resp)
 	}
 
+	// Configure cloud URLs
 	var providerConfigUrls *config.ProviderConfigUrls
 	var cloudConfiguration *cloud.Configuration
 	p.Config.CloudType = config.CloudType(cloudType)
@@ -262,6 +300,8 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	p.Config.Urls = *providerConfigUrls
 	p.Config.Cloud = *cloudConfiguration
 	p.Config.TelemetryOptout = telemetryOptOut
+	p.Config.PartnerId = partnerId
+	p.Config.DisableTerraformPartnerId = disableTerraformPartnerId
 	p.Config.EnableContinuousAccessEvaluation = enableCae
 	p.Config.TerraformVersion = req.TerraformVersion
 
@@ -280,6 +320,11 @@ func configureTestMode(ctx context.Context) {
 func configureUseCli(ctx context.Context, p *PowerPlatformProvider) {
 	tflog.Info(ctx, "Using CLI for authentication")
 	p.Config.UseCli = true
+}
+
+func configureUseDevCli(ctx context.Context, p *PowerPlatformProvider) {
+	tflog.Info(ctx, "Using Azure Developer CLI for authentication")
+	p.Config.UseDevCli = true
 }
 
 func configureUseOidc(ctx context.Context, p *PowerPlatformProvider, tenantId, clientId, oidcRequestToken, azdoServiceConnectionId, oidcRequestUrl, oidcToken, oidcTokenFilePath string, resp *provider.ConfigureResponse) {

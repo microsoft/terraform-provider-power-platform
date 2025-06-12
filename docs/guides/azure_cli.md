@@ -1,0 +1,63 @@
+---
+page_title: "Authenticating to Power Platform using the Azure CLI"
+subcategory: "Authentication"
+description: |-
+  <no value>
+---
+
+# Authenticating to Power Platform using the Azure CLI
+
+The Power Platform provider can use the [Azure CLI](https://learn.microsoft.com/cli/azure/) to authenticate to Power Platform services. If you have the Azure CLI installed, you can use it to log in to your Microsoft Entra Id account and the Power Platform provider will use the credentials from the Azure CLI.
+
+## User Authentication
+
+For user-based authentication, you only need to install the Azure CLI and log in with your user account.
+
+### Prerequisites
+
+1. [Install the Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli)
+
+### Authentication Steps
+
+1. Login using the Azure CLI (the `--allow-no-subscriptions` flag is optional and handles cases where the user doesn't have any Azure subscriptions):
+
+   ```bash
+   az login --allow-no-subscriptions
+   ```
+
+2. Configure the provider to use the Azure CLI:
+
+   ```terraform
+   provider "powerplatform" {
+     use_cli = true
+   }
+   ```
+
+## Service Principal Authentication
+
+For service principal authentication using Azure CLI, you need to create an app registration first.
+
+### Prerequisites
+
+1. [Install the Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli)
+2. [Create an app registration for the Power Platform Terraform Provider](app_registration.md)
+
+### Authentication Steps
+
+1. Login using a Service Principal (the `--allow-no-subscriptions` flag is optional and handles cases where the service principal doesn't have any Azure subscriptions):
+
+   ```bash
+   az login --service-principal --username <CLIENT_ID> --password <CLIENT_SECRET> --tenant <TENANT_ID> --allow-no-subscriptions
+   ```
+
+2. Configure the provider to use the Azure CLI:
+
+   ```terraform
+   provider "powerplatform" {
+     use_cli = true
+   }
+   ```
+
+## Important Notes
+
+* Terraform only supports authenticating using the az CLI (and this must be available on your PATH) - authenticating using the older azure CLI or PowerShell Cmdlets are not supported.
