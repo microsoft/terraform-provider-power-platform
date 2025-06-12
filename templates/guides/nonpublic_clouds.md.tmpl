@@ -28,7 +28,7 @@ See the [Azure CLI documentation](https://learn.microsoft.com/cli/azure/manage-c
 Login to the Azure CLI using:
 
 ```bash
-az login --scope api://powerplatform_provider_terraform/.default
+az login
 ```
 
 Configure Power Platform provider similar to the following example:

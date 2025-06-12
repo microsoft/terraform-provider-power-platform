@@ -5,6 +5,7 @@ package environment
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -266,7 +267,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 		currencyCode := ""
 		defaultCurrency, err := d.EnvironmentClient.GetDefaultCurrencyForEnvironment(ctx, env.Name)
 		if err != nil {
-			if customerrors.Code(err) != customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND {
+			if !errors.Is(err, customerrors.ErrEnvironmentUrlNotFound) {
 				resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", env.Name), err.Error())
 			}
 		} else {
