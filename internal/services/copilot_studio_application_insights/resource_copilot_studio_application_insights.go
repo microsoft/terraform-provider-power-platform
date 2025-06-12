@@ -5,6 +5,7 @@ package copilot_studio_application_insights
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -178,7 +179,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 
 	appInsightsConfigDto, err := r.CopilotStudioApplicationInsightsClient.getCopilotStudioAppInsightsConfiguration(ctx, state.Id.ValueString())
 	if err != nil {
-		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}

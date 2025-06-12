@@ -5,6 +5,7 @@ package licensing
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -146,7 +147,7 @@ func (r *BillingPolicyEnvironmentResource) Read(ctx context.Context, req resourc
 
 	environments, err := r.LicensingClient.GetEnvironmentsForBillingPolicy(ctx, state.BillingPolicyId)
 	if err != nil {
-		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}

@@ -6,6 +6,7 @@ package authorization
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -245,7 +246,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 	if hasEnvDataverse {
 		user, err := r.UserClient.GetDataverseUserByAadObjectId(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString())
 		if err != nil {
-			if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+			if errors.Is(err, customerrors.ErrObjectNotFound) {
 				resp.State.RemoveResource(ctx)
 				return
 			}
@@ -262,7 +263,7 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		}
 
 		if err != nil {
-			if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+			if errors.Is(err, customerrors.ErrObjectNotFound) {
 				resp.State.RemoveResource(ctx)
 				return
 			}
