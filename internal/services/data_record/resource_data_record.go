@@ -323,50 +323,50 @@ func convertResourceModelToMap(columnsAsString *string) (mapColumns map[string]a
 	return mapColumns, nil
 }
 
-func caseBool(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
+func caseBool(ctx context.Context, columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
 	value, ok := columnValue.(bool)
 	if !ok {
-		tflog.Debug(context.TODO(), "caseBool: failed to cast value to bool", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
+		tflog.Debug(ctx, "caseBool: failed to cast value to bool", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
 		return
 	}
 	attrValue[key] = types.BoolValue(value)
 	attrType[key] = types.BoolType
 }
 
-func caseInt64(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
+func caseInt64(ctx context.Context, columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
 	value, ok := columnValue.(int64)
 	if !ok {
-		tflog.Debug(context.TODO(), "caseInt64: failed to cast value to int64", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
+		tflog.Debug(ctx, "caseInt64: failed to cast value to int64", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
 		return
 	}
 	attrValue[key] = types.Int64Value(value)
 	attrType[key] = types.Int64Type
 }
 
-func caseFloat64(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
+func caseFloat64(ctx context.Context, columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
 	value, ok := columnValue.(float64)
 	if !ok {
-		tflog.Debug(context.TODO(), "caseFloat64: failed to cast value to float64", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
+		tflog.Debug(ctx, "caseFloat64: failed to cast value to float64", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
 		return
 	}
 	attrValue[key] = types.Float64Value(value)
 	attrType[key] = types.Float64Type
 }
 
-func caseString(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
+func caseString(ctx context.Context, columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key string) {
 	value, ok := columnValue.(string)
 	if !ok {
-		tflog.Debug(context.TODO(), "caseString: failed to cast value to string", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
+		tflog.Debug(ctx, "caseString: failed to cast value to string", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
 		return
 	}
 	attrValue[key] = types.StringValue(value)
 	attrType[key] = types.StringType
 }
 
-func caseMapStringOfAny(columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key, entityLogicalName string, objectType map[string]attr.Type) {
+func caseMapStringOfAny(ctx context.Context, columnValue any, attrValue map[string]attr.Value, attrType map[string]attr.Type, key, entityLogicalName string, objectType map[string]attr.Type) {
 	value, ok := columnValue.(string)
 	if !ok {
-		tflog.Debug(context.TODO(), "caseMapStringOfAny: failed to cast value to string", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
+		tflog.Debug(ctx, "caseMapStringOfAny: failed to cast value to string", map[string]any{"key": key, "value_type": fmt.Sprintf("%T", columnValue)})
 		return
 	}
 	dataRecordId := value
@@ -449,19 +449,19 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 	for key, value := range mapColumns {
 		switch value.(type) {
 		case bool:
-			caseBool(columns[key], attributes, attributeTypes, key)
+			caseBool(ctx, columns[key], attributes, attributeTypes, key)
 		case int64:
-			caseInt64(columns[key], attributes, attributeTypes, key)
+			caseInt64(ctx, columns[key], attributes, attributeTypes, key)
 		case float64:
-			caseFloat64(columns[key], attributes, attributeTypes, key)
+			caseFloat64(ctx, columns[key], attributes, attributeTypes, key)
 		case string:
-			caseString(columns[key], attributes, attributeTypes, key)
+			caseString(ctx, columns[key], attributes, attributeTypes, key)
 		case map[string]any:
 			entityLogicalName, err := apiClient.GetEntityRelationDefinitionInfo(ctx, environmentId, tableLogicalName, key)
 			if err != nil {
 				return nil, errors.New("error getting entity relation definition info: " + err.Error())
 			}
-			caseMapStringOfAny(columns[fmt.Sprintf("_%s_value", key)], attributes, attributeTypes, key, entityLogicalName, objectType)
+			caseMapStringOfAny(ctx, columns[fmt.Sprintf("_%s_value", key)], attributes, attributeTypes, key, entityLogicalName, objectType)
 		case []any:
 			err := caseArrayOfAny(ctx, attributes, attributeTypes, apiClient, objectType, key, environmentId, tableLogicalName, *recordid)
 			if err != nil {
