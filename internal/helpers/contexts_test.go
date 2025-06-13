@@ -52,7 +52,7 @@ func TestUnitCheckContextTimeout_WithCancelledContext(t *testing.T) {
 	}
 }
 
-// Helper function to check if a string contains a substring.
+// Helper function to check if a string contains a substring
 func containsString(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
 		(len(s) > len(substr) && func() bool {
