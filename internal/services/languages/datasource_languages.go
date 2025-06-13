@@ -114,7 +114,7 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 		)
 		return
 	}
-	d.LanguagesClient = newLanguagesClient(clientApi)
+	d.LanguagesClient = newLanguagesClient(providerClient.Api)
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
