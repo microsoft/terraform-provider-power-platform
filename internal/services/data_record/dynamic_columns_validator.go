@@ -60,7 +60,10 @@ func (v DynamicsColumnsValidator) Validate(ctx context.Context, config tfsdk.Con
 	}
 
 	var dynamicColumns types.Dynamic
-	_ = config.GetAttribute(ctx, matchedPaths[0], &dynamicColumns)
+	diags.Append(config.GetAttribute(ctx, matchedPaths[0], &dynamicColumns)...)
+	if diags.HasError() {
+		return diags
+	}
 
 	terraformDynamicColumns, err := dynamicColumns.UnderlyingValue().ToTerraformValue(ctx)
 	if err != nil {

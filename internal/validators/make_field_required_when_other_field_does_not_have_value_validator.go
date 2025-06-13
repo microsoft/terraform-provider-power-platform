@@ -62,7 +62,10 @@ func (av MakeFieldRequiredWhenOtherFieldDoesNotHaveValueValidator) ValidateStrin
 func (av MakeFieldRequiredWhenOtherFieldDoesNotHaveValueValidator) Validate(ctx context.Context, req MakeFieldRequiredWhenOtherFieldDoesNotHaveValueValidatorRequest, res *MakeFieldRequiredWhenOtherFieldDoesNotHaveValueValidatorResponse) {
 	paths, _ := req.Config.PathMatches(ctx, av.OtherFieldExpression)
 	if paths == nil || len(paths) != 1 {
-		res.Diagnostics.AddError("Other field required when value of validator should have exactly one match", "")
+		res.Diagnostics.AddError(
+			"Validator Configuration Error: Other field match failed",
+			"The validator could not uniquely locate the other field in the configuration. Ensure that 'OtherFieldExpression' matches exactly one attribute.",
+		)
 		return
 	}
 	otherFieldValue := ""
