@@ -68,17 +68,14 @@ func (r *ManagedEnvironmentResource) Configure(ctx context.Context, req resource
 		)
 		return
 	}
-	clientApi := client.Api
-
-	if clientApi == nil {
+	if client.Api == nil {
 		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			"Nil Api client",
+			"ProviderData contained a *api.ProviderClient but with nil Api. Please check provider initialization and credentials.",
 		)
-
 		return
 	}
-	r.ManagedEnvironmentClient = newManagedEnvironmentClient(clientApi)
+	r.ManagedEnvironmentClient = newManagedEnvironmentClient(client.Api)
 }
 
 func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
