@@ -42,7 +42,7 @@ func (client *client) CreateConnection(ctx context.Context, environmentId, conne
 	connection := connectionDto{}
 	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, connectionToCreate, []int{http.StatusCreated}, &connection)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create connection: %w", err)
 	}
 
 	return &connection, nil
@@ -71,7 +71,7 @@ func (client *client) UpdateConnection(ctx context.Context, environmentId, conne
 	updatedConnection := connectionDto{}
 	_, err = client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, conn, []int{http.StatusOK}, &updatedConnection)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update connection: %w", err)
 	}
 
 	return &updatedConnection, nil
@@ -94,7 +94,7 @@ func (client *client) GetConnection(ctx context.Context, environmentId, connecto
 		if strings.Contains(err.Error(), "ConnectionNotFound") {
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("Connection '%s' not found", connectionId))
 		}
-		return nil, err
+		return nil, fmt.Errorf("failed to get connection: %w", err)
 	}
 	return &connection, nil
 }
@@ -113,7 +113,7 @@ func (client *client) GetConnections(ctx context.Context, environmentId string) 
 	connetionsArray := connectionArrayDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connetionsArray)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get connections: %w", err)
 	}
 
 	return connetionsArray.Value, nil
@@ -132,7 +132,7 @@ func (client *client) DeleteConnection(ctx context.Context, environmentId, conne
 
 	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to delete connection: %w", err)
 	}
 	return nil
 }
@@ -168,7 +168,7 @@ func (client *client) ShareConnection(ctx context.Context, environmentId, connec
 
 	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to share connection: %w", err)
 	}
 	return nil
 }
@@ -196,7 +196,7 @@ func (client *client) GetConnectionShares(ctx context.Context, environmentId, co
 
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &share)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get connection shares: %w", err)
 	}
 
 	sort.SliceStable(share.Value, func(i, j int) bool {
@@ -249,7 +249,7 @@ func (client *client) UpdateConnectionShare(ctx context.Context, environmentId, 
 
 	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to update connection share: %w", err)
 	}
 	return nil
 }
@@ -276,7 +276,7 @@ func (client *client) DeleteConnectionShare(ctx context.Context, environmentId, 
 
 	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, share, []int{http.StatusOK}, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to delete connection share: %w", err)
 	}
 	return nil
 }

@@ -34,7 +34,7 @@ func (client *client) GetTenantCapacity(ctx context.Context, tenantId string) (*
 
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &dto)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get tenant capacity: %w", err)
 	}
 
 	return &dto, nil

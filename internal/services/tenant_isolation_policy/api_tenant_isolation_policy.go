@@ -50,7 +50,7 @@ func (client *Client) getTenantIsolationPolicy(ctx context.Context, tenantId str
 	var policy TenantIsolationPolicyDto
 	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound}, &policy)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not retrieve tenant isolation policy for tenant %s: %w", tenantId, err)
 	}
 
 	if resp.HttpResponse.StatusCode == http.StatusNotFound {
