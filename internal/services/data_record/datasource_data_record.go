@@ -240,7 +240,7 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	var elements = []attr.Value{}
 	for _, record := range queryRespnse.Records {
-		columns, err := d.convertColumnsToState(record)
+		columns, err := d.convertColumnsToState(ctx, record)
 		if err != nil {
 			resp.Diagnostics.AddError("Failed to convert columns to state", err.Error())
 			return
@@ -265,7 +265,7 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 }
 
-func (d *DataRecordDataSource) convertColumnsToState(columns map[string]any) (*basetypes.DynamicValue, error) {
+func (d *DataRecordDataSource) convertColumnsToState(ctx context.Context, columns map[string]any) (*basetypes.DynamicValue, error) {
 	if columns == nil {
 		return nil, nil
 	}
@@ -283,7 +283,7 @@ func (d *DataRecordDataSource) convertColumnsToState(columns map[string]any) (*b
 		case string:
 			caseString(v, attributes, attributeTypes, key)
 		case map[string]any:
-			typ, val, _ := d.buildObjectValueFromX(v)
+			typ, val, _ := d.buildObjectValueFromX(ctx, v)
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
@@ -291,12 +291,12 @@ func (d *DataRecordDataSource) convertColumnsToState(columns map[string]any) (*b
 			attributes[key] = objVal
 			attributeTypes[key] = tupleElementType
 		case []any:
-			typeObj, valObj := d.buildExpandObject(v)
+			typeObj, valObj := d.buildExpandObject(ctx, v)
 			attributeTypes[key] = typeObj
 			attributes[key] = valObj
 		default:
 			// Handle unexpected types gracefully by skipping them
-			tflog.Debug(context.Background(), "Skipping unhandled type in convertColumnsToState", map[string]any{
+			tflog.Debug(ctx, "Skipping unhandled type in convertColumnsToState", map[string]any{
 				"key":       key,
 				"valueType": fmt.Sprintf("%T", value),
 			})
@@ -309,7 +309,7 @@ func (d *DataRecordDataSource) convertColumnsToState(columns map[string]any) (*b
 	return &result, nil
 }
 
-func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]any) (map[string]attr.Type, map[string]attr.Value, error) {
+func (d *DataRecordDataSource) buildObjectValueFromX(ctx context.Context, columns map[string]any) (map[string]attr.Type, map[string]attr.Value, error) {
 	knownObjectType := map[string]attr.Type{}
 	knownObjectValue := map[string]attr.Value{}
 
@@ -324,7 +324,7 @@ func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]any) (ma
 		case string:
 			caseString(v, knownObjectValue, knownObjectType, key)
 		case map[string]any:
-			typ, val, _ := d.buildObjectValueFromX(v)
+			typ, val, _ := d.buildObjectValueFromX(ctx, v)
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
@@ -332,12 +332,12 @@ func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]any) (ma
 			knownObjectValue[key] = objVal
 			knownObjectType[key] = tupleElementType
 		case []any:
-			typeObj, valObj := d.buildExpandObject(v)
+			typeObj, valObj := d.buildExpandObject(ctx, v)
 			knownObjectValue[key] = valObj
 			knownObjectType[key] = typeObj
 		default:
 			// Log unexpected types for debugging purposes
-			tflog.Debug(context.Background(), "Skipping unhandled type in buildObjectValueFromX", map[string]any{
+			tflog.Debug(ctx, "Skipping unhandled type in buildObjectValueFromX", map[string]any{
 				"key":       key,
 				"valueType": fmt.Sprintf("%T", value),
 			})
@@ -347,11 +347,11 @@ func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]any) (ma
 	return knownObjectType, knownObjectValue, nil
 }
 
-func (d *DataRecordDataSource) buildExpandObject(items []any) (basetypes.TupleType, basetypes.TupleValue) {
+func (d *DataRecordDataSource) buildExpandObject(ctx context.Context, items []any) (basetypes.TupleType, basetypes.TupleValue) {
 	var listTypes []attr.Type
 	var listValues []attr.Value
 	for _, item := range items {
-		typ, val, _ := d.buildObjectValueFromX(item.(map[string]any))
+		typ, val, _ := d.buildObjectValueFromX(ctx, item.(map[string]any))
 		tupleElementType := types.ObjectType{
 			AttrTypes: typ,
 		}
