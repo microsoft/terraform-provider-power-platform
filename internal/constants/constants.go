@@ -141,6 +141,7 @@ const (
 
 const (
 	DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES = 20 * time.Minute
+	MAX_RETRY_COUNT                               = 10
 )
 
 const (

@@ -1,0 +1,5 @@
+kind: fixed
+body: Fix recursive retry loops and missing return statements after AddError in environment services
+time: 2025-06-10T15:47:40.435353291Z
+custom:
+    Issue: "808"
