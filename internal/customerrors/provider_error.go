@@ -6,17 +6,20 @@ package customerrors
 import (
 	"errors"
 	"fmt"
+
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 )
 
 type ErrorCode string
 
-const (
-	ERROR_OBJECT_NOT_FOUND             ErrorCode = "OBJECT_NOT_FOUND"
-	ERROR_ENVIRONMENT_URL_NOT_FOUND    ErrorCode = "ENVIRONMENT_URL_NOT_FOUND"
-	ERROR_ENVIRONMENTS_IN_ENV_GROUP    ErrorCode = "ENVIRONMENTS_IN_ENV_GROUP"
-	ERROR_POLICY_ASSIGNED_TO_ENV_GROUP ErrorCode = "POLICY_ASSIGNED_TO_ENV_GROUP"
-	ERROR_ENVIRONMENT_SETTINGS_FAILED  ErrorCode = "ENVIRONMENT_SETTINGS_FAILED"
-	ERROR_ENVIRONMENT_CREATION         ErrorCode = "ENVIRONMENT_CREATION"
+// Sentinel errors for use with errors.Is().
+var (
+	ErrObjectNotFound            = ProviderError{ErrorCode: ErrorCode(constants.ERROR_OBJECT_NOT_FOUND)}
+	ErrEnvironmentUrlNotFound    = ProviderError{ErrorCode: ErrorCode(constants.ERROR_ENVIRONMENT_URL_NOT_FOUND)}
+	ErrEnvironmentsInEnvGroup    = ProviderError{ErrorCode: ErrorCode(constants.ERROR_ENVIRONMENTS_IN_ENV_GROUP)}
+	ErrPolicyAssignedToEnvGroup  = ProviderError{ErrorCode: ErrorCode(constants.ERROR_POLICY_ASSIGNED_TO_ENV_GROUP)}
+	ErrEnvironmentSettingsFailed = ProviderError{ErrorCode: ErrorCode(constants.ERROR_ENVIRONMENT_SETTINGS_FAILED)}
+	ErrEnvironmentCreation       = ProviderError{ErrorCode: ErrorCode(constants.ERROR_ENVIRONMENT_CREATION)}
 )
 
 var _ error = ProviderError{}
@@ -32,6 +35,14 @@ func (e ProviderError) Error() string {
 	}
 
 	return fmt.Sprintf("%s: %s", e.ErrorCode, e.Err.Error())
+}
+
+// Is implements the Is method for error equality checking with errors.Is().
+func (e ProviderError) Is(target error) bool {
+	if t, ok := target.(ProviderError); ok {
+		return e.ErrorCode == t.ErrorCode
+	}
+	return false
 }
 
 func Unwrap(err error) error {

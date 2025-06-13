@@ -5,6 +5,7 @@ package environment_group_rule_set
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math/big"
 
@@ -269,15 +270,15 @@ func (r *environmentGroupRuleSetResource) Configure(ctx context.Context, req res
 		return
 	}
 
-	client := req.ProviderData.(*api.ProviderClient).Api
-	if client == nil {
+	providerClient, ok := req.ProviderData.(*api.ProviderClient)
+	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected *http.Client, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
 		)
 		return
 	}
-	r.EnvironmentGroupRuleSetClient = NewEnvironmentGroupRuleSetClient(client, tenant.NewTenantClient(client))
+	r.EnvironmentGroupRuleSetClient = NewEnvironmentGroupRuleSetClient(providerClient.Api, tenant.NewTenantClient(providerClient.Api))
 }
 
 func (r *environmentGroupRuleSetResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -292,7 +293,7 @@ func (r *environmentGroupRuleSetResource) Read(ctx context.Context, req resource
 
 	ruleSetDto, err := r.EnvironmentGroupRuleSetClient.GetEnvironmentGroupRuleSet(ctx, state.EnvironmentGroupId.ValueString())
 	if err != nil {
-		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}

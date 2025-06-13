@@ -74,9 +74,9 @@ func (client *client) DeleteEnvironmentGroup(ctx context.Context, environmentGro
 
 			body := string(resp.BodyAsBytes[:])
 			if strings.Contains(body, "EnvironmentsInEnvironmentGroup") {
-				return customerrors.WrapIntoProviderError(err, customerrors.ERROR_ENVIRONMENTS_IN_ENV_GROUP, "Failed to delete environment group because it contains environments")
+				return customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_ENVIRONMENTS_IN_ENV_GROUP), "Failed to delete environment group because it contains environments")
 			} else if strings.Contains(body, "PolicyAssignedToEnvironmentGroup") {
-				return customerrors.WrapIntoProviderError(err, customerrors.ERROR_POLICY_ASSIGNED_TO_ENV_GROUP, "Failed to delete environment group because it has a policy assigned")
+				return customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_POLICY_ASSIGNED_TO_ENV_GROUP), "Failed to delete environment group because it has a policy assigned")
 			}
 			return errors.New(body)
 		}
