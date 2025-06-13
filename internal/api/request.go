@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 	"runtime"
 	"strconv"
 	"time"
@@ -90,6 +91,12 @@ type Response struct {
 }
 
 func (apiResponse *Response) MarshallTo(obj any) error {
+	// Ensure obj is a pointer to avoid silent failures
+	rv := reflect.ValueOf(obj)
+	if rv.Kind() != reflect.Ptr || rv.IsNil() {
+		return fmt.Errorf("MarshallTo requires a non-nil pointer, got %T", obj)
+	}
+
 	return json.NewDecoder(bytes.NewReader(apiResponse.BodyAsBytes)).Decode(obj)
 }
 
