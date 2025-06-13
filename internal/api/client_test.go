@@ -39,10 +39,10 @@ func TestUnitApiClient_GetConfig(t *testing.T) {
 	}
 
 	switch err.(type) {
-	case customerrors.UrlFormatError:
+	case *customerrors.UrlFormatError:
 		return
 	default:
-		t.Errorf("Expected error type %s but got %s", reflect.TypeOf(customerrors.UrlFormatError{}), reflect.TypeOf(err))
+		t.Errorf("Expected error type %s but got %s", reflect.TypeOf(&customerrors.UrlFormatError{}), reflect.TypeOf(err))
 	}
 }
 
