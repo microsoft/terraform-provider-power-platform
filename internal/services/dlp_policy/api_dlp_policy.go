@@ -70,7 +70,7 @@ func (client *client) GetPolicy(ctx context.Context, name string) (*dlpPolicyMod
 	if err != nil {
 		var httpError *customerrors.UnexpectedHttpStatusCodeError
 		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
-			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("DLP Policy '%s' not found", name))
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("DLP Policy '%s' not found", name))
 		}
 		return nil, err
 	}

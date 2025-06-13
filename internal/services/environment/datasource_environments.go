@@ -5,6 +5,7 @@ package environment
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -275,6 +276,7 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 					err.Error(),
 				)
 				return
+
 			}
 		} else {
 			currencyCode = defaultCurrency.IsoCurrencyCode

@@ -5,6 +5,7 @@ package solution
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -204,7 +205,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	solutionId := getSolutionId(state.Id.ValueString())
 	solution, err := r.SolutionClient.GetSolutionById(ctx, state.EnvironmentId.ValueString(), solutionId)
 	if err != nil {
-		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
