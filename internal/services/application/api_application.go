@@ -40,9 +40,8 @@ func (client *client) AddApplicationUser(ctx context.Context, environmentId stri
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/addAppUser", environmentId),
 	}
-	values := url.Values{
-		"api-version": []string{"2020-10-01"},
-	}
+	values := url.Values{}
+	values.Add(constants.API_VERSION_PARAM, constants.ADMIN_MANAGEMENT_APP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	// Create the request body
@@ -201,7 +200,7 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	env := environmentIdDto{}
@@ -219,9 +218,8 @@ func (client *client) GetTenantApplications(ctx context.Context) ([]tenantApplic
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   "/appmanagement/applicationPackages",
 	}
-	values := url.Values{
-		"api-version": []string{"2022-03-01-preview"},
-	}
+	values := url.Values{}
+	values.Add(constants.API_VERSION_PARAM, constants.APPLICATION_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	application := tenantApplicationArrayDto{}
@@ -240,9 +238,8 @@ func (client *client) GetApplicationsByEnvironmentId(ctx context.Context, enviro
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   fmt.Sprintf("/appmanagement/environments/%s/applicationPackages", environmentId),
 	}
-	values := url.Values{
-		"api-version": []string{"2022-03-01-preview"},
-	}
+	values := url.Values{}
+	values.Add(constants.API_VERSION_PARAM, constants.APPLICATION_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	application := environmentApplicationArrayDto{}
@@ -261,9 +258,8 @@ func (client *client) InstallApplicationInEnvironment(ctx context.Context, envir
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
 		Path:   fmt.Sprintf("/appmanagement/environments/%s/applicationPackages/%s/install", environmentId, uniqueName),
 	}
-	values := url.Values{
-		"api-version": []string{"2022-03-01-preview"},
-	}
+	values := url.Values{}
+	values.Add(constants.API_VERSION_PARAM, constants.APPLICATION_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	response, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, nil, []int{http.StatusAccepted}, nil)

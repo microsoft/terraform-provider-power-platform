@@ -16,6 +16,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 func NewSolutionClient(apiClient *api.Client) Client {
@@ -42,18 +43,12 @@ func (client *Client) GetSolutionUniqueName(ctx context.Context, environmentId, 
 		return nil, err
 	}
 
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   environmentHost,
-		Path:   "/api/data/v9.2/solutions",
-	}
 	values := url.Values{}
 	values.Add("$expand", "publisherid")
 	values.Add("$filter", fmt.Sprintf("uniquename eq '%s'", name))
-	apiUrl.RawQuery = values.Encode()
 
 	solutions := solutionArrayDto{}
-	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &solutions)
+	resp, err := client.Api.Execute(ctx, nil, "GET", helpers.BuildApiUrl(environmentHost, "/api/data/v9.2/solutions", values), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &solutions)
 	if err != nil {
 		return nil, err
 	}

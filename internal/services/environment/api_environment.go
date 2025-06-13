@@ -65,7 +65,7 @@ func (client *Client) GetLocations(ctx context.Context) (*LocationArrayDto, erro
 		Path:   "/providers/Microsoft.BusinessAppPlatform/locations",
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	locationsArray := LocationArrayDto{}
@@ -123,7 +123,7 @@ func currencyCodeValidator(ctx context.Context, client *api.Client, location str
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentCurrencies", location),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	response, err := client.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
@@ -187,7 +187,7 @@ func languageCodeValidator(ctx context.Context, client *api.Client, location str
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentLanguages", location),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	response, err := client.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
@@ -251,7 +251,7 @@ func (client *Client) GetEnvironment(ctx context.Context, environmentId string) 
 	}
 	values := url.Values{}
 	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy,properties/copilotPolicies")
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	env := EnvironmentDto{}
@@ -282,7 +282,7 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	environmentDelete := enironmentDeleteDto{
@@ -336,7 +336,7 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/provisionInstance", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentCreateLinkEnvironmentMetadata, []int{http.StatusAccepted}, nil)
@@ -401,7 +401,7 @@ func (client *Client) ModifyEnvironmentType(ctx context.Context, environmentId, 
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/modifySku", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	modifySkuDto := modifySkuDto{
@@ -442,7 +442,7 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 		Path:   "/providers/Microsoft.BusinessAppPlatform/environments",
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentToCreate, []int{http.StatusAccepted, http.StatusCreated, http.StatusInternalServerError, http.StatusConflict}, nil)
 	if err != nil {
@@ -511,7 +511,7 @@ func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environme
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, generativeAIConfig, []int{http.StatusAccepted, http.StatusConflict}, nil)
 	if err != nil {
@@ -571,7 +571,7 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
 	// Due to a bug in BAPI that triggers managed environment on update of a description field, we need to use the older API version
 	// values.Add("api-version", "2022-05-01")
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted, http.StatusConflict}, nil)
 	if err != nil {
@@ -627,7 +627,7 @@ func (client *Client) GetEnvironments(ctx context.Context) ([]EnvironmentDto, er
 	}
 	values := url.Values{}
 	values.Add("$expand", "properties/billingPolicy,properties/copilotPolicies")
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	envArray := environmentArrayDto{}
@@ -666,7 +666,7 @@ func (client *Client) ValidateCreateEnvironmentDetails(ctx context.Context, loca
 		Path:   "/providers/Microsoft.BusinessAppPlatform/validateEnvironmentDetails",
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	envDetails := validateCreateEnvironmentDetailsDto{
@@ -688,7 +688,7 @@ func (client *Client) ValidateUpdateEnvironmentDetails(ctx context.Context, envi
 		Path:   "/providers/Microsoft.BusinessAppPlatform/validateEnvironmentDetails",
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	envDetails := validateUpdateEnvironmentDetailsDto{

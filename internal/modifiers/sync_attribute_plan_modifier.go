@@ -40,9 +40,7 @@ func (d *syncAttributePlanModifier) PlanModifyString(ctx context.Context, req pl
 		return
 	}
 
-	if settingsFile.IsNull() {
-		resp.PlanValue = types.StringNull()
-	} else if settingsFile.IsUnknown() {
+	if settingsFile.IsNull() || settingsFile.IsUnknown() {
 		resp.PlanValue = types.StringNull()
 	} else {
 		value, err := helpers.CalculateSHA256(settingsFile.ValueString())

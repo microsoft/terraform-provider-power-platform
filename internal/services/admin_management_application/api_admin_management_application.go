@@ -30,7 +30,7 @@ func (client *client) GetAdminApplication(ctx context.Context, clientId string) 
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/adminApplications/%s", clientId),
 		RawQuery: url.Values{
-			constants.API_VERSION_PARAM: []string{"2020-10-01"},
+			constants.API_VERSION_PARAM: []string{constants.ADMIN_MANAGEMENT_APP_API_VERSION},
 		}.Encode(),
 	}
 
@@ -46,7 +46,7 @@ func (client *client) RegisterAdminApplication(ctx context.Context, clientId str
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/adminApplications/%s", clientId),
 		RawQuery: url.Values{
-			"api-version": []string{"2020-10-01"},
+			constants.API_VERSION_PARAM: []string{constants.ADMIN_MANAGEMENT_APP_API_VERSION},
 		}.Encode(),
 	}
 
@@ -62,7 +62,7 @@ func (client *client) UnregisterAdminApplication(ctx context.Context, clientId s
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/adminApplications/%s", clientId),
 		RawQuery: url.Values{
-			"api-version": []string{"2020-10-01"},
+			constants.API_VERSION_PARAM: []string{constants.ADMIN_MANAGEMENT_APP_API_VERSION},
 		}.Encode(),
 	}
 
