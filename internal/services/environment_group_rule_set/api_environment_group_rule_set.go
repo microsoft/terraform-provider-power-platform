@@ -51,7 +51,7 @@ func (client *Client) GetEnvironmentGroupRuleSet(ctx context.Context, environmen
 	}
 
 	if resp.HttpResponse.StatusCode == http.StatusNoContent {
-		return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, "rule set '%s' not found")
+		return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), "rule set '%s' not found")
 	}
 
 	if len(environmentGroupRuleSet.Value) == 0 {
