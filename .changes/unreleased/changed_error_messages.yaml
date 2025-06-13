@@ -1,0 +1,4 @@
+kind: changed
+body: Improved error message formatting and consistency for better user experience across environment templates, tenant isolation policy, and tenant settings resources
+custom:
+  Issue: 823
