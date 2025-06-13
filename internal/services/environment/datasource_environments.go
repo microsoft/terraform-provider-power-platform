@@ -124,7 +124,7 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 							MarkdownDescription: "Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).",
 							Computed:            true,
 						},
-						"billing_policy_id": &schema.StringAttribute{
+						"billing_policy_id": schema.StringAttribute{
 							MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 							Computed:            true,
 						},
@@ -203,7 +203,7 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 									MarkdownDescription: "URL of the linked D365 app",
 									Computed:            true,
 								},
-								"currency_code": &schema.StringAttribute{
+								"currency_code": schema.StringAttribute{
 									MarkdownDescription: "Currency name (EUR, USE, GBP etc.)",
 									Computed:            true,
 								},
