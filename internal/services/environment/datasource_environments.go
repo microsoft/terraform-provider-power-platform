@@ -267,8 +267,16 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 		currencyCode := ""
 		defaultCurrency, err := d.EnvironmentClient.GetDefaultCurrencyForEnvironment(ctx, env.Name)
 		if err != nil {
-			if !errors.Is(err, customerrors.ErrEnvironmentUrlNotFound) {
-				resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", env.Name), err.Error())
+			switch customerrors.Code(err) {
+			case customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND:
+				// Non-critical, just skip currency.
+			default:
+				resp.Diagnostics.AddError(
+					fmt.Sprintf("Unexpected error when reading default currency for environment %s", env.Name),
+					err.Error(),
+				)
+				return
+
 			}
 		} else {
 			currencyCode = defaultCurrency.IsoCurrencyCode

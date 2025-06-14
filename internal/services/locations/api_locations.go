@@ -5,6 +5,7 @@ package locations
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -34,5 +35,8 @@ func (client *client) GetLocations(ctx context.Context) (locationDto, error) {
 
 	var locations locationDto
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &locations)
-	return locations, err
+	if err != nil {
+		return locations, fmt.Errorf("failed to get locations: %w", err)
+	}
+	return locations, nil
 }
