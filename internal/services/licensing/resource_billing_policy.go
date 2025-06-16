@@ -5,6 +5,7 @@ package licensing
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -67,10 +68,16 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 			"name": schema.StringAttribute{
 				MarkdownDescription: "The name of the billing policy",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 			},
 			"location": schema.StringAttribute{
 				MarkdownDescription: "The location of the billing policy",
 				Required:            true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtLeast(1),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -97,6 +104,9 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 					"resource_group": schema.StringAttribute{
 						MarkdownDescription: "The resource group of the billing instrument",
 						Required:            true,
+						Validators: []validator.String{
+							stringvalidator.LengthAtLeast(1),
+						},
 						PlanModifiers: []planmodifier.String{
 							stringplanmodifier.RequiresReplace(),
 						},
@@ -104,6 +114,9 @@ func (r *BillingPolicyResource) Schema(ctx context.Context, req resource.SchemaR
 					"subscription_id": schema.StringAttribute{
 						MarkdownDescription: "The subscription id of the billing instrument",
 						Required:            true,
+						Validators: []validator.String{
+							stringvalidator.LengthAtLeast(1),
+						},
 						PlanModifiers: []planmodifier.String{
 							stringplanmodifier.RequiresReplace(),
 						},
@@ -189,7 +202,7 @@ func (r *BillingPolicyResource) Read(ctx context.Context, req resource.ReadReque
 
 	billing, err := r.LicensingClient.GetBillingPolicy(ctx, state.Id.ValueString())
 	if err != nil {
-		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}

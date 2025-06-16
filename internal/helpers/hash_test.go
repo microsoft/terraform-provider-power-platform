@@ -13,6 +13,11 @@ import (
 func TestUnitCalculateSHA256(t *testing.T) {
 	t.Parallel()
 
+	const (
+		sameContent      = "same"
+		differentContent = "different"
+	)
+
 	tdir := t.TempDir()
 	file1 := tdir + "/test.txt"
 	file2 := tdir + "/test2.txt"
@@ -20,17 +25,17 @@ func TestUnitCalculateSHA256(t *testing.T) {
 	file4 := tdir + "/test4.txt"
 	file5 := tdir + "/test5"
 
-	err := os.WriteFile(file1, []byte("same"), 0644)
+	err := os.WriteFile(file1, []byte(sameContent), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = os.WriteFile(file2, []byte("same"), 0644)
+	err = os.WriteFile(file2, []byte(sameContent), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = os.WriteFile(file3, []byte("different"), 0644)
+	err = os.WriteFile(file3, []byte(differentContent), 0644)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -117,8 +117,9 @@ func (d *EnvironmentTemplatesDataSource) Configure(ctx context.Context, req data
 	client, ok := req.ProviderData.(*api.ProviderClient)
 	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected ProviderData Type",
-			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+			"Invalid Provider Configuration",
+			fmt.Sprintf("The provider data was not of the expected type '*api.ProviderClient' (got: %T). "+
+				"This is likely a bug in the provider. Please file a bug report with the configuration you used.", req.ProviderData),
 		)
 		return
 	}

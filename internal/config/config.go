@@ -6,6 +6,7 @@ package config
 import (
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -28,9 +29,10 @@ const (
 )
 
 type ProviderConfig struct {
-	UseCli  bool
-	UseOidc bool
-	UseMsi  bool
+	UseCli    bool
+	UseDevCli bool
+	UseOidc   bool
+	UseMsi    bool
 
 	TenantId           string
 	AuxiliaryTenantIDs []string
@@ -52,11 +54,13 @@ type ProviderConfig struct {
 	EnableContinuousAccessEvaluation bool
 
 	// internal runtime configuration values
-	TestMode         bool
-	Urls             ProviderConfigUrls
-	TelemetryOptout  bool
-	Cloud            cloud.Configuration
-	TerraformVersion string
+	TestMode                  bool
+	Urls                      ProviderConfigUrls
+	TelemetryOptout           bool
+	PartnerId                 string
+	DisableTerraformPartnerId bool
+	Cloud                     cloud.Configuration
+	TerraformVersion          string
 }
 
 type ProviderConfigUrls struct {
@@ -125,18 +129,25 @@ func (model *ProviderConfig) IsCliProvided() bool {
 	return model.UseCli
 }
 
+func (model *ProviderConfig) IsDevCliProvided() bool {
+	return model.UseDevCli
+}
+
 func (model *ProviderConfig) IsOidcProvided() bool {
 	return model.UseOidc
 }
 
 // ProviderConfigModel is a model for the provider configuration.
 type ProviderConfigModel struct {
-	UseCli  types.Bool `tfsdk:"use_cli"`
-	UseOidc types.Bool `tfsdk:"use_oidc"`
-	UseMsi  types.Bool `tfsdk:"use_msi"`
+	UseCli    types.Bool `tfsdk:"use_cli"`
+	UseDevCli types.Bool `tfsdk:"use_dev_cli"`
+	UseOidc   types.Bool `tfsdk:"use_oidc"`
+	UseMsi    types.Bool `tfsdk:"use_msi"`
 
-	Cloud           types.String `tfsdk:"cloud"`
-	TelemetryOptout types.Bool   `tfsdk:"telemetry_optout"`
+	Cloud                     types.String     `tfsdk:"cloud"`
+	TelemetryOptout           types.Bool       `tfsdk:"telemetry_optout"`
+	PartnerId                 customtypes.UUID `tfsdk:"partner_id"`
+	DisableTerraformPartnerId types.Bool       `tfsdk:"disable_terraform_partner_id"`
 
 	TenantId           types.String `tfsdk:"tenant_id"`
 	AuxiliaryTenantIDs types.List   `tfsdk:"auxiliary_tenant_ids"`

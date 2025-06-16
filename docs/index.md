@@ -45,306 +45,17 @@ See the official Terraform documentation for more information about [requiring p
 
 Terraform supports a number of different methods for authenticating to Power Platform.
 
-* [Authenticating to Power Platform using the Azure CLI](#authenticating-to-power-platform-using-the-azure-cli)
-* [Authenticating to Power Platform using a Service Principal and OpenID Connect (OIDC) GitHub and Azure DevOps](#authenticating-to-power-platform-using-a-service-principal-and-openid-connect-oidc-github-and-azure-devops)
-* [Authenticating to Power Platform using a Service Principal and a Client Secret](#authenticating-to-power-platform-using-a-service-principal-and-a-client-secret)
-* [Authenticating to Power Platform using a Managed Identity](#authenticating-to-power-platform-using-a-managed-identity)
-
-We recommend using either a Service Principal when running Terraform non-interactively (such as when running Terraform in a CI server) - and authenticating using the Azure CLI when running Terraform locally.
-
-Important Notes about Authenticating using the Azure CLI:
-
-* Terraform only supports authenticating using the az CLI (and this must be available on your PATH) - authenticating using the older azure CLI or PowerShell Cmdlets are not supported.
-* Authenticating via the Azure CLI is only supported when using a User Account. If you're using a Service Principal (for example via az login --service-principal) you should instead authenticate via the Service Principal directly (either using a Client Secret or OIDC).
-
-### Authenticating to Power Platform using the Azure CLI
-
-The Power Platform provider can use the [Azure CLI](https://learn.microsoft.com/cli/azure/) to authenticate to Power Platform services. If you have the Azure CLI installed, you can use it to log in to your Microsoft Entra Id account and the Power Platform provider will use the credentials from the Azure CLI.
-
-#### Prerequisites
-
-1. [Install the Azure CLI](https://docs.microsoft.com/cli/azure/install-azure-cli)
-1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
-1. Login using the scope as the "expose API" you configured when creating the app registration
-
-    ```bash
-    az login --allow-no-subscriptions --scope api://powerplatform_provider_terraform/.default
-    ```
-
-    Configure the provider to use the Azure CLI with the following code:
-
-    ```terraform
-    provider "powerplatform" {
-      use_cli = true
-    }
-    ```
-
-### Authenticating to Power Platform using a Service Principal and OpenID Connect (OIDC) GitHub and Azure DevOps
-
-The Power Platform provider can use a Service Principal with OpenID Connect (OIDC) to authenticate to Power Platform services. By using [Microsoft Entra's workload identity federation](https://learn.microsoft.com/entra/workload-id/workload-identity-federation), your CI/CD pipelines in GitHub or Azure DevOps can access Power Platform resources without needing to manage secrets.
-
-#### OpenID Connect (OIDC) Authentication Prerequisites for GitHub Actions
-
-1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
-1. Register the App Registration with the Power Platform. This task can be performed using [the provider itself](/resources/admin_management_application.md) or [PowerShell](https://learn.microsoft.com/power-platform/admin/powershell-create-service-principal).
-1. [Create a trust relationship between your CI/CD pipeline and the app registration](https://learn.microsoft.com/entra/workload-id/workload-identity-federation-create-trust?pivots=identity-wif-apps-methods-azp)
-1. Configure the provider to use OIDC with the following code:
-
-    ```terraform
-    provider "powerplatform" {
-      use_oidc = true
-    }
-    ```
-
-1. Configure your GitHub Actions Permissions, To use OIDC authentication with GitHub Actions, you need to configure the `permissions` for the workflow. The `id-token` permission is required to allow GitHub to generate an OIDC token for the workflow.
-The `contents` permission is required to allow the workflow to access the repository contents.
-
-    ```yaml
-    permissions:
-      id-token: write
-      contents: read
-    ```
-
-##### Additional Resources about OIDC and GitHub Actions:
-
-* [OpenID Connect authentication with Microsoft Entra ID](https://learn.microsoft.com/entra/architecture/auth-oidc)
-* [Configuring OpenID Connect for GitHub and Microsoft Entra ID](https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-azure)
-* [Configuring OpenID Connect in cloud providers](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-cloud-providers)
-
-#### Authenticating to Power Platform using a Azure DevOps Workload Identity Federation (OIDC)
-
-The Power Platform provider can use [Azure DevOps Workload Identity Federation](https://devblogs.microsoft.com/devops/introduction-to-azure-devops-workload-identity-federation-oidc-with-terraform/) with Azure DevOps pipelines to authenticate to Power Platform services.
-Creation of the Service connection in Azure DevOps can be done automatically or manually using an existing APP. Below, we explain both methods.
-
-*Note: For similar hands-off authentication in GitHub and Azure DevOps, the Power Platform Provider also supports the [OIDC authentication method](#authenticating-to-power-platform-using-a-service-principal-with-oidc).*
-
-#### Create an app registration with workload identity federation (automatic)
-
-1. Create an Azure Resource Manager Service Connection in Azure DevOps using the [Create an app registration with workload identity federation (automatic)](https://learn.microsoft.com/azure/devops/pipelines/library/connect-to-azure?view=azure-devops#create-an-app-registration-with-workload-identity-federation-automatic). This will automatically create an App Registration with workload identity federation. Once created, you will need the Service Connection ID number that appears below the Service Connection name "ID:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX", you will also need the Azure "Application (client) ID" of the service connection that you just create.
-1. Configure the [App Permissions](guides/app_registration.md).
-1. Register the App Registration with the Power Platform. This task can be performed using [the provider itself](/resources/admin_management_application.md) or [PowerShell](https://learn.microsoft.com/power-platform/admin/powershell-create-service-principal).
-1. Configure your Azure DevOps pipeline to use the Service Connection you created in step 1. This is done by adding the following variables to your pipeline:
-
-    ```yaml
-    env:
-      ARM_OIDC_REQUEST_TOKEN: $(System.AccessToken)
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-      SYSTEM_OIDCREQUESTURI: $(System.OidcRequestUri)
-      POWER_PLATFORM_OIDC_REQUEST_URI: $(System.OidcRequestUri)
-      POWER_PLATFORM_OIDC_TOKEN: $(System.AccessToken)
-    ```
-
-1. Configure the provider to use Azure DevOps Workload Identity Federation. This authentication option also requires values to be set in the `ARM_OIDC_REQUEST_TOKEN` and `POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID` environment variables, which should be configured in the AzDO pipeline itself. Note that this example sets some of the required properties in the provider configuration, but the whole configuration could also be performed using just environment variables.
-
-    ```terraform
-    provider "powerplatform" {
-      tenant_id = var.tenant_id
-      client_id = var.client_id # The client ID for the Azure resource containing the federated credentials for Azure DevOps. Should be an App Registration or a Managed Identity.
-      use_oidc = true
-    }
-    ```
-
-*Note: To Create service connections in Azure DevOps, you need to have the role: "[Application Developer](https://learn.microsoft.com/entra/identity/role-based-access-control/permissions-reference#application-developer)" permission in the project settings. If you don't have this permission, you will need to ask your Azure DevOps administrator to create the service connection for you.*
-
-#### Create an app registration with workload identity federation for an existing App Registration or User-assigned managed identity (manual)
-
-1. Create an [App Registration](guides/app_registration.md) or a [User-Managed Identity](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview). This resource will be used to manage the identity federation with Azure DevOps.
-1. Register the App Registration or Managed Identity with the Power Platform. This task can be performed using [the provider itself](/resources/admin_management_application.md) or [PowerShell](https://learn.microsoft.com/power-platform/admin/powershell-create-service-principal).
-1. [Complete the service connection configuration in Azure and Azure DevOps](https://learn.microsoft.com/azure/devops/pipelines/release/configure-workload-identity?view=azure-devops&tabs=managed-identity). Note that Azure DevOps may automatically generate the federated credential in Azure, depending on your permissions and Azure Subscription configuration.
-1. Configure your Azure DevOps pipeline to use the Service Connection you created in step 1. This is done by adding the following variables to your pipeline:
-
-    ```yaml
-    env:
-      ARM_OIDC_REQUEST_TOKEN: $(System.AccessToken)
-      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-      SYSTEM_OIDCREQUESTURI: $(System.OidcRequestUri)
-      POWER_PLATFORM_OIDC_REQUEST_URI: $(System.OidcRequestUri)
-      POWER_PLATFORM_OIDC_TOKEN: $(System.AccessToken)
-    ```
-
-1. Configure the provider to use Azure DevOps Workload Identity Federation. This authentication option also requires values to be set in the ARM_OIDC_REQUEST_TOKEN and POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID environment variables, which should be configured in the AzDO pipeline itself. Note that this example sets some of the required properties in the provider configuration, but the whole configuration could also be performed using just environment variables.
-
-    ```terraform
-    provider "powerplatform" {
-      tenant_id = var.tenant_id
-      client_id = var.client_id # The client ID for the Azure resource containing the federated credentials for Azure DevOps. Should be an App Registration or a Managed Identity.
-      use_oidc = true
-    }
-    ```
-
-
-#### Configuring Terraform to use OIDC
-
-Now that we have our federated credential for Entra App and ready to use, it's possible to configure Terraform in a few different ways.
-
-**Note: If using the AzureRM Backend you may also need to configure OIDC there too, see the [documentation for the AzureRM Backend](https://developer.hashicorp.com/terraform/language/backend/azurerm) for more information.**
-
-##### Environment Variables
-
-Whether using OIDC with a generic token, GitHub Action, or Azure DevOps Pipeline, you need these common environment variables shown in the examples below.
-
-    ```sh
-    export POWER_PLATFORM_CLIENT_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    export POWER_PLATFORM_TENANT_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    export POWER_PLATFORM_USE_OIDC="true"
-    ```
-
-    ```Powershell
-    $env:POWER_PLATFORM_CLIENT_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    $env:POWER_PLATFORM_TENANT_ID="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
-    $env:POWER_PLATFORM_USE_OIDC="true"
-    ```
-
-##### Generic OIDC token (Environment Variables)
-
-The provider will use the `POWER_PLATFORM_OIDC_REQUEST_URI` and `POWER_PLATFORM_OIDC_TOKEN` environment variables to authenticate to Power Platform. These variables are set by the CI/CD system when using OIDC authentication.
-
-#### Pipeline Example of using OIDC with Azure DevOps with the task `Azure-CLI@2`
-
-Azure DevOps Pipeline snippet for using the Power Platform and Azure provider in an Azure DevOps pipeline. This example uses the [AzureCLI@2](https://learn.microsoft.com/azure/devops/pipelines/tasks/reference/azure-cli-v2?view=azure-pipelines) task to use the Service Connection and run Terraform commands.
-Is triggered on changes to the `main` branch and uses a self-hosted agent pool named `your-agent-pool-name`. The pipeline also sets up environment variables for authentication.
-
-```yaml
-# Terraform pipeline for Azure DevOps and Power Platform using task "AzureCLI@2"
-
-trigger:
-- main
-
-pool: 
-  name: "your-agent-pool-name"
-  vmImage: ubuntu-latest
-
-variables:
-- name: POWER_PLATFORM_CLIENT_ID
-  value: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-- name: POWER_PLATFORM_TENANT_ID
-  value: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-- name: SERVICE_CONNECTION_ID
-  value: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-- name: ARM_CLIENT_ID
-  value: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-- name: ARM_SUBSCRIPTION_ID
-  value: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-- name: ARM_TENANT_ID
-  value: XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX
-
-steps:
-- task: AzureCLI@2
-  displayName: 'Run Terraform Init, Plan, Apply, and Destroy'
-  inputs:
-    azureSubscription: $(SERVICE_CONNECTION_ID)
-    scriptType: bash
-    scriptLocation: "inlineScript"
-    inlineScript: |
-      # export TF_VAR variables for Azure authentication this variables should be set in your terraform code
-      export TF_VAR_arm_client_id=$ARM_CLIENT_ID
-      export TF_VAR_arm_subscription_id=$ARM_SUBSCRIPTION_ID
-      export TF_VAR_arm_tenant_id=$ARM_TENANT_ID
-      export ARM_ADO_PIPELINE_SERVICE_CONNECTION_ID=$SERVICE_CONNECTION_ID
-      # export Power Platform variables for authentication
-      export TF_VAR_power_platform_client_id=$POWER_PLATFORM_CLIENT_ID
-      export TF_VAR_power_platform_tenant_id=$POWER_PLATFORM_TENANT_ID
-      export POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID=$SERVICE_CONNECTION_ID
-
-      # Terraform CLI installation and commands
-
-  env:
-    ARM_OIDC_REQUEST_TOKEN: $(System.AccessToken)
-    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-    SYSTEM_OIDCREQUESTURI: $(System.OidcRequestUri)
-    POWER_PLATFORM_OIDC_REQUEST_URI: $(System.OidcRequestUri)
-    POWER_PLATFORM_OIDC_TOKEN: $(System.AccessToken)
-
-```
-
-*Note: The `System.AccessToken`and `System.OidcRequestUri`, variables are automatically set by Azure DevOps and does not need to be configured manually.*
-
-
-
-
-### Authenticating to Power Platform using a Service Principal and a Client Secret
-
-The Power Platform provider can use a Service Principal with Client Secret to authenticate to Power Platform services.
-
-1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
-1. [Register your app registration with Power Platform](https://learn.microsoft.com/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
-1. Configure the provider to use a Service Principal with a Client Secret with either environment variables or using Terraform variables
-
-### Authenticating to Power Platform using Service Principal and certificate
-
-1. [Create an app registration for the Power Platform Terraform Provider](guides/app_registration.md)
-1. [Register your app registration with Power Platform](https://learn.microsoft.com/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application)
-1. Generate a certificate using openssl or other tools
-
-    ```bash
-    openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 365
-    ```
-
-1. Merge public and private part of the certificate files together
-
-    Using linux shell
-
-    ```bash
-    cat *.pem > cert+key.pem
-    ```
-
-    Using Powershell
-
-    ```powershell
-    Get-Content .\cert.pem, .\key.pem | Set-Content cert+key.pem
-    ```
-
-1. Generate pkcs12 file
-
-    ```bash
-    openssl pkcs12 -export -out cert.pkcs12 -in cert+key.pem
-    ```
-
-1. Add public part of the certificate (`cert.pem` file) to the app registration
-1. Store your key.pem and the password used to generate in a safe place
-1. Configure the provider to use certificate with the following code:
-
-    ```terraform
-    provider "powerplatform" {
-      client_id     = var.client_id
-      tenant_id     = var.tenant_id
-      client_certificate_file_path = "${path.cwd}/cert.pkcs12"
-      client_certificate_password  = var.cert_pass
-    }
-    ```
-
-### Authenticating to Power Platform Using a Managed Identity
-
-The Power Platform provider can use a [Managed Identity](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview) (previously called Managed Service Identity, or MSI) to authenticate to Power Platform services for keyless authentication in scenarios where the provider is being executed in select Azure services, such as Microsoft-hosted or self-hosted Azure DevOps pipelines.
-
-#### System-Managed Identity
-
-1. [Enable system-managed identity on an Azure resource](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview)
-1. Register the managed identity with the Power Platform using the Application ID from the enterprise application for the system-managed identity resource. This task can be performed using either [the Power Platform Terraform Provider itself](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/resources/admin_management_application), or [PowerShell]([Register the managed identity with the Power Platform](https://learn.microsoft.com/power-platform/admin/powershell-create-service-principal).
-1. Configure the provider to use the system-managed identity. Note that no Client ID is required as the Client ID is derived from the Azure resource running the provider.
-
-    ```terraform
-    provider "powerplatform" {
-      use_msi = true
-    }
-    ```
-
-#### User-Managed Identity
-
-1. [Create a User-Managed Identity resource](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview)
-1. Register the managed identity with the Power Platform using the Application ID from the enterprise application for the system-managed identity resource. This task can be performed using either [the Power Platform Terraform Provider itself](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/resources/admin_management_application), or [PowerShell]([Register the managed identity with the Power Platform](https://learn.microsoft.com/power-platform/admin/powershell-create-service-principal).
-1. Configure the provider to use the System-Managed Identity. Note that this example sets the Client ID in the provider configuration, but it could also be set using the POWER_PLATFORM_CLIENT_ID environment variable.
-
-    ```terraform
-    provider "powerplatform" {
-      use_msi = true
-      client_id = var.client_id # This should be the Client ID from the user-managed identity resource.
-    }
-    ```
+* [Authenticating to Power Platform using the Azure CLI](/guides/azure_cli.md)
+* [Authenticating to Power Platform using the Azure Developer CLI](/guides/azure_developer_cli.md)
+* [Authenticating to Power Platform using a Service Principal and OpenID Connect (OIDC) GitHub and Azure DevOps](/guides/oidc.md)
+* [Authenticating to Power Platform using a Service Principal and a Client Secret/Certificate](/guides/client_secret.md)
+* [Authenticating to Power Platform using a Managed Identity](/guides/managed_identity.md)
+
+We recommend using a Service Principal with OIDC federated credentials when running Terraform non-interactively (such as when running Terraform in a CI server) and authenticating using the Azure CLI when running Terraform locally.
 
 ### Using Environment Variables
 
-We recommend using Environment Variables to pass the credentials to the provider.
+You may use Environment Variables to configure the provider.
 
 | Name | Description | Default Value |
 |------|-------------|---------------|
@@ -354,10 +65,15 @@ We recommend using Environment Variables to pass the credentials to the provider
 | `POWER_PLATFORM_CLOUD` | override for the cloud used (default is `public`) | |
 | `POWER_PLATFORM_USE_OIDC` | if set to `true` then OIDC authentication will be used | |
 | `POWER_PLATFORM_USE_CLI` | if set to `true` then Azure CLI authentication will be used | |
+| `POWER_PLATFORM_USE_DEV_CLI` | if set to `true` then Azure Developer CLI authentication will be used | |
 | `POWER_PLATFORM_USE_MSI` | if set to `true` then Managed Identity authentication will be used | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE` | The Base64 format of your certificate that will be used for certificate-based authentication | |
 | `POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH` | The path to the certificate that will be used for certificate-based authentication | |
 | `POWER_PLATFORM_AZDO_SERVICE_CONNECTION_ID` | The GUID of the Azure DevOps service connection to be used for Azure DevOps Workload Identity Federation | |
+| `POWER_PLATFORM_PARTNER_ID` | Partner GUID used for Customer Usage Attribution. | |
+| `POWER_PLATFORM_DISABLE_TERRAFORM_PARTNER_ID` | If set to `true`, the default Terraform partner ID will not be sent. | |
+| `ARM_PARTNER_ID` | Alternative environment variable for the partner GUID. | |
+| `ARM_DISABLE_TERRAFORM_PARTNER_ID` | Alternative variable to disable the default Terraform partner ID. | |
 
 -> Variables passed into the provider will override the environment variables.
 
@@ -381,6 +97,8 @@ In addition to the authentication options, the following options are also suppor
 | Name | Description | Default Value |
 |------|-------------|---------------|
 | `telemetry_optout` | Opting out of telemetry will remove the User-Agent and session id headers from the requests made to the Power Platform service.  There is no other telemetry data collected by the provider.  This may affect the ability to identify and troubleshoot issues with the provider. | `false` |
+| `partner_id` | Optional GUID for Customer Usage Attribution. When set, the value is appended to the User-Agent header as `pid-<GUID>`. | |
+| `disable_terraform_partner_id` | When `true`, suppresses the default Terraform partner ID when no custom `partner_id` is provided. | `false` |
 
 
 If you are using Azure CLI for authentication, you can also turn off CLI's telemetry by executing the following [command](https://github.com/Azure/azure-cli?tab=readme-ov-file#telemetry-configuration):
