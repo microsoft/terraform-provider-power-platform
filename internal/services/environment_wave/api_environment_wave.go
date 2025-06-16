@@ -37,12 +37,12 @@ func (client *environmentWaveClient) GetOrgEnvironmentId(ctx context.Context, en
 	organizations := OrganizationsArrayDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &organizations)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to execute API call for organizations: %w", err)
 	}
 
 	env, err := client.environmentClient.GetEnvironment(ctx, environmentId)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get environment %s: %w", environmentId, err)
 	}
 
 	for _, org := range organizations {
@@ -73,7 +73,7 @@ func (client *environmentWaveClient) UpdateFeature(ctx context.Context, environm
 
 	_, err = client.Api.Execute(ctx, nil, "POST", urlString, nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update feature %s: %w", featureName, err)
 	}
 
 	retryAfter := api.DefaultRetryAfter()
@@ -116,7 +116,7 @@ func (client *environmentWaveClient) GetFeature(ctx context.Context, environment
 	features := FeaturesArrayDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &features)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get features for environment %s: %w", environmentId, err)
 	}
 
 	for _, feature := range features.Values {
