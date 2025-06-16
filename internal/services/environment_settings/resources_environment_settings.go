@@ -316,7 +316,7 @@ func (r *EnvironmentSettingsResource) Configure(ctx context.Context, req resourc
 		return
 	}
 
-	r.EnvironmentSettingClient = newEnvironmentSettingsClient(client)
+	r.EnvironmentSettingClient = newEnvironmentSettingsClient(providerClient.Api)
 }
 
 func (r *EnvironmentSettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

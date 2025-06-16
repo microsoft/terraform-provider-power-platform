@@ -165,8 +165,8 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	tenantInfo, err := r.Client.TenantApi.GetTenant(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error retrieving tenant information",
-			fmt.Sprintf("Could not retrieve tenant information: %s", err.Error()),
+			"Unable to Retrieve Tenant Information",
+			fmt.Sprintf("Could not retrieve tenant information during tenant isolation policy creation: %s", err.Error()),
 		)
 		return
 	}
@@ -182,8 +182,8 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	policy, err := r.Client.createOrUpdateTenantIsolationPolicy(ctx, tenantInfo.TenantId, *policyDto)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating tenant isolation policy",
-			fmt.Sprintf("Could not create tenant isolation policy: %s", err.Error()),
+			"Unable to Create Tenant Isolation Policy",
+			fmt.Sprintf("Could not create tenant isolation policy with API: %s", err.Error()),
 		)
 		return
 	}
@@ -234,8 +234,8 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	policy, err := r.Client.getTenantIsolationPolicy(ctx, tenantId)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading tenant isolation policy",
-			fmt.Sprintf("Could not read tenant isolation policy: %s", err.Error()),
+			"Unable to Read Tenant Isolation Policy",
+			fmt.Sprintf("Could not read tenant isolation policy for tenant ID %s: %s", tenantId, err.Error()),
 		)
 		return
 	}
@@ -306,8 +306,8 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	updatedPolicy, err := r.Client.createOrUpdateTenantIsolationPolicy(ctx, tenantId, *policyDto)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating tenant isolation policy",
-			fmt.Sprintf("Could not update tenant isolation policy: %s", err.Error()),
+			"Unable to Update Tenant Isolation Policy",
+			fmt.Sprintf("Could not update tenant isolation policy for tenant ID %s: %s", tenantId, err.Error()),
 		)
 		return
 	}
@@ -363,8 +363,8 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 	_, err := r.Client.createOrUpdateTenantIsolationPolicy(ctx, tenantId, emptyPolicy)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting tenant isolation policy",
-			fmt.Sprintf("Could not delete tenant isolation policy: %s", err.Error()),
+			"Unable to Delete Tenant Isolation Policy",
+			fmt.Sprintf("Could not delete tenant isolation policy for tenant ID %s: %s", tenantId, err.Error()),
 		)
 		return
 	}
@@ -387,8 +387,8 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 		tenantInfo, err := r.Client.TenantApi.GetTenant(ctx)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				"Error retrieving tenant information",
-				fmt.Sprintf("Could not retrieve tenant information: %s", err.Error()),
+				"Unable to Retrieve Tenant Information for Import",
+				fmt.Sprintf("Could not retrieve tenant information during import of tenant isolation policy: %s", err.Error()),
 			)
 			return
 		}
