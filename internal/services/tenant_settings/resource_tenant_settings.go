@@ -370,7 +370,8 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 	originalSettings, erro := r.TenantSettingClient.GetTenantSettings(ctx)
 	if erro != nil {
 		resp.Diagnostics.AddError(
-			"Error reading tenant settings", fmt.Sprintf("Error reading tenant settings: %s", erro.Error()),
+			"Unable to Read Tenant Settings in Create",
+			fmt.Sprintf("Could not read existing tenant settings during resource creation: %s", erro.Error()),
 		)
 		return
 	}
@@ -378,7 +379,8 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 	jsonSettings, errj := json.Marshal(originalSettings)
 	if errj != nil {
 		resp.Diagnostics.AddError(
-			"Error marshalling tenant settings", fmt.Sprintf("Error marshalling tenant settings: %s", errj.Error()),
+			"Unable to Marshal Tenant Settings in Create",
+			fmt.Sprintf("Could not marshal original tenant settings to JSON for backup: %s", errj.Error()),
 		)
 		return
 	}
@@ -393,14 +395,15 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 	// Update tenant settings via the API
 	plannedSettingsDto, err := convertFromTenantSettingsModel(ctx, plan)
 	if err != nil {
-		resp.Diagnostics.AddError("Error converting to tenant settings DTO", err.Error())
+		resp.Diagnostics.AddError("Unable to Convert Tenant Settings Model to DTO in Create", err.Error())
 		return
 	}
 
 	tenantSettingsDto, err := r.TenantSettingClient.UpdateTenantSettings(ctx, plannedSettingsDto)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error creating tenant settings", fmt.Sprintf("Error creating tenant settings: %s", err.Error()),
+			"Unable to Create Tenant Settings",
+			fmt.Sprintf("Could not create tenant settings with API: %s", err.Error()),
 		)
 		return
 	}
@@ -409,7 +412,7 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 
 	state, _, err := convertFromTenantSettingsDto[TenantSettingsResourceModel](*stateDto, plan.Timeouts)
 	if err != nil {
-		resp.Diagnostics.AddError("Error converting tenant settings", err.Error())
+		resp.Diagnostics.AddError("Unable to Convert Tenant Settings DTO to Model in Create", err.Error())
 		return
 	}
 	state.Id = plan.Id
@@ -431,7 +434,8 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	tenantSettings, err := r.TenantSettingClient.GetTenantSettings(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error reading tenant settings", fmt.Sprintf("Error reading tenant settings: %s", err.Error()),
+			"Unable to Read Tenant Settings in Read",
+			fmt.Sprintf("Could not read current tenant settings during resource read: %s", err.Error()),
 		)
 		return
 	}
@@ -439,7 +443,8 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	tenant, errt := r.TenantSettingClient.GetTenant(ctx)
 	if errt != nil {
 		resp.Diagnostics.AddError(
-			"Error reading tenant", fmt.Sprintf("Error reading tenant: %s", errt.Error()),
+			"Unable to Read Tenant Information in Read",
+			fmt.Sprintf("Could not read tenant information during resource read: %s", errt.Error()),
 		)
 		return
 	}
@@ -448,13 +453,13 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 	resp.Diagnostics.Append(req.State.Get(ctx, &configuredSettings)...)
 	oldStateDto, err := convertFromTenantSettingsModel(ctx, configuredSettings)
 	if err != nil {
-		resp.Diagnostics.AddError("Error converting to tenant settings DTO", err.Error())
+		resp.Diagnostics.AddError("Unable to Convert Tenant Settings Model to DTO in Read", err.Error())
 		return
 	}
 	newStateDto := applyCorrections(ctx, oldStateDto, *tenantSettings)
 	newState, _, err := convertFromTenantSettingsDto[TenantSettingsResourceModel](*newStateDto, state.Timeouts)
 	if err != nil {
-		resp.Diagnostics.AddError("Error converting tenant settings", err.Error())
+		resp.Diagnostics.AddError("Unable to Convert Tenant Settings DTO to Model in Read", err.Error())
 		return
 	}
 	newState.Id = types.StringValue(tenant.TenantId)
@@ -477,7 +482,7 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 
 	plannedDto, err := convertFromTenantSettingsModel(ctx, plan)
 	if err != nil {
-		resp.Diagnostics.AddError("Error converting to tenant settings DTO", err.Error())
+		resp.Diagnostics.AddError("Unable to Convert Tenant Settings Model to DTO in Update", err.Error())
 		return
 	}
 	// Preprocessing updates is unfortunately needed because Terraform can not treat a zeroed UUID as a null value.
@@ -485,7 +490,7 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	// The plannedDto remembers what the user intended, and the preprocessedDto is what we will send to the API.
 	preprocessedDto, err := convertFromTenantSettingsModel(ctx, plan)
 	if err != nil {
-		resp.Diagnostics.AddError("Error converting to tenant settings DTO", err.Error())
+		resp.Diagnostics.AddError("Unable to Convert Tenant Settings Model to DTO for Preprocessing in Update", err.Error())
 		return
 	}
 
@@ -514,7 +519,8 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	updatedSettingsDto, err := r.TenantSettingClient.UpdateTenantSettings(ctx, preprocessedDto)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"Error updating tenant settings", fmt.Sprintf("Error updating tenant settings: %s", err.Error()),
+			"Unable to Update Tenant Settings",
+			fmt.Sprintf("Could not update tenant settings with API: %s", err.Error()),
 		)
 		return
 	}
@@ -524,7 +530,7 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 
 	newState, _, err := convertFromTenantSettingsDto[TenantSettingsResourceModel](*filteredDto, plan.Timeouts)
 	if err != nil {
-		resp.Diagnostics.AddError("Error converting tenant settings", err.Error())
+		resp.Diagnostics.AddError("Unable to Convert Tenant Settings DTO to Model in Update", err.Error())
 		return
 	}
 	newState.Id = plan.Id
@@ -541,11 +547,11 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	resp.Diagnostics.AddWarning("Tenant Settings are not deleted", "Tenant Settings may not be deleted in Power Platform.  Deleting this resource will attempt to restore settings to their previous values and remove this configuration from Terraform state.")
+	resp.Diagnostics.AddWarning("Tenant Settings Cannot Be Deleted", "Tenant Settings cannot be permanently deleted in Power Platform. Deleting this resource will attempt to restore settings to their previous values and remove this configuration from Terraform state.")
 
 	stateDto, err := convertFromTenantSettingsModel(ctx, state)
 	if err != nil {
-		resp.Diagnostics.AddError("Error converting to tenant settings DTO", err.Error())
+		resp.Diagnostics.AddError("Unable to Convert Tenant Settings Model to DTO in Delete", err.Error())
 		return
 	}
 
@@ -560,7 +566,8 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 	err2 := json.Unmarshal(previousBytes, &originalSettings)
 	if err2 != nil {
 		resp.Diagnostics.AddError(
-			"Error unmarshalling original settings", fmt.Sprintf("Error unmarshalling original settings: %s", err2.Error()),
+			"Unable to Unmarshal Original Settings in Delete",
+			fmt.Sprintf("Could not unmarshal backup of original tenant settings during resource deletion: %s", err2.Error()),
 		)
 		return
 	}
@@ -568,7 +575,8 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 	correctedDto := applyCorrections(ctx, stateDto, originalSettings)
 	if correctedDto == nil {
 		resp.Diagnostics.AddError(
-			"Error applying corrections", "Error applying corrections",
+			"Unable to Apply Corrections in Delete",
+			"Could not apply corrections to tenant settings during resource deletion",
 		)
 		return
 	}
@@ -576,7 +584,8 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 	_, e := r.TenantSettingClient.UpdateTenantSettings(ctx, *correctedDto)
 	if e != nil {
 		resp.Diagnostics.AddError(
-			"Error deleting tenant settings", fmt.Sprintf("Error deleting tenant settings: %s", e.Error()),
+			"Unable to Restore Tenant Settings in Delete",
+			fmt.Sprintf("Could not restore original tenant settings during resource deletion: %s", e.Error()),
 		)
 		return
 	}
@@ -601,7 +610,8 @@ func (r *TenantSettingsResource) ModifyPlan(ctx context.Context, req resource.Mo
 			tenant, errt := r.TenantSettingClient.GetTenant(ctx)
 			if errt != nil {
 				resp.Diagnostics.AddError(
-					"Error reading tenant", fmt.Sprintf("Error reading tenant: %s", errt.Error()),
+					"Unable to Read Tenant Information in ModifyPlan",
+					fmt.Sprintf("Could not read tenant information during plan modification: %s", errt.Error()),
 				)
 				return
 			}
