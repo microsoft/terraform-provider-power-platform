@@ -8,7 +8,6 @@ Constructor Function Naming Not Idiomatic
 
 ## Problem
 
-The factory function is named `newAdminManagementApplicationClient`, which is unexported (starts with a lowercase) but could be confusing, as the Go convention is to name such factory functions as `NewTypeName`.
 
 ## Impact
 
