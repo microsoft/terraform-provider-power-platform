@@ -44,7 +44,7 @@ func getEntityDefinition(ctx context.Context, client *client, environmentId, ent
 	entityDefinition := entityDefinitionsDto{}
 	resp, err := client.Api.Execute(ctx, nil, "GET", entityDefinitionApiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &entityDefinition)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get entity definition for %s: %w", entityLogicalName, err)
 	}
 	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 	env := environmentIdDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get environment %s: %w", environmentId, err)
 	}
 
 	return &env, nil
@@ -108,7 +108,7 @@ func (client *client) GetDataRecordsByODataQuery(ctx context.Context, environmen
 	response := map[string]any{}
 	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl, h, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &response)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to execute OData query: %w", err)
 	}
 	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
 		return nil, err
@@ -275,7 +275,7 @@ func (client *client) GetTableSingularNameFromPlural(ctx context.Context, enviro
 	var mapResponse map[string]any
 	err = json.Unmarshal(response.BodyAsBytes, &mapResponse)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to unmarshal response for table singular name: %w", err)
 	}
 
 	var result string
