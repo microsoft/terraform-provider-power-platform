@@ -186,6 +186,8 @@ func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req data
 		return
 	}
 
+	state.Applications = []TenantApplicationPackageDataSourceModel{}
+
 	for _, application := range applications {
 		if (state.Name.ValueString() != "" && state.Name.ValueString() != application.ApplicationName) ||
 			(state.PublisherName.ValueString() != "" && state.PublisherName.ValueString() != application.PublisherName) {

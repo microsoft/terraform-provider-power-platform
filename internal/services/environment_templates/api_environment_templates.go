@@ -30,9 +30,9 @@ func (client *client) GetEnvironmentTemplatesByLocation(ctx context.Context, loc
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/templates", location),
 	}
-	apiUrl.RawQuery = url.Values{
-		"api-version": []string{"2023-06-01"},
-	}.Encode()
+	values := url.Values{}
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
+	apiUrl.RawQuery = values.Encode()
 
 	templates := environmentTemplateDto{}
 
