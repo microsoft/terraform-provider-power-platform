@@ -38,15 +38,14 @@ func (client *client) GetEnvironmentTemplatesByLocation(ctx context.Context, loc
 
 	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
-		return templates, err
+		return templates, fmt.Errorf("failed to execute API request for environment templates: %w", err)
 	}
 
 	defer response.HttpResponse.Body.Close()
 
 	err = json.Unmarshal(response.BodyAsBytes, &templates)
-
 	if err != nil {
-		return templates, err
+		return templates, fmt.Errorf("failed to unmarshal environment templates response: %w", err)
 	}
 
 	return templates, nil
