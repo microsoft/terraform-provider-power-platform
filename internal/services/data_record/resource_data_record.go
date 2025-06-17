@@ -162,7 +162,7 @@ func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequ
 func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
-	var state *DataRecordResourceModel
+	var state DataRecordResourceModel
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
@@ -198,11 +198,11 @@ func (r *DataRecordResource) Update(ctx context.Context, req resource.UpdateRequ
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan *DataRecordResourceModel
+	var plan DataRecordResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 
-	var state *DataRecordResourceModel
+	var state DataRecordResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
 	if resp.Diagnostics.HasError() {

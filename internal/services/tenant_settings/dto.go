@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 type tenantDto struct {
@@ -133,33 +134,15 @@ type tenantSettingsDto struct {
 func convertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSettingsResourceModel) (tenantSettingsDto, error) {
 	tenantSettingsDto := tenantSettingsDto{}
 
-	if !tenantSettings.WalkMeOptOut.IsNull() && !tenantSettings.WalkMeOptOut.IsUnknown() {
-		tenantSettingsDto.WalkMeOptOut = tenantSettings.WalkMeOptOut.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableNPSCommentsReachout.IsNull() && !tenantSettings.DisableNPSCommentsReachout.IsUnknown() {
-		tenantSettingsDto.DisableNPSCommentsReachout = tenantSettings.DisableNPSCommentsReachout.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableNewsletterSendout.IsNull() && !tenantSettings.DisableNewsletterSendout.IsUnknown() {
-		tenantSettingsDto.DisableNewsletterSendout = tenantSettings.DisableNewsletterSendout.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableEnvironmentCreationByNonAdminUsers.IsNull() && !tenantSettings.DisableEnvironmentCreationByNonAdminUsers.IsUnknown() {
-		tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers = tenantSettings.DisableEnvironmentCreationByNonAdminUsers.ValueBoolPointer()
-	}
-	if !tenantSettings.DisablePortalsCreationByNonAdminUsers.IsNull() && !tenantSettings.DisablePortalsCreationByNonAdminUsers.IsUnknown() {
-		tenantSettingsDto.DisablePortalsCreationByNonAdminUsers = tenantSettings.DisablePortalsCreationByNonAdminUsers.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableSurveyFeedback.IsNull() && !tenantSettings.DisableSurveyFeedback.IsUnknown() {
-		tenantSettingsDto.DisableSurveyFeedback = tenantSettings.DisableSurveyFeedback.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableTrialEnvironmentCreationByNonAdminUsers.IsNull() && !tenantSettings.DisableTrialEnvironmentCreationByNonAdminUsers.IsUnknown() {
-		tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers = tenantSettings.DisableTrialEnvironmentCreationByNonAdminUsers.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableCapacityAllocationByEnvironmentAdmins.IsNull() && !tenantSettings.DisableCapacityAllocationByEnvironmentAdmins.IsUnknown() {
-		tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins = tenantSettings.DisableCapacityAllocationByEnvironmentAdmins.ValueBoolPointer()
-	}
-	if !tenantSettings.DisableSupportTicketsVisibleByAllUsers.IsNull() && !tenantSettings.DisableSupportTicketsVisibleByAllUsers.IsUnknown() {
-		tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers = tenantSettings.DisableSupportTicketsVisibleByAllUsers.ValueBoolPointer()
-	}
+	tenantSettingsDto.WalkMeOptOut = helpers.BoolPointer(tenantSettings.WalkMeOptOut)
+	tenantSettingsDto.DisableNPSCommentsReachout = helpers.BoolPointer(tenantSettings.DisableNPSCommentsReachout)
+	tenantSettingsDto.DisableNewsletterSendout = helpers.BoolPointer(tenantSettings.DisableNewsletterSendout)
+	tenantSettingsDto.DisableEnvironmentCreationByNonAdminUsers = helpers.BoolPointer(tenantSettings.DisableEnvironmentCreationByNonAdminUsers)
+	tenantSettingsDto.DisablePortalsCreationByNonAdminUsers = helpers.BoolPointer(tenantSettings.DisablePortalsCreationByNonAdminUsers)
+	tenantSettingsDto.DisableSurveyFeedback = helpers.BoolPointer(tenantSettings.DisableSurveyFeedback)
+	tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers = helpers.BoolPointer(tenantSettings.DisableTrialEnvironmentCreationByNonAdminUsers)
+	tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins = helpers.BoolPointer(tenantSettings.DisableCapacityAllocationByEnvironmentAdmins)
+	tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers = helpers.BoolPointer(tenantSettings.DisableSupportTicketsVisibleByAllUsers)
 
 	if !tenantSettings.PowerPlatform.IsNull() && !tenantSettings.PowerPlatform.IsUnknown() {
 		powerPlatformAttributes := tenantSettings.PowerPlatform.Attributes()
