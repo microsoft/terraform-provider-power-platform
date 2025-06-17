@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -173,54 +174,14 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	// Fetch the available solution checker rules
-	validRules, err := r.ManagedEnvironmentClient.FetchSolutionCheckerRules(ctx, plan.EnvironmentId.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to fetch solution checker rules", err.Error())
+	solutionCheckerRuleOverrides, ok := r.validateAndPrepareSolutionCheckerRules(ctx, plan, &resp.Diagnostics)
+	if !ok {
 		return
 	}
 
-	// Validate the provided solutionCheckerRuleOverrides
-	var solutionCheckerRuleOverrides *string
-	if !plan.SolutionCheckerRuleOverrides.IsNull() {
-		overrides := helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides)
-		for _, override := range overrides {
-			if !helpers.Contains(validRules, override) {
-				resp.Diagnostics.AddError(
-					"Invalid Solution Checker Rule Override",
-					fmt.Sprintf("The solution checker rule override '%s' is not valid. Valid rules are: %v", override, validRules),
-				)
-				return
-			}
-		}
-		value := strings.Join(overrides, ",")
-		solutionCheckerRuleOverrides = &value
-	}
+	managedEnvironmentDto := r.buildManagedEnvironmentDto(plan, solutionCheckerRuleOverrides)
 
-	managedEnvironmentDto := environment.GovernanceConfigurationDto{
-		ProtectionLevel: "Standard",
-		Settings: &environment.SettingsDto{
-			ExtendedSettings: environment.ExtendedSettingsDto{
-				ExcludeEnvironmentFromAnalysis: strconv.FormatBool(plan.IsUsageInsightsDisabled.ValueBool()),
-				IsGroupSharingDisabled:         strconv.FormatBool(plan.IsGroupSharingDisabled.ValueBool()),
-				MaxLimitUserSharing:            strconv.FormatInt(plan.MaxLimitUserSharing.ValueInt64(), 10),
-				DisableAiGeneratedDescriptions: "false",
-				IncludeOnHomepageInsights:      "false",
-				LimitSharingMode:               strings.ToLower(plan.LimitSharingMode.ValueString()[:1]) + plan.LimitSharingMode.ValueString()[1:],
-				SolutionCheckerMode:            strings.ToLower(plan.SolutionCheckerMode.ValueString()),
-				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
-				SolutionCheckerRuleOverrides:   "",
-				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
-				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
-			},
-		},
-	}
-
-	if solutionCheckerRuleOverrides != nil {
-		managedEnvironmentDto.Settings.ExtendedSettings.SolutionCheckerRuleOverrides = *solutionCheckerRuleOverrides
-	}
-
-	err = r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
+	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s", r.FullTypeName()), err.Error())
 		return
@@ -232,27 +193,9 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	maxLimitUserSharing, _ := strconv.ParseInt(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MaxLimitUserSharing, 10, 64)
-	plan.Id = plan.EnvironmentId
-	plan.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)
-	plan.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
-	plan.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
-	plan.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
-	plan.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
-	plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
-	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
-	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
-	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
-
-	if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
-		plan.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
-	} else {
-		ruleOverrides, err := helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
-		if err != nil {
-			resp.Diagnostics.AddError("Error converting solution checker rule overrides", err.Error())
-			return
-		}
-		plan.SolutionCheckerRuleOverrides = ruleOverrides
+	r.populateStateFromEnvironment(ctx, plan, env, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -329,54 +272,14 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	// Fetch the available solution checker rules
-	validRules, err := r.ManagedEnvironmentClient.FetchSolutionCheckerRules(ctx, plan.EnvironmentId.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("Failed to fetch solution checker rules", err.Error())
+	solutionCheckerRuleOverrides, ok := r.validateAndPrepareSolutionCheckerRules(ctx, plan, &resp.Diagnostics)
+	if !ok {
 		return
 	}
 
-	// Validate the provided solutionCheckerRuleOverrides
-	var solutionCheckerRuleOverrides *string
-	if !plan.SolutionCheckerRuleOverrides.IsNull() {
-		overrides := helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides)
-		for _, override := range overrides {
-			if !helpers.Contains(validRules, override) {
-				resp.Diagnostics.AddError(
-					"Invalid Solution Checker Rule Override",
-					fmt.Sprintf("The solution checker rule override '%s' is not valid. Valid rules are: %v", override, validRules),
-				)
-				return
-			}
-		}
-		value := strings.Join(overrides, ",")
-		solutionCheckerRuleOverrides = &value
-	}
+	managedEnvironmentDto := r.buildManagedEnvironmentDto(plan, solutionCheckerRuleOverrides)
 
-	managedEnvironmentDto := environment.GovernanceConfigurationDto{
-		ProtectionLevel: "Standard",
-		Settings: &environment.SettingsDto{
-			ExtendedSettings: environment.ExtendedSettingsDto{
-				ExcludeEnvironmentFromAnalysis: strconv.FormatBool(plan.IsUsageInsightsDisabled.ValueBool()),
-				IsGroupSharingDisabled:         strconv.FormatBool(plan.IsGroupSharingDisabled.ValueBool()),
-				MaxLimitUserSharing:            strconv.FormatInt(plan.MaxLimitUserSharing.ValueInt64(), 10),
-				DisableAiGeneratedDescriptions: "false",
-				IncludeOnHomepageInsights:      "false",
-				LimitSharingMode:               strings.ToLower(plan.LimitSharingMode.ValueString()[:1]) + plan.LimitSharingMode.ValueString()[1:],
-				SolutionCheckerMode:            strings.ToLower(plan.SolutionCheckerMode.ValueString()),
-				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
-				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
-				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
-				SolutionCheckerRuleOverrides:   "",
-			},
-		},
-	}
-
-	if solutionCheckerRuleOverrides != nil {
-		managedEnvironmentDto.Settings.ExtendedSettings.SolutionCheckerRuleOverrides = *solutionCheckerRuleOverrides
-	}
-
-	err = r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
+	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s", r.FullTypeName()), err.Error())
 		return
@@ -388,27 +291,9 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	maxLimitUserSharing, _ := strconv.ParseInt(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MaxLimitUserSharing, 10, 64)
-	plan.Id = plan.EnvironmentId
-	plan.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)
-	plan.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
-	plan.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
-	plan.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
-	plan.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
-	plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
-	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
-	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
-	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
-
-	if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
-		plan.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
-	} else {
-		ruleOverrides, err := helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
-		if err != nil {
-			resp.Diagnostics.AddError("Error converting solution checker rule overrides", err.Error())
-			return
-		}
-		plan.SolutionCheckerRuleOverrides = ruleOverrides
+	r.populateStateFromEnvironment(ctx, plan, env, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -436,4 +321,87 @@ func (r *ManagedEnvironmentResource) ImportState(ctx context.Context, req resour
 	defer exitContext()
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// validateAndPrepareSolutionCheckerRules validates solution checker rule overrides and returns the prepared string.
+func (r *ManagedEnvironmentResource) validateAndPrepareSolutionCheckerRules(ctx context.Context, plan *ManagedEnvironmentResourceModel, diagnostics *diag.Diagnostics) (*string, bool) {
+	// Fetch the available solution checker rules
+	validRules, err := r.ManagedEnvironmentClient.FetchSolutionCheckerRules(ctx, plan.EnvironmentId.ValueString())
+	if err != nil {
+		diagnostics.AddError("Failed to fetch solution checker rules", err.Error())
+		return nil, false
+	}
+
+	// Validate the provided solutionCheckerRuleOverrides
+	var solutionCheckerRuleOverrides *string
+	if !plan.SolutionCheckerRuleOverrides.IsNull() {
+		overrides := helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides)
+		for _, override := range overrides {
+			if !helpers.Contains(validRules, override) {
+				diagnostics.AddError(
+					"Invalid Solution Checker Rule Override",
+					fmt.Sprintf("The solution checker rule override '%s' is not valid. Valid rules are: %v", override, validRules),
+				)
+				return nil, false
+			}
+		}
+		value := strings.Join(overrides, ",")
+		solutionCheckerRuleOverrides = &value
+	}
+
+	return solutionCheckerRuleOverrides, true
+}
+
+// buildManagedEnvironmentDto creates the GovernanceConfigurationDto from the plan.
+func (r *ManagedEnvironmentResource) buildManagedEnvironmentDto(plan *ManagedEnvironmentResourceModel, solutionCheckerRuleOverrides *string) environment.GovernanceConfigurationDto {
+	managedEnvironmentDto := environment.GovernanceConfigurationDto{
+		ProtectionLevel: "Standard",
+		Settings: &environment.SettingsDto{
+			ExtendedSettings: environment.ExtendedSettingsDto{
+				ExcludeEnvironmentFromAnalysis: strconv.FormatBool(plan.IsUsageInsightsDisabled.ValueBool()),
+				IsGroupSharingDisabled:         strconv.FormatBool(plan.IsGroupSharingDisabled.ValueBool()),
+				MaxLimitUserSharing:            strconv.FormatInt(plan.MaxLimitUserSharing.ValueInt64(), 10),
+				DisableAiGeneratedDescriptions: "false",
+				IncludeOnHomepageInsights:      "false",
+				LimitSharingMode:               strings.ToLower(plan.LimitSharingMode.ValueString()[:1]) + plan.LimitSharingMode.ValueString()[1:],
+				SolutionCheckerMode:            strings.ToLower(plan.SolutionCheckerMode.ValueString()),
+				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
+				SolutionCheckerRuleOverrides:   "",
+				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
+				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
+			},
+		},
+	}
+
+	if solutionCheckerRuleOverrides != nil {
+		managedEnvironmentDto.Settings.ExtendedSettings.SolutionCheckerRuleOverrides = *solutionCheckerRuleOverrides
+	}
+
+	return managedEnvironmentDto
+}
+
+// populateStateFromEnvironment populates the plan state from environment API response.
+func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Context, plan *ManagedEnvironmentResourceModel, env *environment.EnvironmentDto, diagnostics *diag.Diagnostics) {
+	maxLimitUserSharing, _ := strconv.ParseInt(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MaxLimitUserSharing, 10, 64)
+	plan.Id = plan.EnvironmentId
+	plan.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)
+	plan.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
+	plan.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
+	plan.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
+	plan.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
+	plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
+	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
+	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
+	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
+
+	if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
+		plan.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
+	} else {
+		ruleOverrides, err := helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
+		if err != nil {
+			diagnostics.AddError("Error converting solution checker rule overrides", err.Error())
+			return
+		}
+		plan.SolutionCheckerRuleOverrides = ruleOverrides
+	}
 }
