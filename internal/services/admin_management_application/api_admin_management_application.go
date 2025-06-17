@@ -36,8 +36,11 @@ func (client *client) GetAdminApplication(ctx context.Context, clientId string) 
 
 	var adminApp adminManagementApplicationDto
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get admin app %s: %w", clientId, err)
+	}
 
-	return &adminApp, err
+	return &adminApp, nil
 }
 
 func (client *client) RegisterAdminApplication(ctx context.Context, clientId string) (*adminManagementApplicationDto, error) {
@@ -52,8 +55,11 @@ func (client *client) RegisterAdminApplication(ctx context.Context, clientId str
 
 	var adminApp adminManagementApplicationDto
 	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register admin app %s: %w", clientId, err)
+	}
 
-	return &adminApp, err
+	return &adminApp, nil
 }
 
 func (client *client) UnregisterAdminApplication(ctx context.Context, clientId string) error {
@@ -67,6 +73,9 @@ func (client *client) UnregisterAdminApplication(ctx context.Context, clientId s
 	}
 
 	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+	if err != nil {
+		return fmt.Errorf("failed to unregister admin app %s: %w", clientId, err)
+	}
 
-	return err
+	return nil
 }

@@ -171,7 +171,11 @@ func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req data
 	defer exitContext()
 
 	var state TenantApplicationPackagesListDataSourceModel
-	resp.State.Get(ctx, &state)
+	diags := resp.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	state.Name = types.StringValue(state.Name.ValueString())
 	state.PublisherName = types.StringValue(state.PublisherName.ValueString())
@@ -215,7 +219,7 @@ func (d *TenantApplicationPackagesDataSource) Read(ctx context.Context, req data
 		state.Applications = append(state.Applications, app)
 	}
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
