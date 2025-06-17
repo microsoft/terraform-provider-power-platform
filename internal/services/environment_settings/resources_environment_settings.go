@@ -307,6 +307,15 @@ func (r *EnvironmentSettingsResource) Configure(ctx context.Context, req resourc
 		return
 	}
 
+	client := providerClient.Api
+	if client == nil {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			"Provider client Api is nil. Please report this issue to the provider developers.",
+		)
+		return
+	}
+
 	r.EnvironmentSettingClient = newEnvironmentSettingsClient(providerClient.Api)
 }
 

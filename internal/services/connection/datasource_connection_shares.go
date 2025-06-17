@@ -126,7 +126,13 @@ func (d *SharesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 
 	connectionsList, err := d.ConnectionsClient.GetConnectionShares(ctx, state.EnvironmentId.ValueString(), state.ConnectorName.ValueString(), state.ConnectionId.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError("Failed to get connection shares", err.Error())
+		resp.Diagnostics.AddError(
+			fmt.Sprintf(
+				"Failed to get connection shares for environment_id '%s', connector_name '%s', connection_id '%s'",
+				state.EnvironmentId.ValueString(), state.ConnectorName.ValueString(), state.ConnectionId.ValueString(),
+			),
+			err.Error(),
+		)
 		return
 	}
 
