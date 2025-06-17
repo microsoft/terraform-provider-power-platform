@@ -84,7 +84,10 @@ func (av OtherFieldRequiredWhenValueOfValidator) Validate(ctx context.Context, r
 
 		if (av.OtherFieldValueRegex != nil && otherFieldValue != nil && !av.OtherFieldValueRegex.MatchString(*otherFieldValue)) ||
 			(av.OtherFieldValueRegex == nil && (otherFieldValue == nil || *otherFieldValue == "") && !isUnknown) {
-			res.Diagnostics.AddError(av.ErrorMessage, av.ErrorMessage)
+			res.Diagnostics.AddError(
+				av.ErrorMessage,
+				"Field \""+paths[0].String()+"\" does not meet required value conditions.",
+			)
 		}
 	}
 }

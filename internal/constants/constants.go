@@ -189,6 +189,10 @@ const (
 	NO_MANAGEMENT_APPLICATION_ERROR_MSG = "authorization has been denied for this request. Make sure that your service principal is registered as an admin management application: https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application"
 )
 
+const (
+	CAE_CHALLENGE_CLAIMS_INDICATOR              = "claims="
+	CAE_CHALLENGE_INSUFFICIENT_CLAIMS_INDICATOR = "insufficient_claims"
+)
 // Error codes for provider errors.
 const (
 	ERROR_OBJECT_NOT_FOUND             = "OBJECT_NOT_FOUND"
