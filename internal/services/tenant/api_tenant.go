@@ -5,6 +5,7 @@ package tenant
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 
@@ -37,7 +38,7 @@ func (client *Client) GetTenant(ctx context.Context) (*TenantDto, error) {
 
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &dto)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to execute GET tenant API call: %w", err)
 	}
 
 	return &dto, nil

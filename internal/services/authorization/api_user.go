@@ -16,6 +16,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers/array"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
@@ -53,13 +54,10 @@ func (client *client) GetDataverseUsers(ctx context.Context, environmentId strin
 	if err != nil {
 		return nil, err
 	}
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   environmentHost,
-		Path:   "/api/data/v9.2/systemusers",
-	}
+
+	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers", nil)
 	userArray := userArrayDto{}
-	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &userArray)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &userArray)
 	if err != nil {
 		return nil, err
 	}
@@ -77,17 +75,13 @@ func (client *client) GetDataverseUserBySystemUserId(ctx context.Context, enviro
 	if err != nil {
 		return nil, err
 	}
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   environmentHost,
-		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
-	}
+
 	values := url.Values{}
 	values.Add("$expand", "systemuserroles_association($select=roleid,name,ismanaged,_businessunitid_value)")
-	apiUrl.RawQuery = values.Encode()
+	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers("+systemUserId+")", values)
 
 	user := userDto{}
-	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &user)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &user)
 	if err != nil {
 		return nil, err
 	}
@@ -101,17 +95,14 @@ func (client *client) GetDataverseUserBySystemUserId(ctx context.Context, enviro
 }
 
 func (client *client) GetEnvironmentUserByAadObjectId(ctx context.Context, environmentId, aadObjectId string) (*userDto, error) {
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   client.Api.GetConfig().Urls.BapiUrl,
-		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/roleAssignments", environmentId),
-	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
-	apiUrl.RawQuery = values.Encode()
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
+	apiUrl := helpers.BuildBapiUrl(client.Api.GetConfig().Urls.BapiUrl,
+		fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/roleAssignments", environmentId),
+		values)
 
 	respObj := EnvironmentUserGetResponseDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &respObj)
+	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK}, &respObj)
 	if err != nil {
 		return nil, err
 	}
@@ -149,18 +140,14 @@ func (client *client) GetDataverseUserByAadObjectId(ctx context.Context, environ
 	if err != nil {
 		return nil, err
 	}
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   environmentHost,
-		Path:   "/api/data/v9.2/systemusers",
-	}
+
 	values := url.Values{}
 	values.Add("$filter", fmt.Sprintf("azureactivedirectoryobjectid eq %s", aadObjectId))
 	values.Add("$expand", "systemuserroles_association($select=roleid,name,ismanaged,_businessunitid_value)")
-	apiUrl.RawQuery = values.Encode()
+	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers", values)
 
 	user := userArrayDto{}
-	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &user)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &user)
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +174,7 @@ func (client *client) RemoveEnvironmentUserSecurityRoles(ctx context.Context, en
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/modifyRoleAssignments", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	userRead, err := client.GetEnvironmentUserByAadObjectId(ctx, environmentId, aadObjectId)
@@ -241,7 +228,7 @@ func (client *client) AddEnvironmentUserSecurityRoles(ctx context.Context, envir
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/modifyRoleAssignments", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	add := EnvironmentUserRequestDto{
@@ -297,7 +284,7 @@ func (client *client) CreateDataverseUser(ctx context.Context, environmentId, aa
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/addUser", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	userToCreate := map[string]any{
@@ -339,13 +326,10 @@ func (client *client) UpdateDataverseUser(ctx context.Context, environmentId, sy
 	if err != nil {
 		return nil, err
 	}
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   environmentHost,
-		Path:   "/api/data/v9.2/systemusers(" + systemUserId + ")",
-	}
 
-	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, userUpdate, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, nil)
+	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers("+systemUserId+")", nil)
+
+	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl, nil, userUpdate, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -485,7 +469,7 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 	}
 	values := url.Values{}
 	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy,properties/copilotPolicies")
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	env := environmentIdDto{}

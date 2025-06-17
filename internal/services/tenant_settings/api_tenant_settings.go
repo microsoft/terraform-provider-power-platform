@@ -34,7 +34,7 @@ func (client *client) GetTenant(ctx context.Context) (*tenantDto, error) {
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2020-08-01")
+	values.Add(constants.API_VERSION_PARAM, constants.TENANT_SETTINGS_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	tenant := tenantDto{}
@@ -53,7 +53,7 @@ func (client *client) GetTenantSettings(ctx context.Context) (*tenantSettingsDto
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	tenantSettings := tenantSettingsDto{}
@@ -72,7 +72,7 @@ func (client *client) UpdateTenantSettings(ctx context.Context, tenantSettings t
 	}
 
 	values := url.Values{}
-	values.Add(constants.API_VERSION_PARAM, "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	var backendSettings tenantSettingsDto
