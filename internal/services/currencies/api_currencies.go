@@ -30,9 +30,9 @@ func (client *client) GetCurrenciesByLocation(ctx context.Context, location stri
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentCurrencies", location),
 	}
-	apiUrl.RawQuery = url.Values{
-		"api-version": []string{"2023-06-01"},
-	}.Encode()
+	values := url.Values{}
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
+	apiUrl.RawQuery = values.Encode()
 
 	currencies := currenciesDto{}
 

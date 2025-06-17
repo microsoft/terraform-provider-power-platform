@@ -65,7 +65,7 @@ func (client *Client) GetLocations(ctx context.Context) (*LocationArrayDto, erro
 		Path:   "/providers/Microsoft.BusinessAppPlatform/locations",
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	locationsArray := LocationArrayDto{}
@@ -123,7 +123,7 @@ func currencyCodeValidator(ctx context.Context, client *api.Client, location str
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentCurrencies", location),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	response, err := client.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
@@ -187,7 +187,7 @@ func languageCodeValidator(ctx context.Context, client *api.Client, location str
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/environmentLanguages", location),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	response, err := client.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
@@ -233,7 +233,7 @@ func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId 
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
-		return "", customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+		return "", customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_URL_NOT_FOUND), "environment url not found, please check if the environment has dataverse linked")
 	}
 
 	envUrl, err := url.Parse(environmentUrl)
@@ -251,7 +251,7 @@ func (client *Client) GetEnvironment(ctx context.Context, environmentId string) 
 	}
 	values := url.Values{}
 	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy,properties/copilotPolicies")
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	env := EnvironmentDto{}
@@ -259,7 +259,7 @@ func (client *Client) GetEnvironment(ctx context.Context, environmentId string) 
 	if err != nil {
 		var httpError *customerrors.UnexpectedHttpStatusCodeError
 		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
-			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("environment '%s' not found", environmentId))
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("environment '%s' not found", environmentId))
 		}
 		return nil, err
 	}
@@ -276,13 +276,17 @@ func (client *Client) GetEnvironment(ctx context.Context, environmentId string) 
 }
 
 func (client *Client) DeleteEnvironment(ctx context.Context, environmentId string) error {
+	return client.deleteEnvironmentWithRetry(ctx, environmentId, 0)
+}
+
+func (client *Client) deleteEnvironmentWithRetry(ctx context.Context, environmentId string, retryCount int) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	environmentDelete := enironmentDeleteDto{
@@ -299,11 +303,14 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 	}
 
 	if response.HttpResponse.StatusCode == http.StatusConflict {
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for DeleteEnvironment on conflict", constants.MAX_RETRY_COUNT)
+		}
 		err := client.handleHttpConflict(ctx, response)
 		if err != nil {
 			return err
 		}
-		return client.DeleteEnvironment(ctx, environmentId)
+		return client.deleteEnvironmentWithRetry(ctx, environmentId, retryCount+1)
 	}
 
 	var httpError *customerrors.UnexpectedHttpStatusCodeError
@@ -320,11 +327,14 @@ func (client *Client) DeleteEnvironment(ctx context.Context, environmentId strin
 	}
 
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for DeleteEnvironment on lifecycle failure", constants.MAX_RETRY_COUNT)
+		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return err
 		}
 		tflog.Info(ctx, "Environment deletion failed. Retrying")
-		return client.DeleteEnvironment(ctx, environmentId)
+		return client.deleteEnvironmentWithRetry(ctx, environmentId, retryCount+1)
 	}
 	return nil
 }
@@ -336,7 +346,7 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/provisionInstance", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentCreateLinkEnvironmentMetadata, []int{http.StatusAccepted}, nil)
@@ -395,13 +405,17 @@ func (client *Client) AddDataverseToEnvironment(ctx context.Context, environment
 }
 
 func (client *Client) ModifyEnvironmentType(ctx context.Context, environmentId, environmentType string) error {
+	return client.modifyEnvironmentTypeWithRetry(ctx, environmentId, environmentType, 0)
+}
+
+func (client *Client) modifyEnvironmentTypeWithRetry(ctx context.Context, environmentId, environmentType string, retryCount int) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s/modifySku", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	modifySkuDto := modifySkuDto{
@@ -419,16 +433,23 @@ func (client *Client) ModifyEnvironmentType(ctx context.Context, environmentId, 
 	}
 
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for ModifyEnvironmentType on lifecycle failure", constants.MAX_RETRY_COUNT)
+		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return err
 		}
 		tflog.Info(ctx, "Environment update failed. Retrying")
-		return client.ModifyEnvironmentType(ctx, environmentId, environmentType)
+		return client.modifyEnvironmentTypeWithRetry(ctx, environmentId, environmentType, retryCount+1)
 	}
 	return nil
 }
 
 func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate environmentCreateDto) (*EnvironmentDto, error) {
+	return client.createEnvironmentWithRetry(ctx, environmentToCreate, 0)
+}
+
+func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmentToCreate environmentCreateDto, retryCount int) (*EnvironmentDto, error) {
 	if environmentToCreate.Properties.LinkedEnvironmentMetadata != nil && environmentToCreate.Location != "" && environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName != "" {
 		err := client.ValidateCreateEnvironmentDetails(ctx, environmentToCreate.Location, environmentToCreate.Properties.LinkedEnvironmentMetadata.DomainName)
 		if err != nil {
@@ -442,7 +463,7 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 		Path:   "/providers/Microsoft.BusinessAppPlatform/environments",
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentToCreate, []int{http.StatusAccepted, http.StatusCreated, http.StatusInternalServerError, http.StatusConflict}, nil)
 	if err != nil {
@@ -450,15 +471,18 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 	}
 
 	if apiResponse.HttpResponse.StatusCode == http.StatusConflict {
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return nil, fmt.Errorf("maximum retries (%d) reached for CreateEnvironment on conflict", constants.MAX_RETRY_COUNT)
+		}
 		err := client.handleHttpConflict(ctx, apiResponse)
 		if err != nil {
 			return nil, err
 		}
-		return client.CreateEnvironment(ctx, environmentToCreate)
+		return client.createEnvironmentWithRetry(ctx, environmentToCreate, retryCount+1)
 	}
 
 	if apiResponse.HttpResponse.StatusCode == http.StatusInternalServerError {
-		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_CREATION, string(apiResponse.BodyAsBytes))
+		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_CREATION), string(apiResponse.BodyAsBytes))
 	}
 
 	tflog.Debug(ctx, "Environment Creation Operation HTTP Status: '"+apiResponse.HttpResponse.Status+"'")
@@ -505,13 +529,17 @@ func (client *Client) CreateEnvironment(ctx context.Context, environmentToCreate
 }
 
 func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environmentId string, generativeAIConfig GenerativeAiFeaturesDto) error {
+	return client.updateEnvironmentAiFeaturesWithRetry(ctx, environmentId, generativeAIConfig, 0)
+}
+
+func (client *Client) updateEnvironmentAiFeaturesWithRetry(ctx context.Context, environmentId string, generativeAIConfig GenerativeAiFeaturesDto, retryCount int) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, generativeAIConfig, []int{http.StatusAccepted, http.StatusConflict}, nil)
 	if err != nil {
@@ -519,11 +547,14 @@ func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environme
 	}
 
 	if apiResponse.HttpResponse.StatusCode == http.StatusConflict {
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for UpdateEnvironmentAiFeatures on conflict", constants.MAX_RETRY_COUNT)
+		}
 		err := client.handleHttpConflict(ctx, apiResponse)
 		if err != nil {
 			return err
 		}
-		return client.UpdateEnvironmentAiFeatures(ctx, environmentId, generativeAIConfig)
+		return client.updateEnvironmentAiFeaturesWithRetry(ctx, environmentId, generativeAIConfig, retryCount+1)
 	}
 
 	lifecycleResponse, err := client.Api.DoWaitForLifecycleOperationStatus(ctx, apiResponse)
@@ -532,11 +563,14 @@ func (client *Client) UpdateEnvironmentAiFeatures(ctx context.Context, environme
 	}
 
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for UpdateEnvironmentAiFeatures on lifecycle failure", constants.MAX_RETRY_COUNT)
+		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return err
 		}
 		tflog.Info(ctx, "Environment update ai features failed. Retrying")
-		return client.UpdateEnvironmentAiFeatures(ctx, environmentId, generativeAIConfig)
+		return client.updateEnvironmentAiFeaturesWithRetry(ctx, environmentId, generativeAIConfig, retryCount+1)
 	}
 	return nil
 }
@@ -555,6 +589,10 @@ func (client *Client) handleHttpConflict(ctx context.Context, apiResponse *api.R
 }
 
 func (client *Client) UpdateEnvironment(ctx context.Context, environmentId string, environment EnvironmentDto) (*EnvironmentDto, error) {
+	return client.updateEnvironmentWithRetry(ctx, environmentId, environment, 0)
+}
+
+func (client *Client) updateEnvironmentWithRetry(ctx context.Context, environmentId string, environment EnvironmentDto, retryCount int) (*EnvironmentDto, error) {
 	if environment.Location != "" && environment.Properties.LinkedEnvironmentMetadata != nil && environment.Properties.LinkedEnvironmentMetadata.DomainName != "" {
 		err := client.ValidateUpdateEnvironmentDetails(ctx, environment.Id, environment.Properties.LinkedEnvironmentMetadata.DomainName)
 		if err != nil {
@@ -571,7 +609,7 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 	values.Add("$expand", "permissions,properties.capacity,properties/billingPolicy")
 	// Due to a bug in BAPI that triggers managed environment on update of a description field, we need to use the older API version
 	// values.Add("api-version", "2022-05-01")
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environment, []int{http.StatusAccepted, http.StatusConflict}, nil)
 	if err != nil {
@@ -579,11 +617,14 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 	}
 
 	if apiResponse.HttpResponse.StatusCode == http.StatusConflict {
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return nil, fmt.Errorf("maximum retries (%d) reached for UpdateEnvironment on conflict", constants.MAX_RETRY_COUNT)
+		}
 		err := client.handleHttpConflict(ctx, apiResponse)
 		if err != nil {
 			return nil, err
 		}
-		return client.UpdateEnvironment(ctx, environmentId, environment)
+		return client.updateEnvironmentWithRetry(ctx, environmentId, environment, retryCount+1)
 	}
 
 	// wait for the lifecycle operation to finish.
@@ -593,11 +634,14 @@ func (client *Client) UpdateEnvironment(ctx context.Context, environmentId strin
 	}
 
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return nil, fmt.Errorf("maximum retries (%d) reached for UpdateEnvironment on lifecycle failure", constants.MAX_RETRY_COUNT)
+		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return nil, err
 		}
 		tflog.Info(ctx, "Environment update failed. Retrying")
-		return client.UpdateEnvironment(ctx, environmentId, environment)
+		return client.updateEnvironmentWithRetry(ctx, environmentId, environment, retryCount+1)
 	}
 
 	// despite lifecycle operation success, the environment may not be ready yet.
@@ -627,7 +671,7 @@ func (client *Client) GetEnvironments(ctx context.Context) ([]EnvironmentDto, er
 	}
 	values := url.Values{}
 	values.Add("$expand", "properties/billingPolicy,properties/copilotPolicies")
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	envArray := environmentArrayDto{}
@@ -666,7 +710,7 @@ func (client *Client) ValidateCreateEnvironmentDetails(ctx context.Context, loca
 		Path:   "/providers/Microsoft.BusinessAppPlatform/validateEnvironmentDetails",
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	envDetails := validateCreateEnvironmentDetailsDto{
@@ -688,7 +732,7 @@ func (client *Client) ValidateUpdateEnvironmentDetails(ctx context.Context, envi
 		Path:   "/providers/Microsoft.BusinessAppPlatform/validateEnvironmentDetails",
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	envDetails := validateUpdateEnvironmentDetailsDto{

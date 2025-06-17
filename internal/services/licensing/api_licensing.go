@@ -59,7 +59,7 @@ func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*
 
 	var httpError *customerrors.UnexpectedHttpStatusCodeError
 	if err != nil && errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
-		return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+		return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
 	}
 	return &policy, err
 }
@@ -151,7 +151,7 @@ func (client *Client) GetEnvironmentsForBillingPolicy(ctx context.Context, billi
 	if err != nil {
 		var httpError *customerrors.UnexpectedHttpStatusCodeError
 		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
-			return nil, customerrors.WrapIntoProviderError(err, customerrors.ERROR_OBJECT_NOT_FOUND, fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
 		}
 		return nil, err
 	}
