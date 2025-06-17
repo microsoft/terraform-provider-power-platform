@@ -109,6 +109,10 @@ func (p *PowerPlatformProvider) Schema(ctx context.Context, req provider.SchemaR
 				MarkdownDescription: "Flag to indicate whether to use the CLI for authentication. ",
 				Optional:            true,
 			},
+			"use_dev_cli": schema.BoolAttribute{
+				MarkdownDescription: "Flag to indicate whether to use the Azure Developer CLI for authentication. ",
+				Optional:            true,
+			},
 			"tenant_id": schema.StringAttribute{
 				MarkdownDescription: "The id of the AAD tenant that Power Platform API uses to authenticate with",
 				Optional:            true,
@@ -213,6 +217,7 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	clientSecret := helpers.GetConfigString(ctx, configValue.ClientSecret, constants.ENV_VAR_POWER_PLATFORM_CLIENT_SECRET, "")
 	useOidc := helpers.GetConfigBool(ctx, configValue.UseOidc, constants.ENV_VAR_POWER_PLATFORM_USE_OIDC, false)
 	useCli := helpers.GetConfigBool(ctx, configValue.UseCli, constants.ENV_VAR_POWER_PLATFORM_USE_CLI, false)
+	useDevCli := helpers.GetConfigBool(ctx, configValue.UseDevCli, constants.ENV_VAR_POWER_PLATFORM_USE_DEV_CLI, false)
 	clientCertificate := helpers.GetConfigString(ctx, configValue.ClientCertificate, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE, "")
 	clientCertificateFilePath := helpers.GetConfigString(ctx, configValue.ClientCertificateFilePath, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH, "")
 	clientCertificatePassword := helpers.GetConfigString(ctx, configValue.ClientCertificatePassword, constants.ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_PASSWORD, "")
@@ -247,20 +252,25 @@ func (p *PowerPlatformProvider) Configure(ctx context.Context, req provider.Conf
 	// Get CAE configuration
 	enableCae := helpers.GetConfigBool(ctx, configValue.EnableContinuousAccessEvaluation, constants.ENV_VAR_POWER_PLATFORM_ENABLE_CAE, false)
 
-	if p.Config.TestMode {
+	// Configure authentication method
+	switch {
+	case p.Config.TestMode:
 		configureTestMode(ctx)
-	} else if useCli {
+	case useCli:
 		configureUseCli(ctx, p)
-	} else if useOidc {
+	case useDevCli:
+		configureUseDevCli(ctx, p)
+	case useOidc:
 		configureUseOidc(ctx, p, tenantId, clientId, oidcRequestToken, azdoServiceConnectionId, oidcRequestUrl, oidcToken, oidcTokenFilePath, resp)
-	} else if useMsi {
+	case useMsi:
 		configureUseMsi(ctx, p, clientId, auxiliaryTenantIDs)
-	} else if clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != "") {
+	case clientCertificatePassword != "" && (clientCertificate != "" || clientCertificateFilePath != ""):
 		configureClientCertificate(ctx, p, tenantId, clientId, clientCertificate, clientCertificateFilePath, clientCertificatePassword, resp)
-	} else {
+	default:
 		configureClientSecret(ctx, p, tenantId, clientId, clientSecret, resp)
 	}
 
+	// Configure cloud URLs
 	var providerConfigUrls *config.ProviderConfigUrls
 	var cloudConfiguration *cloud.Configuration
 	p.Config.CloudType = config.CloudType(cloudType)
@@ -312,6 +322,11 @@ func configureUseCli(ctx context.Context, p *PowerPlatformProvider) {
 	p.Config.UseCli = true
 }
 
+func configureUseDevCli(ctx context.Context, p *PowerPlatformProvider) {
+	tflog.Info(ctx, "Using Azure Developer CLI for authentication")
+	p.Config.UseDevCli = true
+}
+
 func configureUseOidc(ctx context.Context, p *PowerPlatformProvider, tenantId, clientId, oidcRequestToken, azdoServiceConnectionId, oidcRequestUrl, oidcToken, oidcTokenFilePath string, resp *provider.ConfigureResponse) {
 	// Shared properties
 	p.Config.UseOidc = true
@@ -340,7 +355,11 @@ func configureUseMsi(ctx context.Context, p *PowerPlatformProvider, clientId str
 	// Convert the slice to an array
 	auxiliaryTenantIDsList := make([]string, len(auxiliaryTenantIDs.Elements()))
 	for i, v := range auxiliaryTenantIDs.Elements() {
-		auxiliaryTenantIDsList[i] = v.String()
+		if str, ok := v.(types.String); ok {
+			auxiliaryTenantIDsList[i] = str.ValueString()
+		} else {
+			tflog.Warn(ctx, fmt.Sprintf("Element at index %d in auxiliaryTenantIDs is not of type types.String. Skipping.", i))
+		}
 	}
 	p.Config.AuxiliaryTenantIDs = auxiliaryTenantIDsList
 	p.Config.UseMsi = true

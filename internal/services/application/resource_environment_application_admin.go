@@ -5,6 +5,7 @@ package application
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -182,7 +183,7 @@ func (r *EnvironmentApplicationAdminResource) Read(ctx context.Context, req reso
 	// Check if the application user exists in the environment
 	exists, err := r.ApplicationClient.ApplicationUserExists(ctx, state.EnvironmentId.ValueString(), state.ApplicationId.ValueString())
 	if err != nil {
-		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			// Environment doesn't exist or we don't have access, remove resource from state
 			resp.State.RemoveResource(ctx)
 			return
@@ -235,7 +236,7 @@ func (r *EnvironmentApplicationAdminResource) Delete(ctx context.Context, req re
 	// Get the system user ID for the application user
 	systemUserId, err := r.ApplicationClient.GetApplicationUserSystemId(ctx, state.EnvironmentId.ValueString(), state.ApplicationId.ValueString())
 	if err != nil {
-		if customerrors.Code(err) == customerrors.ERROR_OBJECT_NOT_FOUND {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			// Application user doesn't exist, nothing to delete
 			tflog.Info(ctx, fmt.Sprintf("Application user '%s' not found in environment '%s', nothing to delete",
 				state.ApplicationId.ValueString(), state.EnvironmentId.ValueString()))
