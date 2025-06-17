@@ -30,12 +30,15 @@ func (client *client) GetAdminApplication(ctx context.Context, clientId string) 
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/adminApplications/%s", clientId),
 		RawQuery: url.Values{
-			constants.API_VERSION_PARAM: []string{"2020-10-01"},
+			constants.API_VERSION_PARAM: []string{constants.ADMIN_MANAGEMENT_APP_API_VERSION},
 		}.Encode(),
 	}
 
 	var adminApp adminManagementApplicationDto
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get admin app %s: %w", clientId, err)
+	}
 
 	// Returning pointer to local variable is acceptable for small DTOs
 	return &adminApp, err
@@ -47,12 +50,15 @@ func (client *client) RegisterAdminApplication(ctx context.Context, clientId str
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/adminApplications/%s", clientId),
 		RawQuery: url.Values{
-			"api-version": []string{"2020-10-01"},
+			constants.API_VERSION_PARAM: []string{constants.ADMIN_MANAGEMENT_APP_API_VERSION},
 		}.Encode(),
 	}
 
 	var adminApp adminManagementApplicationDto
 	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, nil, []int{http.StatusOK}, &adminApp)
+	if err != nil {
+		return nil, fmt.Errorf("failed to register admin app %s: %w", clientId, err)
+	}
 
 	// Returning pointer to local variable is acceptable for small DTOs
 	return &adminApp, err
@@ -64,11 +70,14 @@ func (client *client) UnregisterAdminApplication(ctx context.Context, clientId s
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/adminApplications/%s", clientId),
 		RawQuery: url.Values{
-			"api-version": []string{"2020-10-01"},
+			constants.API_VERSION_PARAM: []string{constants.ADMIN_MANAGEMENT_APP_API_VERSION},
 		}.Encode(),
 	}
 
 	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
+	if err != nil {
+		return fmt.Errorf("failed to unregister admin app %s: %w", clientId, err)
+	}
 
-	return err
+	return nil
 }

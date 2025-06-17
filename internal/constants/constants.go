@@ -141,6 +141,7 @@ const (
 
 const (
 	DEFAULT_RESOURCE_OPERATION_TIMEOUT_IN_MINUTES = 20 * time.Minute
+	MAX_RETRY_COUNT                               = 10
 )
 
 const (
@@ -151,6 +152,7 @@ const (
 	ENV_VAR_POWER_PLATFORM_CLIENT_SECRET                = "POWER_PLATFORM_CLIENT_SECRET"
 	ENV_VAR_POWER_PLATFORM_USE_OIDC                     = "POWER_PLATFORM_USE_OIDC"
 	ENV_VAR_POWER_PLATFORM_USE_CLI                      = "POWER_PLATFORM_USE_CLI"
+	ENV_VAR_POWER_PLATFORM_USE_DEV_CLI                  = "POWER_PLATFORM_USE_DEV_CLI"
 	ENV_VAR_POWER_PLATFORM_USE_MSI                      = "POWER_PLATFORM_USE_MSI"
 	ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE           = "POWER_PLATFORM_CLIENT_CERTIFICATE"
 	ENV_VAR_POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH = "POWER_PLATFORM_CLIENT_CERTIFICATE_FILE_PATH"
@@ -180,9 +182,35 @@ const (
 )
 
 const (
+	ADMIN_MANAGEMENT_APP_API_VERSION = "2020-10-01"
+	ENTERPRISE_POLICY_API_VERSION    = "2019-10-01"
+	BAP_API_VERSION                  = "2023-06-01"
+	BAP_2021_API_VERSION             = "2021-04-01"
+	BAP_2022_API_VERSION             = "2022-05-01"
+	APPLICATION_API_VERSION          = "2022-03-01-preview"
+	ENVIRONMENT_GROUP_API_VERSION    = "2021-10-01-preview"
+	CONNECTORS_API_VERSION           = "2019-05-01"
+	TENANT_SETTINGS_API_VERSION      = "2020-08-01"
+)
+
+const (
 	SOLUTION_CHECKER_RULESET_ID = "0ad12346-e108-40b8-a956-9a8f95ea18c9"
 )
 
 const (
 	NO_MANAGEMENT_APPLICATION_ERROR_MSG = "authorization has been denied for this request. Make sure that your service principal is registered as an admin management application: https://learn.microsoft.com/en-us/power-platform/admin/powerplatform-api-create-service-principal#registering-an-admin-management-application"
+)
+
+const (
+	CAE_CHALLENGE_CLAIMS_INDICATOR              = "claims="
+	CAE_CHALLENGE_INSUFFICIENT_CLAIMS_INDICATOR = "insufficient_claims"
+)
+// Error codes for provider errors.
+const (
+	ERROR_OBJECT_NOT_FOUND             = "OBJECT_NOT_FOUND"
+	ERROR_ENVIRONMENT_URL_NOT_FOUND    = "ENVIRONMENT_URL_NOT_FOUND"
+	ERROR_ENVIRONMENTS_IN_ENV_GROUP    = "ENVIRONMENTS_IN_ENV_GROUP"
+	ERROR_POLICY_ASSIGNED_TO_ENV_GROUP = "POLICY_ASSIGNED_TO_ENV_GROUP"
+	ERROR_ENVIRONMENT_SETTINGS_FAILED  = "ENVIRONMENT_SETTINGS_FAILED"
+	ERROR_ENVIRONMENT_CREATION         = "ENVIRONMENT_CREATION"
 )

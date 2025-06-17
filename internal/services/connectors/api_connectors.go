@@ -5,6 +5,7 @@ package connectors
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -30,7 +31,7 @@ func (client *client) GetConnectors(ctx context.Context) ([]connectorDto, error)
 		Path:   "/providers/Microsoft.PowerApps/apis",
 	}
 	values := url.Values{}
-	values.Add("api-version", "2019-05-01")
+	values.Add(constants.API_VERSION_PARAM, constants.CONNECTORS_API_VERSION)
 	values.Add("showApisWithToS", "true")
 	values.Add("hideDlpExemptApis", "true")
 	values.Add("showAllDlpEnforceableApis", "true")
@@ -41,7 +42,7 @@ func (client *client) GetConnectors(ctx context.Context) ([]connectorDto, error)
 	connectorArray := connectorArrayDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &connectorArray)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch PowerApps connectors: %w", err)
 	}
 
 	apiUrl = &url.URL{
@@ -52,7 +53,7 @@ func (client *client) GetConnectors(ctx context.Context) ([]connectorDto, error)
 	unblockableConnectorArray := []unblockableConnectorDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &unblockableConnectorArray)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch unblockable connectors metadata: %w", err)
 	}
 
 	for inx, connector := range connectorArray.Value {
@@ -71,7 +72,7 @@ func (client *client) GetConnectors(ctx context.Context) ([]connectorDto, error)
 	virtualConnectorArray := []virtualConnectorDto{}
 	_, err = client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &virtualConnectorArray)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch virtual connectors metadata: %w", err)
 	}
 	for _, virutualConnector := range virtualConnectorArray {
 		connectorArray.Value = append(connectorArray.Value, connectorDto{

@@ -1,0 +1,5 @@
+kind: fixed
+body: Fixed reflection and type safety issues in provider code. Replaced unsafe reflection usage in API client, improved error handling with Go 1.13+ patterns, and added validation for conversion functions to prevent runtime panics.
+time: 2025-06-10T07:07:44.862725115Z
+custom:
+    Issue: "842"
