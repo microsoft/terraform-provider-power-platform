@@ -103,13 +103,16 @@ func (r *Resource) Configure(ctx context.Context, req resource.ConfigureRequest,
 	tflog.Debug(ctx, "Successfully created client")
 }
 
-func mapFeatureStateToSchemaState(apiState string) string {
+func mapFeatureStateToSchemaState(ctx context.Context, apiState string) string {
 	switch apiState {
 	case "Upgrading":
 		return "upgrading"
 	case "ON":
 		return "enabled"
+	case "Error", "ERROR":
+		return "error"
 	default:
+		tflog.Warn(ctx, fmt.Sprintf("Unknown feature state from API: %s", apiState))
 		return "error"
 	}
 }
@@ -134,7 +137,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		Timeouts:      plan.Timeouts,
 		EnvironmentId: plan.EnvironmentId,
 		FeatureName:   plan.FeatureName,
-		State:         types.StringValue(mapFeatureStateToSchemaState(feature.AppsUpgradeState)),
+		State:         types.StringValue(mapFeatureStateToSchemaState(ctx, feature.AppsUpgradeState)),
 	}
 	state.Id = types.StringValue(fmt.Sprintf("%s/%s", plan.EnvironmentId.ValueString(), plan.FeatureName.ValueString()))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -165,7 +168,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 
-	state.State = types.StringValue(mapFeatureStateToSchemaState(feature.AppsUpgradeState))
+	state.State = types.StringValue(mapFeatureStateToSchemaState(ctx, feature.AppsUpgradeState))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
