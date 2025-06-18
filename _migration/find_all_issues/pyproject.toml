@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fix-all-issues"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "autogen-agentchat>=0.5.7",
+    "autogen-core>=0.5.7",
+    "autogen-ext[azure,magentic-one,mcp,openai]>=0.5.7",
+    "json-schema-to-pydantic>=0.2.4",
+    "tomli>=2.2.1",
+    "mcp-server-time>=0.6.2"
+]
+
+[tool.setuptools]
+py-modules = ["run", "agent", "prompts"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["tools*"]
