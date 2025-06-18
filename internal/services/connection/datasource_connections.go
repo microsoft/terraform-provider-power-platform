@@ -160,13 +160,17 @@ func ConvertFromConnectionDto(connection connectionDto) ConnectionsDataSourceMod
 	conn.Status = statuses
 
 	if connection.Properties.ConnectionParametersSet != nil {
-		p, _ := json.Marshal(connection.Properties.ConnectionParametersSet)
-		conn.ConnectionParametersSet = types.StringValue(string(p))
+		p, err := json.Marshal(connection.Properties.ConnectionParametersSet)
+		if err == nil {
+			conn.ConnectionParametersSet = types.StringValue(string(p))
+		}
 	}
 
 	if connection.Properties.ConnectionParameters != nil {
-		p, _ := json.Marshal(connection.Properties.ConnectionParameters)
-		conn.ConnectionParameters = types.StringValue(string(p))
+		p, err := json.Marshal(connection.Properties.ConnectionParameters)
+		if err == nil {
+			conn.ConnectionParameters = types.StringValue(string(p))
+		}
 	}
 
 	return conn

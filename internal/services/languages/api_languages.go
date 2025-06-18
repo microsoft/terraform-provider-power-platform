@@ -6,6 +6,7 @@ package languages
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -43,8 +44,10 @@ func (client *client) GetLanguagesByLocation(ctx context.Context, location strin
 
 	defer response.HttpResponse.Body.Close()
 
+	if len(response.BodyAsBytes) == 0 {
+		return languages, errors.New("empty response body")
+	}
 	err = json.Unmarshal(response.BodyAsBytes, &languages)
-
 	if err != nil {
 		return languages, err
 	}
