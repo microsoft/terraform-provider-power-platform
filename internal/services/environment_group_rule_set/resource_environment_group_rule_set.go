@@ -332,7 +332,7 @@ func (r *environmentGroupRuleSetResource) Create(ctx context.Context, req resour
 	}
 
 	plan.Id = types.StringPointerValue(createdRuleSetDto.Id)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, *plan)...)
 }
 
 func (r *environmentGroupRuleSetResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
