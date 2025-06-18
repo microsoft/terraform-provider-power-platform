@@ -408,7 +408,11 @@ func (r *TenantSettingsResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	stateDto := applyCorrections(ctx, plannedSettingsDto, *tenantSettingsDto)
+	stateDto, err := applyCorrections(ctx, plannedSettingsDto, *tenantSettingsDto)
+	if err != nil {
+		resp.Diagnostics.AddError("Error applying corrections to tenant settings", err.Error())
+		return
+	}
 
 	state, _, err := convertFromTenantSettingsDto[TenantSettingsResourceModel](*stateDto, plan.Timeouts)
 	if err != nil {
@@ -456,7 +460,11 @@ func (r *TenantSettingsResource) Read(ctx context.Context, req resource.ReadRequ
 		resp.Diagnostics.AddError("Unable to Convert Tenant Settings Model to DTO in Read", err.Error())
 		return
 	}
-	newStateDto := applyCorrections(ctx, oldStateDto, *tenantSettings)
+	newStateDto, err := applyCorrections(ctx, oldStateDto, *tenantSettings)
+	if err != nil {
+		resp.Diagnostics.AddError("Error applying corrections to tenant settings", err.Error())
+		return
+	}
 	newState, _, err := convertFromTenantSettingsDto[TenantSettingsResourceModel](*newStateDto, state.Timeouts)
 	if err != nil {
 		resp.Diagnostics.AddError("Unable to Convert Tenant Settings DTO to Model in Read", err.Error())
@@ -526,7 +534,11 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 	}
 
 	// need to make corrections from what the API returns to match what terraform expects
-	filteredDto := applyCorrections(ctx, plannedDto, *updatedSettingsDto)
+	filteredDto, err := applyCorrections(ctx, plannedDto, *updatedSettingsDto)
+	if err != nil {
+		resp.Diagnostics.AddError("Error applying corrections to tenant settings", err.Error())
+		return
+	}
 
 	newState, _, err := convertFromTenantSettingsDto[TenantSettingsResourceModel](*filteredDto, plan.Timeouts)
 	if err != nil {
@@ -572,11 +584,10 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	correctedDto := applyCorrections(ctx, stateDto, originalSettings)
-	if correctedDto == nil {
+	correctedDto, err := applyCorrections(ctx, stateDto, originalSettings)
+	if err != nil {
 		resp.Diagnostics.AddError(
-			"Unable to Apply Corrections in Delete",
-			"Could not apply corrections to tenant settings during resource deletion",
+			"Error applying corrections", fmt.Sprintf("Error applying corrections: %s", err.Error()),
 		)
 		return
 	}

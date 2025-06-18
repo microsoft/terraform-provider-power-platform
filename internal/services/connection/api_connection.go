@@ -174,7 +174,11 @@ func (client *client) ShareConnection(ctx context.Context, environmentId, connec
 }
 
 func getPrincipalString(principal map[string]any, key string) (string, error) {
-	value, ok := principal[key].(string)
+	raw, exists := principal[key]
+	if !exists {
+		return "", fmt.Errorf("principal key %s does not exist", key)
+	}
+	value, ok := raw.(string)
 	if !ok {
 		return "", fmt.Errorf("failed to convert principal %s to string", key)
 	}
