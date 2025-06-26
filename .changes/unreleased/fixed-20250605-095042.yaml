@@ -1,0 +1,5 @@
+kind: fixed
+body: Improve code structure and maintainability by extracting deeply nested schema definitions into helper functions, reducing duplication in DTO conversion logic, and enhancing error handling for feature state mapping
+time: 2025-06-05T09:50:42.313125548Z
+custom:
+    Issue: "820"
