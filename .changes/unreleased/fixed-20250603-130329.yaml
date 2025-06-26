@@ -1,0 +1,5 @@
+kind: fixed
+body: Add explicit context checking for belt-and-suspenders safety in tenant isolation policy polling
+time: 2025-06-03T13:03:29.272364174Z
+custom:
+    Issue: "800"
