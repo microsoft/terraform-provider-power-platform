@@ -22,7 +22,7 @@ func GetCertificateRawFromCertOrFilePath(certificate, certificateFilePath string
 	if certificateFilePath != "" {
 		pfx, err := os.ReadFile(certificateFilePath)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("failed to read certificate file '%s': %w", certificateFilePath, err)
 		}
 		certAsBase64 := base64.StdEncoding.EncodeToString(pfx)
 		return strings.TrimSpace(certAsBase64), nil
@@ -38,7 +38,7 @@ func ConvertBase64ToCert(b64, password string) ([]*x509.Certificate, crypto.Priv
 
 	certs, key, err := convertByteToCert(pfx, password)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to convert certificate bytes: %w", err)
 	}
 
 	return certs, key, nil
@@ -62,7 +62,7 @@ func convertByteToCert(certData []byte, password string) ([]*x509.Certificate, c
 
 	key, cert, _, err := pkcs12.DecodeChain(certData, password)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("failed to decode PKCS12 certificate chain: %w", err)
 	}
 
 	if cert == nil {
