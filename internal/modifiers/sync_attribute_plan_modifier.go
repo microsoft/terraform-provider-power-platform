@@ -40,18 +40,17 @@ func (d *syncAttributePlanModifier) PlanModifyString(ctx context.Context, req pl
 		return
 	}
 
-	if settingsFile.IsNull() {
-		resp.PlanValue = types.StringNull()
-	} else if settingsFile.IsUnknown() {
+	if settingsFile.IsNull() || settingsFile.IsUnknown() {
 		resp.PlanValue = types.StringNull()
 	} else {
 		value, err := helpers.CalculateSHA256(settingsFile.ValueString())
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Error calculating MD5 checksum for %s", d.syncAttribute), err.Error())
+			resp.Diagnostics.AddError(fmt.Sprintf("Error calculating SHA256 checksum for %s", d.syncAttribute), err.Error())
 			return
 		}
 
 		if value == "" {
+			resp.Diagnostics.AddError(fmt.Sprintf("Checksum is empty for %s", d.syncAttribute), "Calculated SHA256 checksum resulted in an empty value, which is unexpected.")
 			resp.PlanValue = types.StringUnknown()
 		} else {
 			resp.PlanValue = types.StringValue(value)

@@ -1,0 +1,35 @@
+---
+page_title: "Authenticating to Power Platform Using a Managed Identity"
+subcategory: "Authentication"
+description: |-
+  <no value>
+---
+
+# Authenticating to Power Platform Using a Managed Identity
+
+The Power Platform provider can use a [Managed Identity](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview) (previously called Managed Service Identity, or MSI) to authenticate to Power Platform services for keyless authentication in scenarios where the provider is being executed in select Azure services, such as Microsoft-hosted or self-hosted Azure DevOps pipelines.
+
+## System-Managed Identity
+
+1. [Enable system-managed identity on an Azure resource](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview)
+1. Register the managed identity with the Power Platform using the Application ID from the enterprise application for the system-managed identity resource. This task can be performed using either [the Power Platform Terraform Provider itself](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/resources/admin_management_application), or [PowerShell]([Register the managed identity with the Power Platform](https://learn.microsoft.com/power-platform/admin/powershell-create-service-principal).
+1. Configure the provider to use the system-managed identity. Note that no Client ID is required as the Client ID is derived from the Azure resource running the provider.
+
+    ```terraform
+    provider "powerplatform" {
+      use_msi = true
+    }
+    ```
+
+## User-Managed Identity
+
+1. [Create a User-Managed Identity resource](https://learn.microsoft.com/entra/identity/managed-identities-azure-resources/overview)
+1. Register the managed identity with the Power Platform using the Application ID from the enterprise application for the system-managed identity resource. This task can be performed using either [the Power Platform Terraform Provider itself](https://registry.terraform.io/providers/microsoft/power-platform/latest/docs/resources/admin_management_application), or [PowerShell]([Register the managed identity with the Power Platform](https://learn.microsoft.com/power-platform/admin/powershell-create-service-principal).
+1. Configure the provider to use the System-Managed Identity. Note that this example sets the Client ID in the provider configuration, but it could also be set using the POWER_PLATFORM_CLIENT_ID environment variable.
+
+    ```terraform
+    provider "powerplatform" {
+      use_msi = true
+      client_id = var.client_id # This should be the Client ID from the user-managed identity resource.
+    }
+    ```

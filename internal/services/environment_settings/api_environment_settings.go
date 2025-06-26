@@ -48,7 +48,7 @@ func (client *client) GetEnvironmentSettings(ctx context.Context, environmentId 
 	environmentSettings := environmentSettingsValueDto{}
 	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &environmentSettings)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to execute API request for environment settings %s: %w", environmentId, err)
 	}
 	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func (client *client) UpdateEnvironmentSettings(ctx context.Context, environment
 
 	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environmentSettings, []int{http.StatusNoContent, http.StatusInternalServerError, http.StatusForbidden, http.StatusNotFound}, nil)
 	if resp != nil && resp.HttpResponse.StatusCode == http.StatusInternalServerError {
-		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_SETTINGS_FAILED, string(resp.BodyAsBytes))
+		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_SETTINGS_FAILED), string(resp.BodyAsBytes))
 	}
 	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (client *client) UpdateEnvironmentSettings(ctx context.Context, environment
 		return nil, err
 	}
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to execute API request for updating environment settings %s: %w", environmentId, err)
 	}
 
 	return client.GetEnvironmentSettings(ctx, environmentId)
@@ -100,7 +100,7 @@ func (client *client) GetEnvironmentHostById(ctx context.Context, environmentId 
 	}
 	environmentUrl := strings.TrimSuffix(env.Properties.LinkedEnvironmentMetadata.InstanceURL, "/")
 	if environmentUrl == "" {
-		return "", customerrors.WrapIntoProviderError(nil, customerrors.ERROR_ENVIRONMENT_URL_NOT_FOUND, "environment url not found, please check if the environment has dataverse linked")
+		return "", customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_URL_NOT_FOUND), "environment url not found, please check if the environment has dataverse linked")
 	}
 
 	envUrl, err := url.Parse(environmentUrl)
@@ -117,13 +117,13 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	env := environmentIdDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to execute API request for environment %s: %w", environmentId, err)
 	}
 
 	return &env, nil
