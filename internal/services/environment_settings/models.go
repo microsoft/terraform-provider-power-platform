@@ -94,7 +94,7 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 	if auditSettingsObject != nil && helpers.IsKnown(auditSettingsObject) {
 		objectValue, ok := auditSettingsObject.(basetypes.ObjectValue)
 		if !ok {
-			return nil, errors.New("failed to convert audit settings to ObjectValue")
+			return nil, fmt.Errorf("failed to convert audit settings to ObjectValue, got %T: %+v", auditSettingsObject, auditSettingsObject)
 		}
 
 		var auditAndLogsSourceModel AuditSettingsSourceModel
