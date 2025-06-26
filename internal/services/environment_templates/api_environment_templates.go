@@ -30,23 +30,22 @@ func (client *client) GetEnvironmentTemplatesByLocation(ctx context.Context, loc
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/locations/%s/templates", location),
 	}
-	apiUrl.RawQuery = url.Values{
-		"api-version": []string{"2023-06-01"},
-	}.Encode()
+	values := url.Values{}
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
+	apiUrl.RawQuery = values.Encode()
 
 	templates := environmentTemplateDto{}
 
 	response, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, nil)
 	if err != nil {
-		return templates, err
+		return templates, fmt.Errorf("failed to execute API request for environment templates: %w", err)
 	}
 
 	defer response.HttpResponse.Body.Close()
 
 	err = json.Unmarshal(response.BodyAsBytes, &templates)
-
 	if err != nil {
-		return templates, err
+		return templates, fmt.Errorf("failed to unmarshal environment templates response: %w", err)
 	}
 
 	return templates, nil

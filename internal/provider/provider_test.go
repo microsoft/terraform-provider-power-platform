@@ -76,9 +76,9 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 	}
 	datasources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).DataSources(context.Background())
 
-	require.Equal(t, len(expectedDataSources), len(datasources), "There are an unexpected number of registered data sources")
+	require.Equalf(t, len(expectedDataSources), len(datasources), "Expected %d data sources, got %d", len(expectedDataSources), len(datasources))
 	for _, d := range datasources {
-		require.Contains(t, expectedDataSources, d(), "An unexpected data source was registered")
+		require.Containsf(t, expectedDataSources, d(), "Data source %+v was not expected", d())
 	}
 }
 
@@ -109,9 +109,9 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
 
-	require.Equal(t, len(expectedResources), len(resources), "There are an unexpected number of registered resources")
+	require.Equalf(t, len(expectedResources), len(resources), "Expected %d resources, got %d", len(expectedResources), len(resources))
 	for _, r := range resources {
-		require.Contains(t, expectedResources, r(), "An unexpected resource was registered")
+		require.Containsf(t, expectedResources, r(), "Resource %+v was not expected", r())
 	}
 }
 
@@ -172,6 +172,48 @@ func TestUnitPowerPlatformProvider_Validate_Telementry_Optout_Is_True(t *testing
 					telemetry_optout = true
 				}	
 				data "powerplatform_environments" "all" {}`,
+			},
+		},
+	})
+}
+
+func TestUnitPowerPlatformProvider_PartnerId_Valid(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("../services/environment/tests/datasource/Validate_Read/get_environments.json").String()), nil
+		})
+
+	test.Test(t, test.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []test.TestStep{
+			{
+				Config: `provider "powerplatform" {
+                                       use_cli = true
+                                       partner_id = "00000000-0000-0000-0000-000000000001"
+                               }
+                               data "powerplatform_environments" "all" {}`,
+			},
+		},
+	})
+}
+
+func TestUnitPowerPlatformProvider_PartnerId_Invalid(t *testing.T) {
+	test.Test(t, test.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []test.TestStep{
+			{
+				Config: `provider "powerplatform" {
+                                       partner_id = "invalid-guid"
+                               }
+                               data "powerplatform_environments" "all" {}`,
+				ExpectError: regexp.MustCompile("Invalid UUID"),
 			},
 		},
 	})
