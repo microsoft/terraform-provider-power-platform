@@ -1,0 +1,5 @@
+kind: fixed
+body: Fixed duplicated constants and literals issues across codebase to improve maintainability
+time: 2025-06-03T16:46:44.448551164Z
+custom:
+    Issue: "798"

@@ -54,14 +54,20 @@ func (d *setStringValueToUnknownIfChecksumsChangeModifier) hasChecksumChanged(ct
 	var attribute types.String
 	diags := req.Plan.GetAttribute(ctx, path.Root(attributeName), &attribute)
 	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return false
+	}
 
 	var attributeChecksum types.String
 	diags = req.State.GetAttribute(ctx, path.Root(checksumAttributeName), &attributeChecksum)
 	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return false
+	}
 
 	value, err := helpers.CalculateSHA256(attribute.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating MD5 checksum for %s", attribute), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating SHA256 checksum for attribute %q", attributeName), err.Error())
 	}
 
 	return value != attributeChecksum.ValueString()

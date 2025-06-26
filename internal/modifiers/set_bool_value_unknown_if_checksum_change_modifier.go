@@ -61,7 +61,7 @@ func (d *setBoolValueToUnknownIfChecksumsChangeModifier) hasChecksumChanged(ctx 
 
 	value, err := helpers.CalculateSHA256(attribute.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating MD5 checksum for %s", attribute), err.Error())
+		resp.Diagnostics.AddError(fmt.Sprintf("Error calculating SHA256 checksum for %q", attribute), err.Error())
 	}
 
 	return value != attributeChecksum.ValueString()

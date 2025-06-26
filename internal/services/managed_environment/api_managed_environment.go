@@ -29,13 +29,17 @@ type client struct {
 }
 
 func (client *client) EnableManagedEnvironment(ctx context.Context, managedEnvSettings environment.GovernanceConfigurationDto, environmentId string) error {
+	return client.enableManagedEnvironmentWithRetry(ctx, managedEnvSettings, environmentId, 0)
+}
+
+func (client *client) enableManagedEnvironmentWithRetry(ctx context.Context, managedEnvSettings environment.GovernanceConfigurationDto, environmentId string, retryCount int) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/governanceConfiguration", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	apiResponse, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, managedEnvSettings, []int{http.StatusNoContent, http.StatusAccepted, http.StatusConflict}, nil)
@@ -51,23 +55,30 @@ func (client *client) EnableManagedEnvironment(ctx context.Context, managedEnvSe
 		return err
 	}
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for EnableManagedEnvironment on lifecycle failure", constants.MAX_RETRY_COUNT)
+		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return err
 		}
 		tflog.Info(ctx, "Managed Environment Enablement Operation failed. Retrying...")
-		return client.EnableManagedEnvironment(ctx, managedEnvSettings, environmentId)
+		return client.enableManagedEnvironmentWithRetry(ctx, managedEnvSettings, environmentId, retryCount+1)
 	}
 	return nil
 }
 
 func (client *client) DisableManagedEnvironment(ctx context.Context, environmentId string) error {
+	return client.disableManagedEnvironmentWithRetry(ctx, environmentId, 0)
+}
+
+func (client *client) disableManagedEnvironmentWithRetry(ctx context.Context, environmentId string, retryCount int) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/environments/%s/governanceConfiguration", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2021-04-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	managedEnv := environment.GovernanceConfigurationDto{
@@ -87,11 +98,14 @@ func (client *client) DisableManagedEnvironment(ctx context.Context, environment
 		return err
 	}
 	if lifecycleResponse != nil && lifecycleResponse.State.Id == "Failed" {
+		if retryCount >= constants.MAX_RETRY_COUNT {
+			return fmt.Errorf("maximum retries (%d) reached for DisableManagedEnvironment on lifecycle failure", constants.MAX_RETRY_COUNT)
+		}
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return err
 		}
 		tflog.Info(ctx, "Managed Environment Disablement Operation failed. Retrying...")
-		return client.DisableManagedEnvironment(ctx, environmentId)
+		return client.disableManagedEnvironmentWithRetry(ctx, environmentId, retryCount+1)
 	}
 	return nil
 }

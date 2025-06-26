@@ -130,8 +130,8 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	defer exitContext()
 
 	var state DataSourceModel
-	resp.State.Get(ctx, &state)
-	resp.Diagnostics.Append(resp.State.Get(ctx, &state)...)
+	diags := resp.State.Get(ctx, &state)
+	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -156,7 +156,7 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 		})
 	}
 
-	diags := resp.State.Set(ctx, &state)
+	diags = resp.State.Set(ctx, &state)
 
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
