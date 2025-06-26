@@ -205,6 +205,7 @@ const (
 	CAE_CHALLENGE_CLAIMS_INDICATOR              = "claims="
 	CAE_CHALLENGE_INSUFFICIENT_CLAIMS_INDICATOR = "insufficient_claims"
 )
+
 // Error codes for provider errors.
 const (
 	ERROR_OBJECT_NOT_FOUND             = "OBJECT_NOT_FOUND"

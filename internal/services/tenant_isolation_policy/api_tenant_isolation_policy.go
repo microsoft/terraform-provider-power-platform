@@ -187,17 +187,9 @@ func (client *Client) doWaitForLifecycleOperationStatus(ctx context.Context, res
 
 		tflog.Debug(ctx, fmt.Sprintf("Waiting for %s before polling again", waitTime))
 
-		// Check context before sleep for belt-and-suspenders safety
-		select {
-		case <-ctx.Done():
-			tflog.Debug(ctx, "Polling cancelled due to context cancellation")
-			return nil, fmt.Errorf("polling cancelled: %w", ctx.Err())
-		default:
-			// Wait before polling again (honors context cancellation)
-			err = client.Api.SleepWithContext(ctx, waitTime)
-			if err != nil {
-				return nil, fmt.Errorf("polling interrupted: %w", err)
-			}
+		err = client.Api.SleepWithContext(ctx, waitTime)
+		if err != nil {
+			return nil, fmt.Errorf("polling interrupted: %w", err)
 		}
 	}
 }
