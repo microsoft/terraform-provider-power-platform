@@ -568,9 +568,9 @@ func (r *TenantSettingsResource) Delete(ctx context.Context, req resource.Delete
 	}
 
 	// restore to previous state
-	previousBytes, diag := req.Private.GetKey(ctx, "original_settings")
-	if diag.HasError() {
-		diag.Append(diag...)
+	previousBytes, diags := req.Private.GetKey(ctx, "original_settings")
+	if diags.HasError() {
+		resp.Diagnostics.Append(diags...)
 		return
 	}
 
