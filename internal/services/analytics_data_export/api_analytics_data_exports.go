@@ -49,7 +49,7 @@ func (client *Client) GetGatewayCluster(ctx context.Context) (*GatewayClusterDto
 
 	_, err = client.Api.Execute(ctx, nil, "GET", tenantApiUrl.String(), nil, nil, []int{http.StatusOK}, &gatewayCluster)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to execute GetGatewayCluster API request: %w", err)
 	}
 
 	return &gatewayCluster, nil
