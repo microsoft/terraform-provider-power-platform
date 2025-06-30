@@ -20,12 +20,15 @@ type UUIDType struct {
 }
 
 func (t UUIDType) Equal(o attr.Type) bool {
-	other, ok := o.(UUIDType)
-	if !ok {
+	// Support both value and pointer types for comparison
+	switch v := o.(type) {
+	case UUIDType:
+		return t.StringType.Equal(v.StringType)
+	case *UUIDType:
+		return t.StringType.Equal(v.StringType)
+	default:
 		return false
 	}
-
-	return t.StringType.Equal(other.StringType)
 }
 
 func (t UUIDType) String() string {
