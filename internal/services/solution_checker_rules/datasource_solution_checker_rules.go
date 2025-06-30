@@ -118,7 +118,14 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 		)
 		return
 	}
-	d.SolutionCheckerRulesClient = newSolutionCheckerRulesClient(client.Api)
+	// Additional safety check for nil client
+	if client != nil {
+		d.SolutionCheckerRulesClient = newSolutionCheckerRulesClient(client.Api)
+	} else {
+		tflog.Warn(ctx, "Client is nil. Datasource will not be fully configured.", map[string]any{
+			"datasource": d.FullTypeName(),
+		})
+	}
 }
 
 func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
