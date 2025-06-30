@@ -346,7 +346,11 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 		return
 	}
 	policyToCreate.Environments = environments
-	policyToCreate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	policyToCreate.CustomConnectorUrlPatternsDefinition, err = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert custom connector URL patterns", err.Error())
+		return
+	}
 
 	policyToCreate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
 
@@ -420,7 +424,11 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 		return
 	}
 	policyToUpdate.Environments = environments
-	policyToUpdate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	policyToUpdate.CustomConnectorUrlPatternsDefinition, err = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert custom connector URL patterns", err.Error())
+		return
+	}
 
 	policyToUpdate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
 

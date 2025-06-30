@@ -273,7 +273,7 @@ func (d *DataRecordDataSource) convertColumnsToState(ctx context.Context, column
 	attributes := make(map[string]attr.Value)
 
 	for key, value := range columns {
-		switch v := value.(type) {
+		switch value.(type) {
 		case bool:
 			caseBool(ctx, columns[key].(bool), attributes, attributeTypes, key)
 		case int64:
@@ -314,7 +314,7 @@ func (d *DataRecordDataSource) buildObjectValueFromX(ctx context.Context, column
 	knownObjectValue := map[string]attr.Value{}
 
 	for key, value := range columns {
-		switch v := value.(type) {
+		switch value.(type) {
 		case bool:
 			caseBool(ctx, columns[key].(bool), knownObjectValue, knownObjectType, key)
 		case int64:
