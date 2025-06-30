@@ -469,7 +469,10 @@ func (r *DataRecordResource) convertColumnsToState(ctx context.Context, apiClien
 			}
 		}
 	}
-	columnField, _ := types.ObjectValue(attributeTypes, attributes)
+	columnField, diags := types.ObjectValue(attributeTypes, attributes)
+	if diags.HasError() {
+		return nil, fmt.Errorf("failed to create object value: %v", diags)
+	}
 	result := types.DynamicValue(columnField)
 	return &result, nil
 }

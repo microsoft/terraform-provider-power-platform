@@ -273,7 +273,7 @@ func (d *DataRecordDataSource) convertColumnsToState(ctx context.Context, column
 	attributes := make(map[string]attr.Value)
 
 	for key, value := range columns {
-		switch value.(type) {
+		switch v := value.(type) {
 		case bool:
 			caseBool(ctx, columns[key].(bool), attributes, attributeTypes, key)
 		case int64:
@@ -287,13 +287,20 @@ func (d *DataRecordDataSource) convertColumnsToState(ctx context.Context, column
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
-			v, _ := types.ObjectValue(typ, val)
-			attributes[key] = v
+			objVal, _ := types.ObjectValue(typ, val)
+			attributes[key] = objVal
 			attributeTypes[key] = tupleElementType
 		case []any:
 			typeObj, valObj := d.buildExpandObject(ctx, columns[key].([]any))
 			attributeTypes[key] = typeObj
 			attributes[key] = valObj
+		default:
+			// Handle unexpected types gracefully by skipping them
+			tflog.Debug(ctx, "Skipping unhandled type in convertColumnsToState", map[string]any{
+				"key":       key,
+				"valueType": fmt.Sprintf("%T", value),
+			})
+			continue
 		}
 	}
 
@@ -307,7 +314,7 @@ func (d *DataRecordDataSource) buildObjectValueFromX(ctx context.Context, column
 	knownObjectValue := map[string]attr.Value{}
 
 	for key, value := range columns {
-		switch value.(type) {
+		switch v := value.(type) {
 		case bool:
 			caseBool(ctx, columns[key].(bool), knownObjectValue, knownObjectType, key)
 		case int64:
@@ -321,13 +328,20 @@ func (d *DataRecordDataSource) buildObjectValueFromX(ctx context.Context, column
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
-			v, _ := types.ObjectValue(typ, val)
-			knownObjectValue[key] = v
+			objVal, _ := types.ObjectValue(typ, val)
+			knownObjectValue[key] = objVal
 			knownObjectType[key] = tupleElementType
 		case []any:
 			typeObj, valObj := d.buildExpandObject(ctx, columns[key].([]any))
 			knownObjectValue[key] = valObj
 			knownObjectType[key] = typeObj
+		default:
+			// Log unexpected types for debugging purposes
+			tflog.Debug(ctx, "Skipping unhandled type in buildObjectValueFromX", map[string]any{
+				"key":       key,
+				"valueType": fmt.Sprintf("%T", value),
+			})
+			continue
 		}
 	}
 	return knownObjectType, knownObjectValue, nil

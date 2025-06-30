@@ -5,6 +5,7 @@ package dlp_policy
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -187,11 +188,12 @@ func getConnectorGroup(ctx context.Context, connectorsAttr basetypes.SetValue) (
 	return &connectorGroup, nil
 }
 
-func convertToDlpConnectorGroup(ctx context.Context, diags diag.Diagnostics, classification string, connectorsAttr basetypes.SetValue) dlpConnectorGroupsModelDto {
+func convertToDlpConnectorGroup(ctx context.Context, diags diag.Diagnostics, classification string, connectorsAttr basetypes.SetValue) (dlpConnectorGroupsModelDto, error) {
 	var connectors []dataLossPreventionPolicyResourceConnectorModel
 	err := connectorsAttr.ElementsAs(ctx, &connectors, true)
-	if err != nil {
-		diags.AddError("Client error when converting DlpConnectorGroups", "")
+	if err.HasError() {
+		diags.Append(err...)
+		return dlpConnectorGroupsModelDto{}, errors.New("client error when converting DlpConnectorGroups")
 	}
 
 	connectorGroup := dlpConnectorGroupsModelDto{
@@ -215,7 +217,7 @@ func convertToDlpConnectorGroup(ctx context.Context, diags diag.Diagnostics, cla
 			EndpointRules:             convertToDlpEndpointRule(connector),
 		})
 	}
-	return connectorGroup
+	return connectorGroup, nil
 }
 
 func convertToDlpEnvironment(ctx context.Context, environmentsInPolicy basetypes.SetValue) ([]dlpEnvironmentDto, error) {
@@ -235,11 +237,12 @@ func convertToDlpEnvironment(ctx context.Context, environmentsInPolicy basetypes
 	return environments, nil
 }
 
-func convertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diags diag.Diagnostics, connectorPatternsAttr basetypes.SetValue) []dlpConnectorUrlPatternsDefinitionDto {
+func convertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diags diag.Diagnostics, connectorPatternsAttr basetypes.SetValue) ([]dlpConnectorUrlPatternsDefinitionDto, error) {
 	var customConnectorsPatterns []dataLossPreventionPolicyResourceCustomConnectorPattern
 	err := connectorPatternsAttr.ElementsAs(ctx, &customConnectorsPatterns, true)
-	if err != nil {
-		diags.AddError("Client error when converting DlpCustomConnectorUrlPatternsDefinition", "")
+	if err.HasError() {
+		diags.Append(err...)
+		return nil, errors.New("client error when converting DlpCustomConnectorUrlPatternsDefinition")
 	}
 
 	customConnectorUrlPatternsDefinition := make([]dlpConnectorUrlPatternsDefinitionDto, 0)
@@ -254,7 +257,7 @@ func convertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diags
 		})
 		customConnectorUrlPatternsDefinition = append(customConnectorUrlPatternsDefinition, urlPattern)
 	}
-	return customConnectorUrlPatternsDefinition
+	return customConnectorUrlPatternsDefinition, nil
 }
 
 func convertToDlpActionRule(connector dataLossPreventionPolicyResourceConnectorModel) []dlpActionRuleDto {
