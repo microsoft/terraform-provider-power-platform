@@ -310,6 +310,9 @@ func (client *client) CreateDataverseUser(ctx context.Context, environmentId, aa
 		retryCount--
 	}
 	if err != nil {
+		if retryCount == 0 {
+			return nil, fmt.Errorf("failed to create Dataverse user after maximum retries: %w", err)
+		}
 		return nil, err
 	}
 
