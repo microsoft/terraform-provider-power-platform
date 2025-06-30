@@ -189,18 +189,10 @@ func (d *AnalyticsExportDataSource) Read(ctx context.Context, req datasource.Rea
 		)
 		return
 	}
-	if analyticsDataExport == nil {
-		resp.Diagnostics.AddError(
-			"Analytics data export not found",
-			"Unable to find analytics data export with the specified ID",
-		)
-		return
-	}
-
 	// Map the response to the model
 	// Map each analytics data export item to a model
-	exports := make([]AnalyticsDataModel, 0, len(*analyticsDataExport))
-	for _, export := range *analyticsDataExport {
+	exports := make([]AnalyticsDataModel, 0, len(analyticsDataExport))
+	for _, export := range analyticsDataExport {
 		if model := convertDtoToModel(&export); model != nil {
 			exports = append(exports, *model)
 		}

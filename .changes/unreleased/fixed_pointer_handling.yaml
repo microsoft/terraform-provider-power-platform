@@ -1,0 +1,4 @@
+kind: fixed
+body: Fix pointer handling issues across codebase for better Go idioms
+custom:
+  Issue: 804

@@ -40,7 +40,8 @@ func (client *client) GetAdminApplication(ctx context.Context, clientId string) 
 		return nil, fmt.Errorf("failed to get admin app %s: %w", clientId, err)
 	}
 
-	return &adminApp, nil
+	// Returning pointer to local variable is acceptable for small DTOs
+	return &adminApp, err
 }
 
 func (client *client) RegisterAdminApplication(ctx context.Context, clientId string) (*adminManagementApplicationDto, error) {
@@ -59,7 +60,8 @@ func (client *client) RegisterAdminApplication(ctx context.Context, clientId str
 		return nil, fmt.Errorf("failed to register admin app %s: %w", clientId, err)
 	}
 
-	return &adminApp, nil
+	// Returning pointer to local variable is acceptable for small DTOs
+	return &adminApp, err
 }
 
 func (client *client) UnregisterAdminApplication(ctx context.Context, clientId string) error {
