@@ -88,8 +88,13 @@ func convertEnvironmentGroupRuleSetResourceModelToDto(ctx context.Context, model
 func convertAiGenerativeSettings(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) error {
 	aiGenerativeSettingsObj := attrs["ai_generative_settings"]
 	if !aiGenerativeSettingsObj.IsNull() && !aiGenerativeSettingsObj.IsUnknown() {
+		objectValue, ok := aiGenerativeSettingsObj.(basetypes.ObjectValue)
+		if !ok {
+			return fmt.Errorf("expected ai_generative_settings to be of type ObjectValue, got %T", aiGenerativeSettingsObj)
+		}
+
 		var aiGenerativeSettings environmentGroupRuleSetAiGenerativeSettingsModel
-		if diags := aiGenerativeSettingsObj.(basetypes.ObjectValue).As(ctx, &aiGenerativeSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
+		if diags := objectValue.As(ctx, &aiGenerativeSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
 			return fmt.Errorf("failed to convert ai generative settings: %v", diags)
 		}
 
@@ -122,8 +127,13 @@ func convertAiGenerativeSettings(ctx context.Context, attrs map[string]attr.Valu
 func convertAiGeneratedDesc(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) error {
 	aiGeneratedDescObj := attrs["ai_generated_descriptions"]
 	if !aiGeneratedDescObj.IsNull() && !aiGeneratedDescObj.IsUnknown() {
+		objectValue, ok := aiGeneratedDescObj.(basetypes.ObjectValue)
+		if !ok {
+			return fmt.Errorf("expected ai_generated_descriptions to be of type ObjectValue, got %T", aiGeneratedDescObj)
+		}
+
 		var aiGeneratedDesc environmentGroupRuleSetAiGeneratedDescriptionsModel
-		if diags := aiGeneratedDescObj.(basetypes.ObjectValue).As(ctx, &aiGeneratedDesc, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
+		if diags := objectValue.As(ctx, &aiGeneratedDesc, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
 			return fmt.Errorf("failed to convert ai generated desc: %v", diags)
 		}
 
@@ -152,8 +162,13 @@ func convertAiGeneratedDesc(ctx context.Context, attrs map[string]attr.Value, dt
 func convertBackupRetention(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) error {
 	backupRetentionObj := attrs["backup_retention"]
 	if !backupRetentionObj.IsNull() && !backupRetentionObj.IsUnknown() {
+		objectValue, ok := backupRetentionObj.(basetypes.ObjectValue)
+		if !ok {
+			return fmt.Errorf("expected backup_retention to be of type ObjectValue, got %T", backupRetentionObj)
+		}
+
 		var backupRetention environmentGroupRuleSetBackupRetentionModel
-		if diags := backupRetentionObj.(basetypes.ObjectValue).As(ctx, &backupRetention, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
+		if diags := objectValue.As(ctx, &backupRetention, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
 			return fmt.Errorf("failed to convert backup retention: %v", diags)
 		}
 
@@ -182,8 +197,13 @@ func convertBackupRetention(ctx context.Context, attrs map[string]attr.Value, dt
 func convertSolutionCheckerEnforcement(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
 	solutionCheckerObj := attrs["solution_checker_enforcement"]
 	if !solutionCheckerObj.IsNull() && !solutionCheckerObj.IsUnknown() {
+		objectValue, ok := solutionCheckerObj.(basetypes.ObjectValue)
+		if !ok {
+			return // Skip conversion if type assertion fails
+		}
+
 		var solutionChecker environmentGroupRuleSetSolutionCheckerEnforcementModel
-		solutionCheckerObj.(basetypes.ObjectValue).As(ctx, &solutionChecker, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &solutionChecker, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		hasStatedChanges := true
 
@@ -217,8 +237,13 @@ func convertSolutionCheckerEnforcement(ctx context.Context, attrs map[string]att
 func convertMakerWelcomeContent(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
 	makerWelcomeContentObj := attrs["maker_welcome_content"]
 	if !makerWelcomeContentObj.IsNull() && !makerWelcomeContentObj.IsUnknown() {
+		objectValue, ok := makerWelcomeContentObj.(basetypes.ObjectValue)
+		if !ok {
+			return // Skip conversion if type assertion fails
+		}
+
 		var makerWelcomeContent environmentGroupRuleSetMakerWelcomeContentModel
-		makerWelcomeContentObj.(basetypes.ObjectValue).As(ctx, &makerWelcomeContent, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &makerWelcomeContent, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		hasStatedChanges := true
 
@@ -252,8 +277,13 @@ func convertMakerWelcomeContent(ctx context.Context, attrs map[string]attr.Value
 func convertUsageInsights(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
 	usageInsightsObj := attrs["usage_insights"]
 	if !usageInsightsObj.IsNull() && !usageInsightsObj.IsUnknown() {
+		objectValue, ok := usageInsightsObj.(basetypes.ObjectValue)
+		if !ok {
+			return // Skip conversion if type assertion fails
+		}
+
 		var usageInsights environmentGroupRuleSetUsageInsightsModel
-		usageInsightsObj.(basetypes.ObjectValue).As(ctx, &usageInsights, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &usageInsights, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		hasStatedChanges := true
 
@@ -283,8 +313,13 @@ func convertUsageInsights(ctx context.Context, attrs map[string]attr.Value, dto 
 func convertSharingControls(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
 	sharingControlObj := attrs["sharing_controls"]
 	if !sharingControlObj.IsNull() && !sharingControlObj.IsUnknown() {
+		objectValue, ok := sharingControlObj.(basetypes.ObjectValue)
+		if !ok {
+			return // Skip conversion if type assertion fails
+		}
+
 		var sharingControl environmentGroupRuleSetSharingControlsModel
-		sharingControlObj.(basetypes.ObjectValue).As(ctx, &sharingControl, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &sharingControl, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		hasStatedChanges := true
 

@@ -273,17 +273,17 @@ func (d *DataRecordDataSource) convertColumnsToState(ctx context.Context, column
 	attributes := make(map[string]attr.Value)
 
 	for key, value := range columns {
-		switch v := value.(type) {
+		switch value.(type) {
 		case bool:
-			caseBool(v, attributes, attributeTypes, key)
+			caseBool(ctx, columns[key].(bool), attributes, attributeTypes, key)
 		case int64:
-			caseInt64(v, attributes, attributeTypes, key)
+			caseInt64(ctx, columns[key].(int64), attributes, attributeTypes, key)
 		case float64:
-			caseFloat64(v, attributes, attributeTypes, key)
+			caseFloat64(ctx, columns[key].(float64), attributes, attributeTypes, key)
 		case string:
-			caseString(v, attributes, attributeTypes, key)
+			caseString(ctx, columns[key].(string), attributes, attributeTypes, key)
 		case map[string]any:
-			typ, val, _ := d.buildObjectValueFromX(ctx, v)
+			typ, val, _ := d.buildObjectValueFromX(ctx, columns[key].(map[string]any))
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
@@ -291,7 +291,7 @@ func (d *DataRecordDataSource) convertColumnsToState(ctx context.Context, column
 			attributes[key] = objVal
 			attributeTypes[key] = tupleElementType
 		case []any:
-			typeObj, valObj := d.buildExpandObject(ctx, v)
+			typeObj, valObj := d.buildExpandObject(ctx, columns[key].([]any))
 			attributeTypes[key] = typeObj
 			attributes[key] = valObj
 		default:
@@ -314,17 +314,17 @@ func (d *DataRecordDataSource) buildObjectValueFromX(ctx context.Context, column
 	knownObjectValue := map[string]attr.Value{}
 
 	for key, value := range columns {
-		switch v := value.(type) {
+		switch value.(type) {
 		case bool:
-			caseBool(v, knownObjectValue, knownObjectType, key)
+			caseBool(ctx, columns[key].(bool), knownObjectValue, knownObjectType, key)
 		case int64:
-			caseInt64(v, knownObjectValue, knownObjectType, key)
+			caseInt64(ctx, columns[key].(int64), knownObjectValue, knownObjectType, key)
 		case float64:
-			caseFloat64(v, knownObjectValue, knownObjectType, key)
+			caseFloat64(ctx, columns[key].(float64), knownObjectValue, knownObjectType, key)
 		case string:
-			caseString(v, knownObjectValue, knownObjectType, key)
+			caseString(ctx, columns[key].(string), knownObjectValue, knownObjectType, key)
 		case map[string]any:
-			typ, val, _ := d.buildObjectValueFromX(ctx, v)
+			typ, val, _ := d.buildObjectValueFromX(ctx, columns[key].(map[string]any))
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
@@ -332,7 +332,7 @@ func (d *DataRecordDataSource) buildObjectValueFromX(ctx context.Context, column
 			knownObjectValue[key] = objVal
 			knownObjectType[key] = tupleElementType
 		case []any:
-			typeObj, valObj := d.buildExpandObject(ctx, v)
+			typeObj, valObj := d.buildExpandObject(ctx, columns[key].([]any))
 			knownObjectValue[key] = valObj
 			knownObjectType[key] = typeObj
 		default:
