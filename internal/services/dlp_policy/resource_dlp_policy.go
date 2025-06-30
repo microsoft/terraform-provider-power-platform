@@ -340,13 +340,17 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 		CustomConnectorUrlPatternsDefinition: []dlpConnectorUrlPatternsDefinitionDto{},
 	}
 
-	policyToCreate.Environments = convertToDlpEnvironment(ctx, plan.Environments)
-
-	customConnectorUrlPatterns, err := convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	environments, err := convertToDlpEnvironment(ctx, plan.Environments)
 	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert environments", err.Error())
 		return
 	}
-	policyToCreate.CustomConnectorUrlPatternsDefinition = customConnectorUrlPatterns
+	policyToCreate.Environments = environments
+	policyToCreate.CustomConnectorUrlPatternsDefinition, err = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert custom connector URL patterns", err.Error())
+		return
+	}
 
 	policyToCreate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
 
@@ -414,13 +418,17 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 		ConnectorGroups:                 []dlpConnectorGroupsModelDto{},
 	}
 
-	policyToUpdate.Environments = convertToDlpEnvironment(ctx, plan.Environments)
-
-	customConnectorUrlPatterns, err := convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	environments, err := convertToDlpEnvironment(ctx, plan.Environments)
 	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert environments", err.Error())
 		return
 	}
-	policyToUpdate.CustomConnectorUrlPatternsDefinition = customConnectorUrlPatterns
+	policyToUpdate.Environments = environments
+	policyToUpdate.CustomConnectorUrlPatternsDefinition, err = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert custom connector URL patterns", err.Error())
+		return
+	}
 
 	policyToUpdate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
 

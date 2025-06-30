@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
@@ -202,8 +203,17 @@ func convertSearchModel(ctx context.Context, powerPlatformAttributes map[string]
 func convertTeamsIntegrationModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	teamIntegrationObject := powerPlatformAttributes["teams_integration"]
 	if !teamIntegrationObject.IsNull() && !teamIntegrationObject.IsUnknown() {
+		objectValue, ok := teamIntegrationObject.(basetypes.ObjectValue)
+		if !ok {
+			tflog.Debug(ctx, "failed to convert teams_integration to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", teamIntegrationObject),
+			})
+			return // Skip conversion if type assertion fails
+		}
+
 		var teamsIntegrationSettings TeamsIntegrationSettings
-		teamIntegrationObject.(basetypes.ObjectValue).As(ctx, &teamsIntegrationSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &teamsIntegrationSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
 			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
@@ -218,8 +228,17 @@ func convertTeamsIntegrationModel(ctx context.Context, powerPlatformAttributes m
 func convertPowerAppsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	powerAppsObject := powerPlatformAttributes["power_apps"]
 	if !powerAppsObject.IsNull() && !powerAppsObject.IsUnknown() {
+		objectValue, ok := powerAppsObject.(basetypes.ObjectValue)
+		if !ok {
+			tflog.Debug(ctx, "failed to convert power_apps to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", powerAppsObject),
+			})
+			return // Skip conversion if type assertion fails
+		}
+
 		var powerAppsSettings PowerAppsSettings
-		powerAppsObject.(basetypes.ObjectValue).As(ctx, &powerAppsSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &powerAppsSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
 			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
@@ -252,8 +271,17 @@ func convertPowerAppsModel(ctx context.Context, powerPlatformAttributes map[stri
 func convertPowerAutomateModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	powerAutomateObject := powerPlatformAttributes["power_automate"]
 	if !powerAutomateObject.IsNull() && !powerAutomateObject.IsUnknown() {
+		objectValue, ok := powerAutomateObject.(basetypes.ObjectValue)
+		if !ok {
+			tflog.Debug(ctx, "failed to convert power_automate to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", powerAutomateObject),
+			})
+			return // Skip conversion if type assertion fails
+		}
+
 		var powerAutomateSettings PowerAutomateSettings
-		powerAutomateObject.(basetypes.ObjectValue).As(ctx, &powerAutomateSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &powerAutomateSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
 			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
@@ -268,8 +296,17 @@ func convertPowerAutomateModel(ctx context.Context, powerPlatformAttributes map[
 func convertEnvironmentsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	environmentsObject := powerPlatformAttributes["environments"]
 	if !environmentsObject.IsNull() && !environmentsObject.IsUnknown() {
+		objectValue, ok := environmentsObject.(basetypes.ObjectValue)
+		if !ok {
+			tflog.Debug(ctx, "failed to convert environments to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", environmentsObject),
+			})
+			return // Skip conversion if type assertion fails
+		}
+
 		var environmentsSettings EnvironmentsSettings
-		environmentsObject.(basetypes.ObjectValue).As(ctx, &environmentsSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &environmentsSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
 			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
@@ -284,8 +321,17 @@ func convertEnvironmentsModel(ctx context.Context, powerPlatformAttributes map[s
 func convertGovernanceModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	governanceObject := powerPlatformAttributes["governance"]
 	if !governanceObject.IsNull() && !governanceObject.IsUnknown() {
+		objectValue, ok := governanceObject.(basetypes.ObjectValue)
+		if !ok {
+			tflog.Debug(ctx, "failed to convert governance to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", governanceObject),
+			})
+			return // Skip conversion if type assertion fails
+		}
+
 		var governanceSettings GovernanceSettings
-		governanceObject.(basetypes.ObjectValue).As(ctx, &governanceSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &governanceSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
 			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
@@ -329,8 +375,17 @@ func convertGovernanceModel(ctx context.Context, powerPlatformAttributes map[str
 func convertLicensingModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	licensingObject := powerPlatformAttributes["licensing"]
 	if !licensingObject.IsNull() && !licensingObject.IsUnknown() {
+		objectValue, ok := licensingObject.(basetypes.ObjectValue)
+		if !ok {
+			tflog.Debug(ctx, "failed to convert licensing to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", licensingObject),
+			})
+			return // Skip conversion if type assertion fails
+		}
+
 		var licensingSettings LicensingSettings
-		licensingObject.(basetypes.ObjectValue).As(ctx, &licensingSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &licensingSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
 			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
@@ -357,8 +412,17 @@ func convertLicensingModel(ctx context.Context, powerPlatformAttributes map[stri
 func convertPowerPagesModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	powerPagesObject := powerPlatformAttributes["power_pages"]
 	if !powerPagesObject.IsNull() && !powerPagesObject.IsUnknown() {
+		objectValue, ok := powerPagesObject.(basetypes.ObjectValue)
+		if !ok {
+			tflog.Debug(ctx, "failed to convert power_pages to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", powerPagesObject),
+			})
+			return // Skip conversion if type assertion fails
+		}
+
 		var powerPagesSettings PowerPagesSettings
-		powerPagesObject.(basetypes.ObjectValue).As(ctx, &powerPagesSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &powerPagesSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
 			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
@@ -370,8 +434,17 @@ func convertPowerPagesModel(ctx context.Context, powerPlatformAttributes map[str
 func convertChampionsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	championsObject := powerPlatformAttributes["champions"]
 	if !championsObject.IsNull() && !championsObject.IsUnknown() {
+		objectValue, ok := championsObject.(basetypes.ObjectValue)
+		if !ok {
+			tflog.Debug(ctx, "failed to convert champions to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", championsObject),
+			})
+			return // Skip conversion if type assertion fails
+		}
+
 		var championsSettings ChampionsSettings
-		championsObject.(basetypes.ObjectValue).As(ctx, &championsSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &championsSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
 			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
@@ -389,8 +462,13 @@ func convertChampionsModel(ctx context.Context, powerPlatformAttributes map[stri
 func convertIntelligenceModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	intelligenceObject := powerPlatformAttributes["intelligence"]
 	if !intelligenceObject.IsNull() && !intelligenceObject.IsUnknown() {
+		objectValue, ok := intelligenceObject.(basetypes.ObjectValue)
+		if !ok {
+			return // Skip conversion if type assertion fails
+		}
+
 		var intelligenceSettings IntelligenceSettings
-		intelligenceObject.(basetypes.ObjectValue).As(ctx, &intelligenceSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &intelligenceSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		if tenantSettingsDto.PowerPlatform == nil {
 			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
@@ -408,8 +486,17 @@ func convertIntelligenceModel(ctx context.Context, powerPlatformAttributes map[s
 func convertModelExperimentationModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	modelExperimentationObject := powerPlatformAttributes["model_experimentation"]
 	if !modelExperimentationObject.IsNull() && !modelExperimentationObject.IsUnknown() {
+		objectValue, ok := modelExperimentationObject.(basetypes.ObjectValue)
+		if !ok {
+			tflog.Debug(ctx, "failed to convert model_experimentation to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", modelExperimentationObject),
+			})
+			return // Skip conversion if type assertion fails
+		}
+
 		var modelExperimentationSettings ModelExperimentationSettings
-		modelExperimentationObject.(basetypes.ObjectValue).As(ctx, &modelExperimentationSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &modelExperimentationSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		tenantSettingsDto.PowerPlatform.ModelExperimentation = &modelExperimentationSettingsDto{}
 		if !modelExperimentationSettings.EnableModelDataSharing.IsNull() && !modelExperimentationSettings.EnableModelDataSharing.IsUnknown() {
@@ -424,8 +511,17 @@ func convertModelExperimentationModel(ctx context.Context, powerPlatformAttribut
 func convertCatalogSettingsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	catalogSettingsObject := powerPlatformAttributes["catalog_settings"]
 	if !catalogSettingsObject.IsNull() && !catalogSettingsObject.IsUnknown() {
+		objectValue, ok := catalogSettingsObject.(basetypes.ObjectValue)
+		if !ok {
+			tflog.Debug(ctx, "failed to convert catalog_settings to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", catalogSettingsObject),
+			})
+			return // Skip conversion if type assertion fails
+		}
+
 		var catalogSettings CatalogSettingsSettings
-		catalogSettingsObject.(basetypes.ObjectValue).As(ctx, &catalogSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &catalogSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		tenantSettingsDto.PowerPlatform.CatalogSettings = &catalogSettingsDto{}
 		if !catalogSettings.PowerCatalogAudienceSetting.IsNull() && !catalogSettings.PowerCatalogAudienceSetting.IsUnknown() {
@@ -437,8 +533,17 @@ func convertCatalogSettingsModel(ctx context.Context, powerPlatformAttributes ma
 func convertUserManagementSettingsModel(ctx context.Context, powerPlatformAttributes map[string]attr.Value, tenantSettingsDto *tenantSettingsDto) {
 	userManagementSettingsObject := powerPlatformAttributes["user_management_settings"]
 	if !userManagementSettingsObject.IsNull() && !userManagementSettingsObject.IsUnknown() {
+		objectValue, ok := userManagementSettingsObject.(basetypes.ObjectValue)
+		if !ok {
+			tflog.Debug(ctx, "failed to convert user_management_settings to ObjectValue", map[string]any{
+				"expected_type": "basetypes.ObjectValue",
+				"actual_type":   fmt.Sprintf("%T", userManagementSettingsObject),
+			})
+			return // Skip conversion if type assertion fails
+		}
+
 		var userManagementSettings UserManagementSettings
-		userManagementSettingsObject.(basetypes.ObjectValue).As(ctx, &userManagementSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
+		objectValue.As(ctx, &userManagementSettings, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
 
 		tenantSettingsDto.PowerPlatform.UserManagementSettings = &userManagementSettingsDto{}
 		if !userManagementSettings.EnableDeleteDisabledUserinAllEnvironments.IsNull() && !userManagementSettings.EnableDeleteDisabledUserinAllEnvironments.IsUnknown() {
