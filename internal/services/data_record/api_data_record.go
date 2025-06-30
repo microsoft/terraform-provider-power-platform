@@ -80,7 +80,7 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 		Path:   fmt.Sprintf("/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/%s", environmentId),
 	}
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	env := environmentIdDto{}
@@ -118,9 +118,11 @@ func (client *client) GetDataRecordsByODataQuery(ctx context.Context, environmen
 	}
 
 	var totalRecords *int64
-	if response["@Microsoft.Dynamics.CRM.totalrecordcount"] != nil {
-		count := int64(response["@Microsoft.Dynamics.CRM.totalrecordcount"].(float64))
-		totalRecords = &count
+	if rawCount, exists := response["@Microsoft.Dynamics.CRM.totalrecordcount"]; exists && rawCount != nil {
+		if count, ok := rawCount.(float64); ok {
+			countInt := int64(count)
+			totalRecords = &countInt
+		}
 	}
 	var totalRecordsCountLimitExceeded *bool
 	if val, ok := response["@Microsoft.Dynamics.CRM.totalrecordcountlimitexceeded"].(bool); ok {
@@ -145,7 +147,20 @@ func (client *client) GetDataRecordsByODataQuery(ctx context.Context, environmen
 		records = append(records, response)
 	}
 
-	pluralName := strings.Split(response["@odata.context"].(string), "#")[1]
+	// Safe extraction of @odata.context
+	odataCtxRaw, exists := response["@odata.context"]
+	if !exists {
+		return nil, errors.New("@odata.context field missing from response")
+	}
+	odataCtx, ok := odataCtxRaw.(string)
+	if !ok {
+		return nil, errors.New("@odata.context field is not a string")
+	}
+	splitParts := strings.Split(odataCtx, "#")
+	if len(splitParts) < 2 {
+		return nil, errors.New("@odata.context string is malformed")
+	}
+	pluralName := splitParts[1]
 	if index := strings.IndexAny(pluralName, "(/"); index != -1 {
 		pluralName = pluralName[:index]
 	}
@@ -154,7 +169,7 @@ func (client *client) GetDataRecordsByODataQuery(ctx context.Context, environmen
 		Records:                  records,
 		TotalRecord:              totalRecords,
 		TotalRecordLimitExceeded: totalRecordsCountLimitExceeded,
-		TableMetadataUrl:         response["@odata.context"].(string),
+		TableMetadataUrl:         odataCtx,
 		// url will be as example: https://org.crm4.dynamics.com/api/data/v9.2/$metadata#tablepluralname/$entity.
 		TablePluralName: pluralName,
 	}, nil
@@ -279,10 +294,16 @@ func (client *client) GetTableSingularNameFromPlural(ctx context.Context, enviro
 	}
 
 	var result string
-	if mapResponse["value"] != nil && len(mapResponse["value"].([]any)) > 0 {
-		if value, ok := mapResponse["value"].([]any)[0].(map[string]any); ok {
-			if logicalName, ok := value["LogicalName"].(string); ok {
-				result = logicalName
+	if rawVal, exists := mapResponse["value"]; exists && rawVal != nil {
+		valueSlice, ok := rawVal.([]any)
+		if !ok {
+			return nil, errors.New("value field is not of type []any")
+		}
+		if len(valueSlice) > 0 {
+			if value, ok := valueSlice[0].(map[string]any); ok {
+				if logicalName, ok := value["LogicalName"].(string); ok {
+					result = logicalName
+				}
 			}
 		}
 	} else if logicalName, ok := mapResponse["LogicalName"].(string); ok {

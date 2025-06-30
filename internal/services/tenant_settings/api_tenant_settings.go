@@ -5,6 +5,7 @@ package tenant_settings
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -33,7 +34,7 @@ func (client *client) GetTenant(ctx context.Context) (*tenantDto, error) {
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2020-08-01")
+	values.Add(constants.API_VERSION_PARAM, constants.TENANT_SETTINGS_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	tenant := tenantDto{}
@@ -52,7 +53,7 @@ func (client *client) GetTenantSettings(ctx context.Context) (*tenantSettingsDto
 	}
 
 	values := url.Values{}
-	values.Add("api-version", "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	tenantSettings := tenantSettingsDto{}
@@ -71,7 +72,7 @@ func (client *client) UpdateTenantSettings(ctx context.Context, tenantSettings t
 	}
 
 	values := url.Values{}
-	values.Add(constants.API_VERSION_PARAM, "2023-06-01")
+	values.Add(constants.API_VERSION_PARAM, constants.BAP_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
 
 	var backendSettings tenantSettingsDto
@@ -82,12 +83,12 @@ func (client *client) UpdateTenantSettings(ctx context.Context, tenantSettings t
 	return &backendSettings, nil
 }
 
-func applyCorrections(ctx context.Context, planned tenantSettingsDto, actual tenantSettingsDto) *tenantSettingsDto {
+func applyCorrections(ctx context.Context, planned tenantSettingsDto, actual tenantSettingsDto) (*tenantSettingsDto, error) {
 	correctedFilter := filterDto(ctx, planned, actual)
 	corrected, ok := correctedFilter.(*tenantSettingsDto)
 	if !ok {
-		tflog.Error(ctx, "Type assertion to failed in applyCorrections")
-		return nil
+		tflog.Error(ctx, "Type assertion failed in applyCorrections")
+		return nil, errors.New("type assertion to *tenantSettingsDto failed in applyCorrections")
 	}
 
 	if planned.PowerPlatform != nil && planned.PowerPlatform.Governance != nil {
@@ -101,7 +102,7 @@ func applyCorrections(ctx context.Context, planned tenantSettingsDto, actual ten
 			corrected.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId = &zu
 		}
 	}
-	return corrected
+	return corrected, nil
 }
 
 // This function is used to filter out the fields that are not opted in to configuration.

@@ -24,6 +24,11 @@ import (
 var _ resource.Resource = &BillingPolicyEnvironmentResource{}
 var _ resource.ResourceWithImportState = &BillingPolicyEnvironmentResource{}
 
+// addClientError is a helper function to centralize error handling.
+func addClientError(diags interface{ AddError(string, string) }, typeName, action string, err error) {
+	diags.AddError(fmt.Sprintf("Client error when %s %s", action, typeName), err.Error())
+}
+
 func NewBillingPolicyEnvironmentResource() resource.Resource {
 	return &BillingPolicyEnvironmentResource{
 		TypeInfo: helpers.TypeInfo{
@@ -103,27 +108,27 @@ func (r *BillingPolicyEnvironmentResource) Create(ctx context.Context, req resou
 
 	environments, err := r.LicensingClient.GetEnvironmentsForBillingPolicy(ctx, plan.BillingPolicyId)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
+		addClientError(&resp.Diagnostics, r.FullTypeName(), "creating", err)
 		return
 	}
 
 	if len(environments) > 0 {
 		err = r.LicensingClient.RemoveEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId, environments)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
+			addClientError(&resp.Diagnostics, r.FullTypeName(), "creating", err)
 			return
 		}
 	}
 
 	err = r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId, plan.Environments)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
+		addClientError(&resp.Diagnostics, r.FullTypeName(), "creating", err)
 		return
 	}
 
 	environments, err = r.LicensingClient.GetEnvironmentsForBillingPolicy(ctx, plan.BillingPolicyId)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
+		addClientError(&resp.Diagnostics, r.FullTypeName(), "creating", err)
 		return
 	}
 
@@ -151,7 +156,7 @@ func (r *BillingPolicyEnvironmentResource) Read(ctx context.Context, req resourc
 			resp.State.RemoveResource(ctx)
 			return
 		}
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
+		addClientError(&resp.Diagnostics, r.FullTypeName(), "reading", err)
 		return
 	}
 
@@ -182,25 +187,25 @@ func (r *BillingPolicyEnvironmentResource) Update(ctx context.Context, req resou
 
 	environments, err := r.LicensingClient.GetEnvironmentsForBillingPolicy(ctx, plan.BillingPolicyId)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
+		addClientError(&resp.Diagnostics, r.FullTypeName(), "updating", err)
 		return
 	}
 
 	err = r.LicensingClient.RemoveEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId, environments)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
+		addClientError(&resp.Diagnostics, r.FullTypeName(), "updating", err)
 		return
 	}
 
 	err = r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId, plan.Environments)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
+		addClientError(&resp.Diagnostics, r.FullTypeName(), "updating", err)
 		return
 	}
 
 	environments, err = r.LicensingClient.GetEnvironmentsForBillingPolicy(ctx, plan.BillingPolicyId)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
+		addClientError(&resp.Diagnostics, r.FullTypeName(), "updating", err)
 		return
 	}
 
@@ -221,7 +226,7 @@ func (r *BillingPolicyEnvironmentResource) Delete(ctx context.Context, req resou
 
 	err := r.LicensingClient.RemoveEnvironmentsToBillingPolicy(ctx, state.BillingPolicyId, state.Environments)
 	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
+		addClientError(&resp.Diagnostics, r.FullTypeName(), "deleting", err)
 		return
 	}
 }
