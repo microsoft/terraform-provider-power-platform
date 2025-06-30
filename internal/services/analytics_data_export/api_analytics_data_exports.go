@@ -55,7 +55,7 @@ func (client *Client) GetGatewayCluster(ctx context.Context) (*GatewayClusterDto
 	return &gatewayCluster, nil
 }
 
-func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*[]AnalyticsDataDto, error) {
+func (client *Client) GetAnalyticsDataExport(ctx context.Context) ([]AnalyticsDataDto, error) {
 	// Get the gateway cluster
 	gatewayCluster, err := client.GetGatewayCluster(ctx)
 	if err != nil {
@@ -83,7 +83,7 @@ func (client *Client) GetAnalyticsDataExport(ctx context.Context) (*[]AnalyticsD
 		return nil, fmt.Errorf("failed to get analytics data export: %w", err)
 	}
 
-	return &adr.Value, nil
+	return adr.Value, nil
 }
 
 func getAnalyticsUrlMap() map[string]string {

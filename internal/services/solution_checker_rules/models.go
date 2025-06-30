@@ -11,7 +11,7 @@ import (
 
 type DataSource struct {
 	helpers.TypeInfo
-	SolutionCheckerRulesClient client
+	SolutionCheckerRulesClient *Client
 }
 
 type DataSourceModel struct {
@@ -34,7 +34,7 @@ type RuleModel struct {
 }
 
 // Helper function to convert from DTO to Model.
-func convertFromRuleDto(rule ruleDto) RuleModel {
+func convertFromRuleDto(rule RuleDto) RuleModel {
 	return RuleModel{
 		Code:                       types.StringValue(rule.Code),
 		Description:                types.StringValue(rule.Description),
