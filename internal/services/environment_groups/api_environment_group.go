@@ -47,7 +47,7 @@ func (client *client) CreateEnvironmentGroup(ctx context.Context, environmentGro
 	newEnvironmentGroup := environmentGroupDto{}
 	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environmentGroup, []int{http.StatusCreated}, &newEnvironmentGroup)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create environment group: %w", err)
 	}
 
 	return &newEnvironmentGroup, nil
@@ -100,7 +100,7 @@ func (client *client) UpdateEnvironmentGroup(ctx context.Context, environmentGro
 	updatedEnvironmentGroup := environmentGroupDto{}
 	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, environmentGroup, []int{http.StatusOK}, &updatedEnvironmentGroup)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to update environment group: %w", err)
 	}
 
 	return &updatedEnvironmentGroup, nil
@@ -123,7 +123,7 @@ func (client *client) GetEnvironmentGroup(ctx context.Context, environmentGroupI
 	if httpResponse.HttpResponse.StatusCode == http.StatusNotFound {
 		return nil, nil
 	} else if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get environment group: %w", err)
 	}
 
 	return &environmentGroup, nil
@@ -144,7 +144,7 @@ func (client *client) GetEnvironmentsInEnvironmentGroup(ctx context.Context, env
 	environments := environmentArrayDto{}
 	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &environments)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get environments in environment group: %w", err)
 	}
 
 	return environments.Value, nil
@@ -153,7 +153,7 @@ func (client *client) GetEnvironmentsInEnvironmentGroup(ctx context.Context, env
 func (client *client) RemoveEnvironmentFromEnvironmentGroup(ctx context.Context, environmentGroupId, environmentId string) error {
 	tenantDto, err := client.TenantApi.GetTenant(ctx)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get tenant: %w", err)
 	}
 
 	apiUrl := &url.URL{
@@ -168,7 +168,7 @@ func (client *client) RemoveEnvironmentFromEnvironmentGroup(ctx context.Context,
 
 	_, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, nil, []int{http.StatusAccepted}, nil)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to remove environment from environment group: %w", err)
 	}
 	return nil
 }
