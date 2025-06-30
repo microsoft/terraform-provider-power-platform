@@ -276,3 +276,44 @@ func TestUnitTestRest_Validate_Create(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitTestRest_Deprecation_Still_Works(t *testing.T) {
+	// This test verifies that the deprecated resource still functions correctly
+	// The deprecation warning is handled by the framework and doesn't break functionality
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Web_Api_Validate_Create/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/accounts?$select=name,accountid`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/Web_Api_Validate_Create/post_account.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_rest" "deprecated_test" {
+					create = {
+					    scope   = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/.default"
+						url     = "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/accounts?$select=name,accountid"
+						method  = "POST"
+						body    = jsonencode({
+							"accountid" : "00000000-0000-0000-0000-000000000001",
+							"name" : "powerplatform_rest"
+						})
+					}
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_rest.deprecated_test", "output.body", httpmock.File("tests/resource/Web_Api_Validate_Create/post_account.json").String()),
+				),
+			},
+		},
+	})
+}
