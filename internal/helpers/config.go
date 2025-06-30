@@ -84,6 +84,12 @@ func StringPtr(s string) *string {
 	return &s
 }
 
+// IsKnown returns true if the value is not null and not unknown.
+// This is a helper function to reduce repetitive null/unknown checks.
+func IsKnown(value attr.Value) bool {
+	return !value.IsNull() && !value.IsUnknown()
+}
+
 // BoolPointer returns a pointer to the bool value if the BoolValue is not null and not unknown, otherwise returns nil.
 // This helper reduces boilerplate for null/unknown checks when converting BoolValue to *bool.
 func BoolPointer(v basetypes.BoolValue) *bool {

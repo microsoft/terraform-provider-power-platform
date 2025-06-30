@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -160,7 +161,15 @@ func (r *UserResource) Create(ctx context.Context, req resource.CreateRequest, r
 
 	var plan *UserResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	if resp.Diagnostics.HasError() || plan == nil {
+		return
+	}
+
+	// Validate required fields before dereferencing
+	if !validateRequiredStringField(&resp.Diagnostics, plan.EnvironmentId, "Environment ID", "Configuration") {
+		return
+	}
+	if !validateRequiredStringField(&resp.Diagnostics, plan.AadId, "AAD ID", "Configuration") {
 		return
 	}
 
@@ -231,7 +240,12 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	if resp.Diagnostics.HasError() {
+	if resp.Diagnostics.HasError() || state == nil {
+		return
+	}
+
+	// Validate required fields before dereferencing
+	if !validateRequiredStringField(&resp.Diagnostics, state.EnvironmentId, "Environment ID", "State") {
 		return
 	}
 
@@ -309,7 +323,18 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	var state *UserResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	if resp.Diagnostics.HasError() {
+	if resp.Diagnostics.HasError() || plan == nil || state == nil {
+		return
+	}
+
+	// Validate required fields before dereferencing
+	if !validateRequiredStringField(&resp.Diagnostics, plan.EnvironmentId, "Environment ID", "Configuration") {
+		return
+	}
+	if !validateRequiredStringField(&resp.Diagnostics, plan.AadId, "AAD ID", "Configuration") {
+		return
+	}
+	if !validateRequiredStringField(&resp.Diagnostics, state.EnvironmentId, "State Environment ID", "State") {
 		return
 	}
 
@@ -354,8 +379,8 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		}
 		if len(removedSecurityRoles) > 0 {
 			savedRoles := []securityRoleDto{}
-			rolesObj, diag := resp.Private.GetKey(ctx, "role")
-			if diag.HasError() {
+			rolesObj, diagErr := resp.Private.GetKey(ctx, "role")
+			if diagErr.HasError() {
 				resp.Diagnostics.AddError(fmt.Sprintf("Error when updating %s", r.FullTypeName()), err.Error())
 				return
 			}
@@ -404,7 +429,12 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 	var state *UserResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	if resp.Diagnostics.HasError() {
+	if resp.Diagnostics.HasError() || state == nil {
+		return
+	}
+
+	// Validate required fields before dereferencing
+	if !validateRequiredStringField(&resp.Diagnostics, state.EnvironmentId, "Environment ID", "State") {
 		return
 	}
 
@@ -427,8 +457,8 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 		}
 	} else {
 		savedRoles := []securityRoleDto{}
-		rolesObj, diag := resp.Private.GetKey(ctx, "role")
-		if diag.HasError() {
+		rolesObj, diagErr := resp.Private.GetKey(ctx, "role")
+		if diagErr.HasError() {
 			return
 		}
 
@@ -452,6 +482,15 @@ func (r *UserResource) ImportState(ctx context.Context, req resource.ImportState
 	defer exitContext()
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+// validateRequiredStringField validates that a string field is not null or unknown and adds an error diagnostic if invalid.
+func validateRequiredStringField(diagnostics *diag.Diagnostics, field types.String, fieldName, ctxType string) bool {
+	if field.IsUnknown() || field.IsNull() {
+		diagnostics.AddError("Invalid "+ctxType, fieldName+" is required and cannot be null or unknown")
+		return false
+	}
+	return true
 }
 
 func validateEnvironmentSecurityRoles(roles []string) error {
