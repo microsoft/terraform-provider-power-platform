@@ -28,7 +28,10 @@ func TestUnitResponse_MarshallTo(t *testing.T) {
 			response: &Response{
 				BodyAsBytes: []byte(`{"name": "test", "value": 123}`),
 			},
-			obj:         &struct{ Name string; Value int }{},
+			obj: &struct {
+				Name  string
+				Value int
+			}{},
 			expectError: false,
 		},
 		{
@@ -63,7 +66,7 @@ func TestUnitResponse_MarshallTo(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := tt.response.MarshallTo(tt.obj)
-			
+
 			if tt.expectError {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tt.errorMsg)
