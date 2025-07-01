@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
@@ -78,6 +79,11 @@ func (client *environmentWaveClient) UpdateFeature(ctx context.Context, environm
 
 	retryAfter := api.DefaultRetryAfter()
 	for {
+		// Check if context has been cancelled or deadline exceeded
+		if err := helpers.CheckContextTimeout(ctx, fmt.Sprintf("waiting for feature %s to be enabled in environment %s", featureName, environmentId)); err != nil {
+			return nil, err
+		}
+
 		feature, err := client.GetFeature(ctx, environmentId, featureName)
 		if err != nil {
 			return nil, err

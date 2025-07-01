@@ -206,3 +206,15 @@ func IsTestContext(ctx context.Context) bool {
 	testContext, ok := ctx.Value(TEST_CONTEXT_KEY).(TestContextValue)
 	return ok && testContext.IsTestMode
 }
+
+// CheckContextTimeout checks if the context has been cancelled or deadline exceeded.
+// Returns an error if the context is done, nil otherwise.
+// This is commonly used in polling loops to respect timeouts.
+func CheckContextTimeout(ctx context.Context, operation string) error {
+	select {
+	case <-ctx.Done():
+		return fmt.Errorf("timed out during %s: %w", operation, ctx.Err())
+	default:
+		return nil
+	}
+}
