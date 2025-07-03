@@ -10,7 +10,7 @@ The Power Platform provider allows managing environments and other resources wit
 
 !> Bugs or errors in Infrastructure-as-Code (IaC) software could lead to service interruptions or data loss. We strongly recommend backing up your data and testing thoroughly in non-production environments before using any feature in production. Your feedback is valuable to us, so please share any issues or suggestions you encounter via [GitHub issues](https://github.com/microsoft/terraform-provider-power-platform/issues).
 
-~> Some resources and data sources are made available as a preview. Preview features may have restricted or limited functionality. Future updates could include breaking changes; however, we adhere to [Semantic Versioning](https://semver.org/) to clearly communicate these changes.
+~> Some resources and data sources are made available as a preview. Preview features may have restricted or limited functionality. Future updates could include breaking changes; however, we adhere to [Semantic Versioning](https://semver.org/) to clearly communicate these changes. 
 
 The following resources are in **preview**:
 
@@ -45,11 +45,11 @@ See the official Terraform documentation for more information about [requiring p
 
 Terraform supports a number of different methods for authenticating to Power Platform.
 
-- [Authenticating to Power Platform using the Azure CLI](/guides/azure_cli.md)
-- [Authenticating to Power Platform using the Azure Developer CLI](/guides/azure_developer_cli.md)
-- [Authenticating to Power Platform using a Service Principal and OpenID Connect (OIDC) GitHub and Azure DevOps](/guides/oidc.md)
-- [Authenticating to Power Platform using a Service Principal and a Client Secret/Certificate](/guides/client_secret.md)
-- [Authenticating to Power Platform using a Managed Identity](/guides/managed_identity.md)
+* [Authenticating to Power Platform using the Azure CLI](/guides/azure_cli.md)
+* [Authenticating to Power Platform using the Azure Developer CLI](/guides/azure_developer_cli.md)
+* [Authenticating to Power Platform using a Service Principal and OpenID Connect (OIDC) GitHub and Azure DevOps](/guides/oidc.md)
+* [Authenticating to Power Platform using a Service Principal and a Client Secret/Certificate](/guides/client_secret.md)
+* [Authenticating to Power Platform using a Managed Identity](/guides/managed_identity.md)
 
 We recommend using a Service Principal with OIDC federated credentials when running Terraform non-interactively (such as when running Terraform in a CI server) and authenticating using the Azure CLI when running Terraform locally.
 
@@ -100,9 +100,9 @@ In addition to the authentication options, the following options are also suppor
 | `partner_id` | Optional GUID for Customer Usage Attribution. When set, the value is appended to the User-Agent header as `pid-<GUID>`. | |
 | `disable_terraform_partner_id` | When `true`, suppresses the default Terraform partner ID when no custom `partner_id` is provided. | `false` |
 
-If you are using Azure CLI for authentication, you can also turn off CLI's telemetry by executing the following [command](https://github.com/Azure/azure-cli?tab=readme-ov-file#telemetry-configuration):
 
-```bash
+If you are using Azure CLI for authentication, you can also turn off CLI's telemetry by executing the following [command](https://github.com/Azure/azure-cli?tab=readme-ov-file#telemetry-configuration):
+```bash 
 az config set core.collect_telemetry=false
 ```
 
