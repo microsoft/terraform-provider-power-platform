@@ -4,7 +4,7 @@ description: |-
   The Power Platform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/)
 ---
 
-# Power Platform Provider
+# powerplatform Provider
 
 The Power Platform provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
