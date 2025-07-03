@@ -541,9 +541,14 @@ func (client *Client) updateEnvironmentAiFeaturesWithRetry(ctx context.Context, 
 	values := url.Values{}
 	values.Add(constants.API_VERSION_PARAM, constants.BAP_2021_API_VERSION)
 	apiUrl.RawQuery = values.Encode()
-	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, generativeAIConfig, []int{http.StatusAccepted, http.StatusConflict}, nil)
+	apiResponse, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, generativeAIConfig, []int{http.StatusAccepted, http.StatusConflict, http.StatusNoContent}, nil)
 	if err != nil {
 		return err
+	}
+
+	if apiResponse.HttpResponse.StatusCode == http.StatusNoContent {
+		tflog.Info(ctx, "No update operation occurred for Environment AI features")
+		return nil
 	}
 
 	if apiResponse.HttpResponse.StatusCode == http.StatusConflict {

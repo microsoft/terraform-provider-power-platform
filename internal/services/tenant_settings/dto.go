@@ -17,6 +17,36 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
+// Helper functions to reduce duplication in DTO conversion logic
+
+// convertSimpleSettings creates an ObjectType and ObjectValue for simple attribute mappings.
+// It handles the common pattern of nil checking and attribute conversion.
+func convertSimpleSettings(attrTypes map[string]attr.Type, attrValues map[string]attr.Value) (basetypes.ObjectType, basetypes.ObjectValue) {
+	objType := types.ObjectType{AttrTypes: attrTypes}
+	if attrValues == nil {
+		return objType, types.ObjectNull(attrTypes)
+	}
+	return objType, types.ObjectValueMust(attrTypes, attrValues)
+}
+
+// convertBoolSettingsMap creates attribute types map for boolean settings.
+func convertBoolSettingsMap(keys []string) map[string]attr.Type {
+	attrTypes := make(map[string]attr.Type, len(keys))
+	for _, key := range keys {
+		attrTypes[key] = types.BoolType
+	}
+	return attrTypes
+}
+
+// convertStringSettingsMap creates attribute types map for string settings.
+func convertStringSettingsMap(keys []string) map[string]attr.Type {
+	attrTypes := make(map[string]attr.Type, len(keys))
+	for _, key := range keys {
+		attrTypes[key] = types.StringType
+	}
+	return attrTypes
+}
+
 type tenantDto struct {
 	TenantId                         string `json:"tenantId,omitempty"`
 	State                            string `json:"state,omitempty"`
@@ -682,79 +712,61 @@ func convertPowerPlatformSettings(tenantSettingsDto tenantSettingsDto) (basetype
 }
 
 func convertUserManagementSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
-	attrTypesUserManagementSettings := map[string]attr.Type{
-		"enable_delete_disabled_user_in_all_environments": types.BoolType,
-	}
-
+	attrTypes := convertBoolSettingsMap([]string{"enable_delete_disabled_user_in_all_environments"})
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.UserManagementSettings == nil {
-		return types.ObjectType{AttrTypes: attrTypesUserManagementSettings}, types.ObjectNull(attrTypesUserManagementSettings)
+		return convertSimpleSettings(attrTypes, nil)
 	}
-	attrValuesUserManagementSettings := map[string]attr.Value{
+	attrValues := map[string]attr.Value{
 		"enable_delete_disabled_user_in_all_environments": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.UserManagementSettings.EnableDeleteDisabledUserinAllEnvironments),
 	}
-	return types.ObjectType{AttrTypes: attrTypesUserManagementSettings}, types.ObjectValueMust(attrTypesUserManagementSettings, attrValuesUserManagementSettings)
+	return convertSimpleSettings(attrTypes, attrValues)
 }
 
 func convertCatalogSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
-	attrTypesCatalogSettingsProperties := map[string]attr.Type{
-		"power_catalog_audience_setting": types.StringType,
-	}
-
+	attrTypes := convertStringSettingsMap([]string{"power_catalog_audience_setting"})
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.CatalogSettings == nil {
-		return types.ObjectType{AttrTypes: attrTypesCatalogSettingsProperties}, types.ObjectNull(attrTypesCatalogSettingsProperties)
+		return convertSimpleSettings(attrTypes, nil)
 	}
-	attrValuesCatalogSettingsProperties := map[string]attr.Value{
+	attrValues := map[string]attr.Value{
 		"power_catalog_audience_setting": types.StringPointerValue(tenantSettingsDto.PowerPlatform.CatalogSettings.PowerCatalogAudienceSetting),
 	}
-	return types.ObjectType{AttrTypes: attrTypesCatalogSettingsProperties}, types.ObjectValueMust(attrTypesCatalogSettingsProperties, attrValuesCatalogSettingsProperties)
+	return convertSimpleSettings(attrTypes, attrValues)
 }
 
 func convertModelExperimentationSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
-	attrTypesModelExperimentationProperties := map[string]attr.Type{
-		"enable_model_data_sharing": types.BoolType,
-		"disable_data_logging":      types.BoolType,
-	}
-
+	attrTypes := convertBoolSettingsMap([]string{"enable_model_data_sharing", "disable_data_logging"})
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.ModelExperimentation == nil {
-		return types.ObjectType{AttrTypes: attrTypesModelExperimentationProperties}, types.ObjectNull(attrTypesModelExperimentationProperties)
+		return convertSimpleSettings(attrTypes, nil)
 	}
-	attrValuesModelExperimentationProperties := map[string]attr.Value{
+	attrValues := map[string]attr.Value{
 		"enable_model_data_sharing": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.ModelExperimentation.EnableModelDataSharing),
 		"disable_data_logging":      types.BoolPointerValue(tenantSettingsDto.PowerPlatform.ModelExperimentation.DisableDataLogging),
 	}
-	return types.ObjectType{AttrTypes: attrTypesModelExperimentationProperties}, types.ObjectValueMust(attrTypesModelExperimentationProperties, attrValuesModelExperimentationProperties)
+	return convertSimpleSettings(attrTypes, attrValues)
 }
 
 func convertIntelligenceSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
-	attrTypesIntelligenceProperties := map[string]attr.Type{
-		"disable_copilot":               types.BoolType,
-		"enable_open_ai_bot_publishing": types.BoolType,
-	}
-
+	attrTypes := convertBoolSettingsMap([]string{"disable_copilot", "enable_open_ai_bot_publishing"})
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.Intelligence == nil {
-		return types.ObjectType{AttrTypes: attrTypesIntelligenceProperties}, types.ObjectNull(attrTypesIntelligenceProperties)
+		return convertSimpleSettings(attrTypes, nil)
 	}
-	attrValuesIntelligenceProperties := map[string]attr.Value{
+	attrValues := map[string]attr.Value{
 		"disable_copilot":               types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.DisableCopilot),
 		"enable_open_ai_bot_publishing": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.EnableOpenAiBotPublishing),
 	}
-	return types.ObjectType{AttrTypes: attrTypesIntelligenceProperties}, types.ObjectValueMust(attrTypesIntelligenceProperties, attrValuesIntelligenceProperties)
+	return convertSimpleSettings(attrTypes, attrValues)
 }
 
 func convertChampionsSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
-	attrTypesChampionsProperties := map[string]attr.Type{
-		"disable_champions_invitation_reachout":    types.BoolType,
-		"disable_skills_match_invitation_reachout": types.BoolType,
-	}
-
+	attrTypes := convertBoolSettingsMap([]string{"disable_champions_invitation_reachout", "disable_skills_match_invitation_reachout"})
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.Champions == nil {
-		return types.ObjectType{AttrTypes: attrTypesChampionsProperties}, types.ObjectNull(attrTypesChampionsProperties)
+		return convertSimpleSettings(attrTypes, nil)
 	}
-	attrValuesChampionsProperties := map[string]attr.Value{
+	attrValues := map[string]attr.Value{
 		"disable_champions_invitation_reachout":    types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Champions.DisableChampionsInvitationReachout),
 		"disable_skills_match_invitation_reachout": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Champions.DisableSkillsMatchInvitationReachout),
 	}
-	return types.ObjectType{AttrTypes: attrTypesChampionsProperties}, types.ObjectValueMust(attrTypesChampionsProperties, attrValuesChampionsProperties)
+	return convertSimpleSettings(attrTypes, attrValues)
 }
 
 func convertPowerPagesSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {

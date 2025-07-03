@@ -44,10 +44,6 @@ data "powerplatform_analytics_data_exports" "example" {}
 <a id="nestedatt--exports"></a>
 ### Nested Schema for `exports`
 
-Required:
-
-- `sink` (Attributes) The sink configuration for analytics data (see [below for nested schema](#nestedatt--exports--sink))
-
 Read-Only:
 
 - `ai_type` (String) The AI type for the analytics data
@@ -56,6 +52,7 @@ Read-Only:
 - `package_name` (String) The package name for the analytics data
 - `resource_provider` (String) The resource provider for the analytics data
 - `scenarios` (List of String) The list of scenarios covered by this analytics export
+- `sink` (Attributes) The sink configuration for analytics data (see [below for nested schema](#nestedatt--exports--sink))
 - `source` (String) The source of the analytics data
 - `status` (Attributes Set) The status information for the analytics data export (see [below for nested schema](#nestedatt--exports--status))
 
