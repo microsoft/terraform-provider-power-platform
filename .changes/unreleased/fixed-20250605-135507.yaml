@@ -1,5 +1,0 @@
-kind: fixed
-body: Fixed type assertion safety issues in multiple services to prevent potential runtime panics when API responses have unexpected structure or types
-time: 2025-06-05T13:55:07.511122417Z
-custom:
-    Issue: "839"

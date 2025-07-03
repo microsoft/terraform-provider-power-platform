@@ -1,5 +1,0 @@
-kind: fixed
-body: Add missing nil pointer validation checks to prevent runtime panics in application API client, authorization resource, and environment models
-time: 2025-06-05T07:08:28.9013439Z
-custom:
-    Issue: "815"

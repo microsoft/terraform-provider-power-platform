@@ -1,4 +1,0 @@
-kind: fixed
-body: Improved error handling in environment group services - fixed missing error wrapping, silent failures, and incorrect error messages
-custom:
-  Issue: 806

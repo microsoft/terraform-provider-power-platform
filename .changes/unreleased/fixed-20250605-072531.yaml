@@ -1,5 +1,0 @@
-kind: fixed
-body: 'Improved error handling and diagnostics across multiple services: fixed missing parameter context in connection shares error messages, proper error propagation in DLP policy helper functions, handled ignored errors in data record column conversion, and corrected misleading error messages in environment settings'
-time: 2025-06-05T07:25:31.380074777Z
-custom:
-    Issue: "816"
