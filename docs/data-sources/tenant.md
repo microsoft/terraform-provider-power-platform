@@ -4,11 +4,17 @@ page_title: "powerplatform_tenant Data Source - powerplatform"
 subcategory: ""
 description: |-
   Fetches the client configuration for the given tenant.
+  Note: This resource is available as preview
+  Known Limitations: This resource is not supported for with service principal authentication.
 ---
 
 # powerplatform_tenant (Data Source)
 
 Fetches the client configuration for the given tenant.
+
+**Note:** This resource is available as **preview**
+
+**Known Limitations:** This resource is not supported for with service principal authentication.
 
 ## Example Usage
 
