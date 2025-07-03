@@ -1,4 +1,0 @@
-kind: changed
-body: powerplatform_tenant_capacity resource is now available in preview with user authentication support only
-custom:
-  Issue: 867

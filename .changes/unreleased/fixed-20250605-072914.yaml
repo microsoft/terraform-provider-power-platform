@@ -1,5 +1,0 @@
-kind: fixed
-body: 'Fixed JSON Marshal/Unmarshal issues: added empty response body validation, proper error handling for JSON marshaling, safe type assertions, and corrected Decode usage'
-time: 2025-06-05T07:29:14.397730116Z
-custom:
-    Issue: "817"

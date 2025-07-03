@@ -1,5 +1,0 @@
-kind: fixed
-body: Fixed unsafe type assertions in provider data handling that could cause panics and misleading error messages
-time: 2025-06-05T15:12:06.705294178Z
-custom:
-    Issue: "841"

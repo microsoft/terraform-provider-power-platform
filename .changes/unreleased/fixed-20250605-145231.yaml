@@ -1,5 +1,0 @@
-kind: fixed
-body: Fixed type assertion safety issues in DTO conversions and data transformations to prevent runtime panics. Added proper error handling for type assertions in tenant_settings, environment_group_rule_set, dlp_policy, and data_record services. Improved UUID type equality method to support both value and pointer types.
-time: 2025-06-05T14:52:31.852045903Z
-custom:
-    Issue: "840"

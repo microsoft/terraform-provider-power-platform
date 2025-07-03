@@ -1,5 +1,0 @@
-kind: fixed
-body: Fixed missing return statements after error handling in three datasources to prevent potential panics and undefined behavior
-time: 2025-06-04T17:50:56.587490569Z
-custom:
-    Issue: "814"

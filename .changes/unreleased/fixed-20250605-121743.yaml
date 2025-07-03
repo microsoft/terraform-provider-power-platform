@@ -1,5 +1,0 @@
-kind: fixed
-body: 'Fix configuration and constants issues: CAE challenge detection strings, RX PowerApps Advisor API domain constants, and AuxiliaryTenantIDs type safety conversion'
-time: 2025-06-05T12:17:43.646455328Z
-custom:
-    Issue: "824"
