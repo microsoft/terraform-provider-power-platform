@@ -1,5 +1,0 @@
-kind: fixed
-body: Fixed infinite polling loop in environment wave UpdateFeature method by adding context deadline checking to respect timeout configuration
-time: 2025-06-05T09:29:58.402082712Z
-custom:
-    Issue: "818"

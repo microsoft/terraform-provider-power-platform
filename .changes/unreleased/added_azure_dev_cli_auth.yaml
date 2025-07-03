@@ -1,4 +1,0 @@
-kind: added
-body: Add support for Azure Developer CLI authentication via use_dev_cli provider configuration option and POWER_PLATFORM_USE_DEV_CLI environment variable
-custom:
-  Issue: 828

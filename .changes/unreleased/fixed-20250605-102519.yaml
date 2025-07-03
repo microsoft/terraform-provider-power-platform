@@ -1,5 +1,0 @@
-kind: fixed
-body: 'Fixed validation and modifiers issues: improved error handling in validators and plan modifiers, corrected error messages for SHA256 checksums, and enhanced diagnostic context'
-time: 2025-06-05T10:25:19.227038423Z
-custom:
-    Issue: "821"
