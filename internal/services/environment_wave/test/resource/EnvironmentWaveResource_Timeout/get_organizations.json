@@ -1,0 +1,11 @@
+[
+    {
+        "tenantId": "tenant-id",
+        "name": "Test Organization",
+        "id": "00000000-0000-0000-0000-000000000001",
+        "crmGeo": "EMEA",
+        "relationType": "Tenant",
+        "organizationType": 1,
+        "url": "https://test.crm.dynamics.com"
+    }
+]

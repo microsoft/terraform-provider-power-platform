@@ -240,7 +240,7 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 
 	var elements = []attr.Value{}
 	for _, record := range queryRespnse.Records {
-		columns, err := d.convertColumnsToState(record)
+		columns, err := d.convertColumnsToState(ctx, record)
 		if err != nil {
 			resp.Diagnostics.AddError("Failed to convert columns to state", err.Error())
 			return
@@ -265,7 +265,7 @@ func (d *DataRecordDataSource) Read(ctx context.Context, req datasource.ReadRequ
 	}
 }
 
-func (d *DataRecordDataSource) convertColumnsToState(columns map[string]any) (*basetypes.DynamicValue, error) {
+func (d *DataRecordDataSource) convertColumnsToState(ctx context.Context, columns map[string]any) (*basetypes.DynamicValue, error) {
 	if columns == nil {
 		return nil, nil
 	}
@@ -275,25 +275,32 @@ func (d *DataRecordDataSource) convertColumnsToState(columns map[string]any) (*b
 	for key, value := range columns {
 		switch value.(type) {
 		case bool:
-			caseBool(columns[key].(bool), attributes, attributeTypes, key)
+			caseBool(ctx, columns[key].(bool), attributes, attributeTypes, key)
 		case int64:
-			caseInt64(columns[key].(int64), attributes, attributeTypes, key)
+			caseInt64(ctx, columns[key].(int64), attributes, attributeTypes, key)
 		case float64:
-			caseFloat64(columns[key].(float64), attributes, attributeTypes, key)
+			caseFloat64(ctx, columns[key].(float64), attributes, attributeTypes, key)
 		case string:
-			caseString(columns[key].(string), attributes, attributeTypes, key)
+			caseString(ctx, columns[key].(string), attributes, attributeTypes, key)
 		case map[string]any:
-			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]any))
+			typ, val, _ := d.buildObjectValueFromX(ctx, columns[key].(map[string]any))
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
-			v, _ := types.ObjectValue(typ, val)
-			attributes[key] = v
+			objVal, _ := types.ObjectValue(typ, val)
+			attributes[key] = objVal
 			attributeTypes[key] = tupleElementType
 		case []any:
-			typeObj, valObj := d.buildExpandObject(columns[key].([]any))
+			typeObj, valObj := d.buildExpandObject(ctx, columns[key].([]any))
 			attributeTypes[key] = typeObj
 			attributes[key] = valObj
+		default:
+			// Handle unexpected types gracefully by skipping them
+			tflog.Debug(ctx, "Skipping unhandled type in convertColumnsToState", map[string]any{
+				"key":       key,
+				"valueType": fmt.Sprintf("%T", value),
+			})
+			continue
 		}
 	}
 
@@ -302,42 +309,49 @@ func (d *DataRecordDataSource) convertColumnsToState(columns map[string]any) (*b
 	return &result, nil
 }
 
-func (d *DataRecordDataSource) buildObjectValueFromX(columns map[string]any) (map[string]attr.Type, map[string]attr.Value, error) {
+func (d *DataRecordDataSource) buildObjectValueFromX(ctx context.Context, columns map[string]any) (map[string]attr.Type, map[string]attr.Value, error) {
 	knownObjectType := map[string]attr.Type{}
 	knownObjectValue := map[string]attr.Value{}
 
 	for key, value := range columns {
 		switch value.(type) {
 		case bool:
-			caseBool(columns[key].(bool), knownObjectValue, knownObjectType, key)
+			caseBool(ctx, columns[key].(bool), knownObjectValue, knownObjectType, key)
 		case int64:
-			caseInt64(columns[key].(int64), knownObjectValue, knownObjectType, key)
+			caseInt64(ctx, columns[key].(int64), knownObjectValue, knownObjectType, key)
 		case float64:
-			caseFloat64(columns[key].(float64), knownObjectValue, knownObjectType, key)
+			caseFloat64(ctx, columns[key].(float64), knownObjectValue, knownObjectType, key)
 		case string:
-			caseString(columns[key].(string), knownObjectValue, knownObjectType, key)
+			caseString(ctx, columns[key].(string), knownObjectValue, knownObjectType, key)
 		case map[string]any:
-			typ, val, _ := d.buildObjectValueFromX(columns[key].(map[string]any))
+			typ, val, _ := d.buildObjectValueFromX(ctx, columns[key].(map[string]any))
 			tupleElementType := types.ObjectType{
 				AttrTypes: typ,
 			}
-			v, _ := types.ObjectValue(typ, val)
-			knownObjectValue[key] = v
+			objVal, _ := types.ObjectValue(typ, val)
+			knownObjectValue[key] = objVal
 			knownObjectType[key] = tupleElementType
 		case []any:
-			typeObj, valObj := d.buildExpandObject(columns[key].([]any))
+			typeObj, valObj := d.buildExpandObject(ctx, columns[key].([]any))
 			knownObjectValue[key] = valObj
 			knownObjectType[key] = typeObj
+		default:
+			// Log unexpected types for debugging purposes
+			tflog.Debug(ctx, "Skipping unhandled type in buildObjectValueFromX", map[string]any{
+				"key":       key,
+				"valueType": fmt.Sprintf("%T", value),
+			})
+			continue
 		}
 	}
 	return knownObjectType, knownObjectValue, nil
 }
 
-func (d *DataRecordDataSource) buildExpandObject(items []any) (basetypes.TupleType, basetypes.TupleValue) {
+func (d *DataRecordDataSource) buildExpandObject(ctx context.Context, items []any) (basetypes.TupleType, basetypes.TupleValue) {
 	var listTypes []attr.Type
 	var listValues []attr.Value
 	for _, item := range items {
-		typ, val, _ := d.buildObjectValueFromX(item.(map[string]any))
+		typ, val, _ := d.buildObjectValueFromX(ctx, item.(map[string]any))
 		tupleElementType := types.ObjectType{
 			AttrTypes: typ,
 		}

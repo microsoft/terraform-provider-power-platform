@@ -101,8 +101,16 @@ func (d *DataSource) Configure(ctx context.Context, req datasource.ConfigureRequ
 	providerClient, ok := req.ProviderData.(*api.ProviderClient)
 	if !ok {
 		resp.Diagnostics.AddError(
-			"Unexpected DataSource Configure Type",
+			"Unexpected ProviderData type",
 			fmt.Sprintf("Expected *api.ProviderClient, got: %T. Please report this issue to the provider developers.", req.ProviderData),
+		)
+		return
+	}
+	clientApi := providerClient.Api
+	if clientApi == nil {
+		resp.Diagnostics.AddError(
+			"Unexpected nil Api in ProviderClient",
+			"The 'Api' field on ProviderClient was nil.",
 		)
 		return
 	}

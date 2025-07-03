@@ -124,7 +124,7 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 							MarkdownDescription: "Gives you the ability to create environments that are updated first. This allows you to experience and validate scenarios that are important to you before any updates reach your business-critical applications. See [more](https://learn.microsoft.com/en-us/power-platform/admin/early-release).",
 							Computed:            true,
 						},
-						"billing_policy_id": &schema.StringAttribute{
+						"billing_policy_id": schema.StringAttribute{
 							MarkdownDescription: "Billing policy id (guid) for pay-as-you-go environments using Azure subscription billing",
 							Computed:            true,
 						},
@@ -203,7 +203,7 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 									MarkdownDescription: "URL of the linked D365 app",
 									Computed:            true,
 								},
-								"currency_code": &schema.StringAttribute{
+								"currency_code": schema.StringAttribute{
 									MarkdownDescription: "Currency name (EUR, USE, GBP etc.)",
 									Computed:            true,
 								},
@@ -268,8 +268,13 @@ func (d *EnvironmentsDataSource) Read(ctx context.Context, req datasource.ReadRe
 		defaultCurrency, err := d.EnvironmentClient.GetDefaultCurrencyForEnvironment(ctx, env.Name)
 		if err != nil {
 			if !errors.Is(err, customerrors.ErrEnvironmentUrlNotFound) {
-				resp.Diagnostics.AddWarning(fmt.Sprintf("Error when reading default currency for environment %s", env.Name), err.Error())
+				resp.Diagnostics.AddError(
+					fmt.Sprintf("Unexpected error when reading default currency for environment %s", env.Name),
+					err.Error(),
+				)
+				return
 			}
+			// Non-critical error (environment URL not found), just skip currency.
 		} else {
 			currencyCode = defaultCurrency.IsoCurrencyCode
 		}

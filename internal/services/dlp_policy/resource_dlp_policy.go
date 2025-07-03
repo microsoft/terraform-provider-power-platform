@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -339,12 +340,24 @@ func (r *DataLossPreventionPolicyResource) Create(ctx context.Context, req resou
 		CustomConnectorUrlPatternsDefinition: []dlpConnectorUrlPatternsDefinitionDto{},
 	}
 
-	policyToCreate.Environments = convertToDlpEnvironment(ctx, plan.Environments)
-	policyToCreate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	environments, err := convertToDlpEnvironment(ctx, plan.Environments)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert environments", err.Error())
+		return
+	}
+	policyToCreate.Environments = environments
+	policyToCreate.CustomConnectorUrlPatternsDefinition, err = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert custom connector URL patterns", err.Error())
+		return
+	}
+
 	policyToCreate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
-	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors))
-	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.NonBusinessConfidentialConnectors))
-	policyToCreate.ConnectorGroups = append(policyToCreate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors))
+
+	err = r.buildConnectorGroups(ctx, resp.Diagnostics, &policyToCreate.ConnectorGroups, plan)
+	if err != nil {
+		return
+	}
 
 	// Check for conversion errors before proceeding
 	if resp.Diagnostics.HasError() {
@@ -405,12 +418,24 @@ func (r *DataLossPreventionPolicyResource) Update(ctx context.Context, req resou
 		ConnectorGroups:                 []dlpConnectorGroupsModelDto{},
 	}
 
-	policyToUpdate.Environments = convertToDlpEnvironment(ctx, plan.Environments)
-	policyToUpdate.CustomConnectorUrlPatternsDefinition = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	environments, err := convertToDlpEnvironment(ctx, plan.Environments)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert environments", err.Error())
+		return
+	}
+	policyToUpdate.Environments = environments
+	policyToUpdate.CustomConnectorUrlPatternsDefinition, err = convertToDlpCustomConnectorUrlPatternsDefinition(ctx, resp.Diagnostics, plan.CustomConnectorsPatterns)
+	if err != nil {
+		resp.Diagnostics.AddError("Failed to convert custom connector URL patterns", err.Error())
+		return
+	}
+
 	policyToUpdate.ConnectorGroups = make([]dlpConnectorGroupsModelDto, 0)
-	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Confidential", plan.BusinessGeneralConnectors))
-	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "General", plan.NonBusinessConfidentialConnectors))
-	policyToUpdate.ConnectorGroups = append(policyToUpdate.ConnectorGroups, convertToDlpConnectorGroup(ctx, resp.Diagnostics, "Blocked", plan.BlockedConnectors))
+
+	err = r.buildConnectorGroups(ctx, resp.Diagnostics, &policyToUpdate.ConnectorGroups, plan)
+	if err != nil {
+		return
+	}
 
 	// Check for conversion errors before proceeding
 	if resp.Diagnostics.HasError() {
@@ -463,6 +488,36 @@ func (r *DataLossPreventionPolicyResource) Delete(ctx context.Context, req resou
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
+}
+
+// buildConnectorGroups is a helper function that builds connector groups for DLP policies.
+// It takes the target slice and a set of connector group configurations and processes them.
+func (r *DataLossPreventionPolicyResource) buildConnectorGroups(
+	ctx context.Context,
+	diagnostics diag.Diagnostics,
+	connectorGroups *[]dlpConnectorGroupsModelDto,
+	plan *dataLossPreventionPolicyResourceModel,
+) error {
+	// Define the connector group configurations
+	configs := []struct {
+		classification string
+		connectors     types.Set
+	}{
+		{"Confidential", plan.BusinessGeneralConnectors},
+		{"General", plan.NonBusinessConfidentialConnectors},
+		{"Blocked", plan.BlockedConnectors},
+	}
+
+	// Process each configuration
+	for _, config := range configs {
+		connectorGroup, err := convertToDlpConnectorGroup(ctx, diagnostics, config.classification, config.connectors)
+		if err != nil {
+			return err
+		}
+		*connectorGroups = append(*connectorGroups, connectorGroup)
+	}
+
+	return nil
 }
 
 func (r *DataLossPreventionPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
