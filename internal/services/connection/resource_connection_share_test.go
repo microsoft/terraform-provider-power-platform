@@ -15,7 +15,6 @@ import (
 
 func TestAccConnectionsShareResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
-
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azuread": {
@@ -78,15 +77,13 @@ func TestAccConnectionsShareResource_Validate_Create(t *testing.T) {
 					}
 				}
 
-				resource "powerplatform_connection" "azure_openai_connection" {
+				resource "powerplatform_connection" "azure_ai_search_connection" {
 					environment_id = powerplatform_environment.env.id
-					name           = "shared_azureopenai"
-					display_name   = "OpenAI Connection ` + mocks.TestName() + `"
+					name           = "shared_azureaisearch"
+					display_name   = "Azure AI Search Connection ` + mocks.TestName() + `"
 					connection_parameters = jsonencode({
-						"azureOpenAIResourceName" : "aaa",
-						"azureOpenAIApiKey" : "bbb"
-						"azureSearchEndpointUrl" : "ccc",
-						"azureSearchApiKey" : "ddd"
+						ConnectionEndpoint = "aaa"
+						AdminKey           = "bbb"
 					})
 
 					lifecycle {
@@ -98,8 +95,8 @@ func TestAccConnectionsShareResource_Validate_Create(t *testing.T) {
 
 				resource "powerplatform_connection_share" "share_with_user1" {
 					environment_id = powerplatform_environment.env.id
-					connector_name = powerplatform_connection.azure_openai_connection.name
-					connection_id  = powerplatform_connection.azure_openai_connection.id
+					connector_name = powerplatform_connection.azure_ai_search_connection.name
+					connection_id  = powerplatform_connection.azure_ai_search_connection.id
 					role_name      = "CanEdit"
 					principal = {
 						entra_object_id = azuread_user.test_user.object_id
@@ -107,7 +104,7 @@ func TestAccConnectionsShareResource_Validate_Create(t *testing.T) {
 				}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "connector_name", "shared_azureopenai"),
+					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "connector_name", "shared_azureaisearch"),
 					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "role_name", "CanEdit"),
 					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "principal.display_name", mocks.TestName()),
 				),

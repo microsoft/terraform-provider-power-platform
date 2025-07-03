@@ -45,7 +45,9 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 	ctx, exitContext := helpers.EnterRequestContext(ctx, d.TypeInfo, req)
 	defer exitContext()
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Fetches the client configuration for the given tenant.",
+		MarkdownDescription: "Fetches the client configuration for the given tenant.\n\n" +
+			"**Note:** This resource is available as **preview**\n\n" +
+			"**Known Limitations:** This resource is not supported for with service principal authentication.",
 		Attributes: map[string]schema.Attribute{
 			"tenant_id": schema.StringAttribute{
 				MarkdownDescription: "Tenant ID of the application.",
