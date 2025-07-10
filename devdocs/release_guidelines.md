@@ -9,7 +9,6 @@ Releasing a new version involves a sequence of steps that tie together Changie, 
 1. **Work on new branch**
 
     ```bash
-    git checkout -b releases/vNext
     git switch -c release/vNext 
     ```
 
