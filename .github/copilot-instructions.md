@@ -299,4 +299,4 @@ Use the Terraform plugin logger (`tflog`) for logging within resource implementa
   - `<description>` is a concise summary of what was changed or fixed. Follow the commit message style described in `copilot-commit-message-instructions.md`.
   - `<issue_number>` is the related issue or PR number. If unknown, use `0`.
 
-- Ensure your changelog entry is clear, descriptive, and follows the project's conventions.
+- Ensure your changelog entry is clear, short, descriptive, and follows the project's conventions.
