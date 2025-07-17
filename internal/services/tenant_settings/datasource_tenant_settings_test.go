@@ -31,7 +31,7 @@ func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "disable_support_tickets_visible_by_all_users", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "disable_survey_feedback", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "disable_trial_environment_creation_by_non_admin_users", regexp.MustCompile(helpers.BooleanRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.catalog_settings.power_catalog_audience_setting", regexp.MustCompile("^(All|None)$")),
+					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.catalog_settings.power_catalog_audience_setting", regexp.MustCompile("^(All|SpecificAdmins)$")),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.champions.disable_champions_invitation_reachout", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.champions.disable_skills_match_invitation_reachout", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.environments.disable_preferred_data_location_for_teams_environment", regexp.MustCompile(helpers.BooleanRegex)),
