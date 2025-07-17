@@ -315,7 +315,7 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								MarkdownDescription: "Power Catalog Audience Setting",
 								Optional:            true,
 								Validators: []validator.String{
-									stringvalidator.OneOf("SpecificAdmin", "All"),
+									stringvalidator.OneOf("SpecificAdmins", "All"),
 								},
 							},
 						},

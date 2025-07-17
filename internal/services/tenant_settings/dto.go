@@ -176,6 +176,9 @@ func convertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 	tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers = helpers.BoolPointer(tenantSettings.DisableSupportTicketsVisibleByAllUsers)
 
 	if !tenantSettings.PowerPlatform.IsNull() && !tenantSettings.PowerPlatform.IsUnknown() {
+		if tenantSettingsDto.PowerPlatform == nil {
+			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
+		}
 		powerPlatformAttributes := tenantSettings.PowerPlatform.Attributes()
 		err := convertSearchModel(ctx, powerPlatformAttributes, &tenantSettingsDto)
 		if err != nil {
