@@ -280,3 +280,23 @@ Use the Terraform plugin logger (`tflog`) for logging within resource implementa
 - **Test Coverage:** Aim for **at least 80%** code coverage for unit tests on new code. `make unittest` will return a coverage score by service and overall. Focus on the service that is currently being worked on when adding tests to improve coverage.
 
 - **Examples and Documentation:** Whenever a new resource or data source is added, provide an example configuration under the `/examples` directory to demonstrate usage. This helps both in documentation and in manually verifying the resource behavior. After implementing and testing, run `make userdocs` to update the documentation in `/docs` from your schema comments.
+
+## Tools
+
+### Changelog Management with Changie
+
+- Use [Changie](https://changie.dev/) to create a single changelog entry for each pull request or change.
+- Do **not** run the changie tool multiple times per change.
+- Look at the git commit history to determine the kind of change being made and what description to use to describe the change.
+- To create a changelog entry, run the following command from the repository root:
+
+  ```bash
+  changie new --kind <kind_key> --body "<description>" --custom Issue=<issue_number>
+  ```
+
+  Where:
+  - `<kind_key>` is one of: `breaking`, `changed`, `deprecated`, `removed`, `fixed`, `security`, `documentation`
+  - `<description>` is a concise summary of what was changed or fixed. Follow the commit message style described in `copilot-commit-message-instructions.md`.
+  - `<issue_number>` is the related issue or PR number. If unknown, use `0`.
+
+- Ensure your changelog entry is clear, short, descriptive, and follows the project's conventions.
