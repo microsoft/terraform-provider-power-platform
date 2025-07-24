@@ -1,0 +1,5 @@
+kind: fixed
+body: Fixed provider configuration and dependency errors in powerplatform_enterprise_policy example
+time: 2025-07-24T18:35:07.514075242Z
+custom:
+    Issue: "718"
