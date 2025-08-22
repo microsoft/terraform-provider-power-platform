@@ -135,8 +135,8 @@ github.com/hashicorp/terraform-plugin-log v0.9.0 h1:i7hOA+vdAItN1/7UrfBqBwvYPQ9T
 github.com/hashicorp/terraform-plugin-log v0.9.0/go.mod h1:rKL8egZQ/eXSyDqzLUuwUYLVdlYeamldAHSxjUFADow=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0 h1:NFPMacTrY/IdcIcnUB+7hsore1ZaRWU9cnB6jFoBnIM=
 github.com/hashicorp/terraform-plugin-sdk/v2 v2.37.0/go.mod h1:QYmYnLfsosrxjCnGY1p9c7Zj6n9thnEE+7RObeYs3fA=
-github.com/hashicorp/terraform-plugin-testing v1.13.2 h1:mSotG4Odl020vRjIenA3rggwo6Kg6XCKIwtRhYgp+/M=
-github.com/hashicorp/terraform-plugin-testing v1.13.2/go.mod h1:WHQ9FDdiLoneey2/QHpGM/6SAYf4A7AZazVg7230pLE=
+github.com/hashicorp/terraform-plugin-testing v1.13.3 h1:QLi/khB8Z0a5L54AfPrHukFpnwsGL8cwwswj4RZduCo=
+github.com/hashicorp/terraform-plugin-testing v1.13.3/go.mod h1:WHQ9FDdiLoneey2/QHpGM/6SAYf4A7AZazVg7230pLE=
 github.com/hashicorp/terraform-registry-address v0.2.5 h1:2GTftHqmUhVOeuu9CW3kwDkRe4pcBDq0uuK5VJngU1M=
 github.com/hashicorp/terraform-registry-address v0.2.5/go.mod h1:PpzXWINwB5kuVS5CA7m1+eO2f1jKb5ZDIxrOPfpnGkg=
 github.com/hashicorp/terraform-svchost v0.1.1 h1:EZZimZ1GxdqFRinZ1tpJwVxxt49xc/S52uzrw4x0jKQ=
@@ -148,8 +148,8 @@ github.com/huandu/xstrings v1.3.3/go.mod h1:y5/lhBue+AyNmUVz9RLU9xbLR0o4KIIExikq
 github.com/imdario/mergo v0.3.11/go.mod h1:jmQim1M+e3UYxmgPu/WyfjB3N3VflVyUjjjwH0dnCYA=
 github.com/imdario/mergo v0.3.15 h1:M8XP7IuFNsqUx6VPK2P9OSmsYsI/YFaGil0uD21V3dM=
 github.com/imdario/mergo v0.3.15/go.mod h1:WBLT9ZmE3lPoWsEzCh9LPo3TiwVN+ZKEjmz+hD27ysY=
-github.com/jarcoal/httpmock v1.4.0 h1:BvhqnH0JAYbNudL2GMJKgOHe2CtKlzJ/5rWKyp+hc2k=
-github.com/jarcoal/httpmock v1.4.0/go.mod h1:ftW1xULwo+j0R0JJkJIIi7UKigZUXCLLanykgjwBXL0=
+github.com/jarcoal/httpmock v1.4.1 h1:0Ju+VCFuARfFlhVXFc2HxlcQkfB+Xq12/EotHko+x2A=
+github.com/jarcoal/httpmock v1.4.1/go.mod h1:ftW1xULwo+j0R0JJkJIIi7UKigZUXCLLanykgjwBXL0=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jhump/protoreflect v1.15.1 h1:HUMERORf3I3ZdX05WaQ6MIpd/NJ434hTp5YiKgfCL6c=
