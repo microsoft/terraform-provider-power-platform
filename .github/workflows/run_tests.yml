@@ -10,7 +10,7 @@ on:
      branches:
        - main
 
-       
+
 concurrency:
   group: acceptancetests
   cancel-in-progress: false
@@ -142,7 +142,7 @@ jobs:
       if: success() || failure()
       shell: pwsh
       run: |
-        dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version 1.47.1
+        dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version 1.42.1
         pac auth create --githubFederated --tenant ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }} --applicationId ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
         $environmentsList = (pac admin list --name "Test" --json | ConvertFrom-Json)
         $environmentsList | ForEach-Object -Parallel {
