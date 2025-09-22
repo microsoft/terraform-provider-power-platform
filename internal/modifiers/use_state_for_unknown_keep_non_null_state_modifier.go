@@ -32,7 +32,7 @@ func (d *useStateForUnknownKeepNonNullStateModifier) MarkdownDescription(ctx con
 }
 
 func (d *useStateForUnknownKeepNonNullStateModifier) PlanModifyString(ctx context.Context, req planmodifier.StringRequest, resp *planmodifier.StringResponse) {
-	// Do nothing if there the state value is null.
+	// Do nothing if the state value is null.
 	if req.StateValue.IsNull() {
 		return
 	}
