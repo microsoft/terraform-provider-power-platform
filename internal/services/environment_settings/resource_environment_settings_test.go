@@ -63,6 +63,13 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *t
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_ip_range_for_firewall.#", "0"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_service_tags_for_firewall.#", "0"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.#", "0"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_access_to_session_transcripts_for_copilot_studio", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_ai_prompts", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_studio_cross_geo_share_data_with_viva_insights", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_studio_share_data_with_viva_insights", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_preview_and_experimental_ai_models", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_transcript_recording_for_copilot_studio", "true"),
+					resource.TestCheckNoResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_powerapps_maker_bot"),
 				),
 			},
 		},
@@ -108,6 +115,13 @@ func TestAccTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *te
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_service_tags_for_firewall.#", "0"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.#", "0"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.enable_ip_based_cookie_binding", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_access_to_session_transcripts_for_copilot_studio", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_ai_prompts", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_studio_cross_geo_share_data_with_viva_insights", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_studio_share_data_with_viva_insights", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_preview_and_experimental_ai_models", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_transcript_recording_for_copilot_studio", "true"),
+					resource.TestCheckNoResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_powerapps_maker_bot"),
 				),
 			},
 		},
@@ -115,6 +129,7 @@ func TestAccTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *te
 }
 
 func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
+	t.Setenv("TF_ACC", "1")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -149,13 +164,13 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					maker_onboarding_url            = "https://www.microsoft.com"
 				}
 
-				resource "time_sleep" "wait_60_seconds" {
+				resource "time_sleep" "wait_120_seconds" {
 					depends_on = [powerplatform_managed_environment.managed_environment]
-					create_duration = "60s"
+					create_duration = "120s"
 				}
 			
 				resource "powerplatform_environment_settings" "settings" {
-					depends_on = [time_sleep.wait_60_seconds]
+					depends_on = [time_sleep.wait_120_seconds]
 
 					environment_id                         = powerplatform_environment.example_environment_settings.id
 					audit_and_logs = {
@@ -177,6 +192,13 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						}
 						features = {
 						  power_apps_component_framework_for_canvas_apps = true
+						  enable_access_to_session_transcripts_for_copilot_studio = true
+						  enable_transcript_recording_for_copilot_studio = true
+						  enable_ai_prompts = true
+						  enable_copilot_studio_share_data_with_viva_insights = true
+						  enable_copilot_studio_cross_geo_share_data_with_viva_insights = true
+						  enable_preview_and_experimental_ai_models = true
+						  enable_powerapps_maker_bot = true
 						}
 						security = {
 						  allow_application_user_access               = true
@@ -214,6 +236,13 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.0", "10.10.1.1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.1", "192.168.1.1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.enable_ip_based_cookie_binding", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_access_to_session_transcripts_for_copilot_studio", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_ai_prompts", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_studio_cross_geo_share_data_with_viva_insights", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_studio_share_data_with_viva_insights", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_preview_and_experimental_ai_models", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_transcript_recording_for_copilot_studio", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_powerapps_maker_bot", "true"),
 				),
 			},
 		},
@@ -313,6 +342,12 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						}
 						features = {
 						  power_apps_component_framework_for_canvas_apps = false
+						  enable_access_to_session_transcripts_for_copilot_studio = true
+						  enable_transcript_recording_for_copilot_studio = true
+						  enable_ai_prompts = true
+						  enable_copilot_studio_share_data_with_viva_insights = true
+						  enable_copilot_studio_cross_geo_share_data_with_viva_insights = false
+						  enable_preview_and_experimental_ai_models = true
 						}
 						security = {
 						  allow_application_user_access               = true

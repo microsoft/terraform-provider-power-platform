@@ -8,15 +8,23 @@ type environmentSettingsValueDto struct {
 }
 
 type environmentSettingsDto struct {
-	MaxUploadFileSize                        *int64  `json:"maxuploadfilesize,omitempty"`
-	PluginTraceLogSetting                    *int64  `json:"plugintracelogsetting,omitempty"`
-	IsAuditEnabled                           *bool   `json:"isauditenabled,omitempty"`
-	IsUserAccessAuditEnabled                 *bool   `json:"isuseraccessauditenabled,omitempty"`
-	IsReadAuditEnabled                       *bool   `json:"isreadauditenabled,omitempty"`
-	AuditRetentionPeriodV2                   *int32  `json:"auditretentionperiodv2,omitempty"`
-	BoundDashboardDefaultCardExpanded        *bool   `json:"bounddashboarddefaultcardexpanded,omitempty"`
-	OrganizationId                           *string `json:"organizationid,omitempty"`
-	PowerAppsComponentFrameworkForCanvasApps *bool   `json:"iscustomcontrolsincanvasappsenabled,omitempty"`
+	MaxUploadFileSize                                    *int64  `json:"maxuploadfilesize,omitempty"`
+	PluginTraceLogSetting                                *int64  `json:"plugintracelogsetting,omitempty"`
+	IsAuditEnabled                                       *bool   `json:"isauditenabled,omitempty"`
+	IsUserAccessAuditEnabled                             *bool   `json:"isuseraccessauditenabled,omitempty"`
+	IsReadAuditEnabled                                   *bool   `json:"isreadauditenabled,omitempty"`
+	AuditRetentionPeriodV2                               *int32  `json:"auditretentionperiodv2,omitempty"`
+	BoundDashboardDefaultCardExpanded                    *bool   `json:"bounddashboarddefaultcardexpanded,omitempty"`
+	OrganizationId                                       *string `json:"organizationid,omitempty"`
+	PowerAppsComponentFrameworkForCanvasApps             *bool   `json:"iscustomcontrolsincanvasappsenabled,omitempty"`
+	
+	PowerAppsMakerBotEnabled                             *bool   `json:"powerappsmakerbotenabled,omitempty"`
+	BlockAccessToSessionTranscriptsForCopilotStudio      *bool   `json:"blockaccesstosessiontranscriptsforcopilotstudio,omitempty"`
+	BlockTranscriptRecordingForCopilotStudio             *bool   `json:"blocktranscriptrecordingforcopilotstudio,omitempty"`
+	EnableCopilotStudioShareDataWithVivaInsights         *bool   `json:"enablecopilotstudiosharedatawithvivainsights,omitempty"`
+	EnableCopilotStudioCrossGeoShareDataWithVivaInsights *bool   `json:"enablecopilotstudiocrossgeosharedatawithvivainsights,omitempty"`
+	PaiPreviewScenarioEnabled                            *bool   `json:"paipreviewscenarioenabled,omitempty"`
+	AiPromptsEnabled                                     *bool   `json:"aipromptsenabled,omitempty"`
 
 	EnableIpBasedCookieBinding           *bool   `json:"enableipbasedcookiebinding,omitempty"`
 	EnableIpBasedFirewallRule            *bool   `json:"enableipbasedfirewallrule,omitempty"`

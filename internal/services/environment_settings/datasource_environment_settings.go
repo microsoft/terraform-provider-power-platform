@@ -189,6 +189,34 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 								MarkdownDescription: "Power Apps component framework for canvas apps",
 								Optional:            true,
 							},
+							"enable_powerapps_maker_bot": schema.BoolAttribute{
+								MarkdownDescription: "Enable new AI-powered Copilot features for people who make apps. [Learn more](https://go.microsoft.com/fwlink/?linkid=2223555)",
+								Optional:            true,
+							},
+							"enable_access_to_session_transcripts_for_copilot_studio": schema.BoolAttribute{
+								MarkdownDescription: "Allow agent access owners and editors to see session transcripts from conversations interactions in their agents.",
+								Optional:            true,
+							},
+							"enable_transcript_recording_for_copilot_studio": schema.BoolAttribute{
+								MarkdownDescription: "Allow conversation transcripts and their associated metadata to be saved in Dataverse (required for enhanced reporting).",
+								Optional:            true,
+							},
+							"enable_copilot_studio_share_data_with_viva_insights": schema.BoolAttribute{
+								MarkdownDescription: "Allow Copilot Studio to share data with Viva Insights.",
+								Optional:            true,
+							},
+							"enable_copilot_studio_cross_geo_share_data_with_viva_insights": schema.BoolAttribute{
+								MarkdownDescription: "Allow cross-geo sharing of aggregated analytics data if your tenant preferred data location for Viva Insights is different from the location of your Copilot Studio environment.",
+								Optional:            true,
+							},
+							"enable_preview_and_experimental_ai_models": schema.BoolAttribute{
+								MarkdownDescription: "Let people use AI models that are experimental or in preview to make agents, prompts, apps, flow and more in Copilot Studio. [Learn more](https://go.microsoft.com/fwlink/?linkid=2331400)",
+								Optional:            true,
+							},
+							"enable_ai_prompts": schema.BoolAttribute{
+								MarkdownDescription: "Enable the AI prompts feature in Power Platform and Copilot Studio. [Learn more](https://go.microsoft.com/fwlink/?linkid=2283738)",
+								Optional:            true,
+							},
 						},
 					},
 					"security": schema.SingleNestedAttribute{

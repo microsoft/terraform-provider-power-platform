@@ -74,7 +74,14 @@ type BehaviorSettingsSourceModel struct {
 }
 
 type FeaturesSourceModel struct {
-	PowerAppsComponentFrameworkForCanvasApps types.Bool `tfsdk:"power_apps_component_framework_for_canvas_apps"`
+	PowerAppsComponentFrameworkForCanvasApps             types.Bool `tfsdk:"power_apps_component_framework_for_canvas_apps"`
+	PowerAppsMakerBotEnabled                             types.Bool `tfsdk:"enable_powerapps_maker_bot"`
+	EnableAccessToSessionTranscriptsForCopilotStudio     types.Bool `tfsdk:"enable_access_to_session_transcripts_for_copilot_studio"`
+	EnableTranscriptRecordingForCopilotStudio            types.Bool `tfsdk:"enable_transcript_recording_for_copilot_studio"`
+	EnableCopilotStudioShareDataWithVivaInsights         types.Bool `tfsdk:"enable_copilot_studio_share_data_with_viva_insights"`
+	EnableCopilotStudioCrossGeoShareDataWithVivaInsights types.Bool `tfsdk:"enable_copilot_studio_cross_geo_share_data_with_viva_insights"`
+	EnablePreviewAndExperimentalAIModels                 types.Bool `tfsdk:"enable_preview_and_experimental_ai_models"`
+	AiPromptsEnabled                                     types.Bool `tfsdk:"enable_ai_prompts"`
 }
 
 type SecuritySourceModel struct {
@@ -179,7 +186,7 @@ func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSett
 	if behaviorSettings != nil && helpers.IsKnown(behaviorSettings) {
 		var behaviorSettingsSourceModel BehaviorSettingsSourceModel
 		if diags := behaviorSettings.(basetypes.ObjectValue).As(ctx, &behaviorSettingsSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
-			return fmt.Errorf("failed to convert audit settings: %v", diags)
+			return fmt.Errorf("failed to convert behavior settings: %v", diags)
 		}
 
 		if helpers.IsKnown(behaviorSettingsSourceModel.ShowDashboardCardsInExpandedState) {
@@ -194,11 +201,44 @@ func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSetti
 	if features != nil && helpers.IsKnown(features) {
 		var featuresSourceModel FeaturesSourceModel
 		if diags := features.(basetypes.ObjectValue).As(ctx, &featuresSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
-			return fmt.Errorf("failed to convert audit settings: %v", diags)
+			return fmt.Errorf("failed to convert feature settings: %v", diags)
 		}
 
 		if helpers.IsKnown(featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps) {
 			environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps = featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.ValueBoolPointer()
+		}
+		if helpers.IsKnown(featuresSourceModel.PowerAppsMakerBotEnabled) {
+			environmentSettingsDto.PowerAppsMakerBotEnabled = featuresSourceModel.PowerAppsMakerBotEnabled.ValueBoolPointer()
+		}
+		if helpers.IsKnown(featuresSourceModel.EnableAccessToSessionTranscriptsForCopilotStudio) {
+			val := featuresSourceModel.EnableAccessToSessionTranscriptsForCopilotStudio.ValueBoolPointer()
+			if val != nil {
+				negated := !(*val)
+				environmentSettingsDto.BlockAccessToSessionTranscriptsForCopilotStudio = &negated
+			} else {
+				environmentSettingsDto.BlockAccessToSessionTranscriptsForCopilotStudio = nil
+			}
+		}
+		if helpers.IsKnown(featuresSourceModel.EnableTranscriptRecordingForCopilotStudio) {
+			val := featuresSourceModel.EnableTranscriptRecordingForCopilotStudio.ValueBoolPointer()
+			if val != nil {
+				negated := !(*val)
+				environmentSettingsDto.BlockTranscriptRecordingForCopilotStudio = &negated
+			} else {
+				environmentSettingsDto.BlockTranscriptRecordingForCopilotStudio = nil
+			}
+		}
+		if helpers.IsKnown(featuresSourceModel.EnableCopilotStudioShareDataWithVivaInsights) {
+			environmentSettingsDto.EnableCopilotStudioShareDataWithVivaInsights = featuresSourceModel.EnableCopilotStudioShareDataWithVivaInsights.ValueBoolPointer()
+		}
+		if helpers.IsKnown(featuresSourceModel.EnableCopilotStudioCrossGeoShareDataWithVivaInsights) {
+			environmentSettingsDto.EnableCopilotStudioCrossGeoShareDataWithVivaInsights = featuresSourceModel.EnableCopilotStudioCrossGeoShareDataWithVivaInsights.ValueBoolPointer()
+		}
+		if helpers.IsKnown(featuresSourceModel.EnablePreviewAndExperimentalAIModels) {
+			environmentSettingsDto.PaiPreviewScenarioEnabled = featuresSourceModel.EnablePreviewAndExperimentalAIModels.ValueBoolPointer()
+		}
+		if helpers.IsKnown(featuresSourceModel.AiPromptsEnabled) {
+			environmentSettingsDto.AiPromptsEnabled = featuresSourceModel.AiPromptsEnabled.ValueBoolPointer()
 		}
 	}
 	return nil
@@ -209,7 +249,7 @@ func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSett
 	if security != nil && helpers.IsKnown(security) {
 		var securitySourceModel SecuritySourceModel
 		if diags := security.(basetypes.ObjectValue).As(ctx, &securitySourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
-			return fmt.Errorf("failed to convert audit settings: %v", diags)
+			return fmt.Errorf("failed to convert security settings: %v", diags)
 		}
 
 		if helpers.IsKnown(securitySourceModel.EnableIpBasedCookieBinding) {
@@ -306,7 +346,14 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 	}
 
 	attrFeaturesObject := map[string]attr.Type{
-		"power_apps_component_framework_for_canvas_apps": types.BoolType,
+		"power_apps_component_framework_for_canvas_apps":                types.BoolType,
+		"enable_powerapps_maker_bot":                                    types.BoolType,
+		"enable_access_to_session_transcripts_for_copilot_studio":       types.BoolType,
+		"enable_transcript_recording_for_copilot_studio":                types.BoolType,
+		"enable_copilot_studio_share_data_with_viva_insights":           types.BoolType,
+		"enable_copilot_studio_cross_geo_share_data_with_viva_insights": types.BoolType,
+		"enable_preview_and_experimental_ai_models":                     types.BoolType,
+		"enable_ai_prompts":                                             types.BoolType,
 	}
 
 	attrTypesSecurityObject := map[string]attr.Type{
@@ -352,7 +399,14 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 			"show_dashboard_cards_in_expanded_state": types.BoolValue(*environmentSettingsDto.BoundDashboardDefaultCardExpanded),
 		}),
 		"features": types.ObjectValueMust(attrFeaturesObject, map[string]attr.Value{
-			"power_apps_component_framework_for_canvas_apps": types.BoolValue(*environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps),
+			"power_apps_component_framework_for_canvas_apps":                types.BoolValue(*environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps),
+			"enable_powerapps_maker_bot":                                    types.BoolPointerValue(environmentSettingsDto.PowerAppsMakerBotEnabled),
+			"enable_access_to_session_transcripts_for_copilot_studio":       types.BoolValue(!*environmentSettingsDto.BlockAccessToSessionTranscriptsForCopilotStudio),
+			"enable_transcript_recording_for_copilot_studio":                types.BoolValue(!*environmentSettingsDto.BlockTranscriptRecordingForCopilotStudio),
+			"enable_copilot_studio_share_data_with_viva_insights":           types.BoolValue(*environmentSettingsDto.EnableCopilotStudioShareDataWithVivaInsights),
+			"enable_copilot_studio_cross_geo_share_data_with_viva_insights": types.BoolValue(*environmentSettingsDto.EnableCopilotStudioCrossGeoShareDataWithVivaInsights),
+			"enable_preview_and_experimental_ai_models":                     types.BoolValue(*environmentSettingsDto.PaiPreviewScenarioEnabled),
+			"enable_ai_prompts":                                             types.BoolValue(*environmentSettingsDto.AiPromptsEnabled),
 		}),
 		"security": types.ObjectValueMust(attrTypesSecurityObject, map[string]attr.Value{
 			"enable_ip_based_cookie_binding":              types.BoolValue(*environmentSettingsDto.EnableIpBasedCookieBinding),
