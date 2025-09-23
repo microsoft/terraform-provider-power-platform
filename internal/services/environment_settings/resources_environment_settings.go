@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
@@ -36,6 +37,7 @@ import (
 
 var _ resource.Resource = &EnvironmentSettingsResource{}
 var _ resource.ResourceWithImportState = &EnvironmentSettingsResource{}
+var _ resource.ResourceWithValidateConfig = &EnvironmentSettingsResource{}
 
 func NewEnvironmentSettingsResource() resource.Resource {
 	return &EnvironmentSettingsResource{
@@ -343,6 +345,45 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 				},
 			},
 		},
+	}
+}
+
+func (r *EnvironmentSettingsResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config EnvironmentSettingsResourceModel
+
+	if resp.Diagnostics.Append(req.Config.Get(ctx, &config)...); resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.Product.IsNull() || config.Product.IsUnknown() {
+		return
+	}
+
+	productObj := config.Product.Attributes()["features"]
+	if productObj.IsNull() || productObj.IsUnknown() {
+		return
+	}
+
+	var featuresModel FeaturesSourceModel
+	if diags := productObj.(basetypes.ObjectValue).As(ctx, &featuresModel, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	}); diags.HasError() {
+		return
+	}
+
+	vivaInsightsEnabled := featuresModel.EnableCopilotStudioShareDataWithVivaInsights
+	vivaInsightsCrossGeoEnabled := featuresModel.EnableCopilotStudioCrossGeoShareDataWithVivaInsights
+
+	if !vivaInsightsEnabled.IsNull() && !vivaInsightsEnabled.IsUnknown() &&
+		!vivaInsightsCrossGeoEnabled.IsNull() && !vivaInsightsCrossGeoEnabled.IsUnknown() {
+		if !vivaInsightsEnabled.ValueBool() && vivaInsightsCrossGeoEnabled.ValueBool() {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("product").AtName("features"),
+				"Invalid Copilot Studio Viva Insights configuration",
+				"'enable_copilot_studio_cross_geo_share_data_with_viva_insights' cannot be set to 'true' when 'enable_copilot_studio_share_data_with_viva_insights' is 'false'. Cross-geo sharing requires basic sharing to be enabled first.",
+			)
+		}
 	}
 }
 

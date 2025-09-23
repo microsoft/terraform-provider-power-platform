@@ -487,3 +487,25 @@ func TestUnitTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T)
 		},
 	})
 }
+
+func TestUnitTestEnvironmentSettingsResource_Validate_Invalid_CopilotStudio_VivaInsights_Configuration(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				  resource "powerplatform_environment_settings" "settings" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					product = {
+					  features = {
+						enable_copilot_studio_share_data_with_viva_insights           = false
+						enable_copilot_studio_cross_geo_share_data_with_viva_insights = true
+					  }
+					}
+				  }`,
+				ExpectError: regexp.MustCompile("Invalid Copilot Studio Viva Insights configuration"),
+			},
+		},
+	})
+}
