@@ -283,7 +283,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						MarkdownDescription: "Url of the environment",
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
+							modifiers.UseStateForUnknownKeepNonNullStateModifier(),
 							modifiers.SetStringAttributeUnknownOnlyIfSecondAttributeChange(path.Root("dataverse").AtName("domain")),
 						},
 					},
@@ -292,7 +292,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						Optional:            true,
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
+							modifiers.UseStateForUnknownKeepNonNullStateModifier(),
 						},
 						Validators: []validator.String{
 							stringvalidator.LengthAtLeast(1),
