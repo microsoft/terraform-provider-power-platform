@@ -33,7 +33,48 @@ func (client *client) DataverseExists(ctx context.Context, environmentId string)
 	return env.Properties.LinkedEnvironmentMetadata.InstanceURL != "", nil
 }
 
-func (client *client) GetEnvironmentSettings(ctx context.Context, environmentId string) (*environmentSettingsDto, error) {
+func (client *client) GetEnvironmentSettings(ctx context.Context, environmentId string) (*environmentSettings, error) {
+	backendSettings, err := client.getEnvironmentBackendSettings(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+	orgSettings, err := client.getEnvironmentOrgSettings(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+	return &environmentSettings{
+		BackendSettings: backendSettings,
+		OrgSettings:     orgSettings,
+	}, nil
+}
+
+func (client *client) getEnvironmentBackendSettings(ctx context.Context, environmentId string) (*environmentBackendSettingDto, error) {
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   "/api/data/v9.0/RetrieveSettingList()",
+	}
+
+	environmentBackendSettings := environmentBackendSettingsValueDto{}
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &environmentBackendSettings)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute API request for environment backend settings %s: %w", environmentId, err)
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
+		return nil, err
+	}
+	return &environmentBackendSettings.SettingDetailCollection[0], nil
+}
+
+func (client *client) getEnvironmentOrgSettings(ctx context.Context, environmentId string) (*environmentOrgSettingsDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -45,10 +86,10 @@ func (client *client) GetEnvironmentSettings(ctx context.Context, environmentId 
 		Path:   "/api/data/v9.0/organizations",
 	}
 
-	environmentSettings := environmentSettingsValueDto{}
-	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &environmentSettings)
+	environmentOrgSettings := environmentOrgSettingsValueDto{}
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &environmentOrgSettings)
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute API request for environment settings %s: %w", environmentId, err)
+		return nil, fmt.Errorf("failed to execute API request for environment org settings %s: %w", environmentId, err)
 	}
 	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
 		return nil, err
@@ -56,16 +97,16 @@ func (client *client) GetEnvironmentSettings(ctx context.Context, environmentId 
 	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
-	return &environmentSettings.Value[0], nil
+	return &environmentOrgSettings.Value[0], nil
 }
 
-func (client *client) UpdateEnvironmentSettings(ctx context.Context, environmentId string, environmentSettings environmentSettingsDto) (*environmentSettingsDto, error) {
+func (client *client) UpdateEnvironmentSettings(ctx context.Context, environmentId string, environmentSettings environmentOrgSettingsDto) (*environmentSettings, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
-	settings, err := client.GetEnvironmentSettings(ctx, environmentId)
+	settings, err := client.getEnvironmentOrgSettings(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}

@@ -217,6 +217,11 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 								MarkdownDescription: "Enable the AI prompts feature in Power Platform and Copilot Studio. [Learn more](https://go.microsoft.com/fwlink/?linkid=2283738)",
 								Optional:            true,
 							},
+							// /SaveSettingValue() settings
+							"enable_copilot_answer_controls": schema.BoolAttribute{
+								MarkdownDescription: "Allow canvas editors to insert the Copilot answer component, which allows users to receive an AI-powered answer to a predefined data query.",
+								Optional:            true,
+							},
 						},
 					},
 					"security": schema.SingleNestedAttribute{

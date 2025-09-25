@@ -82,6 +82,9 @@ type FeaturesSourceModel struct {
 	EnableCopilotStudioCrossGeoShareDataWithVivaInsights types.Bool `tfsdk:"enable_copilot_studio_cross_geo_share_data_with_viva_insights"`
 	EnablePreviewAndExperimentalAIModels                 types.Bool `tfsdk:"enable_preview_and_experimental_ai_models"`
 	AiPromptsEnabled                                     types.Bool `tfsdk:"enable_ai_prompts"`
+
+	// /SaveSettingValue() settings
+	EnableCopilotAnswerControls types.Bool `tfsdk:"enable_copilot_answer_controls"`
 }
 
 type SecuritySourceModel struct {
@@ -95,8 +98,8 @@ type SecuritySourceModel struct {
 	ReverseProxyIpAddresses              types.Set  `tfsdk:"reverse_proxy_ip_addresses"`
 }
 
-func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel) (*environmentSettingsDto, error) {
-	environmentSettingsDto := &environmentSettingsDto{}
+func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel) (*environmentOrgSettingsDto, error) {
+	environmentSettingsDto := &environmentOrgSettingsDto{}
 	auditSettingsObject := environmentSettings.AuditAndLogs.Attributes()["audit_settings"]
 	if auditSettingsObject != nil && helpers.IsKnown(auditSettingsObject) {
 		objectValue, ok := auditSettingsObject.(basetypes.ObjectValue)
@@ -158,7 +161,7 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 	return environmentSettingsDto, nil
 }
 
-func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) error {
+func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentOrgSettingsDto) error {
 	emailSettingsObject := environmentSettings.Email.Attributes()["email_settings"]
 	if emailSettingsObject != nil && helpers.IsKnown(emailSettingsObject) {
 		objectValue, ok := emailSettingsObject.(basetypes.ObjectValue)
@@ -181,7 +184,7 @@ func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSetting
 	return nil
 }
 
-func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) error {
+func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentOrgSettingsDto) error {
 	behaviorSettings := environmentSettings.Product.Attributes()["behavior_settings"]
 	if behaviorSettings != nil && helpers.IsKnown(behaviorSettings) {
 		var behaviorSettingsSourceModel BehaviorSettingsSourceModel
@@ -196,7 +199,7 @@ func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSett
 	return nil
 }
 
-func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) error {
+func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentOrgSettingsDto) error {
 	features := environmentSettings.Product.Attributes()["features"]
 	if features != nil && helpers.IsKnown(features) {
 		var featuresSourceModel FeaturesSourceModel
@@ -244,7 +247,7 @@ func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSetti
 	return nil
 }
 
-func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentSettingsDto) error {
+func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentOrgSettingsDto) error {
 	security := environmentSettings.Product.Attributes()["security"]
 	if security != nil && helpers.IsKnown(security) {
 		var securitySourceModel SecuritySourceModel
@@ -283,10 +286,19 @@ func convertFromEnvironmentSecuritySettings(ctx context.Context, environmentSett
 	return nil
 }
 
-func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | EnvironmentSettingsDataSourceModel](environmentSettingsDto *environmentSettingsDto, timeout timeouts.Value) (T, error) {
+func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | EnvironmentSettingsDataSourceModel](environmentSettingsDto *environmentSettings, timeout timeouts.Value) (T, error) {
+	environmentOrgSettingsDto := environmentSettingsDto.OrgSettings
+	if environmentOrgSettingsDto == nil {
+		return *new(T), errors.New("environment org settings is nil")
+	}
+	environmentBackendSettingsDto := environmentSettingsDto.BackendSettings
+	if environmentBackendSettingsDto == nil {
+		return *new(T), errors.New("environment backend settings is nil")
+	}
+
 	pluginTraceSettings := "Unknown"
-	if environmentSettingsDto.PluginTraceLogSetting != nil {
-		switch *environmentSettingsDto.PluginTraceLogSetting {
+	if environmentOrgSettingsDto.PluginTraceLogSetting != nil {
+		switch *environmentOrgSettingsDto.PluginTraceLogSetting {
 		case 0:
 			pluginTraceSettings = "Off"
 		case 1:
@@ -299,14 +311,14 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 	}
 
 	logRetentionPeriodTypeValue := types.Int32Value(-1)
-	if environmentSettingsDto.AuditRetentionPeriodV2 != nil {
-		logRetentionPeriodTypeValue = types.Int32Value(*environmentSettingsDto.AuditRetentionPeriodV2)
+	if environmentOrgSettingsDto.AuditRetentionPeriodV2 != nil {
+		logRetentionPeriodTypeValue = types.Int32Value(*environmentOrgSettingsDto.AuditRetentionPeriodV2)
 	}
 
 	attrValuesAuditSettingsProperties := map[string]attr.Value{
-		"is_audit_enabled":             types.BoolValue(*environmentSettingsDto.IsAuditEnabled),
-		"is_user_access_audit_enabled": types.BoolValue(*environmentSettingsDto.IsUserAccessAuditEnabled),
-		"is_read_audit_enabled":        types.BoolValue(*environmentSettingsDto.IsReadAuditEnabled),
+		"is_audit_enabled":             types.BoolValue(*environmentOrgSettingsDto.IsAuditEnabled),
+		"is_user_access_audit_enabled": types.BoolValue(*environmentOrgSettingsDto.IsUserAccessAuditEnabled),
+		"is_read_audit_enabled":        types.BoolValue(*environmentOrgSettingsDto.IsReadAuditEnabled),
 		"log_retention_period_in_days": logRetentionPeriodTypeValue,
 	}
 
@@ -333,7 +345,7 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 
 	attrValuesEmailProperties := map[string]attr.Value{
 		"email_settings": types.ObjectValueMust(attrEmailSettingsObject, map[string]attr.Value{
-			"max_upload_file_size_in_bytes": types.Int64Value(*environmentSettingsDto.MaxUploadFileSize),
+			"max_upload_file_size_in_bytes": types.Int64Value(*environmentOrgSettingsDto.MaxUploadFileSize),
 		}),
 	}
 
@@ -354,6 +366,7 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		"enable_copilot_studio_cross_geo_share_data_with_viva_insights": types.BoolType,
 		"enable_preview_and_experimental_ai_models":                     types.BoolType,
 		"enable_ai_prompts":                                             types.BoolType,
+		"enable_copilot_answer_controls":                                types.BoolType,
 	}
 
 	attrTypesSecurityObject := map[string]attr.Type{
@@ -374,48 +387,51 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 	}
 
 	reverseProxyAdresses := []attr.Value{}
-	if environmentSettingsDto.ReverseProxyIpAddresses != nil {
-		for _, proxy := range strings.Split(*environmentSettingsDto.ReverseProxyIpAddresses, ",") {
+	if environmentOrgSettingsDto.ReverseProxyIpAddresses != nil {
+		for _, proxy := range strings.Split(*environmentOrgSettingsDto.ReverseProxyIpAddresses, ",") {
 			reverseProxyAdresses = append(reverseProxyAdresses, types.StringValue(proxy))
 		}
 	}
 
 	allowedIpRangeForFirewall := []attr.Value{}
-	if environmentSettingsDto.AllowedIpRangeForFirewall != nil {
-		for _, ip := range strings.Split(*environmentSettingsDto.AllowedIpRangeForFirewall, ",") {
+	if environmentOrgSettingsDto.AllowedIpRangeForFirewall != nil {
+		for _, ip := range strings.Split(*environmentOrgSettingsDto.AllowedIpRangeForFirewall, ",") {
 			allowedIpRangeForFirewall = append(allowedIpRangeForFirewall, types.StringValue(ip))
 		}
 	}
 
 	allowedServiceTags := []attr.Value{}
-	if environmentSettingsDto.AllowedServiceTagsForFirewall != nil {
-		for _, tag := range strings.Split(*environmentSettingsDto.AllowedServiceTagsForFirewall, ",") {
+	if environmentOrgSettingsDto.AllowedServiceTagsForFirewall != nil {
+		for _, tag := range strings.Split(*environmentOrgSettingsDto.AllowedServiceTagsForFirewall, ",") {
 			allowedServiceTags = append(allowedServiceTags, types.StringValue(tag))
 		}
 	}
 
 	attrValuesProductProperties := map[string]attr.Value{
 		"behavior_settings": types.ObjectValueMust(attrBahaviorSettingsObject, map[string]attr.Value{
-			"show_dashboard_cards_in_expanded_state": types.BoolValue(*environmentSettingsDto.BoundDashboardDefaultCardExpanded),
+			"show_dashboard_cards_in_expanded_state": types.BoolValue(*environmentOrgSettingsDto.BoundDashboardDefaultCardExpanded),
 		}),
 		"features": types.ObjectValueMust(attrFeaturesObject, map[string]attr.Value{
-			"power_apps_component_framework_for_canvas_apps":                types.BoolValue(*environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps),
-			"enable_powerapps_maker_bot":                                    types.BoolPointerValue(environmentSettingsDto.PowerAppsMakerBotEnabled),
-			"enable_access_to_session_transcripts_for_copilot_studio":       types.BoolValue(!*environmentSettingsDto.BlockAccessToSessionTranscriptsForCopilotStudio),
-			"enable_transcript_recording_for_copilot_studio":                types.BoolValue(!*environmentSettingsDto.BlockTranscriptRecordingForCopilotStudio),
-			"enable_copilot_studio_share_data_with_viva_insights":           types.BoolValue(*environmentSettingsDto.EnableCopilotStudioShareDataWithVivaInsights),
-			"enable_copilot_studio_cross_geo_share_data_with_viva_insights": types.BoolValue(*environmentSettingsDto.EnableCopilotStudioCrossGeoShareDataWithVivaInsights),
-			"enable_preview_and_experimental_ai_models":                     types.BoolValue(*environmentSettingsDto.PaiPreviewScenarioEnabled),
-			"enable_ai_prompts":                                             types.BoolValue(*environmentSettingsDto.AiPromptsEnabled),
+			"power_apps_component_framework_for_canvas_apps":                types.BoolValue(*environmentOrgSettingsDto.PowerAppsComponentFrameworkForCanvasApps),
+			"enable_powerapps_maker_bot":                                    types.BoolPointerValue(environmentOrgSettingsDto.PowerAppsMakerBotEnabled),
+			"enable_access_to_session_transcripts_for_copilot_studio":       types.BoolValue(!*environmentOrgSettingsDto.BlockAccessToSessionTranscriptsForCopilotStudio),
+			"enable_transcript_recording_for_copilot_studio":                types.BoolValue(!*environmentOrgSettingsDto.BlockTranscriptRecordingForCopilotStudio),
+			"enable_copilot_studio_share_data_with_viva_insights":           types.BoolValue(*environmentOrgSettingsDto.EnableCopilotStudioShareDataWithVivaInsights),
+			"enable_copilot_studio_cross_geo_share_data_with_viva_insights": types.BoolValue(*environmentOrgSettingsDto.EnableCopilotStudioCrossGeoShareDataWithVivaInsights),
+			"enable_preview_and_experimental_ai_models":                     types.BoolValue(*environmentOrgSettingsDto.PaiPreviewScenarioEnabled),
+			"enable_ai_prompts":                                             types.BoolValue(*environmentOrgSettingsDto.AiPromptsEnabled),
+
+			// /SaveSettingValue() settings
+			"enable_copilot_answer_controls": convertStringToBool(environmentBackendSettingsDto.Value),
 		}),
 		"security": types.ObjectValueMust(attrTypesSecurityObject, map[string]attr.Value{
-			"enable_ip_based_cookie_binding":              types.BoolValue(*environmentSettingsDto.EnableIpBasedCookieBinding),
-			"enable_ip_based_firewall_rule":               types.BoolValue(*environmentSettingsDto.EnableIpBasedFirewallRule),
+			"enable_ip_based_cookie_binding":              types.BoolValue(*environmentOrgSettingsDto.EnableIpBasedCookieBinding),
+			"enable_ip_based_firewall_rule":               types.BoolValue(*environmentOrgSettingsDto.EnableIpBasedFirewallRule),
 			"allowed_ip_range_for_firewall":               types.SetValueMust(types.StringType, allowedIpRangeForFirewall),
 			"allowed_service_tags_for_firewall":           types.SetValueMust(types.StringType, allowedServiceTags),
-			"allow_application_user_access":               types.BoolValue(*environmentSettingsDto.AllowApplicationUserAccess),
-			"allow_microsoft_trusted_service_tags":        types.BoolValue(*environmentSettingsDto.AllowMicrosoftTrustedServiceTags),
-			"enable_ip_based_firewall_rule_in_audit_mode": types.BoolValue(*environmentSettingsDto.EnableIpBasedFirewallRuleInAuditMode),
+			"allow_application_user_access":               types.BoolValue(*environmentOrgSettingsDto.AllowApplicationUserAccess),
+			"allow_microsoft_trusted_service_tags":        types.BoolValue(*environmentOrgSettingsDto.AllowMicrosoftTrustedServiceTags),
+			"enable_ip_based_firewall_rule_in_audit_mode": types.BoolValue(*environmentOrgSettingsDto.EnableIpBasedFirewallRuleInAuditMode),
 			"reverse_proxy_ip_addresses":                  types.SetValueMust(types.StringType, reverseProxyAdresses),
 		}),
 	}
@@ -444,4 +460,11 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		return environmentSettings, fmt.Errorf("unexpected type %T", environmentSettings)
 	}
 	return environmentSettings, nil
+}
+
+// convertStringToBool converts a string to a Terraform bool value
+// Returns true if the string equals "true" (case-insensitive) or "1"
+func convertStringToBool(value string) types.Bool {
+	valBool := strings.EqualFold(value, "true") || value == "1"
+	return types.BoolValue(valBool)
 }

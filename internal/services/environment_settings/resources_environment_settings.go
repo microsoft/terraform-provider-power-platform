@@ -264,6 +264,14 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 									boolplanmodifier.UseStateForUnknown(),
 								},
 							},
+							"enable_copilot_answer_controls": schema.BoolAttribute{
+								MarkdownDescription: "Enable Copilot answer controls in the environment.",
+								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(false),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
 						},
 					},
 					"security": schema.SingleNestedAttribute{

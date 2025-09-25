@@ -16,6 +16,7 @@ import (
 )
 
 func TestAccTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
+	t.Setenv(
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -52,6 +53,7 @@ func TestAccTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_preview_and_experimental_ai_models", "true"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_transcript_recording_for_copilot_studio", "true"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_powerapps_maker_bot"),
+
 				),
 			},
 		},
@@ -70,6 +72,16 @@ func TestUnitTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/Validate_Read/organisations.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSettingList()`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/Validate_Read/get_retrievesettinglist.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSettingList%28%29`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/datasource/Validate_Read/get_retrievesettinglist.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -109,6 +121,7 @@ func TestUnitTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_powerapps_maker_bot", "true"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_preview_and_experimental_ai_models", "true"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_transcript_recording_for_copilot_studio", "false"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_copilot_answer_controls", "false "),
 				),
 			},
 		},
