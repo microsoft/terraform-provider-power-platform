@@ -514,6 +514,8 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 			return nil, errors.New("environment creation failed. provisioning state: " + envCreatedResponse.Properties.ProvisioningState)
 		}
 		createdEnvironmentId = envCreatedResponse.Name
+	default:
+		return nil, fmt.Errorf("unexpected HTTP status code: %d", apiResponse.HttpResponse.StatusCode)
 	}
 
 	env, err := client.GetEnvironment(ctx, createdEnvironmentId)

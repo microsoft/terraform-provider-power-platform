@@ -1124,6 +1124,8 @@ func TestUnitDataRecordResource_Validate_Update_Relationships(t *testing.T) {
 				contactId = "00000000-0000-0000-0000-000000000011"
 			case `{"firstname":"contact3"}`:
 				contactId = "00000000-0000-0000-0000-000000000012"
+			default:
+				contactId = "11111111-0000-0000-0000-000000000000"
 			}
 
 			resp := httpmock.NewStringResponse(http.StatusOK, "")
