@@ -3,8 +3,32 @@
 
 package environment_settings
 
+import (
+	"fmt"
+)
+
+const (
+	ON                                = "On"
+	OFF                               = "Off"
+	DEFAULT                           = "Default"
+	AUTO                              = "Auto"
+	ALL_USERS                         = "AllUsers"
+	USER_AS_FEATURE_BECOMES_AVAILABLE = "UserAsFeatureBecomesAvailable"
+	NO_ONE                            = "NoOne"
+)
+
+const (
+	EnableCopilotAnswerControl              = "EnableCopilotAnswerControl"
+	AppCopilotEnabled                       = "appcopilotenabled"
+	FormPredictEnabled                      = "FormPredictEnabled"
+	FormPredictSmartPasteEnabledOnByDefault = "FormPredictSmartPasteEnabledOnByDefault"
+	FormFillBarUXEnabled                    = "FormFillBarUXEnabled"
+	NLGridSearchSetting                     = "NLGridSearchSetting"
+	NLChartDataVisualizationSetting         = "NLChartDataVisualizationSetting"
+)
+
 type environmentSettings struct {
-	BackendSettings *environmentBackendSettingDto
+	BackendSettings *environmentBackendSettingsValueDto
 	OrgSettings     *environmentOrgSettingsDto
 }
 
@@ -17,6 +41,36 @@ type environmentBackendSettingDto struct {
 	Name     string `json:"Name"`
 	Value    string `json:"Value"`
 	DataType int    `json:"DataType"`
+}
+
+func (environmentBackendSettings environmentBackendSettingsValueDto) GetValue(name string) string {
+	for _, setting := range environmentBackendSettings.SettingDetailCollection {
+		if setting.Name == name {
+			return setting.Value
+		}
+	}
+	return ""
+}
+
+func (environmentBackendSettings *environmentBackendSettingsValueDto) SetValue(name string, value any) error {
+	for i, setting := range environmentBackendSettings.SettingDetailCollection {
+		if setting.Name == name {
+			switch v := value.(type) {
+			case string:
+				environmentBackendSettings.SettingDetailCollection[i].Value = v
+			case bool:
+				if v {
+					environmentBackendSettings.SettingDetailCollection[i].Value = "true"
+				} else {
+					environmentBackendSettings.SettingDetailCollection[i].Value = "false"
+				}
+			default:
+				return fmt.Errorf("unsupported value type: %T", v)
+			}
+			return nil
+		}
+	}
+	return fmt.Errorf("setting not found: %s", name)
 }
 
 type environmentOrgSettingsValueDto struct {

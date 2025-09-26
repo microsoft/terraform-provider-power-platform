@@ -264,12 +264,78 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 									boolplanmodifier.UseStateForUnknown(),
 								},
 							},
-							"enable_copilot_answer_controls": schema.BoolAttribute{
+							"enable_copilot_answer_control": schema.BoolAttribute{
 								MarkdownDescription: "Enable Copilot answer controls in the environment.",
 								Optional:            true, Computed: true,
 								Default: booldefault.StaticBool(false),
 								PlanModifiers: []planmodifier.Bool{
 									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"enable_ai_powered_chat": schema.StringAttribute{
+								MarkdownDescription: "Allow users to analyze data using an AI-powered chat experience in [canvas](https://go.microsoft.com/fwlink/?linkid=2244583) and [model-driven apps](https://go.microsoft.com/fwlink/?linkid=2244584). [Learn more](https://go.microsoft.com/fwlink/?linkid=2247541) [Requires Copilot licensing](https://go.microsoft.com/fwlink/?linkid=2263413)",
+								Optional:            true, Computed: true,
+								Default: stringdefault.StaticString(DEFAULT),
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"ai_form_fill_automatic_suggestions": schema.StringAttribute{
+								MarkdownDescription: "Allows AI to generate automatic suggestions",
+								Optional:            true, Computed: true,
+								Default: stringdefault.StaticString(DEFAULT),
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"ai_form_fill_smart_paste_and_file_suggestions": schema.StringAttribute{
+								MarkdownDescription: "Allows AI to provide smart paste and file suggestions",
+								Optional:            true, Computed: true,
+								Default: stringdefault.StaticString(DEFAULT),
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"ai_form_fill_toolbar": schema.StringAttribute{
+								MarkdownDescription: "Allows AI to provide a form fill toolbar with suggestions",
+								Optional:            true, Computed: true,
+								Default: stringdefault.StaticString(DEFAULT),
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"natural_language_grid_and_view_search": schema.StringAttribute{
+								MarkdownDescription: "Find your data in model-driven app views with the help of Copilot. [Learn more](https://go.microsoft.com/fwlink/?linkid=2281374)",
+								Optional:            true, Computed: true,
+								Default: stringdefault.StaticString(USER_AS_FEATURE_BECOMES_AVAILABLE),
+								Validators: []validator.String{
+									stringvalidator.OneOf(ALL_USERS, USER_AS_FEATURE_BECOMES_AVAILABLE, NO_ONE),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"allow_ai_to_generate_charts": schema.StringAttribute{
+								MarkdownDescription: "Allow AI to generate charts to visualize the data in a view. [Learn more](https://go.microsoft.com/fwlink/?linkid=2300297)",
+								Optional:            true, Computed: true,
+								Default: stringdefault.StaticString(OFF),
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, AUTO),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
 								},
 							},
 						},

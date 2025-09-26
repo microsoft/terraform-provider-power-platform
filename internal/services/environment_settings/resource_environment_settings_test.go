@@ -80,6 +80,13 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *t
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_preview_and_experimental_ai_models", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_transcript_recording_for_copilot_studio", "true"),
 					resource.TestCheckNoResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_powerapps_maker_bot"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_answer_control", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_ai_powered_chat", "On"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_automatic_suggestions", "Default"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_smart_paste_and_file_suggestions", "Default"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_toolbar", "Default"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.natural_language_grid_and_view_search", "UserAsFeatureBecomesAvailable"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.allow_ai_to_generate_charts", "Auto"),
 				),
 			},
 		},
@@ -139,7 +146,6 @@ func TestAccTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *te
 }
 
 func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
-	t.Setenv("TF_ACC", "1")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -320,6 +326,16 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resources/Validate_Read/get_organisations_%d.json", getOrgInx)).String()), nil
 		})
 
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSettingList()`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resources/Validate_Read/get_retrievesettinglist.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSettingList%28%29`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resources/Validate_Read/get_retrievesettinglist.json").String()), nil
+		})
+
 	httpmock.RegisterResponder("PATCH", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations%2843f51247-aee6-ee11-9048-000d3a688755%29`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
@@ -355,9 +371,17 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 						  enable_access_to_session_transcripts_for_copilot_studio = true
 						  enable_transcript_recording_for_copilot_studio = true
 						  enable_ai_prompts = true
-						  enable_copilot_studio_share_data_with_viva_insights = true
+						  enable_copilot_studio_share_data_with_viva_insights = false
 						  enable_copilot_studio_cross_geo_share_data_with_viva_insights = false
 						  enable_preview_and_experimental_ai_models = true
+						  enable_copilot_answer_control = false
+						  enable_powerapps_maker_bot = false
+						  enable_ai_powered_chat = "Off"
+						  ai_form_fill_automatic_suggestions = "Off"
+						  ai_form_fill_smart_paste_and_file_suggestions = "Off"
+						  ai_form_fill_toolbar = "Off"
+						  natural_language_grid_and_view_search = "NoOne"
+						  allow_ai_to_generate_charts = "Off"
 						}
 						security = {
 						  allow_application_user_access               = true
@@ -380,7 +404,6 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "100"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
-					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.power_apps_component_framework_for_canvas_apps", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allow_application_user_access", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allow_microsoft_trusted_service_tags", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.enable_ip_based_firewall_rule", "true"),
@@ -395,6 +418,21 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.0", "10.10.1.1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.1", "192.168.1.1"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.enable_ip_based_cookie_binding", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.power_apps_component_framework_for_canvas_apps", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_access_to_session_transcripts_for_copilot_studio", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_ai_prompts", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_studio_cross_geo_share_data_with_viva_insights", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_studio_share_data_with_viva_insights", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_preview_and_experimental_ai_models", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_transcript_recording_for_copilot_studio", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_powerapps_maker_bot", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_answer_control", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_ai_powered_chat", "Off"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_automatic_suggestions", "Off"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_smart_paste_and_file_suggestions", "Off"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_toolbar", "Off"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.natural_language_grid_and_view_search", "NoOne"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.allow_ai_to_generate_charts", "Off"),
 				),
 			},
 		},
@@ -488,6 +526,20 @@ func TestUnitTestEnvironmentSettingsResource_Validate_No_Dataverse(t *testing.T)
 						}
 						features = {
 						  power_apps_component_framework_for_canvas_apps = false
+						  enable_access_to_session_transcripts_for_copilot_studio = true
+						  enable_transcript_recording_for_copilot_studio = true
+						  enable_ai_prompts = true
+						  enable_copilot_studio_share_data_with_viva_insights = false
+						  enable_copilot_studio_cross_geo_share_data_with_viva_insights = false
+						  enable_preview_and_experimental_ai_models = true
+						  enable_copilot_answer_control = false
+						  enable_powerapps_maker_bot = false
+						  enable_ai_powered_chat = "Off"
+						  ai_form_fill_automatic_suggestions = "Off"
+						  ai_form_fill_smart_paste_and_file_suggestions = "Off"
+						  ai_form_fill_toolbar = "Off"
+						  natural_language_grid_and_view_search = "NoOne"
+						  allow_ai_to_generate_charts = "Off"
 						}
 					  }
 				  }`,
@@ -515,6 +567,240 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Invalid_CopilotStudio_Viva
 					}
 				  }`,
 				ExpectError: regexp.MustCompile("Invalid Copilot Studio Viva Insights configuration"),
+			},
+		},
+	})
+}
+
+func TestUnitTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	var getOrgInx = 0
+	// Track the current test step (1 or 2)
+	var testStep = 1
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resources/Validate_Update/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations`,
+		func(req *http.Request) (*http.Response, error) {
+			getOrgInx++
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resources/Validate_Update/get_organisations_%d.json", getOrgInx)).String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSettingList\(\)?`,
+		func(req *http.Request) (*http.Response, error) {
+			var file string
+			if testStep == 1 {
+				file = "tests/resources/Validate_Update/get_retrievesettinglist_step1.json"
+			} else {
+				file = "tests/resources/Validate_Update/get_retrievesettinglist_step2.json"
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(file).String()), nil
+		})
+	httpmock.RegisterResponder("GET", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/RetrieveSettingList%28%29`,
+		func(req *http.Request) (*http.Response, error) {
+			var file string
+			if testStep == 1 {
+				file = "tests/resources/Validate_Update/get_retrievesettinglist_step1.json"
+			} else {
+				file = "tests/resources/Validate_Update/get_retrievesettinglist_step2.json"
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(file).String()), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", `https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations%2843f51247-aee6-ee11-9048-000d3a688755%29`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				  resource "powerplatform_environment_settings" "settings" {
+					environment_id                         = "00000000-0000-0000-0000-000000000001"
+					audit_and_logs = {
+						plugin_trace_log_setting = "All"
+						audit_settings = {
+						  is_audit_enabled             = true
+						  is_user_access_audit_enabled = true
+						  is_read_audit_enabled        = true
+						}
+					  }
+					  email = {
+						email_settings = {
+						  max_upload_file_size_in_bytes = 100
+						}
+					  }
+					  product = {
+						behavior_settings = {
+						  show_dashboard_cards_in_expanded_state = true
+						}
+						features = {
+						  power_apps_component_framework_for_canvas_apps = false
+						  enable_access_to_session_transcripts_for_copilot_studio = true
+						  enable_transcript_recording_for_copilot_studio = true
+						  enable_ai_prompts = true
+						  enable_copilot_studio_share_data_with_viva_insights = false
+						  enable_copilot_studio_cross_geo_share_data_with_viva_insights = false
+						  enable_preview_and_experimental_ai_models = true
+						  enable_copilot_answer_control = false
+						  enable_powerapps_maker_bot = false
+						  enable_ai_powered_chat = "Off"
+						  ai_form_fill_automatic_suggestions = "Off"
+						  ai_form_fill_smart_paste_and_file_suggestions = "Off"
+						  ai_form_fill_toolbar = "Off"
+						  natural_language_grid_and_view_search = "NoOne"
+						  allow_ai_to_generate_charts = "Off"
+						}
+						security = {
+						  allow_application_user_access               = true
+						  allow_microsoft_trusted_service_tags        = true
+						  allowed_ip_range_for_firewall               = toset(["10.10.0.0/16", "192.168.0.0/24"])
+						  allowed_service_tags_for_firewall           = toset(["ApiManagement", "AppService"])
+						  enable_ip_based_firewall_rule               = true
+						  enable_ip_based_firewall_rule_in_audit_mode = true
+						  reverse_proxy_ip_addresses                  = toset(["10.10.1.1", "192.168.1.1"])
+						  enable_ip_based_cookie_binding              = true
+						}
+					  }
+				  }`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_audit_enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_read_audit_enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_user_access_audit_enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.log_retention_period_in_days", "-1"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "100"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "All"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allow_application_user_access", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allow_microsoft_trusted_service_tags", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.enable_ip_based_firewall_rule", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.enable_ip_based_firewall_rule_in_audit_mode", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_ip_range_for_firewall.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_ip_range_for_firewall.0", "10.10.0.0/16"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_ip_range_for_firewall.1", "192.168.0.0/24"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_service_tags_for_firewall.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_service_tags_for_firewall.0", "ApiManagement"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_service_tags_for_firewall.1", "AppService"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.0", "10.10.1.1"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.1", "192.168.1.1"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.enable_ip_based_cookie_binding", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.power_apps_component_framework_for_canvas_apps", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_access_to_session_transcripts_for_copilot_studio", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_ai_prompts", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_studio_cross_geo_share_data_with_viva_insights", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_studio_share_data_with_viva_insights", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_preview_and_experimental_ai_models", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_transcript_recording_for_copilot_studio", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_powerapps_maker_bot", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_answer_control", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_ai_powered_chat", "Off"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_automatic_suggestions", "Off"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_smart_paste_and_file_suggestions", "Off"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_toolbar", "Off"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.natural_language_grid_and_view_search", "NoOne"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.allow_ai_to_generate_charts", "Off"),
+				),
+			},
+			{
+				PreConfig: func() { testStep = 2 },
+				Config: `
+				  resource "powerplatform_environment_settings" "settings" {
+					environment_id                         = "00000000-0000-0000-0000-000000000001"
+					audit_and_logs = {
+						plugin_trace_log_setting = "All"
+						audit_settings = {
+						  is_audit_enabled             = true
+						  is_user_access_audit_enabled = true
+						  is_read_audit_enabled        = true
+						}
+					  }
+					  email = {
+						email_settings = {
+						  max_upload_file_size_in_bytes = 100
+						}
+					  }
+					  product = {
+						behavior_settings = {
+						  show_dashboard_cards_in_expanded_state = true
+						}
+						features = {
+						  power_apps_component_framework_for_canvas_apps = true
+						  enable_access_to_session_transcripts_for_copilot_studio = false
+						  enable_transcript_recording_for_copilot_studio = false
+						  enable_ai_prompts = false
+						  enable_copilot_studio_share_data_with_viva_insights = true
+						  enable_copilot_studio_cross_geo_share_data_with_viva_insights = true
+						  enable_preview_and_experimental_ai_models = false
+						  enable_copilot_answer_control = true
+						  enable_powerapps_maker_bot = true
+						  enable_ai_powered_chat = "On"
+						  ai_form_fill_automatic_suggestions = "On"
+						  ai_form_fill_smart_paste_and_file_suggestions = "On"
+						  ai_form_fill_toolbar = "On"
+						  natural_language_grid_and_view_search = "AllUsers"
+						  allow_ai_to_generate_charts = "On"
+						}
+						security = {
+						  allow_application_user_access               = true
+						  allow_microsoft_trusted_service_tags        = true
+						  allowed_ip_range_for_firewall               = toset(["10.10.0.0/16", "192.168.0.0/24"])
+						  allowed_service_tags_for_firewall           = toset(["ApiManagement", "AppService"])
+						  enable_ip_based_firewall_rule               = true
+						  enable_ip_based_firewall_rule_in_audit_mode = true
+						  reverse_proxy_ip_addresses                  = toset(["10.10.1.1", "192.168.1.1"])
+						  enable_ip_based_cookie_binding              = true
+						}
+					  }
+				  }`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_audit_enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_read_audit_enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_user_access_audit_enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.log_retention_period_in_days", "-1"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "100"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "All"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allow_application_user_access", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allow_microsoft_trusted_service_tags", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.enable_ip_based_firewall_rule", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.enable_ip_based_firewall_rule_in_audit_mode", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_ip_range_for_firewall.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_ip_range_for_firewall.0", "10.10.0.0/16"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_ip_range_for_firewall.1", "192.168.0.0/24"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_service_tags_for_firewall.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_service_tags_for_firewall.0", "ApiManagement"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.allowed_service_tags_for_firewall.1", "AppService"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.0", "10.10.1.1"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.reverse_proxy_ip_addresses.1", "192.168.1.1"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.security.enable_ip_based_cookie_binding", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.power_apps_component_framework_for_canvas_apps", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_access_to_session_transcripts_for_copilot_studio", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_ai_prompts", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_studio_cross_geo_share_data_with_viva_insights", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_studio_share_data_with_viva_insights", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_preview_and_experimental_ai_models", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_transcript_recording_for_copilot_studio", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_powerapps_maker_bot", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_copilot_answer_control", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_ai_powered_chat", "On"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_automatic_suggestions", "On"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_smart_paste_and_file_suggestions", "On"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_toolbar", "On"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.natural_language_grid_and_view_search", "AllUsers"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.allow_ai_to_generate_charts", "On"),
+				),
 			},
 		},
 	})

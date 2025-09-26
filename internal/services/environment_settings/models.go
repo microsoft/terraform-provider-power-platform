@@ -16,6 +16,24 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
+var onOffDefaultMapping = map[string]string{
+	"0": DEFAULT,
+	"1": OFF,
+	"2": ON,
+}
+
+var onOffAutoMapping = map[string]string{
+	"0": OFF,
+	"1": AUTO,
+	"2": ON,
+}
+
+var naturalLanguageMapping = map[string]string{
+	"0": USER_AS_FEATURE_BECOMES_AVAILABLE,
+	"1": NO_ONE,
+	"2": ALL_USERS,
+}
+
 type EnvironmentSettingsDataSource struct {
 	helpers.TypeInfo
 	EnvironmentSettingsClient client
@@ -84,7 +102,14 @@ type FeaturesSourceModel struct {
 	AiPromptsEnabled                                     types.Bool `tfsdk:"enable_ai_prompts"`
 
 	// /SaveSettingValue() settings
-	EnableCopilotAnswerControls types.Bool `tfsdk:"enable_copilot_answer_controls"`
+	EnableCopilotAnswerControl             types.Bool   `tfsdk:"enable_copilot_answer_control"`
+	EnableAiPoweredChat                    types.String `tfsdk:"enable_ai_powered_chat"`
+	AiFormFillAutomaticSuggestions         types.String `tfsdk:"ai_form_fill_automatic_suggestions"`
+	AiFormFillSmartPasteAndFileSuggestions types.String `tfsdk:"ai_form_fill_smart_paste_and_file_suggestions"`
+	AiFormFillToolbar                      types.String `tfsdk:"ai_form_fill_toolbar"`
+	NaturalLanguageGridAndViewSearch       types.String `tfsdk:"natural_language_grid_and_view_search"`
+	AllowAiToGenerateCharts                types.String `tfsdk:"allow_ai_to_generate_charts"`
+	// end /SaveSettingValue() settings
 }
 
 type SecuritySourceModel struct {
@@ -98,9 +123,13 @@ type SecuritySourceModel struct {
 	ReverseProxyIpAddresses              types.Set  `tfsdk:"reverse_proxy_ip_addresses"`
 }
 
-func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel) (*environmentOrgSettingsDto, error) {
-	environmentSettingsDto := &environmentOrgSettingsDto{}
-	auditSettingsObject := environmentSettings.AuditAndLogs.Attributes()["audit_settings"]
+func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSettingsModel EnvironmentSettingsResourceModel) (*environmentSettings, error) {
+	environmentSettings := &environmentSettings{
+		BackendSettings: &environmentBackendSettingsValueDto{},
+		OrgSettings:     &environmentOrgSettingsDto{},
+	}
+
+	auditSettingsObject := environmentSettingsModel.AuditAndLogs.Attributes()["audit_settings"]
 	if auditSettingsObject != nil && helpers.IsKnown(auditSettingsObject) {
 		objectValue, ok := auditSettingsObject.(basetypes.ObjectValue)
 		if !ok {
@@ -116,19 +145,19 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 		}
 
 		if helpers.IsKnown(auditAndLogsSourceModel.IsAuditEnabled) {
-			environmentSettingsDto.IsAuditEnabled = auditAndLogsSourceModel.IsAuditEnabled.ValueBoolPointer()
+			environmentSettings.OrgSettings.IsAuditEnabled = auditAndLogsSourceModel.IsAuditEnabled.ValueBoolPointer()
 		}
 		if helpers.IsKnown(auditAndLogsSourceModel.IsUserAccessAuditEnabled) {
-			environmentSettingsDto.IsUserAccessAuditEnabled = auditAndLogsSourceModel.IsUserAccessAuditEnabled.ValueBoolPointer()
+			environmentSettings.OrgSettings.IsUserAccessAuditEnabled = auditAndLogsSourceModel.IsUserAccessAuditEnabled.ValueBoolPointer()
 		}
 		if helpers.IsKnown(auditAndLogsSourceModel.IsReadAuditEnabled) {
-			environmentSettingsDto.IsReadAuditEnabled = auditAndLogsSourceModel.IsReadAuditEnabled.ValueBoolPointer()
+			environmentSettings.OrgSettings.IsReadAuditEnabled = auditAndLogsSourceModel.IsReadAuditEnabled.ValueBoolPointer()
 		}
 		if helpers.IsKnown(auditAndLogsSourceModel.AuditRetentionPeriodV2) {
-			environmentSettingsDto.AuditRetentionPeriodV2 = auditAndLogsSourceModel.AuditRetentionPeriodV2.ValueInt32Pointer()
+			environmentSettings.OrgSettings.AuditRetentionPeriodV2 = auditAndLogsSourceModel.AuditRetentionPeriodV2.ValueInt32Pointer()
 		}
 
-		pluginSettings := environmentSettings.AuditAndLogs.Attributes()["plugin_trace_log_setting"]
+		pluginSettings := environmentSettingsModel.AuditAndLogs.Attributes()["plugin_trace_log_setting"]
 		if pluginSettings != nil && helpers.IsKnown(pluginSettings) {
 			pluginSettingsValue, ok := pluginSettings.(basetypes.StringValue)
 			if !ok {
@@ -136,29 +165,29 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 			}
 			var v int64
 			if pluginSettingsValue.ValueString() == "Off" {
-				environmentSettingsDto.PluginTraceLogSetting = &v
+				environmentSettings.OrgSettings.PluginTraceLogSetting = &v
 			} else if pluginSettingsValue.ValueString() == "Exception" {
 				v = 1
-				environmentSettingsDto.PluginTraceLogSetting = &v
+				environmentSettings.OrgSettings.PluginTraceLogSetting = &v
 			} else if pluginSettingsValue.ValueString() == "All" {
 				v = 2
-				environmentSettingsDto.PluginTraceLogSetting = &v
+				environmentSettings.OrgSettings.PluginTraceLogSetting = &v
 			}
 		}
 	}
-	if err := convertFromEnvironmentEmailSettings(ctx, environmentSettings, environmentSettingsDto); err != nil {
+	if err := convertFromEnvironmentEmailSettings(ctx, environmentSettingsModel, environmentSettings.OrgSettings); err != nil {
 		return nil, err
 	}
-	if err := convertFromEnvironmentBehaviorSettings(ctx, environmentSettings, environmentSettingsDto); err != nil {
+	if err := convertFromEnvironmentBehaviorSettings(ctx, environmentSettingsModel, environmentSettings.OrgSettings); err != nil {
 		return nil, err
 	}
-	if err := convertFromEnvironmentFeatureSettings(ctx, environmentSettings, environmentSettingsDto); err != nil {
+	if err := convertFromEnvironmentFeatureSettings(ctx, environmentSettingsModel, environmentSettings); err != nil {
 		return nil, err
 	}
-	if err := convertFromEnvironmentSecuritySettings(ctx, environmentSettings, environmentSettingsDto); err != nil {
+	if err := convertFromEnvironmentSecuritySettings(ctx, environmentSettingsModel, environmentSettings.OrgSettings); err != nil {
 		return nil, err
 	}
-	return environmentSettingsDto, nil
+	return environmentSettings, nil
 }
 
 func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentOrgSettingsDto) error {
@@ -199,8 +228,9 @@ func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSett
 	return nil
 }
 
-func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentOrgSettingsDto) error {
-	features := environmentSettings.Product.Attributes()["features"]
+func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSettingsModel EnvironmentSettingsResourceModel, environmentSettings *environmentSettings) error {
+
+	features := environmentSettingsModel.Product.Attributes()["features"]
 	if features != nil && helpers.IsKnown(features) {
 		var featuresSourceModel FeaturesSourceModel
 		if diags := features.(basetypes.ObjectValue).As(ctx, &featuresSourceModel, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags != nil {
@@ -208,41 +238,64 @@ func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSetti
 		}
 
 		if helpers.IsKnown(featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps) {
-			environmentSettingsDto.PowerAppsComponentFrameworkForCanvasApps = featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.ValueBoolPointer()
+			environmentSettings.OrgSettings.PowerAppsComponentFrameworkForCanvasApps = featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.ValueBoolPointer()
 		}
 		if helpers.IsKnown(featuresSourceModel.PowerAppsMakerBotEnabled) {
-			environmentSettingsDto.PowerAppsMakerBotEnabled = featuresSourceModel.PowerAppsMakerBotEnabled.ValueBoolPointer()
+			environmentSettings.OrgSettings.PowerAppsMakerBotEnabled = featuresSourceModel.PowerAppsMakerBotEnabled.ValueBoolPointer()
 		}
 		if helpers.IsKnown(featuresSourceModel.EnableAccessToSessionTranscriptsForCopilotStudio) {
 			val := featuresSourceModel.EnableAccessToSessionTranscriptsForCopilotStudio.ValueBoolPointer()
 			if val != nil {
 				negated := !(*val)
-				environmentSettingsDto.BlockAccessToSessionTranscriptsForCopilotStudio = &negated
+				environmentSettings.OrgSettings.BlockAccessToSessionTranscriptsForCopilotStudio = &negated
 			} else {
-				environmentSettingsDto.BlockAccessToSessionTranscriptsForCopilotStudio = nil
+				environmentSettings.OrgSettings.BlockAccessToSessionTranscriptsForCopilotStudio = nil
 			}
 		}
 		if helpers.IsKnown(featuresSourceModel.EnableTranscriptRecordingForCopilotStudio) {
 			val := featuresSourceModel.EnableTranscriptRecordingForCopilotStudio.ValueBoolPointer()
 			if val != nil {
 				negated := !(*val)
-				environmentSettingsDto.BlockTranscriptRecordingForCopilotStudio = &negated
+				environmentSettings.OrgSettings.BlockTranscriptRecordingForCopilotStudio = &negated
 			} else {
-				environmentSettingsDto.BlockTranscriptRecordingForCopilotStudio = nil
+				environmentSettings.OrgSettings.BlockTranscriptRecordingForCopilotStudio = nil
 			}
 		}
 		if helpers.IsKnown(featuresSourceModel.EnableCopilotStudioShareDataWithVivaInsights) {
-			environmentSettingsDto.EnableCopilotStudioShareDataWithVivaInsights = featuresSourceModel.EnableCopilotStudioShareDataWithVivaInsights.ValueBoolPointer()
+			environmentSettings.OrgSettings.EnableCopilotStudioShareDataWithVivaInsights = featuresSourceModel.EnableCopilotStudioShareDataWithVivaInsights.ValueBoolPointer()
 		}
 		if helpers.IsKnown(featuresSourceModel.EnableCopilotStudioCrossGeoShareDataWithVivaInsights) {
-			environmentSettingsDto.EnableCopilotStudioCrossGeoShareDataWithVivaInsights = featuresSourceModel.EnableCopilotStudioCrossGeoShareDataWithVivaInsights.ValueBoolPointer()
+			environmentSettings.OrgSettings.EnableCopilotStudioCrossGeoShareDataWithVivaInsights = featuresSourceModel.EnableCopilotStudioCrossGeoShareDataWithVivaInsights.ValueBoolPointer()
 		}
 		if helpers.IsKnown(featuresSourceModel.EnablePreviewAndExperimentalAIModels) {
-			environmentSettingsDto.PaiPreviewScenarioEnabled = featuresSourceModel.EnablePreviewAndExperimentalAIModels.ValueBoolPointer()
+			environmentSettings.OrgSettings.PaiPreviewScenarioEnabled = featuresSourceModel.EnablePreviewAndExperimentalAIModels.ValueBoolPointer()
 		}
 		if helpers.IsKnown(featuresSourceModel.AiPromptsEnabled) {
-			environmentSettingsDto.AiPromptsEnabled = featuresSourceModel.AiPromptsEnabled.ValueBoolPointer()
+			environmentSettings.OrgSettings.AiPromptsEnabled = featuresSourceModel.AiPromptsEnabled.ValueBoolPointer()
 		}
+		// /SaveSettingValue() settings
+		if helpers.IsKnown(featuresSourceModel.EnableCopilotAnswerControl) {
+			environmentSettings.BackendSettings.SetValue(EnableCopilotAnswerControl, featuresSourceModel.EnableCopilotAnswerControl.ValueBool())
+		}
+		if helpers.IsKnown(featuresSourceModel.EnableAiPoweredChat) {
+			environmentSettings.BackendSettings.SetValue(AppCopilotEnabled, featuresSourceModel.EnableAiPoweredChat.ValueString())
+		}
+		if helpers.IsKnown(featuresSourceModel.AiFormFillAutomaticSuggestions) {
+			environmentSettings.BackendSettings.SetValue(FormPredictEnabled, featuresSourceModel.AiFormFillAutomaticSuggestions.ValueString())
+		}
+		if helpers.IsKnown(featuresSourceModel.AiFormFillSmartPasteAndFileSuggestions) {
+			environmentSettings.BackendSettings.SetValue(FormPredictSmartPasteEnabledOnByDefault, featuresSourceModel.AiFormFillSmartPasteAndFileSuggestions.ValueString())
+		}
+		if helpers.IsKnown(featuresSourceModel.AiFormFillToolbar) {
+			environmentSettings.BackendSettings.SetValue(FormFillBarUXEnabled, featuresSourceModel.AiFormFillToolbar.ValueString())
+		}
+		if helpers.IsKnown(featuresSourceModel.NaturalLanguageGridAndViewSearch) {
+			environmentSettings.BackendSettings.SetValue(NLGridSearchSetting, featuresSourceModel.NaturalLanguageGridAndViewSearch.ValueString())
+		}
+		if helpers.IsKnown(featuresSourceModel.AllowAiToGenerateCharts) {
+			environmentSettings.BackendSettings.SetValue(NLChartDataVisualizationSetting, featuresSourceModel.AllowAiToGenerateCharts.ValueString())
+		}
+		// end /SaveSettingValue() settings
 	}
 	return nil
 }
@@ -366,7 +419,13 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		"enable_copilot_studio_cross_geo_share_data_with_viva_insights": types.BoolType,
 		"enable_preview_and_experimental_ai_models":                     types.BoolType,
 		"enable_ai_prompts":                                             types.BoolType,
-		"enable_copilot_answer_controls":                                types.BoolType,
+		"enable_copilot_answer_control":                                 types.BoolType,
+		"enable_ai_powered_chat":                                        types.StringType,
+		"ai_form_fill_automatic_suggestions":                            types.StringType,
+		"ai_form_fill_smart_paste_and_file_suggestions":                 types.StringType,
+		"ai_form_fill_toolbar":                                          types.StringType,
+		"natural_language_grid_and_view_search":                         types.StringType,
+		"allow_ai_to_generate_charts":                                   types.StringType,
 	}
 
 	attrTypesSecurityObject := map[string]attr.Type{
@@ -422,7 +481,14 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 			"enable_ai_prompts":                                             types.BoolValue(*environmentOrgSettingsDto.AiPromptsEnabled),
 
 			// /SaveSettingValue() settings
-			"enable_copilot_answer_controls": convertStringToBool(environmentBackendSettingsDto.Value),
+			"enable_copilot_answer_control":                 convertStringToBool(environmentBackendSettingsDto.GetValue(EnableCopilotAnswerControl)),
+			"enable_ai_powered_chat":                        convertStringToEnum(environmentBackendSettingsDto.GetValue(AppCopilotEnabled), onOffDefaultMapping),
+			"ai_form_fill_automatic_suggestions":            convertStringToEnum(environmentBackendSettingsDto.GetValue(FormPredictEnabled), onOffDefaultMapping),
+			"ai_form_fill_smart_paste_and_file_suggestions": convertStringToEnum(environmentBackendSettingsDto.GetValue(FormPredictSmartPasteEnabledOnByDefault), onOffDefaultMapping),
+			"ai_form_fill_toolbar":                          convertStringToEnum(environmentBackendSettingsDto.GetValue(FormFillBarUXEnabled), onOffDefaultMapping),
+			"natural_language_grid_and_view_search":         convertStringToEnum(environmentBackendSettingsDto.GetValue(NLGridSearchSetting), naturalLanguageMapping),
+			"allow_ai_to_generate_charts":                   convertStringToEnum(environmentBackendSettingsDto.GetValue(NLChartDataVisualizationSetting), onOffAutoMapping),
+			// end /SaveSettingValue() settings
 		}),
 		"security": types.ObjectValueMust(attrTypesSecurityObject, map[string]attr.Value{
 			"enable_ip_based_cookie_binding":              types.BoolValue(*environmentOrgSettingsDto.EnableIpBasedCookieBinding),
@@ -462,9 +528,16 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 	return environmentSettings, nil
 }
 
-// convertStringToBool converts a string to a Terraform bool value
-// Returns true if the string equals "true" (case-insensitive) or "1"
+func convertStringToEnum(value string, mapping map[string]string) types.String {
+	if mappedValue, exists := mapping[value]; exists {
+		return types.StringValue(mappedValue)
+	}
+	return types.StringValue(value)
+}
+
 func convertStringToBool(value string) types.Bool {
-	valBool := strings.EqualFold(value, "true") || value == "1"
-	return types.BoolValue(valBool)
+	if strings.EqualFold(value, "true") || value == "1" {
+		return types.BoolValue(true)
+	}
+	return types.BoolValue(false)
 }

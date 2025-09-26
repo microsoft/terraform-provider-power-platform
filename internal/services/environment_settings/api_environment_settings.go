@@ -48,7 +48,7 @@ func (client *client) GetEnvironmentSettings(ctx context.Context, environmentId 
 	}, nil
 }
 
-func (client *client) getEnvironmentBackendSettings(ctx context.Context, environmentId string) (*environmentBackendSettingDto, error) {
+func (client *client) getEnvironmentBackendSettings(ctx context.Context, environmentId string) (*environmentBackendSettingsValueDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -71,7 +71,7 @@ func (client *client) getEnvironmentBackendSettings(ctx context.Context, environ
 	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
 		return nil, err
 	}
-	return &environmentBackendSettings.SettingDetailCollection[0], nil
+	return &environmentBackendSettings, nil
 }
 
 func (client *client) getEnvironmentOrgSettings(ctx context.Context, environmentId string) (*environmentOrgSettingsDto, error) {
@@ -100,7 +100,7 @@ func (client *client) getEnvironmentOrgSettings(ctx context.Context, environment
 	return &environmentOrgSettings.Value[0], nil
 }
 
-func (client *client) UpdateEnvironmentSettings(ctx context.Context, environmentId string, environmentSettings environmentOrgSettingsDto) (*environmentSettings, error) {
+func (client *client) UpdateEnvironmentSettings(ctx context.Context, environmentId string, environmentSettings environmentSettings) (*environmentSettings, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,9 @@ func (client *client) UpdateEnvironmentSettings(ctx context.Context, environment
 		Path:   fmt.Sprintf("/api/data/v9.0/organizations(%s)", *settings.OrganizationId),
 	}
 
-	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environmentSettings, []int{http.StatusNoContent, http.StatusInternalServerError, http.StatusForbidden, http.StatusNotFound}, nil)
+	//TODO update backend settings!!
+
+	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environmentSettings.OrgSettings, []int{http.StatusNoContent, http.StatusInternalServerError, http.StatusForbidden, http.StatusNotFound}, nil)
 	if resp != nil && resp.HttpResponse.StatusCode == http.StatusInternalServerError {
 		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_SETTINGS_FAILED), string(resp.BodyAsBytes))
 	}

@@ -218,10 +218,53 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 								Optional:            true,
 							},
 							// /SaveSettingValue() settings
-							"enable_copilot_answer_controls": schema.BoolAttribute{
+							"enable_copilot_answer_control": schema.BoolAttribute{
 								MarkdownDescription: "Allow canvas editors to insert the Copilot answer component, which allows users to receive an AI-powered answer to a predefined data query.",
 								Optional:            true,
 							},
+							"enable_ai_powered_chat": schema.StringAttribute{
+								MarkdownDescription: "Allow users to analyze data using an AI-powered chat experience in [canvas](https://go.microsoft.com/fwlink/?linkid=2244583) and [model-driven apps](https://go.microsoft.com/fwlink/?linkid=2244584). [Learn more](https://go.microsoft.com/fwlink/?linkid=2247541) [Requires Copilot licensing](https://go.microsoft.com/fwlink/?linkid=2263413)",
+								Optional:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+							},
+							"ai_form_fill_automatic_suggestions": schema.StringAttribute{
+								MarkdownDescription: "Allows AI to generate automatic suggestions",
+								Optional:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+							},
+							"ai_form_fill_smart_paste_and_file_suggestions": schema.StringAttribute{
+								MarkdownDescription: "Allows AI to provide smart paste and file suggestions",
+								Optional:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+							},
+							"ai_form_fill_toolbar": schema.StringAttribute{
+								MarkdownDescription: "Allows AI to provide a form fill toolbar with suggestions",
+								Optional:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+							},
+							"natural_language_grid_and_view_search": schema.StringAttribute{
+								MarkdownDescription: "Find your data in model-driven app views with the help of Copilot. [Learn more](https://go.microsoft.com/fwlink/?linkid=2281374)",
+								Optional:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf(ALL_USERS, USER_AS_FEATURE_BECOMES_AVAILABLE, NO_ONE),
+								},
+							},
+							"allow_ai_to_generate_charts": schema.StringAttribute{
+								MarkdownDescription: "Allow AI to generate charts to visualize the data in a view. [Learn more](https://go.microsoft.com/fwlink/?linkid=2300297)",
+								Optional:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, AUTO),
+								},
+							},
+							// end /SaveSettingValue() settings
 						},
 					},
 					"security": schema.SingleNestedAttribute{

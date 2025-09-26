@@ -445,7 +445,7 @@
             "azureschedulerjobcollectionname": null,
             "reportinggroupname": null,
             "ismodeldrivenappsinmsteamsenabled": null,
-            "powerappsmakerbotenabled": true,
+            "powerappsmakerbotenabled": false,
             "modernappdesignercoauthoringenabled": null,
             "isnotesanalysisenabled": null,
             "userratingenabled": null,
@@ -456,7 +456,7 @@
             "blockedmimetypes": null,
             "blockaccesstosessiontranscriptsforcopilotstudio": false,
             "blocktranscriptrecordingforcopilotstudio": false,
-            "enablecopilotstudiosharedatawithvivainsights": true,
+            "enablecopilotstudiosharedatawithvivainsights": false,
             "enablecopilotstudiocrossgeosharedatawithvivainsights": false,
             "aipromptsenabled": true
         }

@@ -16,7 +16,6 @@ import (
 )
 
 func TestAccTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
-	t.Setenv(
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -53,7 +52,13 @@ func TestAccTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_preview_and_experimental_ai_models", "true"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_transcript_recording_for_copilot_studio", "true"),
 					resource.TestCheckNoResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_powerapps_maker_bot"),
-
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_copilot_answer_control", "true"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_ai_powered_chat", "Default"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.ai_form_fill_automatic_suggestions", "Default"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.ai_form_fill_smart_paste_and_file_suggestions", "Default"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.ai_form_fill_toolbar", "Default"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.natural_language_grid_and_view_search", "UserAsFeatureBecomesAvailable"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.allow_ai_to_generate_charts", "Auto"),
 				),
 			},
 		},
@@ -121,7 +126,13 @@ func TestUnitTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_powerapps_maker_bot", "true"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_preview_and_experimental_ai_models", "true"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_transcript_recording_for_copilot_studio", "false"),
-					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_copilot_answer_controls", "false "),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_copilot_answer_control", "false"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.enable_ai_powered_chat", "On"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.ai_form_fill_automatic_suggestions", "Default"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.ai_form_fill_smart_paste_and_file_suggestions", "Default"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.ai_form_fill_toolbar", "Default"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.natural_language_grid_and_view_search", "UserAsFeatureBecomesAvailable"),
+					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.allow_ai_to_generate_charts", "Auto"),
 				),
 			},
 		},
