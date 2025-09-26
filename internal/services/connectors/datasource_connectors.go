@@ -49,6 +49,10 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
+			"environment_id": schema.StringAttribute{
+				MarkdownDescription: "Id of the environment to filter connectors. If not specified, defaults to 'Default' environment which returns tenant-level connectors. Specify an environment Id to get all connectors including those that are specific for environments, including custom connectors.",
+				Optional:            true,
+			},
 			"connectors": schema.ListNestedAttribute{
 				MarkdownDescription: "List of Connectors",
 				Computed:            true,
@@ -120,7 +124,12 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	var state ListDataSourceModel
 	resp.State.Get(ctx, &state)
 
-	connectors, err := d.ConnectorsClient.GetConnectors(ctx)
+	environmentId := ""
+	if !state.EnvironmentId.IsNull() && !state.EnvironmentId.IsUnknown() && state.EnvironmentId.ValueString() != "" {
+		environmentId = state.EnvironmentId.ValueString()
+	}
+
+	connectors, err := d.ConnectorsClient.GetConnectors(ctx, environmentId)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), fmt.Errorf("error occurred: %w", err).Error())
 		return

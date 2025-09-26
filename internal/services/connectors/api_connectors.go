@@ -24,7 +24,7 @@ type client struct {
 	Api *api.Client
 }
 
-func (client *client) GetConnectors(ctx context.Context) ([]connectorDto, error) {
+func (client *client) GetConnectors(ctx context.Context, environmentId string) ([]connectorDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerAppsUrl,
@@ -35,7 +35,11 @@ func (client *client) GetConnectors(ctx context.Context) ([]connectorDto, error)
 	values.Add("showApisWithToS", "true")
 	values.Add("hideDlpExemptApis", "true")
 	values.Add("showAllDlpEnforceableApis", "true")
-	values.Add("$filter", "environment eq '~Default'")
+
+	if environmentId == "" {
+		environmentId = "~Default"
+	}
+	values.Add("$filter", fmt.Sprintf("environment eq '%s'", environmentId))
 
 	apiUrl.RawQuery = values.Encode()
 

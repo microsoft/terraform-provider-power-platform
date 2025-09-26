@@ -15,8 +15,9 @@ type DataSource struct {
 }
 
 type ListDataSourceModel struct {
-	Timeouts   timeouts.Value    `tfsdk:"timeouts"`
-	Connectors []DataSourceModel `tfsdk:"connectors"`
+	Timeouts      timeouts.Value    `tfsdk:"timeouts"`
+	EnvironmentId types.String      `tfsdk:"environment_id"`
+	Connectors    []DataSourceModel `tfsdk:"connectors"`
 }
 
 type DataSourceModel struct {
