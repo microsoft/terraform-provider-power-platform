@@ -3,7 +3,7 @@ module github.com/microsoft/terraform-provider-power-platform
 go 1.24.1
 
 require (
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.19.0
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.19.1
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.11.0
 	github.com/hashicorp/terraform-plugin-docs v0.22.0
 	github.com/hashicorp/terraform-plugin-framework v1.16.0
@@ -13,7 +13,7 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-testing v1.13.3
 	github.com/jarcoal/httpmock v1.4.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 )
 
 require github.com/hashicorp/go-retryablehttp v0.7.7 // indirect
