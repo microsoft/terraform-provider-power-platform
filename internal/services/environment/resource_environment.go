@@ -251,7 +251,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						MarkdownDescription: "Unique name of the Dataverse environment",
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
+							modifiers.UseStateForUnknownKeepNonNullStateModifier(),
 						},
 					},
 					"administration_mode_enabled": schema.BoolAttribute{
@@ -283,7 +283,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						MarkdownDescription: "Url of the environment",
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
+							modifiers.UseStateForUnknownKeepNonNullStateModifier(),
 							modifiers.SetStringAttributeUnknownOnlyIfSecondAttributeChange(path.Root("dataverse").AtName("domain")),
 						},
 					},
@@ -292,7 +292,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						Optional:            true,
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
+							modifiers.UseStateForUnknownKeepNonNullStateModifier(),
 						},
 						Validators: []validator.String{
 							stringvalidator.LengthAtLeast(1),
@@ -302,7 +302,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						MarkdownDescription: "Organization id (guid)",
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
+							modifiers.UseStateForUnknownKeepNonNullStateModifier(),
 						},
 					},
 					"security_group_id": schema.StringAttribute{
@@ -325,7 +325,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						MarkdownDescription: "Version of the environment",
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
+							modifiers.UseStateForUnknownKeepNonNullStateModifier(),
 						},
 					},
 					"templates": schema.ListAttribute{
@@ -342,21 +342,21 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						MarkdownDescription: "The type of the linked D365 application",
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
+							modifiers.UseStateForUnknownKeepNonNullStateModifier(),
 						},
 					},
 					"linked_app_id": schema.StringAttribute{
 						MarkdownDescription: "The GUID of the linked D365 application",
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
+							modifiers.UseStateForUnknownKeepNonNullStateModifier(),
 						},
 					},
 					"linked_app_url": schema.StringAttribute{
 						MarkdownDescription: "The URL of the linked D365 application",
 						Computed:            true,
 						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
+							modifiers.UseStateForUnknownKeepNonNullStateModifier(),
 						},
 					},
 				},

@@ -43,7 +43,7 @@ sh -c 'cat ~/.mitmproxy/mitmproxy-ca-cert.pem >> /etc/ssl/certs/ca-certificates.
 
 tfenv install latest
 
-go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.0.1
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0
 # Removing the golangci-lint binary from GOROOT/bin to avoid conflicts duplicated binaries
 rm -f "$(go env GOROOT)/bin/golangci-lint" || true
 
@@ -54,3 +54,4 @@ az config set core.collect_telemetry=false
 curl -fsSL https://aka.ms/install-azd.sh | bash
 # Turn off telemetry for azd
 export AZURE_DEV_COLLECT_TELEMETRY=no
+

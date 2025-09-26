@@ -57,6 +57,7 @@
     ],
     "window.autoDetectColorScheme": true,
     "go.lintTool": "golangci-lint",
+    "go.testTimeout": "1200s",
     "go.lintFlags": [
         "--fast"
     ],
@@ -65,7 +66,12 @@
         "debugAdapter": "legacy",
     },
     "makefile.configureOnOpen": false,
-    "chat.mcp.discovery.enabled": true,
+    "chat.mcp.discovery.enabled": {
+        "claude-desktop": true,
+        "windsurf": true,
+        "cursor-global": true,
+        "cursor-workspace": true
+    },
     "github.copilot.chat.commitMessageGeneration.instructions": [
         {
             "file": ".github/copilot-commit-message-instructions.md"

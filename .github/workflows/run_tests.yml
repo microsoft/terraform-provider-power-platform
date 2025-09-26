@@ -141,7 +141,7 @@ jobs:
       if: success() || failure()
       shell: pwsh
       run: |
-        dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+        dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version 1.43.6
         pac auth create --githubFederated --tenant ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }} --applicationId ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
         $environmentsList = (pac admin list --name "Test" --json | ConvertFrom-Json)
         $environmentsList | ForEach-Object -Parallel {

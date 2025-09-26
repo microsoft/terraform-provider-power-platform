@@ -253,6 +253,8 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 			pluginTraceSettings = "Exception"
 		case 2:
 			pluginTraceSettings = "All"
+		default:
+			pluginTraceSettings = "Unknown"
 		}
 	}
 
