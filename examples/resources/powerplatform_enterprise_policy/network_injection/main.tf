@@ -1,6 +1,9 @@
 terraform {
   required_version = "> 1.7.0"
   required_providers {
+    powerplatform = {
+      source = "microsoft/power-platform"
+    }
     azapi = {
       source  = "azure/azapi"
       version = "~>2.2.0"
@@ -71,6 +74,15 @@ variable "enterprise_policy_location" {
   validation {
     condition     = length(var.enterprise_policy_location) > 0
     error_message = "The enterprise policy location must not be empty"
+  }
+}
+
+variable "managed_environment_id" {
+  description = "The ID of the managed environment that this policy depends on"
+  type        = string
+  validation {
+    condition     = length(var.managed_environment_id) > 0
+    error_message = "The managed environment ID must not be empty"
   }
 }
 
@@ -149,7 +161,7 @@ resource "powerplatform_enterprise_policy" "network_injection" {
   system_id      = azapi_resource.powerplatform_policy.output.properties.systemId
   policy_type    = "NetworkInjection"
 
-  depends_on = [powerplatform_managed_environment.managed_development]
+  depends_on = [azapi_resource.powerplatform_policy]
 }
 
 output "enterprise_policy_system_id" {
@@ -158,4 +170,8 @@ output "enterprise_policy_system_id" {
 
 output "enterprise_policy_id" {
   value = azapi_resource.powerplatform_policy.output.id
+}
+
+output "enterprise_policy_resource" {
+  value = powerplatform_enterprise_policy.network_injection
 }
