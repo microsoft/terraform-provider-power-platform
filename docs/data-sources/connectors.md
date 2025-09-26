@@ -39,6 +39,7 @@ data "powerplatform_connectors" "all_connectors" {}
 
 ### Optional
 
+- `environment_id` (String) Id of the environment to filter connectors. If not specified, defaults to 'Default' environment which returns tenant-level connectors. Specify an environment Id to get all connectors including those that are specific for environments, including custom connectors.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
