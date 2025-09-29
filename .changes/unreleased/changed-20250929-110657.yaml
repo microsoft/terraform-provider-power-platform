@@ -1,0 +1,5 @@
+kind: changed
+body: Extended powerplatform_environment_settings resource to support new AI-powered features including Copilot Studio settings, PowerApps Maker Bot, AI form fill capabilities, and natural language search features
+time: 2025-09-29T11:06:57.740221324Z
+custom:
+    Issue: "910"
