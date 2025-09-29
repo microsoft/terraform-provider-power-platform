@@ -124,12 +124,15 @@ func (client *client) updateEnvironmentOrgSettings(ctx context.Context, environm
 		return nil, err
 	}
 
-	a, err := client.getEnvironmentOrgSettings(ctx, environmentId)
+	orgSettingsResponse, err := client.getEnvironmentOrgSettings(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
 
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   environmentHost,
-		Path:   fmt.Sprintf("/api/data/v9.0/organizations(%s)", *a.OrganizationId),
+		Path:   fmt.Sprintf("/api/data/v9.0/organizations(%s)", *orgSettingsResponse.OrganizationId),
 	}
 
 	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, orgSettings, []int{http.StatusNoContent, http.StatusInternalServerError, http.StatusForbidden, http.StatusNotFound}, nil)

@@ -54,7 +54,7 @@ func (environmentBackendSettings environmentBackendSettingsValueDto) GetValue(na
 
 func (environmentBackendSettings *environmentBackendSettingsValueDto) SetValue(name string, value any) error {
 	val := ""
-	dataType := -1
+	var dataType int
 	switch v := value.(type) {
 	case string:
 		dataType = 1
@@ -79,7 +79,7 @@ func (environmentBackendSettings *environmentBackendSettingsValueDto) SetValue(n
 		}
 	}
 
-	//value not found in lets add it to the collection
+	// value not found in lets add it to the collection
 	environmentBackendSettings.SettingDetailCollection = append(environmentBackendSettings.SettingDetailCollection, environmentBackendSettingDto{
 		Name:     name,
 		Value:    val,

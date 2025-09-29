@@ -245,71 +245,95 @@ func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSetti
 			return fmt.Errorf("failed to convert feature settings: %v", diags)
 		}
 
-		if helpers.IsKnown(featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps) {
-			environmentSettings.OrgSettings.PowerAppsComponentFrameworkForCanvasApps = featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.ValueBoolPointer()
+		convertOrgFeatureSettings(featuresSourceModel, environmentSettings.OrgSettings)
+
+		if err := convertBackendFeatureSettings(featuresSourceModel, environmentSettings.BackendSettings); err != nil {
+			return err
 		}
-		if helpers.IsKnown(featuresSourceModel.PowerAppsMakerBotEnabled) {
-			environmentSettings.OrgSettings.PowerAppsMakerBotEnabled = featuresSourceModel.PowerAppsMakerBotEnabled.ValueBoolPointer()
+	}
+	return nil
+}
+
+func convertOrgFeatureSettings(featuresSourceModel FeaturesSourceModel, orgSettings *environmentOrgSettingsDto) {
+	if helpers.IsKnown(featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps) {
+		orgSettings.PowerAppsComponentFrameworkForCanvasApps = featuresSourceModel.PowerAppsComponentFrameworkForCanvasApps.ValueBoolPointer()
+	}
+	if helpers.IsKnown(featuresSourceModel.PowerAppsMakerBotEnabled) {
+		orgSettings.PowerAppsMakerBotEnabled = featuresSourceModel.PowerAppsMakerBotEnabled.ValueBoolPointer()
+	}
+	if helpers.IsKnown(featuresSourceModel.EnableAccessToSessionTranscriptsForCopilotStudio) {
+		val := featuresSourceModel.EnableAccessToSessionTranscriptsForCopilotStudio.ValueBoolPointer()
+		if val != nil {
+			negated := !(*val)
+			orgSettings.BlockAccessToSessionTranscriptsForCopilotStudio = &negated
+		} else {
+			orgSettings.BlockAccessToSessionTranscriptsForCopilotStudio = nil
 		}
-		if helpers.IsKnown(featuresSourceModel.EnableAccessToSessionTranscriptsForCopilotStudio) {
-			val := featuresSourceModel.EnableAccessToSessionTranscriptsForCopilotStudio.ValueBoolPointer()
-			if val != nil {
-				negated := !(*val)
-				environmentSettings.OrgSettings.BlockAccessToSessionTranscriptsForCopilotStudio = &negated
-			} else {
-				environmentSettings.OrgSettings.BlockAccessToSessionTranscriptsForCopilotStudio = nil
-			}
+	}
+	if helpers.IsKnown(featuresSourceModel.EnableTranscriptRecordingForCopilotStudio) {
+		val := featuresSourceModel.EnableTranscriptRecordingForCopilotStudio.ValueBoolPointer()
+		if val != nil {
+			negated := !(*val)
+			orgSettings.BlockTranscriptRecordingForCopilotStudio = &negated
+		} else {
+			orgSettings.BlockTranscriptRecordingForCopilotStudio = nil
 		}
-		if helpers.IsKnown(featuresSourceModel.EnableTranscriptRecordingForCopilotStudio) {
-			val := featuresSourceModel.EnableTranscriptRecordingForCopilotStudio.ValueBoolPointer()
-			if val != nil {
-				negated := !(*val)
-				environmentSettings.OrgSettings.BlockTranscriptRecordingForCopilotStudio = &negated
-			} else {
-				environmentSettings.OrgSettings.BlockTranscriptRecordingForCopilotStudio = nil
-			}
+	}
+	if helpers.IsKnown(featuresSourceModel.EnableCopilotStudioShareDataWithVivaInsights) {
+		orgSettings.EnableCopilotStudioShareDataWithVivaInsights = featuresSourceModel.EnableCopilotStudioShareDataWithVivaInsights.ValueBoolPointer()
+	}
+	if helpers.IsKnown(featuresSourceModel.EnableCopilotStudioCrossGeoShareDataWithVivaInsights) {
+		orgSettings.EnableCopilotStudioCrossGeoShareDataWithVivaInsights = featuresSourceModel.EnableCopilotStudioCrossGeoShareDataWithVivaInsights.ValueBoolPointer()
+	}
+	if helpers.IsKnown(featuresSourceModel.EnablePreviewAndExperimentalAIModels) {
+		orgSettings.PaiPreviewScenarioEnabled = featuresSourceModel.EnablePreviewAndExperimentalAIModels.ValueBoolPointer()
+	}
+	if helpers.IsKnown(featuresSourceModel.AiPromptsEnabled) {
+		orgSettings.AiPromptsEnabled = featuresSourceModel.AiPromptsEnabled.ValueBoolPointer()
+	}
+}
+
+func convertBackendFeatureSettings(featuresSourceModel FeaturesSourceModel, backendSettings *environmentBackendSettingsValueDto) error {
+	if helpers.IsKnown(featuresSourceModel.EnableCopilotAnswerControl) {
+		if err := backendSettings.SetValue(EnableCopilotAnswerControl, featuresSourceModel.EnableCopilotAnswerControl.ValueBool()); err != nil {
+			return err
 		}
-		if helpers.IsKnown(featuresSourceModel.EnableCopilotStudioShareDataWithVivaInsights) {
-			environmentSettings.OrgSettings.EnableCopilotStudioShareDataWithVivaInsights = featuresSourceModel.EnableCopilotStudioShareDataWithVivaInsights.ValueBoolPointer()
+	}
+	if helpers.IsKnown(featuresSourceModel.EnableAiPoweredChat) {
+		backendValue := convertEnumToString(featuresSourceModel.EnableAiPoweredChat.ValueString(), onOffDefaultMapping)
+		if err := backendSettings.SetValue(AppCopilotEnabled, backendValue); err != nil {
+			return err
 		}
-		if helpers.IsKnown(featuresSourceModel.EnableCopilotStudioCrossGeoShareDataWithVivaInsights) {
-			environmentSettings.OrgSettings.EnableCopilotStudioCrossGeoShareDataWithVivaInsights = featuresSourceModel.EnableCopilotStudioCrossGeoShareDataWithVivaInsights.ValueBoolPointer()
+	}
+	if helpers.IsKnown(featuresSourceModel.AiFormFillAutomaticSuggestions) {
+		backendValue := convertEnumToString(featuresSourceModel.AiFormFillAutomaticSuggestions.ValueString(), onOffDefaultMapping)
+		if err := backendSettings.SetValue(FormPredictEnabled, backendValue); err != nil {
+			return err
 		}
-		if helpers.IsKnown(featuresSourceModel.EnablePreviewAndExperimentalAIModels) {
-			environmentSettings.OrgSettings.PaiPreviewScenarioEnabled = featuresSourceModel.EnablePreviewAndExperimentalAIModels.ValueBoolPointer()
+	}
+	if helpers.IsKnown(featuresSourceModel.AiFormFillSmartPasteAndFileSuggestions) {
+		backendValue := convertEnumToString(featuresSourceModel.AiFormFillSmartPasteAndFileSuggestions.ValueString(), onOffDefaultMapping)
+		if err := backendSettings.SetValue(FormPredictSmartPasteEnabledOnByDefault, backendValue); err != nil {
+			return err
 		}
-		if helpers.IsKnown(featuresSourceModel.AiPromptsEnabled) {
-			environmentSettings.OrgSettings.AiPromptsEnabled = featuresSourceModel.AiPromptsEnabled.ValueBoolPointer()
+	}
+	if helpers.IsKnown(featuresSourceModel.AiFormFillToolbar) {
+		backendValue := convertEnumToString(featuresSourceModel.AiFormFillToolbar.ValueString(), onOffDefaultMapping)
+		if err := backendSettings.SetValue(FormFillBarUXEnabled, backendValue); err != nil {
+			return err
 		}
-		// /SaveSettingValue() settings
-		if helpers.IsKnown(featuresSourceModel.EnableCopilotAnswerControl) {
-			environmentSettings.BackendSettings.SetValue(EnableCopilotAnswerControl, featuresSourceModel.EnableCopilotAnswerControl.ValueBool())
+	}
+	if helpers.IsKnown(featuresSourceModel.NaturalLanguageGridAndViewSearch) {
+		backendValue := convertEnumToString(featuresSourceModel.NaturalLanguageGridAndViewSearch.ValueString(), naturalLanguageMapping)
+		if err := backendSettings.SetValue(NLGridSearchSetting, backendValue); err != nil {
+			return err
 		}
-		if helpers.IsKnown(featuresSourceModel.EnableAiPoweredChat) {
-			backendValue := convertEnumToString(featuresSourceModel.EnableAiPoweredChat.ValueString(), onOffDefaultMapping)
-			environmentSettings.BackendSettings.SetValue(AppCopilotEnabled, backendValue)
+	}
+	if helpers.IsKnown(featuresSourceModel.AllowAiToGenerateCharts) {
+		backendValue := convertEnumToString(featuresSourceModel.AllowAiToGenerateCharts.ValueString(), onOffAutoMapping)
+		if err := backendSettings.SetValue(NLChartDataVisualizationSetting, backendValue); err != nil {
+			return err
 		}
-		if helpers.IsKnown(featuresSourceModel.AiFormFillAutomaticSuggestions) {
-			backendValue := convertEnumToString(featuresSourceModel.AiFormFillAutomaticSuggestions.ValueString(), onOffDefaultMapping)
-			environmentSettings.BackendSettings.SetValue(FormPredictEnabled, backendValue)
-		}
-		if helpers.IsKnown(featuresSourceModel.AiFormFillSmartPasteAndFileSuggestions) {
-			backendValue := convertEnumToString(featuresSourceModel.AiFormFillSmartPasteAndFileSuggestions.ValueString(), onOffDefaultMapping)
-			environmentSettings.BackendSettings.SetValue(FormPredictSmartPasteEnabledOnByDefault, backendValue)
-		}
-		if helpers.IsKnown(featuresSourceModel.AiFormFillToolbar) {
-			backendValue := convertEnumToString(featuresSourceModel.AiFormFillToolbar.ValueString(), onOffDefaultMapping)
-			environmentSettings.BackendSettings.SetValue(FormFillBarUXEnabled, backendValue)
-		}
-		if helpers.IsKnown(featuresSourceModel.NaturalLanguageGridAndViewSearch) {
-			backendValue := convertEnumToString(featuresSourceModel.NaturalLanguageGridAndViewSearch.ValueString(), naturalLanguageMapping)
-			environmentSettings.BackendSettings.SetValue(NLGridSearchSetting, backendValue)
-		}
-		if helpers.IsKnown(featuresSourceModel.AllowAiToGenerateCharts) {
-			backendValue := convertEnumToString(featuresSourceModel.AllowAiToGenerateCharts.ValueString(), onOffAutoMapping)
-			environmentSettings.BackendSettings.SetValue(NLChartDataVisualizationSetting, backendValue)
-		}
-		// end /SaveSettingValue() settings
 	}
 	return nil
 }
