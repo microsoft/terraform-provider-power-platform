@@ -229,6 +229,14 @@ func convertFromEnvironmentBehaviorSettings(ctx context.Context, environmentSett
 }
 
 func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSettingsModel EnvironmentSettingsResourceModel, environmentSettings *environmentSettings) error {
+	if environmentSettings.OrgSettings == nil {
+		environmentSettings.OrgSettings = &environmentOrgSettingsDto{}
+	}
+	if environmentSettings.BackendSettings == nil {
+		environmentSettings.BackendSettings = &environmentBackendSettingsValueDto{
+			SettingDetailCollection: []environmentBackendSettingDto{},
+		}
+	}
 
 	features := environmentSettingsModel.Product.Attributes()["features"]
 	if features != nil && helpers.IsKnown(features) {
@@ -278,22 +286,28 @@ func convertFromEnvironmentFeatureSettings(ctx context.Context, environmentSetti
 			environmentSettings.BackendSettings.SetValue(EnableCopilotAnswerControl, featuresSourceModel.EnableCopilotAnswerControl.ValueBool())
 		}
 		if helpers.IsKnown(featuresSourceModel.EnableAiPoweredChat) {
-			environmentSettings.BackendSettings.SetValue(AppCopilotEnabled, featuresSourceModel.EnableAiPoweredChat.ValueString())
+			backendValue := convertEnumToString(featuresSourceModel.EnableAiPoweredChat.ValueString(), onOffDefaultMapping)
+			environmentSettings.BackendSettings.SetValue(AppCopilotEnabled, backendValue)
 		}
 		if helpers.IsKnown(featuresSourceModel.AiFormFillAutomaticSuggestions) {
-			environmentSettings.BackendSettings.SetValue(FormPredictEnabled, featuresSourceModel.AiFormFillAutomaticSuggestions.ValueString())
+			backendValue := convertEnumToString(featuresSourceModel.AiFormFillAutomaticSuggestions.ValueString(), onOffDefaultMapping)
+			environmentSettings.BackendSettings.SetValue(FormPredictEnabled, backendValue)
 		}
 		if helpers.IsKnown(featuresSourceModel.AiFormFillSmartPasteAndFileSuggestions) {
-			environmentSettings.BackendSettings.SetValue(FormPredictSmartPasteEnabledOnByDefault, featuresSourceModel.AiFormFillSmartPasteAndFileSuggestions.ValueString())
+			backendValue := convertEnumToString(featuresSourceModel.AiFormFillSmartPasteAndFileSuggestions.ValueString(), onOffDefaultMapping)
+			environmentSettings.BackendSettings.SetValue(FormPredictSmartPasteEnabledOnByDefault, backendValue)
 		}
 		if helpers.IsKnown(featuresSourceModel.AiFormFillToolbar) {
-			environmentSettings.BackendSettings.SetValue(FormFillBarUXEnabled, featuresSourceModel.AiFormFillToolbar.ValueString())
+			backendValue := convertEnumToString(featuresSourceModel.AiFormFillToolbar.ValueString(), onOffDefaultMapping)
+			environmentSettings.BackendSettings.SetValue(FormFillBarUXEnabled, backendValue)
 		}
 		if helpers.IsKnown(featuresSourceModel.NaturalLanguageGridAndViewSearch) {
-			environmentSettings.BackendSettings.SetValue(NLGridSearchSetting, featuresSourceModel.NaturalLanguageGridAndViewSearch.ValueString())
+			backendValue := convertEnumToString(featuresSourceModel.NaturalLanguageGridAndViewSearch.ValueString(), naturalLanguageMapping)
+			environmentSettings.BackendSettings.SetValue(NLGridSearchSetting, backendValue)
 		}
 		if helpers.IsKnown(featuresSourceModel.AllowAiToGenerateCharts) {
-			environmentSettings.BackendSettings.SetValue(NLChartDataVisualizationSetting, featuresSourceModel.AllowAiToGenerateCharts.ValueString())
+			backendValue := convertEnumToString(featuresSourceModel.AllowAiToGenerateCharts.ValueString(), onOffAutoMapping)
+			environmentSettings.BackendSettings.SetValue(NLChartDataVisualizationSetting, backendValue)
 		}
 		// end /SaveSettingValue() settings
 	}
@@ -533,6 +547,15 @@ func convertStringToEnum(value string, mapping map[string]string) types.String {
 		return types.StringValue(mappedValue)
 	}
 	return types.StringValue(value)
+}
+
+func convertEnumToString(value string, mapping map[string]string) string {
+	for apiKey, userFriendlyValue := range mapping {
+		if userFriendlyValue == value {
+			return apiKey
+		}
+	}
+	return value
 }
 
 func convertStringToBool(value string) types.Bool {

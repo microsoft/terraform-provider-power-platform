@@ -53,24 +53,39 @@ func (environmentBackendSettings environmentBackendSettingsValueDto) GetValue(na
 }
 
 func (environmentBackendSettings *environmentBackendSettingsValueDto) SetValue(name string, value any) error {
+	val := ""
+	dataType := -1
+	switch v := value.(type) {
+	case string:
+		dataType = 1
+		val = v
+	case bool:
+		dataType = 2
+		if v {
+			val = "true"
+		} else {
+			val = "false"
+		}
+	case int:
+		dataType = 0
+		val = fmt.Sprintf("%d", v)
+	default:
+		return fmt.Errorf("unsupported value type: %T", v)
+	}
 	for i, setting := range environmentBackendSettings.SettingDetailCollection {
 		if setting.Name == name {
-			switch v := value.(type) {
-			case string:
-				environmentBackendSettings.SettingDetailCollection[i].Value = v
-			case bool:
-				if v {
-					environmentBackendSettings.SettingDetailCollection[i].Value = "true"
-				} else {
-					environmentBackendSettings.SettingDetailCollection[i].Value = "false"
-				}
-			default:
-				return fmt.Errorf("unsupported value type: %T", v)
-			}
+			environmentBackendSettings.SettingDetailCollection[i].Value = val
 			return nil
 		}
 	}
-	return fmt.Errorf("setting not found: %s", name)
+
+	//value not found in lets add it to the collection
+	environmentBackendSettings.SettingDetailCollection = append(environmentBackendSettings.SettingDetailCollection, environmentBackendSettingDto{
+		Name:     name,
+		Value:    val,
+		DataType: dataType,
+	})
+	return nil
 }
 
 type environmentOrgSettingsValueDto struct {
@@ -116,4 +131,9 @@ type environmentIdPropertiesDto struct {
 
 type linkedEnvironmentIdMetadataDto struct {
 	InstanceURL string
+}
+
+type setSettingValueDto struct {
+	SettingName string `json:"SettingName"`
+	Value       string `json:"Value"`
 }

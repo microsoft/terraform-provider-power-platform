@@ -100,26 +100,39 @@ func (client *client) getEnvironmentOrgSettings(ctx context.Context, environment
 	return &environmentOrgSettings.Value[0], nil
 }
 
-func (client *client) UpdateEnvironmentSettings(ctx context.Context, environmentId string, environmentSettings environmentSettings) (*environmentSettings, error) {
+func (client *client) UpdateEnvironmentSettings(ctx context.Context, environmentId string, settings environmentSettings) (*environmentSettings, error) {
+	updatedOrgSettings, err := client.updateEnvironmentOrgSettings(ctx, environmentId, *settings.OrgSettings)
+	if err != nil {
+		return nil, err
+	}
+
+	updatedBackendSettings, err := client.updateEnvironmentBackendSettings(ctx, environmentId, *settings.BackendSettings)
+	if err != nil {
+		return nil, err
+	}
+
+	updateSettings := &environmentSettings{
+		BackendSettings: updatedBackendSettings,
+		OrgSettings:     updatedOrgSettings,
+	}
+	return updateSettings, nil
+}
+
+func (client *client) updateEnvironmentOrgSettings(ctx context.Context, environmentId string, orgSettings environmentOrgSettingsDto) (*environmentOrgSettingsDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
 	}
 
-	settings, err := client.getEnvironmentOrgSettings(ctx, environmentId)
-	if err != nil {
-		return nil, err
-	}
+	a, err := client.getEnvironmentOrgSettings(ctx, environmentId)
 
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   environmentHost,
-		Path:   fmt.Sprintf("/api/data/v9.0/organizations(%s)", *settings.OrganizationId),
+		Path:   fmt.Sprintf("/api/data/v9.0/organizations(%s)", *a.OrganizationId),
 	}
 
-	//TODO update backend settings!!
-
-	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, environmentSettings.OrgSettings, []int{http.StatusNoContent, http.StatusInternalServerError, http.StatusForbidden, http.StatusNotFound}, nil)
+	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, orgSettings, []int{http.StatusNoContent, http.StatusInternalServerError, http.StatusForbidden, http.StatusNotFound}, nil)
 	if resp != nil && resp.HttpResponse.StatusCode == http.StatusInternalServerError {
 		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_SETTINGS_FAILED), string(resp.BodyAsBytes))
 	}
@@ -130,10 +143,48 @@ func (client *client) UpdateEnvironmentSettings(ctx context.Context, environment
 		return nil, err
 	}
 	if err != nil {
-		return nil, fmt.Errorf("failed to execute API request for updating environment settings %s: %w", environmentId, err)
+		return nil, fmt.Errorf("failed to execute API request for updating environment org settings %s: %w", environmentId, err)
 	}
 
-	return client.GetEnvironmentSettings(ctx, environmentId)
+	return client.getEnvironmentOrgSettings(ctx, environmentId)
+}
+
+func (client *client) updateEnvironmentBackendSettings(ctx context.Context, environmentId string, backendSettings environmentBackendSettingsValueDto) (*environmentBackendSettingsValueDto, error) {
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+	for _, setting := range backendSettings.SettingDetailCollection {
+		if setting.Name == "" || setting.Value == "" {
+			continue
+		}
+
+		apiUrl := &url.URL{
+			Scheme: constants.HTTPS,
+			Host:   environmentHost,
+			Path:   "/api/data/v9.0/SaveSettingValue()",
+		}
+
+		settingValue := setSettingValueDto{
+			SettingName: setting.Name,
+			Value:       setting.Value,
+		}
+
+		resp, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, settingValue, []int{http.StatusNoContent, http.StatusInternalServerError, http.StatusForbidden, http.StatusNotFound}, nil)
+		if resp != nil && resp.HttpResponse.StatusCode == http.StatusInternalServerError {
+			return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_SETTINGS_FAILED), string(resp.BodyAsBytes))
+		}
+		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+			return nil, err
+		}
+		if err := client.Api.HandleNotFoundResponse(resp); err != nil {
+			return nil, err
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to execute API request for updating environment backend settings %s: %w", environmentId, err)
+		}
+	}
+	return client.getEnvironmentBackendSettings(ctx, environmentId)
 }
 
 func (client *client) GetEnvironmentHostById(ctx context.Context, environmentId string) (string, error) {
