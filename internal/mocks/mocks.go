@@ -5,6 +5,7 @@ package mocks
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"path/filepath"
 	"regexp"
@@ -39,6 +40,10 @@ var TestAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServe
 }
 
 func ActivateEnvironmentHttpMocks() {
+	httpmock.RegisterNoResponder(func(req *http.Request) (*http.Response, error) {
+		return nil, fmt.Errorf("no responder found for %s %s. Please check your http mocks.", req.Method, req.URL)
+	})
+
 	httpmock.RegisterResponder("GET", `=~^https://([\d-]+)\.crm4\.dynamics\.com/api/data/v9\.2/transactioncurrencies\z`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, `{

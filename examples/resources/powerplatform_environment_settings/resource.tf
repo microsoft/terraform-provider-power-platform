@@ -66,6 +66,13 @@ resource "powerplatform_environment_settings" "settings" {
       enable_copilot_studio_cross_geo_share_data_with_viva_insights = false
       enable_preview_and_experimental_ai_models                     = false
       enable_powerapps_maker_bot                                    = false
+
+      enable_ai_powered_chat                        = "Off"
+      ai_form_fill_automatic_suggestions            = "Off"
+      ai_form_fill_smart_paste_and_file_suggestions = "Off"
+      ai_form_fill_toolbar                          = "Off"
+      natural_language_grid_and_view_search         = "NoOne"
+      allow_ai_to_generate_charts                   = "Off"
     }
     security = {
       allow_application_user_access               = true

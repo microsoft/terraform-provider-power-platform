@@ -52,12 +52,22 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 	}
 
 	apiResponse, err := httpClient.Do(request)
-	resp := &Response{
-		HttpResponse: apiResponse,
+
+	if err != nil && apiResponse == nil {
+		resp := &Response{
+			HttpResponse: &http.Response{
+				StatusCode: http.StatusServiceUnavailable,
+				Status:     http.StatusText(http.StatusServiceUnavailable),
+				Header:     http.Header{},
+				Body:       io.NopCloser(bytes.NewReader([]byte{})),
+				Request:    request,
+			},
+		}
+		return resp, err
 	}
 
-	if err != nil {
-		return resp, err
+	resp := &Response{
+		HttpResponse: apiResponse,
 	}
 
 	if apiResponse == nil {
