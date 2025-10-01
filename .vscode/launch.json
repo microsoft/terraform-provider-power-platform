@@ -24,7 +24,14 @@
             "args": [
                 "-debug",
             ],
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "dlvLoadConfig": {
+                "followPointers": true,
+                "maxVariableRecurse": 3,
+                "maxStringLen": 4096,
+                "maxArrayValues": 64,
+                "maxStructFields": -1
+            }
         }
     ]
 }

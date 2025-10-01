@@ -146,7 +146,7 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 
 		resp, err := client.doRequest(ctx, token, request, headers)
 		if err != nil {
-			return resp, fmt.Errorf("Error making %s request to %s. %w", request.Method, request.RequestURI, err)
+			return resp, err
 		}
 
 		err = validateNoManagementApplicationPermissionsForBapiRequest(resp)

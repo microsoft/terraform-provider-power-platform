@@ -189,6 +189,82 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 								MarkdownDescription: "Power Apps component framework for canvas apps",
 								Optional:            true,
 							},
+							"enable_powerapps_maker_bot": schema.BoolAttribute{
+								MarkdownDescription: "Enable new AI-powered Copilot features for people who make apps. [Learn more](https://go.microsoft.com/fwlink/?linkid=2223555)",
+								Optional:            true,
+							},
+							"enable_access_to_session_transcripts_for_copilot_studio": schema.BoolAttribute{
+								MarkdownDescription: "Allow agent access owners and editors to see session transcripts from conversations interactions in their agents.",
+								Optional:            true,
+							},
+							"enable_transcript_recording_for_copilot_studio": schema.BoolAttribute{
+								MarkdownDescription: "Allow conversation transcripts and their associated metadata to be saved in Dataverse (required for enhanced reporting).",
+								Optional:            true,
+							},
+							"enable_copilot_studio_share_data_with_viva_insights": schema.BoolAttribute{
+								MarkdownDescription: "Allow Copilot Studio to share data with Viva Insights.",
+								Optional:            true,
+							},
+							"enable_copilot_studio_cross_geo_share_data_with_viva_insights": schema.BoolAttribute{
+								MarkdownDescription: "Allow cross-geo sharing of aggregated analytics data if your tenant preferred data location for Viva Insights is different from the location of your Copilot Studio environment.",
+								Optional:            true,
+							},
+							"enable_preview_and_experimental_ai_models": schema.BoolAttribute{
+								MarkdownDescription: "Let people use AI models that are experimental or in preview to make agents, prompts, apps, flow and more in Copilot Studio. [Learn more](https://go.microsoft.com/fwlink/?linkid=2331400)",
+								Optional:            true,
+							},
+							"enable_ai_prompts": schema.BoolAttribute{
+								MarkdownDescription: "Enable the AI prompts feature in Power Platform and Copilot Studio. [Learn more](https://go.microsoft.com/fwlink/?linkid=2283738)",
+								Optional:            true,
+							},
+							// /SaveSettingValue() settings
+							"enable_copilot_answer_control": schema.BoolAttribute{
+								MarkdownDescription: "Allow canvas editors to insert the Copilot answer component, which allows users to receive an AI-powered answer to a predefined data query.",
+								Optional:            true,
+							},
+							"enable_ai_powered_chat": schema.StringAttribute{
+								MarkdownDescription: "Allow users to analyze data using an AI-powered chat experience in [canvas](https://go.microsoft.com/fwlink/?linkid=2244583) and [model-driven apps](https://go.microsoft.com/fwlink/?linkid=2244584). [Learn more](https://go.microsoft.com/fwlink/?linkid=2247541) [Requires Copilot licensing](https://go.microsoft.com/fwlink/?linkid=2263413)",
+								Optional:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+							},
+							"ai_form_fill_automatic_suggestions": schema.StringAttribute{
+								MarkdownDescription: "Allows AI to generate automatic suggestions",
+								Optional:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+							},
+							"ai_form_fill_smart_paste_and_file_suggestions": schema.StringAttribute{
+								MarkdownDescription: "Allows AI to provide smart paste and file suggestions",
+								Optional:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+							},
+							"ai_form_fill_toolbar": schema.StringAttribute{
+								MarkdownDescription: "Allows AI to provide a form fill toolbar with suggestions",
+								Optional:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+							},
+							"natural_language_grid_and_view_search": schema.StringAttribute{
+								MarkdownDescription: "Find your data in model-driven app views with the help of Copilot. [Learn more](https://go.microsoft.com/fwlink/?linkid=2281374)",
+								Optional:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf(ALL_USERS, USER_AS_FEATURE_BECOMES_AVAILABLE, NO_ONE),
+								},
+							},
+							"allow_ai_to_generate_charts": schema.StringAttribute{
+								MarkdownDescription: "Allow AI to generate charts to visualize the data in a view. [Learn more](https://go.microsoft.com/fwlink/?linkid=2300297)",
+								Optional:            true,
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, AUTO),
+								},
+							},
+							// end /SaveSettingValue() settings
 						},
 					},
 					"security": schema.SingleNestedAttribute{

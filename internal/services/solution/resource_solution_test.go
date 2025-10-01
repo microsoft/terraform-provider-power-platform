@@ -49,6 +49,11 @@ func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -64,12 +69,21 @@ func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 					}
 				}
 
+				resource "time_sleep" "wait_120_seconds" {
+					depends_on = [powerplatform_environment.environment]
+					create_duration = "120s"
+				}
+
 				resource "powerplatform_solution" "solution1" {
+					depends_on = [time_sleep.wait_120_seconds]
+
 					environment_id = powerplatform_environment.environment.id
 					solution_file    = "` + SOLUTION_1_NAME + `"
 				}
 					
 				resource "powerplatform_solution" "solution2" {
+					depends_on = [powerplatform_solution.solution1]
+
 					environment_id = powerplatform_environment.environment.id
 					solution_file    = "` + SOLUTION_2_NAME + `"
 				}`,
@@ -94,6 +108,11 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 	solutionFileChecksum, _ := helpers.CalculateSHA256(SOLUTION_1_NAME)
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -109,7 +128,13 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 					}
 				}
 
+				resource "time_sleep" "wait_120_seconds" {
+					depends_on = [powerplatform_environment.environment]
+					create_duration = "120s"
+				}
+
 				resource "powerplatform_solution" "solution" {
+					depends_on = [time_sleep.wait_120_seconds]
 					environment_id = powerplatform_environment.environment.id
 					solution_file    = "` + SOLUTION_1_NAME + `"
 				}`,
@@ -254,6 +279,11 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 	settingsFileChecksum, _ := helpers.CalculateSHA256(solutionSettingsFileName)
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -268,8 +298,15 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
 				}
+
+				resource "time_sleep" "wait_120_seconds" {
+					depends_on = [powerplatform_environment.environment]
+					create_duration = "120s"
+				}
 				
 				resource "powerplatform_solution" "solution" {
+					depends_on = [time_sleep.wait_120_seconds]
+					
 					environment_id = powerplatform_environment.environment.id
 					solution_file    = "` + SOLUTION_1_NAME + `"
 					settings_file 	 = "` + solutionSettingsFileName + `"

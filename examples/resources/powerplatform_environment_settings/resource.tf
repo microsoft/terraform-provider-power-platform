@@ -58,7 +58,21 @@ resource "powerplatform_environment_settings" "settings" {
       show_dashboard_cards_in_expanded_state = true
     }
     features = {
-      power_apps_component_framework_for_canvas_apps = false
+      power_apps_component_framework_for_canvas_apps                = false
+      enable_access_to_session_transcripts_for_copilot_studio       = false
+      enable_transcript_recording_for_copilot_studio                = false
+      enable_ai_prompts                                             = false
+      enable_copilot_studio_share_data_with_viva_insights           = false
+      enable_copilot_studio_cross_geo_share_data_with_viva_insights = false
+      enable_preview_and_experimental_ai_models                     = false
+      enable_powerapps_maker_bot                                    = false
+
+      enable_ai_powered_chat                        = "Off"
+      ai_form_fill_automatic_suggestions            = "Off"
+      ai_form_fill_smart_paste_and_file_suggestions = "Off"
+      ai_form_fill_toolbar                          = "Off"
+      natural_language_grid_and_view_search         = "NoOne"
+      allow_ai_to_generate_charts                   = "Off"
     }
     security = {
       allow_application_user_access               = true
