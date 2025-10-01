@@ -1,5 +1,0 @@
-kind: changed
-body: Enhanced powerplatform_connectors data source to support filtering by environment_id
-time: 2025-09-25T07:16:21.345156192Z
-custom:
-    Issue: "928"
