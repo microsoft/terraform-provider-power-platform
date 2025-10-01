@@ -85,7 +85,8 @@ module "network_injection" {
 
   should_register_provider = false
 
-  environment_id = powerplatform_environment.example_environment.id
+  environment_id         = powerplatform_environment.example_environment.id
+  managed_environment_id = powerplatform_managed_environment.managed_development.id
 
   resource_group_name        = "rg_example_network_injection_policy"
   resource_group_location    = local.europe_location[0].azure_regions[0]
@@ -109,7 +110,7 @@ module "encryption" {
   keyvault_name              = "kv-ep-example8"
 
   // let's wait for first policy to be executed
-  depends_on = [powerplatform_enterprise_policy.network_injection]
+  depends_on = [module.network_injection]
 }
 ```
 

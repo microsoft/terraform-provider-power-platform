@@ -1,11 +1,17 @@
 terraform {
   required_version = "> 1.7.0"
   required_providers {
+    powerplatform = {
+      source = "microsoft/power-platform"
+    }
     azapi = {
       source = "azure/azapi"
     }
     azurerm = {
       source = "hashicorp/azurerm"
+    }
+    time = {
+      source = "hashicorp/time"
     }
   }
 }
@@ -194,4 +200,8 @@ output "enterprise_policy_system_id" {
 
 output "enterprise_policy_id" {
   value = azapi_resource.powerplatform_policy.output.id
+}
+
+output "enterprise_policy_resource" {
+  value = powerplatform_enterprise_policy.encryption
 }
