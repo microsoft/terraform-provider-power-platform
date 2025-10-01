@@ -445,7 +445,7 @@
             "azureschedulerjobcollectionname": null,
             "reportinggroupname": null,
             "ismodeldrivenappsinmsteamsenabled": null,
-            "powerappsmakerbotenabled": null,
+            "powerappsmakerbotenabled": false,
             "modernappdesignercoauthoringenabled": null,
             "isnotesanalysisenabled": null,
             "userratingenabled": null,
@@ -453,7 +453,12 @@
             "picture": null,
             "slapausestates": null,
             "bingmapsapikey": null,
-            "blockedmimetypes": null
+            "blockedmimetypes": null,
+            "blockaccesstosessiontranscriptsforcopilotstudio": false,
+            "blocktranscriptrecordingforcopilotstudio": false,
+            "enablecopilotstudiosharedatawithvivainsights": false,
+            "enablecopilotstudiocrossgeosharedatawithvivainsights": false,
+            "aipromptsenabled": true
         }
     ]
 }

@@ -102,6 +102,20 @@ Optional:
 
 Optional:
 
+- `ai_form_fill_automatic_suggestions` (String) Allows AI to generate automatic suggestions
+- `ai_form_fill_smart_paste_and_file_suggestions` (String) Allows AI to provide smart paste and file suggestions
+- `ai_form_fill_toolbar` (String) Allows AI to provide a form fill toolbar with suggestions
+- `allow_ai_to_generate_charts` (String) Allow AI to generate charts to visualize the data in a view. [Learn more](https://go.microsoft.com/fwlink/?linkid=2300297)
+- `enable_access_to_session_transcripts_for_copilot_studio` (Boolean) Allow agent access owners and editors to see session transcripts from conversations interactions in their agents.
+- `enable_ai_powered_chat` (String) Allow users to analyze data using an AI-powered chat experience in [canvas](https://go.microsoft.com/fwlink/?linkid=2244583) and [model-driven apps](https://go.microsoft.com/fwlink/?linkid=2244584). [Learn more](https://go.microsoft.com/fwlink/?linkid=2247541) [Requires Copilot licensing](https://go.microsoft.com/fwlink/?linkid=2263413)
+- `enable_ai_prompts` (Boolean) Enable the AI prompts feature in Power Platform and Copilot Studio. [Learn more](https://go.microsoft.com/fwlink/?linkid=2283738)
+- `enable_copilot_answer_control` (Boolean) Allow canvas editors to insert the Copilot answer component, which allows users to receive an AI-powered answer to a predefined data query.
+- `enable_copilot_studio_cross_geo_share_data_with_viva_insights` (Boolean) Allow cross-geo sharing of aggregated analytics data if your tenant preferred data location for Viva Insights is different from the location of your Copilot Studio environment.
+- `enable_copilot_studio_share_data_with_viva_insights` (Boolean) Allow Copilot Studio to share data with Viva Insights.
+- `enable_powerapps_maker_bot` (Boolean) Enable new AI-powered Copilot features for people who make apps. [Learn more](https://go.microsoft.com/fwlink/?linkid=2223555)
+- `enable_preview_and_experimental_ai_models` (Boolean) Let people use AI models that are experimental or in preview to make agents, prompts, apps, flow and more in Copilot Studio. [Learn more](https://go.microsoft.com/fwlink/?linkid=2331400)
+- `enable_transcript_recording_for_copilot_studio` (Boolean) Allow conversation transcripts and their associated metadata to be saved in Dataverse (required for enhanced reporting).
+- `natural_language_grid_and_view_search` (String) Find your data in model-driven app views with the help of Copilot. [Learn more](https://go.microsoft.com/fwlink/?linkid=2281374)
 - `power_apps_component_framework_for_canvas_apps` (Boolean) Power Apps component framework for canvas apps
 
 

@@ -29,6 +29,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
@@ -36,6 +37,7 @@ import (
 
 var _ resource.Resource = &EnvironmentSettingsResource{}
 var _ resource.ResourceWithImportState = &EnvironmentSettingsResource{}
+var _ resource.ResourceWithValidateConfig = &EnvironmentSettingsResource{}
 
 func NewEnvironmentSettingsResource() resource.Resource {
 	return &EnvironmentSettingsResource{
@@ -206,6 +208,136 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 									boolplanmodifier.UseStateForUnknown(),
 								},
 							},
+							"enable_powerapps_maker_bot": schema.BoolAttribute{
+								MarkdownDescription: "Enable new AI-powered Copilot features for people who make apps. [Learn more](https://go.microsoft.com/fwlink/?linkid=2223555)",
+								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(true),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"enable_access_to_session_transcripts_for_copilot_studio": schema.BoolAttribute{
+								MarkdownDescription: "Allow agent access owners and editors to see session transcripts from conversations interactions in their agents.",
+								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(true),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"enable_transcript_recording_for_copilot_studio": schema.BoolAttribute{
+								MarkdownDescription: "Allow conversation transcripts and their associated metadata to be saved in Dataverse (required for enhanced reporting).",
+								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(true),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"enable_copilot_studio_share_data_with_viva_insights": schema.BoolAttribute{
+								MarkdownDescription: "Allow Copilot Studio to share data with Viva Insights.",
+								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(true),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"enable_copilot_studio_cross_geo_share_data_with_viva_insights": schema.BoolAttribute{
+								MarkdownDescription: "Allow cross-geo sharing of aggregated analytics data if your tenant preferred data location for Viva Insights is different from the location of your Copilot Studio environment.",
+								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(false),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"enable_preview_and_experimental_ai_models": schema.BoolAttribute{
+								MarkdownDescription: "Let people use AI models that are experimental or in preview to make agents, prompts, apps, flow and more in Copilot Studio. [Learn more](https://go.microsoft.com/fwlink/?linkid=2331400)",
+								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(true),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"enable_ai_prompts": schema.BoolAttribute{
+								MarkdownDescription: "Enable the AI prompts feature in Power Platform and Copilot Studio. [Learn more](https://go.microsoft.com/fwlink/?linkid=2283738)",
+								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(true),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"enable_copilot_answer_control": schema.BoolAttribute{
+								MarkdownDescription: "Enable Copilot answer controls in the environment.",
+								Optional:            true, Computed: true,
+								Default: booldefault.StaticBool(false),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"enable_ai_powered_chat": schema.StringAttribute{
+								MarkdownDescription: "Allow users to analyze data using an AI-powered chat experience in [canvas](https://go.microsoft.com/fwlink/?linkid=2244583) and [model-driven apps](https://go.microsoft.com/fwlink/?linkid=2244584). [Learn more](https://go.microsoft.com/fwlink/?linkid=2247541) [Requires Copilot licensing](https://go.microsoft.com/fwlink/?linkid=2263413)",
+								Optional:            true, Computed: true,
+								Default: stringdefault.StaticString(DEFAULT),
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"ai_form_fill_automatic_suggestions": schema.StringAttribute{
+								MarkdownDescription: "Allows AI to generate automatic suggestions",
+								Optional:            true, Computed: true,
+								Default: stringdefault.StaticString(DEFAULT),
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"ai_form_fill_smart_paste_and_file_suggestions": schema.StringAttribute{
+								MarkdownDescription: "Allows AI to provide smart paste and file suggestions",
+								Optional:            true, Computed: true,
+								Default: stringdefault.StaticString(DEFAULT),
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"ai_form_fill_toolbar": schema.StringAttribute{
+								MarkdownDescription: "Allows AI to provide a form fill toolbar with suggestions",
+								Optional:            true, Computed: true,
+								Default: stringdefault.StaticString(DEFAULT),
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, DEFAULT),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"natural_language_grid_and_view_search": schema.StringAttribute{
+								MarkdownDescription: "Find your data in model-driven app views with the help of Copilot. [Learn more](https://go.microsoft.com/fwlink/?linkid=2281374)",
+								Optional:            true, Computed: true,
+								Default: stringdefault.StaticString(USER_AS_FEATURE_BECOMES_AVAILABLE),
+								Validators: []validator.String{
+									stringvalidator.OneOf(ALL_USERS, USER_AS_FEATURE_BECOMES_AVAILABLE, NO_ONE),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
+							"allow_ai_to_generate_charts": schema.StringAttribute{
+								MarkdownDescription: "Allow AI to generate charts to visualize the data in a view. [Learn more](https://go.microsoft.com/fwlink/?linkid=2300297)",
+								Optional:            true, Computed: true,
+								Default: stringdefault.StaticString(OFF),
+								Validators: []validator.String{
+									stringvalidator.OneOf(ON, OFF, AUTO),
+								},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
 						},
 					},
 					"security": schema.SingleNestedAttribute{
@@ -287,6 +419,45 @@ func (r *EnvironmentSettingsResource) Schema(ctx context.Context, req resource.S
 				},
 			},
 		},
+	}
+}
+
+func (r *EnvironmentSettingsResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config EnvironmentSettingsResourceModel
+
+	if resp.Diagnostics.Append(req.Config.Get(ctx, &config)...); resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.Product.IsNull() || config.Product.IsUnknown() {
+		return
+	}
+
+	productObj := config.Product.Attributes()["features"]
+	if productObj.IsNull() || productObj.IsUnknown() {
+		return
+	}
+
+	var featuresModel FeaturesSourceModel
+	if diags := productObj.(basetypes.ObjectValue).As(ctx, &featuresModel, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	}); diags.HasError() {
+		return
+	}
+
+	vivaInsightsEnabled := featuresModel.EnableCopilotStudioShareDataWithVivaInsights
+	vivaInsightsCrossGeoEnabled := featuresModel.EnableCopilotStudioCrossGeoShareDataWithVivaInsights
+
+	if !vivaInsightsEnabled.IsNull() && !vivaInsightsEnabled.IsUnknown() &&
+		!vivaInsightsCrossGeoEnabled.IsNull() && !vivaInsightsCrossGeoEnabled.IsUnknown() {
+		if !vivaInsightsEnabled.ValueBool() && vivaInsightsCrossGeoEnabled.ValueBool() {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("product").AtName("features"),
+				"Invalid Copilot Studio Viva Insights configuration",
+				"'enable_copilot_studio_cross_geo_share_data_with_viva_insights' cannot be set to 'true' when 'enable_copilot_studio_share_data_with_viva_insights' is 'false'. Cross-geo sharing requires basic sharing to be enabled first.",
+			)
+		}
 	}
 }
 

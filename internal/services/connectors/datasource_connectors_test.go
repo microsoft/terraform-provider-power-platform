@@ -94,6 +94,7 @@ func TestUnitConnectorsDataSource_Validate_Read(t *testing.T) {
 }
 
 func TestAccTestUnitConnectorsDataSource_Validate_Read_With_Given_Environment(t *testing.T) {
+	t.Setenv("TF_ACC", "1")
 	solutionFileBytes, err := os.ReadFile(SOLUTION_RELATIVE_PATH)
 	if err != nil {
 		t.Fatalf("Failed to read solution file: %s", err.Error())
