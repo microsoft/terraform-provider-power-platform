@@ -76,14 +76,14 @@ func covertDlpPolicyToPolicyModelDto(policy dlpPolicyDto) (*dlpPolicyModelDto, e
 
 func convertConnectorRuleClassificationValues(value string) string {
 	switch value {
-	case "Business":
-		return "General"
 	case "NonBusiness":
-		return "Confidential"
+		return "General"
 	case "General":
-		return "Business"
-	case "Confidential":
 		return "NonBusiness"
+	case "Confidential":
+		return "Business"
+	case "Business":
+		return "Confidential"
 	default:
 		return value
 	}
@@ -245,6 +245,7 @@ func convertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diags
 		return nil, errors.New("client error when converting DlpCustomConnectorUrlPatternsDefinition")
 	}
 
+	//customConnectorsPatterns = sortCustomConnectorPatternsByOrder(customConnectorsPatterns)
 	customConnectorUrlPatternsDefinition := make([]dlpConnectorUrlPatternsDefinitionDto, 0)
 	for _, customConnectorPattern := range customConnectorsPatterns {
 		urlPattern := dlpConnectorUrlPatternsDefinitionDto{
