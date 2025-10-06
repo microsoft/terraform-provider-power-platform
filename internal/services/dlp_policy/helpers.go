@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -245,7 +246,6 @@ func convertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diags
 		return nil, errors.New("client error when converting DlpCustomConnectorUrlPatternsDefinition")
 	}
 
-	//customConnectorsPatterns = sortCustomConnectorPatternsByOrder(customConnectorsPatterns)
 	customConnectorUrlPatternsDefinition := make([]dlpConnectorUrlPatternsDefinitionDto, 0)
 	for _, customConnectorPattern := range customConnectorsPatterns {
 		urlPattern := dlpConnectorUrlPatternsDefinitionDto{
@@ -258,6 +258,10 @@ func convertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diags
 		})
 		customConnectorUrlPatternsDefinition = append(customConnectorUrlPatternsDefinition, urlPattern)
 	}
+	sort.Slice(customConnectorUrlPatternsDefinition, func(i, j int) bool {
+		return customConnectorUrlPatternsDefinition[i].Rules[0].Order < customConnectorUrlPatternsDefinition[j].Rules[0].Order
+	})
+
 	return customConnectorUrlPatternsDefinition, nil
 }
 

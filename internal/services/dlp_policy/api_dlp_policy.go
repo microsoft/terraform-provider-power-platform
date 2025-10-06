@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"sort"
 	"strings"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
@@ -236,6 +237,11 @@ func covertDlpPolicyToPolicyModel(policy dlpPolicyDto) (*dlpPolicyModelDto, erro
 			Rules: append([]dlpConnectorUrlPatternsRuleDto{}, rule),
 		})
 	}
+
+	sort.Slice(policyModel.CustomConnectorUrlPatternsDefinition, func(i, j int) bool {
+		// Compare the Order of the first rule in each definition (assuming at least one rule per definition)
+		return policyModel.CustomConnectorUrlPatternsDefinition[i].Rules[0].Order < policyModel.CustomConnectorUrlPatternsDefinition[j].Rules[0].Order
+	})
 
 	return &policyModel, nil
 }

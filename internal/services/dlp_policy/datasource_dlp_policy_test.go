@@ -91,9 +91,12 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environments.0", "be0eb809-e58a-ec1b-8fce-ea40b0e53442"),
 
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.#", "2"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.1.data_group", "NonBusiness"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.1.host_url_pattern", "http://aaa.com"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.1.order", "1"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.0.order", "1"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.0.data_group", "Business"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.0.host_url_pattern", "http://aaa.com"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.1.order", "2"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.1.data_group", "Ignore"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.custom_connectors_patterns.1.host_url_pattern", "*"),
 				),
 			},
 		},
@@ -101,8 +104,6 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 }
 
 func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
-	t.Skip("Skipping due to inconsistent connectors results")
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -189,8 +190,8 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					custom_connectors_patterns = toset([
 					  {
 						order            = 1
-						host_url_pattern = "https://*.contoso.com"
-						data_group       = "Blocked"
+						host_url_pattern = "https://*.contoso.com/*"
+						data_group       = "Business"
 					  },
 					  {
 						order            = 2
@@ -212,8 +213,8 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environments.#", "0"),
 
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.#", "2"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.0.data_group", "Blocked"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.0.host_url_pattern", "https://*.contoso.com"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.0.data_group", "Business"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.0.host_url_pattern", "https://*.contoso.com/*"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.0.order", "1"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.data_group", "Ignore"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.host_url_pattern", "*"),
@@ -237,36 +238,6 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.1.order", "2"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.1.behavior", "Deny"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.1.endpoint", "*"),
-
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.blocked_connectors.#", "0"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.non_business_connectors.#", "4"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.#", "2"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.1.id", "/providers/Microsoft.PowerApps/apis/shared_office365users"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.1.default_action_rule_behavior", ""),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.1.action_rules.#", "0"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.1.endpoint_rules.#", "0"),
-
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_azureblob"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.default_action_rule_behavior", "Block"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.action_rules.#", "13"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.action_rules.0.action_id", "CreateFile_V2"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.action_rules.0.behavior", "Allow"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.endpoint_rules.#", "1"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.endpoint_rules.0.behavior", "Deny"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.endpoint_rules.0.endpoint", "*"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.business_connectors.0.endpoint_rules.0.order", "1"),
-
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.created_by", "admin"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.created_time", "2023-10-02T07:38:56.6864176Z"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.default_connectors_classification", "General"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.id", "00000000-0000-0000-0000-000000000002"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.display_name", "a2"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.last_modified_by", "admin"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.last_modified_time", "2023-10-02T07:56:43.9700369Z"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environment_type", "ExceptEnvironments"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environments.#", "1"),
-					// resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.1.environments.0", "be0eb809-e58a-ec1b-8fce-ea40b0e53442"),
-
 				),
 			},
 		},
