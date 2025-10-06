@@ -259,6 +259,13 @@ func convertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diags
 		customConnectorUrlPatternsDefinition = append(customConnectorUrlPatternsDefinition, urlPattern)
 	}
 	sort.Slice(customConnectorUrlPatternsDefinition, func(i, j int) bool {
+		// Defensive: If either Rules slice is empty, treat empty as "greater" (sort to end)
+		if len(customConnectorUrlPatternsDefinition[i].Rules) == 0 {
+			return false
+		}
+		if len(customConnectorUrlPatternsDefinition[j].Rules) == 0 {
+			return true
+		}
 		return customConnectorUrlPatternsDefinition[i].Rules[0].Order < customConnectorUrlPatternsDefinition[j].Rules[0].Order
 	})
 
