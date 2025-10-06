@@ -918,8 +918,6 @@ func TestUnitDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
 }
 
 func TestAccDataLossPreventionPolicyResource_Validate_Create(t *testing.T) {
-	t.Skip("Skipping as there is inconsistency in API in connectors returned")
-
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               false,
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,

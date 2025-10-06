@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -76,14 +77,14 @@ func covertDlpPolicyToPolicyModelDto(policy dlpPolicyDto) (*dlpPolicyModelDto, e
 
 func convertConnectorRuleClassificationValues(value string) string {
 	switch value {
-	case "Business":
-		return "General"
 	case "NonBusiness":
-		return "Confidential"
+		return "General"
 	case "General":
-		return "Business"
-	case "Confidential":
 		return "NonBusiness"
+	case "Confidential":
+		return "Business"
+	case "Business":
+		return "Confidential"
 	default:
 		return value
 	}
@@ -257,6 +258,17 @@ func convertToDlpCustomConnectorUrlPatternsDefinition(ctx context.Context, diags
 		})
 		customConnectorUrlPatternsDefinition = append(customConnectorUrlPatternsDefinition, urlPattern)
 	}
+	sort.Slice(customConnectorUrlPatternsDefinition, func(i, j int) bool {
+		// Defensive: If either Rules slice is empty, treat empty as "greater" (sort to end)
+		if len(customConnectorUrlPatternsDefinition[i].Rules) == 0 {
+			return false
+		}
+		if len(customConnectorUrlPatternsDefinition[j].Rules) == 0 {
+			return true
+		}
+		return customConnectorUrlPatternsDefinition[i].Rules[0].Order < customConnectorUrlPatternsDefinition[j].Rules[0].Order
+	})
+
 	return customConnectorUrlPatternsDefinition, nil
 }
 

@@ -1,0 +1,5 @@
+kind: fixed
+body: Fixed custom connector URL patterns in data loss prevention policies to maintain correct order based on rule order property
+time: 2025-10-06T15:23:50.926773984Z
+custom:
+    Issue: "943"
