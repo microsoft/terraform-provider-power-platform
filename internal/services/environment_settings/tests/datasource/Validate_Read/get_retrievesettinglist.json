@@ -1,0 +1,485 @@
+{
+    "@odata.context": "https://org271c9bf4.crm4.dynamics.com/api/data/v9.0/$metadata#Microsoft.Dynamics.CRM.RetrieveSettingListResponse",
+    "SettingDetailCollection": [
+        {
+            "Name": "ChannelAvailability",
+            "Value": "PowerAppsMobile",
+            "DataType": 1
+        },
+        {
+            "Name": "HideShowAs",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "AllowNewAppChannelDefault",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "AsyncOnLoad",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "EnableNLGridSearch",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "msdyn_addtoqueuedialogviewselection",
+            "Value": "f374f814-00a2-44ed-8b88-13f34e202e79",
+            "DataType": 1
+        },
+        {
+            "Name": "EnableAppSidePaneEarlyAccess",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "msdyn_RTEv2Notes",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "NewLookModernExperienceOct2023",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "NewLookOptOut",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "AppAdditionalEntityLimitCount",
+            "Value": "15",
+            "DataType": 0
+        },
+        {
+            "Name": "msdyn_EnableChatsForAllEntities",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "msdynce_enableattachmentreminderinemail",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "IsSmartEmailAddressValidationControlEnabled",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "PlanShareSecurityRolesEnabled",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "NotificationsLastAlertedOn",
+            "Value": "1970-01-01T08:00:00.000Z",
+            "DataType": 1
+        },
+        {
+            "Name": "msdyn_TimelineSNA",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "SitemapHomePage",
+            "Value": "0",
+            "DataType": 0
+        },
+        {
+            "Name": "UCIShareButton",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "SyncOnWifi",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "OpenInNewWindowCommandBarButton",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "msdyn_TimelineUserPosts",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "AllowNotificationToasts",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "HeaderAndNavigationRefresh",
+            "Value": "0",
+            "DataType": 0
+        },
+        {
+            "Name": "MobileCommandingImprovements2022Tablet",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "EnableLockTabsOnMobile2022",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "FormPredictSmartPasteEnabledOnByDefault",
+            "Value": "0",
+            "DataType": 0
+        },
+        {
+            "Name": "EnablePeekMode",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "hideactionbuttonrecipientscontrol",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "msdyn_EnableTeamsChat",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "NotificationsLastDismissedAllOn",
+            "Value": "1970-01-01T08:00:00.000Z",
+            "DataType": 1
+        },
+        {
+            "Name": "HeroIconLengthInHighDensityPageHeaderInTeams",
+            "Value": "1",
+            "DataType": 0
+        },
+        {
+            "Name": "EnableGridInsights",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "DisableWrapOnTextColumns",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "enablecopilotsummarizecommandbutton",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "ShareButtonOnViewsDashboards",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "HideNavbar",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "MaxRelatedEntityRecordsForWordTemplate",
+            "Value": "-1",
+            "DataType": 0
+        },
+        {
+            "Name": "AllowNotificationSoundAlerts",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "msdyn_EmailBase64Uploader",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "msdyn_EnablePersonalChats",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "AutoExpandDays",
+            "Value": "-1",
+            "DataType": 0
+        },
+        {
+            "Name": "AppChannel",
+            "Value": "0",
+            "DataType": 0
+        },
+        {
+            "Name": "msdyn_defaultrecommendedtemplateguid",
+            "Value": "00000000-00000000-00000000-00000000",
+            "DataType": 1
+        },
+        {
+            "Name": "msdyn_RTEv2DefaultConfig",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "SharepointDefaultOverwriteSelection",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "EnableCopilotAnswerControl",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "enablecopilotautotriggersummarize",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "EnableFormInsights",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "FormFillBarUXEnabled",
+            "Value": "0",
+            "DataType": 0
+        },
+        {
+            "Name": "NLChartConvergeStylingSetting",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "msdyn_TimelineCopilotInteractions",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "NotificationToastFadeInterval",
+            "Value": "6",
+            "DataType": 0
+        },
+        {
+            "Name": "MobileCommandingImprovements2022",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "FormFillFileUploadEnabled",
+            "Value": "0",
+            "DataType": 0
+        },
+        {
+            "Name": "EnablePerAppLicenseBilling",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "msdyn_RTEv2Email",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "HighDensityPageHeader",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "LaunchNativeExperience",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "FormPredictSmartPasteEnabled",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "EnableViewHierarchy",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "usenewemailattachmentcontrol",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "MentionsInNotes",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "AllowNotificationsEarlyAccess",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "AppCopilotBotSchemaName",
+            "Value": "msdyn_appCopilot",
+            "DataType": 1
+        },
+        {
+            "Name": "SyncFrequency",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "EnableRoleBasedOfflineProfileAccess",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "OverrideAppHeaderColorsWebResource",
+            "Value": "\"\"",
+            "DataType": 1
+        },
+        {
+            "Name": "msdyn_TimelineCopilotForApps",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "AllowUpdatingCreatedByDuringImport",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "OverrideAppHeaderColor",
+            "Value": "\"\"",
+            "DataType": 1
+        },
+        {
+            "Name": "NewLookAlwaysOn",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "FluentThemingPreview",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "msdyn_EmailBase64UploaderSemiAnnual",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "SharepointDisableFileOverwriteOption",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "NativeMobileInputs",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "FormPredictEnabled",
+            "Value": "0",
+            "DataType": 0
+        },
+        {
+            "Name": "NLChartDataVisualizationSetting",
+            "Value": "1",
+            "DataType": 0
+        },
+        {
+            "Name": "OnlineMode",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "IsAppGeneratedByPlanDesigner",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "NLGridSearchSetting",
+            "Value": "0",
+            "DataType": 0
+        },
+        {
+            "Name": "NotificationsLastViewedOn",
+            "Value": "1970-01-01T08:00:00.000Z",
+            "DataType": 1
+        },
+        {
+            "Name": "msdyn_TimelineModernization",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "CustomThemeDefinition",
+            "Value": "\"\"",
+            "DataType": 1
+        },
+        {
+            "Name": "ServerMode",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "EnableCollaborativeComments",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "msdyn_routequeueitemdialogviewselection",
+            "Value": "f374f814-00a2-44ed-8b88-13f34e202e79",
+            "DataType": 1
+        },
+        {
+            "Name": "EnablePowerBIQuickReport",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "appcopilotenabled",
+            "Value": "2",
+            "DataType": 0
+        },
+        {
+            "Name": "CommentingEmailNotification",
+            "Value": "true",
+            "DataType": 2
+        },
+        {
+            "Name": "EnableDesignLanguageThemeSystem",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "msdyn_RTEv2KnowledgeManagement",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "AsyncOnSave",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "PowerAppsAppLevelSecurityRolesEnabled",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "NativeMobileDateTime",
+            "Value": "false",
+            "DataType": 2
+        },
+        {
+            "Name": "NLChartVisualizationSetting",
+            "Value": "false",
+            "DataType": 2
+        }
+    ]
+}

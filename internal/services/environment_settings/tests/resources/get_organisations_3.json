@@ -453,7 +453,12 @@
             "picture": null,
             "slapausestates": null,
             "bingmapsapikey": null,
-            "blockedmimetypes": null
+            "blockedmimetypes": null,
+            "blockaccesstosessiontranscriptsforcopilotstudio": false,
+            "blocktranscriptrecordingforcopilotstudio": false,
+            "enablecopilotstudiosharedatawithvivainsights": false,
+            "enablecopilotstudiocrossgeosharedatawithvivainsights": false,
+            "aipromptsenabled": true
         }
     ]
 }

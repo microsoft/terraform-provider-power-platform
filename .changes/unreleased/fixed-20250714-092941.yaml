@@ -1,5 +1,0 @@
-kind: fixed
-body: update power catalog audience setting validation to include SpecificAdmins option and correct string validator option
-time: 2025-07-14T09:29:41.47834564Z
-custom:
-    Issue: "878"
