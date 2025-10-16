@@ -20,6 +20,10 @@ The following resources are in **preview**:
 
 The [user documentation](https://microsoft.github.io/terraform-provider-power-platform) contains information about how to install, configure, and use the provider to manage Power Platform resources and data sources. More advances examples together with bootstrap script can be found in the [Quick Starts Repository](https://github.com/microsoft/power-platform-terraform-quickstarts).
 
+## Roadmap
+
+See our [ROADMAP.md](ROADMAP.md) for the planned direction and key themes for the next 12 months.
+
 ## Contributing
 
 Refer to the [Contributing Guide](/CONTRIBUTING.md) to learn about the different types of contributions you can make to the repo.
