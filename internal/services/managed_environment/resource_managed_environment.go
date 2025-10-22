@@ -222,6 +222,11 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
+	if env.Properties.ParentEnvironmentGroup != nil && env.Properties.ParentEnvironmentGroup.Id != "" {
+		resp.Diagnostics.AddWarning(fmt.Sprintf("Environment '%s' is included in Environment Group '%s'. The Manage Environment Settings will not be applied.", state.EnvironmentId.ValueString(), env.Properties.ParentEnvironmentGroup.Id), "")
+		return
+	}
+
 	state.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)
 
 	if env.Properties.GovernanceConfiguration.Settings != nil {
@@ -230,8 +235,12 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		state.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
 		state.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
 		state.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
-		state.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
-		state.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
+		if len(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode) > 1 {
+			state.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
+		}
+		if len(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode) > 1 {
+			state.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
+		}
 		state.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
 		state.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 		state.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
@@ -279,20 +288,26 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 
 	managedEnvironmentDto := r.buildManagedEnvironmentDto(plan, solutionCheckerRuleOverrides)
 
-	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s", r.FullTypeName()), err.Error())
-		return
-	}
-
 	env, err := r.ManagedEnvironmentClient.environmentClient.GetEnvironment(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s", r.FullTypeName()), err.Error())
 		return
 	}
 
+	if env.Properties.ParentEnvironmentGroup != nil && env.Properties.ParentEnvironmentGroup.Id != "" {
+		resp.Diagnostics.AddWarning(fmt.Sprintf("Environment '%s' is included in Environment Group '%s'. The Manage Environment Settings will not be applied.", plan.EnvironmentId.ValueString(), env.Properties.ParentEnvironmentGroup.Id), "")
+		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+		return
+	}
+
 	r.populateStateFromEnvironment(ctx, plan, env, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	err = r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s", r.FullTypeName()), err.Error())
 		return
 	}
 
@@ -309,7 +324,18 @@ func (r *ManagedEnvironmentResource) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	err := r.ManagedEnvironmentClient.DisableManagedEnvironment(ctx, state.EnvironmentId.ValueString())
+	env, err := r.ManagedEnvironmentClient.environmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s", r.FullTypeName()), err.Error())
+		return
+	}
+
+	if env.Properties.ParentEnvironmentGroup != nil && env.Properties.ParentEnvironmentGroup.Id != "" {
+		resp.Diagnostics.AddWarning(fmt.Sprintf("Environment '%s' is included in Environment Group '%s'. The Manage Environment Settings will not be applied.", state.EnvironmentId.ValueString(), env.Properties.ParentEnvironmentGroup.Id), "")
+		return
+	}
+
+	err = r.ManagedEnvironmentClient.DisableManagedEnvironment(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when disabling managed environment %s", r.FullTypeName()), err.Error())
 		return
@@ -388,8 +414,12 @@ func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Co
 	plan.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
 	plan.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
 	plan.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
-	plan.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
-	plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
+	if len(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode) > 1 {
+		plan.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
+	}
+	if len(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode) > 1 {
+		plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
+	}
 	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
 	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
 	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
