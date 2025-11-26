@@ -4,8 +4,8 @@ This document tracks the differences between the API endpoints documented in thi
 
 ## Summary
 
-Total Resources: 20  
-Total Data Sources: 18
+Total Resources: 23  
+Total Data Sources: 20
 
 ## Resources
 
@@ -18,6 +18,43 @@ Total Data Sources: 18
 **Official Microsoft Docs:**
 
 **DOES NOT EXIST IS POWER PLATFORM API**
+
+---
+
+### resource_powerplatform_billing_policy
+
+**Provider API Endpoints:**
+
+[See resource_powerplatform_billing_policy/powerplatform_billing_policy.md](./resource_powerplatform_billing_policy/powerplatform_billing_policy.md)
+
+**Official Microsoft Docs:**
+
+- [Billing Policy - Create Billing Policy](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy/create-billing-policy)
+- [Billing Policy - Get Billing Policy](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy/get-billing-policy)
+- [Billing Policy - Update Billing Policy](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy/update-billing-policy)
+- [Billing Policy - Delete Billing Policy](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy/delete-billing-policy)
+
+**Differences:**
+
+**Nothing is missing can be migrated to PPAPI asap**
+
+---
+
+### resource_powerplatform_billing_policy_environment
+
+**Provider API Endpoints:**
+
+[See resource_powerplatform_billing_policy_environment/powerplatform_billing_policy_environment.md](./resource_powerplatform_billing_policy_environment/powerplatform_billing_policy_environment.md)
+
+**Official Microsoft Docs:**
+
+- [Billing Policy Environment - Add Billing Policy Environments](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy-environment/add-billing-policy-environments)
+- [Billing Policy Environment - List Billing Policy Environments](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy-environment/list-billing-policy-environments)
+- [Billing Policy Environment - Remove Billing Policy Environments](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy-environment/remove-billing-policy-environments)
+
+**Differences:**
+
+**Nothing is missing can be migrated to PPAPI asap**
 
 ---
 
@@ -310,11 +347,39 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
+**DOES NOT EXIST IS POWER PLATFORM API**
+
+---
+
+### datasource_powerplatform_billing_policies
+
+**Provider API Endpoints:**
+
+[See datasource_powerplatform_billing_policies/powerplatform_billing_policies.md](./datasource_powerplatform_billing_policies/powerplatform_billing_policies.md)
+
+**Official Microsoft Docs:**
+
+- [Billing Policy - List Billing Policies](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy/list-billing-policies)
 
 **Differences:**
 
-- TBD
+**Nothing is missing can be migrated to PPAPI asap**
+
+---
+
+### datasource_powerplatform_billing_policies_environments
+
+**Provider API Endpoints:**
+
+[See datasource_powerplatform_billing_policies_environments/powerplatform_billing_policies_environments.md](./datasource_powerplatform_billing_policies_environments/powerplatform_billing_policies_environments.md)
+
+**Official Microsoft Docs:**
+
+- [Billing Policy Environment - List Billing Policy Environments](https://learn.microsoft.com/en-us/rest/api/power-platform/licensing/billing-policy-environment/list-billing-policy-environments)
+
+**Differences:**
+
+**Nothing is missing can be migrated to PPAPI asap**
 
 ---
 
@@ -326,11 +391,7 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
-
-**Differences:**
-
-- TBD
+**DOES NOT EXIST IS POWER PLATFORM API**
 
 ---
 
@@ -342,11 +403,7 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
-
-**Differences:**
-
-- TBD
+**DOES NOT EXIST IS POWER PLATFORM API**
 
 ---
 
@@ -358,11 +415,12 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
+- [Connectors - List Connectors](https://learn.microsoft.com/en-us/rest/api/power-platform/connectivity/connectors/list-connectors)
 
 **Differences:**
 
-- TBD
+- Question: Do we need list connectors by environment, for example to get custom connectors?
+- Missing `unblockable` (Boolean) Indicates if the connector can be blocked in a Data Loss Prevention policy. If true, the connector has to be in 'Non-Business' connectors group.
 
 ---
 
@@ -374,43 +432,7 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
-
-**Differences:**
-
-- TBD
-
----
-
-### datasource_powerplatform_data_loss_prevention_policies
-
-**Provider API Endpoints:**
-
-[See datasource_powerplatform_data_loss_prevention_policies/powerplatform_data_loss_prevention_policies.md](./datasource_powerplatform_data_loss_prevention_policies/powerplatform_data_loss_prevention_policies.md)
-
-**Official Microsoft Docs:**
-
-- TBD
-
-**Differences:**
-
-- TBD
-
----
-
-### datasource_powerplatform_environment_application_packages
-
-**Provider API Endpoints:**
-
-[See datasource_powerplatform_environment_application_packages/powerplatform_environment_application_packages.md](./datasource_powerplatform_environment_application_packages/powerplatform_environment_application_packages.md)
-
-**Official Microsoft Docs:**
-
-- TBD
-
-**Differences:**
-
-- TBD
+**WEBAPI OUT OF SCOPE**
 
 ---
 
@@ -422,11 +444,11 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
+- [Apps - Get AdminApps](https://learn.microsoft.com/en-us/rest/api/power-platform/powerapps/apps/get-admin-apps#powerapp)
 
 **Differences:**
 
-- TBD
+- Question: not sure if result will be the same as `https://api.powerapps.com/providers/Microsoft.PowerApps/apps?api-version=2016-11-01&$filter=environment eq '{environment_id}'`
 
 ---
 
@@ -438,12 +460,7 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
-
-**Differences:**
-
-- TBD
-
+**DOES NOT EXIST IS POWER PLATFORM API**
 ---
 
 ### datasource_powerplatform_languages
@@ -454,11 +471,7 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
-
-**Differences:**
-
-- TBD
+**DOES NOT EXIST IS POWER PLATFORM API**
 
 ---
 
@@ -470,11 +483,7 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
-
-**Differences:**
-
-- TBD
+**DOES NOT EXIST IS POWER PLATFORM API**
 
 ---
 
@@ -486,11 +495,7 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
-
-**Differences:**
-
-- TBD
+**WEBAPI OUT OF SCOPE**
 
 ---
 
@@ -502,11 +507,7 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
-
-**Differences:**
-
-- TBD
+**DOES NOT EXIST IS POWER PLATFORM API**
 
 ---
 
@@ -518,12 +519,7 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
-
-**Differences:**
-
-- TBD
-
+**WEBAPI OUT OF SCOPE**
 ---
 
 ### datasource_powerplatform_tenant
@@ -534,12 +530,7 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
-
-**Differences:**
-
-- TBD
-
+**DOES NOT EXIST IS POWER PLATFORM API**
 ---
 
 ### datasource_powerplatform_tenant_application_packages
@@ -550,11 +541,7 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
-
-**Differences:**
-
-- TBD
+**DOES NOT EXIST IS POWER PLATFORM API**
 
 ---
 
@@ -566,12 +553,7 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
-
-**Differences:**
-
-- TBD
-
+**Nothing is missing can be migrated to PPAPI asap**
 ---
 
 ### datasource_powerplatform_tenant_settings_data_source
@@ -582,10 +564,5 @@ Question: Does this API allow to set managed environment settings? (<https://reg
 
 **Official Microsoft Docs:**
 
-- TBD
-
-**Differences:**
-
-- TBD
-
+**DOES NOT EXIST IS POWER PLATFORM API**
 ---
