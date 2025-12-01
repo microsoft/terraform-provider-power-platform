@@ -27,7 +27,7 @@ func TestUnitTenantCapacityDataSource_Validate_Read(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				data "powerplatform_tenant_capacity" "capacity" {	
+				data "powerplatform_tenant_capacity" "capacity" {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
