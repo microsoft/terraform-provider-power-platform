@@ -13,6 +13,8 @@ This resource is used to manage environment groups in Power Platform.
 
 ## Attribute Mapping
 
+**403 Forbidden error when using SPN**
+
 | Resource Attribute | API Response JSON Field |
 | ------------------ | ----------------------- |
 | `id`               | `id`                    |
