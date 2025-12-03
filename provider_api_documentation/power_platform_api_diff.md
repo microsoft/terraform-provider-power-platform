@@ -222,7 +222,9 @@ allow_moving_data_across_regions (Boolean) Allow moving data across regions
 
 - [Rule Based Policies - Create Rule Based Policy](https://learn.microsoft.com/en-us/rest/api/power-platform/governance/rule-based-policies/create-rule-based-policy#ruleset)
 
-**Nothing is missing can be migrated to PPAPI asap**
+**Open Questions**
+- missings delete operations for rule policies, env group 
+- how to add environments to env group
 
 ---
 
