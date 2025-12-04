@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
@@ -48,8 +47,9 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 		MarkdownDescription: "Fetches the capacity information for a given tenant.",
 		Attributes: map[string]schema.Attribute{
 			"tenant_id": schema.StringAttribute{
-				Required:            true,
-				MarkdownDescription: "The tenant ID for which the capacity information is to be fetched.",
+				Optional:            true,
+				DeprecationMessage:  "[DEPRECATED] The tenant_id attribute is DEPRECATED and will be removed in a future version.",
+				MarkdownDescription: "[DEPRECATED] The tenant ID for which the capacity information is to be fetched.",
 			},
 			"license_model_type": schema.StringAttribute{
 				Computed:            true,
@@ -135,13 +135,11 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	defer exitContext()
 
 	var state DataSourceModel
-	var tenantId string
-	req.Config.GetAttribute(ctx, path.Root("tenant_id"), &tenantId)
 
-	tenantCapacityDto, err := d.CapacityClient.GetTenantCapacity(ctx, tenantId)
+	tenantCapacityDto, err := d.CapacityClient.GetTenantCapacity(ctx)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			"error fetching tenant capacity",
+			"error fetching tenant capacity details",
 			err.Error(),
 		)
 		return
