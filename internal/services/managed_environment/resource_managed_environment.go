@@ -223,7 +223,10 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 	}
 
 	if env.Properties.ParentEnvironmentGroup != nil && env.Properties.ParentEnvironmentGroup.Id != "" {
-		resp.Diagnostics.AddWarning(fmt.Sprintf("Environment '%s' is included in Environment Group '%s'. The Manage Environment Settings will not be applied.", state.EnvironmentId.ValueString(), env.Properties.ParentEnvironmentGroup.Id), "")
+		resp.Diagnostics.AddWarning(
+			fmt.Sprintf("Environment '%s' is included in Environment Group '%s'. The Manage Environment Settings will not be applied.", state.EnvironmentId.ValueString(), env.Properties.ParentEnvironmentGroup.Id),
+			"To manage this environment's settings, remove it from the Environment Group first. This limitation exists because settings cannot be applied to environments that are part of an Environment Group."
+		)
 		return
 	}
 
