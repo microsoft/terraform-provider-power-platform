@@ -225,7 +225,7 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 	if env.Properties.ParentEnvironmentGroup != nil && env.Properties.ParentEnvironmentGroup.Id != "" {
 		resp.Diagnostics.AddWarning(
 			fmt.Sprintf("Environment '%s' is included in Environment Group '%s'. The Manage Environment Settings will not be applied.", state.EnvironmentId.ValueString(), env.Properties.ParentEnvironmentGroup.Id),
-			"To manage this environment's settings, remove it from the Environment Group first. This limitation exists because settings cannot be applied to environments that are part of an Environment Group."
+			"To manage this environment's settings, remove it from the Environment Group first. This limitation exists because settings cannot be applied to environments that are part of an Environment Group.",
 		)
 		return
 	}
@@ -310,8 +310,8 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 	if env.Properties.ParentEnvironmentGroup != nil && env.Properties.ParentEnvironmentGroup.Id != "" {
 		resp.Diagnostics.AddWarning(
 			fmt.Sprintf("Environment '%s' is included in Environment Group '%s'. The Manage Environment Settings will not be applied.", plan.EnvironmentId.ValueString(), env.Properties.ParentEnvironmentGroup.Id),
-			"Managed Environment settings cannot be applied to environments that are part of an Environment Group. " +
-			"To manage settings for this environment, remove it from the group or apply settings at the group level if supported."
+			"Managed Environment settings cannot be applied to environments that are part of an Environment Group. "+
+				"To manage settings for this environment, remove it from the group or apply settings at the group level if supported.",
 		)
 		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 		return
@@ -348,7 +348,11 @@ func (r *ManagedEnvironmentResource) Delete(ctx context.Context, req resource.De
 	}
 
 	if env.Properties.ParentEnvironmentGroup != nil && env.Properties.ParentEnvironmentGroup.Id != "" {
-		resp.Diagnostics.AddWarning(fmt.Sprintf("Environment '%s' is included in Environment Group '%s'. The Manage Environment Settings will not be applied.", state.EnvironmentId.ValueString(), env.Properties.ParentEnvironmentGroup.Id), "")
+		resp.Diagnostics.AddWarning(
+			fmt.Sprintf("Environment '%s' is included in Environment Group '%s'. The Manage Environment Settings will not be applied.", state.EnvironmentId.ValueString(), env.Properties.ParentEnvironmentGroup.Id),
+			"Managed Environment settings cannot be disabled for environments that are part of an Environment Group. "+
+				"To manage settings for this environment, remove it from the group first.",
+		)
 		return
 	}
 
