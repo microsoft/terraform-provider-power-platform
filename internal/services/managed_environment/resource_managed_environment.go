@@ -235,11 +235,21 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		state.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
 		state.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
 		state.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
-		if len(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode) > 1 {
-			state.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
+		limitSharingMode := env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode
+		if len(limitSharingMode) > 0 {
+			if len(limitSharingMode) == 1 {
+				state.LimitSharingMode = types.StringValue(strings.ToUpper(limitSharingMode))
+			} else {
+				state.LimitSharingMode = types.StringValue(strings.ToUpper(limitSharingMode[:1]) + limitSharingMode[1:])
+			}
 		}
-		if len(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode) > 1 {
-			state.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
+		solutionCheckerMode := env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode
+		if len(solutionCheckerMode) > 0 {
+			if len(solutionCheckerMode) == 1 {
+				state.SolutionCheckerMode = types.StringValue(strings.ToUpper(solutionCheckerMode))
+			} else {
+				state.SolutionCheckerMode = types.StringValue(strings.ToUpper(solutionCheckerMode[:1]) + solutionCheckerMode[1:])
+			}
 		}
 		state.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
 		state.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
