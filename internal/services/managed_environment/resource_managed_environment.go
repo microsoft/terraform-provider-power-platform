@@ -431,10 +431,10 @@ func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Co
 	plan.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
 	plan.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
 	plan.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
-	if len(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode) > 1 {
+	if len(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode) > 0 {
 		plan.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
 	}
-	if len(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode) > 1 {
+	if len(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode) > 0 {
 		plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
 	}
 	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
