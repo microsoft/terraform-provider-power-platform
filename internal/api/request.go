@@ -24,6 +24,10 @@ import (
 )
 
 func (client *Client) doRequest(ctx context.Context, token *string, request *http.Request, headers http.Header) (*Response, error) {
+	if request == nil {
+		return nil, errors.New("request is nil")
+	}
+
 	if headers != nil {
 		request.Header = headers
 	}
@@ -85,10 +89,13 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 			StatusCode: apiResponse.StatusCode,
 			Headers:    apiResponse.Header,
 		}
-		tflog.Warn(ctx, "Detected Continuous Access Evaluation (CAE) challenge response", map[string]any{
-			"url":        request.URL.String(),
+		logData := map[string]any{
 			"statusCode": apiResponse.StatusCode,
-		})
+		}
+		if request != nil {
+			logData["url"] = request.URL.String()
+		}
+		tflog.Warn(ctx, "Detected Continuous Access Evaluation (CAE) challenge response", logData)
 		return resp, caeError
 	}
 

@@ -119,11 +119,11 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				Required:            true,
 			},
 			"is_group_sharing_disabled": schema.BoolAttribute{
-				MarkdownDescription: "Limits how widely canvas apps can be shared. See [Managed Environment sharing limits](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits) for more details.",
+				MarkdownDescription: "Limits how widely canvas apps can be shared. See [Managed Environment sharing limits](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#canvas-app-sharing-rules) for more details.",
 				Required:            true,
 			},
 			"limit_sharing_mode": schema.StringAttribute{
-				MarkdownDescription: "Limits how widely canvas apps can be shared.  See [Managed Environment sharing limits](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits) for more details",
+				MarkdownDescription: "Limits how widely canvas apps can be shared. See [Managed Environment sharing limits](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#canvas-app-sharing-rules) for more details.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("ExcludeSharingToSecurityGroups", "NoLimit"),
@@ -134,7 +134,7 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				Required:            true,
 			},
 			"solution_checker_mode": schema.StringAttribute{
-				MarkdownDescription: "Automatically verify solution checker results for security and reliability issues before solution import.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.",
+				MarkdownDescription: "Automatically verify solution checker results for security and reliability issues before solution import. See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.",
 				Required:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("None", "Warn", "Block"),
@@ -151,13 +151,28 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				Default:             setdefault.StaticValue(types.SetNull(types.StringType)),
 				ElementType:         types.StringType,
 			},
-			"maker_onboarding_markdown": schema.StringAttribute{
-				MarkdownDescription: "First-time Power Apps makers will see this content in the Studio.  See [Maker welcome content](https://learn.microsoft.com/power-platform/admin/welcome-content) for more details.",
-				Required:            true,
+			"power_automate_is_sharing_disabled": schema.BoolAttribute{
+				MarkdownDescription: "Let people share solution aware cloud flows. See [Solution-aware cloud flow sharing rules](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#solution-aware-cloud-flow-sharing-rules) for more details.",
+				Optional:            true,
+				Computed:            true,
 			},
-			"maker_onboarding_url": schema.StringAttribute{
-				MarkdownDescription: "Maker onboarding 'Learn more' URL. See [Maker welcome content](https://learn.microsoft.com/power-platform/admin/welcome-content) for more details.",
-				Required:            true,
+			"copilot_allow_grant_editor_permissions_when_shared": schema.BoolAttribute{
+				MarkdownDescription: "Allow Power Automate Copilot to grant `Editor` permissions when agent is shared. See [Agent sharing rules](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#agent-sharing-rules) for more details.",
+				Optional:            true,
+				Computed:            true,
+			},
+			"copilot_limit_sharing_mode": schema.StringAttribute{
+				MarkdownDescription: "Limits how widely Copilot agents can be shared. Value `DisableSharing` will block granting `Viewer` permissions when sharing the agent. See [Agent sharing rules](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#agent-sharing-rules) for more details.",
+				Optional:            true,
+				Computed:            true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("DisableSharing", "ExcludeSharingToSecurityGroups", "NoLimit"),
+				},
+			},
+			"copilot_max_limit_user_sharing": schema.Int64Attribute{
+				MarkdownDescription: "Limits how many users can share copilot agents. if 'is_group_sharing_disabled' is 'False', then this values should be '-1'. See [Agent sharing rules](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#agent-sharing-rules) for more details.",
+				Optional:            true,
+				Computed:            true,
 			},
 		},
 	}
@@ -230,54 +245,7 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	state.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)
-
-	if env.Properties.GovernanceConfiguration.Settings != nil {
-		maxLimitUserSharing, _ := strconv.ParseInt(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MaxLimitUserSharing, 10, 64)
-
-		state.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
-		state.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
-		state.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
-		limitSharingMode := env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode
-		if len(limitSharingMode) > 0 {
-			if len(limitSharingMode) == 1 {
-				state.LimitSharingMode = types.StringValue(strings.ToUpper(limitSharingMode))
-			} else {
-				state.LimitSharingMode = types.StringValue(strings.ToUpper(limitSharingMode[:1]) + limitSharingMode[1:])
-			}
-		}
-		solutionCheckerMode := env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode
-		if len(solutionCheckerMode) > 0 {
-			if len(solutionCheckerMode) == 1 {
-				state.SolutionCheckerMode = types.StringValue(strings.ToUpper(solutionCheckerMode))
-			} else {
-				state.SolutionCheckerMode = types.StringValue(strings.ToUpper(solutionCheckerMode[:1]) + solutionCheckerMode[1:])
-			}
-		}
-		state.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
-		state.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
-		state.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
-		if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
-			state.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
-		} else {
-			ruleOverrides, err := helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
-			if err != nil {
-				resp.Diagnostics.AddError("Error converting solution checker rule overrides", err.Error())
-				return
-			}
-			state.SolutionCheckerRuleOverrides = ruleOverrides
-		}
-	} else {
-		state.IsGroupSharingDisabled = types.BoolUnknown()
-		state.IsUsageInsightsDisabled = types.BoolUnknown()
-		state.MaxLimitUserSharing = types.Int64Unknown()
-		state.LimitSharingMode = types.StringUnknown()
-		state.SolutionCheckerMode = types.StringUnknown()
-		state.SuppressValidationEmails = types.BoolUnknown()
-		state.MakerOnboardingUrl = types.StringUnknown()
-		state.MakerOnboardingMarkdown = types.StringUnknown()
-		state.SolutionCheckerRuleOverrides = types.SetUnknown(types.StringType)
-	}
+	r.populateStateFromEnvironment(ctx, state, env, &resp.Diagnostics)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -317,14 +285,24 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	r.populateStateFromEnvironment(ctx, plan, env, &resp.Diagnostics)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	err = r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s", r.FullTypeName()), err.Error())
+		return
+	}
+
+	env, err = r.ManagedEnvironmentClient.environmentClient.GetEnvironment(ctx, plan.EnvironmentId.ValueString())
+	if err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
+		return
+	}
+
+	r.populateStateFromEnvironment(ctx, plan, env, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -414,8 +392,6 @@ func (r *ManagedEnvironmentResource) buildManagedEnvironmentDto(plan *ManagedEnv
 				SolutionCheckerMode:            strings.ToLower(plan.SolutionCheckerMode.ValueString()),
 				SuppressValidationEmails:       strconv.FormatBool(plan.SuppressValidationEmails.ValueBool()),
 				SolutionCheckerRuleOverrides:   "",
-				MakerOnboardingUrl:             plan.MakerOnboardingUrl.ValueString(),
-				MakerOnboardingMarkdown:        plan.MakerOnboardingMarkdown.ValueString(),
 			},
 		},
 	}
@@ -424,35 +400,113 @@ func (r *ManagedEnvironmentResource) buildManagedEnvironmentDto(plan *ManagedEnv
 		managedEnvironmentDto.Settings.ExtendedSettings.SolutionCheckerRuleOverrides = *solutionCheckerRuleOverrides
 	}
 
+	// Power Automate optional attributes
+	if !plan.PowerAutomateIsShareingDisabled.IsNull() && !plan.PowerAutomateIsShareingDisabled.IsUnknown() {
+		maxLimitValue := "-1"
+		if plan.PowerAutomateIsShareingDisabled.ValueBool() {
+			valueDisableShraring := "disableSharing"
+			managedEnvironmentDto.Settings.ExtendedSettings.SolutionCloudFlowsLimitSharingMode = &valueDisableShraring
+		} else {
+			valueNoLimit := "noLimit"
+			managedEnvironmentDto.Settings.ExtendedSettings.SolutionCloudFlowsLimitSharingMode = &valueNoLimit
+		}
+		managedEnvironmentDto.Settings.ExtendedSettings.SolutionCloudFlowsMaxLimitUserSharing = &maxLimitValue
+	}
+	// Copilot optional attributes
+	if !plan.CopilotAllowGrantPermissionsWhenShared.IsNull() && !plan.CopilotAllowGrantPermissionsWhenShared.IsUnknown() {
+		value := strconv.FormatBool(!plan.CopilotAllowGrantPermissionsWhenShared.ValueBool())
+		managedEnvironmentDto.Settings.ExtendedSettings.BotAuthoringSharingDisabled = &value
+	}
+	if !plan.CopilotLimitSharingMode.IsNull() && !plan.CopilotLimitSharingMode.IsUnknown() {
+		value := strings.ToLower(plan.CopilotLimitSharingMode.ValueString()[:1]) + plan.CopilotLimitSharingMode.ValueString()[1:]
+		managedEnvironmentDto.Settings.ExtendedSettings.BotLimitSharingMode = &value
+	}
+	if !plan.CopilotMaxLimitUserSharing.IsNull() && !plan.CopilotMaxLimitUserSharing.IsUnknown() {
+		value := strconv.FormatInt(plan.CopilotMaxLimitUserSharing.ValueInt64(), 10)
+		managedEnvironmentDto.Settings.ExtendedSettings.BotMaxLimitUserSharing = &value
+	}
 	return managedEnvironmentDto
 }
 
-// populateStateFromEnvironment populates the plan state from environment API response.
 func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Context, plan *ManagedEnvironmentResourceModel, env *environment.EnvironmentDto, diagnostics *diag.Diagnostics) {
-	maxLimitUserSharing, _ := strconv.ParseInt(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MaxLimitUserSharing, 10, 64)
 	plan.Id = plan.EnvironmentId
 	plan.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)
-	plan.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
-	plan.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
-	plan.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
-	if len(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode) > 0 {
-		plan.LimitSharingMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode[1:])
-	}
-	if len(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode) > 0 {
-		plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[:1]) + env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode[1:])
-	}
-	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
-	plan.MakerOnboardingUrl = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingUrl)
-	plan.MakerOnboardingMarkdown = types.StringValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MakerOnboardingMarkdown)
 
-	if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
-		plan.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
-	} else {
-		ruleOverrides, err := helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
-		if err != nil {
-			diagnostics.AddError("Error converting solution checker rule overrides", err.Error())
-			return
+	if env.Properties.GovernanceConfiguration.Settings != nil {
+		maxLimitUserSharing, _ := strconv.ParseInt(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MaxLimitUserSharing, 10, 64)
+
+		if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotMaxLimitUserSharing != nil {
+			copilotMaxLimitUserSharing, _ := strconv.ParseInt(*env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotMaxLimitUserSharing, 10, 64)
+			plan.CopilotMaxLimitUserSharing = types.Int64Value(copilotMaxLimitUserSharing)
+		} else {
+			plan.CopilotMaxLimitUserSharing = types.Int64Null()
 		}
-		plan.SolutionCheckerRuleOverrides = ruleOverrides
+
+		plan.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
+		plan.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
+		plan.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
+
+		if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCloudFlowsLimitSharingMode != nil {
+			plan.PowerAutomateIsShareingDisabled = types.BoolValue(*env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCloudFlowsLimitSharingMode == "disableSharing")
+		} else {
+			plan.PowerAutomateIsShareingDisabled = types.BoolNull()
+		}
+		if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotAuthoringSharingDisabled != nil {
+			plan.CopilotAllowGrantPermissionsWhenShared = types.BoolValue(*env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotAuthoringSharingDisabled == "false")
+		} else {
+			plan.CopilotAllowGrantPermissionsWhenShared = types.BoolNull()
+		}
+
+		copilotLimitSharingMode := env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotLimitSharingMode
+		if copilotLimitSharingMode != nil && len(*copilotLimitSharingMode) > 0 {
+			if len(*copilotLimitSharingMode) == 1 {
+				plan.CopilotLimitSharingMode = types.StringValue(strings.ToUpper(*copilotLimitSharingMode))
+			} else {
+				plan.CopilotLimitSharingMode = types.StringValue(strings.ToUpper((*copilotLimitSharingMode)[:1]) + (*copilotLimitSharingMode)[1:])
+			}
+		} else {
+			plan.CopilotLimitSharingMode = types.StringNull()
+		}
+
+		limitSharingMode := env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode
+		if len(limitSharingMode) > 0 {
+			if len(limitSharingMode) == 1 {
+				plan.LimitSharingMode = types.StringValue(strings.ToUpper(limitSharingMode))
+			} else {
+				plan.LimitSharingMode = types.StringValue(strings.ToUpper(limitSharingMode[:1]) + limitSharingMode[1:])
+			}
+		}
+		solutionCheckerMode := env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode
+		if len(solutionCheckerMode) > 0 {
+			if len(solutionCheckerMode) == 1 {
+				plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(solutionCheckerMode))
+			} else {
+				plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(solutionCheckerMode[:1]) + solutionCheckerMode[1:])
+			}
+		}
+		plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
+		if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
+			plan.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
+		} else {
+			ruleOverrides, err := helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
+			if err != nil {
+				diagnostics.AddError("Error converting solution checker rule overrides", err.Error())
+				return
+			}
+			plan.SolutionCheckerRuleOverrides = ruleOverrides
+		}
+
+	} else {
+		plan.IsGroupSharingDisabled = types.BoolUnknown()
+		plan.IsUsageInsightsDisabled = types.BoolUnknown()
+		plan.MaxLimitUserSharing = types.Int64Unknown()
+		plan.LimitSharingMode = types.StringUnknown()
+		plan.SolutionCheckerMode = types.StringUnknown()
+		plan.SuppressValidationEmails = types.BoolUnknown()
+		plan.SolutionCheckerRuleOverrides = types.SetUnknown(types.StringType)
+		plan.PowerAutomateIsShareingDisabled = types.BoolUnknown()
+		plan.CopilotAllowGrantPermissionsWhenShared = types.BoolUnknown()
+		plan.CopilotLimitSharingMode = types.StringUnknown()
+		plan.CopilotMaxLimitUserSharing = types.Int64Unknown()
 	}
 }

@@ -132,8 +132,13 @@ type ExtendedSettingsDto struct {
 	SolutionCheckerMode            string `json:"solutionCheckerMode"`
 	SuppressValidationEmails       string `json:"suppressValidationEmails"`
 	SolutionCheckerRuleOverrides   string `json:"solutionCheckerRuleOverrides"`
-	MakerOnboardingUrl             string `json:"makerOnboardingUrl"`
-	MakerOnboardingMarkdown        string `json:"makerOnboardingMarkdown"`
+
+	SolutionCloudFlowsLimitSharingMode *string `json:"solutionCloudFlows-limitSharingMode"`
+	//not exposed in PPAC UI yet, set to always  to -1
+	SolutionCloudFlowsMaxLimitUserSharing *string `json:"solutionCloudFlows-maxLimitUserSharing"`
+	BotAuthoringSharingDisabled           *string `json:"bot-authoringSharingDisabled"`
+	BotLimitSharingMode                   *string `json:"bot-limitSharingMode"`
+	BotMaxLimitUserSharing                *string `json:"bot-maxLimitUserSharing"`
 }
 
 type LinkedEnvironmentMetadataDto struct {
