@@ -495,7 +495,6 @@ func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Co
 			}
 			plan.SolutionCheckerRuleOverrides = ruleOverrides
 		}
-
 	} else {
 		plan.IsGroupSharingDisabled = types.BoolUnknown()
 		plan.IsUsageInsightsDisabled = types.BoolUnknown()

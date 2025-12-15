@@ -134,7 +134,7 @@ type ExtendedSettingsDto struct {
 	SolutionCheckerRuleOverrides   string `json:"solutionCheckerRuleOverrides"`
 
 	SolutionCloudFlowsLimitSharingMode *string `json:"solutionCloudFlows-limitSharingMode"`
-	//not exposed in PPAC UI yet, set to always  to -1
+	// not exposed in PPAC UI yet, set to always  to -1
 	SolutionCloudFlowsMaxLimitUserSharing *string `json:"solutionCloudFlows-maxLimitUserSharing"`
 	BotAuthoringSharingDisabled           *string `json:"bot-authoringSharingDisabled"`
 	BotLimitSharingMode                   *string `json:"bot-limitSharingMode"`
