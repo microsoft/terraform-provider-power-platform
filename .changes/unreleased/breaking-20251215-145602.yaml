@@ -1,5 +1,0 @@
-kind: breaking
-body: powerplatform_managed_environment: removing no longer supported attributes (maker_onboarding_markdown, maker_onboarding_url); added new attributes (power_automate_is_sharing_disabled, copilot_allow_grant_editor_permissions_when_shared, copilot_limit_sharing_mode, copilot_max_limit_user_sharing)
-time: 2025-12-15T14:56:02.122421036Z
-custom:
-    Issue: "1000"

@@ -1,5 +1,0 @@
-kind: fixed
-body: Deprecate tenant_id attribute in tenant capacity data source and migrate to new API endpoint with expanded response structure
-time: 2025-12-01T09:19:06.419801701Z
-custom:
-    Issue: "984"
