@@ -1,0 +1,5 @@
+kind: fixed
+body: Handle 404 status on environment read/delete as deleted resource instead of fatal error
+time: 2025-12-16T12:13:54.883340024Z
+custom:
+    Issue: "1006"
