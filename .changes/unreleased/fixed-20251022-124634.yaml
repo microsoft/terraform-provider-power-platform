@@ -1,5 +1,0 @@
-kind: fixed
-body: Fixed error when environment is part of an Environment Group by adding warning instead of error when managed environment settings cannot be applied
-time: 2025-10-22T12:46:34.177726784Z
-custom:
-    Issue: "931"
