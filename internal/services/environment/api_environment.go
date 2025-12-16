@@ -255,10 +255,9 @@ func (client *Client) GetEnvironment(ctx context.Context, environmentId string) 
 	apiUrl.RawQuery = values.Encode()
 
 	env := EnvironmentDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
-		var httpError *customerrors.UnexpectedHttpStatusCodeError
-		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
+		if resp != nil && resp.HttpResponse.StatusCode == http.StatusNotFound {
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("environment '%s' not found", environmentId))
 		}
 		return nil, err
@@ -294,7 +293,11 @@ func (client *Client) deleteEnvironmentWithRetry(ctx context.Context, environmen
 		Message: "Deleted using Power Platform Terraform Provider",
 	}
 
-	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, []int{http.StatusNoContent, http.StatusAccepted, http.StatusConflict, http.StatusNotFound}, nil)
+	expectedStatusCodes := []int{http.StatusNoContent, http.StatusAccepted, http.StatusConflict, http.StatusNotFound}
+	response, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, environmentDelete, expectedStatusCodes, nil)
+	if err != nil {
+		return err
+	}
 
 	// Handle HTTP 404 case - if the environment is not found, consider it already deleted
 	if response != nil && response.HttpResponse.StatusCode == http.StatusNotFound {
@@ -313,9 +316,15 @@ func (client *Client) deleteEnvironmentWithRetry(ctx context.Context, environmen
 		return client.deleteEnvironmentWithRetry(ctx, environmentId, retryCount+1)
 	}
 
-	var httpError *customerrors.UnexpectedHttpStatusCodeError
-	if errors.As(err, &httpError) {
-		return fmt.Errorf("unexpected HTTP Status %s; Body: %s", httpError.StatusText, httpError.Body)
+	statusCodeFound := false
+	for _, code := range expectedStatusCodes {
+		if code == response.HttpResponse.StatusCode {
+			statusCodeFound = true
+			break
+		}
+	}
+	if !statusCodeFound {
+		return fmt.Errorf("unexpected HTTP Status %s", response.HttpResponse.Status)
 	}
 
 	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.HttpResponse.Status+"'")
