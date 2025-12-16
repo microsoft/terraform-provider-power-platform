@@ -5,7 +5,6 @@ package dlp_policy
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -67,10 +66,9 @@ func (client *client) GetPolicy(ctx context.Context, name string) (*dlpPolicyMod
 		Path:   fmt.Sprintf("providers/PowerPlatform.Governance/v2/policies/%s", name),
 	}
 	policy := dlpPolicyDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 	if err != nil {
-		var httpError *customerrors.UnexpectedHttpStatusCodeError
-		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
+		if resp != nil && resp.HttpResponse.StatusCode == http.StatusNotFound {
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("DLP Policy '%s' not found", name))
 		}
 		return nil, err

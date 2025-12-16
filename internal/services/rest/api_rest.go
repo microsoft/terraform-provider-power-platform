@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
-	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func newWebApiClient(apiClient *api.Client) client {
@@ -47,28 +46,27 @@ func (client *client) SendOperation(ctx context.Context, operation *DataverseWeb
 		expectedStatusCodes = []int{http.StatusOK, http.StatusCreated, http.StatusAccepted, http.StatusNoContent}
 	}
 
-	res, err := client.ExecuteApiRequest(ctx, operation.Scope.ValueStringPointer(), url, method, body, headers, expectedStatusCodes)
-	var unexpected customerrors.UnexpectedHttpStatusCodeError
-	if errors.As(err, &unexpected) {
+	resp, err := client.ExecuteApiRequest(ctx, operation.Scope.ValueStringPointer(), url, method, body, headers, expectedStatusCodes)
+	if resp != nil && resp.HttpResponse != nil && resp.HttpResponse.StatusCode >= 400 {
 		return types.ObjectUnknown(map[string]attr.Type{
 			"body": types.StringType,
-		}), unexpected
+		}), err
 	}
 
-	if res != nil && res.HttpResponse != nil {
-		tflog.Trace(ctx, fmt.Sprintf("SendOperation Response: %v", res.BodyAsBytes))
-		tflog.Trace(ctx, fmt.Sprintf("SendOperation Response Status: %v", res.HttpResponse.Status))
+	if resp != nil && resp.HttpResponse != nil {
+		tflog.Trace(ctx, fmt.Sprintf("SendOperation Response: %v", resp.BodyAsBytes))
+		tflog.Trace(ctx, fmt.Sprintf("SendOperation Response Status: %v", resp.HttpResponse.Status))
 	}
 
 	output := map[string]attr.Value{
 		"body": types.StringNull(),
 	}
 
-	if res == nil && err != nil {
+	if resp == nil && err != nil {
 		output["body"] = types.StringValue(err.Error())
 	} else {
-		if len(res.BodyAsBytes) > 0 {
-			output["body"] = types.StringValue(string(res.BodyAsBytes))
+		if len(resp.BodyAsBytes) > 0 {
+			output["body"] = types.StringValue(string(resp.BodyAsBytes))
 		}
 	}
 	o := types.ObjectValueMust(map[string]attr.Type{

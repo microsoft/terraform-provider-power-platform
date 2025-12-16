@@ -5,7 +5,6 @@ package licensing
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -55,13 +54,15 @@ func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*
 	apiUrl.RawQuery = values.Encode()
 
 	policy := BillingPolicyDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 
-	var httpError *customerrors.UnexpectedHttpStatusCodeError
-	if err != nil && errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
-		return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+	if err != nil {
+		if resp != nil && resp.HttpResponse.StatusCode == http.StatusNotFound {
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+		}
+		return nil, err
 	}
-	return &policy, err
+	return &policy, nil
 }
 
 func (client *Client) CreateBillingPolicy(ctx context.Context, policyToCreate billingPolicyCreateDto) (*BillingPolicyDto, error) {
@@ -147,10 +148,9 @@ func (client *Client) GetEnvironmentsForBillingPolicy(ctx context.Context, billi
 	apiUrl.RawQuery = values.Encode()
 
 	billingPolicyEnvironments := BillingPolicyEnvironmentsArrayResponseDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &billingPolicyEnvironments)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &billingPolicyEnvironments)
 	if err != nil {
-		var httpError *customerrors.UnexpectedHttpStatusCodeError
-		if errors.As(err, &httpError) && httpError.StatusCode == http.StatusNotFound {
+		if resp != nil && resp.HttpResponse.StatusCode == http.StatusNotFound {
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
 		}
 		return nil, err
