@@ -152,7 +152,7 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				ElementType:         types.StringType,
 			},
 			"power_automate_is_sharing_disabled": schema.BoolAttribute{
-				MarkdownDescription: "Let people share solution aware cloud flows. See [Solution-aware cloud flow sharing rules](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#solution-aware-cloud-flow-sharing-rules) for more details.",
+				MarkdownDescription: "If set to `true`, sharing of solution-aware cloud flows is disabled. If set to `false`, people can share solution-aware cloud flows. See [Solution-aware cloud flow sharing rules](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#solution-aware-cloud-flow-sharing-rules) for more details.",
 				Optional:            true,
 				Computed:            true,
 			},
