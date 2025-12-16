@@ -57,6 +57,10 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 	}
 	tflog.Debug(ctx, "Location Header: "+locationHeader)
 
+	if locationHeader == "" {
+		return nil, nil
+	}
+
 	_, err := url.Parse(locationHeader)
 	if err != nil {
 		tflog.Error(ctx, "Error parsing location header: "+err.Error())

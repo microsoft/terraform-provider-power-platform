@@ -310,9 +310,12 @@
                     "solutionCheckerMode": "Warn",
                     "suppressValidationEmails": "false",
                     "solutionCheckerRuleOverrides": "meta-remove-dup-reg,meta-avoid-reg-no-attribute",
-                    "makerOnboardingUrl": "http://www.example.com",
-                    "makerOnboardingMarkdown": "this is test markdown",
-                    "disableAiGeneratedDescriptions": "false"
+                    "disableAiGeneratedDescriptions": "false",
+                    "solutionCloudFlows-limitSharingMode": "disableSharing",
+                    "solutionCloudFlows-maxLimitUserSharing": "-1",
+                    "bot-authoringSharingDisabled": "true",
+                    "bot-limitSharingMode": "excludeSharingToSecurityGroups",
+                    "bot-maxLimitUserSharing": "55"
                 }
             }
         },
