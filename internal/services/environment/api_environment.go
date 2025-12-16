@@ -316,17 +316,6 @@ func (client *Client) deleteEnvironmentWithRetry(ctx context.Context, environmen
 		return client.deleteEnvironmentWithRetry(ctx, environmentId, retryCount+1)
 	}
 
-	statusCodeFound := false
-	for _, code := range expectedStatusCodes {
-		if code == response.HttpResponse.StatusCode {
-			statusCodeFound = true
-			break
-		}
-	}
-	if !statusCodeFound {
-		return fmt.Errorf("unexpected HTTP Status %s", response.HttpResponse.Status)
-	}
-
 	tflog.Debug(ctx, "Environment Deletion Operation HTTP Status: '"+response.HttpResponse.Status+"'")
 	tflog.Debug(ctx, "Waiting for environment deletion operation to complete")
 
