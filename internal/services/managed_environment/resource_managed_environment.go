@@ -170,7 +170,7 @@ func (r *ManagedEnvironmentResource) Schema(ctx context.Context, req resource.Sc
 				},
 			},
 			"copilot_max_limit_user_sharing": schema.Int64Attribute{
-				MarkdownDescription: "Limits how many users can share copilot agents. if 'is_group_sharing_disabled' is 'False', then this values should be '-1'. See [Agent sharing rules](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#agent-sharing-rules) for more details.",
+				MarkdownDescription: "Limits how many users can share copilot agents. If 'is_group_sharing_disabled' is 'False', then this value should be '-1'. See [Agent sharing rules](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#agent-sharing-rules) for more details.",
 				Optional:            true,
 				Computed:            true,
 			},
