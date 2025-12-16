@@ -503,7 +503,7 @@ func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Co
 		plan.SolutionCheckerMode = types.StringUnknown()
 		plan.SuppressValidationEmails = types.BoolUnknown()
 		plan.SolutionCheckerRuleOverrides = types.SetUnknown(types.StringType)
-		plan.PowerAutomateIsShareingDisabled = types.BoolUnknown()
+		plan.PowerAutomateIsSharingDisabled = types.BoolUnknown()
 		plan.CopilotAllowGrantPermissionsWhenShared = types.BoolUnknown()
 		plan.CopilotLimitSharingMode = types.StringUnknown()
 		plan.CopilotMaxLimitUserSharing = types.Int64Unknown()
