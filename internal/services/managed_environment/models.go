@@ -26,7 +26,7 @@ type ManagedEnvironmentResourceModel struct {
 	SolutionCheckerMode                    types.String   `tfsdk:"solution_checker_mode"`
 	SuppressValidationEmails               types.Bool     `tfsdk:"suppress_validation_emails"`
 	SolutionCheckerRuleOverrides           types.Set      `tfsdk:"solution_checker_rule_overrides"`
-	PowerAutomateIsShareingDisabled        types.Bool     `tfsdk:"power_automate_is_sharing_disabled"`
+	PowerAutomateIsSharingDisabled         types.Bool     `tfsdk:"power_automate_is_sharing_disabled"`
 	CopilotAllowGrantPermissionsWhenShared types.Bool     `tfsdk:"copilot_allow_grant_editor_permissions_when_shared"`
 	CopilotLimitSharingMode                types.String   `tfsdk:"copilot_limit_sharing_mode"` // noLimit, excludeSharingToSecurityGroups
 	CopilotMaxLimitUserSharing             types.Int64    `tfsdk:"copilot_max_limit_user_sharing"`
