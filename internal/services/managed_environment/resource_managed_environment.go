@@ -447,9 +447,9 @@ func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Co
 		plan.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
 
 		if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCloudFlowsLimitSharingMode != nil {
-			plan.PowerAutomateIsShareingDisabled = types.BoolValue(*env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCloudFlowsLimitSharingMode == "disableSharing")
+			plan.PowerAutomateIsSharingDisabled = types.BoolValue(*env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCloudFlowsLimitSharingMode == "disableSharing")
 		} else {
-			plan.PowerAutomateIsShareingDisabled = types.BoolNull()
+			plan.PowerAutomateIsSharingDisabled = types.BoolNull()
 		}
 		if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotAuthoringSharingDisabled != nil {
 			plan.CopilotAllowGrantPermissionsWhenShared = types.BoolValue(*env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotAuthoringSharingDisabled == "false")
