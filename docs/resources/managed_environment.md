@@ -39,16 +39,18 @@ resource "powerplatform_environment" "development" {
 }
 
 resource "powerplatform_managed_environment" "managed_development" {
-  environment_id                  = powerplatform_environment.development.id
-  is_usage_insights_disabled      = true
-  is_group_sharing_disabled       = true
-  limit_sharing_mode              = "ExcludeSharingToSecurityGroups"
-  max_limit_user_sharing          = 10
-  solution_checker_mode           = "Warn"
-  suppress_validation_emails      = true
-  solution_checker_rule_overrides = toset(["meta-avoid-reg-no-attribute", "meta-avoid-reg-retrieve", "app-use-delayoutput-text-input"])
-  maker_onboarding_markdown       = "this is example markdown"
-  maker_onboarding_url            = "https://www.microsoft.com"
+  environment_id                                     = powerplatform_environment.development.id
+  is_usage_insights_disabled                         = true
+  is_group_sharing_disabled                          = true
+  limit_sharing_mode                                 = "ExcludeSharingToSecurityGroups"
+  max_limit_user_sharing                             = 10
+  solution_checker_mode                              = "Warn"
+  suppress_validation_emails                         = true
+  solution_checker_rule_overrides                    = toset(["meta-avoid-reg-no-attribute", "meta-avoid-reg-retrieve", "app-use-delayoutput-text-input"])
+  power_automate_is_sharing_disabled                 = true
+  copilot_allow_grant_editor_permissions_when_shared = false
+  copilot_limit_sharing_mode                         = "ExcludeSharingToSecurityGroups"
+  copilot_max_limit_user_sharing                     = 55
 }
 ```
 
@@ -58,17 +60,19 @@ resource "powerplatform_managed_environment" "managed_development" {
 ### Required
 
 - `environment_id` (String) Unique environment id (guid), of the environment that is managed by these settings
-- `is_group_sharing_disabled` (Boolean) Limits how widely canvas apps can be shared. See [Managed Environment sharing limits](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits) for more details.
+- `is_group_sharing_disabled` (Boolean) Limits how widely canvas apps can be shared. See [Managed Environment sharing limits](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#canvas-app-sharing-rules) for more details.
 - `is_usage_insights_disabled` (Boolean) [Weekly insights digest for the environment](https://learn.microsoft.com/power-platform/admin/managed-environment-usage-insights)
-- `limit_sharing_mode` (String) Limits how widely canvas apps can be shared.  See [Managed Environment sharing limits](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits) for more details
-- `maker_onboarding_markdown` (String) First-time Power Apps makers will see this content in the Studio.  See [Maker welcome content](https://learn.microsoft.com/power-platform/admin/welcome-content) for more details.
-- `maker_onboarding_url` (String) Maker onboarding 'Learn more' URL. See [Maker welcome content](https://learn.microsoft.com/power-platform/admin/welcome-content) for more details.
+- `limit_sharing_mode` (String) Limits how widely canvas apps can be shared. See [Managed Environment sharing limits](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#canvas-app-sharing-rules) for more details.
 - `max_limit_user_sharing` (Number) Limits how many users can share canvas apps. if 'is_group_sharing_disabled' is 'False', then this values should be '-1'
-- `solution_checker_mode` (String) Automatically verify solution checker results for security and reliability issues before solution import.  See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.
+- `solution_checker_mode` (String) Automatically verify solution checker results for security and reliability issues before solution import. See [Solution Checker enforcement](https://learn.microsoft.com/power-platform/admin/managed-environment-solution-checker) for more details.
 - `suppress_validation_emails` (Boolean) Send emails only when a solution is blocked. If 'False', you'll also get emails when there are warnings
 
 ### Optional
 
+- `copilot_allow_grant_editor_permissions_when_shared` (Boolean) Allow Power Automate Copilot to grant `Editor` permissions when agent is shared. See [Agent sharing rules](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#agent-sharing-rules) for more details.
+- `copilot_limit_sharing_mode` (String) Limits how widely Copilot agents can be shared. Value `DisableSharing` will block granting `Viewer` permissions when sharing the agent. See [Agent sharing rules](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#agent-sharing-rules) for more details.
+- `copilot_max_limit_user_sharing` (Number) Limits how many users can share copilot agents. If 'is_group_sharing_disabled' is 'False', then this value should be '-1'. See [Agent sharing rules](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#agent-sharing-rules) for more details.
+- `power_automate_is_sharing_disabled` (Boolean) If set to `true`, sharing of solution-aware cloud flows is disabled. If set to `false`, people can share solution-aware cloud flows. See [Solution-aware cloud flow sharing rules](https://learn.microsoft.com/power-platform/admin/managed-environment-sharing-limits?tabs=new#solution-aware-cloud-flow-sharing-rules) for more details.
 - `solution_checker_rule_overrides` (Set of String) # Solution Checker Rules
 
 
