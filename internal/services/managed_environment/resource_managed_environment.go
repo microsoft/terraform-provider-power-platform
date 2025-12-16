@@ -401,9 +401,9 @@ func (r *ManagedEnvironmentResource) buildManagedEnvironmentDto(plan *ManagedEnv
 	}
 
 	// Power Automate optional attributes
-	if !plan.PowerAutomateIsShareingDisabled.IsNull() && !plan.PowerAutomateIsShareingDisabled.IsUnknown() {
+	if !plan.PowerAutomateIsSharingDisabled.IsNull() && !plan.PowerAutomateIsSharingDisabled.IsUnknown() {
 		maxLimitValue := "-1"
-		if plan.PowerAutomateIsShareingDisabled.ValueBool() {
+		if plan.PowerAutomateIsSharingDisabled.ValueBool() {
 			valueDisableSharing := "disableSharing"
 			managedEnvironmentDto.Settings.ExtendedSettings.SolutionCloudFlowsLimitSharingMode = &valueDisableSharing
 		} else {
