@@ -56,10 +56,13 @@ func (client *Client) GetBillingPolicy(ctx context.Context, billingId string) (*
 	policy := BillingPolicyDto{}
 	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
 
-	if resp != nil && resp.HttpResponse.StatusCode == http.StatusNotFound {
-		return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+	if err != nil {
+		if resp != nil && resp.HttpResponse.StatusCode == http.StatusNotFound {
+			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("Billing Policy with ID '%s' not found", billingId))
+		}
+		return nil, err
 	}
-	return &policy, err
+	return &policy, nil
 }
 
 func (client *Client) CreateBillingPolicy(ctx context.Context, policyToCreate billingPolicyCreateDto) (*BillingPolicyDto, error) {
