@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	SOLUTION_NAME          = "TerraformTestCustomConnector_1_0_0_1.zip"
+	SOLUTION_NAME          = "TerraformTestCustomConnector_1_0_0_1_managed.zip"
 	SOLUTION_RELATIVE_PATH = "tests/Test_Files/" + SOLUTION_NAME
 )
 
