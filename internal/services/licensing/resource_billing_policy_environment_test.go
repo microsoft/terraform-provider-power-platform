@@ -41,7 +41,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-					name     = "` + strings.ReplaceAll(mocks.TestName(), "_", "") + `"
+					name     = "` + strings.ReplaceAll(mocks.TestName(), "_", "") + strconv.Itoa(rand.IntN(9999)) + `"
 					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
@@ -125,6 +125,7 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 
 func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 	rgName := "power-platform-billing-" + mocks.TestName() + strconv.Itoa(rand.IntN(9999))
+	billingPolicyName := strings.ReplaceAll(mocks.TestName(), "_", "") + strconv.Itoa(rand.IntN(9999))
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -146,7 +147,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-					name     = "` + strings.ReplaceAll(mocks.TestName(), "_", "") + `"
+					name     = "` + billingPolicyName + `"
 					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
@@ -196,7 +197,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-					name     = "` + strings.ReplaceAll(mocks.TestName(), "_", "") + `"
+					name     = "` + billingPolicyName + `"
 					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
@@ -250,7 +251,7 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				}
 
 				resource "powerplatform_billing_policy" "pay_as_you_go" {
-					name     = "` + strings.ReplaceAll(mocks.TestName(), "_", "") + `"
+					name     = "` + billingPolicyName + `"
 					location = "unitedstates"
 					status   = "Enabled"
 					billing_instrument = {
