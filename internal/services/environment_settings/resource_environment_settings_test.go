@@ -176,8 +176,6 @@ func TestAccTestEnvironmentSettingsResource_Validate_Read(t *testing.T) {
 					solution_checker_mode           = "Warn"
 					suppress_validation_emails      = true
 					solution_checker_rule_overrides = toset(["meta-remove-dup-reg"])
-					maker_onboarding_markdown       = "this is example markdown"
-					maker_onboarding_url            = "https://www.microsoft.com"
 				}
 
 				resource "time_sleep" "wait_120_seconds" {
@@ -864,8 +862,6 @@ func TestAccTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 					solution_checker_mode           = "Warn"
 					suppress_validation_emails      = true
 					solution_checker_rule_overrides = toset(["meta-remove-dup-reg"])
-					maker_onboarding_markdown       = "this is example markdown"
-					maker_onboarding_url            = "https://www.microsoft.com"
 				}
 
 				resource "time_sleep" "wait_120_seconds" {
@@ -985,8 +981,6 @@ func TestAccTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 					solution_checker_mode           = "Warn"
 					suppress_validation_emails      = true
 					solution_checker_rule_overrides = toset(["meta-remove-dup-reg"])
-					maker_onboarding_markdown       = "this is example markdown"
-					maker_onboarding_url            = "https://www.microsoft.com"
 				}
 
 				resource "time_sleep" "wait_120_seconds" {
