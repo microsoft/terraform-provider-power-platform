@@ -18,7 +18,7 @@ terraform {
   required_providers {
     powerplatform = {
       source  = "microsoft/power-platform"
-      version = "~>3.0"
+      version = "~>4.0"
     }
     azapi = {
       source  = "azure/azapi"
