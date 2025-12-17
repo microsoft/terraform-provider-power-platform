@@ -3,7 +3,7 @@ terraform {
   required_providers {
     powerplatform = {
       source  = "microsoft/power-platform"
-      version = "~>3.0"
+      version = "~>4.0"
     }
     azapi = {
       source  = "azure/azapi"
@@ -59,8 +59,6 @@ resource "powerplatform_managed_environment" "managed_development" {
   max_limit_user_sharing     = 10
   solution_checker_mode      = "None"
   suppress_validation_emails = true
-  maker_onboarding_markdown  = "this is example markdown"
-  maker_onboarding_url       = "https://www.microsoft.com"
 }
 
 
