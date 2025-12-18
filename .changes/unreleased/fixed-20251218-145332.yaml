@@ -1,0 +1,5 @@
+kind: fixed
+body: Change error to warning when deactivating system user in Delete method for powerplatform_environment_application_admin resource
+time: 2025-12-18T14:53:32.74059249Z
+custom:
+    Issue: "922"
