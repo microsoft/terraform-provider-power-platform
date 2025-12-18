@@ -831,7 +831,6 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 }
 
 func TestAccTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
-	t.Setenv("TF_ACC", "1")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
