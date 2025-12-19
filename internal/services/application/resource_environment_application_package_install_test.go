@@ -16,6 +16,9 @@ import (
 )
 
 func TestAccEnvironmentApplicationPackageInstallResource_Validate_Install(t *testing.T) {
+
+	t.Skip("Skipping until SPN issues for `powerplatform_environment_application_packages` data source are resolved.")
+
 	resource.Test(t, resource.TestCase{
 
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
