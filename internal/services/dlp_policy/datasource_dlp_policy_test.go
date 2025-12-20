@@ -104,6 +104,7 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 }
 
 func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
+	t.Setenv("TF_ACC", "1")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -150,6 +151,12 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 						default_action_rule_behavior = ""
 						endpoint_rules               = []
 						id                           = "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"
+					  },
+					   {
+						action_rules                 = []
+						default_action_rule_behavior = ""
+						endpoint_rules               = []
+						id                           = "/providers/Microsoft.PowerApps/apis/shared_azureopenai"
 					  }
 					])
 
@@ -206,7 +213,7 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 				}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "3"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "4"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.default_connectors_classification", "Blocked"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.display_name", mocks.TestName()),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environment_type", "AllEnvironments"),
@@ -221,10 +228,11 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.order", "2"),
 
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environments.#", "0"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "3"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "4"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.1.id", "/providers/Microsoft.PowerApps/apis/shared_approvals"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.2.id", "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.3.id", "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.2.id", "/providers/Microsoft.PowerApps/apis/shared_azureopenai"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.default_action_rule_behavior", "Allow"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.action_rules.#", "2"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.action_rules.0.action_id", "DeleteItem_V2"),
