@@ -253,12 +253,11 @@ func (r *EnvironmentApplicationAdminResource) Delete(ctx context.Context, req re
 	// First deactivate the system user
 	err = r.ApplicationClient.DeactivateSystemUser(ctx, state.EnvironmentId.ValueString(), systemUserId)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		resp.Diagnostics.AddWarning(
 			fmt.Sprintf("Failed to deactivate system user for application '%s' in environment '%s'",
 				state.ApplicationId.ValueString(), state.EnvironmentId.ValueString()),
 			err.Error(),
 		)
-		return
 	}
 
 	// Now delete the system user
