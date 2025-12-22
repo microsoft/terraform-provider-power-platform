@@ -182,7 +182,7 @@ jobs:
         # - -set-exit-code: Preserves the original test exit code
         # - -iocopy: Copies test output to stdout while generating the report
         # - -out junit.xml: Writes JUnit-formatted test results to junit.xml
-        go test -p 6 -v 2>&1 ./... -run ^Test -coverprofile=test-coverage.out -timeout 600m -failfast -shuffle=on | go-junit-report -set-exit-code  -iocopy -out junit.xml
+        go test -p 4 -v 2>&1 ./... -run ^Test -coverprofile=test-coverage.out -timeout 600m -failfast -shuffle=on | go-junit-report -set-exit-code  -iocopy -out junit.xml
         
     - name: Prepare coverage report
       if: success() || failure()
