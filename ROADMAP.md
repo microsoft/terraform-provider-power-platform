@@ -12,7 +12,7 @@ This document outlines the high-level direction of the Terraform Provider for Po
 Focus on making the provider more stable and trustworthy.
 
 - Increase unit test coverage to at least 80% across all services
-- Reduce acceptance tests and improve test isolation
+- Reduce acceptance test runtime and improve test isolation
 - Establish a more predictable release schedule
 - Keep user documentation accurate and up-to-date
 
