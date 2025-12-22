@@ -104,13 +104,20 @@ func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 }
 
 func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
-	t.Setenv("TF_ACC", "1")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: `
-				data "powerplatform_connectors" "all_connectors" {}
+				resource "powerplatform_environment" "env" {
+					display_name     = "` + mocks.TestName() + `"
+					location         = "unitedstates"
+					environment_type = "Sandbox"
+				}
+
+				data "powerplatform_connectors" "all_connectors" {
+					depends_on = [powerplatform_environment.env]
+				}
 
 				locals {
 					business_connectors = toset([
@@ -152,7 +159,7 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 						endpoint_rules               = []
 						id                           = "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"
 					  },
-					   {
+					  {
 						action_rules                 = []
 						default_action_rule_behavior = ""
 						endpoint_rules               = []
@@ -187,8 +194,8 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 				  resource "powerplatform_data_loss_prevention_policy" "my_policy" {
 					display_name                      = "` + mocks.TestName() + `"
 					default_connectors_classification = "Blocked"
-					environment_type                  = "AllEnvironments"
-					environments                      = []
+					environment_type                  = "OnlyEnvironments"
+					environments                      = [powerplatform_environment.env.id]
 
 					business_connectors     = local.business_connectors
 					non_business_connectors = local.non_business_connectors
@@ -216,8 +223,8 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "4"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.default_connectors_classification", "Blocked"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.display_name", mocks.TestName()),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environment_type", "AllEnvironments"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environments.#", "0"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environment_type", "OnlyEnvironments"),
+					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environments.#", "1"),
 
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.#", "2"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.0.data_group", "Business"),
@@ -227,7 +234,6 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.host_url_pattern", "*"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.order", "2"),
 
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environments.#", "0"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "4"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
 					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.1.id", "/providers/Microsoft.PowerApps/apis/shared_approvals"),
