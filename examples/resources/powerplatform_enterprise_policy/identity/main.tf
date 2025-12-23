@@ -16,6 +16,7 @@ terraform {
   }
 }
 
+
 variable "environment_id" {
   description = "The ID of the environment"
   type        = string
@@ -26,7 +27,7 @@ variable "environment_id" {
 }
 
 variable "should_register_provider" {
-  description = "A flag to determine if the PowerPlatfomr provider should be registered in the subscription"
+  description = "A flag to determine if the PowerPlatform provider should be registered in the subscription"
   type        = bool
   default     = true
 }
@@ -40,23 +41,12 @@ variable "resource_group_name" {
   }
 }
 
-
 variable "resource_group_location" {
   description = "The location of the resource group"
   type        = string
   validation {
     condition     = length(var.resource_group_location) > 0
     error_message = "The resource group location must not be empty"
-  }
-
-}
-
-variable "vnet_locations" {
-  description = "The location of the virtual networks"
-  type        = list(string)
-  validation {
-    condition     = length(var.vnet_locations) != 1
-    error_message = "Two virtual network locations in the same region must be provided"
   }
 }
 
@@ -78,6 +68,15 @@ variable "enterprise_policy_location" {
   }
 }
 
+variable "policy_reader_object_id" {
+  description = "The object ID of the user to assign the Reader role to (needed to finish the setup of the Azure Synapse Link to Dataverse)"
+  type        = string
+  validation {
+    condition     = length(var.policy_reader_object_id) > 0
+    error_message = "The policy reader object ID must not be empty"
+  }
+}
+
 resource "azurerm_resource_group" "resource_group" {
   name     = var.resource_group_name
   location = var.resource_group_location
@@ -88,33 +87,10 @@ resource "azurerm_resource_provider_registration" "provider_registration" {
   name  = "Microsoft.PowerPlatform"
 }
 
-locals {
-  vnet_names = tolist(["vnet_primary", "vnet_secondary"])
-}
-
-resource "azurerm_virtual_network" "vnet" {
-  count               = 2
-  name                = local.vnet_names[count.index]
-  location            = var.vnet_locations[count.index]
-  resource_group_name = azurerm_resource_group.resource_group.name
-  address_space       = ["10.0.0.0/16"]
-}
-
-resource "azurerm_subnet" "subnet" {
-  count                = 2
-  name                 = "enterprise_policy_subnet"
-  resource_group_name  = var.resource_group_name
-  virtual_network_name = azurerm_virtual_network.vnet[count.index].name
-  address_prefixes     = ["10.0.1.0/24"]
-
-  delegation {
-    name = "delegation"
-
-    service_delegation {
-      name    = "Microsoft.PowerPlatform/enterprisePolicies"
-      actions = ["Microsoft.Network/virtualNetworks/subnets/join/action"]
-    }
-  }
+resource "azurerm_role_assignment" "policy_reader" {
+  scope                = azapi_resource.powerplatform_policy.id
+  role_definition_name = "Reader"
+  principal_id         = var.policy_reader_object_id
 }
 
 resource "azapi_resource" "powerplatform_policy" {
@@ -125,35 +101,17 @@ resource "azapi_resource" "powerplatform_policy" {
   location  = var.enterprise_policy_location
   parent_id = azurerm_resource_group.resource_group.id
   body = {
-    properties = {
-      networkInjection = {
-        virtualNetworks = [
-          {
-            id = azurerm_virtual_network.vnet[0].id
-            subnet = {
-              name = azurerm_subnet.subnet[0].name
-            }
-          },
-          {
-            id = azurerm_virtual_network.vnet[1].id
-
-            subnet = {
-              name = azurerm_subnet.subnet[1].name
-            }
-          }
-        ]
-      }
+    identity = {
+      type = "SystemAssigned"
     }
-    kind = "NetworkInjection"
+    kind = "Identity"
   }
 }
 
-resource "powerplatform_enterprise_policy" "network_injection" {
+resource "powerplatform_enterprise_policy" "identity_policy" {
   environment_id = var.environment_id
   system_id      = azapi_resource.powerplatform_policy.output.properties.systemId
-  policy_type    = "NetworkInjection"
-
-  depends_on = [powerplatform_managed_environment.managed_development]
+  policy_type    = "Identity"
 }
 
 output "enterprise_policy_system_id" {
@@ -163,3 +121,4 @@ output "enterprise_policy_system_id" {
 output "enterprise_policy_id" {
   value = azapi_resource.powerplatform_policy.output.id
 }
+

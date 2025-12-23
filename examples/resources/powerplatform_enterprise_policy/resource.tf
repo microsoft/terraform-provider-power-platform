@@ -61,6 +61,23 @@ resource "powerplatform_managed_environment" "managed_development" {
   suppress_validation_emails = true
 }
 
+// module that creates all azure resources required for the identity policy and the policy itself
+module "identity" {
+  source = "./identity"
+
+  should_register_provider = false
+
+  //Entra Object ID for administrator user that will configure Azure Synapse Link using Managed Identity
+  policy_reader_object_id = "00000000-0000-0000-0000-000000000000"
+
+  environment_id = powerplatform_environment.example_environment.id
+
+  resource_group_name     = "rg_example_identity"
+  resource_group_location = local.europe_location[0].azure_regions[0]
+
+  enterprise_policy_name     = "ep_example_identity_policy"
+  enterprise_policy_location = local.europe_location[0].name
+}
 
 // module that creates all azure resources required for the network injection policy and the policy itself
 module "network_injection" {
@@ -75,6 +92,8 @@ module "network_injection" {
   vnet_locations             = local.europe_location[0].azure_regions
   enterprise_policy_name     = "ep_example_network_injection_policy"
   enterprise_policy_location = local.europe_location[0].name
+// let's wait for first policy to be executed
+  depends_on = [module.identity]
 }
 
 // module that creates all azure resources required for the encryption policy and the policy itself
@@ -85,12 +104,11 @@ module "encryption" {
 
   environment_id = powerplatform_environment.example_environment.id
 
-  resource_group_name        = "rg_example_encryption_policy8"
+  resource_group_name        = "rg_example_encryption_policy"
   resource_group_location    = local.europe_location[0].azure_regions[0]
-  enterprise_policy_name     = "ep_example_encryption_policy8"
+  enterprise_policy_name     = "ep_example_encryption_policy"
   enterprise_policy_location = "europe"
-  keyvault_name              = "kv-ep-example8"
-
-  // let's wait for first policy to be executed
-  depends_on = [powerplatform_enterprise_policy.network_injection]
+  keyvault_name              = "kv-ep-example"
+  // let's wait for second policy to be executed
+  depends_on = [module.network_injection]
 }

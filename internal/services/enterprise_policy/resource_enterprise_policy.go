@@ -98,10 +98,10 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				},
 			},
 			"policy_type": schema.StringAttribute{
-				MarkdownDescription: fmt.Sprintf("Policy type [%s, %s]", NETWORK_INJECTION_POLICY_TYPE, ENCRYPTION_POLICY_TYPE),
+				MarkdownDescription: fmt.Sprintf("Policy type [%s, %s, %s]", NETWORK_INJECTION_POLICY_TYPE, ENCRYPTION_POLICY_TYPE, IDENTITY_POLICY_TYPE),
 				Required:            true,
 				Validators: []validator.String{
-					stringvalidator.OneOf(NETWORK_INJECTION_POLICY_TYPE, ENCRYPTION_POLICY_TYPE),
+					stringvalidator.OneOf(NETWORK_INJECTION_POLICY_TYPE, ENCRYPTION_POLICY_TYPE, IDENTITY_POLICY_TYPE),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -162,6 +162,8 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 			state.SystemId = types.StringValue(env.Properties.EnterprisePolicies.Vnets.SystemId)
 		} else if state.PolicyType.ValueString() == ENCRYPTION_POLICY_TYPE && env.Properties.EnterprisePolicies.CustomerManagedKeys != nil {
 			state.SystemId = types.StringValue(env.Properties.EnterprisePolicies.CustomerManagedKeys.SystemId)
+		} else if state.PolicyType.ValueString() == IDENTITY_POLICY_TYPE && env.Properties.EnterprisePolicies.Identity != nil {
+			state.SystemId = types.StringValue(env.Properties.EnterprisePolicies.Identity.SystemId)
 		}
 	} else {
 		state.SystemId = types.StringNull()

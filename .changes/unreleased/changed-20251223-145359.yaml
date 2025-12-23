@@ -1,0 +1,5 @@
+kind: changed
+body: Extended powerplatform_enterprise_policy resource to support Identity policy type
+time: 2025-12-23T14:53:59.263648543Z
+custom:
+    Issue: "917"
