@@ -27,7 +27,7 @@ variable "environment_id" {
 }
 
 variable "should_register_provider" {
-  description = "A flag to determine if the PowerPlatfomr provider should be registered in the subscription"
+  description = "A flag to determine if the PowerPlatform provider should be registered in the subscription"
   type        = bool
   default     = true
 }
