@@ -110,5 +110,5 @@ module "encryption" {
   enterprise_policy_location = "europe"
   keyvault_name              = "kv-ep-example"
   // let's wait for second policy to be executed
-  depends_on = [powerplatform_enterprise_policy.network_injection]
+  depends_on = [module.network_injection]
 }
