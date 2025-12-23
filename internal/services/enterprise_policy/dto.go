@@ -6,6 +6,7 @@ package enterprise_policy
 const (
 	NETWORK_INJECTION_POLICY_TYPE = "NetworkInjection"
 	ENCRYPTION_POLICY_TYPE        = "Encryption"
+	IDENTITY_POLICY_TYPE          = "Identity"
 )
 
 type linkEnterprosePolicyDto struct {
