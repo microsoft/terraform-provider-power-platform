@@ -127,11 +127,13 @@ func powerAppsAttributes() map[string]schema.Attribute {
 			Computed:            true,
 		},
 		"disable_create_from_image": schema.BoolAttribute{
-			MarkdownDescription: "Disable Create From Image",
+			DeprecationMessage:  "[DEPRECATED] This attribute is deprecated and will be removed in a future release.",
+			MarkdownDescription: "[DEPRECATED] Disable Create From Image",
 			Computed:            true,
 		},
 		"disable_create_from_figma": schema.BoolAttribute{
-			MarkdownDescription: "Disable Create From Figma",
+			DeprecationMessage:  "[DEPRECATED] This attribute is deprecated and will be removed in a future release.",
+			MarkdownDescription: "[DEPRECATED] Disable Create From Figma",
 			Computed:            true,
 		},
 		"disable_connection_sharing_with_everyone": schema.BoolAttribute{

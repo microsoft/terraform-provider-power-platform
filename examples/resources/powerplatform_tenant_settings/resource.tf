@@ -36,8 +36,6 @@ resource "powerplatform_tenant_settings" "settings" {
       disable_members_indicator                = true
       disable_maker_match                      = true
       disable_unused_license_assignment        = true
-      disable_create_from_image                = true
-      disable_create_from_figma                = true
       disable_connection_sharing_with_everyone = true
     }
     power_automate = {

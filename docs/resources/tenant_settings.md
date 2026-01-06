@@ -51,8 +51,6 @@ resource "powerplatform_tenant_settings" "settings" {
       disable_members_indicator                = true
       disable_maker_match                      = true
       disable_unused_license_assignment        = true
-      disable_create_from_image                = true
-      disable_create_from_figma                = true
       disable_connection_sharing_with_everyone = true
     }
     power_automate = {
@@ -226,8 +224,8 @@ Optional:
 Optional:
 
 - `disable_connection_sharing_with_everyone` (Boolean) Disable Connection Sharing With Everyone
-- `disable_create_from_figma` (Boolean) Disable Create From Figma
-- `disable_create_from_image` (Boolean) Disable Create From Image
+- `disable_create_from_figma` (Boolean, Deprecated) [DEPRECATED] Disable Create From Figma
+- `disable_create_from_image` (Boolean, Deprecated) [DEPRECATED] Disable Create From Image
 - `disable_maker_match` (Boolean) Disable Maker Match
 - `disable_share_with_everyone` (Boolean) Disable Share With Everyone
 - `disable_unused_license_assignment` (Boolean) Disable Unused License Assignment
