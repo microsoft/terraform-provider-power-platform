@@ -40,10 +40,8 @@ data "powerplatform_tenant_settings" "settings" {}
 - `disable_capacity_allocation_by_environment_admins` (Boolean) Disable Capacity Allocation By Environment Admins
 - `disable_environment_creation_by_non_admin_users` (Boolean) Disable Environment Creation By Non Admin Users
 - `disable_newsletter_sendout` (Boolean) Disable Newsletter Sendout
-- `disable_nps_comments_reachout` (Boolean) Disable NPS Comments Reachout
 - `disable_portals_creation_by_non_admin_users` (Boolean) Disable Portals Creation By Non Admin Users
 - `disable_support_tickets_visible_by_all_users` (Boolean) Disable Support Tickets Visible By All Users
-- `disable_survey_feedback` (Boolean) Disable Survey Feedback
 - `disable_trial_environment_creation_by_non_admin_users` (Boolean) Disable Trial Environment Creation By Non Admin Users
 - `power_platform` (Attributes) Power Platform (see [below for nested schema](#nestedatt--power_platform))
 - `walk_me_opt_out` (Boolean) Walk Me Opt Out
@@ -67,6 +65,7 @@ Read-Only:
 - `power_apps` (Attributes) Power Apps (see [below for nested schema](#nestedatt--power_platform--power_apps))
 - `power_automate` (Attributes) Power Automate (see [below for nested schema](#nestedatt--power_platform--power_automate))
 - `power_pages` (Attributes) Power Pages (see [below for nested schema](#nestedatt--power_platform--power_pages))
+- `product_feedback` (Attributes) Product Feedback (see [below for nested schema](#nestedatt--power_platform--product_feedback))
 - `search` (Attributes) Search (see [below for nested schema](#nestedatt--power_platform--search))
 - `teams_integration` (Attributes) Teams Integration (see [below for nested schema](#nestedatt--power_platform--teams_integration))
 - `user_management_settings` (Attributes) User Management Settings (see [below for nested schema](#nestedatt--power_platform--user_management_settings))
@@ -172,6 +171,17 @@ Read-Only:
 
 <a id="nestedatt--power_platform--power_pages"></a>
 ### Nested Schema for `power_platform.power_pages`
+
+
+<a id="nestedatt--power_platform--product_feedback"></a>
+### Nested Schema for `power_platform.product_feedback`
+
+Read-Only:
+
+- `disable_attachments` (Boolean) Disable screenshots and attachments in feedback
+- `disable_microsoft_follow_up` (Boolean) Disable letting Microsoft follow up on feedback
+- `disable_microsoft_surveys_send` (Boolean) Disable letting Microsoft send surveys
+- `disable_user_survey_feedback` (Boolean) Disable users to choose to provide survey feedback
 
 
 <a id="nestedatt--power_platform--search"></a>

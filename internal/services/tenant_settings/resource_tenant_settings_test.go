@@ -27,10 +27,14 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					disable_environment_creation_by_non_admin_users       = false
 					disable_portals_creation_by_non_admin_users           = false
 					disable_newsletter_sendout                            = false
-					disable_nps_comments_reachout                         = false
-					disable_survey_feedback                               = false
 
 					power_platform = {
+					  product_feedback = {
+					  	disable_microsoft_surveys_send = false
+						disable_user_survey_feedback = false
+						disable_attachments = false
+						disable_microsoft_follow_up = false
+					  }
 					  search = {
 						disable_docs_search       = false
 						disable_community_search  = false
@@ -97,11 +101,13 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_capacity_allocation_by_environment_admins", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_environment_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_newsletter_sendout", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_nps_comments_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_portals_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_support_tickets_visible_by_all_users", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_survey_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_trial_environment_creation_by_non_admin_users", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_attachments", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_microsoft_follow_up", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_microsoft_surveys_send", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_user_survey_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.catalog_settings.power_catalog_audience_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_champions_invitation_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_skills_match_invitation_reachout", "false"),
@@ -170,10 +176,14 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					disable_environment_creation_by_non_admin_users       = false
 					disable_portals_creation_by_non_admin_users           = false
 					disable_newsletter_sendout                            = false
-					disable_nps_comments_reachout                         = false
-					disable_survey_feedback                               = false
 
 					power_platform = {
+					  product_feedback = {
+					  	disable_microsoft_surveys_send = false
+						disable_user_survey_feedback = false
+						disable_attachments = false
+						disable_microsoft_follow_up = false
+					  }
 					  search = {
 						disable_docs_search       = false
 						disable_community_search  = false
@@ -240,11 +250,13 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_capacity_allocation_by_environment_admins", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_environment_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_newsletter_sendout", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_nps_comments_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_portals_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_support_tickets_visible_by_all_users", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_survey_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_trial_environment_creation_by_non_admin_users", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_attachments", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_microsoft_follow_up", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_microsoft_surveys_send", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_user_survey_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.catalog_settings.power_catalog_audience_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_champions_invitation_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_skills_match_invitation_reachout", "false"),
@@ -294,10 +306,14 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					disable_environment_creation_by_non_admin_users       = true
 					disable_portals_creation_by_non_admin_users           = true
 					disable_newsletter_sendout                            = true
-					disable_nps_comments_reachout                         = true
-					disable_survey_feedback                               = true
 
 					power_platform = {
+					  product_feedback = {
+					  	disable_microsoft_surveys_send = true
+						disable_user_survey_feedback = true
+						disable_attachments = true
+						disable_microsoft_follow_up = true
+					  }
 					  search = {
 						disable_docs_search       = true
 						disable_community_search  = true
@@ -364,11 +380,13 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_capacity_allocation_by_environment_admins", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_environment_creation_by_non_admin_users", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_newsletter_sendout", "true"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_nps_comments_reachout", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_portals_creation_by_non_admin_users", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_support_tickets_visible_by_all_users", "true"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_survey_feedback", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_trial_environment_creation_by_non_admin_users", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_attachments", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_microsoft_follow_up", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_microsoft_surveys_send", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_user_survey_feedback", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.catalog_settings.power_catalog_audience_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_champions_invitation_reachout", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_skills_match_invitation_reachout", "true"),
@@ -410,10 +428,14 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					disable_environment_creation_by_non_admin_users       = false
 					disable_portals_creation_by_non_admin_users           = false
 					disable_newsletter_sendout                            = false
-					disable_nps_comments_reachout                         = false
-					disable_survey_feedback                               = false
 
 					power_platform = {
+					  product_feedback = {
+					  	disable_microsoft_surveys_send = false
+						disable_user_survey_feedback = false
+						disable_attachments = false
+						disable_microsoft_follow_up = false
+					  }
 					  search = {
 						disable_docs_search       = false
 						disable_community_search  = false
@@ -480,11 +502,13 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_capacity_allocation_by_environment_admins", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_environment_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_newsletter_sendout", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_nps_comments_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_portals_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_support_tickets_visible_by_all_users", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_survey_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_trial_environment_creation_by_non_admin_users", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_attachments", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_microsoft_follow_up", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_microsoft_surveys_send", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_user_survey_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.catalog_settings.power_catalog_audience_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_champions_invitation_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_skills_match_invitation_reachout", "false"),
@@ -558,10 +582,14 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					disable_environment_creation_by_non_admin_users       = true
 					disable_portals_creation_by_non_admin_users           = true
 					disable_newsletter_sendout                            = true
-					disable_nps_comments_reachout                         = true
-					disable_survey_feedback                               = true
 
 					power_platform = {
+					  product_feedback = {
+					  	disable_microsoft_surveys_send = true
+						disable_user_survey_feedback = true
+						disable_attachments = true
+						disable_microsoft_follow_up = true
+					  }
 					  search = {
 						disable_docs_search       = true
 						disable_community_search  = true
@@ -628,11 +656,15 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_capacity_allocation_by_environment_admins", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_environment_creation_by_non_admin_users", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_newsletter_sendout", "true"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_nps_comments_reachout", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_portals_creation_by_non_admin_users", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_support_tickets_visible_by_all_users", "true"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_survey_feedback", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_trial_environment_creation_by_non_admin_users", "true"),
+
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_attachments", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_microsoft_follow_up", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_microsoft_surveys_send", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_user_survey_feedback", "true"),
+
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.catalog_settings.power_catalog_audience_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_champions_invitation_reachout", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_skills_match_invitation_reachout", "true"),
@@ -674,10 +706,14 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					disable_environment_creation_by_non_admin_users       = false
 					disable_portals_creation_by_non_admin_users           = false
 					disable_newsletter_sendout                            = false
-					disable_nps_comments_reachout                         = false
-					disable_survey_feedback                               = false
 
 					power_platform = {
+					  product_feedback = {
+					  	disable_microsoft_surveys_send = false
+						disable_user_survey_feedback = false
+						disable_attachments = false
+						disable_microsoft_follow_up = false
+					  }
 					  search = {
 						disable_docs_search       = false
 						disable_community_search  = false
@@ -744,11 +780,13 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_capacity_allocation_by_environment_admins", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_environment_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_newsletter_sendout", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_nps_comments_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_portals_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_support_tickets_visible_by_all_users", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_survey_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "disable_trial_environment_creation_by_non_admin_users", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_attachments", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_microsoft_follow_up", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_microsoft_surveys_send", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.product_feedback.disable_user_survey_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.catalog_settings.power_catalog_audience_setting", "All"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_champions_invitation_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_skills_match_invitation_reachout", "false"),

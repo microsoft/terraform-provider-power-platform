@@ -71,10 +71,6 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 				MarkdownDescription: "Walk Me Opt Out",
 				Optional:            true,
 			},
-			"disable_nps_comments_reachout": schema.BoolAttribute{
-				MarkdownDescription: "Disable NPS Comments Reachout",
-				Optional:            true,
-			},
 			"disable_newsletter_sendout": schema.BoolAttribute{
 				MarkdownDescription: "Disable Newsletter Sendout",
 				Optional:            true,
@@ -85,10 +81,6 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 			},
 			"disable_portals_creation_by_non_admin_users": schema.BoolAttribute{
 				MarkdownDescription: "Disable Portals Creation By Non Admin Users",
-				Optional:            true,
-			},
-			"disable_survey_feedback": schema.BoolAttribute{
-				MarkdownDescription: "Disable Survey Feedback",
 				Optional:            true,
 			},
 			"disable_trial_environment_creation_by_non_admin_users": schema.BoolAttribute{
@@ -107,6 +99,28 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 				MarkdownDescription: "Power Platform",
 				Optional:            true,
 				Attributes: map[string]schema.Attribute{
+					"product_feedback": schema.SingleNestedAttribute{
+						MarkdownDescription: "Product Feedback",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"disable_microsoft_surveys_send": schema.BoolAttribute{
+								MarkdownDescription: "Disable letting Microsoft send surveys",
+								Optional:            true,
+							},
+							"disable_user_survey_feedback": schema.BoolAttribute{
+								MarkdownDescription: "Disable users to choose to provide survey feedback",
+								Optional:            true,
+							},
+							"disable_attachments": schema.BoolAttribute{
+								MarkdownDescription: "Disable screenshots and attachments in feedback",
+								Optional:            true,
+							},
+							"disable_microsoft_follow_up": schema.BoolAttribute{
+								MarkdownDescription: "Disable letting Microsoft follow up on feedback",
+								Optional:            true,
+							},
+						},
+					},
 					"search": schema.SingleNestedAttribute{
 						MarkdownDescription: "Search",
 						Optional:            true,

@@ -25,56 +25,101 @@ provider "powerplatform" {
   use_cli = true
 }
 
+//Environment Rounting
+//https://1dbbeae58fa6462ea5a19932a520a1.dc.tenant.api.powerplatform.com/governance/ruleBasedPolicies/46073c1a-56a6-4eab-a1d8-de9a5ccf109f?api-version=2021-10-01-preview
+
+//tenant level anlitics enable
+//https://emea.csanalytics.powerplatform.microsoft.com/api/v1/tenants/1dbbeae5-8fa6-462e-a5a1-9932a520a1dc/tenantconsent/update
+//{
+//  "userId": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
+//  "consentState": true
+//}
+
+//tenant lockbox policy
+//https://1dbbeae58fa6462ea5a19932a520a1.dc.tenant.api.powerplatform.com/governance/lockboxPolicies?productType=CDS&api-version=2021-10-01-preview
+//{
+//  "lockboxEnabledState": {
+//    "appliesFor": "All",
+//    "value": "Enabled"
+//  },
+//  "productType": "CDS",
+//  "tenantId": "1dbbeae5-8fa6-462e-a5a1-9932a520a1dc"
+//}
+
 resource "powerplatform_tenant_settings" "settings" {
-  walk_me_opt_out                                       = true
-  disable_support_tickets_visible_by_all_users          = true
-  disable_trial_environment_creation_by_non_admin_users = true
-  disable_capacity_allocation_by_environment_admins     = true
-  disable_environment_creation_by_non_admin_users       = true
-  disable_portals_creation_by_non_admin_users           = true
-  disable_newsletter_sendout                            = true
-  disable_nps_comments_reachout                         = true
-  disable_survey_feedback                               = true
+  walk_me_opt_out                                       = true //?
+  disable_support_tickets_visible_by_all_users          = true //Support requests visibility
+  disable_trial_environment_creation_by_non_admin_users = true //environment assigments: trials
+  disable_capacity_allocation_by_environment_admins     = true //add-on capacity assignments
+  disable_environment_creation_by_non_admin_users       = true //environment assigments: production
+  disable_portals_creation_by_non_admin_users           = true //?
+  disable_newsletter_sendout                            = true //?
+
+  //->helpSupportSettings
+  //useSupportBingSearchByAllUsers //Suport Bing Search solitions
+  //disableHelpSupportCopilot ??
+
+  //product feedback settings
+  //disable_survey_feedback       = true //let users choose to submit feedback
+  //disable_nps_comments_reachout = true //allow to reach out to users who leave comments
+  //disableUserInitiatedFeedback //allow ms to send survey to users
+  //disableSurveyScreenshots //allow to add attachements to feedback
 
   power_platform = {
+    product_feedback = {
+
+    }
     search = {
-      disable_docs_search       = true
-      disable_community_search  = true
-      disable_bing_video_search = true
+      disable_docs_search       = true //?
+      disable_community_search  = true //?
+      disable_bing_video_search = true //?
     }
     teams_integration = {
       share_with_colleagues_user_limit = 10001
     }
     power_apps = {
+      //disableCopilot ??
+      //enablePlanDesignerCopresence ??
+      //enableM365FeaturesForMakers ??
+
       disable_share_with_everyone              = true
       enable_guests_to_make                    = true
-      disable_members_indicator                = true
+      disable_members_indicator                = true // deprecated?
       disable_maker_match                      = true
       disable_unused_license_assignment        = true
       disable_connection_sharing_with_everyone = true
+      //enableCanvasAppInsights //canvas app insights
     }
     power_automate = {
       disable_copilot           = true
-      disable_copilot_with_bing = true
+      disable_copilot_with_bing = true //copilot help assitange in power automate
+      //enableComputerUseSharedMachines = true //host browser in computer use
+      //disableFlowRunResubmission      = true //power autoamnte flow run resubmission
     }
     environments = {
       disable_preferred_data_location_for_teams_environment = true
     }
     governance = {
+      //additionalAdminDigestEmailRecipients: "aaa@aaa.pl" // weekly digest
       disable_admin_digest                                      = true
-      disable_developer_environment_creation_by_non_admin_users = true
+      disable_developer_environment_creation_by_non_admin_users = true //environment assigments: developers
       enable_default_environment_routing                        = false
+      //environmentRoutingAllMakers ??
       policy = {
-        enable_desktop_flow_data_policy_management = true
+        enable_desktop_flow_data_policy_management = true //desktop flow action in dlp
       }
     }
     licensing = {
       disable_billing_policy_creation_by_non_admin_users    = true
       enable_tenant_capacity_report_for_environment_admins  = true
       storage_capacity_consumption_warning_threshold        = 88
-      enable_tenant_licensing_report_for_environment_admins = true
-      disable_use_of_unassigned_ai_builder_credits          = true
-      apply_auto_claim_to_only_managed_environments         = true
+      enable_tenant_licensing_report_for_environment_admins = true // Tenant licesing summary view
+      //enableTenantCapacityReportForEnvironmentAdmins = true // Tenant capacity summary view
+      disable_use_of_unassigned_ai_builder_credits  = true //Ai builder credits
+      apply_auto_claim_to_only_managed_environments = true //Auto-claim policies for Power Apps
+      //applyPAutoAutoClaimToOnlyManagedEnvironments = true //Auto-claim policies for Power Automate
+      //copilotCreditsOverageNotificationEmailRecipients = ["aaa@asdasd.pl1;adsasd@asdfsfd.pl1"] //copilot credits overage notifications
+      //copilotCreditsOverageNotificationEmailRecipientsUpdatedBy = "00000000-0000-0000-0000-000000000000" //copilot credits overage notifications updated by //hjidden
     }
     power_pages = {}
     champions = {
@@ -82,17 +127,19 @@ resource "powerplatform_tenant_settings" "settings" {
       disable_skills_match_invitation_reachout = true
     }
     intelligence = {
-      disable_copilot                   = true
-      enable_open_ai_bot_publishing     = true
-      disable_copilot_feedback          = true
-      disable_copilot_feedback_metadata = true
+      disable_copilot                   = true //copilot in Power Apps
+      enable_open_ai_bot_publishing     = true //publish copilot with ai features
+      disable_copilot_feedback          = true //basic copilot feedback
+      disable_copilot_feedback_metadata = true //Additional Copilot feedback
+      //copilotStudioAuthorsSecurityGroupId = "00000000-0000-0000-0000-000000000000" //copilot studio authors security group
+      //disableAiPrompts ??
     }
     model_experimentation = {
       enable_model_data_sharing = true
       disable_data_logging      = true
     }
     catalog_settings = {
-      power_catalog_audience_setting = "All"
+      power_catalog_audience_setting = "All" //catalog assignments
     }
     user_management_settings = {
       enable_delete_disabled_user_in_all_environments = true
@@ -109,10 +156,8 @@ resource "powerplatform_tenant_settings" "settings" {
 - `disable_capacity_allocation_by_environment_admins` (Boolean) Disable Capacity Allocation By Environment Admins. See [Add-on capacity management](https://learn.microsoft.com/power-platform/admin/capacity-add-on#control-who-can-allocate-add-on-capacity) for more details.
 - `disable_environment_creation_by_non_admin_users` (Boolean) Disable Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.
 - `disable_newsletter_sendout` (Boolean) Disable Newsletter Sendout
-- `disable_nps_comments_reachout` (Boolean) Disable NPS Comments Reachout
 - `disable_portals_creation_by_non_admin_users` (Boolean) Disable Portals Creation By Non Admin Users
 - `disable_support_tickets_visible_by_all_users` (Boolean) Disable Support Tickets Visible By All Users
-- `disable_survey_feedback` (Boolean) Disable Survey Feedback
 - `disable_trial_environment_creation_by_non_admin_users` (Boolean) Disable Trial Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.
 - `power_platform` (Attributes) Power Platform (see [below for nested schema](#nestedatt--power_platform))
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
@@ -137,6 +182,7 @@ Optional:
 - `power_apps` (Attributes) Power Apps (see [below for nested schema](#nestedatt--power_platform--power_apps))
 - `power_automate` (Attributes) Power Automate (see [below for nested schema](#nestedatt--power_platform--power_automate))
 - `power_pages` (Attributes) Power Pages (see [below for nested schema](#nestedatt--power_platform--power_pages))
+- `product_feedback` (Attributes) Product Feedback (see [below for nested schema](#nestedatt--power_platform--product_feedback))
 - `search` (Attributes) Search (see [below for nested schema](#nestedatt--power_platform--search))
 - `teams_integration` (Attributes) Teams Integration (see [below for nested schema](#nestedatt--power_platform--teams_integration))
 - `user_management_settings` (Attributes) User Management Settings (see [below for nested schema](#nestedatt--power_platform--user_management_settings))
@@ -242,6 +288,17 @@ Optional:
 
 <a id="nestedatt--power_platform--power_pages"></a>
 ### Nested Schema for `power_platform.power_pages`
+
+
+<a id="nestedatt--power_platform--product_feedback"></a>
+### Nested Schema for `power_platform.product_feedback`
+
+Optional:
+
+- `disable_attachments` (Boolean) Disable screenshots and attachments in feedback
+- `disable_microsoft_follow_up` (Boolean) Disable letting Microsoft follow up on feedback
+- `disable_microsoft_surveys_send` (Boolean) Disable letting Microsoft send surveys
+- `disable_user_survey_feedback` (Boolean) Disable users to choose to provide survey feedback
 
 
 <a id="nestedatt--power_platform--search"></a>

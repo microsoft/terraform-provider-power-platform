@@ -80,7 +80,26 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 }
 
-// Helper functions for organizing tenant settings schema attributes
+func productFeedbackAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"disable_microsoft_surveys_send": schema.BoolAttribute{
+			MarkdownDescription: "Disable letting Microsoft send surveys",
+			Computed:            true,
+		},
+		"disable_user_survey_feedback": schema.BoolAttribute{
+			MarkdownDescription: "Disable users to choose to provide survey feedback",
+			Computed:            true,
+		},
+		"disable_attachments": schema.BoolAttribute{
+			MarkdownDescription: "Disable screenshots and attachments in feedback",
+			Computed:            true,
+		},
+		"disable_microsoft_follow_up": schema.BoolAttribute{
+			MarkdownDescription: "Disable letting Microsoft follow up on feedback",
+			Computed:            true,
+		},
+	}
+}
 
 func searchAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
@@ -294,6 +313,11 @@ func userManagementSettingsAttributes() map[string]schema.Attribute {
 
 func powerPlatformAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
+		"product_feedback": schema.SingleNestedAttribute{
+			MarkdownDescription: "Product Feedback",
+			Computed:            true,
+			Attributes:          productFeedbackAttributes(),
+		},
 		"search": schema.SingleNestedAttribute{
 			MarkdownDescription: "Search",
 			Computed:            true,
@@ -378,10 +402,6 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, req datasource.Sc
 				MarkdownDescription: "Walk Me Opt Out",
 				Computed:            true,
 			},
-			"disable_nps_comments_reachout": schema.BoolAttribute{
-				MarkdownDescription: "Disable NPS Comments Reachout",
-				Computed:            true,
-			},
 			"disable_newsletter_sendout": schema.BoolAttribute{
 				MarkdownDescription: "Disable Newsletter Sendout",
 				Computed:            true,
@@ -392,10 +412,6 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, req datasource.Sc
 			},
 			"disable_portals_creation_by_non_admin_users": schema.BoolAttribute{
 				MarkdownDescription: "Disable Portals Creation By Non Admin Users",
-				Computed:            true,
-			},
-			"disable_survey_feedback": schema.BoolAttribute{
-				MarkdownDescription: "Disable Survey Feedback",
 				Computed:            true,
 			},
 			"disable_trial_environment_creation_by_non_admin_users": schema.BoolAttribute{

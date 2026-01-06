@@ -5,6 +5,8 @@
     "disableEnvironmentCreationByNonAdminUsers": false,
     "disablePortalsCreationByNonAdminUsers": false,
     "disableSurveyFeedback": false,
+    "disableUserInitiatedFeedback": false,
+    "disableSurveyScreenshots": false,
     "disableTrialEnvironmentCreationByNonAdminUsers": false,
     "disableCapacityAllocationByEnvironmentAdmins": false,
     "disableSupportTicketsVisibleByAllUsers": false,

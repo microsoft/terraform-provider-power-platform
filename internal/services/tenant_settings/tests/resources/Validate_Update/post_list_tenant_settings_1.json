@@ -1,70 +1,72 @@
 {
-    "walkMeOptOut": false,
-    "disableNPSCommentsReachout": false,
-    "disableNewsletterSendout": false,
-    "disableEnvironmentCreationByNonAdminUsers": false,
-    "disablePortalsCreationByNonAdminUsers": false,
-    "disableSurveyFeedback": false,
-    "disableTrialEnvironmentCreationByNonAdminUsers": false,
-    "disableCapacityAllocationByEnvironmentAdmins": false,
-    "disableSupportTicketsVisibleByAllUsers": false,
+    "walkMeOptOut": true,
+    "disableNPSCommentsReachout": true,
+    "disableNewsletterSendout": true,
+    "disableEnvironmentCreationByNonAdminUsers": true,
+    "disablePortalsCreationByNonAdminUsers": true,
+    "disableSurveyFeedback": true,
+    "disableUserInitiatedFeedback": true,
+    "disableSurveyScreenshots": true,
+    "disableTrialEnvironmentCreationByNonAdminUsers": true,
+    "disableCapacityAllocationByEnvironmentAdmins": true,
+    "disableSupportTicketsVisibleByAllUsers": true,
     "powerPlatform": {
         "search": {
-            "disableDocsSearch": false,
-            "disableCommunitySearch": false,
-            "disableBingVideoSearch": false
+            "disableDocsSearch": true,
+            "disableCommunitySearch": true,
+            "disableBingVideoSearch": true
         },
         "teamsIntegration": {
-            "shareWithColleaguesUserLimit": 10001
+            "shareWithColleaguesUserLimit": 999
         },
         "powerApps": {
-            "disableShareWithEveryone": false,
-            "enableGuestsToMake": false,
-            "disableMakerMatch": false,
-            "disableUnusedLicenseAssignment": false,
+            "disableShareWithEveryone": true,
+            "enableGuestsToMake": true,
+            "disableMakerMatch": true,
+            "disableUnusedLicenseAssignment": true,
             "disableCreateFromImage": false,
             "disableCreateFromFigma": false,
-            "disableConnectionSharingWithEveryone": false
+            "disableConnectionSharingWithEveryone": true
         },
         "powerAutomate": {
-            "disableCopilot": false
+            "disableCopilot": true
         },
         "environments": {
-            "disablePreferredDataLocationForTeamsEnvironment": false
+            "disablePreferredDataLocationForTeamsEnvironment": true
         },
         "governance": {
-            "disableAdminDigest": false,
+            "disableAdminDigest": true,
             "disableDeveloperEnvironmentCreationByNonAdminUsers": false,
-            "enableDefaultEnvironmentRouting": false,
+            "enableDefaultEnvironmentRouting": true,
             "policy": {
-                "enableDesktopFlowDataPolicyManagement": false
+                "enableDesktopFlowDataPolicyManagement": true
             }
         },
         "licensing": {
-            "disableBillingPolicyCreationByNonAdminUsers": false,
-            "enableTenantCapacityReportForEnvironmentAdmins": false,
-            "storageCapacityConsumptionWarningThreshold": 85,
-            "enableTenantLicensingReportForEnvironmentAdmins": false,
-            "disableUseOfUnassignedAIBuilderCredits": false
+            "disableBillingPolicyCreationByNonAdminUsers": true,
+            "enableTenantCapacityReportForEnvironmentAdmins": true,
+            "storageCapacityConsumptionWarningThreshold": 95,
+            "enableTenantLicensingReportForEnvironmentAdmins": true,
+            "disableUseOfUnassignedAIBuilderCredits": true
         },
         "powerPages": {},
         "champions": {
-            "disableChampionsInvitationReachout": false,
-            "disableSkillsMatchInvitationReachout": false
+            "disableChampionsInvitationReachout": true,
+            "disableSkillsMatchInvitationReachout": true
         },
         "intelligence": {
-            "disableCopilot": false,
-            "enableOpenAiBotPublishing": false
+            "disableCopilot": true,
+            "enableOpenAiBotPublishing": true
         },
         "modelExperimentation": {
-            "enableModelDataSharing": false,
-            "disableDataLogging": false
+            "enableModelDataSharing": true,
+            "disableDataLogging": true
         },
         "catalogSettings": {
             "powerCatalogAudienceSetting": "All"
         },
         "userManagementSettings": {
-            "enableDeleteDisabledUserinAllEnvironments": false
+            "enableDeleteDisabledUserinAllEnvironments": true
         }
     }
 }

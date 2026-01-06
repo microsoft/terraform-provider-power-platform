@@ -18,11 +18,9 @@ type TenantSettingsDataSource struct {
 type TenantSettingsDataSourceModel struct {
 	Timeouts                                       timeouts.Value `tfsdk:"timeouts"`
 	WalkMeOptOut                                   types.Bool     `tfsdk:"walk_me_opt_out"`
-	DisableNPSCommentsReachout                     types.Bool     `tfsdk:"disable_nps_comments_reachout"`
 	DisableNewsletterSendout                       types.Bool     `tfsdk:"disable_newsletter_sendout"`
 	DisableEnvironmentCreationByNonAdminUsers      types.Bool     `tfsdk:"disable_environment_creation_by_non_admin_users"`
 	DisablePortalsCreationByNonAdminUsers          types.Bool     `tfsdk:"disable_portals_creation_by_non_admin_users"`
-	DisableSurveyFeedback                          types.Bool     `tfsdk:"disable_survey_feedback"`
 	DisableTrialEnvironmentCreationByNonAdminUsers types.Bool     `tfsdk:"disable_trial_environment_creation_by_non_admin_users"`
 	DisableCapacityAllocationByEnvironmentAdmins   types.Bool     `tfsdk:"disable_capacity_allocation_by_environment_admins"`
 	DisableSupportTicketsVisibleByAllUsers         types.Bool     `tfsdk:"disable_support_tickets_visible_by_all_users"`
@@ -33,11 +31,9 @@ type TenantSettingsResourceModel struct {
 	Timeouts                                       timeouts.Value `tfsdk:"timeouts"`
 	Id                                             types.String   `tfsdk:"id"`
 	WalkMeOptOut                                   types.Bool     `tfsdk:"walk_me_opt_out"`
-	DisableNPSCommentsReachout                     types.Bool     `tfsdk:"disable_nps_comments_reachout"`
 	DisableNewsletterSendout                       types.Bool     `tfsdk:"disable_newsletter_sendout"`
 	DisableEnvironmentCreationByNonAdminUsers      types.Bool     `tfsdk:"disable_environment_creation_by_non_admin_users"`
 	DisablePortalsCreationByNonAdminUsers          types.Bool     `tfsdk:"disable_portals_creation_by_non_admin_users"`
-	DisableSurveyFeedback                          types.Bool     `tfsdk:"disable_survey_feedback"`
 	DisableTrialEnvironmentCreationByNonAdminUsers types.Bool     `tfsdk:"disable_trial_environment_creation_by_non_admin_users"`
 	DisableCapacityAllocationByEnvironmentAdmins   types.Bool     `tfsdk:"disable_capacity_allocation_by_environment_admins"`
 	DisableSupportTicketsVisibleByAllUsers         types.Bool     `tfsdk:"disable_support_tickets_visible_by_all_users"`
@@ -45,6 +41,7 @@ type TenantSettingsResourceModel struct {
 }
 
 type PowerPlatformSettingsModel struct {
+	ProductFeedback        types.Map `tfsdk:"product_feedback"`
 	Search                 types.Map `tfsdk:"search"`
 	TeamsIntegration       types.Map `tfsdk:"teams_integration"`
 	PowerApps              types.Map `tfsdk:"power_apps"`
@@ -64,6 +61,13 @@ type SearchSettingsModel struct {
 	DisableDocsSearch      types.Bool `tfsdk:"disable_docs_search"`
 	DisableCommunitySearch types.Bool `tfsdk:"disable_community_search"`
 	DisableBingVideoSearch types.Bool `tfsdk:"disable_bing_video_search"`
+}
+
+type ProductFeedbackSettings struct {
+	DisableMicrosoftSurveysSend types.Bool `tfsdk:"disable_microsoft_surveys_send"`
+	DisableAttachments          types.Bool `tfsdk:"disable_attachments"`
+	DisableMicrosoftFollowUp    types.Bool `tfsdk:"disable_microsoft_follow_up"`
+	DisableUserSurveyFeedback   types.Bool `tfsdk:"disable_user_survey_feedback"`
 }
 
 type TeamsIntegrationSettings struct {
