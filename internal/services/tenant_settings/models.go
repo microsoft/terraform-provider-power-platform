@@ -75,6 +75,7 @@ type TeamsIntegrationSettings struct {
 }
 
 type PowerAppsSettings struct {
+	DisableCopilot                       types.Bool `tfsdk:"disable_copilot"`
 	DisableShareWithEveryone             types.Bool `tfsdk:"disable_share_with_everyone"`
 	EnableGuestsToMake                   types.Bool `tfsdk:"enable_guests_to_make"`
 	DisableMakerMatch                    types.Bool `tfsdk:"disable_maker_match"`

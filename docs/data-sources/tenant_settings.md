@@ -153,6 +153,7 @@ Read-Only:
 Read-Only:
 
 - `disable_connection_sharing_with_everyone` (Boolean) Disable Connection Sharing With Everyone
+- `disable_copilot` (Boolean) Disable Copilot
 - `disable_create_from_figma` (Boolean, Deprecated) [DEPRECATED] Disable Create From Figma
 - `disable_create_from_image` (Boolean, Deprecated) [DEPRECATED] Disable Create From Image
 - `disable_maker_match` (Boolean) Disable Maker Match

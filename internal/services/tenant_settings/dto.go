@@ -82,6 +82,7 @@ type powerAutomateSettingsDto struct {
 }
 
 type powerAppsSettingsDto struct {
+	DisableCopilot                       *bool `json:"disableCopilot,omitempty"`
 	DisableShareWithEveryone             *bool `json:"disableShareWithEveryone,omitempty"`
 	EnableGuestsToMake                   *bool `json:"enableGuestsToMake,omitempty"`
 	DisableMakerMatch                    *bool `json:"disableMakerMatch,omitempty"`
@@ -331,6 +332,9 @@ func convertPowerAppsModel(ctx context.Context, powerPlatformAttributes map[stri
 		}
 		if !powerAppsSettings.DisableConnectionSharingWithEveryone.IsNull() && !powerAppsSettings.DisableConnectionSharingWithEveryone.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.PowerApps.DisableConnectionSharingWithEveryone = powerAppsSettings.DisableConnectionSharingWithEveryone.ValueBoolPointer()
+		}
+		if !powerAppsSettings.DisableCopilot.IsNull() && !powerAppsSettings.DisableCopilot.IsUnknown() {
+			tenantSettingsDto.PowerPlatform.PowerApps.DisableCopilot = powerAppsSettings.DisableCopilot.ValueBoolPointer()
 		}
 	}
 }
@@ -903,6 +907,7 @@ func convertPowerAutomateSettings(tenantSettingsDto tenantSettingsDto) (basetype
 
 func convertPowerAppsSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesPowerAppsProperties := map[string]attr.Type{
+		"disable_copilot":                          types.BoolType,
 		"disable_share_with_everyone":              types.BoolType,
 		"enable_guests_to_make":                    types.BoolType,
 		"disable_maker_match":                      types.BoolType,
@@ -916,6 +921,7 @@ func convertPowerAppsSettings(tenantSettingsDto tenantSettingsDto) (basetypes.Ob
 		return types.ObjectType{AttrTypes: attrTypesPowerAppsProperties}, types.ObjectNull(attrTypesPowerAppsProperties)
 	}
 	attrValuesPowerAppsProperties := map[string]attr.Value{
+		"disable_copilot":                          types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableCopilot),
 		"disable_share_with_everyone":              types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableShareWithEveryone),
 		"enable_guests_to_make":                    types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.EnableGuestsToMake),
 		"disable_maker_match":                      types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableMakerMatch),

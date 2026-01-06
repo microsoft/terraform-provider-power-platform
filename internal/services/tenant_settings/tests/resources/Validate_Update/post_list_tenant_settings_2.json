@@ -26,7 +26,8 @@
             "disableUnusedLicenseAssignment": true,
             "disableCreateFromImage": true,
             "disableCreateFromFigma": true,
-            "disableConnectionSharingWithEveryone": true
+            "disableConnectionSharingWithEveryone": true,
+            "disableCopilot": true
         },
         "powerAutomate": {
             "disableCopilot": true

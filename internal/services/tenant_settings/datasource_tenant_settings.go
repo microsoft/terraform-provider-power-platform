@@ -129,6 +129,10 @@ func teamsIntegrationAttributes() map[string]schema.Attribute {
 
 func powerAppsAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
+		"disable_copilot": schema.BoolAttribute{
+			MarkdownDescription: "Disable Copilot",
+			Computed:            true,
+		},
 		"disable_share_with_everyone": schema.BoolAttribute{
 			MarkdownDescription: "Disable Share With Everyone",
 			Computed:            true,

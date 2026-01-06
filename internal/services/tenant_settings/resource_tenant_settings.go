@@ -156,6 +156,10 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
+							"disable_copilot": schema.BoolAttribute{
+								MarkdownDescription: "Disable Copilot",
+								Optional:            true,
+							},
 							"disable_share_with_everyone": schema.BoolAttribute{
 								MarkdownDescription: "Disable Share With Everyone",
 								Optional:            true,

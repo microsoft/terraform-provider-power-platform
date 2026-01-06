@@ -59,15 +59,12 @@ resource "powerplatform_tenant_settings" "settings" {
   //useSupportBingSearchByAllUsers //Suport Bing Search solitions
   //disableHelpSupportCopilot ??
 
-  //product feedback settings
-  //disable_survey_feedback       = true //let users choose to submit feedback
-  //disable_nps_comments_reachout = true //allow to reach out to users who leave comments
-  //disableUserInitiatedFeedback //allow ms to send survey to users
-  //disableSurveyScreenshots //allow to add attachements to feedback
-
   power_platform = {
     product_feedback = {
-
+      disable_microsoft_surveys_send = true
+      disable_user_survey_feedback   = true
+      disable_attachments            = true
+      disable_microsoft_follow_up    = true
     }
     search = {
       disable_docs_search       = true //?
@@ -81,7 +78,7 @@ resource "powerplatform_tenant_settings" "settings" {
       //disableCopilot ??
       //enablePlanDesignerCopresence ??
       //enableM365FeaturesForMakers ??
-
+      
       disable_share_with_everyone              = true
       enable_guests_to_make                    = true
       disable_members_indicator                = true // deprecated?
@@ -270,6 +267,7 @@ Optional:
 Optional:
 
 - `disable_connection_sharing_with_everyone` (Boolean) Disable Connection Sharing With Everyone
+- `disable_copilot` (Boolean) Disable Copilot
 - `disable_create_from_figma` (Boolean, Deprecated) [DEPRECATED] Disable Create From Figma
 - `disable_create_from_image` (Boolean, Deprecated) [DEPRECATED] Disable Create From Image
 - `disable_maker_match` (Boolean) Disable Maker Match
