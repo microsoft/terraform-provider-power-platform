@@ -90,6 +90,7 @@ type powerAppsSettingsDto struct {
 	DisableCreateFromImage               *bool `json:"disableCreateFromImage,omitempty"`
 	DisableCreateFromFigma               *bool `json:"disableCreateFromFigma,omitempty"`
 	DisableConnectionSharingWithEveryone *bool `json:"disableConnectionSharingWithEveryone,omitempty"`
+	EnableCanvasAppInsights              *bool `json:"enableCanvasAppInsights,omitempty"`
 }
 
 type environmentSettingsDto struct {
@@ -332,6 +333,9 @@ func convertPowerAppsModel(ctx context.Context, powerPlatformAttributes map[stri
 		}
 		if !powerAppsSettings.DisableConnectionSharingWithEveryone.IsNull() && !powerAppsSettings.DisableConnectionSharingWithEveryone.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.PowerApps.DisableConnectionSharingWithEveryone = powerAppsSettings.DisableConnectionSharingWithEveryone.ValueBoolPointer()
+		}
+		if !powerAppsSettings.EnableCanvasAppInsights.IsNull() && !powerAppsSettings.EnableCanvasAppInsights.IsUnknown() {
+			tenantSettingsDto.PowerPlatform.PowerApps.EnableCanvasAppInsights = powerAppsSettings.EnableCanvasAppInsights.ValueBoolPointer()
 		}
 		if !powerAppsSettings.DisableCopilot.IsNull() && !powerAppsSettings.DisableCopilot.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.PowerApps.DisableCopilot = powerAppsSettings.DisableCopilot.ValueBoolPointer()
@@ -915,6 +919,7 @@ func convertPowerAppsSettings(tenantSettingsDto tenantSettingsDto) (basetypes.Ob
 		"disable_create_from_image":                types.BoolType,
 		"disable_create_from_figma":                types.BoolType,
 		"disable_connection_sharing_with_everyone": types.BoolType,
+		"enable_canvas_app_insights":               types.BoolType,
 	}
 
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.PowerApps == nil {
@@ -929,6 +934,7 @@ func convertPowerAppsSettings(tenantSettingsDto tenantSettingsDto) (basetypes.Ob
 		"disable_create_from_image":                types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableCreateFromImage),
 		"disable_create_from_figma":                types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableCreateFromFigma),
 		"disable_connection_sharing_with_everyone": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.DisableConnectionSharingWithEveryone),
+		"enable_canvas_app_insights":               types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerApps.EnableCanvasAppInsights),
 	}
 	return types.ObjectType{AttrTypes: attrTypesPowerAppsProperties}, types.ObjectValueMust(attrTypesPowerAppsProperties, attrValuesPowerAppsProperties)
 }

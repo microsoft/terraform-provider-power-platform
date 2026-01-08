@@ -79,6 +79,7 @@ resource "powerplatform_tenant_settings" "settings" {
       //enablePlanDesignerCopresence ??
       //enableM365FeaturesForMakers ??
       
+      disable_copilot                    = true 
       disable_share_with_everyone              = true
       enable_guests_to_make                    = true
       disable_members_indicator                = true // deprecated?
@@ -273,6 +274,7 @@ Optional:
 - `disable_maker_match` (Boolean) Disable Maker Match
 - `disable_share_with_everyone` (Boolean) Disable Share With Everyone
 - `disable_unused_license_assignment` (Boolean) Disable Unused License Assignment
+- `enable_canvas_app_insights` (Boolean) Enable Canvas App Insights
 - `enable_guests_to_make` (Boolean) Enable Guests To Make
 
 

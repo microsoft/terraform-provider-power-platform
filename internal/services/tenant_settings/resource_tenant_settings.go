@@ -190,6 +190,10 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								MarkdownDescription: "Disable Connection Sharing With Everyone",
 								Optional:            true,
 							},
+							"enable_canvas_app_insights": schema.BoolAttribute{
+								MarkdownDescription: "Enable Canvas App Insights",
+								Optional:            true,
+							},
 						},
 					},
 					"power_automate": schema.SingleNestedAttribute{

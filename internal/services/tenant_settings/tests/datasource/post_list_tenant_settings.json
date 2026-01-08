@@ -27,11 +27,11 @@
             "disableCreateFromImage": false,
             "disableCreateFromFigma": false,
             "disableConnectionSharingWithEveryone": false,
-            "disableCopilot": false
+            "disableCopilot": false,
+            "enableCanvasAppInsights": false
         },
         "powerAutomate": {
-            "disableCopilot": false,
-            "disableCopilotWithBing": false
+            "disableCopilot": false
         },
         "environments": {
             "disablePreferredDataLocationForTeamsEnvironment": false
@@ -49,8 +49,7 @@
             "enableTenantCapacityReportForEnvironmentAdmins": false,
             "storageCapacityConsumptionWarningThreshold": 38,
             "enableTenantLicensingReportForEnvironmentAdmins": false,
-            "disableUseOfUnassignedAIBuilderCredits": false,
-            "applyAutoClaimToOnlyManagedEnvironments": false
+            "disableUseOfUnassignedAIBuilderCredits": false
         },
         "powerPages": {},
         "champions": {
@@ -59,9 +58,7 @@
         },
         "intelligence": {
             "disableCopilot": false,
-            "enableOpenAiBotPublishing": false,
-            "disableCopilotFeedback": false,
-            "disableCopilotFeedbackMetadata": false
+            "enableOpenAiBotPublishing": false
         },
         "modelExperimentation": {
             "enableModelDataSharing": false,

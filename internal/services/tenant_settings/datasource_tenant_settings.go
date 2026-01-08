@@ -163,6 +163,10 @@ func powerAppsAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Disable Connection Sharing With Everyone",
 			Computed:            true,
 		},
+		"enable_canvas_app_insights": schema.BoolAttribute{
+			MarkdownDescription: "Enable Canvas App Insights",
+			Computed:            true,
+		},
 	}
 }
 

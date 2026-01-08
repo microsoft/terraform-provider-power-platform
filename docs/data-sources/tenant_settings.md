@@ -159,6 +159,7 @@ Read-Only:
 - `disable_maker_match` (Boolean) Disable Maker Match
 - `disable_share_with_everyone` (Boolean) Disable Share With Everyone
 - `disable_unused_license_assignment` (Boolean) Disable Unused License Assignment
+- `enable_canvas_app_insights` (Boolean) Enable Canvas App Insights
 - `enable_guests_to_make` (Boolean) Enable Guests To Make
 
 

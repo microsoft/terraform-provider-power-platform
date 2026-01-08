@@ -27,7 +27,8 @@
             "disableCreateFromImage": false,
             "disableCreateFromFigma": false,
             "disableConnectionSharingWithEveryone": false,
-            "disableCopilot": false
+            "disableCopilot": false,
+            "enableCanvasAppInsights": false
         },
         "powerAutomate": {
             "disableCopilot": false

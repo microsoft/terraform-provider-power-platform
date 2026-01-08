@@ -83,6 +83,7 @@ type PowerAppsSettings struct {
 	DisableCreateFromImage               types.Bool `tfsdk:"disable_create_from_image"`
 	DisableCreateFromFigma               types.Bool `tfsdk:"disable_create_from_figma"`
 	DisableConnectionSharingWithEveryone types.Bool `tfsdk:"disable_connection_sharing_with_everyone"`
+	EnableCanvasAppInsights              types.Bool `tfsdk:"enable_canvas_app_insights"`
 }
 
 type PowerAutomateSettings struct {

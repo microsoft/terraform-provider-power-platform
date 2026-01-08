@@ -50,6 +50,7 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 						disable_maker_match                      = false
 						disable_unused_license_assignment        = false
 						disable_connection_sharing_with_everyone = false
+						enable_canvas_app_insights 				= false
 					  }
 					  power_automate = {
 						disable_copilot           = false
@@ -132,6 +133,7 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_copilot", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_community_search", "false"),
@@ -201,6 +203,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 						disable_maker_match                      = false
 						disable_unused_license_assignment        = false
 						disable_connection_sharing_with_everyone = false
+						enable_canvas_app_insights 				= false
 					  }
 					  power_automate = {
 						disable_copilot           = false
@@ -283,6 +286,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_copilot", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_community_search", "false"),
@@ -333,6 +337,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 						disable_maker_match                      = true
 						disable_unused_license_assignment        = true
 						disable_connection_sharing_with_everyone = true
+						enable_canvas_app_insights 				= true
 					  }
 					  power_automate = {
 						disable_copilot           = true
@@ -415,6 +420,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_copilot", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_community_search", "true"),
@@ -457,6 +463,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 						disable_maker_match                      = false
 						disable_unused_license_assignment        = false
 						disable_connection_sharing_with_everyone = false
+						enable_canvas_app_insights 				= false
 					  }
 					  power_automate = {
 						disable_copilot           = false
@@ -539,6 +546,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_copilot", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_community_search", "false"),
@@ -613,6 +621,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 						disable_maker_match                      = true
 						disable_unused_license_assignment        = true
 						disable_connection_sharing_with_everyone = true
+						enable_canvas_app_insights 				= true
 					  }
 					  power_automate = {
 						disable_copilot           = true
@@ -697,6 +706,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_copilot", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_community_search", "true"),
@@ -739,6 +749,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 						disable_maker_match                      = false
 						disable_unused_license_assignment        = false
 						disable_connection_sharing_with_everyone = false
+						enable_canvas_app_insights 				= false
 					  }
 					  power_automate = {
 						disable_copilot           = false
@@ -821,6 +832,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_copilot", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_unused_license_assignment", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_community_search", "false"),
