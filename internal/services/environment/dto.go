@@ -91,6 +91,7 @@ type UsedByDto struct {
 type EnvironmentEnterprisePoliciesDto struct {
 	Vnets               *EnterprisePolicyDto `json:"vnets,omitempty"`
 	CustomerManagedKeys *EnterprisePolicyDto `json:"customerManagedKeys,omitempty"`
+	Identity            *EnterprisePolicyDto `json:"identity,omitempty"`
 }
 
 type EnterprisePolicyDto struct {
