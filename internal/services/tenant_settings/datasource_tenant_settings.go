@@ -184,6 +184,10 @@ func powerAutomateAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Allow Use Of Hosted Browser",
 			Computed:            true,
 		},
+		"disable_flow_resubmission": schema.BoolAttribute{
+			MarkdownDescription: "Disable Flow Resubmission",
+			Computed:            true,
+		},
 	}
 }
 

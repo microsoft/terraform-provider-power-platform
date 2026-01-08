@@ -55,7 +55,8 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					  power_automate = {
 						disable_copilot           = false
 						disable_copilot_with_bing = false
-						allow_use_of_hosted_browser = false
+						allow_use_of_hosted_browser = false					
+						disable_flow_resubmission = false					  
 					  }
 					  environments = {
 						disable_preferred_data_location_for_teams_environment = false
@@ -138,6 +139,8 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_with_bing", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_community_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_docs_search", "false"),
@@ -212,6 +215,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 						disable_copilot           = false
 						disable_copilot_with_bing = false
 						allow_use_of_hosted_browser = false
+						disable_flow_resubmission = false
 					  }
 					  environments = {
 						disable_preferred_data_location_for_teams_environment = false
@@ -294,6 +298,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_with_bing", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_community_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_docs_search", "false"),
@@ -349,6 +354,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 						disable_copilot           = true
 						disable_copilot_with_bing = true
 						allow_use_of_hosted_browser = true
+						disable_flow_resubmission = true
 					  }
 					  environments = {
 						disable_preferred_data_location_for_teams_environment = true
@@ -431,6 +437,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_with_bing", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_community_search", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_docs_search", "true"),
@@ -478,6 +485,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 						disable_copilot           = false
 						disable_copilot_with_bing = false
 						allow_use_of_hosted_browser = false
+						disable_flow_resubmission = false
 					  }
 					  environments = {
 						disable_preferred_data_location_for_teams_environment = false
@@ -560,6 +568,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_with_bing", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_community_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_docs_search", "false"),
@@ -639,6 +648,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 						disable_copilot           = true
 						disable_copilot_with_bing = true
 						allow_use_of_hosted_browser = true
+						disable_flow_resubmission = true
 					  }
 					  environments = {
 						disable_preferred_data_location_for_teams_environment = true
@@ -723,6 +733,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_with_bing", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_community_search", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_docs_search", "true"),
@@ -770,6 +781,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 						disable_copilot           = false
 						disable_copilot_with_bing = false
 						allow_use_of_hosted_browser = false
+						disable_flow_resubmission = false
 					  }
 					  environments = {
 						disable_preferred_data_location_for_teams_environment = false
@@ -852,6 +864,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_with_bing", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_community_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_docs_search", "false"),

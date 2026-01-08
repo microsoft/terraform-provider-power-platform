@@ -78,9 +78,10 @@ type teamsIntegrationSettingsDto struct {
 }
 
 type powerAutomateSettingsDto struct {
-	DisableCopilot          *bool `json:"disableCopilot,omitempty"`
-	DisableCopilotWithBing  *bool `json:"disableCopilotWithBing,omitempty"`
-	AllowUseOfHostedBrowser *bool `json:"enableComputerUseSharedMachines,omitempty"`
+	DisableCopilot           *bool `json:"disableCopilot,omitempty"`
+	DisableCopilotWithBing   *bool `json:"disableCopilotWithBing,omitempty"`
+	AllowUseOfHostedBrowser  *bool `json:"enableComputerUseSharedMachines,omitempty"`
+	DisableFlowResubmission  *bool `json:"disableFlowRunResubmission,omitempty"`
 }
 
 type powerAppsSettingsDto struct {
@@ -372,6 +373,9 @@ func convertPowerAutomateModel(ctx context.Context, powerPlatformAttributes map[
 		}
 		if !powerAutomateSettings.AllowUseOfHostedBrowser.IsNull() && !powerAutomateSettings.AllowUseOfHostedBrowser.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.PowerAutomate.AllowUseOfHostedBrowser = powerAutomateSettings.AllowUseOfHostedBrowser.ValueBoolPointer()
+		}
+		if !powerAutomateSettings.DisableFlowResubmission.IsNull() && !powerAutomateSettings.DisableFlowResubmission.IsUnknown() {
+			tenantSettingsDto.PowerPlatform.PowerAutomate.DisableFlowResubmission = powerAutomateSettings.DisableFlowResubmission.ValueBoolPointer()
 		}
 	}
 }
@@ -908,6 +912,7 @@ func convertPowerAutomateSettings(tenantSettingsDto tenantSettingsDto) (basetype
 		"disable_copilot":             types.BoolType,
 		"disable_copilot_with_bing":   types.BoolType,
 		"allow_use_of_hosted_browser": types.BoolType,
+		"disable_flow_resubmission":   types.BoolType,
 	}
 
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.PowerAutomate == nil {
@@ -917,6 +922,7 @@ func convertPowerAutomateSettings(tenantSettingsDto tenantSettingsDto) (basetype
 		"disable_copilot":             types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.DisableCopilot),
 		"disable_copilot_with_bing":   types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.DisableCopilotWithBing),
 		"allow_use_of_hosted_browser": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.AllowUseOfHostedBrowser),
+		"disable_flow_resubmission":   types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.DisableFlowResubmission),
 	}
 	return types.ObjectType{AttrTypes: attrTypesPowerAutomateProperties}, types.ObjectValueMust(attrTypesPowerAutomateProperties, attrValuesPowerAutomateProperties)
 }

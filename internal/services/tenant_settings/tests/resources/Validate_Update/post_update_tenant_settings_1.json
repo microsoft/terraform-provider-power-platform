@@ -33,7 +33,8 @@
     "powerAutomate": {
       "disableCopilot": true,
       "disableCopilotWithBing": true,
-      "enableComputerUseSharedMachines": true
+      "enableComputerUseSharedMachines": true,
+      "disableFlowRunResubmission": true
     },
     "environments": {
       "disablePreferredDataLocationForTeamsEnvironment": true

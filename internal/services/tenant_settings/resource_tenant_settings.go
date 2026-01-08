@@ -212,6 +212,10 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								MarkdownDescription: "Allow Use Of Hosted Browser",
 								Optional:            true,
 							},
+							"disable_flow_resubmission": schema.BoolAttribute{
+								MarkdownDescription: "Disable Flow Resubmission",
+								Optional:            true,
+							},
 						},
 					},
 					"environments": schema.SingleNestedAttribute{
