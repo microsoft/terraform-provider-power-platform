@@ -87,7 +87,9 @@ type PowerAppsSettings struct {
 }
 
 type PowerAutomateSettings struct {
-	DisableCopilot types.Bool `tfsdk:"disable_copilot"`
+	DisableCopilot          types.Bool `tfsdk:"disable_copilot"`
+	DisableCopilotWithBing  types.Bool `tfsdk:"disable_copilot_with_bing"`
+	AllowUseOfHostedBrowser types.Bool `tfsdk:"allow_use_of_hosted_browser"`
 }
 
 type EnvironmentsSettings struct {

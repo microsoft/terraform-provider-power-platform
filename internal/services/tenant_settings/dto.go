@@ -78,7 +78,9 @@ type teamsIntegrationSettingsDto struct {
 }
 
 type powerAutomateSettingsDto struct {
-	DisableCopilot *bool `json:"disableCopilot,omitempty"`
+	DisableCopilot          *bool `json:"disableCopilot,omitempty"`
+	DisableCopilotWithBing  *bool `json:"disableCopilotWithBing,omitempty"`
+	AllowUseOfHostedBrowser *bool `json:"enableComputerUseSharedMachines,omitempty"`
 }
 
 type powerAppsSettingsDto struct {
@@ -364,6 +366,12 @@ func convertPowerAutomateModel(ctx context.Context, powerPlatformAttributes map[
 		tenantSettingsDto.PowerPlatform.PowerAutomate = &powerAutomateSettingsDto{}
 		if !powerAutomateSettings.DisableCopilot.IsNull() && !powerAutomateSettings.DisableCopilot.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.PowerAutomate.DisableCopilot = powerAutomateSettings.DisableCopilot.ValueBoolPointer()
+		}
+		if !powerAutomateSettings.DisableCopilotWithBing.IsNull() && !powerAutomateSettings.DisableCopilotWithBing.IsUnknown() {
+			tenantSettingsDto.PowerPlatform.PowerAutomate.DisableCopilotWithBing = powerAutomateSettings.DisableCopilotWithBing.ValueBoolPointer()
+		}
+		if !powerAutomateSettings.AllowUseOfHostedBrowser.IsNull() && !powerAutomateSettings.AllowUseOfHostedBrowser.IsUnknown() {
+			tenantSettingsDto.PowerPlatform.PowerAutomate.AllowUseOfHostedBrowser = powerAutomateSettings.AllowUseOfHostedBrowser.ValueBoolPointer()
 		}
 	}
 }
@@ -897,14 +905,18 @@ func convertEnvironmentSettings(tenantSettingsDto tenantSettingsDto) (basetypes.
 
 func convertPowerAutomateSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesPowerAutomateProperties := map[string]attr.Type{
-		"disable_copilot": types.BoolType,
+		"disable_copilot":             types.BoolType,
+		"disable_copilot_with_bing":   types.BoolType,
+		"allow_use_of_hosted_browser": types.BoolType,
 	}
 
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.PowerAutomate == nil {
 		return types.ObjectType{AttrTypes: attrTypesPowerAutomateProperties}, types.ObjectNull(attrTypesPowerAutomateProperties)
 	}
 	attrValuesPowerAutomateProperties := map[string]attr.Value{
-		"disable_copilot": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.DisableCopilot),
+		"disable_copilot":             types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.DisableCopilot),
+		"disable_copilot_with_bing":   types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.DisableCopilotWithBing),
+		"allow_use_of_hosted_browser": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.AllowUseOfHostedBrowser),
 	}
 	return types.ObjectType{AttrTypes: attrTypesPowerAutomateProperties}, types.ObjectValueMust(attrTypesPowerAutomateProperties, attrValuesPowerAutomateProperties)
 }
