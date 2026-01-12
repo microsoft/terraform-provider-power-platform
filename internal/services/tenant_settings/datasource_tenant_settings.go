@@ -318,6 +318,11 @@ func intelligenceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Additional Copilot Feedback",
 			Computed:            true,
 		},
+		"copilot_studio_authors_security_group_id": schema.StringAttribute{
+			MarkdownDescription: "Copilot Studio Authors Security Group ID",
+			Computed:            true,
+			CustomType:          customtypes.UUIDType{},
+		},
 	}
 }
 

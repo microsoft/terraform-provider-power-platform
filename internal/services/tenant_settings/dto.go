@@ -141,10 +141,11 @@ type championSettingsDto struct {
 }
 
 type intelligenceSettingsDto struct {
-	DisableCopilot            *bool `json:"disableCopilot,omitempty"`
-	EnableOpenAiBotPublishing *bool `json:"enableOpenAiBotPublishing,omitempty"`
-	BasicCopilotFeedback      *bool `json:"disableCopilotFeedback,omitempty"`
-	AdditionalCopilotFeedback *bool `json:"disableCopilotFeedbackMetadata,omitempty"`
+	DisableCopilot                      *bool   `json:"disableCopilot,omitempty"`
+	EnableOpenAiBotPublishing           *bool   `json:"enableOpenAiBotPublishing,omitempty"`
+	BasicCopilotFeedback                *bool   `json:"disableCopilotFeedback,omitempty"`
+	AdditionalCopilotFeedback           *bool   `json:"disableCopilotFeedbackMetadata,omitempty"`
+	CopilotStudioAuthorsSecurityGroupId *string `json:"copilotStudioAuthorsSecurityGroupId,omitempty"`
 }
 
 type modelExperimentationSettingsDto struct {
@@ -589,6 +590,13 @@ func convertIntelligenceModel(ctx context.Context, powerPlatformAttributes map[s
 		if !intelligenceSettings.AdditionalCopilotFeedback.IsNull() && !intelligenceSettings.AdditionalCopilotFeedback.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.Intelligence.AdditionalCopilotFeedback = intelligenceSettings.AdditionalCopilotFeedback.ValueBoolPointer()
 		}
+		if !intelligenceSettings.CopilotStudioAuthorsSecurityGroupId.IsNull() && !intelligenceSettings.CopilotStudioAuthorsSecurityGroupId.IsUnknown() {
+			// Only send the value if it's not the empty GUID (which is treated as null by the API)
+			value := intelligenceSettings.CopilotStudioAuthorsSecurityGroupId.ValueString()
+			if value != "00000000-0000-0000-0000-000000000000" {
+				tenantSettingsDto.PowerPlatform.Intelligence.CopilotStudioAuthorsSecurityGroupId = &value
+			}
+		}
 	}
 }
 
@@ -822,7 +830,13 @@ func convertModelExperimentationSettings(tenantSettingsDto tenantSettingsDto) (b
 }
 
 func convertIntelligenceSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
-	attrTypes := convertBoolSettingsMap([]string{"disable_copilot", "allow_copilot_authors_publish_when_ai_features_are_enabled", "basic_copilot_feedback", "additional_copilot_feedback"})
+	attrTypes := map[string]attr.Type{
+		"disable_copilot": types.BoolType,
+		"allow_copilot_authors_publish_when_ai_features_are_enabled": types.BoolType,
+		"basic_copilot_feedback":                                     types.BoolType,
+		"additional_copilot_feedback":                                types.BoolType,
+		"copilot_studio_authors_security_group_id":                   customtypes.UUIDType{},
+	}
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.Intelligence == nil {
 		return convertSimpleSettings(attrTypes, nil)
 	}
@@ -831,6 +845,15 @@ func convertIntelligenceSettings(tenantSettingsDto tenantSettingsDto) (basetypes
 		"allow_copilot_authors_publish_when_ai_features_are_enabled": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.EnableOpenAiBotPublishing),
 		"basic_copilot_feedback":                                     types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.BasicCopilotFeedback),
 		"additional_copilot_feedback":                                types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.AdditionalCopilotFeedback),
+		"copilot_studio_authors_security_group_id": func() attr.Value {
+			// When API returns null/empty, convert to empty GUID for consistency
+			if tenantSettingsDto.PowerPlatform.Intelligence.CopilotStudioAuthorsSecurityGroupId == nil ||
+				*tenantSettingsDto.PowerPlatform.Intelligence.CopilotStudioAuthorsSecurityGroupId == "" {
+				emptyGuid := "00000000-0000-0000-0000-000000000000"
+				return customtypes.NewUUIDPointerValue(&emptyGuid)
+			}
+			return customtypes.NewUUIDPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.CopilotStudioAuthorsSecurityGroupId)
+		}(),
 	}
 	return convertSimpleSettings(attrTypes, attrValues)
 }

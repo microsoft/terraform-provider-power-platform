@@ -348,6 +348,15 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								MarkdownDescription: "Additional Copilot Feedback",
 								Optional:            true,
 							},
+							"copilot_studio_authors_security_group_id": schema.StringAttribute{
+								MarkdownDescription: "Copilot Studio Authors Security Group ID",
+								Optional:            true,
+								Computed:            true,
+								CustomType:          customtypes.UUIDType{},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
+							},
 						},
 					},
 					"model_experimentation": schema.SingleNestedAttribute{

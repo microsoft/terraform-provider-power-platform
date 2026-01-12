@@ -688,7 +688,6 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 						disable_preferred_data_location_for_teams_environment = true
 					  }
 					  governance = {
-						
 						disable_admin_digest                                      = true
 						disable_developer_environment_creation_by_non_admin_users = false
 						enable_default_environment_routing                        = true
