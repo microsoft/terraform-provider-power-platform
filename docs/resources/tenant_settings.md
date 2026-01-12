@@ -125,8 +125,8 @@ resource "powerplatform_tenant_settings" "settings" {
     intelligence = {
       disable_copilot                   = true //copilot in Power Apps
       enable_open_ai_bot_publishing     = true //publish copilot with ai features
-      disable_copilot_feedback          = true //basic copilot feedback
-      disable_copilot_feedback_metadata = true //Additional Copilot feedback
+      basic_copilot_feedback          = true //basic copilot feedback
+      additional_copilot_feedback = true //Additional Copilot feedback
       //copilotStudioAuthorsSecurityGroupId = "00000000-0000-0000-0000-000000000000" //copilot studio authors security group
       //disableAiPrompts ??
     }
@@ -164,6 +164,7 @@ resource "powerplatform_tenant_settings" "settings" {
 - `id` (String) Id of the Power Platform Tenant
 
 <a id="nestedatt--power_platform"></a>
+
 ### Nested Schema for `power_platform`
 
 Optional:
@@ -184,14 +185,15 @@ Optional:
 - `user_management_settings` (Attributes) User Management Settings (see [below for nested schema](#nestedatt--power_platform--user_management_settings))
 
 <a id="nestedatt--power_platform--catalog_settings"></a>
+
 ### Nested Schema for `power_platform.catalog_settings`
 
 Optional:
 
 - `power_catalog_audience_setting` (String) Power Catalog Audience Setting
 
-
 <a id="nestedatt--power_platform--champions"></a>
+
 ### Nested Schema for `power_platform.champions`
 
 Optional:
@@ -199,16 +201,16 @@ Optional:
 - `disable_champions_invitation_reachout` (Boolean) Disable Champions Invitation Reachout
 - `disable_skills_match_invitation_reachout` (Boolean) Disable Skills Match Invitation Reachout
 
-
 <a id="nestedatt--power_platform--environments"></a>
+
 ### Nested Schema for `power_platform.environments`
 
 Optional:
 
 - `disable_preferred_data_location_for_teams_environment` (Boolean) Disable Preferred Data Location For Teams Environment
 
-
 <a id="nestedatt--power_platform--governance"></a>
+
 ### Nested Schema for `power_platform.governance`
 
 Optional:
@@ -223,15 +225,15 @@ Optional:
 - `weekly_digest_email_recipients` (Set of String) Weekly Digest Email Recipients
 
 <a id="nestedatt--power_platform--governance--policy"></a>
+
 ### Nested Schema for `power_platform.governance.policy`
 
 Optional:
 
 - `enable_desktop_flow_data_policy_management` (Boolean) Enable Desktop Flow Data Policy Management
 
-
-
 <a id="nestedatt--power_platform--intelligence"></a>
+
 ### Nested Schema for `power_platform.intelligence`
 
 Optional:
@@ -239,8 +241,8 @@ Optional:
 - `disable_copilot` (Boolean) Disable Copilot
 - `enable_open_ai_bot_publishing` (Boolean) Enable Open AI Bot Publishing
 
-
 <a id="nestedatt--power_platform--licensing"></a>
+
 ### Nested Schema for `power_platform.licensing`
 
 Optional:
@@ -253,8 +255,8 @@ Optional:
 - `enable_tenant_licensing_report_for_environment_admins` (Boolean) Enable Tenant Licensing Report For Environment Admins
 - `storage_capacity_consumption_warning_threshold` (Number) Storage Capacity Consumption Warning Threshold
 
-
 <a id="nestedatt--power_platform--model_experimentation"></a>
+
 ### Nested Schema for `power_platform.model_experimentation`
 
 Optional:
@@ -262,8 +264,8 @@ Optional:
 - `disable_data_logging` (Boolean) Disable Data Logging
 - `enable_model_data_sharing` (Boolean) Enable Model Data Sharing
 
-
 <a id="nestedatt--power_platform--power_apps"></a>
+
 ### Nested Schema for `power_platform.power_apps`
 
 Optional:
@@ -278,8 +280,8 @@ Optional:
 - `enable_canvas_app_insights` (Boolean) Enable Canvas App Insights
 - `enable_guests_to_make` (Boolean) Enable Guests To Make
 
-
 <a id="nestedatt--power_platform--power_automate"></a>
+
 ### Nested Schema for `power_platform.power_automate`
 
 Optional:
@@ -289,12 +291,12 @@ Optional:
 - `disable_copilot_with_bing` (Boolean) Disable Copilot With Bing
 - `disable_flow_resubmission` (Boolean) Disable Flow Resubmission
 
-
 <a id="nestedatt--power_platform--power_pages"></a>
+
 ### Nested Schema for `power_platform.power_pages`
 
-
 <a id="nestedatt--power_platform--product_feedback"></a>
+
 ### Nested Schema for `power_platform.product_feedback`
 
 Optional:
@@ -304,8 +306,8 @@ Optional:
 - `disable_microsoft_surveys_send` (Boolean) Disable letting Microsoft send surveys
 - `disable_user_survey_feedback` (Boolean) Disable users to choose to provide survey feedback
 
-
 <a id="nestedatt--power_platform--search"></a>
+
 ### Nested Schema for `power_platform.search`
 
 Optional:
@@ -314,25 +316,24 @@ Optional:
 - `disable_community_search` (Boolean) Disable Community Search
 - `disable_docs_search` (Boolean) Disable Docs Search
 
-
 <a id="nestedatt--power_platform--teams_integration"></a>
+
 ### Nested Schema for `power_platform.teams_integration`
 
 Optional:
 
 - `share_with_colleagues_user_limit` (Number) Share With Colleagues User Limit
 
-
 <a id="nestedatt--power_platform--user_management_settings"></a>
+
 ### Nested Schema for `power_platform.user_management_settings`
 
 Optional:
 
 - `enable_delete_disabled_user_in_all_environments` (Boolean) Enable Delete Disabled User In All Environments
 
-
-
 <a id="nestedatt--timeouts"></a>
+
 ### Nested Schema for `timeouts`
 
 Optional:

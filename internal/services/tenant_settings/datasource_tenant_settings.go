@@ -310,6 +310,14 @@ func intelligenceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Enable Open AI Bot Publishing",
 			Computed:            true,
 		},
+		"basic_copilot_feedback": schema.BoolAttribute{
+			MarkdownDescription: "Basic Copilot Feedback",
+			Computed:            true,
+		},
+		"additional_copilot_feedback": schema.BoolAttribute{
+			MarkdownDescription: "Additional Copilot Feedback",
+			Computed:            true,
+		},
 	}
 }
 

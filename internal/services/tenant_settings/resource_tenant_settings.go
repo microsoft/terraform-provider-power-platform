@@ -340,6 +340,14 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								MarkdownDescription: "Enable Open AI Bot Publishing",
 								Optional:            true,
 							},
+							"basic_copilot_feedback": schema.BoolAttribute{
+								MarkdownDescription: "Basic Copilot Feedback",
+								Optional:            true,
+							},
+							"additional_copilot_feedback": schema.BoolAttribute{
+								MarkdownDescription: "Additional Copilot Feedback",
+								Optional:            true,
+							},
 						},
 					},
 					"model_experimentation": schema.SingleNestedAttribute{

@@ -133,6 +133,8 @@ type ChampionsSettings struct {
 type IntelligenceSettings struct {
 	DisableCopilot            types.Bool `tfsdk:"disable_copilot"`
 	EnableOpenAiBotPublishing types.Bool `tfsdk:"enable_open_ai_bot_publishing"`
+	BasicCopilotFeedback      types.Bool `tfsdk:"basic_copilot_feedback"`
+	AdditionalCopilotFeedback types.Bool `tfsdk:"additional_copilot_feedback"`
 }
 
 type ModelExperimentationSettings struct {

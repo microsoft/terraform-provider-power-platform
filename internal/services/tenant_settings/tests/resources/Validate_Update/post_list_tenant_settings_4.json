@@ -64,7 +64,9 @@
     },
     "intelligence": {
       "disableCopilot": false,
-      "enableOpenAiBotPublishing": false
+      "enableOpenAiBotPublishing": false,
+      "disableCopilotFeedback": false,
+      "disableCopilotFeedbackMetadata": false
     },
     "modelExperimentation": {
       "enableModelDataSharing": false,
