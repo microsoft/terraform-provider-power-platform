@@ -113,12 +113,13 @@ type PolicySettings struct {
 }
 
 type LicensingSettings struct {
-	DisableBillingPolicyCreationByNonAdminUsers      types.Bool  `tfsdk:"disable_billing_policy_creation_by_non_admin_users"`
-	EnableTenantCapacityReportForEnvironmentAdmins   types.Bool  `tfsdk:"enable_tenant_capacity_report_for_environment_admins"`
-	StorageCapacityConsumptionWarningThreshold       types.Int64 `tfsdk:"storage_capacity_consumption_warning_threshold"`
-	EnableTenantLicensingReportForEnvironmentAdmins  types.Bool  `tfsdk:"enable_tenant_licensing_report_for_environment_admins"`
-	DisableUseOfUnassignedAIBuilderCredits           types.Bool  `tfsdk:"disable_use_of_unassigned_ai_builder_credits"`
-	ApplyAutoClaimPowerAppsToOnlyManagedEnvironments types.Bool  `tfsdk:"apply_auto_claim_power_apps_to_only_managed_environments"`
+	DisableBillingPolicyCreationByNonAdminUsers          types.Bool  `tfsdk:"disable_billing_policy_creation_by_non_admin_users"`
+	EnableTenantCapacityReportForEnvironmentAdmins       types.Bool  `tfsdk:"enable_tenant_capacity_report_for_environment_admins"`
+	StorageCapacityConsumptionWarningThreshold           types.Int64 `tfsdk:"storage_capacity_consumption_warning_threshold"`
+	EnableTenantLicensingReportForEnvironmentAdmins      types.Bool  `tfsdk:"enable_tenant_licensing_report_for_environment_admins"`
+	DisableUseOfUnassignedAIBuilderCredits               types.Bool  `tfsdk:"disable_use_of_unassigned_ai_builder_credits"`
+	ApplyAutoClaimPowerAppsToOnlyManagedEnvironments     types.Bool  `tfsdk:"apply_auto_claim_power_apps_to_only_managed_environments"`
+	ApplyAutoClaimPowerAutomateToOnlyManagedEnvironments types.Bool  `tfsdk:"apply_auto_claim_power_automate_to_only_managed_environments"`
 }
 
 type PowerPagesSettings struct {

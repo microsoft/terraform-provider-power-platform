@@ -112,7 +112,7 @@ resource "powerplatform_tenant_settings" "settings" {
       disable_use_of_unassigned_ai_builder_credits = true //Ai builder credits
       //apply_auto_claim_to_only_managed_environments = true //Auto-claim policies for Power Apps
       apply_auto_claim_power_apps_to_only_managed_environments = true //Auto-claim policies for Power Apps
-
+      apply_auto_claim_power_automate_to_only_managed_environments = true //Auto-claim policies for Power Automate
       //applyPAutoAutoClaimToOnlyManagedEnvironments = true //Auto-claim policies for Power Automate
       //copilotCreditsOverageNotificationEmailRecipients = ["aaa@asdasd.pl1;adsasd@asdfsfd.pl1"] //copilot credits overage notifications
       //copilotCreditsOverageNotificationEmailRecipientsUpdatedBy = "00000000-0000-0000-0000-000000000000" //copilot credits overage notifications updated by //hjidden
@@ -246,6 +246,7 @@ Optional:
 Optional:
 
 - `apply_auto_claim_power_apps_to_only_managed_environments` (Boolean) Apply Auto Claim Power Apps To Only Managed Environments
+- `apply_auto_claim_power_automate_to_only_managed_environments` (Boolean) Apply Auto Claim Power Automate To Only Managed Environments
 - `disable_billing_policy_creation_by_non_admin_users` (Boolean) Disable Billing Policy Creation By Non Admin Users
 - `disable_use_of_unassigned_ai_builder_credits` (Boolean) Disable Use Of Unassigned AI Builder Credits
 - `enable_tenant_capacity_report_for_environment_admins` (Boolean) Enable Tenant Capacity Report For Environment Admins

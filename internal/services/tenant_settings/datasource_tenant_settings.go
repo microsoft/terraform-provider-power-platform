@@ -277,7 +277,10 @@ func licensingAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Apply Auto Claim Power Apps To Only Managed Environments",
 			Computed:            true,
 		},
-	}
+		"apply_auto_claim_power_automate_to_only_managed_environments": schema.BoolAttribute{
+			MarkdownDescription: "Apply Auto Claim Power Automate To Only Managed Environments",
+			Computed:            true,
+		}}
 }
 
 func powerPagesAttributes() map[string]schema.Attribute {

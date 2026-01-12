@@ -129,6 +129,7 @@ type licenseSettingsDto struct {
 	EnableTenantLicensingReportForEnvironmentAdmins *bool  `json:"enableTenantLicensingReportForEnvironmentAdmins,omitempty"`
 	DisableUseOfUnassignedAIBuilderCredits          *bool  `json:"disableUseOfUnassignedAIBuilderCredits,omitempty"`
 	ApplyAutoClaimToOnlyManagedEnvironments         *bool  `json:"applyAutoClaimToOnlyManagedEnvironments,omitempty"`
+	ApplyPAutoAutoClaimToOnlyManagedEnvironments    *bool  `json:"applyPAutoAutoClaimToOnlyManagedEnvironments,omitempty"`
 }
 
 type powerPagesSettingsDto struct {
@@ -503,6 +504,9 @@ func convertLicensingModel(ctx context.Context, powerPlatformAttributes map[stri
 		if !licensingSettings.ApplyAutoClaimPowerAppsToOnlyManagedEnvironments.IsNull() && !licensingSettings.ApplyAutoClaimPowerAppsToOnlyManagedEnvironments.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.Licensing.ApplyAutoClaimToOnlyManagedEnvironments = licensingSettings.ApplyAutoClaimPowerAppsToOnlyManagedEnvironments.ValueBoolPointer()
 		}
+		if !licensingSettings.ApplyAutoClaimPowerAutomateToOnlyManagedEnvironments.IsNull() && !licensingSettings.ApplyAutoClaimPowerAutomateToOnlyManagedEnvironments.IsUnknown() {
+			tenantSettingsDto.PowerPlatform.Licensing.ApplyPAutoAutoClaimToOnlyManagedEnvironments = licensingSettings.ApplyAutoClaimPowerAutomateToOnlyManagedEnvironments.ValueBoolPointer()
+		}
 	}
 }
 
@@ -845,24 +849,26 @@ func convertPowerPagesSettings(tenantSettingsDto tenantSettingsDto) (basetypes.O
 
 func convertLicensingSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesLicencingProperties := map[string]attr.Type{
-		"disable_billing_policy_creation_by_non_admin_users":       types.BoolType,
-		"enable_tenant_capacity_report_for_environment_admins":     types.BoolType,
-		"storage_capacity_consumption_warning_threshold":           types.Int64Type,
-		"enable_tenant_licensing_report_for_environment_admins":    types.BoolType,
-		"disable_use_of_unassigned_ai_builder_credits":             types.BoolType,
-		"apply_auto_claim_power_apps_to_only_managed_environments": types.BoolType,
+		"disable_billing_policy_creation_by_non_admin_users":           types.BoolType,
+		"enable_tenant_capacity_report_for_environment_admins":         types.BoolType,
+		"storage_capacity_consumption_warning_threshold":               types.Int64Type,
+		"enable_tenant_licensing_report_for_environment_admins":        types.BoolType,
+		"disable_use_of_unassigned_ai_builder_credits":                 types.BoolType,
+		"apply_auto_claim_power_apps_to_only_managed_environments":     types.BoolType,
+		"apply_auto_claim_power_automate_to_only_managed_environments": types.BoolType,
 	}
 
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.Licensing == nil {
 		return types.ObjectType{AttrTypes: attrTypesLicencingProperties}, types.ObjectNull(attrTypesLicencingProperties)
 	}
 	attrValuesLicencingProperties := map[string]attr.Value{
-		"disable_billing_policy_creation_by_non_admin_users":       types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.DisableBillingPolicyCreationByNonAdminUsers),
-		"enable_tenant_capacity_report_for_environment_admins":     types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.EnableTenantCapacityReportForEnvironmentAdmins),
-		"storage_capacity_consumption_warning_threshold":           types.Int64PointerValue(tenantSettingsDto.PowerPlatform.Licensing.StorageCapacityConsumptionWarningThreshold),
-		"enable_tenant_licensing_report_for_environment_admins":    types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.EnableTenantLicensingReportForEnvironmentAdmins),
-		"disable_use_of_unassigned_ai_builder_credits":             types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.DisableUseOfUnassignedAIBuilderCredits),
-		"apply_auto_claim_power_apps_to_only_managed_environments": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.ApplyAutoClaimToOnlyManagedEnvironments),
+		"disable_billing_policy_creation_by_non_admin_users":           types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.DisableBillingPolicyCreationByNonAdminUsers),
+		"enable_tenant_capacity_report_for_environment_admins":         types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.EnableTenantCapacityReportForEnvironmentAdmins),
+		"storage_capacity_consumption_warning_threshold":               types.Int64PointerValue(tenantSettingsDto.PowerPlatform.Licensing.StorageCapacityConsumptionWarningThreshold),
+		"enable_tenant_licensing_report_for_environment_admins":        types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.EnableTenantLicensingReportForEnvironmentAdmins),
+		"disable_use_of_unassigned_ai_builder_credits":                 types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.DisableUseOfUnassignedAIBuilderCredits),
+		"apply_auto_claim_power_apps_to_only_managed_environments":     types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.ApplyAutoClaimToOnlyManagedEnvironments),
+		"apply_auto_claim_power_automate_to_only_managed_environments": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.ApplyPAutoAutoClaimToOnlyManagedEnvironments),
 	}
 	return types.ObjectType{AttrTypes: attrTypesLicencingProperties}, types.ObjectValueMust(attrTypesLicencingProperties, attrValuesLicencingProperties)
 }

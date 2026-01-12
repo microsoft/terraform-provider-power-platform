@@ -54,7 +54,8 @@
       "storageCapacityConsumptionWarningThreshold": 95,
       "enableTenantLicensingReportForEnvironmentAdmins": true,
       "disableUseOfUnassignedAIBuilderCredits": true,
-      "applyAutoClaimToOnlyManagedEnvironments": true
+      "applyAutoClaimToOnlyManagedEnvironments": true,
+      "applyPAutoAutoClaimToOnlyManagedEnvironments": true
     },
     "powerPages": {},
     "champions": {
