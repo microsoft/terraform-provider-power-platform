@@ -15,6 +15,7 @@ import (
 )
 
 func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
+	t.Setenv("TF_ACC", "1")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -43,7 +44,7 @@ func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.governance.policy.enable_desktop_flow_data_policy_management", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.intelligence.disable_copilot", regexp.MustCompile(helpers.BooleanRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.intelligence.enable_open_ai_bot_publishing", regexp.MustCompile(helpers.BooleanRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.intelligence.allow_copilot_authors_publish_when_ai_features_are_enabled", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.intelligence.basic_copilot_feedback", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.intelligence.additional_copilot_feedback", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.licensing.disable_billing_policy_creation_by_non_admin_users", regexp.MustCompile(helpers.BooleanRegex)),
@@ -118,7 +119,7 @@ func TestUnitTestTenantSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.governance.policy.enable_desktop_flow_data_policy_management", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.intelligence.disable_copilot", "false"),
-					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.intelligence.enable_open_ai_bot_publishing", "false"),
+					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.intelligence.allow_copilot_authors_publish_when_ai_features_are_enabled", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.intelligence.basic_copilot_feedback", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.intelligence.additional_copilot_feedback", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.licensing.disable_billing_policy_creation_by_non_admin_users", "false"),

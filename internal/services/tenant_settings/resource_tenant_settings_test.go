@@ -87,7 +87,7 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					  }
 					  intelligence = {
 						disable_copilot                   = false
-						enable_open_ai_bot_publishing     = false
+						allow_copilot_authors_publish_when_ai_features_are_enabled     = false
 						basic_copilot_feedback          = false
 						additional_copilot_feedback = false
 					  }
@@ -127,7 +127,7 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.policy.enable_desktop_flow_data_policy_management", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.disable_copilot", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.enable_open_ai_bot_publishing", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.allow_copilot_authors_publish_when_ai_features_are_enabled", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.basic_copilot_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.additional_copilot_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.disable_billing_policy_creation_by_non_admin_users", "false"),
@@ -255,7 +255,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					  }
 					  intelligence = {
 						disable_copilot                   = false
-						enable_open_ai_bot_publishing     = false
+						allow_copilot_authors_publish_when_ai_features_are_enabled     = false
 						basic_copilot_feedback          = false
 						additional_copilot_feedback = false
 					  }
@@ -293,7 +293,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.policy.enable_desktop_flow_data_policy_management", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.disable_copilot", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.enable_open_ai_bot_publishing", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.allow_copilot_authors_publish_when_ai_features_are_enabled", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.basic_copilot_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.additional_copilot_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.disable_billing_policy_creation_by_non_admin_users", "false"),
@@ -402,7 +402,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					  }
 					  intelligence = {
 						disable_copilot                   = true
-						enable_open_ai_bot_publishing     = true
+						allow_copilot_authors_publish_when_ai_features_are_enabled     = true
 						basic_copilot_feedback          = true
 						additional_copilot_feedback = true
 					  }
@@ -440,7 +440,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.policy.enable_desktop_flow_data_policy_management", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.disable_copilot", "true"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.enable_open_ai_bot_publishing", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.allow_copilot_authors_publish_when_ai_features_are_enabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.basic_copilot_feedback", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.additional_copilot_feedback", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.disable_billing_policy_creation_by_non_admin_users", "true"),
@@ -540,7 +540,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					  }
 					  intelligence = {
 						disable_copilot                   = false
-						enable_open_ai_bot_publishing     = false
+						allow_copilot_authors_publish_when_ai_features_are_enabled     = false
 						basic_copilot_feedback          = false
 						additional_copilot_feedback = false
 					  }
@@ -580,7 +580,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.policy.enable_desktop_flow_data_policy_management", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.disable_copilot", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.enable_open_ai_bot_publishing", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.allow_copilot_authors_publish_when_ai_features_are_enabled", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.basic_copilot_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.additional_copilot_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.disable_billing_policy_creation_by_non_admin_users", "false"),
@@ -712,7 +712,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					  }
 					  intelligence = {
 						disable_copilot                   = true
-						enable_open_ai_bot_publishing     = true
+						allow_copilot_authors_publish_when_ai_features_are_enabled     = true
 						basic_copilot_feedback          = true
 						additional_copilot_feedback = true
 					  }
@@ -752,7 +752,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.policy.enable_desktop_flow_data_policy_management", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.disable_copilot", "true"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.enable_open_ai_bot_publishing", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.allow_copilot_authors_publish_when_ai_features_are_enabled", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.basic_copilot_feedback", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.additional_copilot_feedback", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.disable_billing_policy_creation_by_non_admin_users", "true"),
@@ -851,7 +851,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					  }
 					  intelligence = {
 						disable_copilot                   = false
-						enable_open_ai_bot_publishing     = false
+						allow_copilot_authors_publish_when_ai_features_are_enabled     = false
 						basic_copilot_feedback          = false
 						additional_copilot_feedback = false
 					  }
@@ -890,7 +890,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.policy.enable_desktop_flow_data_policy_management", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.disable_copilot", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.enable_open_ai_bot_publishing", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.allow_copilot_authors_publish_when_ai_features_are_enabled", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.basic_copilot_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.intelligence.additional_copilot_feedback", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.disable_billing_policy_creation_by_non_admin_users", "false"),

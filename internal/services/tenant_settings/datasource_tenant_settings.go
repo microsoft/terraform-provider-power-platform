@@ -306,7 +306,7 @@ func intelligenceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Disable Copilot",
 			Computed:            true,
 		},
-		"enable_open_ai_bot_publishing": schema.BoolAttribute{
+		"allow_copilot_authors_publish_when_ai_features_are_enabled": schema.BoolAttribute{
 			MarkdownDescription: "Enable Open AI Bot Publishing",
 			Computed:            true,
 		},

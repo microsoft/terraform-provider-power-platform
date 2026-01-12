@@ -123,8 +123,10 @@ Read-Only:
 
 Read-Only:
 
+- `additional_copilot_feedback` (Boolean) Additional Copilot Feedback
+- `allow_copilot_authors_publish_when_ai_features_are_enabled` (Boolean) Enable Open AI Bot Publishing
+- `basic_copilot_feedback` (Boolean) Basic Copilot Feedback
 - `disable_copilot` (Boolean) Disable Copilot
-- `enable_open_ai_bot_publishing` (Boolean) Enable Open AI Bot Publishing
 
 
 <a id="nestedatt--power_platform--licensing"></a>

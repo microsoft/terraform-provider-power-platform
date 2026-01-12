@@ -336,7 +336,7 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								MarkdownDescription: "Disable Copilot",
 								Optional:            true,
 							},
-							"enable_open_ai_bot_publishing": schema.BoolAttribute{
+							"allow_copilot_authors_publish_when_ai_features_are_enabled": schema.BoolAttribute{
 								MarkdownDescription: "Enable Open AI Bot Publishing",
 								Optional:            true,
 							},

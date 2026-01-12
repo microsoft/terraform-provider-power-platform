@@ -822,15 +822,15 @@ func convertModelExperimentationSettings(tenantSettingsDto tenantSettingsDto) (b
 }
 
 func convertIntelligenceSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
-	attrTypes := convertBoolSettingsMap([]string{"disable_copilot", "enable_open_ai_bot_publishing", "basic_copilot_feedback", "additional_copilot_feedback"})
+	attrTypes := convertBoolSettingsMap([]string{"disable_copilot", "allow_copilot_authors_publish_when_ai_features_are_enabled", "basic_copilot_feedback", "additional_copilot_feedback"})
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.Intelligence == nil {
 		return convertSimpleSettings(attrTypes, nil)
 	}
 	attrValues := map[string]attr.Value{
-		"disable_copilot":               types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.DisableCopilot),
-		"enable_open_ai_bot_publishing": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.EnableOpenAiBotPublishing),
-		"basic_copilot_feedback":        types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.BasicCopilotFeedback),
-		"additional_copilot_feedback":   types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.AdditionalCopilotFeedback),
+		"disable_copilot": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.DisableCopilot),
+		"allow_copilot_authors_publish_when_ai_features_are_enabled": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.EnableOpenAiBotPublishing),
+		"basic_copilot_feedback":                                     types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.BasicCopilotFeedback),
+		"additional_copilot_feedback":                                types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.AdditionalCopilotFeedback),
 	}
 	return convertSimpleSettings(attrTypes, attrValues)
 }
