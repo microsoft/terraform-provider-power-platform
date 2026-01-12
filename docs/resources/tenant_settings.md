@@ -75,30 +75,27 @@ resource "powerplatform_tenant_settings" "settings" {
       share_with_colleagues_user_limit = 10001
     }
     power_apps = {
-      //disableCopilot ??
-      //enablePlanDesignerCopresence ??
-      //enableM365FeaturesForMakers ??
-      
-      disable_copilot                    = true 
+      disable_copilot                          = true
       disable_share_with_everyone              = true
       enable_guests_to_make                    = true
       disable_members_indicator                = true // deprecated?
       disable_maker_match                      = true
       disable_unused_license_assignment        = true
       disable_connection_sharing_with_everyone = true
-      //enableCanvasAppInsights //canvas app insights
+      enable_canvas_app_insights               = true
     }
     power_automate = {
-      disable_copilot           = true
-      disable_copilot_with_bing = true //copilot help assitange in power automate
-      //enableComputerUseSharedMachines = true //host browser in computer use
-      //disableFlowRunResubmission      = true //power autoamnte flow run resubmission
+      disable_copilot             = true
+      disable_copilot_with_bing   = true //copilot help assitange in power automate
+      allow_use_of_hosted_browser = true //enableComputerUseSharedMachines = true //host browser in computer use
+      disable_flow_resubmission   = true //disableFlowRunResubmission      = true //power autoamnte flow run resubmission
     }
     environments = {
       disable_preferred_data_location_for_teams_environment = true
     }
     governance = {
       //additionalAdminDigestEmailRecipients: "aaa@aaa.pl" // weekly digest
+      weekly_digest_email_recipients                            = ["test1@contoso.com", "test2@contoso.com"]
       disable_admin_digest                                      = true
       disable_developer_environment_creation_by_non_admin_users = true //environment assigments: developers
       enable_default_environment_routing                        = false
@@ -222,6 +219,7 @@ Optional:
 - `environment_routing_target_environment_group_id` (String) Assign newly created personal developer environments to a specific environment group
 - `environment_routing_target_security_group_id` (String) Restrict routing to members of the following security group. (00000000-0000-0000-0000-000000000000 allows all users)
 - `policy` (Attributes) Policy (see [below for nested schema](#nestedatt--power_platform--governance--policy))
+- `weekly_digest_email_recipients` (Set of String) Weekly Digest Email Recipients
 
 <a id="nestedatt--power_platform--governance--policy"></a>
 ### Nested Schema for `power_platform.governance.policy`
@@ -283,7 +281,10 @@ Optional:
 
 Optional:
 
+- `allow_use_of_hosted_browser` (Boolean) Allow Use Of Hosted Browser
 - `disable_copilot` (Boolean) Disable Copilot
+- `disable_copilot_with_bing` (Boolean) Disable Copilot With Bing
+- `disable_flow_resubmission` (Boolean) Disable Flow Resubmission
 
 
 <a id="nestedatt--power_platform--power_pages"></a>

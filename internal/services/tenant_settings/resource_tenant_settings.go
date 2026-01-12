@@ -232,6 +232,11 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 						MarkdownDescription: "Governance",
 						Optional:            true,
 						Attributes: map[string]schema.Attribute{
+							"weekly_digest_email_recipients": schema.SetAttribute{
+								MarkdownDescription: "Weekly Digest Email Recipients",
+								Optional:            true,
+								ElementType:         types.StringType,
+							},
 							"disable_admin_digest": schema.BoolAttribute{
 								MarkdownDescription: "Disable Admin Digest",
 								Optional:            true,

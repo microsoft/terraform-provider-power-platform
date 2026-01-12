@@ -40,6 +40,7 @@
       "disablePreferredDataLocationForTeamsEnvironment": false
     },
     "governance": {
+      "additionalAdminDigestEmailRecipients": "test1@test.com",
       "disableAdminDigest": false,
       "disableDeveloperEnvironmentCreationByNonAdminUsers": false,
       "enableDefaultEnvironmentRouting": false,

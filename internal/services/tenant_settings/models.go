@@ -87,10 +87,10 @@ type PowerAppsSettings struct {
 }
 
 type PowerAutomateSettings struct {
-	DisableCopilot           types.Bool `tfsdk:"disable_copilot"`
-	DisableCopilotWithBing   types.Bool `tfsdk:"disable_copilot_with_bing"`
-	AllowUseOfHostedBrowser  types.Bool `tfsdk:"allow_use_of_hosted_browser"`
-	DisableFlowResubmission  types.Bool `tfsdk:"disable_flow_resubmission"`
+	DisableCopilot          types.Bool `tfsdk:"disable_copilot"`
+	DisableCopilotWithBing  types.Bool `tfsdk:"disable_copilot_with_bing"`
+	AllowUseOfHostedBrowser types.Bool `tfsdk:"allow_use_of_hosted_browser"`
+	DisableFlowResubmission types.Bool `tfsdk:"disable_flow_resubmission"`
 }
 
 type EnvironmentsSettings struct {
@@ -98,6 +98,7 @@ type EnvironmentsSettings struct {
 }
 
 type GovernanceSettings struct {
+	WeeklyDigestEmailRecipients                        types.Set        `tfsdk:"weekly_digest_email_recipients"`
 	DisableAdminDigest                                 types.Bool       `tfsdk:"disable_admin_digest"`
 	DisableDeveloperEnvironmentCreationByNonAdminUsers types.Bool       `tfsdk:"disable_developer_environment_creation_by_non_admin_users"`
 	EnableDefaultEnvironmentRouting                    types.Bool       `tfsdk:"enable_default_environment_routing"`

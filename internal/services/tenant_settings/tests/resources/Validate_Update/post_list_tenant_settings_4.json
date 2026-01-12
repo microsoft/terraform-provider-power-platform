@@ -40,6 +40,7 @@
       "disablePreferredDataLocationForTeamsEnvironment": false
     },
     "governance": {
+      "additionalAdminDigestEmailRecipients": "test1@contoso.com",
       "disableAdminDigest": false,
       "disableDeveloperEnvironmentCreationByNonAdminUsers": false,
       "enableDefaultEnvironmentRouting": false,

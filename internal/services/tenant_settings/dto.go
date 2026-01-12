@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -78,10 +79,10 @@ type teamsIntegrationSettingsDto struct {
 }
 
 type powerAutomateSettingsDto struct {
-	DisableCopilot           *bool `json:"disableCopilot,omitempty"`
-	DisableCopilotWithBing   *bool `json:"disableCopilotWithBing,omitempty"`
-	AllowUseOfHostedBrowser  *bool `json:"enableComputerUseSharedMachines,omitempty"`
-	DisableFlowResubmission  *bool `json:"disableFlowRunResubmission,omitempty"`
+	DisableCopilot          *bool `json:"disableCopilot,omitempty"`
+	DisableCopilotWithBing  *bool `json:"disableCopilotWithBing,omitempty"`
+	AllowUseOfHostedBrowser *bool `json:"enableComputerUseSharedMachines,omitempty"`
+	DisableFlowResubmission *bool `json:"disableFlowRunResubmission,omitempty"`
 }
 
 type powerAppsSettingsDto struct {
@@ -107,6 +108,7 @@ type searchSettingsDto struct {
 }
 
 type governanceSettingsDto struct {
+	AdditionalAdminDigestEmailRecipients               *string            `json:"additionalAdminDigestEmailRecipients,omitempty"`
 	DisableAdminDigest                                 *bool              `json:"disableAdminDigest,omitempty"`
 	DisableDeveloperEnvironmentCreationByNonAdminUsers *bool              `json:"disableDeveloperEnvironmentCreationByNonAdminUsers,omitempty"`
 	EnableDefaultEnvironmentRouting                    *bool              `json:"enableDefaultEnvironmentRouting,omitempty"`
@@ -425,6 +427,10 @@ func convertGovernanceModel(ctx context.Context, powerPlatformAttributes map[str
 		}
 		tenantSettingsDto.PowerPlatform.Governance = &governanceSettingsDto{}
 
+		if helpers.IsKnown(governanceSettings.WeeklyDigestEmailRecipients) {
+			value := strings.Join(helpers.SetToStringSlice(governanceSettings.WeeklyDigestEmailRecipients), ";")
+			tenantSettingsDto.PowerPlatform.Governance.AdditionalAdminDigestEmailRecipients = &value
+		}
 		if !governanceSettings.DisableAdminDigest.IsNull() && !governanceSettings.DisableAdminDigest.IsUnknown() {
 			tenantSettingsDto.PowerPlatform.Governance.DisableAdminDigest = governanceSettings.DisableAdminDigest.ValueBoolPointer()
 		}
@@ -861,7 +867,8 @@ func convertGovernanceSettings(tenantSettingsDto tenantSettingsDto) (basetypes.O
 	}
 
 	attrTypesGovernanceProperties := map[string]attr.Type{
-		"disable_admin_digest": types.BoolType,
+		"weekly_digest_email_recipients":                            types.SetType{ElemType: types.StringType},
+		"disable_admin_digest":                                      types.BoolType,
 		"disable_developer_environment_creation_by_non_admin_users": types.BoolType,
 		"enable_default_environment_routing":                        types.BoolType,
 		"environment_routing_all_makers":                            types.BoolType,
@@ -881,8 +888,26 @@ func convertGovernanceSettings(tenantSettingsDto tenantSettingsDto) (basetypes.O
 			"enable_desktop_flow_data_policy_management": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Governance.Policy.EnableDesktopFlowDataPolicyManagement),
 		})
 	}
+
+	weeklyDigestList := []attr.Value{}
+	if tenantSettingsDto.PowerPlatform.Governance.AdditionalAdminDigestEmailRecipients != nil && *tenantSettingsDto.PowerPlatform.Governance.AdditionalAdminDigestEmailRecipients != "" {
+		for _, email := range strings.Split(*tenantSettingsDto.PowerPlatform.Governance.AdditionalAdminDigestEmailRecipients, ";") {
+			weeklyDigestList = append(weeklyDigestList, types.StringValue(email))
+		}
+	}
+
+	var weeklyDigestValue attr.Value
+	if tenantSettingsDto.PowerPlatform.Governance.AdditionalAdminDigestEmailRecipients == nil {
+		// Field not present in API response - return null
+		weeklyDigestValue = types.SetNull(types.StringType)
+	} else {
+		// Field present (even if empty string) - return set (possibly empty)
+		weeklyDigestValue = types.SetValueMust(types.StringType, weeklyDigestList)
+	}
+
 	attrValuesGovernanceProperties := map[string]attr.Value{
-		"disable_admin_digest": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Governance.DisableAdminDigest),
+		"weekly_digest_email_recipients":                            weeklyDigestValue,
+		"disable_admin_digest":                                      types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Governance.DisableAdminDigest),
 		"disable_developer_environment_creation_by_non_admin_users": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Governance.DisableDeveloperEnvironmentCreationByNonAdminUsers),
 		"enable_default_environment_routing":                        types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Governance.EnableDefaultEnvironmentRouting),
 		"environment_routing_all_makers":                            types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Governance.EnvironmentRoutingAllMakers),

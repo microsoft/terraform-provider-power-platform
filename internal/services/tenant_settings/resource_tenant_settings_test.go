@@ -62,6 +62,7 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 						disable_preferred_data_location_for_teams_environment = false
 					  }
 					  governance = {
+						weekly_digest_email_recipients                            = toset(["test1@contoso.com","test2@contoso.com"])
 						disable_admin_digest                                      = false
 						disable_developer_environment_creation_by_non_admin_users = false
 						enable_default_environment_routing                        = false
@@ -116,6 +117,9 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_champions_invitation_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_skills_match_invitation_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.environments.disable_preferred_data_location_for_teams_environment", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.weekly_digest_email_recipients.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.weekly_digest_email_recipients.0", "test1@contoso.com"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.weekly_digest_email_recipients.1", "test2@contoso.com"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.disable_admin_digest", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.disable_developer_environment_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", "false"),
@@ -221,6 +225,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 						disable_preferred_data_location_for_teams_environment = false
 					  }
 					  governance = {
+						weekly_digest_email_recipients                            = toset(["test1@test.com"])
 						disable_admin_digest                                      = false
 						disable_developer_environment_creation_by_non_admin_users = false
 						enable_default_environment_routing                        = false
@@ -275,6 +280,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_champions_invitation_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_skills_match_invitation_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.environments.disable_preferred_data_location_for_teams_environment", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.weekly_digest_email_recipients.#", "1"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.disable_admin_digest", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.disable_developer_environment_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", "false"),
@@ -312,6 +318,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 }
 
 func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
+	t.Setenv("TF_ACC", "1")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -360,6 +367,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 						disable_preferred_data_location_for_teams_environment = true
 					  }
 					  governance = {
+						weekly_digest_email_recipients                            = toset([])
 						disable_admin_digest                                      = true
 						disable_developer_environment_creation_by_non_admin_users = false
 						enable_default_environment_routing                        = true
@@ -414,6 +422,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_champions_invitation_reachout", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_skills_match_invitation_reachout", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.environments.disable_preferred_data_location_for_teams_environment", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.weekly_digest_email_recipients.#", "0"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.disable_admin_digest", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.disable_developer_environment_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", "true"),
@@ -491,6 +500,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 						disable_preferred_data_location_for_teams_environment = false
 					  }
 					  governance = {
+						weekly_digest_email_recipients                            = toset(["test1@contoso.com","test2@contoso.com"])
 						disable_admin_digest                                      = false
 						disable_developer_environment_creation_by_non_admin_users = false
 						enable_default_environment_routing                        = false
@@ -545,6 +555,9 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_champions_invitation_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_skills_match_invitation_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.environments.disable_preferred_data_location_for_teams_environment", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.weekly_digest_email_recipients.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.weekly_digest_email_recipients.0", "test1@contoso.com"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.weekly_digest_email_recipients.1", "test2@contoso.com"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.disable_admin_digest", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.disable_developer_environment_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", "false"),
@@ -654,6 +667,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 						disable_preferred_data_location_for_teams_environment = true
 					  }
 					  governance = {
+						
 						disable_admin_digest                                      = true
 						disable_developer_environment_creation_by_non_admin_users = false
 						enable_default_environment_routing                        = true
@@ -710,6 +724,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_champions_invitation_reachout", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_skills_match_invitation_reachout", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.environments.disable_preferred_data_location_for_teams_environment", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.weekly_digest_email_recipients.#", "0"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.disable_admin_digest", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.disable_developer_environment_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", "true"),
@@ -787,6 +802,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 						disable_preferred_data_location_for_teams_environment = false
 					  }
 					  governance = {
+						weekly_digest_email_recipients                            = toset(["test1@contoso.com"])
 						disable_admin_digest                                      = false
 						disable_developer_environment_creation_by_non_admin_users = false
 						enable_default_environment_routing                        = false
@@ -841,6 +857,8 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_champions_invitation_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.champions.disable_skills_match_invitation_reachout", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.environments.disable_preferred_data_location_for_teams_environment", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.weekly_digest_email_recipients.#", "1"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.weekly_digest_email_recipients.0", "test1@contoso.com"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.disable_admin_digest", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.disable_developer_environment_creation_by_non_admin_users", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.governance.enable_default_environment_routing", "false"),

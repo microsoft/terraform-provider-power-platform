@@ -107,6 +107,7 @@ Read-Only:
 - `environment_routing_target_environment_group_id` (String) Assign newly created personal developer environments to a specific environment group
 - `environment_routing_target_security_group_id` (String) Restrict routing to members of the following security group. (00000000-0000-0000-0000-000000000000 allows all users)
 - `policy` (Attributes) Policy (see [below for nested schema](#nestedatt--power_platform--governance--policy))
+- `weekly_digest_email_recipients` (Set of String) Weekly Digest Email Recipients
 
 <a id="nestedatt--power_platform--governance--policy"></a>
 ### Nested Schema for `power_platform.governance.policy`
@@ -168,7 +169,10 @@ Read-Only:
 
 Read-Only:
 
+- `allow_use_of_hosted_browser` (Boolean) Allow Use Of Hosted Browser
 - `disable_copilot` (Boolean) Disable Copilot
+- `disable_copilot_with_bing` (Boolean) Disable Copilot With Bing
+- `disable_flow_resubmission` (Boolean) Disable Flow Resubmission
 
 
 <a id="nestedatt--power_platform--power_pages"></a>

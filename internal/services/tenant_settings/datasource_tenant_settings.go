@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
@@ -211,6 +212,11 @@ func governancePolicyAttributes() map[string]schema.Attribute {
 
 func governanceAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
+		"weekly_digest_email_recipients": schema.SetAttribute{
+			MarkdownDescription: "Weekly Digest Email Recipients",
+			Computed:            true,
+			ElementType:         types.StringType,
+		},
 		"disable_admin_digest": schema.BoolAttribute{
 			MarkdownDescription: "Disable Admin Digest",
 			Computed:            true,
