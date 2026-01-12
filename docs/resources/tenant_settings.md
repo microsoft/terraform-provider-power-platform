@@ -94,8 +94,7 @@ resource "powerplatform_tenant_settings" "settings" {
       disable_preferred_data_location_for_teams_environment = true
     }
     governance = {
-      //additionalAdminDigestEmailRecipients: "aaa@aaa.pl" // weekly digest
-      weekly_digest_email_recipients                            = ["test1@contoso.com", "test2@contoso.com"]
+      weekly_digest_email_recipients                            = toset(["test1@contoso.com", "test2@contoso.com"])
       disable_admin_digest                                      = true
       disable_developer_environment_creation_by_non_admin_users = true //environment assigments: developers
       enable_default_environment_routing                        = false
@@ -110,8 +109,10 @@ resource "powerplatform_tenant_settings" "settings" {
       storage_capacity_consumption_warning_threshold        = 88
       enable_tenant_licensing_report_for_environment_admins = true // Tenant licesing summary view
       //enableTenantCapacityReportForEnvironmentAdmins = true // Tenant capacity summary view
-      disable_use_of_unassigned_ai_builder_credits  = true //Ai builder credits
-      apply_auto_claim_to_only_managed_environments = true //Auto-claim policies for Power Apps
+      disable_use_of_unassigned_ai_builder_credits = true //Ai builder credits
+      //apply_auto_claim_to_only_managed_environments = true //Auto-claim policies for Power Apps
+      apply_auto_claim_power_apps_to_only_managed_environments = true //Auto-claim policies for Power Apps
+
       //applyPAutoAutoClaimToOnlyManagedEnvironments = true //Auto-claim policies for Power Automate
       //copilotCreditsOverageNotificationEmailRecipients = ["aaa@asdasd.pl1;adsasd@asdfsfd.pl1"] //copilot credits overage notifications
       //copilotCreditsOverageNotificationEmailRecipientsUpdatedBy = "00000000-0000-0000-0000-000000000000" //copilot credits overage notifications updated by //hjidden
@@ -244,6 +245,7 @@ Optional:
 
 Optional:
 
+- `apply_auto_claim_power_apps_to_only_managed_environments` (Boolean) Apply Auto Claim Power Apps To Only Managed Environments
 - `disable_billing_policy_creation_by_non_admin_users` (Boolean) Disable Billing Policy Creation By Non Admin Users
 - `disable_use_of_unassigned_ai_builder_credits` (Boolean) Disable Use Of Unassigned AI Builder Credits
 - `enable_tenant_capacity_report_for_environment_admins` (Boolean) Enable Tenant Capacity Report For Environment Admins

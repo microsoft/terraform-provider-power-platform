@@ -299,6 +299,10 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								MarkdownDescription: "Disable Use Of Unassigned AI Builder Credits",
 								Optional:            true,
 							},
+							"apply_auto_claim_power_apps_to_only_managed_environments": schema.BoolAttribute{
+								MarkdownDescription: "Apply Auto Claim Power Apps To Only Managed Environments",
+								Optional:            true,
+							},
 						},
 					},
 					"power_pages": schema.SingleNestedAttribute{

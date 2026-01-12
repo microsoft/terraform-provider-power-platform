@@ -76,7 +76,7 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 						storage_capacity_consumption_warning_threshold        = 85
 						enable_tenant_licensing_report_for_environment_admins = false
 						disable_use_of_unassigned_ai_builder_credits          = false
-						apply_auto_claim_to_only_managed_environments         = true
+						apply_auto_claim_power_apps_to_only_managed_environments         = false
 					  }
 					  power_pages = {}
 					  champions = {
@@ -131,6 +131,7 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.enable_tenant_capacity_report_for_environment_admins", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.enable_tenant_licensing_report_for_environment_admins", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.storage_capacity_consumption_warning_threshold", "85"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.apply_auto_claim_power_apps_to_only_managed_environments", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.model_experimentation.disable_data_logging", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.model_experimentation.enable_model_data_sharing", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_connection_sharing_with_everyone", "false"),
@@ -239,7 +240,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 						storage_capacity_consumption_warning_threshold        = 85
 						enable_tenant_licensing_report_for_environment_admins = false
 						disable_use_of_unassigned_ai_builder_credits          = false
-						apply_auto_claim_to_only_managed_environments         = true
+						apply_auto_claim_power_apps_to_only_managed_environments         = false
 					  }
 					  power_pages = {}
 					  champions = {
@@ -292,6 +293,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.enable_tenant_capacity_report_for_environment_admins", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.enable_tenant_licensing_report_for_environment_admins", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.storage_capacity_consumption_warning_threshold", "85"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.apply_auto_claim_power_apps_to_only_managed_environments", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.model_experimentation.disable_data_logging", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.model_experimentation.enable_model_data_sharing", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_connection_sharing_with_everyone", "false"),
@@ -381,7 +383,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 						storage_capacity_consumption_warning_threshold        = 95
 						enable_tenant_licensing_report_for_environment_admins = true
 						disable_use_of_unassigned_ai_builder_credits          = true
-						apply_auto_claim_to_only_managed_environments         = false
+						apply_auto_claim_power_apps_to_only_managed_environments         = true
 					  }
 					  power_pages = {}
 					  champions = {
@@ -434,6 +436,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.enable_tenant_capacity_report_for_environment_admins", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.enable_tenant_licensing_report_for_environment_admins", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.storage_capacity_consumption_warning_threshold", "95"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.apply_auto_claim_power_apps_to_only_managed_environments", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.model_experimentation.disable_data_logging", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.model_experimentation.enable_model_data_sharing", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_connection_sharing_with_everyone", "true"),
@@ -514,7 +517,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 						storage_capacity_consumption_warning_threshold        = 85
 						enable_tenant_licensing_report_for_environment_admins = false
 						disable_use_of_unassigned_ai_builder_credits          = false
-						apply_auto_claim_to_only_managed_environments         = true
+						apply_auto_claim_power_apps_to_only_managed_environments         = false
 					  }
 					  power_pages = {}
 					  champions = {
@@ -569,6 +572,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.enable_tenant_capacity_report_for_environment_admins", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.enable_tenant_licensing_report_for_environment_admins", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.storage_capacity_consumption_warning_threshold", "85"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.apply_auto_claim_power_apps_to_only_managed_environments", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.model_experimentation.disable_data_logging", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.model_experimentation.enable_model_data_sharing", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_connection_sharing_with_everyone", "false"),
@@ -681,7 +685,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 						storage_capacity_consumption_warning_threshold        = 95
 						enable_tenant_licensing_report_for_environment_admins = true
 						disable_use_of_unassigned_ai_builder_credits          = true
-						apply_auto_claim_to_only_managed_environments         = false
+						apply_auto_claim_power_apps_to_only_managed_environments         = true
 					  }
 					  power_pages = {}
 					  champions = {
@@ -736,6 +740,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.enable_tenant_capacity_report_for_environment_admins", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.enable_tenant_licensing_report_for_environment_admins", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.storage_capacity_consumption_warning_threshold", "95"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.apply_auto_claim_power_apps_to_only_managed_environments", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.model_experimentation.disable_data_logging", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.model_experimentation.enable_model_data_sharing", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_connection_sharing_with_everyone", "true"),
@@ -816,7 +821,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 						storage_capacity_consumption_warning_threshold        = 85
 						enable_tenant_licensing_report_for_environment_admins = false
 						disable_use_of_unassigned_ai_builder_credits          = false
-						apply_auto_claim_to_only_managed_environments         = true
+						apply_auto_claim_power_apps_to_only_managed_environments         = false
 					  }
 					  power_pages = {}
 					  champions = {
@@ -870,6 +875,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.enable_tenant_capacity_report_for_environment_admins", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.enable_tenant_licensing_report_for_environment_admins", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.storage_capacity_consumption_warning_threshold", "85"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.licensing.apply_auto_claim_power_apps_to_only_managed_environments", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.model_experimentation.disable_data_logging", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.model_experimentation.enable_model_data_sharing", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.disable_connection_sharing_with_everyone", "false"),

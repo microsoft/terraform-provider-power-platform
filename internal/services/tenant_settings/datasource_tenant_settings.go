@@ -273,6 +273,10 @@ func licensingAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Disable Use Of Unassigned AI Builder Credits",
 			Computed:            true,
 		},
+		"apply_auto_claim_power_apps_to_only_managed_environments": schema.BoolAttribute{
+			MarkdownDescription: "Apply Auto Claim Power Apps To Only Managed Environments",
+			Computed:            true,
+		},
 	}
 }
 

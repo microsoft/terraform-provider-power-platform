@@ -132,6 +132,7 @@ Read-Only:
 
 Read-Only:
 
+- `apply_auto_claim_power_apps_to_only_managed_environments` (Boolean) Apply Auto Claim Power Apps To Only Managed Environments
 - `disable_billing_policy_creation_by_non_admin_users` (Boolean) Disable Billing Policy Creation By Non Admin Users
 - `disable_use_of_unassigned_ai_builder_credits` (Boolean) Disable Use Of Unassigned AI Builder Credits
 - `enable_tenant_capacity_report_for_environment_admins` (Boolean) Enable Tenant Capacity Report For Environment Admins
