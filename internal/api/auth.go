@@ -51,11 +51,19 @@ type credentialHolder struct {
 	err        error
 }
 
+type cachedToken struct {
+	token     string
+	expiresOn time.Time
+}
+
 type Auth struct {
 	config *config.ProviderConfig
 
-	credentials map[credentialType]*credentialHolder
-	mu          sync.RWMutex
+	credentials   map[credentialType]*credentialHolder
+	credentialsMutex sync.RWMutex
+
+	cliTokens   map[string]*cachedToken
+	cliTokensMutex sync.RWMutex
 }
 
 type OidcCredential struct {
@@ -80,23 +88,24 @@ func NewAuthBase(configValue *config.ProviderConfig) *Auth {
 	return &Auth{
 		config:      configValue,
 		credentials: make(map[credentialType]*credentialHolder),
+		cliTokens:   make(map[string]*cachedToken),
 	}
 }
 
 func (client *Auth) getOrCreateCredential(ctx context.Context, credType credentialType, factory func() (azcore.TokenCredential, error)) (azcore.TokenCredential, error) {
-	client.mu.RLock()
+	client.credentialsMutex.RLock()
 	holder, exists := client.credentials[credType]
-	client.mu.RUnlock()
+	client.credentialsMutex.RUnlock()
 
 	if !exists {
-		client.mu.Lock()
+		client.credentialsMutex.Lock()
 		holder, exists = client.credentials[credType]
 		if !exists {
 			holder = &credentialHolder{}
 			client.credentials[credType] = holder
 			tflog.Debug(ctx, fmt.Sprintf("Created credential holder for type: %s", credType))
 		}
-		client.mu.Unlock()
+		client.credentialsMutex.Unlock()
 	}
 
 	holder.once.Do(func() {
@@ -110,6 +119,32 @@ func (client *Auth) getOrCreateCredential(ctx context.Context, credType credenti
 	})
 
 	return holder.credential, holder.err
+}
+
+func (client *Auth) getCachedCliToken(cacheKey string) (string, time.Time, bool) {
+	client.cliTokensMutex.RLock()
+	defer client.cliTokensMutex.RUnlock()
+
+	cached, exists := client.cliTokens[cacheKey]
+	if !exists {
+		return "", time.Time{}, false
+	}
+
+	if time.Now().Add(5 * time.Minute).Before(cached.expiresOn) {
+		return cached.token, cached.expiresOn, true
+	}
+
+	return "", time.Time{}, false
+}
+
+func (client *Auth) setCachedCliToken(cacheKey string, token string, expiresOn time.Time) {
+	client.cliTokensMutex.Lock()
+	defer client.cliTokensMutex.Unlock()
+
+	client.cliTokens[cacheKey] = &cachedToken{
+		token:     token,
+		expiresOn: expiresOn,
+	}
 }
 
 func (client *Auth) AuthenticateClientCertificate(ctx context.Context, scopes []string) (string, time.Time, error) {
@@ -144,6 +179,12 @@ func (client *Auth) AuthenticateClientCertificate(ctx context.Context, scopes []
 }
 
 func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string) (string, time.Time, error) {
+	cacheKey := "cli:" + strings.Join(scopes, ",")
+	if token, expiresOn, found := client.getCachedCliToken(cacheKey); found {
+		tflog.Debug(ctx, "Using cached token for Azure CLI credential")
+		return token, expiresOn, nil
+	}
+
 	cred, err := client.getOrCreateCredential(ctx, credTypeCLI, func() (azcore.TokenCredential, error) {
 		return azidentity.NewAzureCLICredential(&azidentity.AzureCLICredentialOptions{
 			AdditionallyAllowedTenants: client.config.AuxiliaryTenantIDs,
@@ -159,10 +200,17 @@ func (client *Auth) AuthenticateUsingCli(ctx context.Context, scopes []string) (
 		return "", time.Time{}, err
 	}
 
+	client.setCachedCliToken(cacheKey, accessToken.Token, accessToken.ExpiresOn)
 	return accessToken.Token, accessToken.ExpiresOn, nil
 }
 
 func (client *Auth) AuthenticateUsingAzureDeveloperCli(ctx context.Context, scopes []string) (string, time.Time, error) {
+	cacheKey := "devcli:" + strings.Join(scopes, ",")
+	if token, expiresOn, found := client.getCachedCliToken(cacheKey); found {
+		tflog.Debug(ctx, "Using cached token for Azure Developer CLI credential")
+		return token, expiresOn, nil
+	}
+
 	cred, err := client.getOrCreateCredential(ctx, credTypeDevCLI, func() (azcore.TokenCredential, error) {
 		return azidentity.NewAzureDeveloperCLICredential(&azidentity.AzureDeveloperCLICredentialOptions{
 			AdditionallyAllowedTenants: client.config.AuxiliaryTenantIDs,
@@ -178,6 +226,7 @@ func (client *Auth) AuthenticateUsingAzureDeveloperCli(ctx context.Context, scop
 		return "", time.Time{}, err
 	}
 
+	client.setCachedCliToken(cacheKey, accessToken.Token, accessToken.ExpiresOn)
 	return accessToken.Token, accessToken.ExpiresOn, nil
 }
 

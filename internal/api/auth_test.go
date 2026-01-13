@@ -6,6 +6,7 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -25,7 +26,7 @@ type mockTokenCredential struct {
 	err               error
 }
 
-func (m *mockTokenCredential) GetToken(ctx context.Context, opts policy.TokenRequestOptions) (azcore.AccessToken, error) {
+func (m *mockTokenCredential) GetToken(ctx context.Context, _ policy.TokenRequestOptions) (azcore.AccessToken, error) {
 	atomic.AddInt32(&m.getTokenCallCount, 1)
 	if m.err != nil {
 		return azcore.AccessToken{}, m.err
@@ -335,12 +336,10 @@ func TestUnit_GetOrCreateCredential_ConcurrentAccessDifferentTypes(t *testing.T)
 
 	for credType, factory := range factories {
 		for range numGoroutinesPerType {
-			wg.Add(1)
-			go func(ct credentialType, f func() (azcore.TokenCredential, error)) {
-				defer wg.Done()
-				cred, err := authClient.getOrCreateCredential(ctx, ct, f)
-				results <- result{credType: ct, cred: cred, err: err}
-			}(credType, factory)
+			wg.Go(func() {
+				cred, err := authClient.getOrCreateCredential(ctx, credType, factory)
+				results <- result{credType: credType, cred: cred, err: err}
+			})
 		}
 	}
 
@@ -428,16 +427,16 @@ type testableAuth struct {
 }
 
 func (ta *testableAuth) injectCredential(credType credentialType, cred azcore.TokenCredential) {
-	ta.mu.Lock()
-	defer ta.mu.Unlock()
+	ta.credentialsMutex.Lock()
+	defer ta.credentialsMutex.Unlock()
 	holder := &credentialHolder{credential: cred}
 	holder.once.Do(func() {})
 	ta.credentials[credType] = holder
 }
 
 func (ta *testableAuth) injectCredentialError(credType credentialType, err error) {
-	ta.mu.Lock()
-	defer ta.mu.Unlock()
+	ta.credentialsMutex.Lock()
+	defer ta.credentialsMutex.Unlock()
 	holder := &credentialHolder{err: err}
 	holder.once.Do(func() {})
 	ta.credentials[credType] = holder
@@ -554,4 +553,123 @@ func TestUnit_AuthenticateSystemManagedIdentity_GetTokenError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Equal(t, "", token)
 	assert.Equal(t, time.Time{}, tokenExpiry)
+}
+
+func TestUnit_CliTokenCache_CachesAndReusesTokens(t *testing.T) {
+	providerConfig := &config.ProviderConfig{}
+	authClient := NewAuthBase(providerConfig)
+
+	// Set a token in the cache
+	cacheKey := "cli:https://management.azure.com/.default"
+	expiresOn := time.Now().Add(1 * time.Hour)
+	authClient.setCachedCliToken(cacheKey, "cached-token", expiresOn)
+
+	// Retrieve the token
+	token, retrievedExpiry, found := authClient.getCachedCliToken(cacheKey)
+
+	assert.True(t, found, "Token should be found in cache")
+	assert.Equal(t, "cached-token", token)
+	assert.Equal(t, expiresOn, retrievedExpiry)
+}
+
+func TestUnit_CliTokenCache_ReturnsNotFoundForMissingKey(t *testing.T) {
+	providerConfig := &config.ProviderConfig{}
+	authClient := NewAuthBase(providerConfig)
+
+	token, expiresOn, found := authClient.getCachedCliToken("nonexistent-key")
+
+	assert.False(t, found, "Token should not be found")
+	assert.Empty(t, token)
+	assert.True(t, expiresOn.IsZero())
+}
+
+func TestUnit_CliTokenCache_ReturnsNotFoundForExpiredToken(t *testing.T) {
+	providerConfig := &config.ProviderConfig{}
+	authClient := NewAuthBase(providerConfig)
+
+	// Set a token that expires in less than 5 minutes (within the buffer)
+	cacheKey := "cli:https://management.azure.com/.default"
+	expiresOn := time.Now().Add(3 * time.Minute)
+	authClient.setCachedCliToken(cacheKey, "expiring-token", expiresOn)
+
+	// Token should not be returned because it's within the 5-minute buffer
+	token, _, found := authClient.getCachedCliToken(cacheKey)
+
+	assert.False(t, found, "Token expiring soon should not be returned")
+	assert.Empty(t, token)
+}
+
+func TestUnit_CliTokenCache_ReturnsValidToken(t *testing.T) {
+	providerConfig := &config.ProviderConfig{}
+	authClient := NewAuthBase(providerConfig)
+
+	// Set a token that expires in more than 5 minutes
+	cacheKey := "cli:https://management.azure.com/.default"
+	expiresOn := time.Now().Add(30 * time.Minute)
+	authClient.setCachedCliToken(cacheKey, "valid-token", expiresOn)
+
+	// Token should be returned
+	token, _, found := authClient.getCachedCliToken(cacheKey)
+
+	assert.True(t, found, "Valid token should be returned")
+	assert.Equal(t, "valid-token", token)
+}
+
+func TestUnit_CliTokenCache_DifferentScopesAreSeparate(t *testing.T) {
+	providerConfig := &config.ProviderConfig{}
+	authClient := NewAuthBase(providerConfig)
+
+	expiresOn := time.Now().Add(1 * time.Hour)
+
+	// Set tokens for different scopes
+	authClient.setCachedCliToken("cli:scope1", "token1", expiresOn)
+	authClient.setCachedCliToken("cli:scope2", "token2", expiresOn)
+
+	// Retrieve and verify separate tokens
+	token1, _, found1 := authClient.getCachedCliToken("cli:scope1")
+	token2, _, found2 := authClient.getCachedCliToken("cli:scope2")
+
+	assert.True(t, found1)
+	assert.True(t, found2)
+	assert.Equal(t, "token1", token1)
+	assert.Equal(t, "token2", token2)
+}
+
+func TestUnit_CliTokenCache_ConcurrentAccess(t *testing.T) {
+	providerConfig := &config.ProviderConfig{}
+	authClient := NewAuthBase(providerConfig)
+
+	const numGoroutines = 50
+	var wg sync.WaitGroup
+
+	expiresOn := time.Now().Add(1 * time.Hour)
+
+	// Writers
+	for i := range numGoroutines {
+		wg.Go(func() {
+			cacheKey := fmt.Sprintf("cli:scope%d", i%5)
+			authClient.setCachedCliToken(cacheKey, fmt.Sprintf("token%d", i), expiresOn)
+		})
+	}
+
+	// Readers
+	for range numGoroutines {
+		wg.Go(func() {
+			authClient.getCachedCliToken("cli:scope0")
+		})
+	}
+
+	wg.Wait()
+
+	// Should not panic or deadlock - verify cache still works
+	_, _, found := authClient.getCachedCliToken("cli:scope0")
+	assert.True(t, found, "Token should be found after concurrent access")
+}
+
+func TestUnit_NewAuthBase_InitializesCliTokenCache(t *testing.T) {
+	providerConfig := &config.ProviderConfig{}
+	authClient := NewAuthBase(providerConfig)
+
+	assert.NotNil(t, authClient.cliTokens, "CLI token cache should be initialized")
+	assert.Empty(t, authClient.cliTokens, "CLI token cache should be empty initially")
 }
