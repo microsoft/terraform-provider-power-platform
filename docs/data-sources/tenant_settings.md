@@ -176,8 +176,8 @@ Read-Only:
 Read-Only:
 
 - `allow_use_of_hosted_browser` (Boolean) Allow Use Of Hosted Browser
+- `diable_copilot_help_assistance` (Boolean) Disable Copilot With Bing
 - `disable_copilot` (Boolean) Disable Copilot
-- `disable_copilot_with_bing` (Boolean) Disable Copilot With Bing
 - `disable_flow_resubmission` (Boolean) Disable Flow Resubmission
 
 
