@@ -24,6 +24,7 @@ type TenantSettingsDataSourceModel struct {
 	DisableTrialEnvironmentCreationByNonAdminUsers types.Bool     `tfsdk:"disable_trial_environment_creation_by_non_admin_users"`
 	DisableCapacityAllocationByEnvironmentAdmins   types.Bool     `tfsdk:"disable_capacity_allocation_by_environment_admins"`
 	DisableSupportTicketsVisibleByAllUsers         types.Bool     `tfsdk:"disable_support_tickets_visible_by_all_users"`
+	EnableSupportUseBingSearchSolutions            types.Bool     `tfsdk:"enable_support_use_bing_search_solutions"`
 	PowerPlatform                                  types.Object   `tfsdk:"power_platform"`
 }
 
@@ -37,6 +38,7 @@ type TenantSettingsResourceModel struct {
 	DisableTrialEnvironmentCreationByNonAdminUsers types.Bool     `tfsdk:"disable_trial_environment_creation_by_non_admin_users"`
 	DisableCapacityAllocationByEnvironmentAdmins   types.Bool     `tfsdk:"disable_capacity_allocation_by_environment_admins"`
 	DisableSupportTicketsVisibleByAllUsers         types.Bool     `tfsdk:"disable_support_tickets_visible_by_all_users"`
+	EnableSupportUseBingSearchSolutions            types.Bool     `tfsdk:"enable_support_use_bing_search_solutions"`
 	PowerPlatform                                  types.Object   `tfsdk:"power_platform"`
 }
 

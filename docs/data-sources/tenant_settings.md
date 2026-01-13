@@ -43,6 +43,7 @@ data "powerplatform_tenant_settings" "settings" {}
 - `disable_portals_creation_by_non_admin_users` (Boolean) Disable Portals Creation By Non Admin Users
 - `disable_support_tickets_visible_by_all_users` (Boolean) Disable Support Tickets Visible By All Users
 - `disable_trial_environment_creation_by_non_admin_users` (Boolean) Disable Trial Environment Creation By Non Admin Users
+- `enable_support_use_bing_search_solutions` (Boolean) When enabled, Bing search is going to be used when providing self-help solutions.
 - `power_platform` (Attributes) Power Platform (see [below for nested schema](#nestedatt--power_platform))
 - `walk_me_opt_out` (Boolean) Walk Me Opt Out
 
@@ -126,6 +127,7 @@ Read-Only:
 - `additional_copilot_feedback` (Boolean) Additional Copilot Feedback
 - `allow_copilot_authors_publish_when_ai_features_are_enabled` (Boolean) Enable Open AI Bot Publishing
 - `basic_copilot_feedback` (Boolean) Basic Copilot Feedback
+- `copilot_studio_authors_security_group_id` (String) Copilot Studio Authors Security Group ID
 - `disable_copilot` (Boolean) Disable Copilot
 
 

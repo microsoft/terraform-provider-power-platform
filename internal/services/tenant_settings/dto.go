@@ -72,6 +72,11 @@ type powerPlatformSettingsDto struct {
 	ModelExperimentation   *modelExperimentationSettingsDto `json:"modelExperimentation,omitempty"`
 	CatalogSettings        *catalogSettingsDto              `json:"catalogSettings,omitempty"`
 	UserManagementSettings *userManagementSettingsDto       `json:"userManagementSettings,omitempty"`
+	HelpSupportSettings    *helpSupportSettingsDto          `json:"helpSupportSettings,omitempty"`
+}
+
+type helpSupportSettingsDto struct {
+	UseSupportBingSearchByAllUsers *bool `json:"useSupportBingSearchByAllUsers,omitempty"`
 }
 
 type teamsIntegrationSettingsDto struct {
@@ -188,6 +193,17 @@ func convertFromTenantSettingsModel(ctx context.Context, tenantSettings TenantSe
 	tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers = helpers.BoolPointer(tenantSettings.DisableTrialEnvironmentCreationByNonAdminUsers)
 	tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins = helpers.BoolPointer(tenantSettings.DisableCapacityAllocationByEnvironmentAdmins)
 	tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers = helpers.BoolPointer(tenantSettings.DisableSupportTicketsVisibleByAllUsers)
+
+	// Convert EnableSupportUseBingSearchSolutions to nested PowerPlatform.HelpSupportSettings
+	if !tenantSettings.EnableSupportUseBingSearchSolutions.IsNull() && !tenantSettings.EnableSupportUseBingSearchSolutions.IsUnknown() {
+		if tenantSettingsDto.PowerPlatform == nil {
+			tenantSettingsDto.PowerPlatform = &powerPlatformSettingsDto{}
+		}
+		if tenantSettingsDto.PowerPlatform.HelpSupportSettings == nil {
+			tenantSettingsDto.PowerPlatform.HelpSupportSettings = &helpSupportSettingsDto{}
+		}
+		tenantSettingsDto.PowerPlatform.HelpSupportSettings.UseSupportBingSearchByAllUsers = tenantSettings.EnableSupportUseBingSearchSolutions.ValueBoolPointer()
+	}
 
 	if !tenantSettings.PowerPlatform.IsNull() && !tenantSettings.PowerPlatform.IsUnknown() {
 		if tenantSettingsDto.PowerPlatform == nil {
@@ -672,6 +688,12 @@ func convertUserManagementSettingsModel(ctx context.Context, powerPlatformAttrib
 func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettingsResourceModel](tenantSettingsDto tenantSettingsDto, timeout timeouts.Value) (T, basetypes.ObjectValue, error) {
 	objTypePowerPlatformSettings, objValuePowerPlatformSettings := convertPowerPlatformSettings(tenantSettingsDto)
 
+	// Extract useSupportBingSearchByAllUsers from nested PowerPlatform.HelpSupportSettings
+	var useSupportBingSearchByAllUsers *bool
+	if tenantSettingsDto.PowerPlatform != nil && tenantSettingsDto.PowerPlatform.HelpSupportSettings != nil {
+		useSupportBingSearchByAllUsers = tenantSettingsDto.PowerPlatform.HelpSupportSettings.UseSupportBingSearchByAllUsers
+	}
+
 	tenantSettingsProperties := map[string]attr.Type{
 		"walk_me_opt_out":                                       types.BoolType,
 		"disable_nps_comments_reachout":                         types.BoolType,
@@ -681,6 +703,7 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 		"disable_trial_environment_creation_by_non_admin_users": types.BoolType,
 		"disable_capacity_allocation_by_environment_admins":     types.BoolType,
 		"disable_support_tickets_visible_by_all_users":          types.BoolType,
+		"enable_support_use_bing_search_solutions":              types.BoolType,
 		"power_platform":                                        objTypePowerPlatformSettings,
 	}
 
@@ -693,6 +716,7 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 		"disable_trial_environment_creation_by_non_admin_users": types.BoolPointerValue(tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers),
 		"disable_capacity_allocation_by_environment_admins":     types.BoolPointerValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
 		"disable_support_tickets_visible_by_all_users":          types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
+		"enable_support_use_bing_search_solutions":              types.BoolPointerValue(useSupportBingSearchByAllUsers),
 		"power_platform":                                        objValuePowerPlatformSettings,
 	}
 
@@ -710,6 +734,7 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 			DisableTrialEnvironmentCreationByNonAdminUsers: types.BoolPointerValue(tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers),
 			DisableCapacityAllocationByEnvironmentAdmins:   types.BoolPointerValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
 			DisableSupportTicketsVisibleByAllUsers:         types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
+			EnableSupportUseBingSearchSolutions:            types.BoolPointerValue(useSupportBingSearchByAllUsers),
 			PowerPlatform:                                  objValuePowerPlatformSettings,
 		}
 		typedResult, ok := any(dsModel).(T)
@@ -728,6 +753,7 @@ func convertFromTenantSettingsDto[T TenantSettingsDataSourceModel | TenantSettin
 			DisableTrialEnvironmentCreationByNonAdminUsers: types.BoolPointerValue(tenantSettingsDto.DisableTrialEnvironmentCreationByNonAdminUsers),
 			DisableCapacityAllocationByEnvironmentAdmins:   types.BoolPointerValue(tenantSettingsDto.DisableCapacityAllocationByEnvironmentAdmins),
 			DisableSupportTicketsVisibleByAllUsers:         types.BoolPointerValue(tenantSettingsDto.DisableSupportTicketsVisibleByAllUsers),
+			EnableSupportUseBingSearchSolutions:            types.BoolPointerValue(useSupportBingSearchByAllUsers),
 			PowerPlatform:                                  objValuePowerPlatformSettings,
 		}
 		typedResult, ok := any(resModel).(T)

@@ -472,6 +472,10 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, req datasource.Sc
 				MarkdownDescription: "Disable Support Tickets Visible By All Users",
 				Computed:            true,
 			},
+			"enable_support_use_bing_search_solutions": schema.BoolAttribute{
+				MarkdownDescription: "When enabled, Bing search is going to be used when providing self-help solutions.",
+				Computed:            true,
+			},
 			"power_platform": schema.SingleNestedAttribute{
 				MarkdownDescription: "Power Platform",
 				Computed:            true,

@@ -11,6 +11,9 @@
   "disableCapacityAllocationByEnvironmentAdmins": false,
   "disableSupportTicketsVisibleByAllUsers": false,
   "powerPlatform": {
+    "helpSupportSettings": {
+      "useSupportBingSearchByAllUsers": false
+    },
     "search": {
       "disableDocsSearch": false,
       "disableCommunitySearch": false,

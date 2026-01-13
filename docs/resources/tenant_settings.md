@@ -25,27 +25,6 @@ provider "powerplatform" {
   use_cli = true
 }
 
-//Environment Rounting
-//https://1dbbeae58fa6462ea5a19932a520a1.dc.tenant.api.powerplatform.com/governance/ruleBasedPolicies/46073c1a-56a6-4eab-a1d8-de9a5ccf109f?api-version=2021-10-01-preview
-
-//tenant level anlitics enable
-//https://emea.csanalytics.powerplatform.microsoft.com/api/v1/tenants/1dbbeae5-8fa6-462e-a5a1-9932a520a1dc/tenantconsent/update
-//{
-//  "userId": "f99f844b-ce3b-49ae-86f3-e374ecae789c",
-//  "consentState": true
-//}
-
-//tenant lockbox policy
-//https://1dbbeae58fa6462ea5a19932a520a1.dc.tenant.api.powerplatform.com/governance/lockboxPolicies?productType=CDS&api-version=2021-10-01-preview
-//{
-//  "lockboxEnabledState": {
-//    "appliesFor": "All",
-//    "value": "Enabled"
-//  },
-//  "productType": "CDS",
-//  "tenantId": "1dbbeae5-8fa6-462e-a5a1-9932a520a1dc"
-//}
-
 resource "powerplatform_tenant_settings" "settings" {
   walk_me_opt_out                                       = true //?
   disable_support_tickets_visible_by_all_users          = true //Support requests visibility
@@ -54,10 +33,7 @@ resource "powerplatform_tenant_settings" "settings" {
   disable_environment_creation_by_non_admin_users       = true //environment assigments: production
   disable_portals_creation_by_non_admin_users           = true //?
   disable_newsletter_sendout                            = true //?
-
-  //->helpSupportSettings
-  //useSupportBingSearchByAllUsers //Suport Bing Search solitions
-  //disableHelpSupportCopilot ??
+  enable_support_use_bing_search_solutions              = true //Support Bing Search solitions
 
   power_platform = {
     product_feedback = {
@@ -86,7 +62,8 @@ resource "powerplatform_tenant_settings" "settings" {
     }
     power_automate = {
       disable_copilot             = true
-      disable_copilot_with_bing   = true //copilot help assitange in power automate
+      disable_copilot_with_bing   = true //copilot help assitange in power automate !!!!
+      diable_copilot_help_assistance = true //copilot help assitange in power automate !!!!
       allow_use_of_hosted_browser = true //enableComputerUseSharedMachines = true //host browser in computer use
       disable_flow_resubmission   = true //disableFlowRunResubmission      = true //power autoamnte flow run resubmission
     }
@@ -104,18 +81,14 @@ resource "powerplatform_tenant_settings" "settings" {
       }
     }
     licensing = {
-      disable_billing_policy_creation_by_non_admin_users    = true
-      enable_tenant_capacity_report_for_environment_admins  = true
-      storage_capacity_consumption_warning_threshold        = 88
-      enable_tenant_licensing_report_for_environment_admins = true // Tenant licesing summary view
-      //enableTenantCapacityReportForEnvironmentAdmins = true // Tenant capacity summary view
-      disable_use_of_unassigned_ai_builder_credits = true //Ai builder credits
-      //apply_auto_claim_to_only_managed_environments = true //Auto-claim policies for Power Apps
+      disable_billing_policy_creation_by_non_admin_users           = true
+      enable_tenant_capacity_report_for_environment_admins         = true
+      storage_capacity_consumption_warning_threshold               = 88
+      enable_tenant_licensing_report_for_environment_admins        = true // Tenant licesing summary view
+      enable_tenant_capacity_report_for_environment_admins         = true
+      disable_use_of_unassigned_ai_builder_credits                 = true //Ai builder credits
       apply_auto_claim_power_apps_to_only_managed_environments     = true //Auto-claim policies for Power Apps
       apply_auto_claim_power_automate_to_only_managed_environments = true //Auto-claim policies for Power Automate
-      //applyPAutoAutoClaimToOnlyManagedEnvironments = true //Auto-claim policies for Power Automate
-      //copilotCreditsOverageNotificationEmailRecipients = ["aaa@asdasd.pl1;adsasd@asdfsfd.pl1"] //copilot credits overage notifications
-      //copilotCreditsOverageNotificationEmailRecipientsUpdatedBy = "00000000-0000-0000-0000-000000000000" //copilot credits overage notifications updated by //hjidden
     }
     power_pages = {}
     champions = {
@@ -123,12 +96,11 @@ resource "powerplatform_tenant_settings" "settings" {
       disable_skills_match_invitation_reachout = true
     }
     intelligence = {
-      disable_copilot                                            = true //copilot in Power Apps
-      allow_copilot_authors_publish_when_ai_features_are_enabled = true //publish copilot with ai features
-      basic_copilot_feedback                                     = true //basic copilot feedback
-      additional_copilot_feedback                                = true //Additional Copilot feedback
-      //copilotStudioAuthorsSecurityGroupId = "00000000-0000-0000-0000-000000000000" //copilot studio authors security group
-      //disableAiPrompts ??
+      disable_copilot                                            = true                                   //copilot in Power Apps
+      allow_copilot_authors_publish_when_ai_features_are_enabled = true                                   //publish copilot with ai features
+      basic_copilot_feedback                                     = true                                   //basic copilot feedback
+      additional_copilot_feedback                                = true                                   //Additional Copilot feedback
+      copilot_studio_authors_security_group_id                   = "00000000-0000-0000-0000-000000000000" //copilot studio authors security group
     }
     model_experimentation = {
       enable_model_data_sharing = true
@@ -155,6 +127,7 @@ resource "powerplatform_tenant_settings" "settings" {
 - `disable_portals_creation_by_non_admin_users` (Boolean) Disable Portals Creation By Non Admin Users
 - `disable_support_tickets_visible_by_all_users` (Boolean) Disable Support Tickets Visible By All Users
 - `disable_trial_environment_creation_by_non_admin_users` (Boolean) Disable Trial Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.
+- `enable_support_use_bing_search_solutions` (Boolean) When enabled, Bing search is going to be used when providing self-help solutions.
 - `power_platform` (Attributes) Power Platform (see [below for nested schema](#nestedatt--power_platform))
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 - `walk_me_opt_out` (Boolean) Walk Me Opt Out
@@ -239,6 +212,7 @@ Optional:
 - `additional_copilot_feedback` (Boolean) Additional Copilot Feedback
 - `allow_copilot_authors_publish_when_ai_features_are_enabled` (Boolean) Enable Open AI Bot Publishing
 - `basic_copilot_feedback` (Boolean) Basic Copilot Feedback
+- `copilot_studio_authors_security_group_id` (String) Copilot Studio Authors Security Group ID
 - `disable_copilot` (Boolean) Disable Copilot
 
 
