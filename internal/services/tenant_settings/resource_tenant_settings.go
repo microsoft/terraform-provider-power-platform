@@ -593,6 +593,10 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 		preprocessedDto.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId = types.StringValue(constants.ZERO_UUID).ValueStringPointer()
 	}
 
+	if needsProcessing(path.Root("power_platform").AtName("intelligence").AtName("copilot_studio_authors_security_group_id")) {
+		preprocessedDto.PowerPlatform.Intelligence.CopilotStudioAuthorsSecurityGroupId = types.StringValue(constants.ZERO_UUID).ValueStringPointer()
+	}
+
 	// send preprocessedDto to the API
 	updatedSettingsDto, err := r.TenantSettingClient.UpdateTenantSettings(ctx, preprocessedDto)
 	if err != nil {

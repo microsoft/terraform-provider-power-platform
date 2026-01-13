@@ -69,7 +69,8 @@
       "disableCopilot": false,
       "enableOpenAiBotPublishing": false,
       "disableCopilotFeedback": false,
-      "disableCopilotFeedbackMetadata": false
+      "disableCopilotFeedbackMetadata": false,
+      "copilotStudioAuthorsSecurityGroupId": "00000000-0000-0000-0000-000000000000"
     },
     "modelExperimentation": {
       "enableModelDataSharing": false,
