@@ -151,7 +151,6 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.diable_copilot_help_assistance", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_community_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_docs_search", "false"),
