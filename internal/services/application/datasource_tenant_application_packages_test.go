@@ -15,6 +15,8 @@ import (
 )
 
 func TestAccTenantApplicationPackagesDataSource_Validate_Read(t *testing.T) {
+	t.Skip("Skipping until we authenticate properly with SPN")
+
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
