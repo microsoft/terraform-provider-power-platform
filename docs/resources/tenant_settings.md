@@ -83,7 +83,6 @@ resource "powerplatform_tenant_settings" "settings" {
       enable_tenant_capacity_report_for_environment_admins         = true
       storage_capacity_consumption_warning_threshold               = 88
       enable_tenant_licensing_report_for_environment_admins        = true
-      enable_tenant_capacity_report_for_environment_admins         = true
       disable_use_of_unassigned_ai_builder_credits                 = true
       apply_auto_claim_power_apps_to_only_managed_environments     = true
       apply_auto_claim_power_automate_to_only_managed_environments = true
