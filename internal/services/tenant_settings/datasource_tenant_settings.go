@@ -177,7 +177,7 @@ func powerAutomateAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Disable Copilot",
 			Computed:            true,
 		},
-		"disable_copilot_with_bing": schema.BoolAttribute{
+		"diable_copilot_help_assistance": schema.BoolAttribute{
 			MarkdownDescription: "Disable Copilot With Bing",
 			Computed:            true,
 		},

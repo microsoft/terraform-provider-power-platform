@@ -208,7 +208,7 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								MarkdownDescription: "Disable Copilot",
 								Optional:            true,
 							},
-							"disable_copilot_with_bing": schema.BoolAttribute{
+							"diable_copilot_help_assistance": schema.BoolAttribute{
 								MarkdownDescription: "Disable Copilot With Bing",
 								Optional:            true,
 							},

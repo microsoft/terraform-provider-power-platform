@@ -1005,20 +1005,20 @@ func convertEnvironmentSettings(tenantSettingsDto tenantSettingsDto) (basetypes.
 
 func convertPowerAutomateSettings(tenantSettingsDto tenantSettingsDto) (basetypes.ObjectType, basetypes.ObjectValue) {
 	attrTypesPowerAutomateProperties := map[string]attr.Type{
-		"disable_copilot":             types.BoolType,
-		"disable_copilot_with_bing":   types.BoolType,
-		"allow_use_of_hosted_browser": types.BoolType,
-		"disable_flow_resubmission":   types.BoolType,
+		"disable_copilot":                types.BoolType,
+		"diable_copilot_help_assistance": types.BoolType,
+		"allow_use_of_hosted_browser":    types.BoolType,
+		"disable_flow_resubmission":      types.BoolType,
 	}
 
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.PowerAutomate == nil {
 		return types.ObjectType{AttrTypes: attrTypesPowerAutomateProperties}, types.ObjectNull(attrTypesPowerAutomateProperties)
 	}
 	attrValuesPowerAutomateProperties := map[string]attr.Value{
-		"disable_copilot":             types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.DisableCopilot),
-		"disable_copilot_with_bing":   types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.DisableCopilotWithBing),
-		"allow_use_of_hosted_browser": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.AllowUseOfHostedBrowser),
-		"disable_flow_resubmission":   types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.DisableFlowResubmission),
+		"disable_copilot":                types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.DisableCopilot),
+		"diable_copilot_help_assistance": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.DisableCopilotWithBing),
+		"allow_use_of_hosted_browser":    types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.AllowUseOfHostedBrowser),
+		"disable_flow_resubmission":      types.BoolPointerValue(tenantSettingsDto.PowerPlatform.PowerAutomate.DisableFlowResubmission),
 	}
 	return types.ObjectType{AttrTypes: attrTypesPowerAutomateProperties}, types.ObjectValueMust(attrTypesPowerAutomateProperties, attrValuesPowerAutomateProperties)
 }

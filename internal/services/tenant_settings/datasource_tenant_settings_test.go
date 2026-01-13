@@ -15,7 +15,6 @@ import (
 )
 
 func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
-	t.Setenv("TF_ACC", "1")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -65,7 +64,7 @@ func TestAccTenantSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", regexp.MustCompile(helpers.BooleanRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_with_bing", regexp.MustCompile(helpers.BooleanRegex)),
+					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_automate.diable_copilot_help_assistance", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", regexp.MustCompile(helpers.BooleanRegex)),
 					resource.TestMatchResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", regexp.MustCompile(helpers.BooleanRegex)),
@@ -141,7 +140,7 @@ func TestUnitTestTenantSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "false"),
-					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_with_bing", "false"),
+					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_automate.diable_copilot_help_assistance", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "false"),
