@@ -382,6 +382,26 @@ func convertEnterprisePolicyModelFromDto(environmentDto EnvironmentDto, model *S
 		},
 	}
 	if environmentDto.Properties.EnterprisePolicies != nil {
+		if environmentDto.Properties.EnterprisePolicies.Identity != nil {
+			model.EnterprisePolicies = types.SetValueMust(enterprisePolicyAttrType, []attr.Value{
+				types.ObjectValueMust(
+					map[string]attr.Type{
+						"type":      types.StringType,
+						"id":        types.StringType,
+						"location":  types.StringType,
+						"system_id": types.StringType,
+						"status":    types.StringType,
+					},
+					map[string]attr.Value{
+						"type":      types.StringValue("Identity"),
+						"id":        types.StringValue(environmentDto.Properties.EnterprisePolicies.Identity.Id),
+						"location":  types.StringValue(environmentDto.Properties.EnterprisePolicies.Identity.Location),
+						"system_id": types.StringValue(environmentDto.Properties.EnterprisePolicies.Identity.SystemId),
+						"status":    types.StringValue(environmentDto.Properties.EnterprisePolicies.Identity.LinkStatus),
+					},
+				),
+			})
+		}
 		if environmentDto.Properties.EnterprisePolicies.Vnets != nil {
 			model.EnterprisePolicies = types.SetValueMust(enterprisePolicyAttrType, []attr.Value{
 				types.ObjectValueMust(
