@@ -61,10 +61,10 @@ resource "powerplatform_tenant_settings" "settings" {
       enable_canvas_app_insights               = true
     }
     power_automate = {
-      disable_copilot                = true
-      diable_copilot_help_assistance = true
-      allow_use_of_hosted_browser    = true
-      disable_flow_resubmission      = true
+      disable_copilot                 = true
+      disable_copilot_help_assistance = true
+      allow_use_of_hosted_browser     = true
+      disable_flow_resubmission       = true
     }
     environments = {
       disable_preferred_data_location_for_teams_environment = true
@@ -259,8 +259,8 @@ Optional:
 Optional:
 
 - `allow_use_of_hosted_browser` (Boolean) Allow Use Of Hosted Browser
-- `diable_copilot_help_assistance` (Boolean) Disable Copilot With Bing
 - `disable_copilot` (Boolean) Disable Copilot
+- `disable_copilot_help_assistance` (Boolean) Disable Copilot With Bing
 - `disable_flow_resubmission` (Boolean) Disable Flow Resubmission
 
 

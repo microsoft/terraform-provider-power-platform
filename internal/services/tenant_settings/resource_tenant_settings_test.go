@@ -55,7 +55,7 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					  }
 					  power_automate = {
 						disable_copilot           = false
-						diable_copilot_help_assistance = false
+						disable_copilot_help_assistance = false
 						allow_use_of_hosted_browser = false					
 						disable_flow_resubmission = false					  
 					  }
@@ -148,7 +148,7 @@ func TestAccTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.diable_copilot_help_assistance", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_help_assistance", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "false"),
@@ -225,7 +225,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					  }
 					  power_automate = {
 						disable_copilot           = false
-						diable_copilot_help_assistance = false
+						disable_copilot_help_assistance = false
 						allow_use_of_hosted_browser = false
 						disable_flow_resubmission = false
 					  }
@@ -316,7 +316,7 @@ func TestUnitTestTenantSettingsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.diable_copilot_help_assistance", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_help_assistance", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "false"),
@@ -373,7 +373,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					  }
 					  power_automate = {
 						disable_copilot           = true
-						diable_copilot_help_assistance = true
+						disable_copilot_help_assistance = true
 						allow_use_of_hosted_browser = true
 						disable_flow_resubmission = true
 					  }
@@ -466,7 +466,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "true"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.diable_copilot_help_assistance", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_help_assistance", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "true"),
@@ -515,7 +515,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					  }
 					  power_automate = {
 						disable_copilot           = false
-						diable_copilot_help_assistance = false
+						disable_copilot_help_assistance = false
 						allow_use_of_hosted_browser = false
 						disable_flow_resubmission = false
 					  }
@@ -610,7 +610,7 @@ func TestAccTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.diable_copilot_help_assistance", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_help_assistance", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "false"),
@@ -691,7 +691,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					  }
 					  power_automate = {
 						disable_copilot           = true
-						diable_copilot_help_assistance = true
+						disable_copilot_help_assistance = true
 						allow_use_of_hosted_browser = true
 						disable_flow_resubmission = true
 					  }
@@ -785,7 +785,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "true"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.diable_copilot_help_assistance", "true"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_help_assistance", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "true"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "true"),
@@ -834,7 +834,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					  }
 					  power_automate = {
 						disable_copilot           = false
-						diable_copilot_help_assistance = false
+						disable_copilot_help_assistance = false
 						allow_use_of_hosted_browser = false
 						disable_flow_resubmission = false
 					  }
@@ -926,7 +926,7 @@ func TestUnitTestTenantSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_guests_to_make", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_apps.enable_canvas_app_insights", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot", "false"),
-					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.diable_copilot_help_assistance", "false"),
+					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_copilot_help_assistance", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.allow_use_of_hosted_browser", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.power_automate.disable_flow_resubmission", "false"),
 					resource.TestCheckResourceAttr("powerplatform_tenant_settings.settings", "power_platform.search.disable_bing_video_search", "false"),
