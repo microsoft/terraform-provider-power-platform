@@ -124,10 +124,10 @@ Read-Only:
 
 Read-Only:
 
-- `additional_copilot_feedback` (Boolean) Additional Copilot Feedback
-- `allow_copilot_authors_publish_when_ai_features_are_enabled` (Boolean) Enable Open AI Bot Publishing
-- `basic_copilot_feedback` (Boolean) Basic Copilot Feedback
+- `allow_copilot_authors_publish_when_ai_features_are_enabled` (Boolean) Allow Copilot authors to publish from Copilot Studio when AI features are enabled
 - `copilot_studio_authors_security_group_id` (String) Copilot Studio Authors Security Group ID
+- `disable_additional_copilot_feedback` (Boolean) Additional Copilot Feedback
+- `disable_basic_copilot_feedback` (Boolean) Basic Copilot Feedback
 - `disable_copilot` (Boolean) Disable Copilot
 
 

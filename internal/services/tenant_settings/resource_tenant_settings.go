@@ -341,14 +341,14 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								Optional:            true,
 							},
 							"allow_copilot_authors_publish_when_ai_features_are_enabled": schema.BoolAttribute{
-								MarkdownDescription: "Enable Open AI Bot Publishing",
+								MarkdownDescription: "Allow Copilot authors to publish from Copilot Studio when AI features are enabled",
 								Optional:            true,
 							},
-							"basic_copilot_feedback": schema.BoolAttribute{
+							"disable_basic_copilot_feedback": schema.BoolAttribute{
 								MarkdownDescription: "Basic Copilot Feedback",
 								Optional:            true,
 							},
-							"additional_copilot_feedback": schema.BoolAttribute{
+							"disable_additional_copilot_feedback": schema.BoolAttribute{
 								MarkdownDescription: "Additional Copilot Feedback",
 								Optional:            true,
 							},

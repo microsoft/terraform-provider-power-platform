@@ -128,13 +128,13 @@ type policySettingsDto struct {
 }
 
 type licenseSettingsDto struct {
-	DisableBillingPolicyCreationByNonAdminUsers     *bool  `json:"disableBillingPolicyCreationByNonAdminUsers,omitempty"`
-	EnableTenantCapacityReportForEnvironmentAdmins  *bool  `json:"enableTenantCapacityReportForEnvironmentAdmins,omitempty"`
-	StorageCapacityConsumptionWarningThreshold      *int64 `json:"storageCapacityConsumptionWarningThreshold,omitempty"`
-	EnableTenantLicensingReportForEnvironmentAdmins *bool  `json:"enableTenantLicensingReportForEnvironmentAdmins,omitempty"`
-	DisableUseOfUnassignedAIBuilderCredits          *bool  `json:"disableUseOfUnassignedAIBuilderCredits,omitempty"`
-	ApplyAutoClaimToOnlyManagedEnvironments         *bool  `json:"applyAutoClaimToOnlyManagedEnvironments,omitempty"`
-	ApplyAutoClaimToOnlyManagedEnvironments    *bool  `json:"applyAutoClaimToOnlyManagedEnvironments,omitempty"`
+	DisableBillingPolicyCreationByNonAdminUsers              *bool  `json:"disableBillingPolicyCreationByNonAdminUsers,omitempty"`
+	EnableTenantCapacityReportForEnvironmentAdmins           *bool  `json:"enableTenantCapacityReportForEnvironmentAdmins,omitempty"`
+	StorageCapacityConsumptionWarningThreshold               *int64 `json:"storageCapacityConsumptionWarningThreshold,omitempty"`
+	EnableTenantLicensingReportForEnvironmentAdmins          *bool  `json:"enableTenantLicensingReportForEnvironmentAdmins,omitempty"`
+	DisableUseOfUnassignedAIBuilderCredits                   *bool  `json:"disableUseOfUnassignedAIBuilderCredits,omitempty"`
+	ApplyPowerAppsAutoClaimToOnlyManagedEnvironments         *bool  `json:"applyAutoClaimToOnlyManagedEnvironments,omitempty"`
+	ApplyPowerAutomateAutoAutoClaimToOnlyManagedEnvironments *bool  `json:"applyPAutoAutoClaimToOnlyManagedEnvironments,omitempty"`
 }
 
 type powerPagesSettingsDto struct {
@@ -521,10 +521,10 @@ func convertLicensingModel(ctx context.Context, powerPlatformAttributes map[stri
 			tenantSettingsDto.PowerPlatform.Licensing.DisableUseOfUnassignedAIBuilderCredits = licensingSettings.DisableUseOfUnassignedAIBuilderCredits.ValueBoolPointer()
 		}
 		if !licensingSettings.ApplyAutoClaimPowerAppsToOnlyManagedEnvironments.IsNull() && !licensingSettings.ApplyAutoClaimPowerAppsToOnlyManagedEnvironments.IsUnknown() {
-			tenantSettingsDto.PowerPlatform.Licensing.ApplyAutoClaimToOnlyManagedEnvironments = licensingSettings.ApplyAutoClaimPowerAppsToOnlyManagedEnvironments.ValueBoolPointer()
+			tenantSettingsDto.PowerPlatform.Licensing.ApplyPowerAppsAutoClaimToOnlyManagedEnvironments = licensingSettings.ApplyAutoClaimPowerAppsToOnlyManagedEnvironments.ValueBoolPointer()
 		}
 		if !licensingSettings.ApplyAutoClaimPowerAutomateToOnlyManagedEnvironments.IsNull() && !licensingSettings.ApplyAutoClaimPowerAutomateToOnlyManagedEnvironments.IsUnknown() {
-			tenantSettingsDto.PowerPlatform.Licensing.ApplyPAutoAutoClaimToOnlyManagedEnvironments = licensingSettings.ApplyAutoClaimPowerAutomateToOnlyManagedEnvironments.ValueBoolPointer()
+			tenantSettingsDto.PowerPlatform.Licensing.ApplyPowerAutomateAutoAutoClaimToOnlyManagedEnvironments = licensingSettings.ApplyAutoClaimPowerAutomateToOnlyManagedEnvironments.ValueBoolPointer()
 		}
 	}
 }
@@ -859,8 +859,8 @@ func convertIntelligenceSettings(tenantSettingsDto tenantSettingsDto) (basetypes
 	attrTypes := map[string]attr.Type{
 		"disable_copilot": types.BoolType,
 		"allow_copilot_authors_publish_when_ai_features_are_enabled": types.BoolType,
-		"basic_copilot_feedback":                                     types.BoolType,
-		"additional_copilot_feedback":                                types.BoolType,
+		"disable_basic_copilot_feedback":                             types.BoolType,
+		"disable_additional_copilot_feedback":                        types.BoolType,
 		"copilot_studio_authors_security_group_id":                   customtypes.UUIDType{},
 	}
 	if tenantSettingsDto.PowerPlatform == nil || tenantSettingsDto.PowerPlatform.Intelligence == nil {
@@ -869,8 +869,8 @@ func convertIntelligenceSettings(tenantSettingsDto tenantSettingsDto) (basetypes
 	attrValues := map[string]attr.Value{
 		"disable_copilot": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.DisableCopilot),
 		"allow_copilot_authors_publish_when_ai_features_are_enabled": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.EnableOpenAiBotPublishing),
-		"basic_copilot_feedback":                                     types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.BasicCopilotFeedback),
-		"additional_copilot_feedback":                                types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.AdditionalCopilotFeedback),
+		"disable_basic_copilot_feedback":                             types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.BasicCopilotFeedback),
+		"disable_additional_copilot_feedback":                        types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Intelligence.AdditionalCopilotFeedback),
 		"copilot_studio_authors_security_group_id": func() attr.Value {
 			// When API returns null/empty, convert to empty GUID for consistency
 			if tenantSettingsDto.PowerPlatform.Intelligence.CopilotStudioAuthorsSecurityGroupId == nil ||
@@ -926,8 +926,8 @@ func convertLicensingSettings(tenantSettingsDto tenantSettingsDto) (basetypes.Ob
 		"storage_capacity_consumption_warning_threshold":               types.Int64PointerValue(tenantSettingsDto.PowerPlatform.Licensing.StorageCapacityConsumptionWarningThreshold),
 		"enable_tenant_licensing_report_for_environment_admins":        types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.EnableTenantLicensingReportForEnvironmentAdmins),
 		"disable_use_of_unassigned_ai_builder_credits":                 types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.DisableUseOfUnassignedAIBuilderCredits),
-		"apply_auto_claim_power_apps_to_only_managed_environments":     types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.ApplyAutoClaimToOnlyManagedEnvironments),
-		"apply_auto_claim_power_automate_to_only_managed_environments": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.ApplyPAutoAutoClaimToOnlyManagedEnvironments),
+		"apply_auto_claim_power_apps_to_only_managed_environments":     types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.ApplyPowerAppsAutoClaimToOnlyManagedEnvironments),
+		"apply_auto_claim_power_automate_to_only_managed_environments": types.BoolPointerValue(tenantSettingsDto.PowerPlatform.Licensing.ApplyPowerAutomateAutoAutoClaimToOnlyManagedEnvironments),
 	}
 	return types.ObjectType{AttrTypes: attrTypesLicencingProperties}, types.ObjectValueMust(attrTypesLicencingProperties, attrValuesLicencingProperties)
 }
