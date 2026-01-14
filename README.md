@@ -2,6 +2,8 @@
 
 The Power Platform Terraform Provider allows managing environments and other resources within [Power Platform](https://powerplatform.microsoft.com/).
 
+See our [Roadmap](./ROADMAP.md) for the project's direction over the next 12 months.
+
 > [!CAUTION]
 > Bugs or errors in Infrastructure-as-Code (IaC) software could lead to service interruptions or data loss. We strongly recommend backing up your data and testing thoroughly in non-production environments before using any feature in production. Your feedback is valuable to us, so please share any issues or suggestions you encounter via [GitHub issues](https://github.com/microsoft/terraform-provider-power-platform/issues).
 
