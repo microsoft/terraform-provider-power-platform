@@ -134,7 +134,7 @@ type licenseSettingsDto struct {
 	EnableTenantLicensingReportForEnvironmentAdmins *bool  `json:"enableTenantLicensingReportForEnvironmentAdmins,omitempty"`
 	DisableUseOfUnassignedAIBuilderCredits          *bool  `json:"disableUseOfUnassignedAIBuilderCredits,omitempty"`
 	ApplyAutoClaimToOnlyManagedEnvironments         *bool  `json:"applyAutoClaimToOnlyManagedEnvironments,omitempty"`
-	ApplyPAutoAutoClaimToOnlyManagedEnvironments    *bool  `json:"applyPAutoAutoClaimToOnlyManagedEnvironments,omitempty"`
+	ApplyAutoClaimToOnlyManagedEnvironments    *bool  `json:"applyAutoClaimToOnlyManagedEnvironments,omitempty"`
 }
 
 type powerPagesSettingsDto struct {
