@@ -192,16 +192,16 @@ func TestUnitOidcCredential_GetAssertionSources(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "file-token", token)
 
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	successSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		require.Equal(t, "Bearer request-token", r.Header.Get("Authorization"))
 		require.Equal(t, "application/x-www-form-urlencoded", r.Header.Get("Content-Type"))
 		require.Equal(t, "application/json", r.Header.Get("Accept"))
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"value":"http-token"}`))
 	}))
-	defer srv.Close()
+	defer successSrv.Close()
 
-	cred = &OidcCredential{requestToken: "request-token", requestUrl: srv.URL}
+	cred = &OidcCredential{requestToken: "request-token", requestUrl: successSrv.URL}
 	token, err = cred.getAssertion(ctx)
 	require.NoError(t, err)
 	require.Equal(t, "http-token", token)
