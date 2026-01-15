@@ -175,7 +175,7 @@ func TestUnitNewOidcCredential_ValidationErrors(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestUnitOidcCredential_GetAssertionSources(t *testing.T) {
+func TestUnitOidcCredential_GetAssertion(t *testing.T) {
 	t.Parallel()
 	ctx := context.Background()
 
