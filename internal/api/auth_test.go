@@ -354,7 +354,6 @@ func TestUnitAuthenticateClientSecret_ContextCancelled(t *testing.T) {
 }
 
 func TestUnitAuthenticateCliVariants_WithStub(t *testing.T) {
-	t.Parallel()
 	tmp := t.TempDir()
 	cliPath := filepath.Join(tmp, "az")
 	devCliPath := filepath.Join(tmp, "azd")
@@ -409,7 +408,6 @@ func TestUnitAuthenticateAzDOWorkloadIdentityFederation_Cancelled(t *testing.T) 
 }
 
 func TestUnitGetTokenForScopes_AllBranches(t *testing.T) {
-	t.Parallel()
 	pfx := generateTestPFX(t, "pass")
 	tmp := t.TempDir()
 	cliPath := filepath.Join(tmp, "az")
@@ -433,7 +431,15 @@ func TestUnitGetTokenForScopes_AllBranches(t *testing.T) {
 	for _, cfg := range tests {
 		cfgCopy := cfg
 		auth := NewAuthBase(&cfgCopy)
-		token, err := auth.GetTokenForScopes(context.Background(), []string{"scope"})
+		ctx := context.Background()
+		var cancel context.CancelFunc
+		if cfgCopy.UseMsi {
+			ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
+		}
+		token, err := auth.GetTokenForScopes(ctx, []string{"scope"})
+		if cancel != nil {
+			cancel()
+		}
 		if err == nil {
 			require.NotNil(t, token)
 		}
