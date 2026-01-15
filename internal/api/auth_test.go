@@ -409,6 +409,7 @@ func TestUnitAuthenticateAzDOWorkloadIdentityFederation_Cancelled(t *testing.T) 
 }
 
 func TestUnitGetTokenForScopes_AllBranches(t *testing.T) {
+	t.Parallel()
 	pfx := generateTestPFX(t, "pass")
 	tmp := t.TempDir()
 	cliPath := filepath.Join(tmp, "az")
