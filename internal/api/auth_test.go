@@ -14,6 +14,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 
@@ -23,6 +24,8 @@ import (
 	pkcs12 "software.sslmate.com/src/go-pkcs12"
 )
 
+// generateTestPFX creates a self-signed RSA certificate, packages it into a password-protected
+// PKCS#12 (PFX) blob, and returns the base64-encoded PFX data for use in tests.
 func generateTestPFX(t *testing.T, password string) string {
 	key, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
@@ -45,6 +48,26 @@ func generateTestPFX(t *testing.T, password string) string {
 	require.NoError(t, err)
 
 	return base64.StdEncoding.EncodeToString(pfxBytes)
+}
+
+func writeCliStub(t *testing.T, dir, name, output string) string {
+	t.Helper()
+	filename := name
+	script := "#!/bin/sh\necho '" + output + "'\n"
+	perm := os.FileMode(0700)
+
+	if runtime.GOOS == "windows" {
+		filename = name + ".cmd"
+		script = "@echo off\r\necho " + output + "\r\n"
+		perm = 0600
+	}
+
+	path := filepath.Join(dir, filename)
+	require.NoError(t, os.WriteFile(path, []byte(script), perm))
+	if runtime.GOOS != "windows" {
+		require.NoError(t, os.Chmod(path, 0700))
+	}
+	return path
 }
 
 func TestUnitCreateTokenRequestOptions(t *testing.T) {
@@ -274,8 +297,6 @@ func TestUnitAuthenticateCliVariants(t *testing.T) {
 }
 
 func TestUnitAuthenticateManagedIdentity_ContextCancelled(t *testing.T) {
-	t.Setenv("AZURE_IDENTITY_DISABLE_MANAGED_IDENTITY", "true")
-
 	cfg := &config.ProviderConfig{ClientId: "client"}
 	auth := NewAuthBase(cfg)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -354,12 +375,10 @@ func TestUnitAuthenticateClientSecret_ContextCancelled(t *testing.T) {
 }
 
 func TestUnitAuthenticateCliVariants_WithStub(t *testing.T) {
+	// Not parallel because the test modifies PATH to use stub CLI executables.
 	tmp := t.TempDir()
-	cliPath := filepath.Join(tmp, "az")
-	devCliPath := filepath.Join(tmp, "azd")
-	stub := []byte("#!/bin/sh\necho '{\"accessToken\":\"token\",\"expiresOn\":\"2099-01-01 00:00:00.000000\"}'\n")
-	require.NoError(t, os.WriteFile(cliPath, stub, 0700))
-	require.NoError(t, os.WriteFile(devCliPath, []byte("#!/bin/sh\necho '{\"token\":\"token\",\"expiresOn\":\"2099-01-01T00:00:00Z\"}'\n"), 0700))
+	writeCliStub(t, tmp, "az", `{"accessToken":"token","expiresOn":"2099-01-01 00:00:00.000000"}`)
+	writeCliStub(t, tmp, "azd", `{"token":"token","expiresOn":"2099-01-01T00:00:00Z"}`)
 	t.Setenv("PATH", tmp+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	cfg := &config.ProviderConfig{}
@@ -369,9 +388,8 @@ func TestUnitAuthenticateCliVariants_WithStub(t *testing.T) {
 	require.NotEmpty(t, token)
 
 	token, _, err = auth.AuthenticateUsingAzureDeveloperCli(context.Background(), []string{"scope"})
-	if err == nil {
-		require.NotEmpty(t, token)
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, token)
 }
 
 func TestUnitAuthenticateManagedIdentity_Attempt(t *testing.T) {
@@ -410,11 +428,8 @@ func TestUnitAuthenticateAzDOWorkloadIdentityFederation_Cancelled(t *testing.T) 
 func TestUnitGetTokenForScopes_AllBranches(t *testing.T) {
 	pfx := generateTestPFX(t, "pass")
 	tmp := t.TempDir()
-	cliPath := filepath.Join(tmp, "az")
-	devCliPath := filepath.Join(tmp, "azd")
-	stub := []byte("#!/bin/sh\necho '{\"accessToken\":\"token\",\"expiresOn\":\"2099-01-01 00:00:00.000000\"}'\n")
-	require.NoError(t, os.WriteFile(cliPath, stub, 0700))
-	require.NoError(t, os.WriteFile(devCliPath, []byte("#!/bin/sh\necho '{\"token\":\"token\",\"expiresOn\":\"2099-01-01T00:00:00Z\"}'\n"), 0700))
+	writeCliStub(t, tmp, "az", `{"accessToken":"token","expiresOn":"2099-01-01 00:00:00.000000"}`)
+	writeCliStub(t, tmp, "azd", `{"token":"token","expiresOn":"2099-01-01T00:00:00Z"}`)
 	t.Setenv("PATH", tmp+string(os.PathListSeparator)+os.Getenv("PATH"))
 
 	tests := []config.ProviderConfig{
