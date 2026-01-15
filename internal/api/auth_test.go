@@ -354,6 +354,7 @@ func TestUnitAuthenticateClientSecret_ContextCancelled(t *testing.T) {
 }
 
 func TestUnitAuthenticateCliVariants_WithStub(t *testing.T) {
+	t.Parallel()
 	tmp := t.TempDir()
 	cliPath := filepath.Join(tmp, "az")
 	devCliPath := filepath.Join(tmp, "azd")
