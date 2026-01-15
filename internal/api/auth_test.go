@@ -41,7 +41,7 @@ func generateTestPFX(t *testing.T, password string) string {
 	cert, err := x509.ParseCertificate(certDER)
 	require.NoError(t, err)
 
-	pfxBytes, err := pkcs12.Encode(rand.Reader, key, cert, nil, password)
+	pfxBytes, err := pkcs12.Modern.Encode(key, cert, nil, password)
 	require.NoError(t, err)
 
 	return base64.StdEncoding.EncodeToString(pfxBytes)
@@ -206,7 +206,7 @@ func TestUnitOidcCredential_GetAssertionSources(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, "http-token", token)
 
-	errorSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	errorSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		_, _ = w.Write([]byte(`{"message":"bad"}`))
 	}))
@@ -216,7 +216,7 @@ func TestUnitOidcCredential_GetAssertionSources(t *testing.T) {
 	_, err = cred.getAssertion(ctx)
 	require.Error(t, err)
 
-	missingValueSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	missingValueSrv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"value":null}`))
 	}))

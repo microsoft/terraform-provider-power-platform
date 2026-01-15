@@ -53,7 +53,7 @@ func TestUnitDoWaitForLifecycleOperationStatus_ConflictThenSuccess(t *testing.T)
 	t.Parallel()
 
 	callCount := 0
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		callCount++
 		if callCount == 1 {
 			w.WriteHeader(http.StatusConflict)
@@ -94,7 +94,7 @@ func TestUnitDoWaitForLifecycleOperationStatus_ConflictThenSuccess(t *testing.T)
 func TestUnitDoWaitForLifecycleOperationStatus_SleepWithContextError(t *testing.T) {
 	t.Parallel()
 
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"state":{"id":"InProgress"}}`))
