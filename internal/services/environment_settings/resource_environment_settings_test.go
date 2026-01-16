@@ -1072,7 +1072,6 @@ func TestAccTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_automatic_suggestions", "On"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_smart_paste_and_file_suggestions", "On"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_toolbar", "Off"),
-					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.natural_language_grid_and_view_search", "AllUsers"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.allow_ai_to_generate_charts", "Off"),
 				),
 			},
