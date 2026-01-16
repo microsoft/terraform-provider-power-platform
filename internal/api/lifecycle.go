@@ -75,19 +75,23 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 			return nil, err
 		}
 
-		err = client.SleepWithContext(ctx, waitFor)
-		if err != nil {
-			return nil, err
-		}
-
 		tflog.Debug(ctx, "Lifecycle Operation HTTP Status: '"+response.HttpResponse.Status+"'")
 		if response.HttpResponse.StatusCode == http.StatusConflict {
+			err = client.SleepWithContext(ctx, waitFor)
+			if err != nil {
+				return nil, err
+			}
 			continue
 		}
 		tflog.Debug(ctx, "Lifecycle Operation State: '"+lifecycleResponse.State.Id+"'")
 
 		if lifecycleResponse.State.Id == "Succeeded" || lifecycleResponse.State.Id == "Failed" {
 			return &lifecycleResponse, nil
+		}
+
+		err = client.SleepWithContext(ctx, waitFor)
+		if err != nil {
+			return nil, err
 		}
 	}
 }
