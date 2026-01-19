@@ -27,6 +27,11 @@ func TestUnitProviderError_ErrorAndIs(t *testing.T) {
 	if errors.Is(err, ProviderError{ErrorCode: "OTHER"}) {
 		t.Fatal("did not expect errors.Is to match different code")
 	}
+
+	noInner := ProviderError{ErrorCode: ErrorCode("NO_INNER")}
+	if got := noInner.Error(); got != "NO_INNER" {
+		t.Fatalf("unexpected error string for nil inner: %q", got)
+	}
 }
 
 func TestUnitProviderError_UnwrapAndCode(t *testing.T) {
@@ -45,6 +50,19 @@ func TestUnitProviderError_UnwrapAndCode(t *testing.T) {
 
 	if code := Code(nil); code != "" {
 		t.Fatalf("expected empty code for nil error, got %s", code)
+	}
+
+	if got := Unwrap(ProviderError{ErrorCode: ErrorCode("NO_INNER")}); got != nil {
+		t.Fatalf("expected nil unwrap for ProviderError without inner error, got %v", got)
+	}
+
+	plainWrapped := fmt.Errorf("plain: %w", inner)
+	if got := Unwrap(plainWrapped); !errors.Is(got, inner) {
+		t.Fatalf("expected unwrap to return inner error for non-provider error")
+	}
+
+	if code := Code(errors.New("plain")); code != "" {
+		t.Fatalf("expected empty code for non-provider error, got %s", code)
 	}
 }
 
