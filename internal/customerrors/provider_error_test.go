@@ -21,11 +21,11 @@ func TestUnitProviderError_ErrorAndIs(t *testing.T) {
 	}
 
 	if !errors.Is(err, ProviderError{ErrorCode: "CODE"}) {
-		t.Fatalf("expected errors.Is to match on error code")
+		t.Fatal("expected errors.Is to match on error code")
 	}
 
 	if errors.Is(err, ProviderError{ErrorCode: "OTHER"}) {
-		t.Fatalf("did not expect errors.Is to match different code")
+		t.Fatal("did not expect errors.Is to match different code")
 	}
 }
 
@@ -36,7 +36,7 @@ func TestUnitProviderError_UnwrapAndCode(t *testing.T) {
 	wrapped := ProviderError{ErrorCode: ErrorCode("WRAPPED"), Err: fmt.Errorf("outer: %w", inner)}
 
 	if got := Unwrap(wrapped); !errors.Is(got, inner) {
-		t.Fatalf("unwrap did not return inner error")
+		t.Fatal("unwrap did not return inner error")
 	}
 
 	if code := Code(wrapped); code != ErrorCode("WRAPPED") {

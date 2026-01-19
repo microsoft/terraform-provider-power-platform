@@ -11,7 +11,7 @@ func TestUnitUnexpectedHttpStatusCodeError(t *testing.T) {
 	err := NewUnexpectedHttpStatusCodeError([]int{200, 202}, 500, "Internal Server Error", []byte("body"))
 	httpErr, ok := err.(UnexpectedHttpStatusCodeError)
 	if !ok {
-		t.Fatalf("expected UnexpectedHttpStatusCodeError type")
+		t.Fatal("expected UnexpectedHttpStatusCodeError type")
 	}
 
 	if httpErr.StatusCode != 500 || httpErr.StatusText != "Internal Server Error" {

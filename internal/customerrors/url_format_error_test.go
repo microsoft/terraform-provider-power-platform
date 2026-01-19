@@ -17,11 +17,11 @@ func TestUnitUrlFormatError(t *testing.T) {
 
 	ufe, ok := err.(*UrlFormatError)
 	if !ok {
-		t.Fatalf("expected UrlFormatError type")
+		t.Fatal("expected UrlFormatError type")
 	}
 
 	if ufe.Url != "http://example" || !errors.Is(ufe, wrapped) {
-		t.Fatalf("unexpected fields on UrlFormatError")
+		t.Fatal("unexpected fields on UrlFormatError")
 	}
 
 	if got := ufe.Error(); !strings.Contains(got, "Request url must be an absolute url") || !strings.Contains(got, "parse failure") {
