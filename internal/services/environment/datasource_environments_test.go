@@ -15,6 +15,7 @@ import (
 )
 
 func TestAccEnvironmentsDataSource_Basic(t *testing.T) {
+	t.Skip("Skipping until we can control environment creation in multi test runs")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
