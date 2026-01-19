@@ -143,13 +143,24 @@ jobs:
       run: |
         dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version 1.43.6
         pac auth create --githubFederated --tenant ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }} --applicationId ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
-        $environmentsList = (pac admin list --name "Test" --json | ConvertFrom-Json)
-        $environmentsList | ForEach-Object -Parallel {
-            if ($_.DisplayName.StartsWith("Test")){
-                Write-Output $_.DisplayName
-                pac admin delete -env $_.EnvironmentID
-            }
-        } -ThrottleLimit 15
+        $output = pac admin list --name "Test" --json
+        if ($LASTEXITCODE -eq 0 -and $output) {
+          try {
+            $environmentsList = $output | ConvertFrom-Json
+            $environmentsList | ForEach-Object -Parallel {
+                if ($_.DisplayName.StartsWith("Test")){
+                    Write-Output $_.DisplayName
+                    pac admin delete -env $_.EnvironmentID
+                }
+            } -ThrottleLimit 15
+          } catch {
+            Write-Output "Failed to parse environments list: $_"
+            Write-Output "Raw output: $output"
+          }
+        } else {
+          Write-Output "Failed to list environments or no output received. Exit code: $LASTEXITCODE"
+          Write-Output "Output: $output"
+        }
 
     - name: Run tests
       env: 
