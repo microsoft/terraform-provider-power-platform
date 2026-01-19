@@ -21,7 +21,7 @@ func TestUnitUUIDTypeStringAndValueType(t *testing.T) {
 	}
 
 	if _, ok := typ.ValueType(ctx).(UUIDValue); !ok {
-		t.Fatalf("ValueType should return UUIDValue")
+		t.Fatal("ValueType should return UUIDValue")
 	}
 
 	unknown := basetypes.NewStringUnknown()
@@ -31,7 +31,7 @@ func TestUnitUUIDTypeStringAndValueType(t *testing.T) {
 	}
 
 	if uuidVal, ok := val.(UUIDValue); !ok || !uuidVal.IsUnknown() {
-		t.Fatalf("expected ValueFromString to return unknown UUIDValue")
+		t.Fatal("expected ValueFromString to return unknown UUIDValue")
 	}
 }
 
@@ -40,6 +40,6 @@ func TestUnitUUIDTypeEqualDifferentType(t *testing.T) {
 
 	typ := UUIDType{}
 	if typ.Equal(basetypes.StringType{}) {
-		t.Fatalf("expected UUIDType to not equal StringType")
+		t.Fatal("expected UUIDType to not equal StringType")
 	}
 }
