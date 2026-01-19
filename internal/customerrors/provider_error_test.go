@@ -58,7 +58,7 @@ func TestUnitProviderError_UnwrapAndCode(t *testing.T) {
 
 	plainWrapped := fmt.Errorf("plain: %w", inner)
 	if got := Unwrap(plainWrapped); !errors.Is(got, inner) {
-		t.Fatalf("expected unwrap to return inner error for non-provider error")
+		t.Fatal("expected unwrap to return inner error for non-provider error")
 	}
 
 	if code := Code(errors.New("plain")); code != "" {
