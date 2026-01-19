@@ -128,10 +128,12 @@ func powerAppsAttributes() map[string]schema.Attribute {
 		},
 		"disable_create_from_image": schema.BoolAttribute{
 			MarkdownDescription: "Disable Create From Image",
+			DeprecationMessage:  "This attribute is deprecated and will be removed in next major release",
 			Computed:            true,
 		},
 		"disable_create_from_figma": schema.BoolAttribute{
 			MarkdownDescription: "Disable Create From Figma",
+			DeprecationMessage:  "This attribute is deprecated and will be removed in next major release",
 			Computed:            true,
 		},
 		"disable_connection_sharing_with_everyone": schema.BoolAttribute{
@@ -254,6 +256,7 @@ func intelligenceAttributes() map[string]schema.Attribute {
 		},
 		"enable_open_ai_bot_publishing": schema.BoolAttribute{
 			MarkdownDescription: "Enable Open AI Bot Publishing",
+			DeprecationMessage:  "This attribute is deprecated and will be replaced in next major release",
 			Computed:            true,
 		},
 	}
@@ -378,6 +381,7 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, req datasource.Sc
 			},
 			"disable_nps_comments_reachout": schema.BoolAttribute{
 				MarkdownDescription: "Disable NPS Comments Reachout",
+				DeprecationMessage:  "This attribute is deprecated and will be replaced by a new one in next major release",
 				Computed:            true,
 			},
 			"disable_newsletter_sendout": schema.BoolAttribute{
@@ -394,6 +398,7 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, req datasource.Sc
 			},
 			"disable_survey_feedback": schema.BoolAttribute{
 				MarkdownDescription: "Disable Survey Feedback",
+				DeprecationMessage:  "This attribute is deprecated and will be replaced by a new one in next major release",
 				Computed:            true,
 			},
 			"disable_trial_environment_creation_by_non_admin_users": schema.BoolAttribute{

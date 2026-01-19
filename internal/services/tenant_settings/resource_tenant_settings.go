@@ -73,6 +73,7 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 			},
 			"disable_nps_comments_reachout": schema.BoolAttribute{
 				MarkdownDescription: "Disable NPS Comments Reachout",
+				DeprecationMessage:  "This attribute is deprecated and will be replaced by a new one in next major release",
 				Optional:            true,
 			},
 			"disable_newsletter_sendout": schema.BoolAttribute{
@@ -89,6 +90,7 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 			},
 			"disable_survey_feedback": schema.BoolAttribute{
 				MarkdownDescription: "Disable Survey Feedback",
+				DeprecationMessage:  "This attribute is deprecated and will be replaced by a new one in next major release",
 				Optional:            true,
 			},
 			"disable_trial_environment_creation_by_non_admin_users": schema.BoolAttribute{
@@ -160,10 +162,12 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 							},
 							"disable_create_from_image": schema.BoolAttribute{
 								MarkdownDescription: "Disable Create From Image",
+								DeprecationMessage:  "This attribute is deprecated and will be removed in next major release",
 								Optional:            true,
 							},
 							"disable_create_from_figma": schema.BoolAttribute{
 								MarkdownDescription: "Disable Create From Figma",
+								DeprecationMessage:  "This attribute is deprecated and will be removed in next major release",
 								Optional:            true,
 							},
 							"disable_connection_sharing_with_everyone": schema.BoolAttribute{
@@ -289,6 +293,7 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 							},
 							"enable_open_ai_bot_publishing": schema.BoolAttribute{
 								MarkdownDescription: "Enable Open AI Bot Publishing",
+								DeprecationMessage:  "This attribute is deprecated and will be removed in next major release",
 								Optional:            true,
 							},
 						},
