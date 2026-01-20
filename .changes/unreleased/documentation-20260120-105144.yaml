@@ -1,0 +1,5 @@
+kind: documentation
+body: Add import instructions and examples for billing_policy_environment, connection, connection_share, data_record, environment_group_rule_set, environment_settings, managed_environment, solution, tenant_isolation_policy, tenant_settings, and user resources
+time: 2026-01-20T10:51:44.149363118Z
+custom:
+    Issue: "1035"
