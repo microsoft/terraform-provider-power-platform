@@ -1693,6 +1693,54 @@ func TestUnitEnvironmentsResource_Validate_Taken_Domain_Name(t *testing.T) {
 	})
 }
 
+func TestUnitEnvironmentsResource_Validate_Domain_Format_Valid(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				PlanOnly: true,
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						domain            = "example-env-2026"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_Domain_Format_Invalid_Characters(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile("domain must start with a lowercase letter"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name     = "displayname"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						domain            = "example_env"
+						security_group_id = "00000000-0000-0000-0000-000000000000"
+					}
+				}`,
+			},
+		},
+	})
+}
+
 func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
