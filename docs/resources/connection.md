@@ -82,6 +82,6 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-# Environment resource can be imported using the connection id (replace with a real connection id that can be found in the URL of the connection details page in Power Apps maker portal)
+# Connection resource can be imported using the connection id (replace with a real connection id that can be found in the URL of the connection details page in Power Apps maker portal)
 terraform import powerplatform_connection.example 000000000000000000000000000000000
 ```
