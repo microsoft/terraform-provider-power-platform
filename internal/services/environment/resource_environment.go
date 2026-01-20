@@ -296,7 +296,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						},
 						Validators: []validator.String{
 							stringvalidator.LengthAtLeast(1),
-							stringvalidator.RegexMatches(regexp.MustCompile(helpers.DomainNameRegex), "domain must start with a lowercase letter and contain only lowercase letters, numbers, and '-'"),
+							stringvalidator.RegexMatches(regexp.MustCompile(helpers.DomainNameRegex), "domain must start with a lowercase letter or digit and contain only lowercase letters, numbers, and '-'"),
 						},
 					},
 					"organization_id": schema.StringAttribute{

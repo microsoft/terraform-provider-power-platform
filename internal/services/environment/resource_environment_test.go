@@ -1022,13 +1022,13 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Force_Recreate(t *testing.
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Force_Recreate/get_lifecycle_delete.json").String()), nil
 		})
 
-	httpmock.RegisterResponder("GET", `=~^https://([\d-]+)\.crm4\.dynamics\.com/api/data/v9\.2/transactioncurrencies\z`,
+	httpmock.RegisterResponder("GET", `=~^https://([a-z0-9-]+)\.crm4\.dynamics\.com/api/data/v9\.2/transactioncurrencies\z`,
 		func(req *http.Request) (*http.Response, error) {
 			id := httpmock.MustGetSubmatch(req, 1)
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Validate_Create_And_Force_Recreate/get_transactioncurrencies_%s.json", id)).String()), nil
 		})
 
-	httpmock.RegisterResponder("GET", `=~^https://([\d-]+)\.crm4\.dynamics\.com/api/data/v9\.2/organizations\z`,
+	httpmock.RegisterResponder("GET", `=~^https://([a-z0-9-]+)\.crm4\.dynamics\.com/api/data/v9\.2/organizations\z`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, `{
 				"value": [
@@ -1700,6 +1700,7 @@ func TestUnitEnvironmentsResource_Validate_Domain_Format_Valid(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				PlanOnly: true,
+				ExpectNonEmptyPlan: true,
 				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "displayname"
@@ -1723,7 +1724,7 @@ func TestUnitEnvironmentsResource_Validate_Domain_Format_Invalid_Characters(t *t
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ExpectError: regexp.MustCompile("domain must start with a lowercase letter"),
+				ExpectError: regexp.MustCompile("domain must start with a lowercase letter or digit"),
 				Config: `
 				resource "powerplatform_environment" "development" {
 					display_name     = "displayname"
