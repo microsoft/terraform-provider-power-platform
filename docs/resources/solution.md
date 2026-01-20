@@ -117,6 +117,6 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-# Environment resource can be imported using the solution id (replace with a real solution id in format {environment_id}_{solution_id})
+# Solution resource can be imported using the solution id (replace with a real solution id in format {environment_id}_{solution_id})
 terraform import powerplatform_solution.example 00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000001
 ```
