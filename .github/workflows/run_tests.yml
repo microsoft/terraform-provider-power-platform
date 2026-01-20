@@ -141,7 +141,7 @@ jobs:
       if: success() || failure()
       shell: pwsh
       run: |
-        dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version 1.43.6
+        dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version 1.52.1
         pac auth create --githubFederated --tenant ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }} --applicationId ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
         $output = pac admin list --name "Test" --json
         if ($LASTEXITCODE -eq 0 -and $output) {
