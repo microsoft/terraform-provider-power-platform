@@ -82,3 +82,14 @@ Required:
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Tenant isolation policy resource can be imported using the tenant id (replace with a real tenant id)
+terraform import powerplatform_tenant_isolation_policy.example 00000000-0000-0000-0000-000000000000
+```
