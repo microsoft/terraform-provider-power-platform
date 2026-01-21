@@ -1699,7 +1699,7 @@ func TestUnitEnvironmentsResource_Validate_Domain_Format_Valid(t *testing.T) {
 		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				PlanOnly: true,
+				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 				Config: `
 				resource "powerplatform_environment" "development" {
