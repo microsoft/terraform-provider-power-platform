@@ -59,10 +59,10 @@ type cachedToken struct {
 type Auth struct {
 	config *config.ProviderConfig
 
-	credentials   map[credentialType]*credentialHolder
+	credentials      map[credentialType]*credentialHolder
 	credentialsMutex sync.RWMutex
 
-	cliTokens   map[string]*cachedToken
+	cliTokens      map[string]*cachedToken
 	cliTokensMutex sync.RWMutex
 }
 
