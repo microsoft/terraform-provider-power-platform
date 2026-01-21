@@ -1,11 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-package array
+package helpers
 
-// DiffArrays returns the added and removed items between two string arrays.
+// ArrayDiff returns the added and removed items between two string arrays.
 // This can be useful for comparing plan vs state arrays.
-func Diff(newArr, oldArr []string) (added []string, removed []string) {
+func ArrayDiff(newArr, oldArr []string) (added []string, removed []string) {
 	addedElements := make([]string, 0)
 	removedElements := make([]string, 0)
 	oldMap := make(map[string]bool)
@@ -31,7 +31,7 @@ func Diff(newArr, oldArr []string) (added []string, removed []string) {
 }
 
 // ArrayContains returns true if the given array contains the given item.
-func Contains[T comparable](arr []T, item T) bool {
+func ArrayContains[T comparable](arr []T, item T) bool {
 	for _, v := range arr {
 		if v == item {
 			return true
@@ -40,8 +40,8 @@ func Contains[T comparable](arr []T, item T) bool {
 	return false
 }
 
-// Except returns a slice of elements that are in 'a' but not in 'b'.
-func Except[T comparable](a, b []T) []T {
+// ArrayExcept returns a slice of elements that are in 'a' but not in 'b'.
+func ArrayExcept[T comparable](a, b []T) []T {
 	bSet := make(map[T]struct{}, len(b))
 	for _, value := range b {
 		bSet[value] = struct{}{}
@@ -57,8 +57,8 @@ func Except[T comparable](a, b []T) []T {
 	return diff
 }
 
-// Find returns the first element in the array that satisfies the predicate.
-func Find[T comparable](arr []T, predicate func(T) bool) T {
+// ArrayFind returns the first element in the array that satisfies the predicate.
+func ArrayFind[T comparable](arr []T, predicate func(T) bool) T {
 	for _, v := range arr {
 		if predicate(v) {
 			return v
