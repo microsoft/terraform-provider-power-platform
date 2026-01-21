@@ -70,12 +70,12 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 		return resp, err
 	}
 
-	resp := &Response{
-		HttpResponse: apiResponse,
+	if apiResponse == nil {
+		return nil, errors.New("unexpected nil response without error")
 	}
 
-	if apiResponse == nil {
-		return resp, errors.New("unexpected nil response without error")
+	resp := &Response{
+		HttpResponse: apiResponse,
 	}
 
 	defer apiResponse.Body.Close()
