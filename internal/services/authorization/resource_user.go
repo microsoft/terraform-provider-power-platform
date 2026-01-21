@@ -25,7 +25,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers/array"
 )
 
 var _ resource.Resource = &UserResource{}
@@ -345,7 +344,7 @@ func (r *UserResource) Update(ctx context.Context, req resource.UpdateRequest, r
 	}
 	tflog.Debug(ctx, fmt.Sprintf("Dataverse exists in environment: %t", hasEnvDataverse))
 
-	addedSecurityRoles, removedSecurityRoles := array.Diff(plan.SecurityRoles, state.SecurityRoles)
+	addedSecurityRoles, removedSecurityRoles := helpers.ArrayDiff(plan.SecurityRoles, state.SecurityRoles)
 	user := userDto{}
 	if hasEnvDataverse {
 		if len(addedSecurityRoles) > 0 {
@@ -494,7 +493,7 @@ func validateRequiredStringField(diagnostics *diag.Diagnostics, field types.Stri
 }
 
 func validateEnvironmentSecurityRoles(roles []string) error {
-	except := array.Except(roles, []string{ROLE_ENVIRONMENT_ADMIN, ROLE_ENVIRONMENT_MAKER})
+	except := helpers.ArrayExcept(roles, []string{ROLE_ENVIRONMENT_ADMIN, ROLE_ENVIRONMENT_MAKER})
 	if len(except) > 0 {
 		return fmt.Errorf("invalid security roles. only '%s' and '%s' are allowed", ROLE_ENVIRONMENT_ADMIN, ROLE_ENVIRONMENT_MAKER)
 	}
