@@ -40,10 +40,10 @@ data "powerplatform_tenant_settings" "settings" {}
 - `disable_capacity_allocation_by_environment_admins` (Boolean) Disable Capacity Allocation By Environment Admins
 - `disable_environment_creation_by_non_admin_users` (Boolean) Disable Environment Creation By Non Admin Users
 - `disable_newsletter_sendout` (Boolean) Disable Newsletter Sendout
-- `disable_nps_comments_reachout` (Boolean) Disable NPS Comments Reachout
+- `disable_nps_comments_reachout` (Boolean, Deprecated) Disable NPS Comments Reachout
 - `disable_portals_creation_by_non_admin_users` (Boolean) Disable Portals Creation By Non Admin Users
 - `disable_support_tickets_visible_by_all_users` (Boolean) Disable Support Tickets Visible By All Users
-- `disable_survey_feedback` (Boolean) Disable Survey Feedback
+- `disable_survey_feedback` (Boolean, Deprecated) Disable Survey Feedback
 - `disable_trial_environment_creation_by_non_admin_users` (Boolean) Disable Trial Environment Creation By Non Admin Users
 - `power_platform` (Attributes) Power Platform (see [below for nested schema](#nestedatt--power_platform))
 - `walk_me_opt_out` (Boolean) Walk Me Opt Out
@@ -124,7 +124,7 @@ Read-Only:
 Read-Only:
 
 - `disable_copilot` (Boolean) Disable Copilot
-- `enable_open_ai_bot_publishing` (Boolean) Enable Open AI Bot Publishing
+- `enable_open_ai_bot_publishing` (Boolean, Deprecated) Enable Open AI Bot Publishing
 
 
 <a id="nestedatt--power_platform--licensing"></a>
@@ -154,8 +154,8 @@ Read-Only:
 Read-Only:
 
 - `disable_connection_sharing_with_everyone` (Boolean) Disable Connection Sharing With Everyone
-- `disable_create_from_figma` (Boolean) Disable Create From Figma
-- `disable_create_from_image` (Boolean) Disable Create From Image
+- `disable_create_from_figma` (Boolean, Deprecated) Disable Create From Figma
+- `disable_create_from_image` (Boolean, Deprecated) Disable Create From Image
 - `disable_maker_match` (Boolean) Disable Maker Match
 - `disable_share_with_everyone` (Boolean) Disable Share With Everyone
 - `disable_unused_license_assignment` (Boolean) Disable Unused License Assignment

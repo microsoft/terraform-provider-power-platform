@@ -53,7 +53,7 @@ jobs:
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - name: Set up Go
-      uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -85,7 +85,7 @@ jobs:
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - name: Set up Go
-      uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -118,7 +118,7 @@ jobs:
       uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
     - name: Set up Go
-      uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -141,15 +141,26 @@ jobs:
       if: success() || failure()
       shell: pwsh
       run: |
-        dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version 1.43.6
+        dotnet tool install --global Microsoft.PowerApps.CLI.Tool --version 1.52.1
         pac auth create --githubFederated --tenant ${{ secrets.ACCEPTANCE_TESTS_ENV_TENANT_ID }} --applicationId ${{ secrets.ACCEPTANCE_TESTS_ENV_CLIENT_ID }}
-        $environmentsList = (pac admin list --name "Test" --json | ConvertFrom-Json)
-        $environmentsList | ForEach-Object -Parallel {
-            if ($_.DisplayName.StartsWith("Test")){
-                Write-Output $_.DisplayName
-                pac admin delete -env $_.EnvironmentID
-            }
-        } -ThrottleLimit 15
+        $output = pac admin list --name "Test" --json
+        if ($LASTEXITCODE -eq 0 -and $output) {
+          try {
+            $environmentsList = $output | ConvertFrom-Json
+            $environmentsList | ForEach-Object -Parallel {
+                if ($_.DisplayName.StartsWith("Test")){
+                    Write-Output $_.DisplayName
+                    pac admin delete -env $_.EnvironmentID
+                }
+            } -ThrottleLimit 15
+          } catch {
+            Write-Output "Failed to parse environments list: $_"
+            Write-Output "Raw output: $output"
+          }
+        } else {
+          Write-Output "Failed to list environments or no output received. Exit code: $LASTEXITCODE"
+          Write-Output "Output: $output"
+        }
 
     - name: Run tests
       env: 
@@ -164,7 +175,25 @@ jobs:
         ARM_SUBSCRIPTION_ID: ${{ secrets.ACCEPTANCE_TESTS_ENV_SUBSCRIPTION_ID }}
       run: |
         go clean -testcache
-        go test -p 3 -v 2>&1 ./... -run ^Test -coverprofile=test-coverage.out -timeout 300m | go-junit-report -set-exit-code -iocopy -out junit.xml
+        # Test Execution Command
+        #
+        # Runs Go tests for the Terraform Provider for Power Platform with the following configurations:
+        #
+        # - -p 1: Executes tests with parallelism set to 1 (sequential execution)
+        # - -v: Enables verbose output to display detailed test information
+        # - 2>&1: Redirects stderr to stdout to capture all output
+        # - ./...: Runs tests in all packages recursively from the current directory
+        # - -run ^Test: Executes only functions matching the pattern "^Test" (standard Go test functions)
+        # - -coverprofile=test-coverage.out: Generates a coverage profile and saves it to test-coverage.out
+        # - -timeout 600m: Sets a 10-hour timeout for the entire test suite
+        # - -failfast: Stops test execution immediately upon first failure
+        # - -shuffle=on: Randomizes test execution order to detect order-dependent test failures
+        #
+        # The output is piped to go-junit-report which:
+        # - -set-exit-code: Preserves the original test exit code
+        # - -iocopy: Copies test output to stdout while generating the report
+        # - -out junit.xml: Writes JUnit-formatted test results to junit.xml
+        go test -p 4 -v 2>&1 ./... -run ^Test -coverprofile=test-coverage.out -timeout 600m -failfast -shuffle=on | go-junit-report -set-exit-code  -iocopy -out junit.xml
         
     - name: Prepare coverage report
       if: success() || failure()
@@ -194,7 +223,7 @@ jobs:
     
     - name: Render test results
       if: always()
-      uses: dorny/test-reporter@fe45e9537387dac839af0d33ba56eed8e24189e8 # v2.3.0
+      uses: dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637 # v2.5.0
       with:
         name: Test Results
         path: junit.xml

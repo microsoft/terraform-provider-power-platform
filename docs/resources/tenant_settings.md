@@ -111,10 +111,10 @@ resource "powerplatform_tenant_settings" "settings" {
 - `disable_capacity_allocation_by_environment_admins` (Boolean) Disable Capacity Allocation By Environment Admins. See [Add-on capacity management](https://learn.microsoft.com/power-platform/admin/capacity-add-on#control-who-can-allocate-add-on-capacity) for more details.
 - `disable_environment_creation_by_non_admin_users` (Boolean) Disable Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.
 - `disable_newsletter_sendout` (Boolean) Disable Newsletter Sendout
-- `disable_nps_comments_reachout` (Boolean) Disable NPS Comments Reachout
+- `disable_nps_comments_reachout` (Boolean, Deprecated) Disable NPS Comments Reachout
 - `disable_portals_creation_by_non_admin_users` (Boolean) Disable Portals Creation By Non Admin Users
 - `disable_support_tickets_visible_by_all_users` (Boolean) Disable Support Tickets Visible By All Users
-- `disable_survey_feedback` (Boolean) Disable Survey Feedback
+- `disable_survey_feedback` (Boolean, Deprecated) Disable Survey Feedback
 - `disable_trial_environment_creation_by_non_admin_users` (Boolean) Disable Trial Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.
 - `power_platform` (Attributes) Power Platform (see [below for nested schema](#nestedatt--power_platform))
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
@@ -196,7 +196,7 @@ Optional:
 Optional:
 
 - `disable_copilot` (Boolean) Disable Copilot
-- `enable_open_ai_bot_publishing` (Boolean) Enable Open AI Bot Publishing
+- `enable_open_ai_bot_publishing` (Boolean, Deprecated) Enable Open AI Bot Publishing
 
 
 <a id="nestedatt--power_platform--licensing"></a>
@@ -226,8 +226,8 @@ Optional:
 Optional:
 
 - `disable_connection_sharing_with_everyone` (Boolean) Disable Connection Sharing With Everyone
-- `disable_create_from_figma` (Boolean) Disable Create From Figma
-- `disable_create_from_image` (Boolean) Disable Create From Image
+- `disable_create_from_figma` (Boolean, Deprecated) Disable Create From Figma
+- `disable_create_from_image` (Boolean, Deprecated) Disable Create From Image
 - `disable_maker_match` (Boolean) Disable Maker Match
 - `disable_share_with_everyone` (Boolean) Disable Share With Everyone
 - `disable_unused_license_assignment` (Boolean) Disable Unused License Assignment
@@ -282,3 +282,14 @@ Optional:
 - `delete` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Setting a timeout for a Delete operation is only applicable if changes are saved into state before the destroy operation occurs.
 - `read` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours). Read operations occur during any refresh or planning operation when refresh is enabled.
 - `update` (String) A string that can be [parsed as a duration](https://pkg.go.dev/time#ParseDuration) consisting of numbers and unit suffixes, such as "30s" or "2h45m". Valid time units are "s" (seconds), "m" (minutes), "h" (hours).
+
+## Import
+
+Import is supported using the following syntax:
+
+The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
+
+```shell
+# Tenant settings resource can be imported using the tenant id (replace with a real tenant id)
+terraform import powerplatform_tenant_settings.example 00000000-0000-0000-0000-000000000000
+```
