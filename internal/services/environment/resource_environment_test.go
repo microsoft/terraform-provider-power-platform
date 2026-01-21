@@ -1663,7 +1663,7 @@ func TestUnitEnvironmentsResource_Validate_Taken_Domain_Name(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusBadRequest, `{
 				"error": {
 					"code": "InvalidDomainName",
-					"message": "The specified domain name with a value of 'wrong domain name' is invalid. A domain name must start with a letter and contain only characters, A-Z, a-z, 0-9 and '-'."
+					"message": "The specified domain name with a value of 'existing-domain' is invalid."
 				}
 			}`), nil
 		})
@@ -1682,7 +1682,7 @@ func TestUnitEnvironmentsResource_Validate_Taken_Domain_Name(t *testing.T) {
 					dataverse = {
 						language_code                             = "1033"
 						currency_code                             = "PLN"
-						domain                                    = "wrong domain name"
+						domain                                    = "existing-domain"
 						security_group_id                         = "00000000-0000-0000-0000-000000000000"
 					}
 				}`,
