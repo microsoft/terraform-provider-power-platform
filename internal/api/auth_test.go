@@ -5,20 +5,20 @@ package api
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"sync"
-	"sync/atomic"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
+	"errors"
+	"fmt"
 	"math/big"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"runtime"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -27,8 +27,8 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-  
-  pkcs12 "software.sslmate.com/src/go-pkcs12"
+
+	pkcs12 "software.sslmate.com/src/go-pkcs12"
 )
 
 type mockTokenCredential struct {
@@ -47,8 +47,7 @@ func (m *mockTokenCredential) GetToken(ctx context.Context, _ policy.TokenReques
 		Token:     m.tokenValue,
 		ExpiresOn: m.expiresOn,
 	}, nil
-	
-)
+}
 
 // generateTestPFX creates a self-signed RSA certificate, packages it into a password-protected
 // PKCS#12 (PFX) blob, and returns the base64-encoded PFX data for use in tests.
@@ -731,6 +730,8 @@ func TestUnit_NewAuthBase_InitializesCliTokenCache(t *testing.T) {
 
 	assert.NotNil(t, authClient.cliTokens, "CLI token cache should be initialized")
 	assert.Empty(t, authClient.cliTokens, "CLI token cache should be empty initially")
+}
+
 func TestUnitTokenExpiredError_Error(t *testing.T) {
 	t.Parallel()
 
