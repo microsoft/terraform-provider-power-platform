@@ -6,13 +6,13 @@ package common
 import "testing"
 
 func TestReleaseDefaults(t *testing.T) {
-	if ProviderVersion == "" {
-		t.Fatal("expected ProviderVersion to be set")
+	if ProviderVersion != "0.0.0-dev" {
+		t.Fatalf("expected ProviderVersion default %q, got %q", "0.0.0-dev", ProviderVersion)
 	}
-	if Commit == "" {
-		t.Fatal("expected Commit to be set")
+	if Commit != "dev" {
+		t.Fatalf("expected Commit default %q, got %q", "dev", Commit)
 	}
-	if Branch == "" {
-		t.Fatal("expected Branch to be set")
+	if Branch != "dev" {
+		t.Fatalf("expected Branch default %q, got %q", "dev", Branch)
 	}
 }
