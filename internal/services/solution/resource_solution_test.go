@@ -648,7 +648,7 @@ func TestUnitSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 
 				resource "powerplatform_solution" "solution" {
 					environment_id = powerplatform_environment.env.id
-					solution_file    = "test_solution.zip"
+					solution_file  = "` + SOLUTION_1_RELATIVE_PATH + `"
 				}`,
 				ExpectError: regexp.MustCompile("No Dataverse exists in environment '00000000-0000-0000-0000-000000000001'"),
 				Check:       resource.ComposeAggregateTestCheckFunc(),
