@@ -5,7 +5,6 @@ package mocks_test
 
 import (
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
