@@ -12,7 +12,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
-func TestUseStateForUnknownKeepNonNullStateModifier(t *testing.T) {
+func TestUnitUseStateForUnknownKeepNonNullStateModifier(t *testing.T) {
 	ctx := context.Background()
 	modifier := modifiers.UseStateForUnknownKeepNonNullStateModifier()
 

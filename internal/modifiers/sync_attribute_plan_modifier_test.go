@@ -17,7 +17,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
-func TestSyncAttributePlanModifier(t *testing.T) {
+func TestUnitSyncAttributePlanModifier(t *testing.T) {
 	ctx := context.Background()
 	modifier := modifiers.SyncAttributePlanModifier("file")
 

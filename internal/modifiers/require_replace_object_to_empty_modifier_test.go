@@ -13,7 +13,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
-func TestRequireReplaceObjectToEmptyModifier(t *testing.T) {
+func TestUnitRequireReplaceObjectToEmptyModifier(t *testing.T) {
 	ctx := context.Background()
 	modifier := modifiers.RequireReplaceObjectToEmptyModifier()
 

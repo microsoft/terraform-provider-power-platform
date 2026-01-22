@@ -15,7 +15,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
-func TestSetStringAttributeUnknownOnlyIfSecondAttributeChange(t *testing.T) {
+func TestUnitSetStringAttributeUnknownOnlyIfSecondAttributeChange(t *testing.T) {
 	ctx := context.Background()
 	modifier := modifiers.SetStringAttributeUnknownOnlyIfSecondAttributeChange(path.Root("second"))
 

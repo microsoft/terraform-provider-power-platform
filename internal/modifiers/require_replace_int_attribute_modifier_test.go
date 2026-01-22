@@ -12,7 +12,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
-func TestRequireReplaceIntAttributePlanModifier(t *testing.T) {
+func TestUnitRequireReplaceIntAttributePlanModifier(t *testing.T) {
 	ctx := context.Background()
 	modifier := modifiers.RequireReplaceIntAttributePlanModifier()
 

@@ -58,7 +58,7 @@ func TestRestoreOriginalValueModifier_String(t *testing.T) {
 	})
 }
 
-func TestRestoreOriginalValueModifier_Bool(t *testing.T) {
+func TestUnitRestoreOriginalValueModifier_Bool(t *testing.T) {
 	ctx := context.Background()
 	modifier := modifiers.RestoreOriginalBoolModifier()
 

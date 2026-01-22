@@ -12,7 +12,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
-func TestRequireReplaceStringFromNonEmptyPlanModifier(t *testing.T) {
+func TestUnitRequireReplaceStringFromNonEmptyPlanModifier(t *testing.T) {
 	ctx := context.Background()
 	modifier := modifiers.RequireReplaceStringFromNonEmptyPlanModifier()
 

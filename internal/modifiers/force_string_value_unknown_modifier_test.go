@@ -12,7 +12,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
-func TestForceStringValueUnknownModifier(t *testing.T) {
+func TestUnitForceStringValueUnknownModifier(t *testing.T) {
 	ctx := context.Background()
 	modifier := modifiers.ForceStringValueUnknownModifier()
 

@@ -17,7 +17,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
-func TestSetStringValueToUnknownIfChecksumsChangeModifier(t *testing.T) {
+func TestUnitSetStringValueToUnknownIfChecksumsChangeModifier(t *testing.T) {
 	ctx := context.Background()
 	modifier := modifiers.SetStringValueToUnknownIfChecksumsChangeModifier(
 		[]string{"file1", "checksum1"},
