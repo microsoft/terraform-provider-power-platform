@@ -4,6 +4,7 @@
 package mocks_test
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 
@@ -44,7 +45,7 @@ func TestStateValueMatch(t *testing.T) {
 	check := func(left, right *mocks.StateValue) error {
 		called = true
 		if left.Value != right.Value {
-			return fmt.Errorf("values do not match")
+			return errors.New("values do not match")
 		}
 		return nil
 	}
