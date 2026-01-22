@@ -16,7 +16,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers/array"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
@@ -187,7 +186,7 @@ func (client *client) RemoveEnvironmentUserSecurityRoles(ctx context.Context, en
 	}
 
 	for _, role := range securityRoles {
-		savedRoleData := array.Find(savedRoles, func(roleDto securityRoleDto) bool {
+		savedRoleData := helpers.ArrayFind(savedRoles, func(roleDto securityRoleDto) bool {
 			return roleDto.RoleId == role
 		})
 

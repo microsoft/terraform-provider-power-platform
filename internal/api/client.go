@@ -22,7 +22,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
-	"github.com/microsoft/terraform-provider-power-platform/internal/helpers/array"
 )
 
 // ProviderClient is a wrapper around the API client that provides additional helper methods.
@@ -154,7 +153,7 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 			return resp, err
 		}
 
-		isAcceptable := len(acceptableStatusCodes) > 0 && array.Contains(acceptableStatusCodes, resp.HttpResponse.StatusCode)
+		isAcceptable := len(acceptableStatusCodes) > 0 && helpers.ArrayContains(acceptableStatusCodes, resp.HttpResponse.StatusCode)
 		if isAcceptable {
 			if responseObj != nil && len(resp.BodyAsBytes) > 0 {
 				err = resp.MarshallTo(responseObj)
@@ -166,7 +165,7 @@ func (client *Client) Execute(ctx context.Context, scopes []string, method, url 
 			return resp, nil
 		}
 
-		isRetryable := array.Contains(retryableStatusCodes, resp.HttpResponse.StatusCode)
+		isRetryable := helpers.ArrayContains(retryableStatusCodes, resp.HttpResponse.StatusCode)
 		if !isRetryable {
 			return resp, customerrors.NewUnexpectedHttpStatusCodeError(acceptableStatusCodes, resp.HttpResponse.StatusCode, resp.HttpResponse.Status, resp.BodyAsBytes)
 		}

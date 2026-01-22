@@ -362,7 +362,7 @@ func (r *ManagedEnvironmentResource) validateAndPrepareSolutionCheckerRules(ctx 
 	if !plan.SolutionCheckerRuleOverrides.IsNull() {
 		overrides := helpers.SetToStringSlice(plan.SolutionCheckerRuleOverrides)
 		for _, override := range overrides {
-			if !helpers.Contains(validRules, override) {
+			if !helpers.ArrayContains(validRules, override) {
 				diagnostics.AddError(
 					"Invalid Solution Checker Rule Override",
 					fmt.Sprintf("The solution checker rule override '%s' is not valid. Valid rules are: %v", override, validRules),

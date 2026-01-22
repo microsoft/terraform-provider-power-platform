@@ -8,6 +8,7 @@ const (
 	GuidOrEmptyValueRegex = "^(?:[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})?$"
 	UrlValidStringRegex   = "(?i)^[A-Za-z0-9-._~%/:/?=]+$"
 	ApiIdRegex            = "^[0-9a-zA-Z/._]*$"
+	DomainNameRegex       = "^[a-z0-9][a-z0-9-]*$"
 	StringRegex           = "^.*$"
 	VersionRegex          = "^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$"
 	TimeRegex             = "^(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)$"
