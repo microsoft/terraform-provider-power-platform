@@ -44,7 +44,7 @@ func ActivateEnvironmentHttpMocks() {
 		return nil, fmt.Errorf("no responder found for %s %s, please check your http mocks", req.Method, req.URL)
 	})
 
-	httpmock.RegisterResponder("GET", `=~^https://([\d-]+)\.crm4\.dynamics\.com/api/data/v9\.2/transactioncurrencies\z`,
+	httpmock.RegisterResponder("GET", `=~^https://([a-z0-9-]+)\.crm4\.dynamics\.com/api/data/v9\.2/transactioncurrencies\z`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, `{
 				"value": [
@@ -53,7 +53,7 @@ func ActivateEnvironmentHttpMocks() {
 					}]}`), nil
 		})
 
-	httpmock.RegisterResponder("GET", `=~^https://([\d-]+)\.crm4\.dynamics\.com/api/data/v9\.2/organizations\z`,
+	httpmock.RegisterResponder("GET", `=~^https://([a-z0-9-]+)\.crm4\.dynamics\.com/api/data/v9\.2/organizations\z`,
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, `{
 				"value": [
