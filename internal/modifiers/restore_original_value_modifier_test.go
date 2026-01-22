@@ -39,7 +39,7 @@ func TestRestoreOriginalValueModifier_String(t *testing.T) {
 
 		modifier.PlanModifyString(ctx, req, &resp)
 
-		stored := privateGetKey(t, privatePtr, ctx, "field")
+		stored := privateGetKey(ctx, t, privatePtr, "field")
 		if stored != nil {
 			t.Fatal("expected stored key to be nil due to invalid JSON value")
 		}
@@ -73,7 +73,7 @@ func TestRestoreOriginalValueModifier_Bool(t *testing.T) {
 
 	modifier.PlanModifyBool(ctx, req, &resp)
 
-	stored := privateGetKey(t, privatePtr, ctx, "flag")
+	stored := privateGetKey(ctx, t, privatePtr, "flag")
 	if stored != nil {
 		t.Fatal("expected stored key to be nil due to zero-length value")
 	}

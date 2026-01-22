@@ -44,7 +44,7 @@ func setPrivateData(t *testing.T, target any) reflect.Value {
 	return privatePtr
 }
 
-func privateSetKey(t *testing.T, privatePtr reflect.Value, ctx context.Context, key string, value []byte) {
+func privateSetKey(ctx context.Context, t *testing.T, privatePtr reflect.Value, key string, value []byte) {
 	t.Helper()
 	method := privatePtr.MethodByName("SetKey")
 	if !method.IsValid() {
@@ -54,7 +54,7 @@ func privateSetKey(t *testing.T, privatePtr reflect.Value, ctx context.Context, 
 	method.Call([]reflect.Value{reflect.ValueOf(ctx), reflect.ValueOf(key), reflect.ValueOf(value)})
 }
 
-func privateGetKey(t *testing.T, privatePtr reflect.Value, ctx context.Context, key string) []byte {
+func privateGetKey(ctx context.Context, t *testing.T, privatePtr reflect.Value, key string) []byte {
 	t.Helper()
 	method := privatePtr.MethodByName("GetKey")
 	if !method.IsValid() {

@@ -38,7 +38,7 @@ func TestForceStringValueUnknownModifier(t *testing.T) {
 	t.Run("force_unknown", func(t *testing.T) {
 		req := planmodifier.StringRequest{}
 		privatePtr := setPrivateData(t, &req)
-		privateSetKey(t, privatePtr, ctx, "force_value_unknown", []byte("true"))
+		privateSetKey(ctx, t, privatePtr, "force_value_unknown", []byte("true"))
 		resp := planmodifier.StringResponse{PlanValue: types.StringValue("keep")}
 
 		modifier.PlanModifyString(ctx, req, &resp)
