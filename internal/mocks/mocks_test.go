@@ -17,19 +17,19 @@ func testNameCaller() string {
 	return mocks.TestName()
 }
 
-func TestTestName(t *testing.T) {
+func TestUnitTestName(t *testing.T) {
 	if got := testNameCaller(); got != "testNameCaller" {
 		t.Fatalf("expected %q, got %q", "testNameCaller", got)
 	}
 }
 
-func TestTestsEntraLicesingGroupName(t *testing.T) {
+func TestUnitTestsEntraLicesingGroupName(t *testing.T) {
 	if got := mocks.TestsEntraLicesingGroupName(); got == "" {
 		t.Fatal("expected group name to be non-empty")
 	}
 }
 
-func TestProviderFactories(t *testing.T) {
+func TestUnitProviderFactories(t *testing.T) {
 	if len(mocks.TestUnitTestProtoV6ProviderFactories) == 0 {
 		t.Fatal("expected unit test provider factories to be registered")
 	}
@@ -48,7 +48,7 @@ func TestProviderFactories(t *testing.T) {
 	}
 }
 
-func TestActivateEnvironmentHttpMocks(t *testing.T) {
+func TestUnitActivateEnvironmentHttpMocks(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 

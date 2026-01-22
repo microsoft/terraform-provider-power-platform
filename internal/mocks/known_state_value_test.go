@@ -11,7 +11,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
-func TestGetKnownValue_CheckValueAndString(t *testing.T) {
+func TestUnitGetKnownValue_CheckValueAndString(t *testing.T) {
 	state := &mocks.StateValue{}
 	known := mocks.GetStateValue(state)
 
@@ -28,7 +28,7 @@ func TestGetKnownValue_CheckValueAndString(t *testing.T) {
 	}
 }
 
-func TestGetKnownValue_CheckValueTypeMismatch(t *testing.T) {
+func TestUnitGetKnownValue_CheckValueTypeMismatch(t *testing.T) {
 	state := &mocks.StateValue{}
 	known := mocks.GetStateValue(state)
 
@@ -37,7 +37,7 @@ func TestGetKnownValue_CheckValueTypeMismatch(t *testing.T) {
 	}
 }
 
-func TestStateValueMatch(t *testing.T) {
+func TestUnitStateValueMatch(t *testing.T) {
 	a := &mocks.StateValue{Value: "same"}
 	b := &mocks.StateValue{Value: "same"}
 	called := false
