@@ -8,3 +8,4 @@ set -eux
 #Install codeql extension
 echo "Installing GitHub CodeQL CLI extension..."
 gh extensions install github/gh-codeql
+git config --global core.autocrlf input
