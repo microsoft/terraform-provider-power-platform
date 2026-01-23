@@ -1,5 +1,0 @@
-kind: deprecated
-body: 'Deprecated tenant settings attributes: ''disable_survey_feedback'', ''disable_nps_comments_reachout'', ''disable_create_from_image'', ''disable_create_from_figma'' and ''enable_open_ai_bot_publishing'''
-time: 2026-01-19T16:36:20.146866765Z
-custom:
-    Issue: "1039"
