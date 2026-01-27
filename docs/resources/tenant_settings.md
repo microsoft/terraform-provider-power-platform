@@ -33,10 +33,15 @@ resource "powerplatform_tenant_settings" "settings" {
   disable_environment_creation_by_non_admin_users       = true
   disable_portals_creation_by_non_admin_users           = true
   disable_newsletter_sendout                            = true
-  disable_nps_comments_reachout                         = true
-  disable_survey_feedback                               = true
+  enable_support_use_bing_search_solutions              = true
 
   power_platform = {
+    product_feedback = {
+      disable_microsoft_surveys_send = true
+      disable_user_survey_feedback   = true
+      disable_attachments            = true
+      disable_microsoft_follow_up    = true
+    }
     search = {
       disable_docs_search       = true
       disable_community_search  = true
@@ -46,23 +51,26 @@ resource "powerplatform_tenant_settings" "settings" {
       share_with_colleagues_user_limit = 10001
     }
     power_apps = {
+      disable_copilot                          = true
       disable_share_with_everyone              = true
       enable_guests_to_make                    = true
       disable_members_indicator                = true
       disable_maker_match                      = true
       disable_unused_license_assignment        = true
-      disable_create_from_image                = true
-      disable_create_from_figma                = true
       disable_connection_sharing_with_everyone = true
+      enable_canvas_app_insights               = true
     }
     power_automate = {
-      disable_copilot           = true
-      disable_copilot_with_bing = true
+      disable_copilot                 = true
+      disable_copilot_help_assistance = true
+      allow_use_of_hosted_browser     = true
+      disable_flow_resubmission       = true
     }
     environments = {
       disable_preferred_data_location_for_teams_environment = true
     }
     governance = {
+      weekly_digest_email_recipients                            = toset(["test1@contoso.com", "test2@contoso.com"])
       disable_admin_digest                                      = true
       disable_developer_environment_creation_by_non_admin_users = true
       enable_default_environment_routing                        = false
@@ -71,12 +79,13 @@ resource "powerplatform_tenant_settings" "settings" {
       }
     }
     licensing = {
-      disable_billing_policy_creation_by_non_admin_users    = true
-      enable_tenant_capacity_report_for_environment_admins  = true
-      storage_capacity_consumption_warning_threshold        = 88
-      enable_tenant_licensing_report_for_environment_admins = true
-      disable_use_of_unassigned_ai_builder_credits          = true
-      apply_auto_claim_to_only_managed_environments         = true
+      disable_billing_policy_creation_by_non_admin_users           = true
+      enable_tenant_capacity_report_for_environment_admins         = true
+      storage_capacity_consumption_warning_threshold               = 88
+      enable_tenant_licensing_report_for_environment_admins        = true
+      disable_use_of_unassigned_ai_builder_credits                 = true
+      apply_auto_claim_power_apps_to_only_managed_environments     = true
+      apply_auto_claim_power_automate_to_only_managed_environments = true
     }
     power_pages = {}
     champions = {
@@ -84,10 +93,11 @@ resource "powerplatform_tenant_settings" "settings" {
       disable_skills_match_invitation_reachout = true
     }
     intelligence = {
-      disable_copilot                   = true
-      enable_open_ai_bot_publishing     = true
-      disable_copilot_feedback          = true
-      disable_copilot_feedback_metadata = true
+      disable_copilot                                            = true
+      allow_copilot_authors_publish_when_ai_features_are_enabled = true
+      disable_basic_copilot_feedback                             = true
+      disable_additional_copilot_feedback                        = true
+      copilot_studio_authors_security_group_id                   = "00000000-0000-0000-0000-000000000000"
     }
     model_experimentation = {
       enable_model_data_sharing = true
@@ -111,11 +121,10 @@ resource "powerplatform_tenant_settings" "settings" {
 - `disable_capacity_allocation_by_environment_admins` (Boolean) Disable Capacity Allocation By Environment Admins. See [Add-on capacity management](https://learn.microsoft.com/power-platform/admin/capacity-add-on#control-who-can-allocate-add-on-capacity) for more details.
 - `disable_environment_creation_by_non_admin_users` (Boolean) Disable Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.
 - `disable_newsletter_sendout` (Boolean) Disable Newsletter Sendout
-- `disable_nps_comments_reachout` (Boolean, Deprecated) Disable NPS Comments Reachout
 - `disable_portals_creation_by_non_admin_users` (Boolean) Disable Portals Creation By Non Admin Users
 - `disable_support_tickets_visible_by_all_users` (Boolean) Disable Support Tickets Visible By All Users
-- `disable_survey_feedback` (Boolean, Deprecated) Disable Survey Feedback
 - `disable_trial_environment_creation_by_non_admin_users` (Boolean) Disable Trial Environment Creation By Non Admin Users. See [Control environment creation](https://learn.microsoft.com/power-platform/admin/control-environment-creation) for more details.
+- `enable_support_use_bing_search_solutions` (Boolean) When enabled, Bing search is going to be used when providing self-help solutions.
 - `power_platform` (Attributes) Power Platform (see [below for nested schema](#nestedatt--power_platform))
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 - `walk_me_opt_out` (Boolean) Walk Me Opt Out
@@ -139,6 +148,7 @@ Optional:
 - `power_apps` (Attributes) Power Apps (see [below for nested schema](#nestedatt--power_platform--power_apps))
 - `power_automate` (Attributes) Power Automate (see [below for nested schema](#nestedatt--power_platform--power_automate))
 - `power_pages` (Attributes) Power Pages (see [below for nested schema](#nestedatt--power_platform--power_pages))
+- `product_feedback` (Attributes) Product Feedback (see [below for nested schema](#nestedatt--power_platform--product_feedback))
 - `search` (Attributes) Search (see [below for nested schema](#nestedatt--power_platform--search))
 - `teams_integration` (Attributes) Teams Integration (see [below for nested schema](#nestedatt--power_platform--teams_integration))
 - `user_management_settings` (Attributes) User Management Settings (see [below for nested schema](#nestedatt--power_platform--user_management_settings))
@@ -180,6 +190,7 @@ Optional:
 - `environment_routing_target_environment_group_id` (String) Assign newly created personal developer environments to a specific environment group
 - `environment_routing_target_security_group_id` (String) Restrict routing to members of the following security group. (00000000-0000-0000-0000-000000000000 allows all users)
 - `policy` (Attributes) Policy (see [below for nested schema](#nestedatt--power_platform--governance--policy))
+- `weekly_digest_email_recipients` (Set of String) Weekly Digest Email Recipients
 
 <a id="nestedatt--power_platform--governance--policy"></a>
 ### Nested Schema for `power_platform.governance.policy`
@@ -195,8 +206,11 @@ Optional:
 
 Optional:
 
+- `allow_copilot_authors_publish_when_ai_features_are_enabled` (Boolean) Allow Copilot authors to publish from Copilot Studio when AI features are enabled
+- `copilot_studio_authors_security_group_id` (String) Copilot Studio Authors Security Group ID
+- `disable_additional_copilot_feedback` (Boolean) Additional Copilot Feedback
+- `disable_basic_copilot_feedback` (Boolean) Basic Copilot Feedback
 - `disable_copilot` (Boolean) Disable Copilot
-- `enable_open_ai_bot_publishing` (Boolean, Deprecated) Enable Open AI Bot Publishing
 
 
 <a id="nestedatt--power_platform--licensing"></a>
@@ -204,6 +218,8 @@ Optional:
 
 Optional:
 
+- `apply_auto_claim_power_apps_to_only_managed_environments` (Boolean) Apply Auto Claim Power Apps To Only Managed Environments
+- `apply_auto_claim_power_automate_to_only_managed_environments` (Boolean) Apply Auto Claim Power Automate To Only Managed Environments
 - `disable_billing_policy_creation_by_non_admin_users` (Boolean) Disable Billing Policy Creation By Non Admin Users
 - `disable_use_of_unassigned_ai_builder_credits` (Boolean) Disable Use Of Unassigned AI Builder Credits
 - `enable_tenant_capacity_report_for_environment_admins` (Boolean) Enable Tenant Capacity Report For Environment Admins
@@ -226,11 +242,13 @@ Optional:
 Optional:
 
 - `disable_connection_sharing_with_everyone` (Boolean) Disable Connection Sharing With Everyone
-- `disable_create_from_figma` (Boolean, Deprecated) Disable Create From Figma
-- `disable_create_from_image` (Boolean, Deprecated) Disable Create From Image
+- `disable_copilot` (Boolean) Disable Copilot
+- `disable_create_from_figma` (Boolean, Deprecated) [DEPRECATED] Disable Create From Figma
+- `disable_create_from_image` (Boolean, Deprecated) [DEPRECATED] Disable Create From Image
 - `disable_maker_match` (Boolean) Disable Maker Match
 - `disable_share_with_everyone` (Boolean) Disable Share With Everyone
 - `disable_unused_license_assignment` (Boolean) Disable Unused License Assignment
+- `enable_canvas_app_insights` (Boolean) Enable Canvas App Insights
 - `enable_guests_to_make` (Boolean) Enable Guests To Make
 
 
@@ -239,11 +257,25 @@ Optional:
 
 Optional:
 
+- `allow_use_of_hosted_browser` (Boolean) Allow Use Of Hosted Browser
 - `disable_copilot` (Boolean) Disable Copilot
+- `disable_copilot_help_assistance` (Boolean) Disable Copilot With Bing
+- `disable_flow_resubmission` (Boolean) Disable Flow Resubmission
 
 
 <a id="nestedatt--power_platform--power_pages"></a>
 ### Nested Schema for `power_platform.power_pages`
+
+
+<a id="nestedatt--power_platform--product_feedback"></a>
+### Nested Schema for `power_platform.product_feedback`
+
+Optional:
+
+- `disable_attachments` (Boolean) Disable screenshots and attachments in feedback
+- `disable_microsoft_follow_up` (Boolean) Disable letting Microsoft follow up on feedback
+- `disable_microsoft_surveys_send` (Boolean) Disable letting Microsoft send surveys
+- `disable_user_survey_feedback` (Boolean) Disable users to choose to provide survey feedback
 
 
 <a id="nestedatt--power_platform--search"></a>
