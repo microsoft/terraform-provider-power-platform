@@ -1,70 +1,86 @@
 {
-    "walkMeOptOut": false,
-    "disableNPSCommentsReachout": false,
-    "disableNewsletterSendout": false,
-    "disableEnvironmentCreationByNonAdminUsers": false,
-    "disablePortalsCreationByNonAdminUsers": false,
-    "disableSurveyFeedback": false,
-    "disableTrialEnvironmentCreationByNonAdminUsers": false,
-    "disableCapacityAllocationByEnvironmentAdmins": false,
-    "disableSupportTicketsVisibleByAllUsers": false,
-    "powerPlatform": {
-        "search": {
-            "disableDocsSearch": false,
-            "disableCommunitySearch": false,
-            "disableBingVideoSearch": false
-        },
-        "teamsIntegration": {
-            "shareWithColleaguesUserLimit": 10001
-        },
-        "powerApps": {
-            "disableShareWithEveryone": false,
-            "enableGuestsToMake": false,
-            "disableMakerMatch": false,
-            "disableUnusedLicenseAssignment": false,
-            "disableCreateFromImage": false,
-            "disableCreateFromFigma": false,
-            "disableConnectionSharingWithEveryone": false
-        },
-        "powerAutomate": {
-            "disableCopilot": false
-        },
-        "environments": {
-            "disablePreferredDataLocationForTeamsEnvironment": false
-        },
-        "governance": {
-            "disableAdminDigest": false,
-            "disableDeveloperEnvironmentCreationByNonAdminUsers": false,
-            "enableDefaultEnvironmentRouting": false,
-            "policy": {
-                "enableDesktopFlowDataPolicyManagement": false
-            }
-        },
-        "licensing": {
-            "disableBillingPolicyCreationByNonAdminUsers": false,
-            "enableTenantCapacityReportForEnvironmentAdmins": false,
-            "storageCapacityConsumptionWarningThreshold": 85,
-            "enableTenantLicensingReportForEnvironmentAdmins": false,
-            "disableUseOfUnassignedAIBuilderCredits": false
-        },
-        "powerPages": {},
-        "champions": {
-            "disableChampionsInvitationReachout": false,
-            "disableSkillsMatchInvitationReachout": false
-        },
-        "intelligence": {
-            "disableCopilot": false,
-            "enableOpenAiBotPublishing": false
-        },
-        "modelExperimentation": {
-            "enableModelDataSharing": false,
-            "disableDataLogging": false
-        },
-        "catalogSettings": {
-            "powerCatalogAudienceSetting": "All"
-        },
-        "userManagementSettings": {
-            "enableDeleteDisabledUserinAllEnvironments": false
-        }
+  "walkMeOptOut": true,
+  "disableNPSCommentsReachout": true,
+  "disableNewsletterSendout": true,
+  "disableEnvironmentCreationByNonAdminUsers": true,
+  "disablePortalsCreationByNonAdminUsers": true,
+  "disableSurveyFeedback": true,
+  "disableUserInitiatedFeedback": true,
+  "disableSurveyScreenshots": true,
+  "disableTrialEnvironmentCreationByNonAdminUsers": true,
+  "disableCapacityAllocationByEnvironmentAdmins": true,
+  "disableSupportTicketsVisibleByAllUsers": true,
+  "powerPlatform": {
+    "helpSupportSettings": {
+      "useSupportBingSearchByAllUsers": true
+    },
+    "search": {
+      "disableDocsSearch": true,
+      "disableCommunitySearch": true,
+      "disableBingVideoSearch": true
+    },
+    "teamsIntegration": {
+      "shareWithColleaguesUserLimit": 999
+    },
+    "powerApps": {
+      "disableShareWithEveryone": true,
+      "enableGuestsToMake": true,
+      "disableMakerMatch": true,
+      "disableUnusedLicenseAssignment": true,
+      "disableCreateFromImage": false,
+      "disableCreateFromFigma": false,
+      "disableConnectionSharingWithEveryone": true,
+      "disableCopilot": true,
+      "enableCanvasAppInsights": true
+    },
+    "powerAutomate": {
+      "disableCopilot": true,
+      "disableCopilotWithBing": true,
+      "enableComputerUseSharedMachines": true,
+      "disableFlowRunResubmission": true
+    },
+    "environments": {
+      "disablePreferredDataLocationForTeamsEnvironment": true
+    },
+    "governance": {
+      "additionalAdminDigestEmailRecipients": "",
+      "disableAdminDigest": true,
+      "disableDeveloperEnvironmentCreationByNonAdminUsers": false,
+      "enableDefaultEnvironmentRouting": true,
+      "policy": {
+        "enableDesktopFlowDataPolicyManagement": true
+      }
+    },
+    "licensing": {
+      "disableBillingPolicyCreationByNonAdminUsers": true,
+      "enableTenantCapacityReportForEnvironmentAdmins": true,
+      "storageCapacityConsumptionWarningThreshold": 95,
+      "enableTenantLicensingReportForEnvironmentAdmins": true,
+      "disableUseOfUnassignedAIBuilderCredits": true,
+      "applyAutoClaimToOnlyManagedEnvironments": true,
+      "applyPAutoAutoClaimToOnlyManagedEnvironments": true
+    },
+    "powerPages": {},
+    "champions": {
+      "disableChampionsInvitationReachout": true,
+      "disableSkillsMatchInvitationReachout": true
+    },
+    "intelligence": {
+      "disableCopilot": true,
+      "enableOpenAiBotPublishing": true,
+      "disableCopilotFeedback": true,
+      "disableCopilotFeedbackMetadata": true,
+      "copilotStudioAuthorsSecurityGroupId": "00000000-0000-0000-0000-000000000001"
+    },
+    "modelExperimentation": {
+      "enableModelDataSharing": true,
+      "disableDataLogging": true
+    },
+    "catalogSettings": {
+      "powerCatalogAudienceSetting": "All"
+    },
+    "userManagementSettings": {
+      "enableDeleteDisabledUserinAllEnvironments": true
     }
+  }
 }
