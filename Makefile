@@ -1,3 +1,5 @@
+.PHONY: clean deps build install userdocs userstory unittest acctest test coverage netdump lint precommit
+
 clean:
 	@go clean -testcache
 	@rm -rf ./bin
