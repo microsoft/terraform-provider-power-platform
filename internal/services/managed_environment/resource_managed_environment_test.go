@@ -781,6 +781,75 @@ func TestAccManagedEnvironmentsResource_Validate_No_Dataverse(t *testing.T) {
 	})
 }
 
+func TestUnitManagedEnvironmentsResource_Validate_Import(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	patchResponseInx := 0
+
+	httpmock.RegisterResponder("GET", "https://europe.api.advisor.powerapps.com/api/rule?api-version=2.0&ruleset=0ad12346-e108-40b8-a956-9a8f95ea18c9",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/get_rulesset.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001/governanceConfiguration?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("services/environment/tests/resource/Validate_Create_And_Update/get_environments_%d.json", patchResponseInx)).String()), nil
+		})
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001/governanceConfiguration?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Update/get_lifecycle.json").String()), nil
+		})
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Update/get_environment_create_response.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_managed_environment" "managed_development" {
+					environment_id             = "00000000-0000-0000-0000-000000000001"
+					is_usage_insights_disabled = true
+					is_group_sharing_disabled  = true
+					limit_sharing_mode         = "ExcludeSharingToSecurityGroups"
+					max_limit_user_sharing     = 10
+					solution_checker_mode      = "None"
+					suppress_validation_emails = true
+					solution_checker_rule_overrides = toset(["meta-remove-dup-reg", "meta-avoid-reg-no-attribute"])
+					power_automate_is_sharing_disabled                 = true
+					copilot_allow_grant_editor_permissions_when_shared = false
+					copilot_limit_sharing_mode                         = "ExcludeSharingToSecurityGroups"
+					copilot_max_limit_user_sharing                     = 55
+				}`,
+
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "id", "00000000-0000-0000-0000-000000000001"),
+					resource.TestCheckResourceAttr("powerplatform_managed_environment.managed_development", "environment_id", "00000000-0000-0000-0000-000000000001"),
+				),
+			},
+			{
+				ResourceName:      "powerplatform_managed_environment.managed_development",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     "00000000-0000-0000-0000-000000000001",
+			},
+		},
+	})
+}
+
 func TestUnitManagedEnvironmentsResource_Validate_Update_Wrong_Solution_Checker_Rule_Overrides(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
