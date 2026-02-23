@@ -345,6 +345,11 @@ func (r *ManagedEnvironmentResource) ImportState(ctx context.Context, req resour
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
+	diags := resp.State.SetAttribute(ctx, path.Root("environment_id"), req.ID)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
