@@ -345,6 +345,7 @@ func (r *ManagedEnvironmentResource) ImportState(ctx context.Context, req resour
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
+	resp.State.SetAttribute(ctx, path.Root("environment_id"), req.ID)
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
