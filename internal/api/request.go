@@ -49,6 +49,7 @@ func (client *Client) doRequest(ctx context.Context, token *string, request *htt
 	if !client.GetConfig().TelemetryOptout {
 		ua := client.buildUserAgent(ctx)
 		request.Header.Set("User-Agent", ua)
+		request.Header.Set("x-ms-useragent", constants.HEADER_X_MS_USERAGENT)
 		sessionId, requestId := client.buildCorrelationHeaders(ctx)
 		request.Header.Set("X-Correlation-Id", sessionId)
 		request.Header.Set("X-Ms-Client-Session-Id", sessionId)
