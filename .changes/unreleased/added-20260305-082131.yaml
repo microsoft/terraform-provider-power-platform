@@ -1,0 +1,5 @@
+kind: added
+body: Add x-ms-useragent header to all backend requests when telemetry is not opted out
+time: 2026-03-05T08:21:31.513391533Z
+custom:
+    Issue: "1068"
