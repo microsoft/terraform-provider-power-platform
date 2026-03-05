@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/config"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/stretchr/testify/require"
 )
 
@@ -18,9 +19,9 @@ func TestUnitBuildUserAgent_WithPartnerId(t *testing.T) {
 }
 
 func TestUnitDoRequest_XMsUserAgent_TelemetryNotOptedOut(t *testing.T) {
-	var capturedRequest *http.Request
+	requestCh := make(chan *http.Request, 1)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		capturedRequest = r
+		requestCh <- r
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
@@ -35,13 +36,14 @@ func TestUnitDoRequest_XMsUserAgent_TelemetryNotOptedOut(t *testing.T) {
 	_, err = client.doRequest(context.Background(), &token, req, http.Header{})
 	require.NoError(t, err)
 
-	require.Equal(t, "terraform-provider-power-platform", capturedRequest.Header.Get("x-ms-useragent"))
+	capturedRequest := <-requestCh
+	require.Equal(t, constants.HEADER_X_MS_USERAGENT, capturedRequest.Header.Get("x-ms-useragent"))
 }
 
 func TestUnitDoRequest_XMsUserAgent_TelemetryOptedOut(t *testing.T) {
-	var capturedRequest *http.Request
+	requestCh := make(chan *http.Request, 1)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		capturedRequest = r
+		requestCh <- r
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer server.Close()
@@ -56,6 +58,7 @@ func TestUnitDoRequest_XMsUserAgent_TelemetryOptedOut(t *testing.T) {
 	_, err = client.doRequest(context.Background(), &token, req, http.Header{})
 	require.NoError(t, err)
 
+	capturedRequest := <-requestCh
 	require.Empty(t, capturedRequest.Header.Get("x-ms-useragent"))
 }
 
