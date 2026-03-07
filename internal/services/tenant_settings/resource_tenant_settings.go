@@ -71,11 +71,6 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 				MarkdownDescription: "Walk Me Opt Out",
 				Optional:            true,
 			},
-			"disable_nps_comments_reachout": schema.BoolAttribute{
-				MarkdownDescription: "Disable NPS Comments Reachout",
-				DeprecationMessage:  "This attribute is deprecated and will be replaced by a new one in next major release",
-				Optional:            true,
-			},
 			"disable_newsletter_sendout": schema.BoolAttribute{
 				MarkdownDescription: "Disable Newsletter Sendout",
 				Optional:            true,
@@ -86,11 +81,6 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 			},
 			"disable_portals_creation_by_non_admin_users": schema.BoolAttribute{
 				MarkdownDescription: "Disable Portals Creation By Non Admin Users",
-				Optional:            true,
-			},
-			"disable_survey_feedback": schema.BoolAttribute{
-				MarkdownDescription: "Disable Survey Feedback",
-				DeprecationMessage:  "This attribute is deprecated and will be replaced by a new one in next major release",
 				Optional:            true,
 			},
 			"disable_trial_environment_creation_by_non_admin_users": schema.BoolAttribute{
@@ -105,10 +95,36 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 				MarkdownDescription: "Disable Support Tickets Visible By All Users",
 				Optional:            true,
 			},
+			"enable_support_use_bing_search_solutions": schema.BoolAttribute{
+				MarkdownDescription: "When enabled, Bing search is going to be used when providing self-help solutions.",
+				Optional:            true,
+			},
 			"power_platform": schema.SingleNestedAttribute{
 				MarkdownDescription: "Power Platform",
 				Optional:            true,
 				Attributes: map[string]schema.Attribute{
+					"product_feedback": schema.SingleNestedAttribute{
+						MarkdownDescription: "Product Feedback",
+						Optional:            true,
+						Attributes: map[string]schema.Attribute{
+							"disable_microsoft_surveys_send": schema.BoolAttribute{
+								MarkdownDescription: "Disable letting Microsoft send surveys",
+								Optional:            true,
+							},
+							"disable_user_survey_feedback": schema.BoolAttribute{
+								MarkdownDescription: "Disable users to choose to provide survey feedback",
+								Optional:            true,
+							},
+							"disable_attachments": schema.BoolAttribute{
+								MarkdownDescription: "Disable screenshots and attachments in feedback",
+								Optional:            true,
+							},
+							"disable_microsoft_follow_up": schema.BoolAttribute{
+								MarkdownDescription: "Disable letting Microsoft follow up on feedback",
+								Optional:            true,
+							},
+						},
+					},
 					"search": schema.SingleNestedAttribute{
 						MarkdownDescription: "Search",
 						Optional:            true,
@@ -144,6 +160,10 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 							// objectplanmodifier.UseStateForUnknown(),
 						},
 						Attributes: map[string]schema.Attribute{
+							"disable_copilot": schema.BoolAttribute{
+								MarkdownDescription: "Disable Copilot",
+								Optional:            true,
+							},
 							"disable_share_with_everyone": schema.BoolAttribute{
 								MarkdownDescription: "Disable Share With Everyone",
 								Optional:            true,
@@ -161,17 +181,21 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								Optional:            true,
 							},
 							"disable_create_from_image": schema.BoolAttribute{
-								MarkdownDescription: "Disable Create From Image",
-								DeprecationMessage:  "This attribute is deprecated and will be removed in next major release",
+								DeprecationMessage:  "[DEPRECATED] This attribute is deprecated and will be removed in a future release.",
+								MarkdownDescription: "[DEPRECATED] Disable Create From Image",
 								Optional:            true,
 							},
 							"disable_create_from_figma": schema.BoolAttribute{
-								MarkdownDescription: "Disable Create From Figma",
-								DeprecationMessage:  "This attribute is deprecated and will be removed in next major release",
+								DeprecationMessage:  "[DEPRECATED] This attribute is deprecated and will be removed in a future release.",
+								MarkdownDescription: "[DEPRECATED] Disable Create From Figma",
 								Optional:            true,
 							},
 							"disable_connection_sharing_with_everyone": schema.BoolAttribute{
 								MarkdownDescription: "Disable Connection Sharing With Everyone",
+								Optional:            true,
+							},
+							"enable_canvas_app_insights": schema.BoolAttribute{
+								MarkdownDescription: "Enable Canvas App Insights",
 								Optional:            true,
 							},
 						},
@@ -182,6 +206,18 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 						Attributes: map[string]schema.Attribute{
 							"disable_copilot": schema.BoolAttribute{
 								MarkdownDescription: "Disable Copilot",
+								Optional:            true,
+							},
+							"disable_copilot_help_assistance": schema.BoolAttribute{
+								MarkdownDescription: "Disable Copilot With Bing",
+								Optional:            true,
+							},
+							"allow_use_of_hosted_browser": schema.BoolAttribute{
+								MarkdownDescription: "Allow Use Of Hosted Browser",
+								Optional:            true,
+							},
+							"disable_flow_resubmission": schema.BoolAttribute{
+								MarkdownDescription: "Disable Flow Resubmission",
 								Optional:            true,
 							},
 						},
@@ -200,6 +236,11 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 						MarkdownDescription: "Governance",
 						Optional:            true,
 						Attributes: map[string]schema.Attribute{
+							"weekly_digest_email_recipients": schema.SetAttribute{
+								MarkdownDescription: "Weekly Digest Email Recipients",
+								Optional:            true,
+								ElementType:         types.StringType,
+							},
 							"disable_admin_digest": schema.BoolAttribute{
 								MarkdownDescription: "Disable Admin Digest",
 								Optional:            true,
@@ -262,6 +303,14 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								MarkdownDescription: "Disable Use Of Unassigned AI Builder Credits",
 								Optional:            true,
 							},
+							"apply_auto_claim_power_apps_to_only_managed_environments": schema.BoolAttribute{
+								MarkdownDescription: "Apply Auto Claim Power Apps To Only Managed Environments",
+								Optional:            true,
+							},
+							"apply_auto_claim_power_automate_to_only_managed_environments": schema.BoolAttribute{
+								MarkdownDescription: "Apply Auto Claim Power Automate To Only Managed Environments",
+								Optional:            true,
+							},
 						},
 					},
 					"power_pages": schema.SingleNestedAttribute{
@@ -291,10 +340,26 @@ func (r *TenantSettingsResource) Schema(ctx context.Context, req resource.Schema
 								MarkdownDescription: "Disable Copilot",
 								Optional:            true,
 							},
-							"enable_open_ai_bot_publishing": schema.BoolAttribute{
-								MarkdownDescription: "Enable Open AI Bot Publishing",
-								DeprecationMessage:  "This attribute is deprecated and will be removed in next major release",
+							"allow_copilot_authors_publish_when_ai_features_are_enabled": schema.BoolAttribute{
+								MarkdownDescription: "Allow Copilot authors to publish from Copilot Studio when AI features are enabled",
 								Optional:            true,
+							},
+							"disable_basic_copilot_feedback": schema.BoolAttribute{
+								MarkdownDescription: "Basic Copilot Feedback",
+								Optional:            true,
+							},
+							"disable_additional_copilot_feedback": schema.BoolAttribute{
+								MarkdownDescription: "Additional Copilot Feedback",
+								Optional:            true,
+							},
+							"copilot_studio_authors_security_group_id": schema.StringAttribute{
+								MarkdownDescription: "Copilot Studio Authors Security Group ID",
+								Optional:            true,
+								Computed:            true,
+								CustomType:          customtypes.UUIDType{},
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
+								},
 							},
 						},
 					},
@@ -526,6 +591,10 @@ func (r *TenantSettingsResource) Update(ctx context.Context, req resource.Update
 
 	if needsProcessing(path.Root("power_platform").AtName("governance").AtName("environment_routing_target_environment_group_id")) {
 		preprocessedDto.PowerPlatform.Governance.EnvironmentRoutingTargetEnvironmentGroupId = types.StringValue(constants.ZERO_UUID).ValueStringPointer()
+	}
+
+	if needsProcessing(path.Root("power_platform").AtName("intelligence").AtName("copilot_studio_authors_security_group_id")) {
+		preprocessedDto.PowerPlatform.Intelligence.CopilotStudioAuthorsSecurityGroupId = types.StringValue(constants.ZERO_UUID).ValueStringPointer()
 	}
 
 	// send preprocessedDto to the API

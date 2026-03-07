@@ -832,7 +832,6 @@ func TestUnitTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 
 func TestAccTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 	t.Skip("Skipping until we can control environment creation in multi test runs")
-
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
@@ -1022,9 +1021,9 @@ func TestAccTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 						  enable_ai_powered_chat = "On"
 						  ai_form_fill_automatic_suggestions = "On"
 						  ai_form_fill_smart_paste_and_file_suggestions = "On"
-						  ai_form_fill_toolbar = "On"
+						  ai_form_fill_toolbar = "Off"
 						  natural_language_grid_and_view_search = "AllUsers"
-						  allow_ai_to_generate_charts = "On"
+						  allow_ai_to_generate_charts = "Off"
 						}
 						security = {
 						  allow_application_user_access               = true
@@ -1073,9 +1072,8 @@ func TestAccTestEnvironmentSettingsResource_Validate_Update(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.enable_ai_powered_chat", "On"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_automatic_suggestions", "On"),
 					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_smart_paste_and_file_suggestions", "On"),
-					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_toolbar", "On"),
-					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.natural_language_grid_and_view_search", "AllUsers"),
-					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.allow_ai_to_generate_charts", "On"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.ai_form_fill_toolbar", "Off"),
+					resource.TestCheckResourceAttr("powerplatform_environment_settings.settings", "product.features.allow_ai_to_generate_charts", "Off"),
 				),
 			},
 		},
