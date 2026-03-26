@@ -137,6 +137,7 @@ const (
 	API_VERSION_PARAM         = "api-version"
 
 	DEFAULT_TERRAFORM_PARTNER_ID = "222c6c49-1b0a-5959-a213-6608f9eb8820"
+	HEADER_X_MS_USERAGENT        = "terraform-provider-power-platform"
 )
 
 const (
