@@ -42,6 +42,7 @@ func (r *EnvironmentGitIntegrationResource) validateRemoteConfiguration(ctx cont
 			"Invalid project_name",
 			fmt.Sprintf("The Git project `%s` was not returned by the Dataverse `gitprojects` endpoint for organization `%s`.", data.ProjectName.ValueString(), data.OrganizationName.ValueString()),
 		)
+		return
 	}
 
 	repositories, err := r.GitIntegrationClient.ListGitRepositories(ctx, data.EnvironmentID.ValueString(), data.OrganizationName.ValueString(), data.ProjectName.ValueString())

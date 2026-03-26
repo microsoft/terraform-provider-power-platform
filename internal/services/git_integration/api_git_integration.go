@@ -709,7 +709,7 @@ func (c *client) EnableSolutionSourceControlIntegration(ctx context.Context, env
 
 	apiURL := helpers.BuildDataverseApiUrl(environmentHost, fmt.Sprintf("/api/data/v9.0/solutions(%s)", solutionID), nil)
 	resp, err := c.Api.Execute(ctx, nil, http.MethodPatch, apiURL, nil, updateSolutionSourceControlIntegrationDto{
-		EnabledForSourceControlIntegration: "true",
+		EnabledForSourceControlIntegration: true,
 	}, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
 	if err != nil {
 		return err
@@ -769,7 +769,6 @@ func (c *client) SetSourceControlIntegrationScope(ctx context.Context, environme
 
 	updatedOrgSettings := setOrgDbOrgSettingValue(orgSettings.OrgDbOrgSettings, "SourceControlIntegrationScope", sourceControlIntegrationScopeToOrgDbValue(scope))
 	updateDTO := organizationSettingsDto{
-		OrganizationID:   orgSettings.OrganizationID,
 		OrgDbOrgSettings: updatedOrgSettings,
 	}
 
