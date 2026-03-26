@@ -57,13 +57,21 @@ type SolutionGitBranchResourceModel struct {
 }
 
 func gitProviderToInt(value string) int {
-	_ = strings.TrimSpace(value)
-	return 0
+	switch strings.TrimSpace(value) {
+	case "", gitProviderAzureDevOps:
+		return 0
+	default:
+		return -1
+	}
 }
 
 func gitProviderFromInt(value int) string {
-	_ = value
-	return gitProviderAzureDevOps
+	switch value {
+	case 0:
+		return gitProviderAzureDevOps
+	default:
+		return ""
+	}
 }
 
 func convertSourceControlConfigurationDtoToModel(environmentID, scope string, dto sourceControlConfigurationDto) EnvironmentGitIntegrationResourceModel {

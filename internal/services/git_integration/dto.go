@@ -143,5 +143,5 @@ type preValidateGitComponentsResponseDto struct {
 }
 
 type updateSolutionSourceControlIntegrationDto struct {
-	EnabledForSourceControlIntegration string `json:"enabledforsourcecontrolintegration,omitempty"`
+	EnabledForSourceControlIntegration bool `json:"enabledforsourcecontrolintegration,omitempty"`
 }

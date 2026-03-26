@@ -5,6 +5,7 @@ package git_integration_test
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -112,11 +113,30 @@ func TestUnitEnvironmentGitIntegrationResource_Validate_Create_And_Update(t *tes
 
 	httpmock.RegisterRegexpResponder("PATCH", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/organizations%28aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa%29$`),
 		func(req *http.Request) (*http.Response, error) {
+			body, err := io.ReadAll(req.Body)
+			if err != nil {
+				return nil, err
+			}
+			bodyText := string(body)
+			if strings.Contains(bodyText, "organizationid") {
+				return nil, fmt.Errorf("organization scope patch unexpectedly included organizationid: %s", bodyText)
+			}
+			if !strings.Contains(bodyText, "SourceControlIntegrationScope") {
+				return nil, fmt.Errorf("organization scope patch missing SourceControlIntegrationScope: %s", bodyText)
+			}
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
 	httpmock.RegisterRegexpResponder("PATCH", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/solutions(?:%28|\()(33333333-3333-3333-3333-333333333333|44444444-4444-4444-4444-444444444444)(?:%29|\))$`),
 		func(req *http.Request) (*http.Response, error) {
+			body, err := io.ReadAll(req.Body)
+			if err != nil {
+				return nil, err
+			}
+			bodyText := string(body)
+			if !strings.Contains(bodyText, `"enabledforsourcecontrolintegration":true`) {
+				return nil, fmt.Errorf("solution enablement patch did not send boolean true: %s", bodyText)
+			}
 			matched := false
 			for _, id := range []string{
 				"33333333-3333-3333-3333-333333333333",
