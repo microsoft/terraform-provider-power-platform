@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
@@ -126,13 +127,17 @@ func (r *EnvironmentGitIntegrationResource) ValidateConfig(ctx context.Context, 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var data EnvironmentGitIntegrationResourceModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	var projectName types.String
+	resp.Diagnostics.Append(req.Config.GetAttribute(ctx, path.Root("project_name"), &projectName)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if data.ProjectName.IsNull() || data.ProjectName.ValueString() == "" {
+	if projectName.IsUnknown() {
+		return
+	}
+
+	if projectName.IsNull() || projectName.ValueString() == "" {
 		resp.Diagnostics.AddAttributeError(
 			path.Root("project_name"),
 			"Missing project_name for AzureDevOps",
