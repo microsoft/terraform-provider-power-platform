@@ -1,0 +1,16 @@
+{
+  "value": [
+    {
+      "solutionid": "86928ed8-df37-4ce2-add5-47030a833bff",
+      "uniquename": "TerraformTestSolution",
+      "friendlyname": "Terraform Test Solution Updated",
+      "description": "Updated by Terraform",
+      "_publisherid_value": "aa47dc6c-bf13-490b-a007-1da95a0d1e3f",
+      "ismanaged": false,
+      "createdon": "2023-10-17T11:03:41Z",
+      "version": "1.0.0.0",
+      "modifiedon": "2023-10-17T11:10:17Z",
+      "installedon": "2023-10-17T11:03:41Z"
+    }
+  ]
+}

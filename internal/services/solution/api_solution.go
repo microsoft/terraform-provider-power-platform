@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
@@ -258,6 +259,115 @@ func (client *Client) CreateSolution(ctx context.Context, environmentId string, 
 	}
 }
 
+func (client *Client) CreateUnmanagedSolution(ctx context.Context, environmentId, uniqueName, displayName, publisherId, description string) (*SolutionDto, error) {
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	requestBody := createUnmanagedSolutionDto{
+		Description:   description,
+		DisplayName:   displayName,
+		PublisherBind: fmt.Sprintf("/publishers(%s)", publisherId),
+		UniqueName:    uniqueName,
+		Version:       "1.0.0.0",
+	}
+
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   "/api/data/v9.0/solutions",
+	}
+
+	createdSolution := SolutionDto{}
+	resp, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, requestBody, []int{http.StatusCreated, http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, &createdSolution)
+	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
+		return nil, err
+	}
+
+	solutionID := ""
+	if createdSolution.Id != "" {
+		solutionID = createdSolution.Id
+	}
+	if entityId := resp.GetHeader("OData-EntityId"); entityId != "" {
+		if parsedSolutionID, ok := tryExtractSolutionIDFromEntityHeader(entityId); ok {
+			solutionID = parsedSolutionID
+		}
+	}
+
+	return client.WaitForUnmanagedSolution(ctx, environmentId, solutionID, uniqueName)
+}
+
+func (client *Client) UpdateUnmanagedSolution(ctx context.Context, environmentId, solutionId, displayName, description string) (*SolutionDto, error) {
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	requestBody := updateUnmanagedSolutionDto{
+		Description: description,
+		DisplayName: displayName,
+	}
+
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   fmt.Sprintf("/api/data/v9.0/solutions(%s)", solutionId),
+	}
+
+	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, requestBody, []int{http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
+	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
+		return nil, err
+	}
+
+	return client.GetSolutionById(ctx, environmentId, solutionId)
+}
+
+func (client *Client) WaitForUnmanagedSolution(ctx context.Context, environmentId, solutionId, uniqueName string) (*SolutionDto, error) {
+	var lastErr error
+
+	for {
+		var (
+			solution *SolutionDto
+			err      error
+		)
+
+		if solutionId != "" {
+			solution, err = client.GetSolutionById(ctx, environmentId, solutionId)
+		} else {
+			solution, err = client.GetSolutionUniqueName(ctx, environmentId, uniqueName)
+		}
+
+		if err == nil {
+			return solution, nil
+		}
+
+		if !errors.Is(err, customerrors.ErrObjectNotFound) {
+			return nil, err
+		}
+
+		lastErr = err
+		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+			if lastErr != nil {
+				return nil, fmt.Errorf("timed out waiting for unmanaged solution '%s' to become readable: %w", uniqueName, lastErr)
+			}
+			return nil, err
+		}
+	}
+}
+
 func (client *Client) createSolutionComponentParameters(settings []byte) ([]any, error) {
 	if len(settings) == 0 {
 		return nil, nil
@@ -382,6 +492,14 @@ func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId 
 		return "", err
 	}
 	return envUrl.Host, nil
+}
+
+func tryExtractSolutionIDFromEntityHeader(entityID string) (string, bool) {
+	matches := regexp.MustCompile(`solutions\(([^)]+)\)`).FindStringSubmatch(entityID)
+	if len(matches) != 2 {
+		return "", false
+	}
+	return matches[1], true
 }
 
 func (client *Client) getEnvironment(ctx context.Context, environmentId string) (*environmentIdDto, error) {
