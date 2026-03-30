@@ -271,5 +271,5 @@ func setDataSourceModelFromDto(model *DataSourceModel, environmentId string, pub
 	model.EmailAddress = nullableStringValue(publisher.EmailAddress)
 	model.SupportingWebsiteURL = nullableStringValue(publisher.SupportingWebsiteURL)
 	model.IsReadOnly = types.BoolValue(publisher.IsReadOnly)
-	model.Address = addressModelsFromDto(publisher)
+	model.Address = addressModelsFromDto(publisher, model.Address)
 }

@@ -32,6 +32,7 @@ Current work on this branch adds a new typed Dataverse publisher feature:
 - `powerplatform_publisher` data source
 - Dataverse CRUD against `/api/data/v9.2/publishers`
 - Provider registration, examples, tests, and docs generation inputs
+- The publisher mapper now ignores placeholder/default-only Dataverse address slots and preserves explicit empty-string optional values and explicit empty `address` configuration to avoid empty-vs-null drift after apply.
 
 ## Publisher design notes
 

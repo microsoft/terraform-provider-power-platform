@@ -3,7 +3,11 @@
 
 package publisher
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
+)
 
 func TestUnitAddressModelFromDto_IgnoresEmptySlotWithOnlyAddressID(t *testing.T) {
 	dto := &publisherDto{
@@ -14,4 +18,106 @@ func TestUnitAddressModelFromDto_IgnoresEmptySlotWithOnlyAddressID(t *testing.T)
 	if model != nil {
 		t.Fatalf("expected address slot 2 to be ignored when only address id remains, got %#v", model)
 	}
+}
+
+func TestUnitAddressModelsFromDto_IgnoresPlaceholderSlotWithoutExistingState(t *testing.T) {
+	dto := &publisherDto{
+		Address1AddressId:          "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+		Address1AddressTypeCode:    int64Pointer(1),
+		Address1ShippingMethodCode: int64Pointer(1),
+	}
+
+	models := addressModelsFromDto(dto, nil)
+	if models != nil {
+		t.Fatalf("expected placeholder address slot to be ignored, got %#v", models)
+	}
+}
+
+func TestUnitAddressModelsFromDto_PreservesPlaceholderSlotWhenAlreadyTracked(t *testing.T) {
+	dto := &publisherDto{
+		Address1AddressId:          "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+		Address1AddressTypeCode:    int64Pointer(1),
+		Address1ShippingMethodCode: int64Pointer(1),
+	}
+
+	existing := []PublisherAddressModel{
+		{
+			Slot:               types.Int64Value(1),
+			AddressTypeCode:    types.Int64Value(1),
+			ShippingMethodCode: types.Int64Value(1),
+		},
+	}
+
+	models := addressModelsFromDto(dto, existing)
+	if len(models) != 1 {
+		t.Fatalf("expected tracked placeholder address slot to be preserved, got %#v", models)
+	}
+	if models[0].Slot.ValueInt64() != 1 {
+		t.Fatalf("expected preserved address slot 1, got %#v", models[0])
+	}
+}
+
+func TestUnitSetResourceModelFromDto_PreservesExplicitEmptyTopLevelStrings(t *testing.T) {
+	model := ResourceModel{
+		Description:          types.StringValue(""),
+		EmailAddress:         types.StringValue(""),
+		SupportingWebsiteURL: types.StringValue(""),
+	}
+
+	setResourceModelFromDto(&model, "00000000-0000-0000-0000-000000000001", &publisherDto{
+		Id:                             "11111111-1111-1111-1111-111111111111",
+		UniqueName:                     "testpublisher",
+		FriendlyName:                   "Test Publisher",
+		CustomizationPrefix:            "tp",
+		CustomizationOptionValuePrefix: 12345,
+	})
+
+	if model.Description.IsNull() || model.Description.ValueString() != "" {
+		t.Fatalf("expected empty description to be preserved, got %#v", model.Description)
+	}
+	if model.EmailAddress.IsNull() || model.EmailAddress.ValueString() != "" {
+		t.Fatalf("expected empty email_address to be preserved, got %#v", model.EmailAddress)
+	}
+	if model.SupportingWebsiteURL.IsNull() || model.SupportingWebsiteURL.ValueString() != "" {
+		t.Fatalf("expected empty supporting_website_url to be preserved, got %#v", model.SupportingWebsiteURL)
+	}
+}
+
+func TestUnitAddressModelsFromDto_PreservesExplicitEmptyAddressList(t *testing.T) {
+	models := addressModelsFromDto(&publisherDto{}, []PublisherAddressModel{})
+	if models == nil {
+		t.Fatal("expected explicit empty address list to be preserved")
+	}
+	if len(models) != 0 {
+		t.Fatalf("expected no address entries, got %#v", models)
+	}
+}
+
+func TestUnitAddressModelsFromDto_PreservesTrackedEmptyStringAddressFields(t *testing.T) {
+	dto := &publisherDto{
+		Address1AddressId:          "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+		Address1AddressTypeCode:    int64Pointer(1),
+		Address1ShippingMethodCode: int64Pointer(1),
+	}
+
+	existing := []PublisherAddressModel{
+		{
+			Slot:               types.Int64Value(1),
+			AddressTypeCode:    types.Int64Value(1),
+			ShippingMethodCode: types.Int64Value(1),
+			Line1:              types.StringValue(""),
+		},
+	}
+
+	models := addressModelsFromDto(dto, existing)
+	if len(models) != 1 {
+		t.Fatalf("expected tracked address slot to be preserved, got %#v", models)
+	}
+	if models[0].Line1.IsNull() || models[0].Line1.ValueString() != "" {
+		t.Fatalf("expected empty line1 to be preserved, got %#v", models[0].Line1)
+	}
+}
+
+func int64Pointer(value int64) *int64 {
+	return &value
 }
