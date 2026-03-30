@@ -148,6 +148,10 @@ func (r *UnmanagedSolutionResource) Create(ctx context.Context, req resource.Cre
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
 		return
 	}
+	if err := validateUnmanagedSolution(solution, r.FullTypeName()); err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating %s", r.FullTypeName()), err.Error())
+		return
+	}
 
 	setUnmanagedSolutionState(&plan, solution)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -170,6 +174,10 @@ func (r *UnmanagedSolutionResource) Read(ctx context.Context, req resource.ReadR
 			resp.State.RemoveResource(ctx)
 			return
 		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
+		return
+	}
+	if err := validateUnmanagedSolution(solution, r.FullTypeName()); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
@@ -200,6 +208,10 @@ func (r *UnmanagedSolutionResource) Update(ctx context.Context, req resource.Upd
 		plan.Description.ValueString(),
 	)
 	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
+		return
+	}
+	if err := validateUnmanagedSolution(solution, r.FullTypeName()); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 		return
 	}
@@ -260,6 +272,14 @@ func setUnmanagedSolutionState(model *UnmanagedSolutionResourceModel, solution *
 	} else {
 		model.Description = types.StringValue(solution.Description)
 	}
+}
+
+func validateUnmanagedSolution(solution *SolutionDto, typeName string) error {
+	if solution != nil && solution.IsManaged {
+		return fmt.Errorf("solution '%s' is managed and cannot be used with %s", solution.Name, typeName)
+	}
+
+	return nil
 }
 
 func splitSolutionCompositeID(id string) []string {

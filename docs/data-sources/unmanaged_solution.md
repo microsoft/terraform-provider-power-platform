@@ -14,7 +14,7 @@ Fetches a single unmanaged Dataverse solution by unique name.
 
 ```terraform
 data "powerplatform_unmanaged_solution" "example" {
-  environment_id = powerplatform_environment.example.id
+  environment_id = var.environment_id
   uniquename     = "TerraformUnmanagedSolution"
 }
 ```

@@ -111,3 +111,45 @@ func TestUnitUnmanagedSolutionDataSource_Validate_Not_Found(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitUnmanagedSolutionDataSource_Validate_Managed_Solution(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/"+unmanagedSolutionEnvironmentID+"?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Unmanaged_Create/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=uniquename+eq+%27ManagedSolution%27",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+				"value": [
+					{
+						"solutionid": "`+unmanagedSolutionID+`",
+						"uniquename": "ManagedSolution",
+						"friendlyname": "Managed Solution",
+						"_publisherid_value": "`+unmanagedPublisherID+`",
+						"ismanaged": true
+					}
+				]
+			}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				data "powerplatform_unmanaged_solution" "solution" {
+					environment_id = "` + unmanagedSolutionEnvironmentID + `"
+					uniquename     = "ManagedSolution"
+				}`,
+				ExpectError: regexp.MustCompile(`solution 'ManagedSolution' is managed and cannot be used with\s+powerplatform_unmanaged_solution`),
+			},
+		},
+	})
+}

@@ -133,6 +133,10 @@ func (d *UnmanagedSolutionDataSource) Read(ctx context.Context, req datasource.R
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
 		return
 	}
+	if err := validateUnmanagedSolution(solution, d.FullTypeName()); err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
+		return
+	}
 
 	setUnmanagedSolutionDataSourceState(&state, solution)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
