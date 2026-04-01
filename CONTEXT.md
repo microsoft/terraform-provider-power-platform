@@ -33,6 +33,7 @@ Current work on this branch adds a new typed Dataverse publisher feature:
 - Dataverse CRUD against `/api/data/v9.2/publishers`
 - Provider registration, examples, tests, and docs generation inputs
 - The publisher mapper now ignores placeholder/default-only Dataverse address slots and preserves explicit empty-string optional values and explicit empty `address` configuration to avoid empty-vs-null drift after apply.
+- `customization_option_value_prefix` is now intended to be optional on the resource, with the provider deriving the default value using the same hash algorithm used by the Power Apps publisher UI when the field is omitted.
 
 ## Publisher design notes
 

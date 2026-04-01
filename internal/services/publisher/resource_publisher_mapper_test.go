@@ -4,9 +4,11 @@
 package publisher
 
 import (
+	"math"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 func TestUnitAddressModelFromDto_IgnoresEmptySlotWithOnlyAddressID(t *testing.T) {
@@ -118,6 +120,53 @@ func TestUnitAddressModelsFromDto_PreservesTrackedEmptyStringAddressFields(t *te
 	}
 }
 
+func TestUnitDeriveCustomizationOptionValuePrefix_MatchesClientAlgorithm(t *testing.T) {
+	got := deriveCustomizationOptionValuePrefix("mf", "")
+	if got != 12457 {
+		t.Fatalf("expected derived prefix 12457 for 'mf', got %d", got)
+	}
+}
+
+func TestUnitDeriveCustomizationOptionValuePrefix_UsesPublisherSpecialCase(t *testing.T) {
+	got := deriveCustomizationOptionValuePrefix("anything", "d21aab71-79e7-11dd-8874-00188b01e34f")
+	if got != 10000 {
+		t.Fatalf("expected special-case derived prefix 10000, got %d", got)
+	}
+}
+
+func TestUnitCustomizationOptionValuePrefixFromHash_HandlesMinInt32(t *testing.T) {
+	got := customizationOptionValuePrefixFromHash(math.MinInt32)
+	if got != 93648 {
+		t.Fatalf("expected min-int32 hash to produce 93648, got %d", got)
+	}
+}
+
 func int64Pointer(value int64) *int64 {
 	return &value
+}
+
+func TestUnitIsPublisherAlreadyExistsError_MatchesDataverseDuplicateKeyResponse(t *testing.T) {
+	err := customerrors.NewUnexpectedHttpStatusCodeError(
+		[]int{201, 204},
+		412,
+		"412 Precondition Failed",
+		[]byte(`{"error":{"code":"0x80040237","message":"A record with matching key values already exists."}}`),
+	)
+
+	if !isPublisherAlreadyExistsError(err) {
+		t.Fatal("expected Dataverse duplicate-key response to be recognized as already exists")
+	}
+}
+
+func TestUnitIsPublisherAlreadyExistsError_IgnoresOtherUnexpectedStatusErrors(t *testing.T) {
+	err := customerrors.NewUnexpectedHttpStatusCodeError(
+		[]int{201, 204},
+		409,
+		"409 Conflict",
+		[]byte(`{"error":{"code":"other","message":"conflict"}}`),
+	)
+
+	if isPublisherAlreadyExistsError(err) {
+		t.Fatal("expected non-412 error to be ignored")
+	}
 }

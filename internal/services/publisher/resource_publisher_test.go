@@ -36,6 +36,9 @@ func TestUnitPublisherResource_Validate_CRUD(t *testing.T) {
 			if !strings.Contains(string(body), `"friendlyname":"Contoso Publisher"`) {
 				return httpmock.NewStringResponse(http.StatusBadRequest, `{"error":"missing friendly name"}`), nil
 			}
+			if !strings.Contains(string(body), `"customizationoptionvalueprefix":77074`) {
+				return httpmock.NewStringResponse(http.StatusBadRequest, `{"error":"missing derived customization option value prefix"}`), nil
+			}
 
 			resp := httpmock.NewStringResponse(http.StatusNoContent, "")
 			resp.Header.Set("OData-EntityId", fmt.Sprintf("https://%s/api/data/v9.2/publishers(%s)", testPublisherHost, testPublisherID))
@@ -52,6 +55,9 @@ func TestUnitPublisherResource_Validate_CRUD(t *testing.T) {
 			body, _ := io.ReadAll(req.Body)
 			if !strings.Contains(string(body), `"friendlyname":"Updated Contoso Publisher"`) {
 				return httpmock.NewStringResponse(http.StatusBadRequest, `{"error":"missing updated friendly name"}`), nil
+			}
+			if !strings.Contains(string(body), `"customizationoptionvalueprefix":72710`) {
+				return httpmock.NewStringResponse(http.StatusBadRequest, `{"error":"missing explicit customization option value prefix override"}`), nil
 			}
 			if !strings.Contains(string(body), `"address2_city":null`) {
 				return httpmock.NewStringResponse(http.StatusBadRequest, `{"error":"expected address slot 2 to be cleared"}`), nil
@@ -76,7 +82,6 @@ resource "powerplatform_publisher" "example" {
   uniquename                          = "contoso"
   friendly_name                       = "Contoso Publisher"
   customization_prefix                = "cts"
-  customization_option_value_prefix   = 72700
   description                         = "Initial publisher"
   email_address                       = "publisher@contoso.example"
   supporting_website_url              = "https://contoso.example"
@@ -104,6 +109,7 @@ resource "powerplatform_publisher" "example" {
 					resource.TestCheckResourceAttr("powerplatform_publisher.example", "id", testEnvironmentID+"_"+testPublisherID),
 					resource.TestCheckResourceAttr("powerplatform_publisher.example", "publisher_id", testPublisherID),
 					resource.TestCheckResourceAttr("powerplatform_publisher.example", "friendly_name", "Contoso Publisher"),
+					resource.TestCheckResourceAttr("powerplatform_publisher.example", "customization_option_value_prefix", "77074"),
 					resource.TestCheckResourceAttr("powerplatform_publisher.example", "address.#", "2"),
 					resource.TestCheckResourceAttr("powerplatform_publisher.example", "address.0.slot", "1"),
 					resource.TestCheckResourceAttr("powerplatform_publisher.example", "address.1.slot", "2"),
@@ -170,7 +176,7 @@ func publisherCreateResponse() string {
   "friendlyname": "Contoso Publisher",
   "uniquename": "contoso",
   "customizationprefix": "cts",
-  "customizationoptionvalueprefix": 72700,
+  "customizationoptionvalueprefix": 77074,
   "description": "Initial publisher",
   "emailaddress": "publisher@contoso.example",
   "supportingwebsiteurl": "https://contoso.example",

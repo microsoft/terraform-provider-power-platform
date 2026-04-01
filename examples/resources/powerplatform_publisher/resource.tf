@@ -3,7 +3,6 @@ resource "powerplatform_publisher" "example" {
   uniquename                        = "contoso"
   friendly_name                     = "Contoso Publisher"
   customization_prefix              = "cts"
-  customization_option_value_prefix = 72700
   description                       = "Terraform-managed Dataverse publisher"
   email_address                     = "publisher@contoso.example"
   supporting_website_url            = "https://contoso.example"
