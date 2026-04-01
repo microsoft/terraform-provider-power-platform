@@ -53,3 +53,11 @@ curl -fsSL https://aka.ms/install-azd.sh | bash
 # Turn off telemetry for azd
 export AZURE_DEV_COLLECT_TELEMETRY=no
 
+# Install Azure CLI via pipx (avoids distutils issues with Python 3.12+)
+if ! command -v az > /dev/null 2>&1; then
+    python3 -m ensurepip --upgrade
+    python3 -m pip install --quiet pipx
+    PIPX_HOME=/usr/local/pipx PIPX_BIN_DIR=/usr/local/bin python3 -m pipx install azure-cli
+fi
+az version
+
