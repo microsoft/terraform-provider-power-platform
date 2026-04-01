@@ -80,7 +80,9 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 
 		if response.HttpResponse.StatusCode == http.StatusNotFound {
 			tflog.Info(ctx, "Lifecycle operation returned 404 - resource already gone, treating as success")
-			return nil, nil
+			// Return a non-nil LifecycleDto sentinel so callers can safely dereference the result.
+			lifecycleResponse.State.Id = "Succeeded"
+			return &lifecycleResponse, nil
 		}
 
 		if response.HttpResponse.StatusCode == http.StatusConflict {
