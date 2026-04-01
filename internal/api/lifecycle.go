@@ -73,7 +73,6 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 		response, err = client.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusConflict, http.StatusNotFound}, &lifecycleResponse)
 		if err != nil {
 			return nil, err
-
 		}
 
 		tflog.Debug(ctx, "Lifecycle Operation HTTP Status: '"+response.HttpResponse.Status+"'")
