@@ -283,7 +283,7 @@ Use the Terraform plugin logger (`tflog`) for logging within resource implementa
 
 ## Tools
 
- - Developer.md file describes usage of mitmproxy for recording API interactions that is helpful for debugging and creating unit tests with realistic mock responses.You can use it to capture API calls made by the provider during acceptance tests, and save the relevant request/response pairs as JSON fixtures for unit tests.
+ - DEVELOPER.md file describes usage of mitmproxy for recording API interactions that is helpful for debugging and creating unit tests with realistic mock responses. You can use it to capture API calls made by the provider during acceptance tests, and save the relevant request/response pairs as JSON fixtures for unit tests.
 
 ### Changelog Management with Changie
 
