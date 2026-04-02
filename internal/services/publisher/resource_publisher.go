@@ -305,8 +305,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 		return
 	}
 
-	publisherId := getPublisherId(state.Id.ValueString())
-	publisher, err := r.PublisherClient.GetPublisherById(ctx, state.EnvironmentId.ValueString(), publisherId)
+	publisher, err := r.PublisherClient.GetPublisherById(ctx, state.EnvironmentId.ValueString(), state.Id.ValueString())
 	if err != nil {
 		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
@@ -338,8 +337,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	publisherId := getPublisherId(state.Id.ValueString())
-	publisher, err := r.PublisherClient.UpdatePublisher(ctx, state.EnvironmentId.ValueString(), publisherId, &plan)
+	publisher, err := r.PublisherClient.UpdatePublisher(ctx, state.EnvironmentId.ValueString(), state.Id.ValueString(), &plan)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 		return
@@ -363,8 +361,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 		return
 	}
 
-	publisherId := getPublisherId(state.Id.ValueString())
-	err := r.PublisherClient.DeletePublisher(ctx, state.EnvironmentId.ValueString(), publisherId)
+	err := r.PublisherClient.DeletePublisher(ctx, state.EnvironmentId.ValueString(), state.Id.ValueString())
 	if err != nil && !errors.Is(err, customerrors.ErrObjectNotFound) {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 	}
@@ -671,14 +668,6 @@ func isAddressContentEmpty(model PublisherAddressModel) bool {
 
 func isDefaultOrNullInt64(value types.Int64, defaultValue int64) bool {
 	return value.IsNull() || (!value.IsUnknown() && value.ValueInt64() == defaultValue)
-}
-
-func getPublisherId(resourceId string) string {
-	parts := strings.SplitN(resourceId, "_", 2)
-	if len(parts) != 2 {
-		return resourceId
-	}
-	return parts[1]
 }
 
 func buildPublisherImportId(environmentId, publisherId string) string {

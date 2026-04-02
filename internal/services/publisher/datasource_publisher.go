@@ -242,7 +242,7 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 	var publisher *publisherDto
 	var err error
 	if !config.Id.IsNull() && !config.Id.IsUnknown() && config.Id.ValueString() != "" {
-		publisher, err = d.PublisherClient.GetPublisherById(ctx, config.EnvironmentId.ValueString(), getPublisherId(config.Id.ValueString()))
+		publisher, err = d.PublisherClient.GetPublisherById(ctx, config.EnvironmentId.ValueString(), config.Id.ValueString())
 	} else {
 		publisher, err = d.PublisherClient.GetPublisherByUniqueName(ctx, config.EnvironmentId.ValueString(), config.UniqueName.ValueString())
 	}
