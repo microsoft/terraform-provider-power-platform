@@ -208,7 +208,11 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	r.populateStateFromEnvironment(ctx, plan, env, &resp.Diagnostics)
+	err = r.populateStateFromEnvironment(ctx, plan, env, &resp.Diagnostics)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error populating state from environment for %s", r.FullTypeName()), err.Error())
+		return
+	}
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -245,8 +249,14 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	r.populateStateFromEnvironment(ctx, state, env, &resp.Diagnostics)
-
+	err = r.populateStateFromEnvironment(ctx, state, env, &resp.Diagnostics)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error populating state from environment for %s", r.FullTypeName()), err.Error())
+		return
+	}
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -301,7 +311,11 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	r.populateStateFromEnvironment(ctx, plan, env, &resp.Diagnostics)
+	err = r.populateStateFromEnvironment(ctx, plan, env, &resp.Diagnostics)
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Error populating state from environment for %s", r.FullTypeName()), err.Error())
+		return
+	}
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -433,84 +447,78 @@ func (r *ManagedEnvironmentResource) buildManagedEnvironmentDto(plan *ManagedEnv
 	return managedEnvironmentDto
 }
 
-func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Context, plan *ManagedEnvironmentResourceModel, env *environment.EnvironmentDto, diagnostics *diag.Diagnostics) {
+func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Context, plan *ManagedEnvironmentResourceModel, env *environment.EnvironmentDto, diagnostics *diag.Diagnostics) error {
+	if env.Properties.LinkedEnvironmentMetadata == nil {
+		return fmt.Errorf("environment '%s' requires Dataverse to be enabled before it can be managed", env.Name)
+	}
 	plan.Id = plan.EnvironmentId
 	plan.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)
 
-	if env.Properties.GovernanceConfiguration.Settings != nil {
-		maxLimitUserSharing, _ := strconv.ParseInt(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MaxLimitUserSharing, 10, 64)
+	if env.Properties.GovernanceConfiguration.Settings == nil {
+		return fmt.Errorf("environment '%s' doesn't have managed environment feature enabled", env.Name)
+	}
 
-		if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotMaxLimitUserSharing != nil {
-			copilotMaxLimitUserSharing, _ := strconv.ParseInt(*env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotMaxLimitUserSharing, 10, 64)
-			plan.CopilotMaxLimitUserSharing = types.Int64Value(copilotMaxLimitUserSharing)
-		} else {
-			plan.CopilotMaxLimitUserSharing = types.Int64Null()
-		}
+	maxLimitUserSharing, _ := strconv.ParseInt(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MaxLimitUserSharing, 10, 64)
 
-		plan.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
-		plan.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
-		plan.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
+	if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotMaxLimitUserSharing != nil {
+		copilotMaxLimitUserSharing, _ := strconv.ParseInt(*env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotMaxLimitUserSharing, 10, 64)
+		plan.CopilotMaxLimitUserSharing = types.Int64Value(copilotMaxLimitUserSharing)
+	} else {
+		plan.CopilotMaxLimitUserSharing = types.Int64Null()
+	}
 
-		if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCloudFlowsLimitSharingMode != nil {
-			plan.PowerAutomateIsSharingDisabled = types.BoolValue(*env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCloudFlowsLimitSharingMode == "disableSharing")
-		} else {
-			plan.PowerAutomateIsSharingDisabled = types.BoolNull()
-		}
-		if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotAuthoringSharingDisabled != nil {
-			plan.CopilotAllowGrantPermissionsWhenShared = types.BoolValue(*env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotAuthoringSharingDisabled == "false")
-		} else {
-			plan.CopilotAllowGrantPermissionsWhenShared = types.BoolNull()
-		}
+	plan.IsUsageInsightsDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.ExcludeEnvironmentFromAnalysis == "true")
+	plan.IsGroupSharingDisabled = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.IsGroupSharingDisabled == "true")
+	plan.MaxLimitUserSharing = types.Int64Value(maxLimitUserSharing)
 
-		copilotLimitSharingMode := env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotLimitSharingMode
-		if copilotLimitSharingMode != nil && len(*copilotLimitSharingMode) > 0 {
-			if len(*copilotLimitSharingMode) == 1 {
-				plan.CopilotLimitSharingMode = types.StringValue(strings.ToUpper(*copilotLimitSharingMode))
-			} else {
-				plan.CopilotLimitSharingMode = types.StringValue(strings.ToUpper((*copilotLimitSharingMode)[:1]) + (*copilotLimitSharingMode)[1:])
-			}
-		} else {
-			plan.CopilotLimitSharingMode = types.StringNull()
-		}
+	if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCloudFlowsLimitSharingMode != nil {
+		plan.PowerAutomateIsSharingDisabled = types.BoolValue(*env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCloudFlowsLimitSharingMode == "disableSharing")
+	} else {
+		plan.PowerAutomateIsSharingDisabled = types.BoolNull()
+	}
+	if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotAuthoringSharingDisabled != nil {
+		plan.CopilotAllowGrantPermissionsWhenShared = types.BoolValue(*env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotAuthoringSharingDisabled == "false")
+	} else {
+		plan.CopilotAllowGrantPermissionsWhenShared = types.BoolNull()
+	}
 
-		limitSharingMode := env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode
-		if len(limitSharingMode) > 0 {
-			if len(limitSharingMode) == 1 {
-				plan.LimitSharingMode = types.StringValue(strings.ToUpper(limitSharingMode))
-			} else {
-				plan.LimitSharingMode = types.StringValue(strings.ToUpper(limitSharingMode[:1]) + limitSharingMode[1:])
-			}
-		}
-		solutionCheckerMode := env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode
-		if len(solutionCheckerMode) > 0 {
-			if len(solutionCheckerMode) == 1 {
-				plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(solutionCheckerMode))
-			} else {
-				plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(solutionCheckerMode[:1]) + solutionCheckerMode[1:])
-			}
-		}
-		plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
-		if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
-			plan.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
+	copilotLimitSharingMode := env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.BotLimitSharingMode
+	if copilotLimitSharingMode != nil && len(*copilotLimitSharingMode) > 0 {
+		if len(*copilotLimitSharingMode) == 1 {
+			plan.CopilotLimitSharingMode = types.StringValue(strings.ToUpper(*copilotLimitSharingMode))
 		} else {
-			ruleOverrides, err := helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
-			if err != nil {
-				diagnostics.AddError("Error converting solution checker rule overrides", err.Error())
-				return
-			}
-			plan.SolutionCheckerRuleOverrides = ruleOverrides
+			plan.CopilotLimitSharingMode = types.StringValue(strings.ToUpper((*copilotLimitSharingMode)[:1]) + (*copilotLimitSharingMode)[1:])
 		}
 	} else {
-		plan.IsGroupSharingDisabled = types.BoolUnknown()
-		plan.IsUsageInsightsDisabled = types.BoolUnknown()
-		plan.MaxLimitUserSharing = types.Int64Unknown()
-		plan.LimitSharingMode = types.StringUnknown()
-		plan.SolutionCheckerMode = types.StringUnknown()
-		plan.SuppressValidationEmails = types.BoolUnknown()
-		plan.SolutionCheckerRuleOverrides = types.SetUnknown(types.StringType)
-		plan.PowerAutomateIsSharingDisabled = types.BoolUnknown()
-		plan.CopilotAllowGrantPermissionsWhenShared = types.BoolUnknown()
-		plan.CopilotLimitSharingMode = types.StringUnknown()
-		plan.CopilotMaxLimitUserSharing = types.Int64Unknown()
+		plan.CopilotLimitSharingMode = types.StringNull()
 	}
+
+	limitSharingMode := env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.LimitSharingMode
+	if len(limitSharingMode) > 0 {
+		if len(limitSharingMode) == 1 {
+			plan.LimitSharingMode = types.StringValue(strings.ToUpper(limitSharingMode))
+		} else {
+			plan.LimitSharingMode = types.StringValue(strings.ToUpper(limitSharingMode[:1]) + limitSharingMode[1:])
+		}
+	}
+	solutionCheckerMode := env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerMode
+	if len(solutionCheckerMode) > 0 {
+		if len(solutionCheckerMode) == 1 {
+			plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(solutionCheckerMode))
+		} else {
+			plan.SolutionCheckerMode = types.StringValue(strings.ToUpper(solutionCheckerMode[:1]) + solutionCheckerMode[1:])
+		}
+	}
+	plan.SuppressValidationEmails = types.BoolValue(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SuppressValidationEmails == "true")
+	if env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides == "" {
+		plan.SolutionCheckerRuleOverrides = types.SetNull(types.StringType)
+	} else {
+		ruleOverrides, err := helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
+		if err != nil {
+			diagnostics.AddError("Error converting solution checker rule overrides", err.Error())
+			return err
+		}
+		plan.SolutionCheckerRuleOverrides = ruleOverrides
+	}
+	return nil
 }
