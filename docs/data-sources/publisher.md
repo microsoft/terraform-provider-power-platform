@@ -3,12 +3,12 @@
 page_title: "powerplatform_publisher Data Source - Power Platform"
 subcategory: ""
 description: |-
-  Fetches a Dataverse publisher by publisher id or unique name.
+  Fetches a Dataverse publisher by Dataverse publisher id or unique name.
 ---
 
 # powerplatform_publisher (Data Source)
 
-Fetches a Dataverse publisher by publisher id or unique name.
+Fetches a Dataverse publisher by Dataverse publisher id or unique name.
 
 ## Example Usage
 
@@ -28,7 +28,7 @@ data "powerplatform_publisher" "example" {
 
 ### Optional
 
-- `publisher_id` (String) Dataverse publisher id.
+- `id` (String) Dataverse publisher id.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 - `uniquename` (String) Unique name of the publisher.
 
@@ -40,7 +40,6 @@ data "powerplatform_publisher" "example" {
 - `description` (String) Description of the publisher.
 - `email_address` (String) Email address for the publisher.
 - `friendly_name` (String) Display name of the publisher.
-- `id` (String) Unique identifier of the publisher in provider format `<environment_id>_<publisher_id>`.
 - `is_read_only` (Boolean) Whether Dataverse reports this publisher as read only.
 - `supporting_website_url` (String) Supporting website URL for the publisher.
 

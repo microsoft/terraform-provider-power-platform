@@ -48,7 +48,6 @@ type ResourceModel struct {
 	Timeouts                       timeouts.Value          `tfsdk:"timeouts"`
 	Id                             types.String            `tfsdk:"id"`
 	EnvironmentId                  types.String            `tfsdk:"environment_id"`
-	PublisherId                    types.String            `tfsdk:"publisher_id"`
 	UniqueName                     types.String            `tfsdk:"uniquename"`
 	FriendlyName                   types.String            `tfsdk:"friendly_name"`
 	CustomizationPrefix            types.String            `tfsdk:"customization_prefix"`
@@ -64,7 +63,6 @@ type DataSourceModel struct {
 	Timeouts                       timeouts.Value          `tfsdk:"timeouts"`
 	Id                             types.String            `tfsdk:"id"`
 	EnvironmentId                  types.String            `tfsdk:"environment_id"`
-	PublisherId                    types.String            `tfsdk:"publisher_id"`
 	UniqueName                     types.String            `tfsdk:"uniquename"`
 	FriendlyName                   types.String            `tfsdk:"friendly_name"`
 	CustomizationPrefix            types.String            `tfsdk:"customization_prefix"`

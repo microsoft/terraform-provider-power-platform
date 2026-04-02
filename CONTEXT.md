@@ -37,10 +37,10 @@ Current work on this branch adds a new typed Dataverse publisher feature:
 
 ## Publisher design notes
 
-- Resource id format is planned as `<environment_id>_<publisher_id>` so imports can carry both the Dataverse environment and raw publisher GUID.
+- Resource `id` is now the raw Dataverse `publisherid`. Imports still accept the composite token `<environment_id>_<publisher_id>` so environment scoping can be supplied during import without storing that composite string as state identity.
 - The schema uses explicit top-level publisher fields for core publisher metadata.
 - Addresses are modeled as a repeated child `address` structure with up to two entries, mapped to Dataverse `address1_*` and `address2_*` fields.
-- The data source supports lookup by either `publisher_id` or `uniquename`.
+- The data source supports lookup by either `id` or `uniquename`.
 
 ## Open assumptions
 

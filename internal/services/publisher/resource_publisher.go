@@ -66,7 +66,7 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Delete: true,
 			}),
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Unique identifier of the publisher in provider format `<environment_id>_<publisher_id>`.",
+				MarkdownDescription: "Dataverse publisher id.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -78,10 +78,6 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-			},
-			"publisher_id": schema.StringAttribute{
-				MarkdownDescription: "Dataverse publisher id.",
-				Computed:            true,
 			},
 			"uniquename": schema.StringAttribute{
 				MarkdownDescription: "Unique name of the publisher.",
@@ -274,7 +270,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 						"A Dataverse publisher with unique name `%s` already exists in environment `%s`. Import it using `terraform import <resource-address> %s` or choose a different `uniquename`.",
 						plan.UniqueName.ValueString(),
 						plan.EnvironmentId.ValueString(),
-						buildPublisherResourceId(plan.EnvironmentId.ValueString(), existing.Id),
+						buildPublisherImportId(plan.EnvironmentId.ValueString(), existing.Id),
 					),
 				)
 				return
@@ -388,7 +384,7 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 	}
 
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), req.ID)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), parts[1])...)
 }
 
 func validateAddressSlots(addresses []PublisherAddressModel) (diags diag.Diagnostics) {
@@ -423,9 +419,8 @@ func setResourceModelFromDto(model *ResourceModel, environmentId string, publish
 	existingEmailAddress := model.EmailAddress
 	existingSupportingWebsiteURL := model.SupportingWebsiteURL
 
-	model.Id = types.StringValue(buildPublisherResourceId(environmentId, publisher.Id))
+	model.Id = types.StringValue(publisher.Id)
 	model.EnvironmentId = types.StringValue(environmentId)
-	model.PublisherId = types.StringValue(publisher.Id)
 	model.UniqueName = types.StringValue(publisher.UniqueName)
 	model.FriendlyName = types.StringValue(publisher.FriendlyName)
 	model.CustomizationPrefix = types.StringValue(publisher.CustomizationPrefix)
@@ -686,7 +681,7 @@ func getPublisherId(resourceId string) string {
 	return parts[1]
 }
 
-func buildPublisherResourceId(environmentId, publisherId string) string {
+func buildPublisherImportId(environmentId, publisherId string) string {
 	return fmt.Sprintf("%s_%s", environmentId, publisherId)
 }
 
@@ -747,12 +742,7 @@ func effectiveCustomizationOptionValuePrefix(model *ResourceModel) int64 {
 		return model.CustomizationOptionValuePrefix.ValueInt64()
 	}
 
-	publisherId := ""
-	if !model.PublisherId.IsNull() && !model.PublisherId.IsUnknown() {
-		publisherId = model.PublisherId.ValueString()
-	}
-
-	return deriveCustomizationOptionValuePrefix(model.CustomizationPrefix.ValueString(), publisherId)
+	return deriveCustomizationOptionValuePrefix(model.CustomizationPrefix.ValueString(), model.Id.ValueString())
 }
 
 func deriveCustomizationOptionValuePrefix(prefix, publisherId string) int64 {

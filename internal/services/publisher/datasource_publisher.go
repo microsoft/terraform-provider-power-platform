@@ -47,23 +47,19 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Fetches a Dataverse publisher by publisher id or unique name.",
+		MarkdownDescription: "Fetches a Dataverse publisher by Dataverse publisher id or unique name.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Read: true,
 			}),
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Unique identifier of the publisher in provider format `<environment_id>_<publisher_id>`.",
+				MarkdownDescription: "Dataverse publisher id.",
+				Optional:            true,
 				Computed:            true,
 			},
 			"environment_id": schema.StringAttribute{
 				MarkdownDescription: "Id of the Dataverse-enabled environment containing the publisher.",
 				Required:            true,
-			},
-			"publisher_id": schema.StringAttribute{
-				MarkdownDescription: "Dataverse publisher id.",
-				Optional:            true,
-				Computed:            true,
 			},
 			"uniquename": schema.StringAttribute{
 				MarkdownDescription: "Unique name of the publisher.",
@@ -207,7 +203,7 @@ func (d *DataSource) Schema(ctx context.Context, req datasource.SchemaRequest, r
 func (d *DataSource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
 	return []datasource.ConfigValidator{
 		datasourcevalidator.ExactlyOneOf(
-			path.MatchRoot("publisher_id"),
+			path.MatchRoot("id"),
 			path.MatchRoot("uniquename"),
 		),
 	}
@@ -245,8 +241,8 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 
 	var publisher *publisherDto
 	var err error
-	if !config.PublisherId.IsNull() && !config.PublisherId.IsUnknown() && config.PublisherId.ValueString() != "" {
-		publisher, err = d.PublisherClient.GetPublisherById(ctx, config.EnvironmentId.ValueString(), config.PublisherId.ValueString())
+	if !config.Id.IsNull() && !config.Id.IsUnknown() && config.Id.ValueString() != "" {
+		publisher, err = d.PublisherClient.GetPublisherById(ctx, config.EnvironmentId.ValueString(), getPublisherId(config.Id.ValueString()))
 	} else {
 		publisher, err = d.PublisherClient.GetPublisherByUniqueName(ctx, config.EnvironmentId.ValueString(), config.UniqueName.ValueString())
 	}
@@ -260,9 +256,8 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 }
 
 func setDataSourceModelFromDto(model *DataSourceModel, environmentId string, publisher *publisherDto) {
-	model.Id = types.StringValue(buildPublisherResourceId(environmentId, publisher.Id))
+	model.Id = types.StringValue(publisher.Id)
 	model.EnvironmentId = types.StringValue(environmentId)
-	model.PublisherId = types.StringValue(publisher.Id)
 	model.UniqueName = types.StringValue(publisher.UniqueName)
 	model.FriendlyName = types.StringValue(publisher.FriendlyName)
 	model.CustomizationPrefix = types.StringValue(publisher.CustomizationPrefix)

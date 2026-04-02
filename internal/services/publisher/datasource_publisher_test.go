@@ -36,7 +36,7 @@ data "powerplatform_publisher" "example" {
   uniquename     = "contoso"
 }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.powerplatform_publisher.example", "publisher_id", testPublisherID),
+					resource.TestCheckResourceAttr("data.powerplatform_publisher.example", "id", testPublisherID),
 					resource.TestCheckResourceAttr("data.powerplatform_publisher.example", "friendly_name", "Contoso Publisher"),
 					resource.TestCheckResourceAttr("data.powerplatform_publisher.example", "address.#", "2"),
 				),

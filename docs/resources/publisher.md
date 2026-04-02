@@ -64,9 +64,8 @@ resource "powerplatform_publisher" "example" {
 
 ### Read-Only
 
-- `id` (String) Unique identifier of the publisher in provider format `<environment_id>_<publisher_id>`.
+- `id` (String) Dataverse publisher id.
 - `is_read_only` (Boolean) Whether Dataverse reports this publisher as read only.
-- `publisher_id` (String) Dataverse publisher id.
 
 <a id="nestedatt--address"></a>
 ### Nested Schema for `address`

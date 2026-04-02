@@ -106,8 +106,7 @@ resource "powerplatform_publisher" "example" {
   ]
 }`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_publisher.example", "id", testEnvironmentID+"_"+testPublisherID),
-					resource.TestCheckResourceAttr("powerplatform_publisher.example", "publisher_id", testPublisherID),
+					resource.TestCheckResourceAttr("powerplatform_publisher.example", "id", testPublisherID),
 					resource.TestCheckResourceAttr("powerplatform_publisher.example", "friendly_name", "Contoso Publisher"),
 					resource.TestCheckResourceAttr("powerplatform_publisher.example", "customization_option_value_prefix", "77074"),
 					resource.TestCheckResourceAttr("powerplatform_publisher.example", "address.#", "2"),
