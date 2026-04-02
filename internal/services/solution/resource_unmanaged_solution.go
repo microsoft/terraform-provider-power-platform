@@ -57,7 +57,7 @@ func (r *UnmanagedSolutionResource) Schema(ctx context.Context, req resource.Sch
 				Read:   true,
 			}),
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Unique identifier of the unmanaged solution in provider format `<environment_id>_<solution_id>`.",
+				MarkdownDescription: "Unique identifier of the unmanaged solution.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -167,8 +167,7 @@ func (r *UnmanagedSolutionResource) Read(ctx context.Context, req resource.ReadR
 		return
 	}
 
-	solutionId := getSolutionId(state.Id.ValueString())
-	solution, err := r.SolutionClient.GetSolutionById(ctx, state.EnvironmentId.ValueString(), solutionId)
+	solution, err := r.SolutionClient.GetSolutionById(ctx, state.EnvironmentId.ValueString(), state.Id.ValueString())
 	if err != nil {
 		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
@@ -199,11 +198,10 @@ func (r *UnmanagedSolutionResource) Update(ctx context.Context, req resource.Upd
 		return
 	}
 
-	solutionId := getSolutionId(state.Id.ValueString())
 	solution, err := r.SolutionClient.UpdateUnmanagedSolution(
 		ctx,
 		state.EnvironmentId.ValueString(),
-		solutionId,
+		state.Id.ValueString(),
 		plan.DisplayName.ValueString(),
 		plan.Description.ValueString(),
 	)
@@ -237,8 +235,7 @@ func (r *UnmanagedSolutionResource) Delete(ctx context.Context, req resource.Del
 		return
 	}
 
-	solutionId := getSolutionId(state.Id.ValueString())
-	err := r.SolutionClient.DeleteSolution(ctx, state.EnvironmentId.ValueString(), solutionId)
+	err := r.SolutionClient.DeleteSolution(ctx, state.EnvironmentId.ValueString(), state.Id.ValueString())
 	if err != nil && !errors.Is(err, customerrors.ErrObjectNotFound) {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 	}
@@ -257,12 +254,12 @@ func (r *UnmanagedSolutionResource) ImportState(ctx context.Context, req resourc
 		return
 	}
 
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), idParts[1])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), idParts[0])...)
 }
 
 func setUnmanagedSolutionState(model *UnmanagedSolutionResourceModel, solution *SolutionDto) {
-	model.Id = types.StringValue(fmt.Sprintf("%s_%s", model.EnvironmentId.ValueString(), solution.Id))
+	model.Id = types.StringValue(solution.Id)
 	model.UniqueName = types.StringValue(solution.Name)
 	model.DisplayName = types.StringValue(solution.DisplayName)
 	model.PublisherId = types.StringValue(solution.PublisherId)

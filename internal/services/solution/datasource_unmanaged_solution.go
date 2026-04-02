@@ -52,7 +52,7 @@ func (d *UnmanagedSolutionDataSource) Schema(ctx context.Context, req datasource
 				Read: true,
 			}),
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Unique identifier of the unmanaged solution in provider format `<environment_id>_<solution_id>`.",
+				MarkdownDescription: "Unique identifier of the unmanaged solution.",
 				Computed:            true,
 			},
 			"environment_id": schema.StringAttribute{
@@ -143,7 +143,7 @@ func (d *UnmanagedSolutionDataSource) Read(ctx context.Context, req datasource.R
 }
 
 func setUnmanagedSolutionDataSourceState(model *UnmanagedSolutionDataSourceModel, solution *SolutionDto) {
-	model.Id = types.StringValue(fmt.Sprintf("%s_%s", model.EnvironmentId.ValueString(), solution.Id))
+	model.Id = types.StringValue(solution.Id)
 	model.UniqueName = types.StringValue(solution.Name)
 	model.DisplayName = types.StringValue(solution.DisplayName)
 	model.PublisherId = types.StringValue(solution.PublisherId)

@@ -41,7 +41,7 @@ func TestUnitUnmanagedSolutionDataSource_Validate_Read(t *testing.T) {
 					uniquename     = "TerraformTestSolution"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.powerplatform_unmanaged_solution.solution", "id", unmanagedSolutionEnvironmentID+"_"+unmanagedSolutionID),
+					resource.TestCheckResourceAttr("data.powerplatform_unmanaged_solution.solution", "id", unmanagedSolutionID),
 					resource.TestCheckResourceAttr("data.powerplatform_unmanaged_solution.solution", "environment_id", unmanagedSolutionEnvironmentID),
 					resource.TestCheckResourceAttr("data.powerplatform_unmanaged_solution.solution", "uniquename", "TerraformTestSolution"),
 					resource.TestCheckResourceAttr("data.powerplatform_unmanaged_solution.solution", "display_name", "Terraform Test Solution"),

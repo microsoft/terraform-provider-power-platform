@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -65,7 +64,7 @@ func TestUnitUnmanagedSolutionResource_Validate_Create(t *testing.T) {
 					description    = "Created by Terraform"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "id", unmanagedSolutionEnvironmentID+"_"+unmanagedSolutionID),
+					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "id", unmanagedSolutionID),
 					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "environment_id", unmanagedSolutionEnvironmentID),
 					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "uniquename", "TerraformTestSolution"),
 					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "display_name", "Terraform Test Solution"),
@@ -243,7 +242,7 @@ func TestUnitUnmanagedSolutionResource_Validate_Create_Eventual_Consistency(t *t
 					description    = "Created by Terraform"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "id", unmanagedSolutionEnvironmentID+"_"+unmanagedSolutionID),
+					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "id", unmanagedSolutionID),
 					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "uniquename", "TerraformTestSolution"),
 				),
 			},
@@ -302,7 +301,7 @@ func TestUnitUnmanagedSolutionResource_Validate_Create_Uses_Response_ID(t *testi
 					description    = "Created by Terraform"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "id", unmanagedSolutionEnvironmentID+"_"+unmanagedSolutionID),
+					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "id", unmanagedSolutionID),
 					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "publisher_id", unmanagedPublisherID),
 				),
 			},
@@ -381,13 +380,13 @@ func TestAccUnmanagedSolutionResource_Validate_Create_Update(t *testing.T) {
 					true,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr("powerplatform_unmanaged_solution.solution", "id", unmanagedSolutionCompositeIDRegex()),
+					resource.TestMatchResourceAttr("powerplatform_unmanaged_solution.solution", "id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestMatchResourceAttr("powerplatform_unmanaged_solution.solution", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "uniquename", "TerraformUnmanagedSolutionAcc"),
 					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "display_name", "Terraform Unmanaged Solution"),
 					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "description", "Created by Terraform acceptance test"),
 					resource.TestMatchResourceAttr("powerplatform_unmanaged_solution.solution", "publisher_id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestMatchResourceAttr("data.powerplatform_unmanaged_solution.lookup", "id", unmanagedSolutionCompositeIDRegex()),
+					resource.TestMatchResourceAttr("data.powerplatform_unmanaged_solution.lookup", "id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("data.powerplatform_unmanaged_solution.lookup", "uniquename", "TerraformUnmanagedSolutionAcc"),
 					resource.TestCheckResourceAttr("data.powerplatform_unmanaged_solution.lookup", "display_name", "Terraform Unmanaged Solution"),
 					resource.TestCheckResourceAttr("data.powerplatform_unmanaged_solution.lookup", "description", "Created by Terraform acceptance test"),
@@ -463,9 +462,4 @@ func testAccUnmanagedSolutionConfig(environmentDisplayName, uniqueName, displayN
 					description    = "%s"
 				}%s
 	`, environmentDisplayName, uniqueName, displayName, description, lookupBlock)
-}
-
-func unmanagedSolutionCompositeIDRegex() *regexp.Regexp {
-	guidPattern := strings.TrimSuffix(strings.TrimPrefix(helpers.GuidRegex, "^"), "$")
-	return regexp.MustCompile("^" + guidPattern + "_" + guidPattern + "$")
 }

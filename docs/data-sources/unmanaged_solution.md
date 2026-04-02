@@ -35,7 +35,7 @@ data "powerplatform_unmanaged_solution" "example" {
 
 - `description` (String) Description of the unmanaged solution.
 - `display_name` (String) Display name of the unmanaged solution.
-- `id` (String) Unique identifier of the unmanaged solution in provider format `<environment_id>_<solution_id>`.
+- `id` (String) Unique identifier of the unmanaged solution.
 - `publisher_id` (String) Existing Dataverse publisher id that owns the solution.
 
 <a id="nestedatt--timeouts"></a>

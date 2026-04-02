@@ -39,7 +39,7 @@ resource "powerplatform_unmanaged_solution" "solution" {
 
 ### Read-Only
 
-- `id` (String) Unique identifier of the unmanaged solution in provider format `<environment_id>_<solution_id>`.
+- `id` (String) Unique identifier of the unmanaged solution.
 
 <a id="nestedatt--timeouts"></a>
 ### Nested Schema for `timeouts`
