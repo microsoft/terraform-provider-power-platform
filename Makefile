@@ -50,4 +50,4 @@ netdump:
 lint:
 	@golangci-lint run
 
-precommit: clean build lint userdocs unittest 
+precommit: clean build lint userdocs unittest
