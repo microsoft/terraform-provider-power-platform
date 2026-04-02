@@ -196,7 +196,20 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 
 	managedEnvironmentDto := r.buildManagedEnvironmentDto(plan, solutionCheckerRuleOverrides)
 
-	err := r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
+	envPreCheck, err := r.ManagedEnvironmentClient.environmentClient.GetEnvironment(ctx, plan.EnvironmentId.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading environment %s", r.FullTypeName()), err.Error())
+		return
+	}
+	if envPreCheck.Properties.LinkedEnvironmentMetadata == nil {
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Error enabling managed environment for %s", r.FullTypeName()),
+			fmt.Sprintf("environment '%s' requires Dataverse to be enabled before it can be managed", envPreCheck.Name),
+		)
+		return
+	}
+
+	err = r.ManagedEnvironmentClient.EnableManagedEnvironment(ctx, managedEnvironmentDto, plan.EnvironmentId.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when enabling managed environment %s", r.FullTypeName()), err.Error())
 		return
@@ -208,11 +221,7 @@ func (r *ManagedEnvironmentResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	err = r.populateStateFromEnvironment(ctx, plan, env, &resp.Diagnostics)
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error populating state from environment for %s", r.FullTypeName()), err.Error())
-		return
-	}
+	r.populateStateFromEnvironment(ctx, plan, env, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -249,11 +258,7 @@ func (r *ManagedEnvironmentResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	err = r.populateStateFromEnvironment(ctx, state, env, &resp.Diagnostics)
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error populating state from environment for %s", r.FullTypeName()), err.Error())
-		return
-	}
+	r.populateStateFromEnvironment(ctx, state, env, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -311,11 +316,7 @@ func (r *ManagedEnvironmentResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	err = r.populateStateFromEnvironment(ctx, plan, env, &resp.Diagnostics)
-	if err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("Error populating state from environment for %s", r.FullTypeName()), err.Error())
-		return
-	}
+	r.populateStateFromEnvironment(ctx, plan, env, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -447,15 +448,23 @@ func (r *ManagedEnvironmentResource) buildManagedEnvironmentDto(plan *ManagedEnv
 	return managedEnvironmentDto
 }
 
-func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Context, plan *ManagedEnvironmentResourceModel, env *environment.EnvironmentDto, diagnostics *diag.Diagnostics) error {
+func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Context, plan *ManagedEnvironmentResourceModel, env *environment.EnvironmentDto, diagnostics *diag.Diagnostics) {
 	if env.Properties.LinkedEnvironmentMetadata == nil {
-		return fmt.Errorf("environment '%s' requires Dataverse to be enabled before it can be managed", env.Name)
+		diagnostics.AddError(
+			fmt.Sprintf("Error populating state from environment for %s", r.FullTypeName()),
+			fmt.Sprintf("environment '%s' requires Dataverse to be enabled before it can be managed", env.Name),
+		)
+		return
 	}
 	plan.Id = plan.EnvironmentId
 	plan.ProtectionLevel = types.StringValue(env.Properties.GovernanceConfiguration.ProtectionLevel)
 
 	if env.Properties.GovernanceConfiguration.Settings == nil {
-		return fmt.Errorf("environment '%s' doesn't have managed environment feature enabled", env.Name)
+		diagnostics.AddError(
+			fmt.Sprintf("Error populating state from environment for %s", r.FullTypeName()),
+			fmt.Sprintf("environment '%s' doesn't have managed environment feature enabled", env.Name),
+		)
+		return
 	}
 
 	maxLimitUserSharing, _ := strconv.ParseInt(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.MaxLimitUserSharing, 10, 64)
@@ -516,9 +525,8 @@ func (r *ManagedEnvironmentResource) populateStateFromEnvironment(ctx context.Co
 		ruleOverrides, err := helpers.StringSliceToSet(strings.Split(env.Properties.GovernanceConfiguration.Settings.ExtendedSettings.SolutionCheckerRuleOverrides, ","))
 		if err != nil {
 			diagnostics.AddError("Error converting solution checker rule overrides", err.Error())
-			return err
+			return
 		}
 		plan.SolutionCheckerRuleOverrides = ruleOverrides
 	}
-	return nil
 }

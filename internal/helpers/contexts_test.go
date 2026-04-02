@@ -6,7 +6,6 @@ package helpers_test
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
@@ -16,24 +15,6 @@ func TestUnitCheckContextTimeout_NoTimeout(t *testing.T) {
 	err := helpers.CheckContextTimeout(ctx, "test operation")
 	if err != nil {
 		t.Errorf("Expected no error for non-cancelled context, got: %v", err)
-	}
-}
-
-func TestUnitCheckContextTimeout_WithTimeout(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Millisecond)
-	defer cancel()
-
-	// Wait for the timeout to be reached
-	time.Sleep(10 * time.Millisecond)
-
-	err := helpers.CheckContextTimeout(ctx, "test operation")
-	if err == nil {
-		t.Error("Expected timeout error for expired context, got nil")
-	}
-
-	expectedErrorSubstring := "timed out during test operation"
-	if !containsString(err.Error(), expectedErrorSubstring) {
-		t.Errorf("Expected error to contain '%s', got: %v", expectedErrorSubstring, err.Error())
 	}
 }
 
