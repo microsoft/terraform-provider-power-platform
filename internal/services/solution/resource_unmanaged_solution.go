@@ -132,7 +132,10 @@ func (r *UnmanagedSolutionResource) Create(ctx context.Context, req resource.Cre
 		return
 	}
 	if !dvExists {
-		resp.Diagnostics.AddError(fmt.Sprintf("No Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), "")
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("No Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()),
+			fmt.Sprintf("Unmanaged solutions can only be created in Dataverse-enabled environments. The environment '%s' does not have Dataverse provisioned, so solution creation cannot continue. Verify that the target environment is Dataverse-enabled and provision Dataverse before retrying.", plan.EnvironmentId.ValueString()),
+		)
 		return
 	}
 
@@ -277,7 +280,7 @@ func validateUnmanagedSolution(solution *SolutionDto, typeName string) error {
 }
 
 func splitSolutionCompositeID(id string) []string {
-	return strings.Split(id, "_")
+	return strings.SplitN(id, "_", 2)
 }
 
 func normalizeNullableDescription(value string, existing types.String) types.String {

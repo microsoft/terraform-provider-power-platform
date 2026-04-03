@@ -116,7 +116,10 @@ func (d *UnmanagedSolutionDataSource) Read(ctx context.Context, req datasource.R
 	}
 
 	if !dvExists {
-		resp.Diagnostics.AddError(fmt.Sprintf("No Dataverse exists in environment '%s'", state.EnvironmentId.ValueString()), "")
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("No Dataverse exists in environment '%s'", state.EnvironmentId.ValueString()),
+			fmt.Sprintf("The environment '%s' does not have Dataverse enabled or provisioned. Unmanaged solutions require a Dataverse environment. Verify that the environment ID is correct and that Dataverse has been created for this environment.", state.EnvironmentId.ValueString()),
+		)
 		return
 	}
 
