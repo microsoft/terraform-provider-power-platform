@@ -758,7 +758,12 @@ func (c *client) GetSourceControlIntegrationScope(ctx context.Context, environme
 		return "", err
 	}
 
-	return sourceControlIntegrationScopeFromOrgDbValue(extractOrgDbOrgSettingValue(orgSettings.OrgDbOrgSettings, "SourceControlIntegrationScope")), nil
+	scope := sourceControlIntegrationScopeFromOrgDbValue(extractOrgDbOrgSettingValue(orgSettings.OrgDbOrgSettings, "SourceControlIntegrationScope"))
+	if scope == "" {
+		return "", fmt.Errorf("source control integration scope for environment `%s` could not be determined from organization settings", environmentID)
+	}
+
+	return scope, nil
 }
 
 func (c *client) SetSourceControlIntegrationScope(ctx context.Context, environmentID, scope string) error {

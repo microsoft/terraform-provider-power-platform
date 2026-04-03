@@ -164,7 +164,8 @@ func normalizeSolutionID(environmentID, configuredValue string) (string, error) 
 		return "", fmt.Errorf("the `solution_id` value `%s` must be the `id` exported by `powerplatform_solution` for environment `%s`", configuredValue, environmentID)
 	}
 
-	if _, err := uuid.Parse(environmentPrefix); err != nil {
+	parsedEnvironmentPrefix, err := uuid.Parse(environmentPrefix)
+	if err != nil {
 		return "", fmt.Errorf("the `solution_id` value `%s` must use a valid environment GUID prefix", configuredValue)
 	}
 
@@ -172,7 +173,12 @@ func normalizeSolutionID(environmentID, configuredValue string) (string, error) 
 		return "", fmt.Errorf("the `solution_id` value `%s` must use a valid Dataverse solution GUID suffix", configuredValue)
 	}
 
-	if environmentPrefix != environmentID {
+	parsedEnvironmentID, err := uuid.Parse(environmentID)
+	if err != nil {
+		return "", fmt.Errorf("the `environment_id` value `%s` must be a valid environment GUID", environmentID)
+	}
+
+	if parsedEnvironmentPrefix.String() != parsedEnvironmentID.String() {
 		return "", fmt.Errorf("the `solution_id` value `%s` uses environment `%s`, but this resource is targeting environment `%s`", configuredValue, environmentPrefix, environmentID)
 	}
 

@@ -70,3 +70,45 @@ func TestUnitDeleteSolutionGitBranch_UsesLookedUpBranchID(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, deleted)
 }
+
+func TestUnitGetSourceControlIntegrationScope_RejectsUnknownScope(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	httpmock.RegisterNoResponder(func(req *http.Request) (*http.Response, error) {
+		return nil, fmt.Errorf("no responder found for %s %s", req.Method, req.URL)
+	})
+
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001\?%24expand=permissions%2Cproperties\.capacity%2Cproperties%2FbillingPolicy(%2Cproperties%2FcopilotPolicies)?&api-version=2023-06-01$`),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{
+				"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+				"name": "00000000-0000-0000-0000-000000000001",
+				"type": "Microsoft.BusinessAppPlatform/scopes/admin/environments",
+				"location": "europe",
+				"properties": {
+					"displayName": "Test",
+					"linkedEnvironmentMetadata": {
+						"instanceUrl": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"
+					}
+				}
+			}`), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations?%24select=organizationid%2Corgdborgsettings",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationid":"44444444-4444-4444-4444-444444444444","orgdborgsettings":"<OrgSettings><SourceControlIntegrationScope>BrokenScope</SourceControlIntegrationScope></OrgSettings>"}]}`), nil
+		})
+
+	cfg := &config.ProviderConfig{
+		TestMode: true,
+		Urls: config.ProviderConfigUrls{
+			BapiUrl: "api.bap.microsoft.com",
+		},
+	}
+	apiClient := api.NewApiClientBase(cfg, api.NewAuthBase(cfg))
+	client := newGitIntegrationClient(apiClient)
+
+	_, err := client.GetSourceControlIntegrationScope(context.Background(), "00000000-0000-0000-0000-000000000001")
+	require.ErrorContains(t, err, "could not be determined")
+}
