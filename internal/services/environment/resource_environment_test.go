@@ -1259,47 +1259,6 @@ func TestUnitEnvironmentsResource_Validate_Update_Security_Group_Id(t *testing.T
 		updatedSecurityGroup  = "11111111-1111-1111-1111-111111111111"
 	)
 
-	withSecurityGroupID := func(t *testing.T, fixturePath, displayName, securityGroupID string, isListResponse bool) string {
-		t.Helper()
-
-		var payload map[string]any
-		err := json.Unmarshal([]byte(httpmock.File(fixturePath).String()), &payload)
-		if err != nil {
-			t.Fatalf("failed to decode fixture %s: %v", fixturePath, err)
-		}
-
-		target := payload
-		if isListResponse {
-			items, ok := payload["value"].([]any)
-			if !ok || len(items) == 0 {
-				t.Fatalf("fixture %s does not contain a list response", fixturePath)
-			}
-			item, ok := items[0].(map[string]any)
-			if !ok {
-				t.Fatalf("fixture %s contains an invalid list item", fixturePath)
-			}
-			target = item
-		}
-
-		properties, ok := target["properties"].(map[string]any)
-		if !ok {
-			t.Fatalf("fixture %s does not contain properties", fixturePath)
-		}
-		properties["displayName"] = displayName
-		linkedEnvironmentMetadata, ok := properties["linkedEnvironmentMetadata"].(map[string]any)
-		if !ok {
-			t.Fatalf("fixture %s does not contain linkedEnvironmentMetadata", fixturePath)
-		}
-		linkedEnvironmentMetadata["securityGroupId"] = securityGroupID
-
-		body, err := json.Marshal(payload)
-		if err != nil {
-			t.Fatalf("failed to encode fixture %s: %v", fixturePath, err)
-		}
-
-		return string(body)
-	}
-
 	environmentUpdated := false
 	patchRequests := 0
 
@@ -1312,12 +1271,12 @@ func TestUnitEnvironmentsResource_Validate_Update_Security_Group_Id(t *testing.T
 
 	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Update/get_lifecycle_delete.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Security_Group_Id/get_lifecycle_delete.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Update/get_lifecycle_1.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Security_Group_Id/get_lifecycle_1.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
@@ -1329,14 +1288,12 @@ func TestUnitEnvironmentsResource_Validate_Update_Security_Group_Id(t *testing.T
 
 	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
-			fixturePath := "tests/resource/Validate_Create_And_Update/get_environment_0.json"
-			securityGroupID := originalSecurityGroup
+			fixturePath := "tests/resource/Validate_Update_Security_Group_Id/get_environment_0.json"
 			if environmentUpdated {
-				fixturePath = "tests/resource/Validate_Create_And_Update/get_environment_1.json"
-				securityGroupID = updatedSecurityGroup
+				fixturePath = "tests/resource/Validate_Update_Security_Group_Id/get_environment_1.json"
 			}
 
-			return httpmock.NewStringResponse(http.StatusOK, withSecurityGroupID(t, fixturePath, "Example1", securityGroupID, false)), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixturePath).String()), nil
 		})
 
 	httpmock.RegisterResponder("PATCH", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
@@ -1379,12 +1336,12 @@ func TestUnitEnvironmentsResource_Validate_Update_Security_Group_Id(t *testing.T
 
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			securityGroupID := originalSecurityGroup
+			fixturePath := "tests/resource/Validate_Update_Security_Group_Id/get_environments_0.json"
 			if environmentUpdated {
-				securityGroupID = updatedSecurityGroup
+				fixturePath = "tests/resource/Validate_Update_Security_Group_Id/get_environments_1.json"
 			}
 
-			return httpmock.NewStringResponse(http.StatusOK, withSecurityGroupID(t, "tests/resource/Validate_Create_And_Update/get_environments_1.json", "Example1", securityGroupID, true)), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixturePath).String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
