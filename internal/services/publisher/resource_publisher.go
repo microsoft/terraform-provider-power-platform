@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	stdpath "path"
 	"regexp"
 	"strings"
 
@@ -33,6 +34,8 @@ import (
 var _ resource.Resource = &Resource{}
 var _ resource.ResourceWithConfigure = &Resource{}
 var _ resource.ResourceWithImportState = &Resource{}
+
+var canonicalGuidRegex = regexp.MustCompile(helpers.GuidRegex)
 
 func NewPublisherResource() resource.Resource {
 	return &Resource{
@@ -675,9 +678,12 @@ func buildPublisherImportId(environmentId, publisherId string) string {
 }
 
 func getPublisherIdFromResponse(resp *api.Response) (string, error) {
-	entityId := resp.HttpResponse.Header.Get("OData-EntityId")
-	if entityId == "" {
-		entityId = resp.HttpResponse.Header.Get("odata-entityid")
+	var entityId string
+	for headerName, values := range resp.HttpResponse.Header {
+		if strings.EqualFold(headerName, "OData-EntityId") && len(values) > 0 {
+			entityId = values[0]
+			break
+		}
 	}
 	if entityId == "" {
 		return "", errors.New("no publisher id returned from the API")
@@ -688,11 +694,18 @@ func getPublisherIdFromResponse(resp *api.Response) (string, error) {
 		return "", err
 	}
 
-	matches := regexp.MustCompile(`[0-9a-fA-F-]{36}`).FindStringSubmatch(parsed.Path)
-	if len(matches) == 0 {
+	entitySegment := stdpath.Base(parsed.Path)
+	publisherId, found := strings.CutPrefix(entitySegment, "publishers(")
+	if !found {
 		return "", errors.New("no publisher id returned from the API")
 	}
-	return matches[0], nil
+
+	publisherId = strings.TrimSuffix(publisherId, ")")
+	if !canonicalGuidRegex.MatchString(publisherId) {
+		return "", errors.New("no publisher id returned from the API")
+	}
+
+	return publisherId, nil
 }
 
 func nullableStringValue(value string) types.String {
@@ -810,5 +823,5 @@ func nullableFloat64Pointer(value types.Float64) *float64 {
 }
 
 func isGuid(value string) bool {
-	return regexp.MustCompile(`^[0-9a-fA-F-]{36}$`).MatchString(value)
+	return canonicalGuidRegex.MatchString(value)
 }

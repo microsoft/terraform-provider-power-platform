@@ -7,11 +7,14 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
@@ -155,6 +158,46 @@ resource "powerplatform_publisher" "example" {
 	})
 }
 
+func TestAccPublisherResource_Validate_Create(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: publisherAcceptanceResourceConfig(mocks.TestName(), "terraformpublisher", "Terraform Publisher", "tfp"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_publisher.example", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_publisher.example", "uniquename", "terraformpublisher"),
+					resource.TestCheckResourceAttr("powerplatform_publisher.example", "friendly_name", "Terraform Publisher"),
+					resource.TestCheckResourceAttr("powerplatform_publisher.example", "customization_prefix", "tfp"),
+					resource.TestMatchResourceAttr("powerplatform_publisher.example", "customization_option_value_prefix", regexp.MustCompile(`^[1-9]\d{4}$`)),
+				),
+			},
+			{
+				Config: publisherAcceptanceResourceConfig(mocks.TestName(), "terraformpublisher", "Terraform Publisher Updated", "tfp"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_publisher.example", "friendly_name", "Terraform Publisher Updated"),
+					resource.TestMatchResourceAttr("powerplatform_publisher.example", "id", regexp.MustCompile(helpers.GuidRegex)),
+				),
+			},
+			{
+				ResourceName:      "powerplatform_publisher.example",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: func(state *terraform.State) (string, error) {
+					environmentState := state.RootModule().Resources["powerplatform_environment.environment"]
+					publisherState := state.RootModule().Resources["powerplatform_publisher.example"]
+					return environmentState.Primary.ID + "_" + publisherState.Primary.ID, nil
+				},
+			},
+		},
+	})
+}
+
 func registerPublisherEnvironmentMock() {
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/"+testEnvironmentID+"?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
@@ -217,4 +260,32 @@ func publisherUpdateResponse() string {
 
 func encodedPublisherURL() string {
 	return fmt.Sprintf("https://%s/api/data/v9.2/publishers%%28%s%%29", testPublisherHost, testPublisherID)
+}
+
+func publisherAcceptanceResourceConfig(environmentDisplayName, uniqueName, friendlyName, customizationPrefix string) string {
+	return fmt.Sprintf(`
+resource "powerplatform_environment" "environment" {
+  display_name     = "%s"
+  location         = "unitedstates"
+  environment_type = "Sandbox"
+  dataverse = {
+    language_code     = "1033"
+    currency_code     = "USD"
+    security_group_id = "00000000-0000-0000-0000-000000000000"
+  }
+}
+
+resource "time_sleep" "wait_120_seconds" {
+  depends_on      = [powerplatform_environment.environment]
+  create_duration = "120s"
+}
+
+resource "powerplatform_publisher" "example" {
+  depends_on           = [time_sleep.wait_120_seconds]
+  environment_id       = powerplatform_environment.environment.id
+  uniquename           = "%s"
+  friendly_name        = "%s"
+  customization_prefix = "%s"
+}
+`, environmentDisplayName, uniqueName, friendlyName, customizationPrefix)
 }

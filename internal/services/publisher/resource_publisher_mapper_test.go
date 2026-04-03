@@ -5,9 +5,11 @@ package publisher
 
 import (
 	"math"
+	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
@@ -138,6 +140,48 @@ func TestUnitCustomizationOptionValuePrefixFromHash_HandlesMinInt32(t *testing.T
 	got := customizationOptionValuePrefixFromHash(math.MinInt32)
 	if got != 93648 {
 		t.Fatalf("expected min-int32 hash to produce 93648, got %d", got)
+	}
+}
+
+func TestUnitGetPublisherIdFromResponse_ParsesCanonicalGuid(t *testing.T) {
+	resp := &api.Response{
+		HttpResponse: &http.Response{
+			Header: http.Header{
+				"OData-EntityId": []string{"https://example.crm.dynamics.com/api/data/v9.2/publishers(11111111-1111-1111-1111-111111111111)"},
+			},
+		},
+	}
+
+	got, err := getPublisherIdFromResponse(resp)
+	if err != nil {
+		t.Fatalf("expected publisher id to be parsed, got error: %v", err)
+	}
+	if got != "11111111-1111-1111-1111-111111111111" {
+		t.Fatalf("expected canonical publisher id, got %q", got)
+	}
+}
+
+func TestUnitGetPublisherIdFromResponse_RejectsNonCanonicalGuid(t *testing.T) {
+	resp := &api.Response{
+		HttpResponse: &http.Response{
+			Header: http.Header{
+				"OData-EntityId": []string{"https://example.crm.dynamics.com/api/data/v9.2/publishers(11111111-1111-1111-1111-11111111111)"},
+			},
+		},
+	}
+
+	_, err := getPublisherIdFromResponse(resp)
+	if err == nil {
+		t.Fatal("expected malformed publisher id to be rejected")
+	}
+}
+
+func TestUnitIsGuid_RequiresCanonicalGuidFormat(t *testing.T) {
+	if !isGuid("11111111-1111-1111-1111-111111111111") {
+		t.Fatal("expected canonical guid to be recognized")
+	}
+	if isGuid("11111111-1111-1111-1111-11111111111") {
+		t.Fatal("expected malformed guid to be rejected")
 	}
 }
 

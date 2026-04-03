@@ -2,4 +2,4 @@ kind: added
 body: Add powerplatform_publisher resource and data source with Dataverse CRUD support and nested address handling
 time: 2026-03-30T19:30:00Z
 custom:
-    Issue: ""
+    Issue: 1133
