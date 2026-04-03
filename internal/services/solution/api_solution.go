@@ -20,6 +20,8 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
+var solutionEntityHeaderIDPattern = regexp.MustCompile(`solutions\(([^)]+)\)`)
+
 func NewSolutionClient(apiClient *api.Client) Client {
 	return Client{
 		Api: apiClient,
@@ -495,7 +497,7 @@ func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId 
 }
 
 func tryExtractSolutionIDFromEntityHeader(entityID string) (string, bool) {
-	matches := regexp.MustCompile(`solutions\(([^)]+)\)`).FindStringSubmatch(entityID)
+	matches := solutionEntityHeaderIDPattern.FindStringSubmatch(entityID)
 	if len(matches) != 2 {
 		return "", false
 	}
