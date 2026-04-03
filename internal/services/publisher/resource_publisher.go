@@ -456,7 +456,7 @@ func setResourceModelFromDto(model *ResourceModel, environmentId string, publish
 	model.Id = types.StringValue(publisher.Id)
 	model.EnvironmentId = types.StringValue(environmentId)
 	model.UniqueName = types.StringValue(publisher.UniqueName)
-	model.FriendlyName = types.StringValue(publisher.FriendlyName)
+	model.FriendlyName = normalizeCaseInsensitiveConfigString(publisher.FriendlyName, model.FriendlyName)
 	model.CustomizationPrefix = types.StringValue(publisher.CustomizationPrefix)
 	model.CustomizationOptionValuePrefix = types.Int64Value(publisher.CustomizationOptionValuePrefix)
 	model.Description = normalizeNullableConfigString(publisher.Description, existingDescription)
@@ -759,6 +759,14 @@ func normalizeNullableConfigString(value string, existing types.String) types.St
 	}
 
 	return types.StringNull()
+}
+
+func normalizeCaseInsensitiveConfigString(value string, existing types.String) types.String {
+	if !existing.IsNull() && !existing.IsUnknown() && strings.EqualFold(value, existing.ValueString()) {
+		return existing
+	}
+
+	return types.StringValue(value)
 }
 
 func normalizeNullableConfigStringValue(value types.String, existing types.String) types.String {

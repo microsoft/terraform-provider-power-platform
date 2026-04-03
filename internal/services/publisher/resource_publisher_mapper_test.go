@@ -87,6 +87,24 @@ func TestUnitSetResourceModelFromDto_PreservesExplicitEmptyTopLevelStrings(t *te
 	}
 }
 
+func TestUnitSetResourceModelFromDto_PreservesCaseOnlyFriendlyNameDifferences(t *testing.T) {
+	model := ResourceModel{
+		FriendlyName: types.StringValue("MetaForm"),
+	}
+
+	setResourceModelFromDto(&model, "00000000-0000-0000-0000-000000000001", &publisherDto{
+		Id:                             "11111111-1111-1111-1111-111111111111",
+		UniqueName:                     "metaform",
+		FriendlyName:                   "Metaform",
+		CustomizationPrefix:            "mf",
+		CustomizationOptionValuePrefix: 12457,
+	})
+
+	if model.FriendlyName.ValueString() != "MetaForm" {
+		t.Fatalf("expected configured friendly_name casing to be preserved, got %q", model.FriendlyName.ValueString())
+	}
+}
+
 func TestUnitAddressModelsFromDto_PreservesExplicitEmptyAddressList(t *testing.T) {
 	models := addressModelsFromDto(&publisherDto{}, []PublisherAddressModel{})
 	if models == nil {
