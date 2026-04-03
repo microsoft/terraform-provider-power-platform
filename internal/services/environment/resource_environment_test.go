@@ -4,7 +4,9 @@
 package environment_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"math/rand"
 	"net/http"
 	"regexp"
@@ -1243,6 +1245,194 @@ func TestUnitEnvironmentsResource_Validate_Create_And_Update(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestUnitEnvironmentsResource_Validate_Update_Security_Group_Id(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	const (
+		environmentId         = "00000000-0000-0000-0000-000000000001"
+		originalSecurityGroup = "00000000-0000-0000-0000-000000000000"
+		updatedSecurityGroup  = "11111111-1111-1111-1111-111111111111"
+	)
+
+	withSecurityGroupID := func(t *testing.T, fixturePath, displayName, securityGroupID string, isListResponse bool) string {
+		t.Helper()
+
+		var payload map[string]any
+		err := json.Unmarshal([]byte(httpmock.File(fixturePath).String()), &payload)
+		if err != nil {
+			t.Fatalf("failed to decode fixture %s: %v", fixturePath, err)
+		}
+
+		target := payload
+		if isListResponse {
+			items, ok := payload["value"].([]any)
+			if !ok || len(items) == 0 {
+				t.Fatalf("fixture %s does not contain a list response", fixturePath)
+			}
+			item, ok := items[0].(map[string]any)
+			if !ok {
+				t.Fatalf("fixture %s contains an invalid list item", fixturePath)
+			}
+			target = item
+		}
+
+		properties, ok := target["properties"].(map[string]any)
+		if !ok {
+			t.Fatalf("fixture %s does not contain properties", fixturePath)
+		}
+		properties["displayName"] = displayName
+		linkedEnvironmentMetadata, ok := properties["linkedEnvironmentMetadata"].(map[string]any)
+		if !ok {
+			t.Fatalf("fixture %s does not contain linkedEnvironmentMetadata", fixturePath)
+		}
+		linkedEnvironmentMetadata["securityGroupId"] = securityGroupID
+
+		body, err := json.Marshal(payload)
+		if err != nil {
+			t.Fatalf("failed to encode fixture %s: %v", fixturePath, err)
+		}
+
+		return string(body)
+	}
+
+	environmentUpdated := false
+	patchRequests := 0
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Update/get_lifecycle_delete.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Create_And_Update/get_lifecycle_1.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			fixturePath := "tests/resource/Validate_Create_And_Update/get_environment_0.json"
+			securityGroupID := originalSecurityGroup
+			if environmentUpdated {
+				fixturePath = "tests/resource/Validate_Create_And_Update/get_environment_1.json"
+				securityGroupID = updatedSecurityGroup
+			}
+
+			return httpmock.NewStringResponse(http.StatusOK, withSecurityGroupID(t, fixturePath, "Example1", securityGroupID, false)), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			patchRequests++
+
+			body, err := io.ReadAll(req.Body)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read patch request body: %w", err)
+			}
+
+			var payload map[string]any
+			err = json.Unmarshal(body, &payload)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decode patch request body: %w", err)
+			}
+
+			properties, ok := payload["properties"].(map[string]any)
+			if !ok {
+				return nil, fmt.Errorf("patch request body does not contain properties")
+			}
+			linkedEnvironmentMetadata, ok := properties["linkedEnvironmentMetadata"].(map[string]any)
+			if !ok {
+				return nil, fmt.Errorf("patch request body does not contain linkedEnvironmentMetadata")
+			}
+			securityGroupID, ok := linkedEnvironmentMetadata["securityGroupId"].(string)
+			if !ok {
+				return nil, fmt.Errorf("patch request body does not contain linkedEnvironmentMetadata.securityGroupId")
+			}
+			if securityGroupID != updatedSecurityGroup {
+				return nil, fmt.Errorf("patch request body contains linkedEnvironmentMetadata.securityGroupId=%q, want %q", securityGroupID, updatedSecurityGroup)
+			}
+
+			environmentUpdated = true
+
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			securityGroupID := originalSecurityGroup
+			if environmentUpdated {
+				securityGroupID = updatedSecurityGroup
+			}
+
+			return httpmock.NewStringResponse(http.StatusOK, withSecurityGroupID(t, "tests/resource/Validate_Create_And_Update/get_environments_1.json", "Example1", securityGroupID, true)), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(`
+				resource "powerplatform_environment" "development" {
+					display_name     = "Example1"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						domain            = "%s"
+						security_group_id = "%s"
+					}
+				}`, environmentId, originalSecurityGroup),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", environmentId),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", originalSecurityGroup),
+				),
+			},
+			{
+				Config: fmt.Sprintf(`
+				resource "powerplatform_environment" "development" {
+					display_name     = "Example1"
+					location         = "europe"
+					environment_type = "Sandbox"
+					dataverse = {
+						language_code     = "1033"
+						currency_code     = "PLN"
+						domain            = "%s"
+						security_group_id = "%s"
+					}
+				}`, environmentId, updatedSecurityGroup),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "id", environmentId),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "dataverse.security_group_id", updatedSecurityGroup),
+				),
+			},
+		},
+	})
+
+	if patchRequests != 1 {
+		t.Fatalf("expected exactly one environment update request, got %d", patchRequests)
+	}
 }
 
 func TestUnitEnvironmentsResource_Validate_Create(t *testing.T) {
