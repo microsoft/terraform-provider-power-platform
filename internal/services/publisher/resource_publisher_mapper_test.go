@@ -185,7 +185,7 @@ func TestUnitSetDerivedCustomizationOptionValuePrefix_PreservesExplicitConfigVal
 	}
 }
 
-func TestUnitSetDerivedCustomizationOptionValuePrefix_UsesCurrentPrefixNotPriorStateValue(t *testing.T) {
+func TestUnitSetDerivedCustomizationOptionValuePrefix_PreservesStateValueAfterCreate(t *testing.T) {
 	plan := ResourceModel{
 		Id:                             types.StringValue("11111111-1111-1111-1111-111111111111"),
 		CustomizationPrefix:            types.StringValue("ab"),
@@ -202,11 +202,8 @@ func TestUnitSetDerivedCustomizationOptionValuePrefix_UsesCurrentPrefixNotPriorS
 
 	setDerivedCustomizationOptionValuePrefix(&plan, &config, &state, true)
 
-	if plan.CustomizationOptionValuePrefix.ValueInt64() == state.CustomizationOptionValuePrefix.ValueInt64() {
-		t.Fatalf("expected derived value to be recomputed from current prefix, not copied from state")
-	}
-	if plan.CustomizationOptionValuePrefix.ValueInt64() != deriveCustomizationOptionValuePrefix("ab", "11111111-1111-1111-1111-111111111111") {
-		t.Fatalf("expected derived value to match current prefix, got %d", plan.CustomizationOptionValuePrefix.ValueInt64())
+	if plan.CustomizationOptionValuePrefix.ValueInt64() != state.CustomizationOptionValuePrefix.ValueInt64() {
+		t.Fatalf("expected existing customization option value prefix to be preserved from state, got %d", plan.CustomizationOptionValuePrefix.ValueInt64())
 	}
 }
 

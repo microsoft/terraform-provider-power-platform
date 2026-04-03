@@ -786,6 +786,11 @@ func setDerivedCustomizationOptionValuePrefix(plan, config, state *ResourceModel
 		return
 	}
 
+	if hasState && !state.CustomizationOptionValuePrefix.IsNull() && !state.CustomizationOptionValuePrefix.IsUnknown() {
+		plan.CustomizationOptionValuePrefix = state.CustomizationOptionValuePrefix
+		return
+	}
+
 	if plan.CustomizationPrefix.IsNull() || plan.CustomizationPrefix.IsUnknown() {
 		return
 	}
