@@ -36,7 +36,7 @@ func (client *client) CreatePublisher(ctx context.Context, environmentId string,
 	}
 
 	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, "/api/data/v9.2/publishers", nil)
-	resp, err := client.Api.Execute(ctx, nil, http.MethodPost, apiUrl, nil, publisherBodyFromModel(model), []int{http.StatusCreated, http.StatusNoContent}, nil)
+	resp, err := client.Api.Execute(ctx, nil, http.MethodPost, apiUrl, nil, publisherBodyFromModel(model), []int{http.StatusCreated, http.StatusNoContent, http.StatusForbidden}, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (client *client) UpdatePublisher(ctx context.Context, environmentId, publis
 	}
 
 	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, fmt.Sprintf("/api/data/v9.2/publishers(%s)", publisherId), nil)
-	resp, err := client.Api.Execute(ctx, nil, http.MethodPatch, apiUrl, nil, publisherBodyFromModel(model), []int{http.StatusNoContent}, nil)
+	resp, err := client.Api.Execute(ctx, nil, http.MethodPatch, apiUrl, nil, publisherBodyFromModel(model), []int{http.StatusNoContent, http.StatusForbidden}, nil)
 	if err != nil {
 		return nil, err
 	}

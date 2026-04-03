@@ -150,6 +150,66 @@ func TestUnitCustomizationOptionValuePrefixFromHash_HandlesMinInt32(t *testing.T
 	}
 }
 
+func TestUnitSetDerivedCustomizationOptionValuePrefix_DerivesWhenConfigOmitted(t *testing.T) {
+	plan := ResourceModel{
+		CustomizationPrefix:            types.StringValue("mf"),
+		CustomizationOptionValuePrefix: types.Int64Unknown(),
+	}
+	config := ResourceModel{
+		CustomizationOptionValuePrefix: types.Int64Null(),
+	}
+
+	setDerivedCustomizationOptionValuePrefix(&plan, &config, &ResourceModel{}, false)
+
+	if plan.CustomizationOptionValuePrefix.IsUnknown() || plan.CustomizationOptionValuePrefix.IsNull() {
+		t.Fatal("expected derived customization option value prefix to be planned")
+	}
+	if plan.CustomizationOptionValuePrefix.ValueInt64() != 12457 {
+		t.Fatalf("expected derived customization option value prefix 12457, got %d", plan.CustomizationOptionValuePrefix.ValueInt64())
+	}
+}
+
+func TestUnitSetDerivedCustomizationOptionValuePrefix_PreservesExplicitConfigValue(t *testing.T) {
+	plan := ResourceModel{
+		CustomizationPrefix:            types.StringValue("mf"),
+		CustomizationOptionValuePrefix: types.Int64Value(77777),
+	}
+	config := ResourceModel{
+		CustomizationOptionValuePrefix: types.Int64Value(77777),
+	}
+
+	setDerivedCustomizationOptionValuePrefix(&plan, &config, &ResourceModel{}, false)
+
+	if plan.CustomizationOptionValuePrefix.ValueInt64() != 77777 {
+		t.Fatalf("expected explicit customization option value prefix to be preserved, got %d", plan.CustomizationOptionValuePrefix.ValueInt64())
+	}
+}
+
+func TestUnitSetDerivedCustomizationOptionValuePrefix_UsesCurrentPrefixNotPriorStateValue(t *testing.T) {
+	plan := ResourceModel{
+		Id:                             types.StringValue("11111111-1111-1111-1111-111111111111"),
+		CustomizationPrefix:            types.StringValue("ab"),
+		CustomizationOptionValuePrefix: types.Int64Unknown(),
+	}
+	config := ResourceModel{
+		CustomizationOptionValuePrefix: types.Int64Null(),
+	}
+	state := ResourceModel{
+		Id:                             types.StringValue("11111111-1111-1111-1111-111111111111"),
+		CustomizationPrefix:            types.StringValue("old"),
+		CustomizationOptionValuePrefix: types.Int64Value(77074),
+	}
+
+	setDerivedCustomizationOptionValuePrefix(&plan, &config, &state, true)
+
+	if plan.CustomizationOptionValuePrefix.ValueInt64() == state.CustomizationOptionValuePrefix.ValueInt64() {
+		t.Fatalf("expected derived value to be recomputed from current prefix, not copied from state")
+	}
+	if plan.CustomizationOptionValuePrefix.ValueInt64() != deriveCustomizationOptionValuePrefix("ab", "11111111-1111-1111-1111-111111111111") {
+		t.Fatalf("expected derived value to match current prefix, got %d", plan.CustomizationOptionValuePrefix.ValueInt64())
+	}
+}
+
 func TestUnitGetPublisherIdFromResponse_ParsesCanonicalGuid(t *testing.T) {
 	resp := &api.Response{
 		HttpResponse: &http.Response{

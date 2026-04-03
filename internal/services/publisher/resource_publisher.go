@@ -34,6 +34,7 @@ import (
 var _ resource.Resource = &Resource{}
 var _ resource.ResourceWithConfigure = &Resource{}
 var _ resource.ResourceWithImportState = &Resource{}
+var _ resource.ResourceWithModifyPlan = &Resource{}
 
 var canonicalGuidRegex = regexp.MustCompile(helpers.GuidRegex)
 
@@ -225,6 +226,39 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 			},
 		},
 	}
+}
+
+func (r *Resource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
+	defer exitContext()
+
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+
+	var config ResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var plan ResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	var state ResourceModel
+	hasState := !req.State.Raw.IsNull()
+	if hasState {
+		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	setDerivedCustomizationOptionValuePrefix(&plan, &config, &state, hasState)
+	resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 }
 
 func (r *Resource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
@@ -745,6 +779,27 @@ func effectiveCustomizationOptionValuePrefix(model *ResourceModel) int64 {
 	}
 
 	return deriveCustomizationOptionValuePrefix(model.CustomizationPrefix.ValueString(), model.Id.ValueString())
+}
+
+func setDerivedCustomizationOptionValuePrefix(plan, config, state *ResourceModel, hasState bool) {
+	if !config.CustomizationOptionValuePrefix.IsNull() || config.CustomizationOptionValuePrefix.IsUnknown() {
+		return
+	}
+
+	if plan.CustomizationPrefix.IsNull() || plan.CustomizationPrefix.IsUnknown() {
+		return
+	}
+
+	publisherId := ""
+	if !plan.Id.IsNull() && !plan.Id.IsUnknown() {
+		publisherId = plan.Id.ValueString()
+	} else if hasState && !state.Id.IsNull() && !state.Id.IsUnknown() {
+		publisherId = state.Id.ValueString()
+	}
+
+	plan.CustomizationOptionValuePrefix = types.Int64Value(
+		deriveCustomizationOptionValuePrefix(plan.CustomizationPrefix.ValueString(), publisherId),
+	)
 }
 
 func deriveCustomizationOptionValuePrefix(prefix, publisherId string) int64 {
