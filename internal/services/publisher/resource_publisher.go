@@ -748,7 +748,7 @@ func effectiveCustomizationOptionValuePrefix(model *ResourceModel) int64 {
 }
 
 func deriveCustomizationOptionValuePrefix(prefix, publisherId string) int64 {
-	if publisherId == "d21aab71-79e7-11dd-8874-00188b01e34f" {
+	if strings.EqualFold(publisherId, "d21aab71-79e7-11dd-8874-00188b01e34f") {
 		return 10000
 	}
 

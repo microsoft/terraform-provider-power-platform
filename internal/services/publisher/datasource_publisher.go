@@ -241,10 +241,21 @@ func (d *DataSource) Read(ctx context.Context, req datasource.ReadRequest, resp 
 
 	var publisher *publisherDto
 	var err error
-	if !config.Id.IsNull() && !config.Id.IsUnknown() && config.Id.ValueString() != "" {
+	switch lookupTarget := publisherLookupTarget(config); lookupTarget {
+	case publisherLookupTargetDeferred:
+		tflog.Debug(ctx, "Skipping publisher lookup until the selected lookup attribute is known")
+		resp.Diagnostics.Append(resp.State.Set(ctx, &config)...)
+		return
+	case publisherLookupTargetID:
 		publisher, err = d.PublisherClient.GetPublisherById(ctx, config.EnvironmentId.ValueString(), config.Id.ValueString())
-	} else {
+	case publisherLookupTargetUniqueName:
 		publisher, err = d.PublisherClient.GetPublisherByUniqueName(ctx, config.EnvironmentId.ValueString(), config.UniqueName.ValueString())
+	default:
+		resp.Diagnostics.AddError(
+			"Invalid publisher lookup configuration",
+			"Exactly one of `id` or `uniquename` must be configured with a known non-empty value.",
+		)
+		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", d.FullTypeName()), err.Error())
@@ -267,4 +278,37 @@ func setDataSourceModelFromDto(model *DataSourceModel, environmentId string, pub
 	model.SupportingWebsiteURL = nullableStringValue(publisher.SupportingWebsiteURL)
 	model.IsReadOnly = types.BoolValue(publisher.IsReadOnly)
 	model.Address = addressModelsFromDto(publisher, model.Address)
+}
+
+type publisherLookupTargetType string
+
+const (
+	publisherLookupTargetInvalid    publisherLookupTargetType = "invalid"
+	publisherLookupTargetDeferred   publisherLookupTargetType = "deferred"
+	publisherLookupTargetID         publisherLookupTargetType = "id"
+	publisherLookupTargetUniqueName publisherLookupTargetType = "uniquename"
+)
+
+func publisherLookupTarget(config DataSourceModel) publisherLookupTargetType {
+	if !config.Id.IsNull() {
+		if config.Id.IsUnknown() {
+			return publisherLookupTargetDeferred
+		}
+		if config.Id.ValueString() != "" {
+			return publisherLookupTargetID
+		}
+		return publisherLookupTargetInvalid
+	}
+
+	if !config.UniqueName.IsNull() {
+		if config.UniqueName.IsUnknown() {
+			return publisherLookupTargetDeferred
+		}
+		if config.UniqueName.ValueString() != "" {
+			return publisherLookupTargetUniqueName
+		}
+		return publisherLookupTargetInvalid
+	}
+
+	return publisherLookupTargetInvalid
 }

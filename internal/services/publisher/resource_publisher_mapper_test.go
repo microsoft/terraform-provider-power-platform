@@ -136,6 +136,13 @@ func TestUnitDeriveCustomizationOptionValuePrefix_UsesPublisherSpecialCase(t *te
 	}
 }
 
+func TestUnitDeriveCustomizationOptionValuePrefix_UsesPublisherSpecialCaseCaseInsensitive(t *testing.T) {
+	got := deriveCustomizationOptionValuePrefix("anything", "D21AAB71-79E7-11DD-8874-00188B01E34F")
+	if got != 10000 {
+		t.Fatalf("expected case-insensitive special-case derived prefix 10000, got %d", got)
+	}
+}
+
 func TestUnitCustomizationOptionValuePrefixFromHash_HandlesMinInt32(t *testing.T) {
 	got := customizationOptionValuePrefixFromHash(math.MinInt32)
 	if got != 93648 {
