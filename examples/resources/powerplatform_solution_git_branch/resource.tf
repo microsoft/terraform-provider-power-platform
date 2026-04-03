@@ -16,6 +16,10 @@ provider "powerplatform" {
   use_cli = true
 }
 
+# Known limitation: Dataverse Git integration currently works only with delegated
+# user principal authentication that also has Azure DevOps repository access.
+# Service principal, app-only, and OIDC pipeline identities are not supported.
+
 resource "local_file" "solution_settings_file" {
   filename = "${path.module}/solution_settings.json"
   content  = <<EOF

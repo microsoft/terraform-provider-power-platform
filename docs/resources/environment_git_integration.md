@@ -4,11 +4,14 @@ page_title: "powerplatform_environment_git_integration Resource - Power Platform
 subcategory: ""
 description: |-
   Manages the environment-level Dataverse Git repository binding. This maps to the documented sourcecontrolconfiguration Dataverse table and stores the repository connection metadata for an environment.
+  Known limitation: the underlying Power Platform Git integration bootstrap currently requires delegated user principal authentication with Azure DevOps access. Service principal, app-only, and OIDC pipeline identities are not currently supported by the backing Dataverse Git integration flow.
 ---
 
 # powerplatform_environment_git_integration (Resource)
 
 Manages the environment-level Dataverse Git repository binding. This maps to the documented `sourcecontrolconfiguration` Dataverse table and stores the repository connection metadata for an environment.
+
+Known limitation: the underlying Power Platform Git integration bootstrap currently requires delegated user principal authentication with Azure DevOps access. Service principal, app-only, and OIDC pipeline identities are not currently supported by the backing Dataverse Git integration flow.
 
 ## Example Usage
 
@@ -24,6 +27,10 @@ terraform {
 provider "powerplatform" {
   use_cli = true
 }
+
+# Known limitation: Dataverse Git integration currently works only with delegated
+# user principal authentication that also has Azure DevOps repository access.
+# Service principal, app-only, and OIDC pipeline identities are not supported.
 
 # Use `scope = "Environment"` to mirror the maker UI environment-level binding.
 # In this mode the provider manages the root Dataverse binding and proactively

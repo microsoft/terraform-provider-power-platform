@@ -10,6 +10,10 @@ provider "powerplatform" {
   use_cli = true
 }
 
+# Known limitation: Dataverse Git integration currently works only with delegated
+# user principal authentication that also has Azure DevOps repository access.
+# Service principal, app-only, and OIDC pipeline identities are not supported.
+
 # Use `scope = "Environment"` to mirror the maker UI environment-level binding.
 # In this mode the provider manages the root Dataverse binding and proactively
 # enables eligible visible unmanaged solutions in the environment. Built-in

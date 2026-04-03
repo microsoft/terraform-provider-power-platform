@@ -4,11 +4,14 @@ page_title: "powerplatform_solution_git_branch Resource - Power Platform"
 subcategory: ""
 description: |-
   Manages a solution-level Dataverse Git branch binding. This maps to the documented sourcecontrolbranchconfiguration Dataverse table and links a solution partition to a branch and folder beneath an environment Git integration.
+  Known limitation: the underlying Power Platform Git integration bootstrap currently requires delegated user principal authentication with Azure DevOps access. Service principal, app-only, and OIDC pipeline identities are not currently supported by the backing Dataverse Git integration flow.
 ---
 
 # powerplatform_solution_git_branch (Resource)
 
 Manages a solution-level Dataverse Git branch binding. This maps to the documented `sourcecontrolbranchconfiguration` Dataverse table and links a solution partition to a branch and folder beneath an environment Git integration.
+
+Known limitation: the underlying Power Platform Git integration bootstrap currently requires delegated user principal authentication with Azure DevOps access. Service principal, app-only, and OIDC pipeline identities are not currently supported by the backing Dataverse Git integration flow.
 
 ## Example Usage
 
@@ -30,6 +33,10 @@ provider "local" {}
 provider "powerplatform" {
   use_cli = true
 }
+
+# Known limitation: Dataverse Git integration currently works only with delegated
+# user principal authentication that also has Azure DevOps repository access.
+# Service principal, app-only, and OIDC pipeline identities are not supported.
 
 resource "local_file" "solution_settings_file" {
   filename = "${path.module}/solution_settings.json"

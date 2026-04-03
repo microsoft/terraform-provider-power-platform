@@ -74,6 +74,8 @@ func TestUnitSolutionGitBranchResource_Validate_Create_And_Update(t *testing.T) 
 				createdBranch = true
 			case "00000000-0000-0000-0000-000000000000":
 				rootBranchCreated = true
+			default:
+				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
 			}
 
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil

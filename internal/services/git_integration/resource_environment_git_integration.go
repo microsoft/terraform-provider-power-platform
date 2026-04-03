@@ -51,7 +51,7 @@ func (r *EnvironmentGitIntegrationResource) Schema(ctx context.Context, req reso
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Manages the environment-level Dataverse Git repository binding. This maps to the documented `sourcecontrolconfiguration` Dataverse table and stores the repository connection metadata for an environment.",
+		MarkdownDescription: "Manages the environment-level Dataverse Git repository binding. This maps to the documented `sourcecontrolconfiguration` Dataverse table and stores the repository connection metadata for an environment.\n\nKnown limitation: the underlying Power Platform Git integration bootstrap currently requires delegated user principal authentication with Azure DevOps access. Service principal, app-only, and OIDC pipeline identities are not currently supported by the backing Dataverse Git integration flow.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
