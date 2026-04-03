@@ -198,12 +198,12 @@ func (c *client) UpdateEnvironmentGitIntegration(ctx context.Context, environmen
 }
 
 func (c *client) DeleteEnvironmentGitIntegration(ctx context.Context, environmentID, configurationID string) error {
-	rootBranch, err := c.lookupAnySolutionGitBranchByPartition(ctx, environmentID, configurationID, rootPartitionID)
+	_, err := c.lookupAnySolutionGitBranchByPartition(ctx, environmentID, configurationID, rootPartitionID)
 	if err != nil && !errors.Is(err, customerrors.ErrObjectNotFound) {
 		return err
 	}
 	if err == nil {
-		if err := c.DeleteSolutionGitBranch(ctx, environmentID, rootBranch.ID, configurationID, rootPartitionID); err != nil {
+		if err := c.DeleteSolutionGitBranch(ctx, environmentID, configurationID, rootPartitionID); err != nil {
 			return err
 		}
 	}
@@ -414,7 +414,7 @@ func (c *client) UpdateSolutionGitBranch(ctx context.Context, environmentID, bra
 	return c.FindSolutionGitBranchByPartition(ctx, environmentID, configurationID, partitionID)
 }
 
-func (c *client) DeleteSolutionGitBranch(ctx context.Context, environmentID, branchID, configurationID, partitionID string) error {
+func (c *client) DeleteSolutionGitBranch(ctx context.Context, environmentID, configurationID, partitionID string) error {
 	existingBranch, err := c.lookupAnySolutionGitBranchByPartition(ctx, environmentID, configurationID, partitionID)
 	if err != nil {
 		if errors.Is(err, customerrors.ErrObjectNotFound) {
@@ -424,7 +424,7 @@ func (c *client) DeleteSolutionGitBranch(ctx context.Context, environmentID, bra
 	}
 
 	if existingBranch.StatusCode == sourceControlBranchConfigurationStatusInactive {
-		return c.waitForSolutionGitBranchRemoval(ctx, environmentID, branchID, configurationID, partitionID)
+		return c.waitForSolutionGitBranchRemoval(ctx, environmentID, existingBranch.ID, configurationID, partitionID)
 	}
 
 	environmentHost, err := c.EnvironmentClient.GetEnvironmentHostById(ctx, environmentID)
@@ -432,7 +432,7 @@ func (c *client) DeleteSolutionGitBranch(ctx context.Context, environmentID, bra
 		return err
 	}
 
-	apiURL := helpers.BuildDataverseApiUrl(environmentHost, buildSourceControlBranchConfigurationCompositeKeyPath(branchID, partitionID), nil)
+	apiURL := helpers.BuildDataverseApiUrl(environmentHost, buildSourceControlBranchConfigurationCompositeKeyPath(existingBranch.ID, partitionID), nil)
 	headers := http.Header{}
 	headers.Set("If-Match", "*")
 	resp, err := c.Api.Execute(ctx, nil, http.MethodPatch, apiURL, headers, disableSourceControlBranchConfigurationDto{
@@ -448,7 +448,7 @@ func (c *client) DeleteSolutionGitBranch(ctx context.Context, environmentID, bra
 		return nil
 	}
 
-	return c.waitForSolutionGitBranchRemoval(ctx, environmentID, branchID, configurationID, partitionID)
+	return c.waitForSolutionGitBranchRemoval(ctx, environmentID, existingBranch.ID, configurationID, partitionID)
 }
 
 func (c *client) waitForSolutionGitBranchRemoval(ctx context.Context, environmentID, branchID, configurationID, partitionID string) error {
