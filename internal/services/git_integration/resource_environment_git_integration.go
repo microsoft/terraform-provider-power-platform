@@ -188,7 +188,7 @@ func (r *EnvironmentGitIntegrationResource) Create(ctx context.Context, req reso
 	}
 
 	if plan.Scope.ValueString() == scopeEnvironment {
-		if err := r.GitIntegrationClient.EnsureSolutionScopeRootBranch(ctx, plan.EnvironmentID.ValueString(), created.ID, created.OrganizationName, created.ProjectName, created.RepositoryName); err != nil {
+		if err := r.GitIntegrationClient.EnsureRootBranchConfiguration(ctx, plan.EnvironmentID.ValueString(), created.ID, created.OrganizationName, created.ProjectName, created.RepositoryName); err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating the root Git binding for %s", r.FullTypeName()), err.Error())
 			return
 		}
@@ -281,7 +281,7 @@ func (r *EnvironmentGitIntegrationResource) Update(ctx context.Context, req reso
 	}
 
 	if plan.Scope.ValueString() == scopeEnvironment {
-		if err := r.GitIntegrationClient.EnsureSolutionScopeRootBranch(ctx, plan.EnvironmentID.ValueString(), updated.ID, updated.OrganizationName, updated.ProjectName, updated.RepositoryName); err != nil {
+		if err := r.GitIntegrationClient.EnsureRootBranchConfiguration(ctx, plan.EnvironmentID.ValueString(), updated.ID, updated.OrganizationName, updated.ProjectName, updated.RepositoryName); err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when creating the root Git binding for %s", r.FullTypeName()), err.Error())
 			return
 		}

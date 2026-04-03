@@ -75,18 +75,13 @@ func gitProviderFromInt(value int) string {
 }
 
 func convertSourceControlConfigurationDtoToModel(environmentID, scope string, dto sourceControlConfigurationDto) EnvironmentGitIntegrationResourceModel {
-	projectName := types.StringNull()
-	if dto.ProjectName != "" {
-		projectName = types.StringValue(dto.ProjectName)
-	}
-
 	return EnvironmentGitIntegrationResourceModel{
 		ID:               types.StringValue(dto.ID),
 		EnvironmentID:    types.StringValue(environmentID),
 		GitProvider:      types.StringValue(gitProviderFromInt(dto.GitProvider)),
 		Scope:            types.StringValue(scope),
 		OrganizationName: types.StringValue(dto.OrganizationName),
-		ProjectName:      projectName,
+		ProjectName:      types.StringValue(dto.ProjectName),
 		RepositoryName:   types.StringValue(dto.RepositoryName),
 	}
 }

@@ -136,7 +136,7 @@ func (c *client) WaitForEnvironmentGitIntegrationReady(ctx context.Context, envi
 	}
 }
 
-func (c *client) EnsureSolutionScopeRootBranch(ctx context.Context, environmentID, configurationID, organizationName, projectName, repositoryName string) error {
+func (c *client) EnsureRootBranchConfiguration(ctx context.Context, environmentID, configurationID, organizationName, projectName, repositoryName string) error {
 	defaultBranch, err := c.GetGitRepositoryDefaultBranch(ctx, environmentID, organizationName, projectName, repositoryName)
 	if err != nil {
 		return err
@@ -295,7 +295,7 @@ func (c *client) CreateSolutionGitBranch(ctx context.Context, environmentID, sol
 		return nil, err
 	}
 
-	if err := c.EnsureSolutionScopeRootBranch(ctx, environmentID, configurationID, configuration.OrganizationName, configuration.ProjectName, configuration.RepositoryName); err != nil {
+	if err := c.EnsureRootBranchConfiguration(ctx, environmentID, configurationID, configuration.OrganizationName, configuration.ProjectName, configuration.RepositoryName); err != nil {
 		return nil, err
 	}
 
