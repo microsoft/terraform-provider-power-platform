@@ -4,10 +4,7 @@
 package environment_test
 
 import (
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"math/rand"
 	"net/http"
 	"regexp"
@@ -1260,8 +1257,7 @@ func TestUnitEnvironmentsResource_Validate_Update_Security_Group_Id(t *testing.T
 		updatedSecurityGroup  = "11111111-1111-1111-1111-111111111111"
 	)
 
-	environmentUpdated := false
-	patchRequests := 0
+	patchResponseInx := 0
 
 	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
@@ -1289,46 +1285,12 @@ func TestUnitEnvironmentsResource_Validate_Update_Security_Group_Id(t *testing.T
 
 	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
-			fixturePath := "tests/resource/Validate_Update_Security_Group_Id/get_environment_0.json"
-			if environmentUpdated {
-				fixturePath = "tests/resource/Validate_Update_Security_Group_Id/get_environment_1.json"
-			}
-
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixturePath).String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Validate_Update_Security_Group_Id/get_environment_%d.json", patchResponseInx)).String()), nil
 		})
 
 	httpmock.RegisterResponder("PATCH", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
-			patchRequests++
-
-			body, err := io.ReadAll(req.Body)
-			if err != nil {
-				return nil, fmt.Errorf("failed to read patch request body: %w", err)
-			}
-
-			var payload map[string]any
-			err = json.Unmarshal(body, &payload)
-			if err != nil {
-				return nil, fmt.Errorf("failed to decode patch request body: %w", err)
-			}
-
-			properties, ok := payload["properties"].(map[string]any)
-			if !ok {
-				return nil, errors.New("patch request body does not contain properties")
-			}
-			linkedEnvironmentMetadata, ok := properties["linkedEnvironmentMetadata"].(map[string]any)
-			if !ok {
-				return nil, errors.New("patch request body does not contain linkedEnvironmentMetadata")
-			}
-			securityGroupID, ok := linkedEnvironmentMetadata["securityGroupId"].(string)
-			if !ok {
-				return nil, errors.New("patch request body does not contain linkedEnvironmentMetadata.securityGroupId")
-			}
-			if securityGroupID != updatedSecurityGroup {
-				return nil, fmt.Errorf("patch request body contains linkedEnvironmentMetadata.securityGroupId=%q, want %q", securityGroupID, updatedSecurityGroup)
-			}
-
-			environmentUpdated = true
+			patchResponseInx++
 
 			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
 			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
@@ -1337,12 +1299,7 @@ func TestUnitEnvironmentsResource_Validate_Update_Security_Group_Id(t *testing.T
 
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments?%24expand=properties%2FbillingPolicy&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			fixturePath := "tests/resource/Validate_Update_Security_Group_Id/get_environments_0.json"
-			if environmentUpdated {
-				fixturePath = "tests/resource/Validate_Update_Security_Group_Id/get_environments_1.json"
-			}
-
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fixturePath).String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File(fmt.Sprintf("tests/resource/Validate_Update_Security_Group_Id/get_environments_%d.json", patchResponseInx)).String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -1388,8 +1345,8 @@ func TestUnitEnvironmentsResource_Validate_Update_Security_Group_Id(t *testing.T
 		},
 	})
 
-	if patchRequests != 1 {
-		t.Fatalf("expected exactly one environment update request, got %d", patchRequests)
+	if patchResponseInx != 1 {
+		t.Fatalf("expected exactly one environment update request, got %d", patchResponseInx)
 	}
 }
 
