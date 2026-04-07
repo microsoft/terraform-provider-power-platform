@@ -1,0 +1,5 @@
+kind: breaking
+body: Renamed resource `powerplatform_solution` to `powerplatform_solution_import`
+time: 2026-04-07T11:04:42.576657677Z
+custom:
+    Issue: "1136"

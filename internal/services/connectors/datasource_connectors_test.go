@@ -136,7 +136,7 @@ func TestAccTestUnitConnectorsDataSource_Validate_Read_With_Given_Environment(t 
 					create_duration = "90s"
 				}
 
-				resource "powerplatform_solution" "solution" {
+				resource "powerplatform_solution_import" "solution" {
 					depends_on      = [time_sleep.wait_90_seconds]
 
 					environment_id = powerplatform_environment.environment.id
@@ -144,7 +144,7 @@ func TestAccTestUnitConnectorsDataSource_Validate_Read_With_Given_Environment(t 
 				}
 
 				data "powerplatform_connectors" "all_connectors" {
-					depends_on      = [powerplatform_solution.solution]
+					depends_on      = [powerplatform_solution_import.solution]
 
 					environment_id = powerplatform_environment.environment.id
 				}
