@@ -47,9 +47,7 @@ go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.5.0
 # Removing the golangci-lint binary from GOROOT/bin to avoid conflicts duplicated binaries
 rm -f "$(go env GOROOT)/bin/golangci-lint" || true
 
-# Turn off telemetry for az cli
-# https://github.com/Azure/azure-cli?tab=readme-ov-file#telemetry-configuration
-az config set core.collect_telemetry=false
+
 
 curl -fsSL https://aka.ms/install-azd.sh | bash
 # Turn off telemetry for azd

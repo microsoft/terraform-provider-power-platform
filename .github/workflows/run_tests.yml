@@ -27,7 +27,7 @@ jobs:
       acceptance_tests: ${{ steps.set_acceptance_tests.outputs.acceptance_tests }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        uses: step-security/harden-runner@fe104658747b27e96e4f7e80cd0a94068e53901d # v2.16.1
         with:
           egress-policy: audit
 
@@ -45,7 +45,7 @@ jobs:
     steps:
 
     - name: Harden Runner
-      uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+      uses: step-security/harden-runner@fe104658747b27e96e4f7e80cd0a94068e53901d # v2.16.1
       with:
         egress-policy: audit
 
@@ -53,7 +53,7 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
     - name: Set up Go
-      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+      uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -77,7 +77,7 @@ jobs:
     steps:
 
     - name: Harden Runner
-      uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+      uses: step-security/harden-runner@fe104658747b27e96e4f7e80cd0a94068e53901d # v2.16.1
       with:
         egress-policy: audit
 
@@ -85,7 +85,7 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
     - name: Set up Go
-      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+      uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -110,7 +110,7 @@ jobs:
     steps:
     
     - name: Harden Runner
-      uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+      uses: step-security/harden-runner@fe104658747b27e96e4f7e80cd0a94068e53901d # v2.16.1
       with:
         egress-policy: audit
 
@@ -118,7 +118,7 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
     - name: Set up Go
-      uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5 # v6.2.0
+      uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
       with:
         cache: true
         go-version-file: 'go.mod'
@@ -131,7 +131,7 @@ jobs:
         go mod download
     
     - name: "Set up Terraform"
-      uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2  
+      uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 # v4.0.0
     
     - name: Install Power Platform Tools
       if: success() || failure()
@@ -193,7 +193,7 @@ jobs:
         # - -set-exit-code: Preserves the original test exit code
         # - -iocopy: Copies test output to stdout while generating the report
         # - -out junit.xml: Writes JUnit-formatted test results to junit.xml
-        go test -p 4 -v 2>&1 ./... -run ^Test -coverprofile=test-coverage.out -timeout 600m -failfast -shuffle=on | go-junit-report -set-exit-code  -iocopy -out junit.xml
+        go test -p 2 -v 2>&1 ./... -run ^Test -coverprofile=test-coverage.out -timeout 600m -failfast -shuffle=on | go-junit-report -set-exit-code  -iocopy -out junit.xml
         
     - name: Prepare coverage report
       if: success() || failure()
@@ -202,14 +202,14 @@ jobs:
 
     - name: Upload Coverage Artifacts
       if: success() || failure()
-      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
       with:
         name: Test Coverage
         path: test-coverage.cov.html
 
     - name: Upload coverage results to Codecov
       if: success() || failure()
-      uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+      uses: codecov/codecov-action@57e3a136b779b570ffcdbf80b3bdc90e7fab3de2 # v6.0.0
       with:
         file: test-coverage.out
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -223,7 +223,7 @@ jobs:
     
     - name: Render test results
       if: always()
-      uses: dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637 # v2.5.0
+      uses: dorny/test-reporter@a43b3a5f7366b97d083190328d2c652e1a8b6aa2 # v3.0.0
       with:
         name: Test Results
         path: junit.xml
