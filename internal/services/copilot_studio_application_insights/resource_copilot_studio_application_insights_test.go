@@ -67,13 +67,13 @@ func TestAccCopilotStudioApplicationInsights_Validate_Create(t *testing.T) {
 						}
 					}
 
-					resource "powerplatform_solution" "solution" {
+					resource "powerplatform_solution_import" "solution" {
 						environment_id = powerplatform_environment.environment.id
 						solution_file  = "tests/Test_Files/testagent_1_0_0_1_managed.zip"
 					}
 
 					resource "time_sleep" "wait_60_seconds" {
-						depends_on = [powerplatform_solution.solution]
+						depends_on = [powerplatform_solution_import.solution]
 						create_duration = "60s"
 					}
 
@@ -84,7 +84,7 @@ func TestAccCopilotStudioApplicationInsights_Validate_Create(t *testing.T) {
 						select            = ["botid", "name"]
 						top               = 1
 
-						depends_on = [powerplatform_solution.solution, time_sleep.wait_60_seconds]
+						depends_on = [powerplatform_solution_import.solution, time_sleep.wait_60_seconds]
 					}
 
 					resource "powerplatform_copilot_studio_application_insights" "cps_app_insights_config" {

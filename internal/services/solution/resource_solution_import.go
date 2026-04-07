@@ -28,10 +28,10 @@ import (
 var _ resource.Resource = &Resource{}
 var _ resource.ResourceWithImportState = &Resource{}
 
-func NewSolutionResource() resource.Resource {
+func NewSolutionImportResource() resource.Resource {
 	return &Resource{
 		TypeInfo: helpers.TypeInfo{
-			TypeName: "solution",
+			TypeName: "solution_import",
 		},
 	}
 }

@@ -74,15 +74,15 @@ func TestAccSolutionResource_Uninstall_Multiple_Solutions(t *testing.T) {
 					create_duration = "120s"
 				}
 
-				resource "powerplatform_solution" "solution1" {
+				resource "powerplatform_solution_import" "solution1" {
 					depends_on = [time_sleep.wait_120_seconds]
 
 					environment_id = powerplatform_environment.environment.id
 					solution_file    = "` + SOLUTION_1_NAME + `"
 				}
 					
-				resource "powerplatform_solution" "solution2" {
-					depends_on = [powerplatform_solution.solution1]
+				resource "powerplatform_solution_import" "solution2" {
+					depends_on = [powerplatform_solution_import.solution1]
 
 					environment_id = powerplatform_environment.environment.id
 					solution_file    = "` + SOLUTION_2_NAME + `"
@@ -133,21 +133,21 @@ func TestAccSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 					create_duration = "120s"
 				}
 
-				resource "powerplatform_solution" "solution" {
+				resource "powerplatform_solution_import" "solution" {
 					depends_on = [time_sleep.wait_120_seconds]
 					environment_id = powerplatform_environment.environment.id
 					solution_file    = "` + SOLUTION_1_NAME + `"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
-					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file"),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file", SOLUTION_1_NAME),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", "Terraform Test Solution"),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", "false"),
-					resource.TestMatchResourceAttr("powerplatform_solution.solution", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", "1.1.0.0"),
+					resource.TestCheckNoResourceAttr("powerplatform_solution_import.solution", "settings_file_checksum"),
+					resource.TestCheckNoResourceAttr("powerplatform_solution_import.solution", "settings_file"),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_file_checksum", solutionFileChecksum),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_file", SOLUTION_1_NAME),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "display_name", "Terraform Test Solution"),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "is_managed", "false"),
+					resource.TestMatchResourceAttr("powerplatform_solution_import.solution", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_version", "1.1.0.0"),
 				),
 			},
 		},
@@ -215,18 +215,18 @@ func TestUnitSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 			{
 				Config: `
 
-				resource "powerplatform_solution" "solution" {
+				resource "powerplatform_solution_import" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					solution_file    = "test_solution.zip"
 					settings_file 	 = "test_solution_settings.json"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", "1.1.0.0"),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_checksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_checksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", "Terraform Test Solution"),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", strconv.FormatBool(false)),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_version", "1.1.0.0"),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_file_checksum", solution_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "settings_file_checksum", settings_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "display_name", "Terraform Test Solution"),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "is_managed", strconv.FormatBool(false)),
 				),
 			},
 		},
@@ -304,7 +304,7 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 					create_duration = "120s"
 				}
 				
-				resource "powerplatform_solution" "solution" {
+				resource "powerplatform_solution_import" "solution" {
 					depends_on = [time_sleep.wait_120_seconds]
 					
 					environment_id = powerplatform_environment.environment.id
@@ -313,14 +313,14 @@ func TestAccSolutionResource_Validate_Create_With_Settings_File(t *testing.T) {
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solutionFileChecksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settingsFileChecksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file", solutionSettingsFileName),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file", SOLUTION_1_NAME),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", "Terraform Test Solution"),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", "false"),
-					resource.TestMatchResourceAttr("powerplatform_solution.solution", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", "1.1.0.0"),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_file_checksum", solutionFileChecksum),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "settings_file_checksum", settingsFileChecksum),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "settings_file", solutionSettingsFileName),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_file", SOLUTION_1_NAME),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "display_name", "Terraform Test Solution"),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "is_managed", "false"),
+					resource.TestMatchResourceAttr("powerplatform_solution_import.solution", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_version", "1.1.0.0"),
 				),
 			},
 		},
@@ -387,18 +387,18 @@ func TestUnitSolutionResource_Validate_Create_No_Settings_File(t *testing.T) {
 			{
 				Config: `
 
-				resource "powerplatform_solution" "solution" {
+				resource "powerplatform_solution_import" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					solution_file    = "test_solution.zip"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
-					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file"),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_checksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_version", "1.1.0.0"),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "display_name", "Terraform Test Solution"),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "is_managed", strconv.FormatBool(false)),
+					resource.TestCheckNoResourceAttr("powerplatform_solution_import.solution", "settings_file_checksum"),
+					resource.TestCheckNoResourceAttr("powerplatform_solution_import.solution", "settings_file"),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_file_checksum", solution_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_version", "1.1.0.0"),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "display_name", "Terraform Test Solution"),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "is_managed", strconv.FormatBool(false)),
 				),
 			},
 		},
@@ -472,56 +472,56 @@ func TestUnitSolutionResource_Validate_Create_And_Force_Recreate(t *testing.T) {
 			{
 				Config: `
 		
-				resource "powerplatform_solution" "solution" {
+				resource "powerplatform_solution_import" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					solution_file    = "test_solution_before.zip"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_before_checksum),
-					resource.TestCheckNoResourceAttr("powerplatform_solution.solution", "settings_file_checksum"),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_file_checksum", solution_before_checksum),
+					resource.TestCheckNoResourceAttr("powerplatform_solution_import.solution", "settings_file_checksum"),
 				),
 			},
 			{
 				Config: `
 
-				resource "powerplatform_solution" "solution" {
+				resource "powerplatform_solution_import" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					solution_file    = "test_solution_before.zip"
 					settings_file 	 = "test_settings_before.json"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_before_checksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_before_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_file_checksum", solution_before_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "settings_file_checksum", settings_before_checksum),
 				),
 			},
 			{
 				Config: `
 
-				resource "powerplatform_solution" "solution" {
+				resource "powerplatform_solution_import" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					solution_file    = "test_solution_after.zip"
 					settings_file 	 = "test_settings_before.json"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_after_checksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_before_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_file_checksum", solution_after_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "settings_file_checksum", settings_before_checksum),
 				),
 			},
 			{
 				Config: `
 
-				resource "powerplatform_solution" "solution" {
+				resource "powerplatform_solution_import" "solution" {
 					environment_id = "00000000-0000-0000-0000-000000000001"
 					solution_file    = "test_solution_after.zip"
 					settings_file 	 = "test_settings_after.json"
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "solution_file_checksum", solution_after_checksum),
-					resource.TestCheckResourceAttr("powerplatform_solution.solution", "settings_file_checksum", settings_after_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "solution_file_checksum", solution_after_checksum),
+					resource.TestCheckResourceAttr("powerplatform_solution_import.solution", "settings_file_checksum", settings_after_checksum),
 				),
 			},
 		},
@@ -551,7 +551,7 @@ func TestAccSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 					environment_type                          = "Sandbox"
 				}
 				
-				resource "powerplatform_solution" "solution" {
+				resource "powerplatform_solution_import" "solution" {
 					environment_id = powerplatform_environment.environment.id
 					solution_file    = "` + SOLUTION_1_NAME + `"
 				}`,
@@ -646,7 +646,7 @@ func TestUnitSolutionResource_Validate_Create_No_Dataverse(t *testing.T) {
 					environment_type                          = "Sandbox"
 				}
 
-				resource "powerplatform_solution" "solution" {
+				resource "powerplatform_solution_import" "solution" {
 					environment_id = powerplatform_environment.env.id
 					solution_file  = "` + SOLUTION_1_RELATIVE_PATH + `"
 				}`,

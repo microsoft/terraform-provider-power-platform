@@ -398,7 +398,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return environment.NewEnvironmentResource() },
 		func() resource.Resource { return application.NewEnvironmentApplicationPackageInstallResource() },
 		func() resource.Resource { return dlp_policy.NewDataLossPreventionPolicyResource() },
-		func() resource.Resource { return solution.NewSolutionResource() },
+		func() resource.Resource { return solution.NewSolutionImportResource() },
 		func() resource.Resource { return tenant_settings.NewTenantSettingsResource() },
 		func() resource.Resource { return managed_environment.NewManagedEnvironmentResource() },
 		func() resource.Resource { return licensing.NewBillingPolicyEnvironmentResource() },

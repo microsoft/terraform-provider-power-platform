@@ -88,7 +88,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		environment_groups.NewEnvironmentGroupResource(),
 		application.NewEnvironmentApplicationPackageInstallResource(),
 		dlp_policy.NewDataLossPreventionPolicyResource(),
-		solution.NewSolutionResource(),
+		solution.NewSolutionImportResource(),
 		tenant_settings.NewTenantSettingsResource(),
 		managed_environment.NewManagedEnvironmentResource(),
 		licensing.NewBillingPolicyResource(),

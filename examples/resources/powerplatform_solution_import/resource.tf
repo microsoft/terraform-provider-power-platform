@@ -56,7 +56,7 @@ resource "powerplatform_environment" "environment" {
   }
 }
 
-resource "powerplatform_solution" "solution" {
+resource "powerplatform_solution_import" "solution" {
   environment_id = powerplatform_environment.environment.id
   solution_file  = "${path.module}/TerraformTestSolution_Complex_1_1_0_0.zip"
   settings_file  = local_file.solution_settings_file.filename
