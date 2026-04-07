@@ -5,6 +5,7 @@ package environment_test
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/rand"
@@ -1313,15 +1314,15 @@ func TestUnitEnvironmentsResource_Validate_Update_Security_Group_Id(t *testing.T
 
 			properties, ok := payload["properties"].(map[string]any)
 			if !ok {
-				return nil, fmt.Errorf("patch request body does not contain properties")
+				return nil, errors.New("patch request body does not contain properties")
 			}
 			linkedEnvironmentMetadata, ok := properties["linkedEnvironmentMetadata"].(map[string]any)
 			if !ok {
-				return nil, fmt.Errorf("patch request body does not contain linkedEnvironmentMetadata")
+				return nil, errors.New("patch request body does not contain linkedEnvironmentMetadata")
 			}
 			securityGroupID, ok := linkedEnvironmentMetadata["securityGroupId"].(string)
 			if !ok {
-				return nil, fmt.Errorf("patch request body does not contain linkedEnvironmentMetadata.securityGroupId")
+				return nil, errors.New("patch request body does not contain linkedEnvironmentMetadata.securityGroupId")
 			}
 			if securityGroupID != updatedSecurityGroup {
 				return nil, fmt.Errorf("patch request body contains linkedEnvironmentMetadata.securityGroupId=%q, want %q", securityGroupID, updatedSecurityGroup)
