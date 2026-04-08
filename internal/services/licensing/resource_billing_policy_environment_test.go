@@ -20,7 +20,6 @@ import (
 )
 
 func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
-	t.Setenv("TF_ACC", "true")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
