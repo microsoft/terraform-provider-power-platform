@@ -144,6 +144,9 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 				VersionConstraint: constants.AZAPI_PROVIDER_VERSION_CONSTRAINT,
 				Source:            "azure/azapi",
 			},
+			"time": {
+				Source: "hashicorp/time",
+			},
 		},
 		Steps: []resource.TestStep{
 			{
@@ -187,9 +190,17 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 					environment_type = "Sandbox"
 				}
 
+				resource "time_sleep" "wait_for_environments" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.env1, powerplatform_environment.env2, powerplatform_environment.env3]
+				}
+
 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
 					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
 					environments      = [powerplatform_environment.env1.id]
+
+					depends_on = [time_sleep.wait_for_environments]
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "billing_policy_id", regexp.MustCompile(helpers.GuidRegex)),
@@ -241,9 +252,17 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
 				}
 
+				resource "time_sleep" "wait_for_environments" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.env1, powerplatform_environment.env2, powerplatform_environment.env3]
+				}
+
 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
 					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
 					environments      = [powerplatform_environment.env1.id, powerplatform_environment.env2.id, powerplatform_environment.env3.id]
+
+					depends_on = [time_sleep.wait_for_environments]
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "billing_policy_id", regexp.MustCompile(helpers.GuidRegex)),
@@ -293,9 +312,17 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
 				}
 
+				resource "time_sleep" "wait_for_environments" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.env1, powerplatform_environment.env2, powerplatform_environment.env3]
+				}
+
 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
 					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
 					environments      = [powerplatform_environment.env1.id, powerplatform_environment.env3.id]
+
+					depends_on = [time_sleep.wait_for_environments]
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "billing_policy_id", regexp.MustCompile(helpers.GuidRegex)),
