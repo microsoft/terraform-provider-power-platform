@@ -361,6 +361,9 @@ func TestAccUserResource_Validate_Create_Dataverse_User(t *testing.T) {
 				VersionConstraint: constants.RANDOM_PROVIDER_VERSION_CONSTRAINT,
 				Source:            "hashicorp/random",
 			},
+			"time": {
+				Source: "hashicorp/time",
+			},
 		},
 		Steps: []resource.TestStep{
 			{
@@ -412,6 +415,12 @@ func TestAccUserResource_Validate_Create_Dataverse_User(t *testing.T) {
 					}
 				}
 
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.dataverse_user_example]
+				}
+
 				resource "powerplatform_user" "new_user" {
 					environment_id = powerplatform_environment.dataverse_user_example.id
 					security_roles = [
@@ -419,6 +428,8 @@ func TestAccUserResource_Validate_Create_Dataverse_User(t *testing.T) {
 					]
 					aad_id         =  element(split("/", azuread_user.test_user.id), 2)  
 					disable_delete = false
+
+					depends_on = [time_sleep.wait_for_dataverse]
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
