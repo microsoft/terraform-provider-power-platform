@@ -163,3 +163,24 @@ func TestUnitConnectionsResource_Validate_Create_Without_Config_Parameters(t *te
 		},
 	})
 }
+
+func TestUnitConnectionsResource_Validate_Create_Invalid_Connection_Parameters(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		IsUnitTest: true,
+
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+					resource "powerplatform_connection" "azure_openai_connection" {
+						environment_id         = "00000000-0000-0000-0000-000000000000"
+						name                   = "shared_azureopenai"
+						display_name           = "OpenAI Connection"
+						connection_parameters  = "{"
+					}
+					`,
+				ExpectError: regexp.MustCompile("Failed to convert connection parameters"),
+			},
+		},
+	})
+}
