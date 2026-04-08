@@ -20,12 +20,16 @@ import (
 )
 
 func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
+	t.Setenv("TF_ACC", "true")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		ExternalProviders: map[string]resource.ExternalProvider{
 			"azapi": {
 				VersionConstraint: constants.AZAPI_PROVIDER_VERSION_CONSTRAINT,
 				Source:            "azure/azapi",
+			},
+			"time": {
+				Source: "hashicorp/time",
 			},
 		},
 		Steps: []resource.TestStep{
@@ -66,9 +70,17 @@ func TestAccBillingPolicyResourceEnvironment_Validate_Create(t *testing.T) {
 					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
 				}
 
+				resource "time_sleep" "wait_for_environments" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.env1, powerplatform_environment.env2]
+				}
+
 				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
 					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
 					environments      = [powerplatform_environment.env1.id, powerplatform_environment.env2.id]
+
+					depends_on = [time_sleep.wait_for_environments]
 				}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(

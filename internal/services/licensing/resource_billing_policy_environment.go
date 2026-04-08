@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -120,7 +121,12 @@ func (r *BillingPolicyEnvironmentResource) Create(ctx context.Context, req resou
 		}
 	}
 
-	err = r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId, plan.Environments)
+	normalizedPlanEnvs := make([]string, len(plan.Environments))
+	for i, env := range plan.Environments {
+		normalizedPlanEnvs[i] = strings.ToLower(env)
+	}
+
+	err = r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId, normalizedPlanEnvs)
 	if err != nil {
 		addClientError(&resp.Diagnostics, r.FullTypeName(), "creating", err)
 		return
@@ -197,7 +203,12 @@ func (r *BillingPolicyEnvironmentResource) Update(ctx context.Context, req resou
 		return
 	}
 
-	err = r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId, plan.Environments)
+	normalizedPlanEnvs := make([]string, len(plan.Environments))
+	for i, env := range plan.Environments {
+		normalizedPlanEnvs[i] = strings.ToLower(env)
+	}
+
+	err = r.LicensingClient.AddEnvironmentsToBillingPolicy(ctx, plan.BillingPolicyId, normalizedPlanEnvs)
 	if err != nil {
 		addClientError(&resp.Diagnostics, r.FullTypeName(), "updating", err)
 		return

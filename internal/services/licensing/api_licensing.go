@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
@@ -158,7 +159,7 @@ func (client *Client) GetEnvironmentsForBillingPolicy(ctx context.Context, billi
 
 	environments := []string{}
 	for _, billingPolicyEnvironment := range billingPolicyEnvironments.Value {
-		environments = append(environments, billingPolicyEnvironment.EnvironmentId)
+		environments = append(environments, strings.ToLower(billingPolicyEnvironment.EnvironmentId))
 	}
 	return environments, err
 }
