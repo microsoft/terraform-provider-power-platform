@@ -62,12 +62,38 @@ func TestUnitSyncAttributePlanModifier(t *testing.T) {
 		}
 	})
 
+	t.Run("create_without_prior_state_leaves_checksum_unknown", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		file := filepath.Join(tmpDir, "file.txt")
+		if err := os.WriteFile(file, []byte("content"), 0600); err != nil {
+			t.Fatalf("write file: %v", err)
+		}
+
+		req := planmodifier.StringRequest{
+			Plan: newPlan(t, schemaDef, map[string]tftypes.Value{
+				"file": tftypes.NewValue(tftypes.String, file),
+			}),
+			StateValue: types.StringNull(),
+		}
+		resp := planmodifier.StringResponse{}
+
+		modifier.PlanModifyString(ctx, req, &resp)
+
+		if resp.Diagnostics.HasError() {
+			t.Fatalf("expected no diagnostics, got %v", resp.Diagnostics)
+		}
+		if !resp.PlanValue.IsUnknown() {
+			t.Fatal("expected plan value to be unknown")
+		}
+	})
+
 	t.Run("checksum_error", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		req := planmodifier.StringRequest{
 			Plan: newPlan(t, schemaDef, map[string]tftypes.Value{
 				"file": tftypes.NewValue(tftypes.String, tmpDir),
 			}),
+			StateValue: types.StringValue("existing"),
 		}
 		resp := planmodifier.StringResponse{}
 
@@ -84,6 +110,7 @@ func TestUnitSyncAttributePlanModifier(t *testing.T) {
 			Plan: newPlan(t, schemaDef, map[string]tftypes.Value{
 				"file": tftypes.NewValue(tftypes.String, nonexistent),
 			}),
+			StateValue: types.StringValue("existing"),
 		}
 		resp := planmodifier.StringResponse{}
 
@@ -112,6 +139,7 @@ func TestUnitSyncAttributePlanModifier(t *testing.T) {
 			Plan: newPlan(t, schemaDef, map[string]tftypes.Value{
 				"file": tftypes.NewValue(tftypes.String, file),
 			}),
+			StateValue: types.StringValue("existing"),
 		}
 		resp := planmodifier.StringResponse{}
 
