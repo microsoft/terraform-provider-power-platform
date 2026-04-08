@@ -178,8 +178,13 @@ func (client *Client) AddEnvironmentsToBillingPolicy(ctx context.Context, billin
 	values.Add("api-version", "2022-03-01-preview")
 	apiUrl.RawQuery = values.Encode()
 
+	normalizedIds := make([]string, len(environmentIds))
+	for i, id := range environmentIds {
+		normalizedIds[i] = strings.ToLower(id)
+	}
+
 	environments := BillingPolicyEnvironmentsArrayDto{
-		EnvironmentIds: environmentIds,
+		EnvironmentIds: normalizedIds,
 	}
 	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environments, []int{http.StatusOK}, nil)
 
@@ -198,10 +203,15 @@ func (client *Client) RemoveEnvironmentsToBillingPolicy(ctx context.Context, bil
 
 	values := url.Values{}
 	values.Add("api-version", "2022-03-01-preview")
+
+	normalizedIds := make([]string, len(environmentIds))
+	for i, id := range environmentIds {
+		normalizedIds[i] = strings.ToLower(id)
+	}
 	apiUrl.RawQuery = values.Encode()
 
 	environments := BillingPolicyEnvironmentsArrayDto{
-		EnvironmentIds: environmentIds,
+		EnvironmentIds: normalizedIds,
 	}
 	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, environments, []int{http.StatusOK}, nil)
 
