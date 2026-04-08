@@ -1,0 +1,5 @@
+kind: fixed
+body: Fix create-time powerplatform_solution.settings_file_checksum plan inconsistency when settings_file is generated during the same apply
+time: 2026-04-08T16:07:41.282297+10:00
+custom:
+    Issue: "1138"
