@@ -95,7 +95,7 @@ type stageSolutionDetailsDto struct {
 type importSolutionDto struct {
 	PublishWorkflows                 bool                        `json:"PublishWorkflows"`
 	OverwriteUnmanagedCustomizations bool                        `json:"OverwriteUnmanagedCustomizations"`
-	ComponentParameters              []any                       `json:"ComponentParameters"`
+	ComponentParameters              []any                       `json:"ComponentParameters,omitempty"`
 	SolutionParameters               importSolutionParametersDto `json:"SolutionParameters"`
 }
 

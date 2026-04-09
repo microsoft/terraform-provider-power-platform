@@ -5,7 +5,9 @@ package managedsolution_test
 
 import (
 	"archive/zip"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -125,6 +127,20 @@ func TestUnitManagedSolutionResource_Validate_Create_HappyPath(t *testing.T) {
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/ImportSolutionAsync",
 		func(req *http.Request) (*http.Response, error) {
+			body, err := io.ReadAll(req.Body)
+			if err != nil {
+				t.Fatalf("failed to read import request body: %v", err)
+			}
+
+			requestBody := map[string]any{}
+			if err := json.Unmarshal(body, &requestBody); err != nil {
+				t.Fatalf("failed to unmarshal import request body: %v", err)
+			}
+
+			if _, exists := requestBody["ComponentParameters"]; exists {
+				t.Fatalf("ComponentParameters should be omitted when the package declares no connection references: %s", string(body))
+			}
+
 			return httpmock.NewStringResponse(http.StatusOK, `{
   "ImportJobKey": "job-id",
   "AsyncOperationId": "async-id"

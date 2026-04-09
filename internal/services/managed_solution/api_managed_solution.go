@@ -502,6 +502,10 @@ func buildConnectionParameters(packageRefs map[string]packageConnectionReference
 		})
 	}
 
+	if len(parameters) == 0 {
+		return nil, nil
+	}
+
 	return parameters, nil
 }
 
