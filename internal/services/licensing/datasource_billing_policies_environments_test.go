@@ -26,6 +26,9 @@ func TestAccBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.T) {
 				VersionConstraint: constants.AZAPI_PROVIDER_VERSION_CONSTRAINT,
 				Source:            "azure/azapi",
 			},
+			"time": {
+				Source: "hashicorp/time",
+			},
 		},
 		Steps: []resource.TestStep{
 			{
@@ -49,8 +52,16 @@ func TestAccBillingPoliciesEnvironmentsDataSource_Validate_Read(t *testing.T) {
 					}
 				}
 
+				resource "time_sleep" "wait_for_billing_policy" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_billing_policy.pay_as_you_go]
+				}
+
 				data "powerplatform_billing_policies_environments" "all_pay_as_you_go_policy_envs" {
 					billing_policy_id = powerplatform_billing_policy.pay_as_you_go.id
+
+					depends_on = [time_sleep.wait_for_billing_policy]
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

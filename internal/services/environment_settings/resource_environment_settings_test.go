@@ -97,6 +97,11 @@ func TestAccTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *te
 	resource.Test(t, resource.TestCase{
 		IsUnitTest:               false,
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -111,8 +116,16 @@ func TestAccTestEnvironmentSettingsResource_Validate_Create_Empty_Settings(t *te
 						}
 					}
 
+					resource "time_sleep" "wait_for_dataverse" {
+						create_duration = "120s"
+
+						depends_on = [powerplatform_environment.example_environment_settings]
+					}
+
 					resource "powerplatform_environment_settings" "settings" {
 						environment_id                         = powerplatform_environment.example_environment_settings.id
+
+						depends_on = [time_sleep.wait_for_dataverse]
 					}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
