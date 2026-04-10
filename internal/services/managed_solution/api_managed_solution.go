@@ -26,8 +26,6 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
 )
 
-const solutionComponentType = "66"
-
 func NewManagedSolutionClient(apiClient *api.Client) Client {
 	return Client{
 		Api:            apiClient,
@@ -299,11 +297,15 @@ func processSolutionXMLFile(file *zip.File, pkg *solutionPackage) error {
 func collectDependencies(missingDependencies []solutionMissingDependencyXML, pkg *solutionPackage) error {
 	for _, missingDependency := range missingDependencies {
 		for _, required := range missingDependency.Required {
-			if required.Type != solutionComponentType || required.Solution == "" {
-				continue
+			solutionRef := strings.TrimSpace(required.Solution)
+			if solutionRef == "" {
+				return fmt.Errorf("invalid solution dependency reference for schema %q: solution attribute is empty", required.SchemaName)
+			}
+			if strings.EqualFold(solutionRef, "Active") {
+				return fmt.Errorf("invalid solution dependency reference for schema %q: solution attribute is %q", required.SchemaName, required.Solution)
 			}
 
-			name, version, err := parseSolutionRef(required.Solution)
+			name, version, err := parseSolutionRef(solutionRef)
 			if err != nil {
 				return err
 			}

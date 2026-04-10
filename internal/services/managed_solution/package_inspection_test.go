@@ -23,13 +23,13 @@ func TestUnitInspectSolutionPackage_ParsesMetadataInterfaceAndDependencies(t *te
     <Managed>1</Managed>
     <MissingDependencies>
       <MissingDependency>
-        <Required type="66" schemaName="dep_one" solution="BaseLib (1.0.0.0)" />
+        <Required type="44" schemaName="dep_one" solution="BaseLib (1.0.0.0)" />
       </MissingDependency>
       <MissingDependency>
         <Required type="66" schemaName="dep_two" solution="BaseLib (1.4.0.0)" />
       </MissingDependency>
       <MissingDependency>
-        <Required type="66" schemaName="dep_three" solution="Portal (2.0.0.0)" />
+        <Required type="90" schemaName="dep_three" solution="Portal (2.0.0.0)" />
       </MissingDependency>
     </MissingDependencies>
   </SolutionManifest>
@@ -83,6 +83,52 @@ func TestUnitInspectSolutionPackage_ParsesMetadataInterfaceAndDependencies(t *te
 	}
 	if !pkg.EnvironmentVariables["codeeditor_secret"].ContainsPackagedValue {
 		t.Fatal("expected codeeditor_secret to be marked as containing a packaged current value")
+	}
+}
+
+func TestUnitInspectSolutionPackage_FailsWhenDependencySolutionReferenceIsActive(t *testing.T) {
+	zipPath := createTestSolutionZip(t, map[string]string{
+		"solution.xml": `<ImportExportXml>
+  <SolutionManifest>
+    <UniqueName>CodeEditor</UniqueName>
+    <Version>1.2.3.4</Version>
+    <Managed>1</Managed>
+    <MissingDependencies>
+      <MissingDependency>
+        <Required type="12" schemaName="active_placeholder" solution="Active" />
+      </MissingDependency>
+    </MissingDependencies>
+  </SolutionManifest>
+</ImportExportXml>`,
+		"customizations.xml": `<ImportExportXml></ImportExportXml>`,
+	})
+
+	_, err := inspectSolutionPackage(zipPath)
+	if err == nil {
+		t.Fatal("expected inspectSolutionPackage to fail for Active solution dependency reference")
+	}
+}
+
+func TestUnitInspectSolutionPackage_FailsWhenDependencySolutionReferenceIsEmpty(t *testing.T) {
+	zipPath := createTestSolutionZip(t, map[string]string{
+		"solution.xml": `<ImportExportXml>
+  <SolutionManifest>
+    <UniqueName>CodeEditor</UniqueName>
+    <Version>1.2.3.4</Version>
+    <Managed>1</Managed>
+    <MissingDependencies>
+      <MissingDependency>
+        <Required type="13" schemaName="empty_placeholder" solution="" />
+      </MissingDependency>
+    </MissingDependencies>
+  </SolutionManifest>
+</ImportExportXml>`,
+		"customizations.xml": `<ImportExportXml></ImportExportXml>`,
+	})
+
+	_, err := inspectSolutionPackage(zipPath)
+	if err == nil {
+		t.Fatal("expected inspectSolutionPackage to fail for empty solution dependency reference")
 	}
 }
 
