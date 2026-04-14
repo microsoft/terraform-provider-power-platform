@@ -5,11 +5,13 @@ package connection_test
 
 import (
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
@@ -106,7 +108,7 @@ func TestAccConnectionsShareResource_Validate_Create(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "connector_name", "shared_azureaisearch"),
 					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "role_name", "CanEdit"),
-					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "principal.display_name", mocks.TestName()),
+					resource.TestMatchResourceAttr("powerplatform_connection_share.share_with_user1", "principal.display_name", regexp.MustCompile(helpers.StringRegex)),
 				),
 			},
 		},

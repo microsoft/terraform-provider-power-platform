@@ -144,25 +144,29 @@ func (client *client) GetDataverseUserByAadObjectId(ctx context.Context, environ
 	values.Add("$expand", "systemuserroles_association($select=roleid,name,ismanaged,_businessunitid_value)")
 	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, "/api/data/v9.2/systemusers", values)
 
-	user := userArrayDto{}
-	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &user)
-	if err != nil {
-		return nil, err
-	}
-	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
-		return nil, err
-	}
-	if err := client.Api.HandleNotFoundResponse(resp); err != nil {
-		return nil, err
-	}
+	const maxRetries = 30
+	for attempt := 0; attempt < maxRetries; attempt++ {
+		user := userArrayDto{}
+		resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl, nil, nil, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &user)
+		if err != nil {
+			return nil, err
+		}
+		if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+			return nil, err
+		}
+		if err := client.Api.HandleNotFoundResponse(resp); err != nil {
+			return nil, err
+		}
 
-	if len(user.Value) == 0 {
+		if len(user.Value) > 0 {
+			return &user.Value[0], nil
+		}
+
 		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
 			return nil, err
 		}
-		return client.GetDataverseUserByAadObjectId(ctx, environmentId, aadObjectId)
 	}
-	return &user.Value[0], nil
+	return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("Dataverse user with AAD object id '%s' not found after %d retries", aadObjectId, maxRetries))
 }
 
 func (client *client) RemoveEnvironmentUserSecurityRoles(ctx context.Context, environmentId, aadObjectId string, securityRoles []string, savedRoles []securityRoleDto) (*userDto, error) {

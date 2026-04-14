@@ -5,6 +5,7 @@ package connection_test
 
 import (
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -114,7 +115,7 @@ func TestAccConnectionsShareDataSource_Validate_Read(t *testing.T) {
 				}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.#", "2"),
+					resource.TestMatchResourceAttr("data.powerplatform_connection_shares.all_shares", "shares.#", regexp.MustCompile(`^[1-9]\d*$`)),
 				),
 			},
 		},

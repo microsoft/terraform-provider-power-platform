@@ -269,8 +269,9 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		updateUser = *user
 	} else {
 		user, err := r.UserClient.GetEnvironmentUserByAadObjectId(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString())
-		// if all the security roles are removed, the user will not be found
+		// if all the security roles are removed, the user will not be found in the role assignments response
 		if user.AadObjectId == "" {
+			user.Id = state.AadId.ValueString()
 			user.AadObjectId = state.AadId.ValueString()
 			user.DomainName = state.UserPrincipalName.ValueString()
 		}
