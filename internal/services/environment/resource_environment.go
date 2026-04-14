@@ -712,9 +712,7 @@ func updateExistingDataverse(ctx context.Context, plan *SourceModel, environment
 		DomainName: dataverseSourcePlanModel.Domain.ValueString(),
 	}
 
-	if plan.EnvironmentType.ValueString() != EnvironmentTypesDeveloper {
-		environmentDto.Properties.LinkedEnvironmentMetadata.SecurityGroupId = types.StringNull().ValueString()
-	}
+	environmentDto.Properties.LinkedEnvironmentMetadata.SecurityGroupId = dataverseSourcePlanModel.SecurityGroupId.ValueString()
 
 	if !dataverseSourcePlanModel.AdministrationMode.IsNull() && !dataverseSourcePlanModel.AdministrationMode.IsUnknown() {
 		if dataverseSourcePlanModel.AdministrationMode.ValueBool() {
