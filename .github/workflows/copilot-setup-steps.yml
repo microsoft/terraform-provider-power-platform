@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         
       - name: "Install Changie (changelog tool)"
-        uses: miniscruff/changie-action@5036dffa79ffc007110dc7f75eca7ef72780e147 # v2
+        uses: miniscruff/changie-action@11bcad388e7973948cbcecb10863baf024d5f607 # v2
         with:
           version: "v1.21.1"
           args: --version

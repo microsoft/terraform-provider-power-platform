@@ -596,12 +596,6 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	updateDescription(plan, &environmentDto)
 	updateCadence(plan, &environmentDto)
 
-	err = r.updateAllowBingSearch(ctx, plan)
-	if err != nil {
-		resp.Diagnostics.AddError("Error when updating allow bing search", err.Error())
-		return
-	}
-
 	updateEnvironmentGroupId(plan, &environmentDto)
 	updateBillingPolicyId(plan, &environmentDto)
 
@@ -622,7 +616,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	envDto, err := r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
+	_, err = r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
 	if err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 		return
@@ -630,11 +624,27 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 
 	// This is a temporary fix for the issue in BAPI where the display name is not propagated correctly on environment update
 	if plan.DisplayName.ValueString() != state.DisplayName.ValueString() {
-		envDto, err = r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
+		_, err = r.EnvironmentClient.UpdateEnvironment(ctx, plan.Id.ValueString(), environmentDto)
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 			return
 		}
+	}
+
+	err = r.updateAllowBingSearch(ctx, plan)
+	if err != nil {
+		resp.Diagnostics.AddError("Error when updating allow bing search", err.Error())
+		return
+	}
+
+	envDto, err := r.EnvironmentClient.GetEnvironment(ctx, plan.Id.ValueString())
+	if err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
+		return
 	}
 
 	var templateMetadata *createTemplateMetadataDto
@@ -800,7 +810,10 @@ func updateCadence(plan *SourceModel, environmentDto *EnvironmentDto) {
 }
 
 func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel) error {
-	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
+	allowBingSearchSet := !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown()
+	allowMovingDataSet := !plan.AllowMovingDataAcrossRegions.IsNull() && !plan.AllowMovingDataAcrossRegions.IsUnknown()
+
+	if allowBingSearchSet || allowMovingDataSet {
 		err := r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
 		if err != nil {
 			return err
