@@ -250,6 +250,10 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	hasEnvDataverse, err := r.UserClient.EnvironmentHasDataverse(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
@@ -440,6 +444,10 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	hasEnvDataverse, err := r.UserClient.EnvironmentHasDataverse(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
@@ -474,6 +482,7 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 			return
 		}
 	}
+	resp.State.RemoveResource(ctx)
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.FullTypeName()))
 }
 
