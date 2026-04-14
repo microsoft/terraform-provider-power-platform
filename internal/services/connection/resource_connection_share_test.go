@@ -108,7 +108,7 @@ func TestAccConnectionsShareResource_Validate_Create(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "connector_name", "shared_azureaisearch"),
 					resource.TestCheckResourceAttr("powerplatform_connection_share.share_with_user1", "role_name", "CanEdit"),
-					resource.TestMatchResourceAttr("powerplatform_connection_share.share_with_user1", "principal.display_name", regexp.MustCompile(helpers.StringRegex)),
+					resource.TestMatchResourceAttr("powerplatform_connection_share.share_with_user1", "principal.display_name", regexp.MustCompile(helpers.NonEmptyStringRegex)),
 				),
 			},
 		},

@@ -269,13 +269,6 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		updateUser = *user
 	} else {
 		user, err := r.UserClient.GetEnvironmentUserByAadObjectId(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString())
-		// if all the security roles are removed, the user will not be found in the role assignments response
-		if user.AadObjectId == "" {
-			user.Id = state.AadId.ValueString()
-			user.AadObjectId = state.AadId.ValueString()
-			user.DomainName = state.UserPrincipalName.ValueString()
-		}
-
 		if err != nil {
 			if errors.Is(err, customerrors.ErrObjectNotFound) {
 				resp.State.RemoveResource(ctx)
@@ -283,6 +276,12 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 			}
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 			return
+		}
+		// if all the security roles are removed, the user will not be found in the role assignments response
+		if user.AadObjectId == "" {
+			user.Id = state.AadId.ValueString()
+			user.AadObjectId = state.AadId.ValueString()
+			user.DomainName = state.UserPrincipalName.ValueString()
 		}
 
 		rolesBytes, err := json.Marshal(user.SecurityRoles)

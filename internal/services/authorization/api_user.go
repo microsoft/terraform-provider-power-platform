@@ -162,8 +162,10 @@ func (client *client) GetDataverseUserByAadObjectId(ctx context.Context, environ
 			return &user.Value[0], nil
 		}
 
-		if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
-			return nil, err
+		if attempt < maxRetries-1 {
+			if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("Dataverse user with AAD object id '%s' not found after %d retries", aadObjectId, maxRetries))
