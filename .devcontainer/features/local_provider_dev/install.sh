@@ -60,4 +60,3 @@ if ! command -v az > /dev/null 2>&1; then
     PIPX_HOME=/usr/local/pipx PIPX_BIN_DIR=/usr/local/bin python3 -m pipx install azure-cli
 fi
 az version
-
