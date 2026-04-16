@@ -18,7 +18,7 @@ jobs:
       pull-requests: read
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+        uses: step-security/harden-runner@f808768d1510423e83855289c910610ca9b43176 # v2.17.0
         with:
           egress-policy: audit
 
@@ -29,14 +29,14 @@ jobs:
           
       - name: Get Issue Metrics
         id: issue-metrics
-        uses: github/issue-metrics@326551a377784dd5dd766944c9a87289550e7eb5 # v4.1.2
+        uses: github/issue-metrics@c9e9838147fd355dace335ba787f01b6641a400a # v4.2.2
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPOSITORY: ${{ github.repository }}
           SEARCH_QUERY: "repo:${{ github.repository }} is:issue is:pr created:>${{ steps.date.outputs.last_week }}"
         
       - name: Upload metrics file as artifact
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: issue-metrics
           path: ./issue_metrics.md

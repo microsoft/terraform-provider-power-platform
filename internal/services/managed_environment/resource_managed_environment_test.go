@@ -18,6 +18,11 @@ import (
 func TestAccManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -30,6 +35,12 @@ func TestAccManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 						currency_code    = "USD"
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
+				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -45,6 +56,8 @@ func TestAccManagedEnvironmentsResource_Validate_Create(t *testing.T) {
   					copilot_allow_grant_editor_permissions_when_shared = false
   					copilot_limit_sharing_mode                         = "ExcludeSharingToSecurityGroups"
   					copilot_max_limit_user_sharing                     = 55
+
+					depends_on = [time_sleep.wait_for_dataverse]
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -74,6 +87,11 @@ func TestAccManagedEnvironmentsResource_Validate_Create(t *testing.T) {
 func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -87,6 +105,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
 				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
+				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
 					environment_id             = powerplatform_environment.development.id
@@ -97,7 +121,8 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 					solution_checker_mode      = "None"
 					suppress_validation_emails = true
 					solution_checker_rule_overrides = toset(["meta-remove-dup-reg", "meta-avoid-reg-no-attribute"])
-					
+
+					depends_on = [time_sleep.wait_for_dataverse]
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -115,6 +140,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						currency_code    = "USD"
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
+				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -145,6 +176,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
 				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
+				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
 					environment_id             = powerplatform_environment.development.id
@@ -173,6 +210,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						currency_code    = "USD"
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
+				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -203,6 +246,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
 				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
+				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
 					environment_id             = powerplatform_environment.development.id
@@ -231,6 +280,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						currency_code    = "USD"
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
+				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -261,6 +316,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
 				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
+				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
 					environment_id             = powerplatform_environment.development.id
@@ -289,6 +350,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						currency_code    = "USD"
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
+				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -320,6 +387,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
 				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
+				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
 					environment_id             = powerplatform_environment.development.id
@@ -349,6 +422,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						currency_code    = "USD"
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
+				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -380,6 +459,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
 				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
+				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
 					environment_id             = powerplatform_environment.development.id
@@ -410,6 +495,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						currency_code    = "USD"
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
+				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {
@@ -442,6 +533,12 @@ func TestAccManagedEnvironmentsResource_Validate_Update(t *testing.T) {
 						currency_code    = "USD"
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
+				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.development]
 				}
 				
 				resource "powerplatform_managed_environment" "managed_development" {

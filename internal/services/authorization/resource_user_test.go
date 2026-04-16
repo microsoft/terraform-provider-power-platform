@@ -144,6 +144,71 @@ func TestUnitUserResource_Validate_Create_Environment_User(t *testing.T) {
 	})
 }
 
+func TestUnitUserResource_Validate_Read_Removes_State_When_Parent_Environment_Is_Deleted(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	environmentDeleted := false
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			if environmentDeleted {
+				return httpmock.NewStringResponse(http.StatusNotFound, `{"error":{"code":"EnvironmentNotFound","message":"environment not found"}}`), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/modifyRoleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env/modify_role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/roleAssignments?api-version=2021-04-01`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Create_Env/role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ResourceName: "powerplatform_user.new_user",
+				Config: `
+				resource "powerplatform_user" "new_user" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					security_roles = [
+					   "Environment Admin",
+					   "Environment Maker"
+					]
+					aad_id = "00000000-0000-0000-0000-000000000002"
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_user.new_user", "id", "00000000-0000-0000-0000-000000000002"),
+				),
+			},
+			{
+				PreConfig: func() {
+					environmentDeleted = true
+				},
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+				Config: `
+				resource "powerplatform_user" "new_user" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					security_roles = [
+					   "Environment Admin",
+					   "Environment Maker"
+					]
+					aad_id = "00000000-0000-0000-0000-000000000002"
+				}`,
+			},
+		},
+	})
+}
+
 func TestAccUserResource_Validate_Update_Environment_User(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
@@ -361,6 +426,9 @@ func TestAccUserResource_Validate_Create_Dataverse_User(t *testing.T) {
 				VersionConstraint: constants.RANDOM_PROVIDER_VERSION_CONSTRAINT,
 				Source:            "hashicorp/random",
 			},
+			"time": {
+				Source: "hashicorp/time",
+			},
 		},
 		Steps: []resource.TestStep{
 			{
@@ -412,6 +480,12 @@ func TestAccUserResource_Validate_Create_Dataverse_User(t *testing.T) {
 					}
 				}
 
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.dataverse_user_example]
+				}
+
 				resource "powerplatform_user" "new_user" {
 					environment_id = powerplatform_environment.dataverse_user_example.id
 					security_roles = [
@@ -419,6 +493,8 @@ func TestAccUserResource_Validate_Create_Dataverse_User(t *testing.T) {
 					]
 					aad_id         =  element(split("/", azuread_user.test_user.id), 2)  
 					disable_delete = false
+
+					depends_on = [time_sleep.wait_for_dataverse]
 				}`,
 
 				Check: resource.ComposeAggregateTestCheckFunc(

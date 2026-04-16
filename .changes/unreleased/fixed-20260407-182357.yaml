@@ -1,0 +1,5 @@
+kind: fixed
+body: Handle missing parent environments for powerplatform_user resources during refresh and delete
+time: 2026-04-07T18:23:57.376847+10:00
+custom:
+    Issue: "1129"

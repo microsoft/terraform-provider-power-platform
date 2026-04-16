@@ -24,6 +24,11 @@ import (
 func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -36,6 +41,12 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 					  currency_code     = "USD"
 					  security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
+				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.test_env]
 				}
 
 				resource "powerplatform_data_record" "data_record_sample_contact1" {
@@ -51,6 +62,8 @@ func TestAccDataRecordResource_Validate_Create(t *testing.T) {
 					  birthdate          = "2024-04-10"
 					  description        = "This is the description of the the terraform \n\nsample contact"
 					}
+
+					depends_on = [time_sleep.wait_for_dataverse]
 				}
 
 				resource "powerplatform_data_record" "data_record_account" {
