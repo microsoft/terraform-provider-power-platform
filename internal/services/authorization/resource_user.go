@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -489,7 +490,19 @@ func (r *UserResource) ImportState(ctx context.Context, req resource.ImportState
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
+	// Import ID format: {environment_id}/{aad_id}
+	idParts := strings.Split(req.ID, "/")
+	if len(idParts) != 2 {
+		resp.Diagnostics.AddError(
+			"Invalid import ID",
+			fmt.Sprintf("Expected import ID in format 'environment_id/aad_id', got '%s'", req.ID),
+		)
+		return
+	}
+
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), idParts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("aad_id"), idParts[1])...)
 }
 
 // validateRequiredStringField validates that a string field is not null or unknown and adds an error diagnostic if invalid.
