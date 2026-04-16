@@ -309,9 +309,19 @@ func (client *Client) deleteEnvironmentWithRetry(ctx context.Context, environmen
 		if retryCount >= constants.MAX_RETRY_COUNT {
 			return fmt.Errorf("maximum retries (%d) reached for DeleteEnvironment on conflict", constants.MAX_RETRY_COUNT)
 		}
-		err := client.handleHttpConflict(ctx, response)
-		if err != nil {
-			return err
+		body := string(response.BodyAsBytes)
+		if body == "" {
+			// The API sometimes returns 409 with no body when a lifecycle operation is already in progress.
+			// Treat this as a transient conflict and retry after a delay.
+			tflog.Debug(ctx, "Delete returned HTTP 409 with no body, another lifecycle operation may be in progress, retrying")
+			if err := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); err != nil {
+				return err
+			}
+		} else {
+			err := client.handleHttpConflict(ctx, response)
+			if err != nil {
+				return err
+			}
 		}
 		return client.deleteEnvironmentWithRetry(ctx, environmentId, retryCount+1)
 	}

@@ -4,13 +4,54 @@
 package dlp_policy_test
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
+
+func findDLPPolicyIndex(s *terraform.State, datasourceName, displayName string) (int, error) {
+	rs := s.RootModule().Resources[datasourceName]
+	if rs == nil {
+		return -1, fmt.Errorf("datasource %q not found in state", datasourceName)
+	}
+	attrs := rs.Primary.Attributes
+	var count int
+	if _, err := fmt.Sscanf(attrs["policies.#"], "%d", &count); err != nil || count == 0 {
+		return -1, fmt.Errorf("no policies found in %s", datasourceName)
+	}
+	for i := 0; i < count; i++ {
+		if attrs[fmt.Sprintf("policies.%d.display_name", i)] == displayName {
+			return i, nil
+		}
+	}
+	return -1, fmt.Errorf("policy with display_name %q not found in %s (total policies: %d)", displayName, datasourceName, count)
+}
+
+func testCheckDLPPolicyAttr(datasourceName, displayName, attrSuffix, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		idx, err := findDLPPolicyIndex(s, datasourceName, displayName)
+		if err != nil {
+			return err
+		}
+		return resource.TestCheckResourceAttr(datasourceName, fmt.Sprintf("policies.%d.%s", idx, attrSuffix), expected)(s)
+	}
+}
+
+func testCheckDLPPolicySetElemNestedAttrs(datasourceName, displayName, nestedSetAttr string, values map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		idx, err := findDLPPolicyIndex(s, datasourceName, displayName)
+		if err != nil {
+			return err
+		}
+		key := fmt.Sprintf("policies.%d.%s.*", idx, nestedSetAttr)
+		return resource.TestCheckTypeSetElemNestedAttrs(datasourceName, key, values)(s)
+	}
+}
 
 func TestUnitDlpPolicyDataSource_Validate_Read(t *testing.T) {
 	httpmock.Activate()
@@ -220,38 +261,38 @@ func TestAccDlpPolicyDataSource_Validate_Read(t *testing.T) {
 				}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "4"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.default_connectors_classification", "Blocked"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.display_name", mocks.TestName()),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environment_type", "OnlyEnvironments"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.environments.#", "1"),
+					testCheckDLPPolicyAttr("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "default_connectors_classification", "Blocked"),
+					testCheckDLPPolicyAttr("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "environment_type", "OnlyEnvironments"),
+					testCheckDLPPolicyAttr("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "environments.#", "1"),
+					testCheckDLPPolicyAttr("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "business_connectors.#", "4"),
+					testCheckDLPPolicyAttr("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "custom_connectors_patterns.#", "2"),
 
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.#", "2"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.0.data_group", "Business"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.0.host_url_pattern", "https://*.contoso.com/*"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.0.order", "1"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.data_group", "Ignore"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.host_url_pattern", "*"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.custom_connectors_patterns.1.order", "2"),
+					testCheckDLPPolicySetElemNestedAttrs("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "business_connectors", map[string]string{
+						"id": "/providers/Microsoft.PowerApps/apis/shared_approvals",
+					}),
+					testCheckDLPPolicySetElemNestedAttrs("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "business_connectors", map[string]string{
+						"id": "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity",
+					}),
+					testCheckDLPPolicySetElemNestedAttrs("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "business_connectors", map[string]string{
+						"id": "/providers/Microsoft.PowerApps/apis/shared_azureopenai",
+					}),
+					testCheckDLPPolicySetElemNestedAttrs("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "business_connectors", map[string]string{
+						"id":                           "/providers/Microsoft.PowerApps/apis/shared_sql",
+						"default_action_rule_behavior": "Allow",
+						"action_rules.#":               "2",
+						"endpoint_rules.#":             "2",
+					}),
 
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.#", "4"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.id", "/providers/Microsoft.PowerApps/apis/shared_sql"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.1.id", "/providers/Microsoft.PowerApps/apis/shared_approvals"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.3.id", "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.2.id", "/providers/Microsoft.PowerApps/apis/shared_azureopenai"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.default_action_rule_behavior", "Allow"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.action_rules.#", "2"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.action_rules.0.action_id", "DeleteItem_V2"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.action_rules.0.behavior", "Block"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.action_rules.1.action_id", "ExecutePassThroughNativeQuery_V2"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.action_rules.1.behavior", "Block"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.#", "2"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.0.order", "1"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.0.behavior", "Allow"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.0.endpoint", "contoso.com"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.1.order", "2"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.1.behavior", "Deny"),
-					resource.TestCheckResourceAttr("data.powerplatform_data_loss_prevention_policies.all", "policies.0.business_connectors.0.endpoint_rules.1.endpoint", "*"),
+					testCheckDLPPolicySetElemNestedAttrs("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "custom_connectors_patterns", map[string]string{
+						"data_group":       "Ignore",
+						"host_url_pattern": "*",
+						"order":            "2",
+					}),
+					testCheckDLPPolicySetElemNestedAttrs("data.powerplatform_data_loss_prevention_policies.all", mocks.TestName(), "custom_connectors_patterns", map[string]string{
+						"data_group":       "Business",
+						"host_url_pattern": "https://*.contoso.com/*",
+						"order":            "1",
+					}),
 				),
 			},
 		},

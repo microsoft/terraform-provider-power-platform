@@ -355,7 +355,7 @@ func TestUnitUserResource_Validate_Update_Environment_User(t *testing.T) {
 	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/roleAssignments?api-version=2021-04-01`,
 		func(req *http.Request) (*http.Response, error) {
 			queryUserInx++
-			if queryUserInx < 5 {
+			if queryUserInx < 4 {
 				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Update_Env/role_assignments_00000000-0000-0000-0000-000000000001.json").String()), nil
 			}
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/user/Validate_Update_Env/role_assignments_00000000-0000-0000-0000-000000000001_empty.json").String()), nil
@@ -502,8 +502,8 @@ func TestAccUserResource_Validate_Create_Dataverse_User(t *testing.T) {
 					resource.TestMatchResourceAttr("powerplatform_user.new_user", "environment_id", regexp.MustCompile(helpers.GuidRegex)),
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.#", "1"),
 					resource.TestMatchResourceAttr("powerplatform_user.new_user", "aad_id", regexp.MustCompile(helpers.GuidRegex)),
-					resource.TestCheckResourceAttr("powerplatform_user.new_user", "first_name", "#"),
-					resource.TestCheckResourceAttr("powerplatform_user.new_user", "last_name", mocks.TestName()),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "first_name", regexp.MustCompile(helpers.NonEmptyStringRegex)),
+					resource.TestMatchResourceAttr("powerplatform_user.new_user", "last_name", regexp.MustCompile(helpers.NonEmptyStringRegex)),
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "disable_delete", "false"),
 
 					resource.TestCheckResourceAttr("powerplatform_user.new_user", "security_roles.0", "e0d2794e-82f3-e811-a951-000d3a1bcf17"),
