@@ -1,0 +1,51 @@
+{
+    "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+    "type": "Microsoft.BusinessAppPlatform/scopes/environments",
+    "location": "unitedstates",
+    "name": "00000000-0000-0000-0000-000000000001",
+    "properties": {
+        "tenantId": "00000000-0000-0000-0000-000000000010",
+        "azureRegion": "westus",
+        "displayName": "Production Environment",
+        "createdTime": "2025-01-01T00:00:00Z",
+        "provisioningState": "Succeeded",
+        "environmentSku": "Production",
+        "databaseType": "CommonDataService",
+        "linkedEnvironmentMetadata": {
+            "resourceId": "orgid",
+            "friendlyName": "Production Environment",
+            "uniqueName": "00000000-0000-0000-0000-000000000001",
+            "domainName": "prod-dr-test",
+            "version": "9.2.25010.00100",
+            "instanceUrl": "https://prod-dr-test.crm.dynamics.com/",
+            "instanceApiUrl": "https://prod-dr-test.api.crm.dynamics.com",
+            "baseLanguage": 1033,
+            "instanceState": "Ready",
+            "backgroundOperationsState": "Enabled"
+        },
+        "runtimeEndpoints": {
+            "microsoft.BusinessAppPlatform": "https://api.bap.microsoft.com",
+            "microsoft.CommonDataModel": "https://api.cds.microsoft.com",
+            "microsoft.PowerApps": "https://api.powerapps.com",
+            "microsoft.PowerAppsAdvisor": "https://api.advisor.powerapps.com",
+            "microsoft.Flow": "https://api.flow.microsoft.com"
+        },
+        "states": {
+            "management": {
+                "id": "Ready"
+            },
+            "runtime": {
+                "id": "Enabled"
+            },
+            "disasterRecovery": {
+                "id": "Disabled"
+            }
+        },
+        "governanceConfiguration": {
+            "protectionLevel": "Standard"
+        },
+        "cluster": {
+            "category": "Prod"
+        }
+    }
+}

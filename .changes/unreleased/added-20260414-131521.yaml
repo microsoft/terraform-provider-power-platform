@@ -1,0 +1,5 @@
+kind: added
+body: Add powerplatform_environment_disaster_recovery resource to enable/disable disaster recovery for Power Platform environments
+time: 2026-04-14T13:15:21.296451396Z
+custom:
+    Issue: "946"
