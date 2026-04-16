@@ -1,0 +1,64 @@
+{
+    "id": "519e32e9-9e86-453d-a45d-b90d390a9623",
+    "links": {
+        "self": {
+            "path": "/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/519e32e9-9e86-453d-a45d-b90d390a9623"
+        },
+        "environment": {
+            "path": "/providers/Microsoft.BusinessAppPlatform/environments/00000000-0000-0000-0000-000000000001"
+        }
+    },
+    "type": {
+        "id": "Edit"
+    },
+    "typeDisplayName": "Edit",
+    "state": {
+        "id": "Succeeded"
+    },
+    "createdDateTime": "2025-10-03T21:30:40.0422098Z",
+    "lastActionDateTime": "2025-10-03T21:32:47.6409748Z",
+    "requestedBy": {
+        "id": "00000000-0000-0000-0000-000000000009",
+        "displayName": "ServicePrincipal",
+        "type": "ServicePrincipal",
+        "tenantId": "00000000-0000-0000-0000-000000000010"
+    },
+    "stages": [
+        {
+            "id": "Validate",
+            "name": "Validate",
+            "state": {
+                "id": "Succeeded"
+            },
+            "firstActionDateTime": "2025-10-03T21:30:42.268922Z",
+            "lastActionDateTime": "2025-10-03T21:30:42.268922Z"
+        },
+        {
+            "id": "Prepare",
+            "name": "Prepare",
+            "state": {
+                "id": "Succeeded"
+            },
+            "firstActionDateTime": "2025-10-03T21:30:42.2845463Z",
+            "lastActionDateTime": "2025-10-03T21:30:42.2845463Z"
+        },
+        {
+            "id": "Run",
+            "name": "Run",
+            "state": {
+                "id": "Succeeded"
+            },
+            "firstActionDateTime": "2025-10-03T21:30:42.300174Z",
+            "lastActionDateTime": "2025-10-03T21:32:46.6722115Z"
+        },
+        {
+            "id": "Finalize",
+            "name": "Finalize",
+            "state": {
+                "id": "Succeeded"
+            },
+            "firstActionDateTime": "2025-10-03T21:32:47.0784649Z",
+            "lastActionDateTime": "2025-10-03T21:32:47.6409748Z"
+        }
+    ]
+}

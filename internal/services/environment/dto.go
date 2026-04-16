@@ -172,8 +172,13 @@ type LinkedAppMetadataDto struct {
 }
 
 type StatesEnvironmentDto struct {
-	Management *StatesManagementEnvironmentDto `json:"management,omitempty"`
-	Runtime    *RuntimeEnvironmentDto          `json:"runtime,omitempty"`
+	Management       *StatesManagementEnvironmentDto `json:"management,omitempty"`
+	Runtime          *RuntimeEnvironmentDto          `json:"runtime,omitempty"`
+	DisasterRecovery *DisasterRecoveryStateDto       `json:"disasterRecovery,omitempty"`
+}
+
+type DisasterRecoveryStateDto struct {
+	Id string `json:"id,omitempty"`
 }
 
 type RuntimeEnvironmentDto struct {
