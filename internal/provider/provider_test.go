@@ -25,6 +25,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/copilot_studio_application_insights"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/currencies"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/data_record"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/disaster_recovery"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/dlp_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/enterprise_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
@@ -106,6 +107,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		tenant_isolation_policy.NewTenantIsolationPolicyResource(),
 		environment_wave.NewEnvironmentWaveResource(),
 		application.NewEnvironmentApplicationAdminResource(),
+		disaster_recovery.NewDisasterRecoveryResource(),
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
 
