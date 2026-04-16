@@ -1,0 +1,5 @@
+kind: fixed
+body: Fixed crash when importing powerplatform_environment_group_rule_set caused by testify assert calls in production DTO conversion code
+time: 2026-04-01T12:23:41.850214Z
+custom:
+    Issue: "1112"

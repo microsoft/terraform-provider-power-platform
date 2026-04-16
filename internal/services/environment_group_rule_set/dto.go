@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/stretchr/testify/assert"
 )
 
 type environmentGroupRuleSetDto struct {
@@ -447,9 +446,6 @@ func convertAiGenerativeSettingsDtoToModel(dto *environmentGroupRuleSetParameter
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), nil
 	}
 
-	assert.Equal(nil, AI_GENERATIVE_SETTINGS, dto.Type, fmt.Sprintf("Type should be %s", AI_GENERATIVE_SETTINGS))
-	assert.Equal(nil, NOT_SPECIFIED, dto.ResourceType, fmt.Sprintf("ResourceType should be %s", NOT_SPECIFIED))
-
 	crossGeoCopilotDataMovementEnabled := tryGetRuleValueFromDto(dto.Value, CROSS_GEO_COPILOT_DATA_MOVEMENT_ENABLED)
 	if crossGeoCopilotDataMovementEnabled == nil {
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", CROSS_GEO_COPILOT_DATA_MOVEMENT_ENABLED)
@@ -475,9 +471,6 @@ func convertAiGeneratedDescDtoToModel(dto *environmentGroupRuleSetParameterDto) 
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), nil
 	}
 
-	assert.Equal(nil, AI_GENERATED_DESC, dto.Type, fmt.Sprintf("Type should be %s", AI_GENERATED_DESC))
-	assert.Equal(nil, APP, dto.ResourceType, fmt.Sprintf("ResourceType should be %s", APP))
-
 	aiDescriptionEnabled := tryGetRuleValueFromDto(dto.Value, DISABLE_AI_GENERATED_DESCRIPTIONS)
 	if aiDescriptionEnabled == nil {
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", DISABLE_AI_GENERATED_DESCRIPTIONS)
@@ -497,9 +490,6 @@ func convertBackupRetentionDtoToModel(dto *environmentGroupRuleSetParameterDto) 
 	if dto == nil || len(dto.Value) == 0 {
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), nil
 	}
-
-	assert.Equal(nil, BACKUP_RETENTION, dto.Type, fmt.Sprintf("Type should be %s", BACKUP_RETENTION))
-	assert.Equal(nil, NOT_SPECIFIED, dto.ResourceType, fmt.Sprintf("ResourceType should be %s", NOT_SPECIFIED))
 
 	periodInDays := tryGetRuleValueFromDto(dto.Value, RETENTION_PERIOD)
 	if periodInDays == nil {
@@ -532,9 +522,6 @@ func convertSolutionCheckerEnforcementDtoToModel(dto *environmentGroupRuleSetPar
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), nil
 	}
 
-	assert.Equal(nil, SOLUTION_CHECKER_ENFORCEMENT, dto.Type, fmt.Sprintf("Type should be %s", SOLUTION_CHECKER_ENFORCEMENT))
-	assert.Equal(nil, NOT_SPECIFIED, dto.ResourceType, fmt.Sprintf("ResourceType should be %s", NOT_SPECIFIED))
-
 	solutionCheckerMode := tryGetRuleValueFromDto(dto.Value, SOLUTION_CHECKER_MODE)
 	if solutionCheckerMode == nil {
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", SOLUTION_CHECKER_MODE)
@@ -561,9 +548,6 @@ func convertMakerWelcomeContentDtoToModel(dto *environmentGroupRuleSetParameterD
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), nil
 	}
 
-	assert.Equal(nil, MAKER_WELCOME_CONTENT, dto.Type, fmt.Sprintf("Type should be %s", MAKER_WELCOME_CONTENT))
-	assert.Equal(nil, NOT_SPECIFIED, dto.ResourceType, fmt.Sprintf("ResourceType should be %s", NOT_SPECIFIED))
-
 	makerOnboardingUrl := tryGetRuleValueFromDto(dto.Value, MAKER_ONBOARDING_URL)
 	if makerOnboardingUrl == nil {
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", MAKER_ONBOARDING_URL)
@@ -588,9 +572,6 @@ func convertUsageInsightsDtoToModel(dto *environmentGroupRuleSetParameterDto) (b
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), nil
 	}
 
-	assert.Equal(nil, USAGE_INSIGHTS, dto.Type, fmt.Sprintf("Type should be %s", USAGE_INSIGHTS))
-	assert.Equal(nil, NOT_SPECIFIED, dto.ResourceType, fmt.Sprintf("ResourceType should be %s", NOT_SPECIFIED))
-
 	excludeEnvFromAnalisys := tryGetRuleValueFromDto(dto.Value, EXCLUDE_ENVIRONMENT_FROM_ANALYSIS)
 	if excludeEnvFromAnalisys == nil {
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", EXCLUDE_ENVIRONMENT_FROM_ANALYSIS)
@@ -611,9 +592,6 @@ func convertSharingControlsDtoToModel(dto *environmentGroupRuleSetParameterDto) 
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), nil
 	}
 
-	assert.Equal(nil, SHARING, dto.Type, fmt.Sprintf("Type should be %s", SHARING))
-	assert.Equal(nil, APP, dto.ResourceType, fmt.Sprintf("ResourceType should be %s", APP))
-
 	canShareWithSecurityGroups := tryGetRuleValueFromDto(dto.Value, CAN_SHARE_WITH_SECURITY_GROUPS)
 	if canShareWithSecurityGroups == nil {
 		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", CAN_SHARE_WITH_SECURITY_GROUPS)
@@ -626,8 +604,6 @@ func convertSharingControlsDtoToModel(dto *environmentGroupRuleSetParameterDto) 
 
 	attrValue := map[string]attr.Value{}
 	if canShareWithSecurityGroups.Value == NO_LIMIT {
-		assert.Equal(nil, -1.0, maxLimitValue, "Max limit value should be -1, when share mode is 'no limit'")
-
 		attrValue["share_mode"] = types.StringValue("no limit")
 		attrValue["share_max_limit"] = types.NumberNull() // -1 value is considered as null in terraform
 	} else {
