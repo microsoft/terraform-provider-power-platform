@@ -8,7 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"strconv"
 	"slices"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
@@ -226,6 +228,35 @@ func normalizedSourceURL(value types.String) string {
 	return parsed.String()
 }
 
+func normalizeSolutionVersion(raw string) (string, error) {
+	trimmed := strings.TrimSpace(raw)
+	if trimmed == "" {
+		return "", errors.New("version must be a non-empty string")
+	}
+
+	segments := strings.Split(trimmed, ".")
+	if len(segments) < 1 || len(segments) > 4 {
+		return "", fmt.Errorf("version %q must contain between one and four numeric segments", raw)
+	}
+
+	normalized := [4]string{"0", "0", "0", "0"}
+	for index, segment := range segments {
+		value := strings.TrimSpace(segment)
+		if value == "" {
+			return "", fmt.Errorf("version %q contains an empty segment", raw)
+		}
+
+		parsed, err := strconv.Atoi(value)
+		if err != nil || parsed < 0 {
+			return "", fmt.Errorf("version %q contains non-numeric segment %q", raw, segment)
+		}
+
+		normalized[index] = strconv.Itoa(parsed)
+	}
+
+	return strings.Join(normalized[:], "."), nil
+}
+
 func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
@@ -343,7 +374,17 @@ func (r *Resource) applyManagedSolution(ctx context.Context, plan *ResourceModel
 		diagnostics.AddError("Managed solution unique name mismatch", fmt.Sprintf("Configured unique_name %q does not match package unique name %q.", plan.UniqueName.ValueString(), pkg.UniqueName))
 		return nil
 	}
-	if pkg.Version != plan.Version.ValueString() {
+	normalizedConfiguredVersion, err := normalizeSolutionVersion(plan.Version.ValueString())
+	if err != nil {
+		diagnostics.AddError("Managed solution version mismatch", fmt.Sprintf("Configured version %q is invalid: %s", plan.Version.ValueString(), err.Error()))
+		return nil
+	}
+	normalizedPackageVersion, err := normalizeSolutionVersion(pkg.Version)
+	if err != nil {
+		diagnostics.AddError("Managed solution version mismatch", fmt.Sprintf("Package version %q is invalid: %s", pkg.Version, err.Error()))
+		return nil
+	}
+	if normalizedPackageVersion != normalizedConfiguredVersion {
 		diagnostics.AddError("Managed solution version mismatch", fmt.Sprintf("Configured version %q does not match package version %q.", plan.Version.ValueString(), pkg.Version))
 		return nil
 	}

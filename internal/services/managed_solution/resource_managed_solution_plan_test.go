@@ -50,3 +50,16 @@ func TestSourcesAreEquivalent_DetectsPathChange(t *testing.T) {
 		t.Fatal("expected different local source paths to be treated as different")
 	}
 }
+
+func TestNormalizeSolutionVersion_PadsMissingSegments(t *testing.T) {
+	t.Parallel()
+
+	normalized, err := normalizeSolutionVersion("1.3.5")
+	if err != nil {
+		t.Fatalf("expected version normalization to succeed: %v", err)
+	}
+
+	if normalized != "1.3.5.0" {
+		t.Fatalf("expected normalized version to be 1.3.5.0, got %s", normalized)
+	}
+}
