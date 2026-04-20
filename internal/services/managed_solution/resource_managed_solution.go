@@ -257,6 +257,15 @@ func normalizeSolutionVersion(raw string) (string, error) {
 	return strings.Join(normalized[:], "."), nil
 }
 
+func normalizeSolutionVersionOrOriginal(raw string) string {
+	normalized, err := normalizeSolutionVersion(raw)
+	if err != nil {
+		return raw
+	}
+
+	return normalized
+}
+
 func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
@@ -299,7 +308,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	state.SolutionId = types.StringValue(solutionState.Id)
 	state.DisplayName = types.StringValue(solutionState.DisplayName)
 	state.UniqueName = types.StringValue(solutionState.Name)
-	state.Version = types.StringValue(solutionState.Version)
+	state.Version = types.StringValue(normalizeSolutionVersionOrOriginal(solutionState.Version))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -449,7 +458,7 @@ func (r *Resource) applyManagedSolution(ctx context.Context, plan *ResourceModel
 	result.SolutionId = types.StringValue(solutionState.Id)
 	result.DisplayName = types.StringValue(solutionState.DisplayName)
 	result.UniqueName = types.StringValue(solutionState.Name)
-	result.Version = types.StringValue(solutionState.Version)
+	result.Version = types.StringValue(normalizeSolutionVersionOrOriginal(solutionState.Version))
 
 	return &result
 }
