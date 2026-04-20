@@ -1,0 +1,5 @@
+kind: fixed
+body: Fixed managed environment import failing when environment does not have managed environment settings enabled
+time: 2026-04-02T10:13:28.604983517Z
+custom:
+    Issue: "1122"
