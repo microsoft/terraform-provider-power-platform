@@ -10,12 +10,10 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -25,18 +23,18 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
-var _ resource.Resource = &EnvironmentApplicationUserResource{}
-var _ resource.ResourceWithImportState = &EnvironmentApplicationUserResource{}
+var _ resource.Resource = &ApplicationUserResource{}
+var _ resource.ResourceWithImportState = &ApplicationUserResource{}
 
-func NewEnvironmentApplicationUserResource() resource.Resource {
-	return &EnvironmentApplicationUserResource{
+func NewApplicationUserResource() resource.Resource {
+	return &ApplicationUserResource{
 		TypeInfo: helpers.TypeInfo{
-			TypeName: "environment_application_user",
+			TypeName: "application_user",
 		},
 	}
 }
 
-func (r *EnvironmentApplicationUserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *ApplicationUserResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	r.ProviderTypeName = req.ProviderTypeName
 
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
@@ -46,13 +44,13 @@ func (r *EnvironmentApplicationUserResource) Metadata(ctx context.Context, req r
 	tflog.Debug(ctx, fmt.Sprintf("METADATA: %s", resp.TypeName))
 }
 
-func (r *EnvironmentApplicationUserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *ApplicationUserResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Creates a Dataverse application user for a Microsoft Entra service principal within an environment using the Dataverse `systemusers` API. " +
-			"The user is created as a non-interactive application user (`accessmode = 4`). Security roles are requested by name, resolved within the selected business unit, and assigned through Dataverse role associations.",
+			"The user is created as a non-interactive application user (`accessmode = 4`). Dataverse security-role assignment is managed separately.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
@@ -61,7 +59,7 @@ func (r *EnvironmentApplicationUserResource) Schema(ctx context.Context, req res
 				Read:   true,
 			}),
 			"id": schema.StringAttribute{
-				MarkdownDescription: "Composite ID `{environment_id}/{application_id}`.",
+				MarkdownDescription: "Unique Dataverse application user ID (guid). This is the Dataverse principal ID for the application user.",
 				Computed:            true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -97,38 +95,11 @@ func (r *EnvironmentApplicationUserResource) Schema(ctx context.Context, req res
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"security_roles": schema.SetAttribute{
-				MarkdownDescription: "Security role names to assign to the application user. Role names are resolved within the selected business unit and must match exactly.",
-				ElementType:         types.StringType,
-				Optional:            true,
-				Computed:            true,
-				Default:             setdefault.StaticValue(types.SetValueMust(types.StringType, []attr.Value{})),
-			},
-			"resolved_security_roles": schema.ListNestedAttribute{
-				MarkdownDescription: "Resolved security-role assignments for this environment-specific application user.",
-				Computed:            true,
-				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
-							MarkdownDescription: "Resolved security role name.",
-							Computed:            true,
-						},
-						"role_id": schema.StringAttribute{
-							MarkdownDescription: "Environment-specific Dataverse role ID.",
-							Computed:            true,
-						},
-						"business_unit_id": schema.StringAttribute{
-							MarkdownDescription: "Business unit ID for the resolved role.",
-							Computed:            true,
-						},
-					},
-				},
-			},
 		},
 	}
 }
 
-func (r *EnvironmentApplicationUserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *ApplicationUserResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 	if req.ProviderData == nil {
@@ -146,11 +117,11 @@ func (r *EnvironmentApplicationUserResource) Configure(ctx context.Context, req 
 	r.ApplicationClient = newApplicationClient(client.Api)
 }
 
-func (r *EnvironmentApplicationUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *ApplicationUserResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan EnvironmentApplicationUserResourceModel
+	var plan ApplicationUserResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -190,28 +161,9 @@ func (r *EnvironmentApplicationUserResource) Create(ctx context.Context, req res
 		return
 	}
 
-	if len(plan.SecurityRoles) > 0 {
-		resolvedRoles, err := r.ApplicationClient.ResolveSecurityRoleNames(ctx, plan.EnvironmentId.ValueString(), businessUnitID, plan.SecurityRoles)
-		if err != nil {
-			r.addCreateFailureWithCleanupDiagnostics(ctx, resp, plan.EnvironmentId.ValueString(), user.SystemUserId, fmt.Sprintf("Failed to resolve security roles for application user '%s'", plan.ApplicationId.ValueString()), err)
-			return
-		}
-
-		roleIDs := make([]string, 0, len(resolvedRoles))
-		for _, role := range resolvedRoles {
-			roleIDs = append(roleIDs, role.RoleId)
-		}
-
-		user, err = r.ApplicationClient.AddApplicationUserSecurityRoles(ctx, plan.EnvironmentId.ValueString(), user.SystemUserId, roleIDs)
-		if err != nil {
-			r.addCreateFailureWithCleanupDiagnostics(ctx, resp, plan.EnvironmentId.ValueString(), user.SystemUserId, fmt.Sprintf("Failed to assign security roles to application user '%s'", plan.ApplicationId.ValueString()), err)
-			return
-		}
-	}
-
-	plan.Id = types.StringValue(fmt.Sprintf("%s/%s", plan.EnvironmentId.ValueString(), plan.ApplicationId.ValueString()))
+	plan.Id = types.StringValue(user.SystemUserId)
 	plan.SystemUserId = types.StringValue(user.SystemUserId)
-	plan.BusinessUnitId, plan.SecurityRoles, plan.ResolvedSecurityRoles = convertApplicationUserToModel(user)
+	plan.BusinessUnitId = types.StringValue(businessUnitID)
 
 	stateDiags := resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(stateDiags...)
@@ -221,7 +173,7 @@ func (r *EnvironmentApplicationUserResource) Create(ctx context.Context, req res
 	}
 }
 
-func (r *EnvironmentApplicationUserResource) addCreateFailureDiagnostics(ctx context.Context, resp *resource.CreateResponse, environmentID, applicationID string, err error) {
+func (r *ApplicationUserResource) addCreateFailureDiagnostics(ctx context.Context, resp *resource.CreateResponse, environmentID, applicationID string, err error) {
 	exists, existsErr := r.ApplicationClient.ApplicationUserExists(ctx, environmentID, applicationID)
 	if existsErr == nil && exists {
 		resp.Diagnostics.AddError(
@@ -242,7 +194,7 @@ func (r *EnvironmentApplicationUserResource) addCreateFailureDiagnostics(ctx con
 	)
 }
 
-func (r *EnvironmentApplicationUserResource) addCreateFailureWithCleanupDiagnostics(ctx context.Context, resp *resource.CreateResponse, environmentID, systemUserID, summary string, err error) {
+func (r *ApplicationUserResource) addCreateFailureWithCleanupDiagnostics(ctx context.Context, resp *resource.CreateResponse, environmentID, systemUserID, summary string, err error) {
 	cleanupErr := r.cleanupCreatedApplicationUser(ctx, environmentID, systemUserID)
 	if cleanupErr != nil {
 		resp.Diagnostics.AddError(
@@ -258,7 +210,7 @@ func (r *EnvironmentApplicationUserResource) addCreateFailureWithCleanupDiagnost
 	)
 }
 
-func (r *EnvironmentApplicationUserResource) cleanupCreatedApplicationUser(ctx context.Context, environmentID, systemUserID string) error {
+func (r *ApplicationUserResource) cleanupCreatedApplicationUser(ctx context.Context, environmentID, systemUserID string) error {
 	if err := r.ApplicationClient.DeactivateSystemUser(ctx, environmentID, systemUserID); err != nil {
 		return fmt.Errorf("failed to deactivate created application user '%s': %w", systemUserID, err)
 	}
@@ -270,26 +222,14 @@ func (r *EnvironmentApplicationUserResource) cleanupCreatedApplicationUser(ctx c
 	return nil
 }
 
-func (r *EnvironmentApplicationUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *ApplicationUserResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state EnvironmentApplicationUserResourceModel
+	var state ApplicationUserResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	if !state.Id.IsNull() && state.Id.ValueString() != "" {
-		idParts := strings.Split(state.Id.ValueString(), "/")
-		if len(idParts) == 2 {
-			if state.EnvironmentId.IsNull() || state.EnvironmentId.ValueString() == "" {
-				state.EnvironmentId = types.StringValue(idParts[0])
-			}
-			if state.ApplicationId.IsNull() || state.ApplicationId.ValueString() == "" {
-				state.ApplicationId = types.StringValue(idParts[1])
-			}
-		}
 	}
 
 	user, err := r.ApplicationClient.GetApplicationUser(ctx, state.EnvironmentId.ValueString(), state.ApplicationId.ValueString())
@@ -305,18 +245,19 @@ func (r *EnvironmentApplicationUserResource) Read(ctx context.Context, req resou
 		return
 	}
 
+	state.Id = types.StringValue(user.SystemUserId)
 	state.SystemUserId = types.StringValue(user.SystemUserId)
-	state.BusinessUnitId, state.SecurityRoles, state.ResolvedSecurityRoles = convertApplicationUserToModel(user)
+	state.BusinessUnitId = types.StringValue(user.BusinessUnitId)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *EnvironmentApplicationUserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *ApplicationUserResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var plan EnvironmentApplicationUserResourceModel
-	var state EnvironmentApplicationUserResourceModel
+	var plan ApplicationUserResourceModel
+	var state ApplicationUserResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -336,78 +277,18 @@ func (r *EnvironmentApplicationUserResource) Update(ctx context.Context, req res
 		return
 	}
 
-	businessUnitID := plan.BusinessUnitId.ValueString()
-	if businessUnitID == "" {
-		businessUnitID = currentUser.BusinessUnitId
-	}
-
-	resolvedDesiredRoles, err := r.ApplicationClient.ResolveSecurityRoleNames(ctx, state.EnvironmentId.ValueString(), businessUnitID, plan.SecurityRoles)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Failed to resolve security roles for application user '%s'", state.ApplicationId.ValueString()),
-			err.Error(),
-		)
-		return
-	}
-
-	desiredRoleIDs := make(map[string]applicationSecurityRoleDto, len(resolvedDesiredRoles))
-	for _, role := range resolvedDesiredRoles {
-		desiredRoleIDs[role.RoleId] = role
-	}
-
-	currentRoleIDs := make(map[string]applicationSecurityRoleDto, len(currentUser.SecurityRoles))
-	for _, role := range currentUser.SecurityRoles {
-		currentRoleIDs[role.RoleId] = role
-	}
-
-	rolesToAdd := make([]string, 0)
-	for roleID := range desiredRoleIDs {
-		if _, exists := currentRoleIDs[roleID]; !exists {
-			rolesToAdd = append(rolesToAdd, roleID)
-		}
-	}
-
-	rolesToRemove := make([]string, 0)
-	for roleID := range currentRoleIDs {
-		if _, exists := desiredRoleIDs[roleID]; !exists {
-			rolesToRemove = append(rolesToRemove, roleID)
-		}
-	}
-
-	if len(rolesToAdd) > 0 {
-		currentUser, err = r.ApplicationClient.AddApplicationUserSecurityRoles(ctx, state.EnvironmentId.ValueString(), currentUser.SystemUserId, rolesToAdd)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("Failed to add security roles for application user '%s'", state.ApplicationId.ValueString()),
-				err.Error(),
-			)
-			return
-		}
-	}
-
-	if len(rolesToRemove) > 0 {
-		currentUser, err = r.ApplicationClient.RemoveApplicationUserSecurityRoles(ctx, state.EnvironmentId.ValueString(), currentUser.SystemUserId, rolesToRemove)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("Failed to remove security roles for application user '%s'", state.ApplicationId.ValueString()),
-				err.Error(),
-			)
-			return
-		}
-	}
-
 	plan.SystemUserId = types.StringValue(currentUser.SystemUserId)
-	plan.BusinessUnitId, plan.SecurityRoles, plan.ResolvedSecurityRoles = convertApplicationUserToModel(currentUser)
-	plan.Id = state.Id
+	plan.BusinessUnitId = types.StringValue(currentUser.BusinessUnitId)
+	plan.Id = types.StringValue(currentUser.SystemUserId)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *EnvironmentApplicationUserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *ApplicationUserResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
-	var state EnvironmentApplicationUserResourceModel
+	var state ApplicationUserResourceModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -415,18 +296,21 @@ func (r *EnvironmentApplicationUserResource) Delete(ctx context.Context, req res
 
 	systemUserID := state.SystemUserId.ValueString()
 	if systemUserID == "" {
-		resolvedSystemUserID, err := r.ApplicationClient.GetApplicationUserSystemId(ctx, state.EnvironmentId.ValueString(), state.ApplicationId.ValueString())
-		if err != nil {
-			if errors.Is(err, customerrors.ErrObjectNotFound) {
+		systemUserID = state.Id.ValueString()
+		if systemUserID == "" {
+			resolvedSystemUserID, err := r.ApplicationClient.GetApplicationUserSystemId(ctx, state.EnvironmentId.ValueString(), state.ApplicationId.ValueString())
+			if err != nil {
+				if errors.Is(err, customerrors.ErrObjectNotFound) {
+					return
+				}
+				resp.Diagnostics.AddError(
+					fmt.Sprintf("Failed to get system user ID for application user '%s' in environment '%s'", state.ApplicationId.ValueString(), state.EnvironmentId.ValueString()),
+					err.Error(),
+				)
 				return
 			}
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("Failed to get system user ID for application user '%s' in environment '%s'", state.ApplicationId.ValueString(), state.EnvironmentId.ValueString()),
-				err.Error(),
-			)
-			return
+			systemUserID = resolvedSystemUserID
 		}
-		systemUserID = resolvedSystemUserID
 	}
 
 	if err := r.ApplicationClient.DeactivateSystemUser(ctx, state.EnvironmentId.ValueString(), systemUserID); err != nil {
@@ -446,7 +330,7 @@ func (r *EnvironmentApplicationUserResource) Delete(ctx context.Context, req res
 	}
 }
 
-func (r *EnvironmentApplicationUserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *ApplicationUserResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
 
@@ -459,7 +343,18 @@ func (r *EnvironmentApplicationUserResource) ImportState(ctx context.Context, re
 		return
 	}
 
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	user, err := r.ApplicationClient.GetApplicationUser(ctx, idParts[0], idParts[1])
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Failed to import application user",
+			err.Error(),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("id"), user.SystemUserId)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("environment_id"), idParts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("application_id"), idParts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("system_user_id"), user.SystemUserId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("business_unit_id"), user.BusinessUnitId)...)
 }

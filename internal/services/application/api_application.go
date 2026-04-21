@@ -217,6 +217,10 @@ func (client *client) CreateScopedApplicationUser(ctx context.Context, environme
 }
 
 func (client *client) GetApplicationUserBySystemUserId(ctx context.Context, environmentId, systemUserId string) (*applicationUserDto, error) {
+	return client.GetPrincipalBySystemUserId(ctx, environmentId, systemUserId)
+}
+
+func (client *client) GetPrincipalBySystemUserId(ctx context.Context, environmentId, systemUserId string) (*applicationUserDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -241,7 +245,7 @@ func (client *client) GetApplicationUserBySystemUserId(ctx context.Context, envi
 		return nil, err
 	}
 	if resp.HttpResponse.StatusCode == http.StatusNotFound {
-		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("application user not found for system user ID %s", systemUserId))
+		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("principal not found for system user ID %s", systemUserId))
 	}
 
 	sort.Slice(response.SecurityRoles, func(i, j int) bool {
@@ -315,6 +319,10 @@ func (client *client) ResolveSecurityRoleNames(ctx context.Context, environmentI
 }
 
 func (client *client) AddApplicationUserSecurityRoles(ctx context.Context, environmentId, systemUserId string, roleIds []string) (*applicationUserDto, error) {
+	return client.AddPrincipalSecurityRoles(ctx, environmentId, systemUserId, roleIds)
+}
+
+func (client *client) AddPrincipalSecurityRoles(ctx context.Context, environmentId, systemUserId string, roleIds []string) (*applicationUserDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -342,10 +350,14 @@ func (client *client) AddApplicationUserSecurityRoles(ctx context.Context, envir
 		}
 	}
 
-	return client.GetApplicationUserBySystemUserId(ctx, environmentId, systemUserId)
+	return client.GetPrincipalBySystemUserId(ctx, environmentId, systemUserId)
 }
 
 func (client *client) RemoveApplicationUserSecurityRoles(ctx context.Context, environmentId, systemUserId string, roleIds []string) (*applicationUserDto, error) {
+	return client.RemovePrincipalSecurityRoles(ctx, environmentId, systemUserId, roleIds)
+}
+
+func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environmentId, systemUserId string, roleIds []string) (*applicationUserDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -373,7 +385,7 @@ func (client *client) RemoveApplicationUserSecurityRoles(ctx context.Context, en
 		}
 	}
 
-	return client.GetApplicationUserBySystemUserId(ctx, environmentId, systemUserId)
+	return client.GetPrincipalBySystemUserId(ctx, environmentId, systemUserId)
 }
 
 func (client *client) DeactivateSystemUser(ctx context.Context, environmentId string, systemUserId string) error {
@@ -563,5 +575,5 @@ func (client *client) InstallApplicationInEnvironment(ctx context.Context, envir
 }
 
 func (client *client) getApplicationUserBySystemId(ctx context.Context, environmentId string, systemUserId string) (*applicationUserDto, error) {
-	return client.GetApplicationUserBySystemUserId(ctx, environmentId, systemUserId)
+	return client.GetPrincipalBySystemUserId(ctx, environmentId, systemUserId)
 }
