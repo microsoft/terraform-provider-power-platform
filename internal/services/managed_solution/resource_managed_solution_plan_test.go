@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func TestSourcesAreEquivalent_IgnoresPowerPackDownloadToken(t *testing.T) {
+func TestSourcesAreEquivalent_IgnoresTokenQueryParameter(t *testing.T) {
 	t.Parallel()
 
 	plan := &SourceModel{
@@ -17,7 +17,7 @@ func TestSourcesAreEquivalent_IgnoresPowerPackDownloadToken(t *testing.T) {
 	}
 
 	if !sourcesAreEquivalent(plan, state) {
-		t.Fatal("expected PowerPack download URLs that differ only by token to be treated as equivalent")
+		t.Fatal("expected URLs that differ only by token query value to be treated as equivalent")
 	}
 }
 
@@ -32,7 +32,7 @@ func TestSourcesAreEquivalent_DetectsTransportChange(t *testing.T) {
 	}
 
 	if sourcesAreEquivalent(plan, state) {
-		t.Fatal("expected legacy localhost transport URLs to differ from PowerPack API URLs")
+		t.Fatal("expected URLs with different transport and path values to be treated as different")
 	}
 }
 
