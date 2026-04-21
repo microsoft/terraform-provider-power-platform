@@ -221,9 +221,7 @@ func normalizedSourceURL(value types.String) string {
 		return raw
 	}
 
-	query := parsed.Query()
-	query.Del("token")
-	parsed.RawQuery = query.Encode()
+	parsed.RawQuery = ""
 	parsed.Fragment = ""
 	return parsed.String()
 }
