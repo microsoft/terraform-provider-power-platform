@@ -45,20 +45,22 @@ type EnvironmentSettingsResource struct {
 }
 
 type EnvironmentSettingsResourceModel struct {
-	Timeouts      timeouts.Value `tfsdk:"timeouts"`
-	Id            types.String   `tfsdk:"id"`
-	EnvironmentId types.String   `tfsdk:"environment_id"`
-	AuditAndLogs  types.Object   `tfsdk:"audit_and_logs"`
-	Email         types.Object   `tfsdk:"email"`
-	Product       types.Object   `tfsdk:"product"`
+	Timeouts           timeouts.Value `tfsdk:"timeouts"`
+	Id                 types.String   `tfsdk:"id"`
+	EnvironmentId      types.String   `tfsdk:"environment_id"`
+	AuditAndLogs       types.Object   `tfsdk:"audit_and_logs"`
+	Email              types.Object   `tfsdk:"email"`
+	PrivacyAndSecurity types.Object   `tfsdk:"privacy_and_security"`
+	Product            types.Object   `tfsdk:"product"`
 }
 
 type EnvironmentSettingsDataSourceModel struct {
-	Timeouts      timeouts.Value `tfsdk:"timeouts"`
-	EnvironmentId types.String   `tfsdk:"environment_id"`
-	AuditAndLogs  types.Object   `tfsdk:"audit_and_logs"`
-	Email         types.Object   `tfsdk:"email"`
-	Product       types.Object   `tfsdk:"product"`
+	Timeouts           timeouts.Value `tfsdk:"timeouts"`
+	EnvironmentId      types.String   `tfsdk:"environment_id"`
+	AuditAndLogs       types.Object   `tfsdk:"audit_and_logs"`
+	Email              types.Object   `tfsdk:"email"`
+	PrivacyAndSecurity types.Object   `tfsdk:"privacy_and_security"`
+	Product            types.Object   `tfsdk:"product"`
 }
 
 type AuditAndLogsSourceModel struct {
@@ -79,6 +81,10 @@ type EmailSourceModel struct {
 
 type EmailSettingsSourceModel struct {
 	MaxUploadFileSize types.Int64 `tfsdk:"max_upload_file_size_in_bytes"`
+}
+
+type PrivacyAndSecuritySourceModel struct {
+	BlockedAttachmentExtensions types.Set `tfsdk:"blocked_attachment_extensions"`
 }
 
 type ProductSourceModel struct {
@@ -178,6 +184,9 @@ func convertFromEnvironmentSettingsModel(ctx context.Context, environmentSetting
 	if err := convertFromEnvironmentEmailSettings(ctx, environmentSettingsModel, environmentSettings.OrgSettings); err != nil {
 		return nil, err
 	}
+	if err := convertFromEnvironmentPrivacyAndSecuritySettings(ctx, environmentSettingsModel, environmentSettings.OrgSettings); err != nil {
+		return nil, err
+	}
 	if err := convertFromEnvironmentBehaviorSettings(ctx, environmentSettingsModel, environmentSettings.OrgSettings); err != nil {
 		return nil, err
 	}
@@ -210,6 +219,28 @@ func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSetting
 			environmentSettingsDto.MaxUploadFileSize = emailSourceModel.MaxUploadFileSize.ValueInt64Pointer()
 		}
 	}
+	return nil
+}
+
+func convertFromEnvironmentPrivacyAndSecuritySettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentOrgSettingsDto) error {
+	privacyAndSecurity := environmentSettings.PrivacyAndSecurity
+	if privacyAndSecurity.IsNull() || privacyAndSecurity.IsUnknown() {
+		return nil
+	}
+
+	var privacyAndSecuritySourceModel PrivacyAndSecuritySourceModel
+	if diags := privacyAndSecurity.As(ctx, &privacyAndSecuritySourceModel, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: true,
+	}); diags != nil {
+		return fmt.Errorf("failed to convert privacy and security settings: %v", diags)
+	}
+
+	if helpers.IsKnown(privacyAndSecuritySourceModel.BlockedAttachmentExtensions) {
+		value := strings.Join(helpers.SetToStringSlice(privacyAndSecuritySourceModel.BlockedAttachmentExtensions), ";")
+		environmentSettingsDto.BlockedAttachments = &value
+	}
+
 	return nil
 }
 
@@ -434,6 +465,13 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		"max_upload_file_size_in_bytes": types.Int64Type,
 	}
 
+	blockedAttachmentExtensions := []attr.Value{}
+	if environmentOrgSettingsDto.BlockedAttachments != nil && *environmentOrgSettingsDto.BlockedAttachments != "" {
+		for _, extension := range strings.Split(*environmentOrgSettingsDto.BlockedAttachments, ";") {
+			blockedAttachmentExtensions = append(blockedAttachmentExtensions, types.StringValue(extension))
+		}
+	}
+
 	attrValuesEmailProperties := map[string]attr.Value{
 		"email_settings": types.ObjectValueMust(attrEmailSettingsObject, map[string]attr.Value{
 			"max_upload_file_size_in_bytes": types.Int64Value(*environmentOrgSettingsDto.MaxUploadFileSize),
@@ -442,6 +480,10 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 
 	attrTypesEmailObject := map[string]attr.Type{
 		"email_settings": types.ObjectType{AttrTypes: attrEmailSettingsObject},
+	}
+
+	attrTypesPrivacyAndSecurityObject := map[string]attr.Type{
+		"blocked_attachment_extensions": types.SetType{ElemType: types.StringType},
 	}
 
 	attrBahaviorSettingsObject := map[string]attr.Type{
@@ -548,14 +590,20 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 			Timeouts:     timeout,
 			AuditAndLogs: types.ObjectValueMust(attrTypesAuditAndLogsObject, attrValuesAuditAndLogsProperties),
 			Email:        types.ObjectValueMust(attrTypesEmailObject, attrValuesEmailProperties),
-			Product:      types.ObjectValueMust(attrTypesProductObject, attrValuesProductProperties),
+			PrivacyAndSecurity: types.ObjectValueMust(attrTypesPrivacyAndSecurityObject, map[string]attr.Value{
+				"blocked_attachment_extensions": types.SetValueMust(types.StringType, blockedAttachmentExtensions),
+			}),
+			Product: types.ObjectValueMust(attrTypesProductObject, attrValuesProductProperties),
 		}).(T)
 	case EnvironmentSettingsDataSourceModel:
 		environmentSettings, ok = any(EnvironmentSettingsDataSourceModel{
 			Timeouts:     timeout,
 			AuditAndLogs: types.ObjectValueMust(attrTypesAuditAndLogsObject, attrValuesAuditAndLogsProperties),
 			Email:        types.ObjectValueMust(attrTypesEmailObject, attrValuesEmailProperties),
-			Product:      types.ObjectValueMust(attrTypesProductObject, attrValuesProductProperties),
+			PrivacyAndSecurity: types.ObjectValueMust(attrTypesPrivacyAndSecurityObject, map[string]attr.Value{
+				"blocked_attachment_extensions": types.SetValueMust(types.StringType, blockedAttachmentExtensions),
+			}),
+			Product: types.ObjectValueMust(attrTypesProductObject, attrValuesProductProperties),
 		}).(T)
 	default:
 		return environmentSettings, fmt.Errorf("unexpected type %T", environmentSettings)

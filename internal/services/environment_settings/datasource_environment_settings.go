@@ -167,6 +167,17 @@ func (d *EnvironmentSettingsDataSource) Schema(ctx context.Context, req datasour
 					},
 				},
 			},
+			"privacy_and_security": schema.SingleNestedAttribute{
+				MarkdownDescription: "Privacy and Security settings. See the environment Privacy + Security settings for more details.",
+				Optional:            true,
+				Attributes: map[string]schema.Attribute{
+					"blocked_attachment_extensions": schema.SetAttribute{
+						ElementType:         types.StringType,
+						MarkdownDescription: "Blocked attachment extensions enforced at the environment level.",
+						Optional:            true,
+					},
+				},
+			},
 			"product": schema.SingleNestedAttribute{
 				MarkdownDescription: "Product",
 				Optional:            true,
