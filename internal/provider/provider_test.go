@@ -34,6 +34,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_settings"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_templates"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_wave"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/git_integration"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/languages"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/locations"
@@ -99,6 +100,8 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		data_record.NewDataRecordResource(),
 		rest.NewDataverseWebApiResource(),
 		connection.NewConnectionResource(),
+		git_integration.NewEnvironmentGitIntegrationResource(),
+		git_integration.NewSolutionGitBranchResource(),
 		connection.NewConnectionShareResource(),
 		admin_management_application.NewAdminManagementApplicationResource(),
 		environment_group_rule_set.NewEnvironmentGroupRuleSetResource(),
