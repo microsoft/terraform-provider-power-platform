@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"slices"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -178,10 +179,53 @@ func (r *Resource) ModifyPlan(ctx context.Context, req resource.ModifyPlanReques
 	if plan.EnvironmentId.ValueString() == state.EnvironmentId.ValueString() &&
 		plan.UniqueName.ValueString() == state.UniqueName.ValueString() &&
 		plan.Version.ValueString() == state.Version.ValueString() &&
-		mapsEqual(planRefs, stateRefs) {
+		mapsEqual(planRefs, stateRefs) &&
+		sourcesAreEquivalent(plan.Source, state.Source) {
 		plan.Source = cloneSourceModel(state.Source)
 		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 	}
+}
+
+func sourcesAreEquivalent(plan *SourceModel, state *SourceModel) bool {
+	if plan == nil || state == nil {
+		return plan == nil && state == nil
+	}
+
+	planPath := normalizedSourceString(plan.Path)
+	statePath := normalizedSourceString(state.Path)
+	if planPath != "" || statePath != "" {
+		return planPath != "" && planPath == statePath
+	}
+
+	planURL := normalizedSourceURL(plan.URL)
+	stateURL := normalizedSourceURL(state.URL)
+	return planURL != "" && planURL == stateURL
+}
+
+func normalizedSourceString(value types.String) string {
+	if value.IsNull() || value.IsUnknown() {
+		return ""
+	}
+
+	return value.ValueString()
+}
+
+func normalizedSourceURL(value types.String) string {
+	raw := normalizedSourceString(value)
+	if raw == "" {
+		return ""
+	}
+
+	parsed, err := url.Parse(raw)
+	if err != nil {
+		return raw
+	}
+
+	query := parsed.Query()
+	query.Del("token")
+	parsed.RawQuery = query.Encode()
+	parsed.Fragment = ""
+	return parsed.String()
 }
 
 func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
