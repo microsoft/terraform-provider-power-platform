@@ -22,6 +22,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/modifiers"
 )
 
 var _ resource.Resource = &ApplicationUserResource{}
@@ -101,6 +102,9 @@ func (r *ApplicationUserResource) Schema(ctx context.Context, req resource.Schem
 				Optional:            true,
 				Computed:            true,
 				Default:             booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					modifiers.UseDefaultBoolValueWhenConfigNull(false),
+				},
 			},
 		},
 	}
