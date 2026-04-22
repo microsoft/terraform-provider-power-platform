@@ -191,6 +191,112 @@ func TestUnitEnvironmentApplicationUserResource_UpdateDisabled(t *testing.T) {
 	})
 }
 
+func TestUnitEnvironmentApplicationUserResource_RecreatesDeletedUser(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const (
+		environmentID   = "00000000-0000-0000-0000-000000000001"
+		applicationID   = "00000000-0000-0000-0000-000000000002"
+		firstSystemUser = "00000000-0000-0000-0000-000000000008"
+		nextSystemUser  = "00000000-0000-0000-0000-000000000009"
+		rootBusinessID  = "00000000-0000-0000-0000-000000000003"
+	)
+
+	createCount := 0
+	currentSystemUserID := firstSystemUser
+	userDeleted := false
+
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/businessunits.*`,
+		func(req *http.Request) (*http.Response, error) {
+			body := fmt.Sprintf(`{"value":[{"businessunitid":"%s","name":"root"}]}`, rootBusinessID)
+			return httpmock.NewStringResponse(http.StatusOK, body), nil
+		})
+
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers$`,
+		func(req *http.Request) (*http.Response, error) {
+			createCount++
+			userDeleted = false
+			if createCount > 1 {
+				currentSystemUserID = nextSystemUser
+			}
+
+			resp := httpmock.NewStringResponse(http.StatusNoContent, "")
+			resp.Header.Set("OData-EntityId", fmt.Sprintf("https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%s)", currentSystemUserID))
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			body := fmt.Sprintf(`{"systemuserid":"%s","applicationid":"%s","fullname":"Example Application User","_businessunitid_value":"%s","isdisabled":false,"deletedstate":%d,"systemuserroles_association":[]}`,
+				currentSystemUserID, applicationID, rootBusinessID, boolToDeletedState(userDeleted))
+
+			if strings.Contains(req.URL.Path, "/systemusers(") || strings.Contains(req.URL.RawPath, "/systemusers%28") {
+				return httpmock.NewStringResponse(http.StatusOK, body), nil
+			}
+
+			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{"value":[%s]}`, body)), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()00000000-0000-0000-0000-000000000008(%29|\))$`,
+		func(req *http.Request) (*http.Response, error) {
+			userDeleted = true
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%28|\()00000000-0000-0000-0000-000000000009(%29|\))$`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_application_user" "test" {
+					environment_id = "` + environmentID + `"
+					application_id = "` + applicationID + `"
+				}
+				`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_application_user.test", "id", firstSystemUser),
+				),
+			},
+			{
+				PreConfig: func() {
+					userDeleted = true
+				},
+				Config: `
+				resource "powerplatform_application_user" "test" {
+					environment_id = "` + environmentID + `"
+					application_id = "` + applicationID + `"
+				}
+				`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_application_user.test", "id", nextSystemUser),
+				),
+			},
+		},
+	})
+}
+
 func TestUnitEnvironmentApplicationUserResource_Import(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -265,6 +371,14 @@ func TestUnitEnvironmentApplicationUserResource_Import(t *testing.T) {
 			},
 		},
 	})
+}
+
+func boolToDeletedState(deleted bool) int {
+	if deleted {
+		return 1
+	}
+
+	return 0
 }
 
 func TestUnitEnvironmentApplicationUserResource_Read_NotFound(t *testing.T) {

@@ -98,6 +98,7 @@ type applicationUserDto struct {
 	SystemUserId   string                       `json:"systemuserid"`
 	BusinessUnitId string                       `json:"_businessunitid_value"`
 	IsDisabled     bool                         `json:"isdisabled"`
+	DeletedState   int64                        `json:"deletedstate"`
 	SecurityRoles  []applicationSecurityRoleDto `json:"systemuserroles_association,omitempty"`
 }
 

@@ -143,7 +143,7 @@ func (client *client) GetApplicationUser(ctx context.Context, environmentId stri
 		Path:   fmt.Sprintf("/api/data/%s/systemusers", constants.DATAVERSE_API_VERSION),
 	}
 	values := url.Values{}
-	values.Add("$select", "applicationid,systemuserid,fullname,isdisabled,_businessunitid_value")
+	values.Add("$select", "applicationid,systemuserid,fullname,isdisabled,deletedstate,_businessunitid_value")
 	values.Add("$expand", "systemuserroles_association($select=roleid,name,_businessunitid_value)")
 	values.Add("$filter", fmt.Sprintf("applicationid eq %s", applicationId))
 	apiUrl.RawQuery = values.Encode()
@@ -160,11 +160,19 @@ func (client *client) GetApplicationUser(ctx context.Context, environmentId stri
 		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("application user '%s' not found in environment '%s'", applicationId, environmentId))
 	}
 
-	sort.Slice(response.Value[0].SecurityRoles, func(i, j int) bool {
-		return response.Value[0].SecurityRoles[i].RoleId < response.Value[0].SecurityRoles[j].RoleId
-	})
+	for _, user := range response.Value {
+		if user.DeletedState != 0 {
+			continue
+		}
 
-	return &response.Value[0], nil
+		sort.Slice(user.SecurityRoles, func(i, j int) bool {
+			return user.SecurityRoles[i].RoleId < user.SecurityRoles[j].RoleId
+		})
+
+		return &user, nil
+	}
+
+	return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("application user '%s' not found in environment '%s'", applicationId, environmentId))
 }
 
 func (client *client) GetApplicationUserSystemId(ctx context.Context, environmentId string, applicationId string) (string, error) {
@@ -260,7 +268,7 @@ func (client *client) GetPrincipalBySystemUserId(ctx context.Context, environmen
 		Path:   fmt.Sprintf("/api/data/%s/systemusers(%s)", constants.DATAVERSE_API_VERSION, systemUserId),
 	}
 	values := url.Values{}
-	values.Add("$select", "applicationid,systemuserid,fullname,isdisabled,_businessunitid_value")
+	values.Add("$select", "applicationid,systemuserid,fullname,isdisabled,deletedstate,_businessunitid_value")
 	values.Add("$expand", "systemuserroles_association($select=roleid,name,_businessunitid_value)")
 	apiUrl.RawQuery = values.Encode()
 
@@ -273,6 +281,9 @@ func (client *client) GetPrincipalBySystemUserId(ctx context.Context, environmen
 		return nil, err
 	}
 	if resp.HttpResponse.StatusCode == http.StatusNotFound {
+		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("principal not found for system user ID %s", systemUserId))
+	}
+	if response.DeletedState != 0 {
 		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("principal not found for system user ID %s", systemUserId))
 	}
 
