@@ -132,6 +132,27 @@ func (client *client) ApplicationUserExists(ctx context.Context, environmentId s
 }
 
 func (client *client) GetApplicationUser(ctx context.Context, environmentId string, applicationId string) (*applicationUserDto, error) {
+	users, err := client.getApplicationUsersByApplicationId(ctx, environmentId, applicationId)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, user := range users {
+		if user.DeletedState != 0 {
+			continue
+		}
+
+		sort.Slice(user.SecurityRoles, func(i, j int) bool {
+			return user.SecurityRoles[i].RoleId < user.SecurityRoles[j].RoleId
+		})
+
+		return &user, nil
+	}
+
+	return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("application user '%s' not found in environment '%s'", applicationId, environmentId))
+}
+
+func (client *client) getApplicationUsersByApplicationId(ctx context.Context, environmentId string, applicationId string) ([]applicationUserDto, error) {
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -160,19 +181,7 @@ func (client *client) GetApplicationUser(ctx context.Context, environmentId stri
 		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("application user '%s' not found in environment '%s'", applicationId, environmentId))
 	}
 
-	for _, user := range response.Value {
-		if user.DeletedState != 0 {
-			continue
-		}
-
-		sort.Slice(user.SecurityRoles, func(i, j int) bool {
-			return user.SecurityRoles[i].RoleId < user.SecurityRoles[j].RoleId
-		})
-
-		return &user, nil
-	}
-
-	return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("application user '%s' not found in environment '%s'", applicationId, environmentId))
+	return response.Value, nil
 }
 
 func (client *client) GetApplicationUserSystemId(ctx context.Context, environmentId string, applicationId string) (string, error) {
@@ -204,7 +213,14 @@ func (client *client) CreateScopedApplicationUser(ctx context.Context, environme
 
 	response, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, requestBody, []int{http.StatusNoContent, http.StatusCreated}, nil)
 	if err != nil {
-		return nil, err
+		if purgeErr := client.purgeDeletedApplicationUsersByApplicationId(ctx, environmentId, applicationId, err); purgeErr != nil {
+			return nil, purgeErr
+		}
+
+		response, err = client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, requestBody, []int{http.StatusNoContent, http.StatusCreated}, nil)
+		if err != nil {
+			return nil, err
+		}
 	}
 	if err := client.Api.HandleForbiddenResponse(response); err != nil {
 		return nil, err
@@ -222,6 +238,36 @@ func (client *client) CreateScopedApplicationUser(ctx context.Context, environme
 	}
 
 	return client.GetApplicationUserBySystemUserId(ctx, environmentId, match[len(match)-1][0])
+}
+
+func (client *client) purgeDeletedApplicationUsersByApplicationId(ctx context.Context, environmentId, applicationId string, createErr error) error {
+	users, err := client.getApplicationUsersByApplicationId(ctx, environmentId, applicationId)
+	if err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			return createErr
+		}
+
+		return fmt.Errorf("%w\n\nAn additional lookup for deleted application users failed: %s", createErr, err.Error())
+	}
+
+	purgedAny := false
+	for _, user := range users {
+		if user.DeletedState == 0 {
+			continue
+		}
+
+		if err := client.PermanentlyDeleteSystemUser(ctx, environmentId, user.SystemUserId); err != nil {
+			return fmt.Errorf("%w\n\nA conflicting deleted application user '%s' was found but could not be permanently deleted: %s", createErr, user.SystemUserId, err.Error())
+		}
+
+		purgedAny = true
+	}
+
+	if !purgedAny {
+		return createErr
+	}
+
+	return nil
 }
 
 func (client *client) SetApplicationUserDisabledState(ctx context.Context, environmentId, systemUserId, applicationId string, disabled bool) (*applicationUserDto, error) {
@@ -442,6 +488,22 @@ func (client *client) DeactivateSystemUser(ctx context.Context, environmentId st
 }
 
 func (client *client) DeleteSystemUser(ctx context.Context, environmentId string, systemUserId string) error {
+	return client.deleteSystemUser(ctx, environmentId, systemUserId, []int{http.StatusNoContent, http.StatusOK})
+}
+
+func (client *client) PermanentlyDeleteSystemUser(ctx context.Context, environmentId string, systemUserId string) error {
+	if err := client.deleteSystemUser(ctx, environmentId, systemUserId, []int{http.StatusNoContent, http.StatusOK, http.StatusNotFound}); err != nil {
+		return err
+	}
+
+	if err := client.deleteSystemUser(ctx, environmentId, systemUserId, []int{http.StatusNoContent, http.StatusOK, http.StatusNotFound}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (client *client) deleteSystemUser(ctx context.Context, environmentId string, systemUserId string, expectedStatusCodes []int) error {
 	// Get the environment host
 	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
@@ -456,7 +518,7 @@ func (client *client) DeleteSystemUser(ctx context.Context, environmentId string
 	}
 
 	// Make the request
-	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent, http.StatusOK}, nil)
+	_, err = client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, expectedStatusCodes, nil)
 	if err != nil {
 		return err
 	}

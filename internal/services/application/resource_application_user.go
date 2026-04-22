@@ -249,7 +249,7 @@ func (r *ApplicationUserResource) cleanupCreatedApplicationUser(ctx context.Cont
 		return fmt.Errorf("failed to deactivate created application user '%s': %w", systemUserID, err)
 	}
 
-	if err := r.ApplicationClient.DeleteSystemUser(ctx, environmentID, systemUserID); err != nil {
+	if err := r.ApplicationClient.PermanentlyDeleteSystemUser(ctx, environmentID, systemUserID); err != nil {
 		return fmt.Errorf("failed to delete created application user '%s': %w", systemUserID, err)
 	}
 
@@ -374,7 +374,7 @@ func (r *ApplicationUserResource) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
-	if err := r.ApplicationClient.DeleteSystemUser(ctx, state.EnvironmentId.ValueString(), systemUserID); err != nil {
+	if err := r.ApplicationClient.PermanentlyDeleteSystemUser(ctx, state.EnvironmentId.ValueString(), systemUserID); err != nil {
 		resp.Diagnostics.AddError(
 			fmt.Sprintf("Failed to delete system user for application '%s' in environment '%s'", state.ApplicationId.ValueString(), state.EnvironmentId.ValueString()),
 			err.Error(),
