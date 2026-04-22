@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -95,6 +96,12 @@ func (r *ApplicationUserResource) Schema(ctx context.Context, req resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"disabled": schema.BoolAttribute{
+				MarkdownDescription: "Whether the Dataverse application user is disabled. Defaults to `false` and is actively reconciled by the resource.",
+				Optional:            true,
+				Computed:            true,
+				Default:             booldefault.StaticBool(false),
+			},
 		},
 	}
 }
@@ -161,9 +168,32 @@ func (r *ApplicationUserResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	desiredDisabled := plan.Disabled.ValueBool()
+	if user.IsDisabled != desiredDisabled {
+		user, err = r.ApplicationClient.SetApplicationUserDisabledState(
+			ctx,
+			plan.EnvironmentId.ValueString(),
+			user.SystemUserId,
+			plan.ApplicationId.ValueString(),
+			desiredDisabled,
+		)
+		if err != nil {
+			r.addCreateFailureWithCleanupDiagnostics(
+				ctx,
+				resp,
+				plan.EnvironmentId.ValueString(),
+				user.SystemUserId,
+				fmt.Sprintf("Failed to reconcile disabled state for application user '%s'", plan.ApplicationId.ValueString()),
+				err,
+			)
+			return
+		}
+	}
+
 	plan.Id = types.StringValue(user.SystemUserId)
 	plan.SystemUserId = types.StringValue(user.SystemUserId)
-	plan.BusinessUnitId = types.StringValue(businessUnitID)
+	plan.BusinessUnitId = types.StringValue(user.BusinessUnitId)
+	plan.Disabled = types.BoolValue(user.IsDisabled)
 
 	stateDiags := resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(stateDiags...)
@@ -248,6 +278,7 @@ func (r *ApplicationUserResource) Read(ctx context.Context, req resource.ReadReq
 	state.Id = types.StringValue(user.SystemUserId)
 	state.SystemUserId = types.StringValue(user.SystemUserId)
 	state.BusinessUnitId = types.StringValue(user.BusinessUnitId)
+	state.Disabled = types.BoolValue(user.IsDisabled)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -277,9 +308,27 @@ func (r *ApplicationUserResource) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
+	if currentUser.IsDisabled != plan.Disabled.ValueBool() {
+		currentUser, err = r.ApplicationClient.SetApplicationUserDisabledState(
+			ctx,
+			state.EnvironmentId.ValueString(),
+			currentUser.SystemUserId,
+			state.ApplicationId.ValueString(),
+			plan.Disabled.ValueBool(),
+		)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				fmt.Sprintf("Failed to update disabled state for application user '%s'", state.ApplicationId.ValueString()),
+				err.Error(),
+			)
+			return
+		}
+	}
+
 	plan.SystemUserId = types.StringValue(currentUser.SystemUserId)
 	plan.BusinessUnitId = types.StringValue(currentUser.BusinessUnitId)
 	plan.Id = types.StringValue(currentUser.SystemUserId)
+	plan.Disabled = types.BoolValue(currentUser.IsDisabled)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -357,4 +406,5 @@ func (r *ApplicationUserResource) ImportState(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("application_id"), idParts[1])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("system_user_id"), user.SystemUserId)...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("business_unit_id"), user.BusinessUnitId)...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("disabled"), user.IsDisabled)...)
 }

@@ -216,6 +216,34 @@ func (client *client) CreateScopedApplicationUser(ctx context.Context, environme
 	return client.GetApplicationUserBySystemUserId(ctx, environmentId, match[len(match)-1][0])
 }
 
+func (client *client) SetApplicationUserDisabledState(ctx context.Context, environmentId, systemUserId, applicationId string, disabled bool) (*applicationUserDto, error) {
+	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   fmt.Sprintf("/api/data/%s/systemusers(%s)", constants.DATAVERSE_API_VERSION, systemUserId),
+	}
+
+	requestBody := map[string]any{
+		"isdisabled":    disabled,
+		"applicationid": applicationId,
+	}
+
+	resp, err := client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, requestBody, []int{http.StatusNoContent, http.StatusOK}, nil)
+	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+
+	return client.GetApplicationUserBySystemUserId(ctx, environmentId, systemUserId)
+}
+
 func (client *client) GetApplicationUserBySystemUserId(ctx context.Context, environmentId, systemUserId string) (*applicationUserDto, error) {
 	return client.GetPrincipalBySystemUserId(ctx, environmentId, systemUserId)
 }
@@ -389,34 +417,13 @@ func (client *client) RemovePrincipalSecurityRoles(ctx context.Context, environm
 }
 
 func (client *client) DeactivateSystemUser(ctx context.Context, environmentId string, systemUserId string) error {
-	// Get the environment host
-	environmentHost, err := client.GetEnvironmentHostById(ctx, environmentId)
-	if err != nil {
-		return err
-	}
-
 	// Get the application user to find the application ID
 	appUser, err := client.getApplicationUserBySystemId(ctx, environmentId, systemUserId)
 	if err != nil {
 		return err
 	}
 
-	// Create the Dataverse Web API URL to deactivate the system user
-	apiUrl := &url.URL{
-		Scheme: constants.HTTPS,
-		Host:   environmentHost,
-		Path:   fmt.Sprintf("/api/data/v9.0/systemusers(%s)", systemUserId),
-	}
-
-	// The request body to disable the user
-	requestBody := map[string]any{
-		"isdisabled":    true,
-		"applicationid": appUser.ApplicationId,
-	}
-
-	// Make the PATCH request to disable the user
-	_, err = client.Api.Execute(ctx, nil, "PATCH", apiUrl.String(), nil, requestBody, []int{http.StatusNoContent, http.StatusOK}, nil)
-	if err != nil {
+	if _, err = client.SetApplicationUserDisabledState(ctx, environmentId, systemUserId, appUser.ApplicationId, true); err != nil {
 		return err
 	}
 

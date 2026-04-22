@@ -21,4 +21,5 @@ type ApplicationUserResourceModel struct {
 	ApplicationId  types.String   `tfsdk:"application_id"`
 	SystemUserId   types.String   `tfsdk:"system_user_id"`
 	BusinessUnitId types.String   `tfsdk:"business_unit_id"`
+	Disabled       types.Bool     `tfsdk:"disabled"`
 }
