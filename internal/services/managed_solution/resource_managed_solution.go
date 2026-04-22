@@ -484,7 +484,7 @@ func (r *Resource) applyManagedSolution(ctx context.Context, plan *ResourceModel
 		return nil
 	}
 
-	installedSolutions, err := r.Client.GetSolutions(ctx, plan.EnvironmentId.ValueString())
+	installedSolutions, err := r.Client.GetInstalledSolutions(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
 		diagnostics.AddError("Unable to verify installed solution dependencies", err.Error())
 		return nil

@@ -105,7 +105,7 @@ func TestUnitManagedSolutionResource_Validate_Create_HappyPath(t *testing.T) {
 			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
 		})
 
-	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=%28isvisible+eq+true%29&%24orderby=createdon+desc",
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24orderby=createdon+desc",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
 		})
@@ -300,7 +300,7 @@ func TestUnitManagedSolutionResource_Validate_Create_Fails_When_DependencyVersio
 	})
 
 	registerManagedSolutionEnvironmentResponder()
-	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=%28isvisible+eq+true%29&%24orderby=createdon+desc",
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24orderby=createdon+desc",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, `{
   "value": [
@@ -354,7 +354,7 @@ func registerManagedSolutionEnvironmentResponder() {
 }`), nil
 		})
 
-	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=%28isvisible+eq+true%29&%24orderby=createdon+desc",
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24orderby=createdon+desc",
 		func(req *http.Request) (*http.Response, error) {
 			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
 		})

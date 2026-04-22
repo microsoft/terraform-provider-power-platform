@@ -50,6 +50,10 @@ func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([
 	return client.SolutionClient.GetSolutions(ctx, environmentId)
 }
 
+func (client *Client) GetInstalledSolutions(ctx context.Context, environmentId string) ([]solution.SolutionDto, error) {
+	return client.SolutionClient.GetInstalledSolutions(ctx, environmentId)
+}
+
 func (client *Client) DeleteSolution(ctx context.Context, environmentId, solutionId string) error {
 	return client.SolutionClient.DeleteSolution(ctx, environmentId, solutionId)
 }
