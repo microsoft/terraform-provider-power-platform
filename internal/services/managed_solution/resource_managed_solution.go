@@ -184,6 +184,9 @@ func (r *Resource) ModifyPlan(ctx context.Context, req resource.ModifyPlanReques
 		mapsEqual(planRefs, stateRefs) &&
 		sourcesAreEquivalent(plan.Source, state.Source) {
 		plan.Source = cloneSourceModel(state.Source)
+		plan.Id = state.Id
+		plan.SolutionId = state.SolutionId
+		plan.DisplayName = state.DisplayName
 		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
 	}
 }
@@ -276,7 +279,13 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	solutionState := r.applyManagedSolution(ctx, &plan, &resp.Diagnostics)
+	var config ResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	solutionState := r.applyManagedSolution(ctx, &plan, config.Source, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -323,7 +332,13 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		return
 	}
 
-	solutionState := r.applyManagedSolution(ctx, &plan, &resp.Diagnostics)
+	var config ResourceModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &config)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	solutionState := r.applyManagedSolution(ctx, &plan, config.Source, &resp.Diagnostics)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -351,7 +366,7 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 	}
 }
 
-func (r *Resource) applyManagedSolution(ctx context.Context, plan *ResourceModel, diagnostics *diag.Diagnostics) *ResourceModel {
+func (r *Resource) applyManagedSolution(ctx context.Context, plan *ResourceModel, deliverySource *SourceModel, diagnostics *diag.Diagnostics) *ResourceModel {
 	dataverseExists, err := r.Client.DataverseExists(ctx, plan.EnvironmentId.ValueString())
 	if err != nil {
 		diagnostics.AddError(fmt.Sprintf("Client error when checking if Dataverse exists in environment '%s'", plan.EnvironmentId.ValueString()), err.Error())
@@ -362,7 +377,7 @@ func (r *Resource) applyManagedSolution(ctx context.Context, plan *ResourceModel
 		return nil
 	}
 
-	sourcePath, cleanup, err := resolveSourceToPath(ctx, plan.Source)
+	sourcePath, cleanup, err := resolveSourceToPath(ctx, deliverySource)
 	if err != nil {
 		diagnostics.AddError("Unable to resolve managed solution source", err.Error())
 		return nil
