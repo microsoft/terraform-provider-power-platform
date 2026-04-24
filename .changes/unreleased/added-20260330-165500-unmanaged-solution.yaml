@@ -1,0 +1,5 @@
+kind: added
+body: Added the `powerplatform_unmanaged_solution` resource for direct Dataverse solution CRUD without ZIP import lifecycle coupling.
+time: 2026-03-30T16:55:00+11:00
+custom:
+  Issue: 1117
