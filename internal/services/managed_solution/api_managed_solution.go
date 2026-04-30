@@ -458,6 +458,35 @@ func compareVersionStrings(left, right string) (int, error) {
 	return 0, nil
 }
 
+func compareVersionStringsIgnoringBuild(left, right string) (int, error) {
+	leftParts, err := normalizeVersionParts(left)
+	if err != nil {
+		return 0, err
+	}
+	rightParts, err := normalizeVersionParts(right)
+	if err != nil {
+		return 0, err
+	}
+
+	for len(leftParts) < 3 {
+		leftParts = append(leftParts, 0)
+	}
+	for len(rightParts) < 3 {
+		rightParts = append(rightParts, 0)
+	}
+
+	for i := 0; i < 3; i++ {
+		if leftParts[i] < rightParts[i] {
+			return -1, nil
+		}
+		if leftParts[i] > rightParts[i] {
+			return 1, nil
+		}
+	}
+
+	return 0, nil
+}
+
 func normalizeVersionParts(raw string) ([]int, error) {
 	if raw == "" {
 		return nil, errors.New("version cannot be empty")
@@ -608,7 +637,7 @@ func validateDependencies(required map[string]string, installed []solution.Solut
 			continue
 		}
 
-		cmp, err := compareVersionStrings(installedSolution.Version, requiredVersion)
+		cmp, err := compareVersionStringsIgnoringBuild(installedSolution.Version, requiredVersion)
 		if err != nil {
 			return err
 		}

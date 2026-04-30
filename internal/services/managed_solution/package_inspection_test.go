@@ -158,6 +158,34 @@ func TestUnitValidateDependencies_FailsWhenInstalledVersionIsTooLow(t *testing.T
 	}
 }
 
+func TestUnitValidateDependencies_AllowsLowerBuildWhenMajorMinorPatchMatch(t *testing.T) {
+	err := validateDependencies(map[string]string{
+		"CodeEditorBase": "1.2.3.99",
+	}, []solution.SolutionDto{
+		{
+			Name:    "CodeEditorBase",
+			Version: "1.2.3.1",
+		},
+	})
+	if err != nil {
+		t.Fatalf("expected validateDependencies to allow lower build when major.minor.patch matches: %v", err)
+	}
+}
+
+func TestUnitValidateDependencies_FailsWhenPatchIsTooLow(t *testing.T) {
+	err := validateDependencies(map[string]string{
+		"CodeEditorBase": "1.2.3.0",
+	}, []solution.SolutionDto{
+		{
+			Name:    "CodeEditorBase",
+			Version: "1.2.2.999",
+		},
+	})
+	if err == nil {
+		t.Fatal("expected validateDependencies to fail when installed patch version is too low")
+	}
+}
+
 func createTestSolutionZip(t *testing.T, files map[string]string) string {
 	t.Helper()
 
