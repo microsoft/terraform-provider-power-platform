@@ -18,10 +18,15 @@ resource "powerplatform_tenant_settings" "settings" {
   disable_environment_creation_by_non_admin_users       = true
   disable_portals_creation_by_non_admin_users           = true
   disable_newsletter_sendout                            = true
-  disable_nps_comments_reachout                         = true
-  disable_survey_feedback                               = true
+  enable_support_use_bing_search_solutions              = true
 
   power_platform = {
+    product_feedback = {
+      disable_microsoft_surveys_send = true
+      disable_user_survey_feedback   = true
+      disable_attachments            = true
+      disable_microsoft_follow_up    = true
+    }
     search = {
       disable_docs_search       = true
       disable_community_search  = true
@@ -31,23 +36,26 @@ resource "powerplatform_tenant_settings" "settings" {
       share_with_colleagues_user_limit = 10001
     }
     power_apps = {
+      disable_copilot                          = true
       disable_share_with_everyone              = true
       enable_guests_to_make                    = true
       disable_members_indicator                = true
       disable_maker_match                      = true
       disable_unused_license_assignment        = true
-      disable_create_from_image                = true
-      disable_create_from_figma                = true
       disable_connection_sharing_with_everyone = true
+      enable_canvas_app_insights               = true
     }
     power_automate = {
-      disable_copilot           = true
-      disable_copilot_with_bing = true
+      disable_copilot                 = true
+      disable_copilot_help_assistance = true
+      allow_use_of_hosted_browser     = true
+      disable_flow_resubmission       = true
     }
     environments = {
       disable_preferred_data_location_for_teams_environment = true
     }
     governance = {
+      weekly_digest_email_recipients                            = toset(["test1@contoso.com", "test2@contoso.com"])
       disable_admin_digest                                      = true
       disable_developer_environment_creation_by_non_admin_users = true
       enable_default_environment_routing                        = false
@@ -56,12 +64,13 @@ resource "powerplatform_tenant_settings" "settings" {
       }
     }
     licensing = {
-      disable_billing_policy_creation_by_non_admin_users    = true
-      enable_tenant_capacity_report_for_environment_admins  = true
-      storage_capacity_consumption_warning_threshold        = 88
-      enable_tenant_licensing_report_for_environment_admins = true
-      disable_use_of_unassigned_ai_builder_credits          = true
-      apply_auto_claim_to_only_managed_environments         = true
+      disable_billing_policy_creation_by_non_admin_users           = true
+      enable_tenant_capacity_report_for_environment_admins         = true
+      storage_capacity_consumption_warning_threshold               = 88
+      enable_tenant_licensing_report_for_environment_admins        = true
+      disable_use_of_unassigned_ai_builder_credits                 = true
+      apply_auto_claim_power_apps_to_only_managed_environments     = true
+      apply_auto_claim_power_automate_to_only_managed_environments = true
     }
     power_pages = {}
     champions = {
@@ -69,10 +78,11 @@ resource "powerplatform_tenant_settings" "settings" {
       disable_skills_match_invitation_reachout = true
     }
     intelligence = {
-      disable_copilot                   = true
-      enable_open_ai_bot_publishing     = true
-      disable_copilot_feedback          = true
-      disable_copilot_feedback_metadata = true
+      disable_copilot                                            = true
+      allow_copilot_authors_publish_when_ai_features_are_enabled = true
+      disable_basic_copilot_feedback                             = true
+      disable_additional_copilot_feedback                        = true
+      copilot_studio_authors_security_group_id                   = "00000000-0000-0000-0000-000000000000"
     }
     model_experimentation = {
       enable_model_data_sharing = true

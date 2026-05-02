@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customtypes"
@@ -80,7 +81,26 @@ func (d *TenantSettingsDataSource) Read(ctx context.Context, req datasource.Read
 	}
 }
 
-// Helper functions for organizing tenant settings schema attributes
+func productFeedbackAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
+		"disable_microsoft_surveys_send": schema.BoolAttribute{
+			MarkdownDescription: "Disable letting Microsoft send surveys",
+			Computed:            true,
+		},
+		"disable_user_survey_feedback": schema.BoolAttribute{
+			MarkdownDescription: "Disable users to choose to provide survey feedback",
+			Computed:            true,
+		},
+		"disable_attachments": schema.BoolAttribute{
+			MarkdownDescription: "Disable screenshots and attachments in feedback",
+			Computed:            true,
+		},
+		"disable_microsoft_follow_up": schema.BoolAttribute{
+			MarkdownDescription: "Disable letting Microsoft follow up on feedback",
+			Computed:            true,
+		},
+	}
+}
 
 func searchAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
@@ -110,6 +130,10 @@ func teamsIntegrationAttributes() map[string]schema.Attribute {
 
 func powerAppsAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
+		"disable_copilot": schema.BoolAttribute{
+			MarkdownDescription: "Disable Copilot",
+			Computed:            true,
+		},
 		"disable_share_with_everyone": schema.BoolAttribute{
 			MarkdownDescription: "Disable Share With Everyone",
 			Computed:            true,
@@ -127,17 +151,21 @@ func powerAppsAttributes() map[string]schema.Attribute {
 			Computed:            true,
 		},
 		"disable_create_from_image": schema.BoolAttribute{
-			MarkdownDescription: "Disable Create From Image",
-			DeprecationMessage:  "This attribute is deprecated and will be removed in next major release",
+			DeprecationMessage:  "[DEPRECATED] This attribute is deprecated and will be removed in a future release.",
+			MarkdownDescription: "[DEPRECATED] Disable Create From Image",
 			Computed:            true,
 		},
 		"disable_create_from_figma": schema.BoolAttribute{
-			MarkdownDescription: "Disable Create From Figma",
-			DeprecationMessage:  "This attribute is deprecated and will be removed in next major release",
+			DeprecationMessage:  "[DEPRECATED] This attribute is deprecated and will be removed in a future release.",
+			MarkdownDescription: "[DEPRECATED] Disable Create From Figma",
 			Computed:            true,
 		},
 		"disable_connection_sharing_with_everyone": schema.BoolAttribute{
 			MarkdownDescription: "Disable Connection Sharing With Everyone",
+			Computed:            true,
+		},
+		"enable_canvas_app_insights": schema.BoolAttribute{
+			MarkdownDescription: "Enable Canvas App Insights",
 			Computed:            true,
 		},
 	}
@@ -147,6 +175,18 @@ func powerAutomateAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
 		"disable_copilot": schema.BoolAttribute{
 			MarkdownDescription: "Disable Copilot",
+			Computed:            true,
+		},
+		"disable_copilot_help_assistance": schema.BoolAttribute{
+			MarkdownDescription: "Disable Copilot With Bing",
+			Computed:            true,
+		},
+		"allow_use_of_hosted_browser": schema.BoolAttribute{
+			MarkdownDescription: "Allow Use Of Hosted Browser",
+			Computed:            true,
+		},
+		"disable_flow_resubmission": schema.BoolAttribute{
+			MarkdownDescription: "Disable Flow Resubmission",
 			Computed:            true,
 		},
 	}
@@ -172,6 +212,11 @@ func governancePolicyAttributes() map[string]schema.Attribute {
 
 func governanceAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
+		"weekly_digest_email_recipients": schema.SetAttribute{
+			MarkdownDescription: "Weekly Digest Email Recipients",
+			Computed:            true,
+			ElementType:         types.StringType,
+		},
 		"disable_admin_digest": schema.BoolAttribute{
 			MarkdownDescription: "Disable Admin Digest",
 			Computed:            true,
@@ -228,7 +273,14 @@ func licensingAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Disable Use Of Unassigned AI Builder Credits",
 			Computed:            true,
 		},
-	}
+		"apply_auto_claim_power_apps_to_only_managed_environments": schema.BoolAttribute{
+			MarkdownDescription: "Apply Auto Claim Power Apps To Only Managed Environments",
+			Computed:            true,
+		},
+		"apply_auto_claim_power_automate_to_only_managed_environments": schema.BoolAttribute{
+			MarkdownDescription: "Apply Auto Claim Power Automate To Only Managed Environments",
+			Computed:            true,
+		}}
 }
 
 func powerPagesAttributes() map[string]schema.Attribute {
@@ -254,10 +306,22 @@ func intelligenceAttributes() map[string]schema.Attribute {
 			MarkdownDescription: "Disable Copilot",
 			Computed:            true,
 		},
-		"enable_open_ai_bot_publishing": schema.BoolAttribute{
-			MarkdownDescription: "Enable Open AI Bot Publishing",
-			DeprecationMessage:  "This attribute is deprecated and will be replaced in next major release",
+		"allow_copilot_authors_publish_when_ai_features_are_enabled": schema.BoolAttribute{
+			MarkdownDescription: "Allow Copilot authors to publish from Copilot Studio when AI features are enabled",
 			Computed:            true,
+		},
+		"disable_basic_copilot_feedback": schema.BoolAttribute{
+			MarkdownDescription: "Basic Copilot Feedback",
+			Computed:            true,
+		},
+		"disable_additional_copilot_feedback": schema.BoolAttribute{
+			MarkdownDescription: "Additional Copilot Feedback",
+			Computed:            true,
+		},
+		"copilot_studio_authors_security_group_id": schema.StringAttribute{
+			MarkdownDescription: "Copilot Studio Authors Security Group ID",
+			Computed:            true,
+			CustomType:          customtypes.UUIDType{},
 		},
 	}
 }
@@ -295,6 +359,11 @@ func userManagementSettingsAttributes() map[string]schema.Attribute {
 
 func powerPlatformAttributes() map[string]schema.Attribute {
 	return map[string]schema.Attribute{
+		"product_feedback": schema.SingleNestedAttribute{
+			MarkdownDescription: "Product Feedback",
+			Computed:            true,
+			Attributes:          productFeedbackAttributes(),
+		},
 		"search": schema.SingleNestedAttribute{
 			MarkdownDescription: "Search",
 			Computed:            true,
@@ -379,11 +448,6 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, req datasource.Sc
 				MarkdownDescription: "Walk Me Opt Out",
 				Computed:            true,
 			},
-			"disable_nps_comments_reachout": schema.BoolAttribute{
-				MarkdownDescription: "Disable NPS Comments Reachout",
-				DeprecationMessage:  "This attribute is deprecated and will be replaced by a new one in next major release",
-				Computed:            true,
-			},
 			"disable_newsletter_sendout": schema.BoolAttribute{
 				MarkdownDescription: "Disable Newsletter Sendout",
 				Computed:            true,
@@ -396,11 +460,6 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, req datasource.Sc
 				MarkdownDescription: "Disable Portals Creation By Non Admin Users",
 				Computed:            true,
 			},
-			"disable_survey_feedback": schema.BoolAttribute{
-				MarkdownDescription: "Disable Survey Feedback",
-				DeprecationMessage:  "This attribute is deprecated and will be replaced by a new one in next major release",
-				Computed:            true,
-			},
 			"disable_trial_environment_creation_by_non_admin_users": schema.BoolAttribute{
 				MarkdownDescription: "Disable Trial Environment Creation By Non Admin Users",
 				Computed:            true,
@@ -411,6 +470,10 @@ func (d *TenantSettingsDataSource) Schema(ctx context.Context, req datasource.Sc
 			},
 			"disable_support_tickets_visible_by_all_users": schema.BoolAttribute{
 				MarkdownDescription: "Disable Support Tickets Visible By All Users",
+				Computed:            true,
+			},
+			"enable_support_use_bing_search_solutions": schema.BoolAttribute{
+				MarkdownDescription: "When enabled, Bing search is going to be used when providing self-help solutions.",
 				Computed:            true,
 			},
 			"power_platform": schema.SingleNestedAttribute{
