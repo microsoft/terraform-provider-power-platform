@@ -11,6 +11,7 @@ import (
 
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 )
 
 const apiVersion = "2024-10-01"
@@ -68,9 +69,17 @@ func (client *Client) GetPolicy(ctx context.Context, policyId string) (*ruleBase
 	apiUrl.RawQuery = values.Encode()
 
 	policy := ruleBasedPolicyDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &policy)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound}, &policy)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get rule-based policy: %w", err)
+	}
+
+	if resp.HttpResponse.StatusCode == http.StatusNotFound {
+		return nil, customerrors.WrapIntoProviderError(
+			fmt.Errorf("rule-based policy '%s' not found", policyId),
+			constants.ERROR_OBJECT_NOT_FOUND,
+			fmt.Sprintf("rule-based policy '%s' not found", policyId),
+		)
 	}
 
 	return &policy, nil

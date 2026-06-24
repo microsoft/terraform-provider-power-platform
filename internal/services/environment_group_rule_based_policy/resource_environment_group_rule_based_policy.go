@@ -5,6 +5,7 @@ package environment_group_rule_based_policy
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -17,11 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 var _ resource.Resource = &environmentGroupRuleBasedPolicyResource{}
 var _ resource.ResourceWithImportState = &environmentGroupRuleBasedPolicyResource{}
+var _ resource.ResourceWithValidateConfig = &environmentGroupRuleBasedPolicyResource{}
 
 func NewEnvironmentGroupRuleBasedPolicyResource() resource.Resource {
 	return &environmentGroupRuleBasedPolicyResource{
@@ -92,7 +95,7 @@ func (r *environmentGroupRuleBasedPolicyResource) Schema(ctx context.Context, re
 					},
 					"content_security_policy": schema.SingleNestedAttribute{
 						MarkdownDescription: "Configures the [Content Security Policy (CSP)](https://learn.microsoft.com/power-platform/admin/content-security-policy) for Power Apps in this environment group.",
-						Optional: true,
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"enabled": schema.BoolAttribute{
 								MarkdownDescription: "Enable Content Security Policy for model-driven apps",
@@ -114,14 +117,14 @@ func (r *environmentGroupRuleBasedPolicyResource) Schema(ctx context.Context, re
 								MarkdownDescription: "Reporting endpoint for CSP violations",
 								Optional:            true,
 							},
-							"configuration":              cspConfigurationSchema("model-driven apps", true),
+							"configuration":               cspConfigurationSchema("model-driven apps", true),
 							"configuration_for_canvas":    cspConfigurationSchema("canvas apps", true),
 							"configuration_for_code_apps": cspConfigurationSchema("code-first apps", false),
 						},
 					},
 					"advanced_connector_policies": schema.SingleNestedAttribute{
 						MarkdownDescription: "Manages which connectors are allowed and what actions they can perform in environments within this group (API rule set ID: `ConnectorManagement`).",
-						Optional: true,
+						Optional:            true,
 						Attributes: map[string]schema.Attribute{
 							"allowed_connectors": schema.ListNestedAttribute{
 								MarkdownDescription: "List of connectors that are allowed in the environment group",
@@ -138,8 +141,8 @@ func (r *environmentGroupRuleBasedPolicyResource) Schema(ctx context.Context, re
 										},
 										"allowed_actions": schema.ListAttribute{
 											MarkdownDescription: "List of specific action names allowed for this connector. Only used when `actions_mode` is `some_allowed`.",
-											Optional:    true,
-											ElementType: types.StringType,
+											Optional:            true,
+											ElementType:         types.StringType,
 										},
 									},
 								},
@@ -231,6 +234,35 @@ func (r *environmentGroupRuleBasedPolicyResource) Configure(ctx context.Context,
 	r.RuleBasedPolicyClient = NewRuleBasedPolicyClient(providerClient.Api)
 }
 
+func (r *environmentGroupRuleBasedPolicyResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
+	var config environmentGroupRuleBasedPolicyResourceModel
+
+	if resp.Diagnostics.Append(req.Config.Get(ctx, &config)...); resp.Diagnostics.HasError() {
+		return
+	}
+
+	if config.RuleSets.IsNull() || config.RuleSets.IsUnknown() {
+		return
+	}
+
+	ruleSetsAttrs := config.RuleSets.Attributes()
+	hasAtLeastOne := false
+	for _, attr := range ruleSetsAttrs {
+		if objAttr, ok := attr.(types.Object); ok && !objAttr.IsNull() && !objAttr.IsUnknown() {
+			hasAtLeastOne = true
+			break
+		}
+	}
+
+	if !hasAtLeastOne {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("rule_sets"),
+			"At least one rule set is required",
+			"The rule_sets block must contain at least one of: advanced_connector_policies_only, content_security_policy, or advanced_connector_policies.",
+		)
+	}
+}
+
 func (r *environmentGroupRuleBasedPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	ctx, exitContext := helpers.EnterRequestContext(ctx, r.TypeInfo, req)
 	defer exitContext()
@@ -314,6 +346,10 @@ func (r *environmentGroupRuleBasedPolicyResource) Read(ctx context.Context, req 
 	tflog.Debug(ctx, fmt.Sprintf("Reading rule-based policy %s", state.Id.ValueString()))
 	policy, err := r.RuleBasedPolicyClient.GetPolicy(ctx, state.Id.ValueString())
 	if err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError("Failed to get rule-based policy", err.Error())
 		return
 	}
@@ -393,6 +429,9 @@ func (r *environmentGroupRuleBasedPolicyResource) Delete(ctx context.Context, re
 	// Get the current policy to obtain its name (required by the removeRule endpoint)
 	existingPolicy, err := r.RuleBasedPolicyClient.GetPolicy(ctx, policyId)
 	if err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			return
+		}
 		resp.Diagnostics.AddError("Failed to get rule-based policy for deletion", err.Error())
 		return
 	}

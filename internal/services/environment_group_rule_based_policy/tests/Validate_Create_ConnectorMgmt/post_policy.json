@@ -13,7 +13,7 @@
           {
             "AllowedActionsMode": "AllAllowed",
             "AllowedConnectionTypesMode": "AllAllowed",
-            "AllowedConnector": "/providers/Microsoft.PowerApps/apis/shared_cloudappsecurity"
+            "AllowedConnector": "/providers/Microsoft.PowerApps/apis/shared_commondataservice"
           },
           {
             "AllowedActionsMode": "SomeAllowed",
