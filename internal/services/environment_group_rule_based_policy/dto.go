@@ -644,15 +644,25 @@ func convertConnectorManagementModelToDto(ctx context.Context, objectValue baset
 			actionsMode = v.ValueString()
 		}
 
-		apiActionsMode := "AllAllowed"
-		if actionsMode == actionsModeSomeAllowed {
+		apiActionsMode := ""
+		switch actionsMode {
+		case actionsModeAllAllowed:
+			apiActionsMode = "AllAllowed"
+		case actionsModeSomeAllowed:
 			apiActionsMode = "SomeAllowed"
+		default:
+			return ruleSetDto{}, fmt.Errorf("invalid actions_mode %q: must be %q or %q", actionsMode, actionsModeAllAllowed, actionsModeSomeAllowed)
+		}
+
+		allowedConnector := connectorId
+		if len(connectorId) < len(CONNECTOR_API_PREFIX) || connectorId[:len(CONNECTOR_API_PREFIX)] != CONNECTOR_API_PREFIX {
+			allowedConnector = CONNECTOR_API_PREFIX + connectorId
 		}
 
 		entry := allowedConnectorDto{
 			AllowedActionsMode:         apiActionsMode,
 			AllowedConnectionTypesMode: "AllAllowed",
-			AllowedConnector:           CONNECTOR_API_PREFIX + connectorId,
+			AllowedConnector:           allowedConnector,
 		}
 
 		if actionsMode == actionsModeSomeAllowed {
@@ -725,7 +735,7 @@ func convertConnectorManagementDtoToModel(ruleSets []ruleSetDto) (basetypes.Obje
 		}
 		// Strip the API prefix to get the short connector ID
 		connectorId := connectorPath
-		if len(connectorPath) > len(CONNECTOR_API_PREFIX) {
+		if len(connectorPath) >= len(CONNECTOR_API_PREFIX) && connectorPath[:len(CONNECTOR_API_PREFIX)] == CONNECTOR_API_PREFIX {
 			connectorId = connectorPath[len(CONNECTOR_API_PREFIX):]
 		}
 
