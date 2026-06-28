@@ -119,7 +119,7 @@ Required:
 Required:
 
 - `actions_mode` (String) Controls which actions are allowed for this connector. Use `all_allowed` to permit all actions, or `some_allowed` to restrict to specific actions listed in `allowed_actions`.
-- `connector_id` (String) Short connector identifier (e.g., `shared_cloudappsecurity`). The provider automatically prepends `/providers/Microsoft.PowerApps/apis/`.
+- `connector_id` (String) Short connector identifier (e.g., `shared_commondataservice`). The provider automatically prepends `/providers/Microsoft.PowerApps/apis/`.
 
 Optional:
 
