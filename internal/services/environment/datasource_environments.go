@@ -147,6 +147,10 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 							MarkdownDescription: "Allow Bing search in the environment",
 							Computed:            true,
 						},
+						"allow_m365_enabled": schema.BoolAttribute{
+							MarkdownDescription: "Allow M365 in the environment",
+							Computed:            true,
+						},
 						"allow_moving_data_across_regions": schema.BoolAttribute{
 							MarkdownDescription: "Allow moving data across regions",
 							Computed:            true,

@@ -49,6 +49,7 @@ type SourceModel struct {
 	OwnerId                      types.String       `tfsdk:"owner_id"`
 	ReleaseCycle                 types.String       `tfsdk:"release_cycle"`
 	AllowBingSearch              types.Bool         `tfsdk:"allow_bing_search"`
+	AllowM365Enabled             types.Bool         `tfsdk:"allow_m365_enabled"`
 	AllowMovingDataAcrossRegions types.Bool         `tfsdk:"allow_moving_data_across_regions"`
 	EnterprisePolicies           basetypes.SetValue `tfsdk:"enterprise_policies"`
 
@@ -135,6 +136,10 @@ func convertCreateEnvironmentDtoFromSourceModel(ctx context.Context, environment
 		environmentDto.Properties.BingChatEnabled = environmentSource.AllowBingSearch.ValueBool()
 	}
 
+	if helpers.IsKnown(environmentSource.AllowM365Enabled) {
+		environmentDto.Properties.M365Enabled = environmentSource.AllowM365Enabled.ValueBool()
+	}
+
 	if helpers.IsKnown(environmentSource.OwnerId) {
 		tenantId, err := r.EnvironmentClient.tenantClient.GetTenant(ctx)
 		if err != nil {
@@ -208,7 +213,8 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 		AzureRegion:     types.StringValue(environmentDto.Properties.AzureRegion),
 		EnvironmentType: types.StringValue(environmentDto.Properties.EnvironmentSku),
 		Cadence:         types.StringValue(environmentDto.Properties.UpdateCadence.Id),
-		AllowBingSearch: types.BoolValue(environmentDto.Properties.BingChatEnabled),
+		AllowBingSearch:  types.BoolValue(environmentDto.Properties.BingChatEnabled),
+		AllowM365Enabled: types.BoolValue(environmentDto.Properties.M365Enabled),
 	}
 
 	convertBillingPolicyModelFromDto(environmentDto, model)

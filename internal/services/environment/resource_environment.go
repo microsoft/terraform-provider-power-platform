@@ -204,6 +204,11 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 				Optional:            true,
 				Computed:            true,
 			},
+			"allow_m365_enabled": schema.BoolAttribute{
+				MarkdownDescription: "Allow M365 in the environment",
+				Optional:            true,
+				Computed:            true,
+			},
 			"allow_moving_data_across_regions": schema.BoolAttribute{
 				MarkdownDescription: "Allow moving data across regions",
 				Optional:            true,
@@ -449,8 +454,8 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 		return
 	}
 
-	if !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown() {
-		err := r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
+	if (!plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown()) || (!plan.AllowM365Enabled.IsNull() && !plan.AllowM365Enabled.IsUnknown()) || (!plan.AllowMovingDataAcrossRegions.IsNull() && !plan.AllowMovingDataAcrossRegions.IsUnknown()) {
+		err := r.updateEnvironmentAiFeatures(ctx, envDto.Name, plan.AllowBingSearch.ValueBool(), plan.AllowM365Enabled.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when updating %s", r.FullTypeName()), err.Error())
 			return
@@ -582,6 +587,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		DisplayName:     plan.DisplayName.ValueString(),
 		EnvironmentSku:  plan.EnvironmentType.ValueString(),
 		BingChatEnabled: plan.AllowBingSearch.ValueBool(),
+		M365Enabled:     plan.AllowM365Enabled.ValueBool(),
 	}
 
 	environmentDto := EnvironmentDto{
@@ -631,9 +637,9 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		}
 	}
 
-	err = r.updateAllowBingSearch(ctx, plan)
+	err = r.updateGenerativeAiFeatures(ctx, plan)
 	if err != nil {
-		resp.Diagnostics.AddError("Error when updating allow bing search", err.Error())
+		resp.Diagnostics.AddError("Error when updating generative ai features", err.Error())
 		return
 	}
 
@@ -670,10 +676,11 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &newState)...)
 }
 
-func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentId string, allowBingSearch bool, allowMovingData *bool) error {
+func (r *Resource) updateEnvironmentAiFeatures(ctx context.Context, environmentId string, allowBingSearch bool, allowM365Enabled bool, allowMovingData *bool) error {
 	featuresDto := GenerativeAiFeaturesDto{
 		Properties: GenerativeAiFeaturesPropertiesDto{
 			BingChatEnabled: allowBingSearch,
+			M365Enabled:     allowM365Enabled,
 		},
 	}
 
@@ -809,12 +816,13 @@ func updateCadence(plan *SourceModel, environmentDto *EnvironmentDto) {
 	}
 }
 
-func (r *Resource) updateAllowBingSearch(ctx context.Context, plan *SourceModel) error {
+func (r *Resource) updateGenerativeAiFeatures(ctx context.Context, plan *SourceModel) error {
 	allowBingSearchSet := !plan.AllowBingSearch.IsNull() && !plan.AllowBingSearch.IsUnknown()
+	allowM365EnabledSet := !plan.AllowM365Enabled.IsNull() && !plan.AllowM365Enabled.IsUnknown()
 	allowMovingDataSet := !plan.AllowMovingDataAcrossRegions.IsNull() && !plan.AllowMovingDataAcrossRegions.IsUnknown()
 
-	if allowBingSearchSet || allowMovingDataSet {
-		err := r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan.AllowBingSearch.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
+	if allowBingSearchSet || allowM365EnabledSet || allowMovingDataSet {
+		err := r.updateEnvironmentAiFeatures(ctx, plan.Id.ValueString(), plan.AllowBingSearch.ValueBool(), plan.AllowM365Enabled.ValueBool(), plan.AllowMovingDataAcrossRegions.ValueBoolPointer())
 		if err != nil {
 			return err
 		}
@@ -881,7 +889,7 @@ func (r *Resource) aiGenerativeFeaturesValidaor(plan *SourceModel) error {
 	if plan.Location.ValueString() == "unitedstates" && plan.AllowMovingDataAcrossRegions.ValueBool() {
 		return errors.New("moving data across regions is not supported in the unitedstates location")
 	}
-	if plan.Location.ValueString() != "unitedstates" && plan.AllowBingSearch.ValueBool() && !plan.AllowMovingDataAcrossRegions.ValueBool() {
+	if plan.Location.ValueString() != "unitedstates" && (plan.AllowBingSearch.ValueBool() || plan.AllowM365Enabled.ValueBool()) && !plan.AllowMovingDataAcrossRegions.ValueBool() {
 		return errors.New("to enable ai generative features, moving data across regions must be enabled")
 	}
 	return nil
