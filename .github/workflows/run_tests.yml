@@ -27,7 +27,7 @@ jobs:
       acceptance_tests: ${{ steps.set_acceptance_tests.outputs.acceptance_tests }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
-        uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
         with:
           egress-policy: audit
 
@@ -45,7 +45,7 @@ jobs:
     steps:
 
     - name: Harden Runner
-      uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+      uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
       with:
         egress-policy: audit
 
@@ -77,7 +77,7 @@ jobs:
     steps:
 
     - name: Harden Runner
-      uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+      uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
       with:
         egress-policy: audit
 
@@ -110,7 +110,7 @@ jobs:
     steps:
     
     - name: Harden Runner
-      uses: step-security/harden-runner@a5ad31d6a139d249332a2605b85202e8c0b78450 # v2.19.1
+      uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
       with:
         egress-policy: audit
 
@@ -131,11 +131,11 @@ jobs:
         go mod download
     
     - name: "Set up Terraform"
-      uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85 # v4.0.0
+      uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
     
     - name: Install Power Platform Tools
       if: success() || failure()
-      uses: microsoft/powerplatform-actions/actions-install@6c7b538671a040d11afd8ab94d77bfe3b3ed87e6 # v1.9.1
+      uses: microsoft/powerplatform-actions/actions-install@59c0b2abadc26618ca914c689ab9dc399da4d6bb # v1.9.2
 
     - name: Environments cleanup
       if: success() || failure()
