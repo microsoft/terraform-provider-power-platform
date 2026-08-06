@@ -1,0 +1,5 @@
+kind: added
+body: Added `powerplatform_role_based_access_assignments` data source to list role assignments at the tenant scope
+time: 2026-08-06T20:11:03.526179674Z
+custom:
+    Issue: "1190"
