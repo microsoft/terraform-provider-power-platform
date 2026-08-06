@@ -52,3 +52,30 @@ const (
 	CROSS_GEO_COPILOT_DATA_MOVEMENT_ENABLED = "crossGeoCopilotDataMovementEnabled"
 	BING_CHAT_ENABLED                       = "bingChatEnabled"
 )
+
+// Rule sets below are served by the rule-based policies API rather than the legacy rule sets API.
+const (
+	POLICY_API_VERSION = "2024-10-01"
+
+	ADVANCED_CONNECTOR_POLICIES_ONLY_ID    = "AdvancedConnectorPoliciesOnly"
+	ADVANCED_CONNECTOR_POLICIES_VERSION    = "1.0"
+	ENABLE_ADVANCED_CONNECTOR_POLICIES_KEY = "EnableAdvancedConnectorPoliciesOnly"
+
+	CONTENT_SECURITY_POLICY_ID      = "PowerAppsContentSecurityPolicy"
+	CONTENT_SECURITY_POLICY_VERSION = "1.0"
+
+	CSP_IS_ENABLED_KEY                  = "IsContentSecurityPolicyEnabled"
+	CSP_IS_ENABLED_FOR_CANVAS_KEY       = "IsContentSecurityPolicyEnabledForCanvas"
+	CSP_IS_ENABLED_FOR_CODE_APPS_KEY    = "IsContentSecurityPolicyEnabledForCodeApps"
+	CSP_OPTIONS_KEY                     = "ContentSecurityPolicyOptions"
+	CSP_REPORT_URI_KEY                  = "ContentSecurityPolicyReportUri"
+	CSP_REPORTING_ENDPOINT_KEY          = "ContentSecurityPolicyReportingEndpoint"
+	CSP_CONFIGURATION_KEY               = "ContentSecurityPolicyConfiguration"
+	CSP_CONFIGURATION_FOR_CANVAS_KEY    = "ContentSecurityPolicyConfigurationForCanvas"
+	CSP_CONFIGURATION_FOR_CODE_APPS_KEY = "ContentSecurityPolicyConfigurationForCodeApps"
+
+	CONNECTOR_MANAGEMENT_ID               = "ConnectorManagement"
+	CONNECTOR_MANAGEMENT_VERSION          = "1.0"
+	CONNECTOR_MANAGEMENT_ALLOWED_LIST_KEY = "AllowedConnectorList"
+	CONNECTOR_API_PREFIX                  = "/providers/Microsoft.PowerApps/apis/"
+)

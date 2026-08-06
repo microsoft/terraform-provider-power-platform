@@ -6,12 +6,22 @@ package environment_group_rule_set_test
 import (
 	"fmt"
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
+
+// mockNoPolicyAssignments makes the rule-based policies side of the resource report "nothing assigned",
+// so tests that only exercise legacy rules don't need policy fixtures.
+func mockNoPolicyAssignments() {
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`https://api\.powerplatform\.com/governance/ruleBasedPolicies/environmentGroups/[^/]+/assignments`),
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+		})
+}
 
 func TestAccEnvironmentGroupRuleSetResource_Validate_Create(t *testing.T) {
 	resource.Test(t, resource.TestCase{
@@ -77,6 +87,7 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Create(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
+	mockNoPolicyAssignments()
 
 	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
@@ -292,6 +303,7 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Update(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
+	mockNoPolicyAssignments()
 
 	post_rule_set_inx := -1
 	get_rule_set_inx := -1
@@ -441,6 +453,7 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Import(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
+	mockNoPolicyAssignments()
 
 	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
@@ -511,6 +524,7 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Import_Empty_Ruleset(t *te
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
+	mockNoPolicyAssignments()
 
 	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
@@ -557,6 +571,109 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Import_Empty_Ruleset(t *te
 				ImportState:       true,
 				ImportStateVerify: false,
 				ImportStateId:     "00000000-0000-0000-0000-000000000000",
+			},
+		},
+	})
+}
+
+// TestAccEnvironmentGroupRuleSetResource_Validate_Policy_Rules covers the rules served by the
+// rule-based policies API alongside the legacy ones, so both backends are exercised in one resource.
+func TestAccEnvironmentGroupRuleSetResource_Validate_Policy_Rules(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment_group" "example_group" {
+					display_name = "` + mocks.TestName() + `"
+					description  = "` + mocks.TestName() + `"
+				}
+
+				resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
+					environment_group_id = powerplatform_environment_group.example_group.id
+					rules = {
+						backup_retention = {
+							period_in_days = 21
+						}
+						advanced_connector_policies_only = {
+							enabled = true
+						}
+						content_security_policy = {
+							enabled               = true
+							enabled_for_canvas    = true
+							enabled_for_code_apps = false
+
+							configuration = {
+								img_src     = ["https://example.com"]
+								connect_src = ["https://api.example.com"]
+								strict_csp  = true
+							}
+							configuration_for_canvas = {
+								connect_src = ["https://canvas-api.example.com"]
+							}
+						}
+						advanced_connector_policies = {
+							allowed_connectors = [
+								{
+									connector_id = "shared_commondataservice"
+									actions_mode = "all_allowed"
+								},
+								{
+									connector_id    = "shared_office365"
+									actions_mode    = "some_allowed"
+									allowed_actions = ["SendEmail", "GetEvents"]
+								}
+							]
+						}
+					}
+				}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("powerplatform_environment_group_rule_set.example_group_rule_set", "id"),
+					resource.TestCheckResourceAttrSet("powerplatform_environment_group_rule_set.example_group_rule_set", "policy_id"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.backup_retention.period_in_days", "21"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.advanced_connector_policies_only.enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.content_security_policy.enabled", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.content_security_policy.enabled_for_code_apps", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.content_security_policy.configuration.strict_csp", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.content_security_policy.configuration.img_src.0", "https://example.com"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.advanced_connector_policies.allowed_connectors.#", "2"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.advanced_connector_policies.allowed_connectors.1.allowed_actions.0", "SendEmail"),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment_group" "example_group" {
+					display_name = "` + mocks.TestName() + `"
+					description  = "` + mocks.TestName() + `"
+				}
+
+				resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
+					environment_group_id = powerplatform_environment_group.example_group.id
+					rules = {
+						backup_retention = {
+							period_in_days = 28
+						}
+						advanced_connector_policies_only = {
+							enabled = false
+						}
+						advanced_connector_policies = {
+							allowed_connectors = [
+								{
+									connector_id = "shared_commondataservice"
+									actions_mode = "all_allowed"
+								}
+							]
+						}
+					}
+				}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.backup_retention.period_in_days", "28"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.advanced_connector_policies_only.enabled", "false"),
+					resource.TestCheckNoResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.content_security_policy.enabled"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_rule_set.example_group_rule_set", "rules.advanced_connector_policies.allowed_connectors.#", "1"),
+				),
 			},
 		},
 	})
