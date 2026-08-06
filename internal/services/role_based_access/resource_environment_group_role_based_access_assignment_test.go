@@ -10,8 +10,75 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/jarcoal/httpmock"
+	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
+
+func TestAccEnvironmentGroupRoleBasedAccessAssignmentResource_Validate_Create(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"azuread": {
+				VersionConstraint: constants.AZURE_AD_PROVIDER_VERSION_CONSTRAINT,
+				Source:            "hashicorp/azuread",
+			},
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "azuread_application_registration" "test_app" {
+					display_name = "` + mocks.TestName() + `"
+				}
+
+				resource "azuread_service_principal" "test_sp" {
+					client_id = azuread_application_registration.test_app.client_id
+				}
+
+				resource "time_sleep" "wait_for_service_principal" {
+					create_duration = "60s"
+
+					depends_on = [azuread_service_principal.test_sp]
+				}
+
+				resource "powerplatform_environment_group" "test_env_group" {
+					display_name = "` + mocks.TestName() + `"
+					description  = "Environment group for role assignment acceptance test"
+				}
+
+				data "powerplatform_role_definitions" "all" {
+				}
+
+				locals {
+					role_definition_id = [
+						for role in data.powerplatform_role_definitions.all.role_definitions :
+						role.role_definition_id if role.role_definition_name == "` + roleBasedAccessAdministratorRoleName + `"
+					][0]
+				}
+
+				resource "powerplatform_environment_group_role_based_access_assignment" "test" {
+					environment_group_id             = powerplatform_environment_group.test_env_group.id
+					enterprise_application_object_id = azuread_service_principal.test_sp.object_id
+					principal_type                   = "ApplicationUser"
+					role_definition_id               = local.role_definition_id
+
+					depends_on = [time_sleep.wait_for_service_principal]
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestMatchResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "id", regexp.MustCompile(helpers.GuidRegex)),
+					resource.TestCheckResourceAttrPair("powerplatform_environment_group_role_based_access_assignment.test", "environment_group_id", "powerplatform_environment_group.test_env_group", "id"),
+					resource.TestCheckResourceAttrPair("powerplatform_environment_group_role_based_access_assignment.test", "enterprise_application_object_id", "azuread_service_principal.test_sp", "object_id"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "principal_type", "ApplicationUser"),
+					resource.TestMatchResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "scope", regexp.MustCompile(`/environmentGroups/`)),
+					resource.TestCheckResourceAttrSet("powerplatform_environment_group_role_based_access_assignment.test", "created_on"),
+				),
+			},
+		},
+	})
+}
 
 func TestUnitEnvironmentGroupRoleBasedAccessAssignmentResource_Validate_Create(t *testing.T) {
 	httpmock.Activate()
