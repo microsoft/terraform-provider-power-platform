@@ -51,6 +51,7 @@ type SourceModel struct {
 	AllowBingSearch              types.Bool         `tfsdk:"allow_bing_search"`
 	AllowMicrosoft365Services    types.Bool         `tfsdk:"allow_microsoft_365_services"`
 	AllowMovingDataAcrossRegions types.Bool         `tfsdk:"allow_moving_data_across_regions"`
+	AllowFlexRouting             types.Bool         `tfsdk:"allow_flex_routing"`
 	EnterprisePolicies           basetypes.SetValue `tfsdk:"enterprise_policies"`
 
 	Dataverse types.Object `tfsdk:"dataverse"`
@@ -222,7 +223,7 @@ func convertSourceModelFromEnvironmentDto(environmentDto EnvironmentDto, currenc
 	convertEnterprisePolicyModelFromDto(environmentDto, model)
 	convertReleaseCycleModelFromDto(environmentDto, model, providerConfig)
 	convertOwnerIdFromDto(environmentDto, model)
-	convertCrossRegionDataMovementFromDto(environmentDto, model)
+	convertCopilotPoliciesFromDto(environmentDto, model)
 
 	attrTypesDataverseObject := map[string]attr.Type{
 		"url":                          types.StringType,
@@ -369,12 +370,10 @@ func convertOwnerIdFromDto(environmentDto EnvironmentDto, model *SourceModel) {
 	}
 }
 
-func convertCrossRegionDataMovementFromDto(environmentDto EnvironmentDto, model *SourceModel) {
-	if environmentDto.Properties.CopilotPolicies != nil && environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled != nil && *environmentDto.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled {
-		model.AllowMovingDataAcrossRegions = types.BoolValue(true)
-	} else {
-		model.AllowMovingDataAcrossRegions = types.BoolValue(false)
-	}
+func convertCopilotPoliciesFromDto(environmentDto EnvironmentDto, model *SourceModel) {
+	policies := environmentDto.Properties.CopilotPolicies
+	model.AllowMovingDataAcrossRegions = types.BoolValue(policies != nil && policies.CrossGeoCopilotDataMovementEnabled != nil && *policies.CrossGeoCopilotDataMovementEnabled)
+	model.AllowFlexRouting = types.BoolValue(policies != nil && policies.CrossBoundaryCopilotDataMovementEnabled != nil && *policies.CrossBoundaryCopilotDataMovementEnabled)
 }
 
 func convertEnterprisePolicyModelFromDto(environmentDto EnvironmentDto, model *SourceModel) {

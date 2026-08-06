@@ -155,6 +155,10 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 							MarkdownDescription: "Allow moving data across regions",
 							Computed:            true,
 						},
+						"allow_flex_routing": schema.BoolAttribute{
+							MarkdownDescription: "Allows large language model (LLM) inferencing to occur outside of the European Union (EU) Data Boundary during periods of peak load, to help maintain a consistent Copilot experience. Data is encrypted in transit and at rest, and data at rest continues to be stored inside the EU Data Boundary, except for limited pseudonymized data that may be stored outside of it for security and operational purposes. See [Flex routing during peak load periods](https://go.microsoft.com/fwlink/?linkid=2356920) for more information.",
+							Computed:            true,
+						},
 						"dataverse": schema.SingleNestedAttribute{
 							MarkdownDescription: "Dataverse environment details",
 							Computed:            true,

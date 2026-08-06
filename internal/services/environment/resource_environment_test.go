@@ -410,6 +410,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
+					resource.TestCheckResourceAttrSet("powerplatform_environment.development", "allow_flex_routing"),
 				),
 			},
 			{
@@ -422,12 +423,14 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 						allow_bing_search                = false
 						allow_microsoft_365_services     = false
 						allow_moving_data_across_regions = true
+						allow_flex_routing               = false
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_flex_routing", "false"),
 				),
 			},
 			{
@@ -440,12 +443,14 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 						allow_bing_search                = false
 						allow_microsoft_365_services     = true
 						allow_moving_data_across_regions = true
+						allow_flex_routing               = true
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_flex_routing", "true"),
 				),
 			},
 			{
@@ -458,12 +463,14 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 						allow_bing_search                = false
 						allow_microsoft_365_services     = false
 						allow_moving_data_across_regions = false
+						allow_flex_routing               = false
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_flex_routing", "false"),
 				),
 			},
 		},
@@ -587,6 +594,29 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 
 						allow_bing_search                = false
 						allow_microsoft_365_services     = true
+						allow_moving_data_across_regions = false
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Region_Flex_Routing_Expect_Fail(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*to enable ai generative features, moving data across regions must be enabled.*"),
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "europe"
+						environment_type                       	  = "Sandbox"
+
+						allow_bing_search                = false
+						allow_flex_routing               = true
 						allow_moving_data_across_regions = false
 					}
 				`,
@@ -2040,21 +2070,21 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 	})
 }
 
-func TestUnitEnvironmentsResource_Validate_Update_Microsoft_365_Services(t *testing.T) {
+func TestUnitEnvironmentsResource_Validate_Update_Generative_Ai_Features(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
 	mocks.ActivateEnvironmentHttpMocks()
 
-	microsoft365ServicesEnabled := true
+	generativeAiFeaturesEnabled := true
 
 	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
 		func(req *http.Request) (*http.Response, error) {
 			responseFile := "get_environment_enabled.json"
-			if !microsoft365ServicesEnabled {
+			if !generativeAiFeaturesEnabled {
 				responseFile = "get_environment_disabled.json"
 			}
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Microsoft_365_Services/"+responseFile).String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Generative_Ai_Features/"+responseFile).String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
@@ -2066,7 +2096,7 @@ func TestUnitEnvironmentsResource_Validate_Update_Microsoft_365_Services(t *test
 
 	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Microsoft_365_Services/get_lifecycle.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Generative_Ai_Features/get_lifecycle.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2021-04-01",
@@ -2080,7 +2110,10 @@ func TestUnitEnvironmentsResource_Validate_Update_Microsoft_365_Services(t *test
 		func(req *http.Request) (*http.Response, error) {
 			var body struct {
 				Properties struct {
-					M365Enabled *bool `json:"m365Enabled"`
+					M365Enabled     *bool `json:"m365Enabled"`
+					CopilotPolicies *struct {
+						CrossBoundaryCopilotDataMovementEnabled *bool `json:"crossBoundaryCopilotDataMovementEnabled"`
+					} `json:"copilotPolicies"`
 				} `json:"properties"`
 			}
 			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
@@ -2091,7 +2124,15 @@ func TestUnitEnvironmentsResource_Validate_Update_Microsoft_365_Services(t *test
 				t.Errorf("expected 'm365Enabled' to be present in the generative ai features request body")
 				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
 			}
-			microsoft365ServicesEnabled = *body.Properties.M365Enabled
+			if body.Properties.CopilotPolicies == nil || body.Properties.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled == nil {
+				t.Errorf("expected 'crossBoundaryCopilotDataMovementEnabled' to be present in the generative ai features request body")
+				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
+			}
+			// the test configuration keeps both toggles in lockstep
+			if *body.Properties.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled != *body.Properties.M365Enabled {
+				t.Errorf("expected 'crossBoundaryCopilotDataMovementEnabled' to be %t, got %t", *body.Properties.M365Enabled, *body.Properties.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled)
+			}
+			generativeAiFeaturesEnabled = *body.Properties.M365Enabled
 			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
@@ -2104,7 +2145,7 @@ func TestUnitEnvironmentsResource_Validate_Update_Microsoft_365_Services(t *test
 
 	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Microsoft_365_Services/get_lifecycle_delete.json").String()), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Generative_Ai_Features/get_lifecycle_delete.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -2122,12 +2163,14 @@ func TestUnitEnvironmentsResource_Validate_Update_Microsoft_365_Services(t *test
 					allow_bing_search                         = true
 					allow_microsoft_365_services              = true
 					allow_moving_data_across_regions          = true
+					allow_flex_routing                        = true
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_flex_routing", "true"),
 				),
 			},
 			{
@@ -2141,12 +2184,14 @@ func TestUnitEnvironmentsResource_Validate_Update_Microsoft_365_Services(t *test
 					allow_bing_search                         = true
 					allow_microsoft_365_services              = false
 					allow_moving_data_across_regions          = true
+					allow_flex_routing                        = false
 				}`,
 
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_flex_routing", "false"),
 				),
 			},
 		},
@@ -2171,6 +2216,33 @@ func TestUnitEnvironmentsResource_Validate_Microsoft_365_Services_Requires_Movin
 					location                                  = "europe"
 					environment_type                          = "Sandbox"
 					allow_microsoft_365_services              = true
+					allow_moving_data_across_regions          = false
+				}`,
+
+				Check: resource.ComposeTestCheckFunc(),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_Flex_Routing_Requires_Moving_Data_Across_Regions(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*to enable ai generative features, moving data across regions must be enabled.*"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					allow_flex_routing                        = true
 					allow_moving_data_across_regions          = false
 				}`,
 

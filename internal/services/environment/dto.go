@@ -77,7 +77,8 @@ type GenerativeAiFeaturesPropertiesDto struct {
 }
 
 type CopilotPoliciesDto struct {
-	CrossGeoCopilotDataMovementEnabled *bool `json:"crossGeoCopilotDataMovementEnabled"`
+	CrossGeoCopilotDataMovementEnabled      *bool `json:"crossGeoCopilotDataMovementEnabled"`
+	CrossBoundaryCopilotDataMovementEnabled *bool `json:"crossBoundaryCopilotDataMovementEnabled"`
 }
 
 type ClusterDto struct {
