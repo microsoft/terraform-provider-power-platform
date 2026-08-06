@@ -29,6 +29,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/dlp_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/enterprise_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_group_rule_based_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_group_rule_set"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_groups"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_settings"
@@ -40,6 +41,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/managed_environment"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/powerapps"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/rest"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/role_based_access"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution_checker_rules"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
@@ -74,6 +76,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		capacity.NewTenantCapcityDataSource(),
 		tenant.NewTenantDataSource(),
 		solution_checker_rules.NewSolutionCheckerRulesDataSource(),
+		role_based_access.NewRoleDefinitionsDataSource(),
 	}
 	datasources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).DataSources(context.Background())
 
@@ -102,12 +105,16 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		connection.NewConnectionShareResource(),
 		admin_management_application.NewAdminManagementApplicationResource(),
 		environment_group_rule_set.NewEnvironmentGroupRuleSetResource(),
+		environment_group_rule_based_policy.NewEnvironmentGroupRuleBasedPolicyResource(),
 		enterprise_policy.NewEnterpisePolicyResource(),
 		copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource(),
 		tenant_isolation_policy.NewTenantIsolationPolicyResource(),
 		environment_wave.NewEnvironmentWaveResource(),
 		application.NewEnvironmentApplicationAdminResource(),
 		disaster_recovery.NewDisasterRecoveryResource(),
+		role_based_access.NewRoleBasedAccessAssignmentResource(),
+		role_based_access.NewEnvironmentGroupRoleBasedAccessAssignmentResource(),
+		role_based_access.NewEnvironmentRoleBasedAccessAssignmentResource(),
 	}
 	resources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).Resources(context.Background())
 

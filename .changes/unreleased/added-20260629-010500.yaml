@@ -1,0 +1,5 @@
+kind: added
+body: Add RBAC role assignment resources (tenant, environment group, environment) and role definitions data source for Power Platform authorization
+time: 2026-06-29T01:05:00.891253+02:00
+custom:
+    Issue: "1190"

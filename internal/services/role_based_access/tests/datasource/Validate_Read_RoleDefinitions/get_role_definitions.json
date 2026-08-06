@@ -1,0 +1,14 @@
+{
+  "value": [
+    {
+      "roleDefinitionId": "ff954d61-0000-0000-0000-000000000001",
+      "roleDefinitionName": "Power Platform Administrator",
+      "permissions": ["tenant.manage", "environment.manage"]
+    },
+    {
+      "roleDefinitionId": "ff954d61-0000-0000-0000-000000000002",
+      "roleDefinitionName": "Environment Administrator",
+      "permissions": ["environment.manage"]
+    }
+  ]
+}

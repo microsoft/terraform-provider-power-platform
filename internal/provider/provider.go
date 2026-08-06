@@ -38,6 +38,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/dlp_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/enterprise_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_group_rule_based_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_group_rule_set"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_groups"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment_settings"
@@ -49,6 +50,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/managed_environment"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/powerapps"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/rest"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/role_based_access"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution_checker_rules"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
@@ -415,6 +417,9 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return environment_groups.NewEnvironmentGroupResource() },
 		func() resource.Resource { return admin_management_application.NewAdminManagementApplicationResource() },
 		func() resource.Resource { return environment_group_rule_set.NewEnvironmentGroupRuleSetResource() },
+		func() resource.Resource {
+			return environment_group_rule_based_policy.NewEnvironmentGroupRuleBasedPolicyResource()
+		},
 		func() resource.Resource { return enterprise_policy.NewEnterpisePolicyResource() },
 		func() resource.Resource {
 			return copilot_studio_application_insights.NewCopilotStudioApplicationInsightsResource()
@@ -422,6 +427,13 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		func() resource.Resource { return application.NewEnvironmentApplicationAdminResource() },
 		func() resource.Resource { return tenant_isolation_policy.NewTenantIsolationPolicyResource() },
 		func() resource.Resource { return disaster_recovery.NewDisasterRecoveryResource() },
+		func() resource.Resource { return role_based_access.NewRoleBasedAccessAssignmentResource() },
+		func() resource.Resource {
+			return role_based_access.NewEnvironmentGroupRoleBasedAccessAssignmentResource()
+		},
+		func() resource.Resource {
+			return role_based_access.NewEnvironmentRoleBasedAccessAssignmentResource()
+		},
 	}
 }
 
@@ -451,6 +463,7 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return capacity.NewTenantCapcityDataSource() },
 		func() datasource.DataSource { return tenant.NewTenantDataSource() },
 		func() datasource.DataSource { return solution_checker_rules.NewSolutionCheckerRulesDataSource() },
+		func() datasource.DataSource { return role_based_access.NewRoleDefinitionsDataSource() },
 	}
 }
 
