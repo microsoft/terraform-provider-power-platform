@@ -1,5 +1,0 @@
-kind: added
-body: Added `powerplatform_role_based_access_assignments`, `powerplatform_environment_role_based_access_assignments` and `powerplatform_environment_group_role_based_access_assignments` data sources to list RBAC role assignments
-time: 2026-08-06T16:12:26.800673201Z
-custom:
-    Issue: "1"
