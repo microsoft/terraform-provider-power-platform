@@ -21,6 +21,21 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
+type generativeAiFeaturesRequestBody struct {
+	Properties generativeAiFeaturesProperties `json:"properties"`
+}
+
+type generativeAiFeaturesProperties struct {
+	BingChatEnabled *bool                      `json:"bingChatEnabled"`
+	M365Enabled     *bool                      `json:"m365Enabled"`
+	CopilotPolicies *generativeAiCopilotPolicy `json:"copilotPolicies"`
+}
+
+type generativeAiCopilotPolicy struct {
+	CrossGeoCopilotDataMovementEnabled      *bool `json:"crossGeoCopilotDataMovementEnabled"`
+	CrossBoundaryCopilotDataMovementEnabled *bool `json:"crossBoundaryCopilotDataMovementEnabled"`
+}
+
 func TestUnitEnvironmentsResource_Validate_Attribute_Validators(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
@@ -2096,7 +2111,10 @@ func TestUnitEnvironmentsResource_Validate_Update_Generative_Ai_Features(t *test
 			if err := json.Unmarshal([]byte(httpmock.File("tests/resource/Validate_Update_Generative_Ai_Features/get_environment.json").String()), &environment); err != nil {
 				return nil, err
 			}
-			properties := environment["properties"].(map[string]any)
+			properties, ok := environment["properties"].(map[string]any)
+			if !ok {
+				return nil, fmt.Errorf("expected environment properties to be a JSON object, got %T", environment["properties"])
+			}
 			properties["bingChatEnabled"] = aiFeatures.bingChatEnabled
 			properties["m365Enabled"] = aiFeatures.m365Enabled
 			properties["copilotPolicies"] = map[string]any{
@@ -2127,28 +2145,19 @@ func TestUnitEnvironmentsResource_Validate_Update_Generative_Ai_Features(t *test
 
 	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
 		func(req *http.Request) (*http.Response, error) {
-			var body struct {
-				Properties struct {
-					BingChatEnabled *bool `json:"bingChatEnabled"`
-					M365Enabled     *bool `json:"m365Enabled"`
-					CopilotPolicies *struct {
-						CrossGeoCopilotDataMovementEnabled      *bool `json:"crossGeoCopilotDataMovementEnabled"`
-						CrossBoundaryCopilotDataMovementEnabled *bool `json:"crossBoundaryCopilotDataMovementEnabled"`
-					} `json:"copilotPolicies"`
-				} `json:"properties"`
-			}
+			var body generativeAiFeaturesRequestBody
 			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
 				return nil, err
 			}
 			// every toggle must always be serialized, otherwise a feature cannot be turned off
 			if body.Properties.BingChatEnabled == nil || body.Properties.M365Enabled == nil {
-				t.Errorf("expected 'bingChatEnabled' and 'm365Enabled' to be present in the generative ai features request body")
+				t.Error("expected 'bingChatEnabled' and 'm365Enabled' to be present in the generative ai features request body")
 				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
 			}
 			if body.Properties.CopilotPolicies == nil ||
 				body.Properties.CopilotPolicies.CrossGeoCopilotDataMovementEnabled == nil ||
 				body.Properties.CopilotPolicies.CrossBoundaryCopilotDataMovementEnabled == nil {
-				t.Errorf("expected both copilot policies to be present in the generative ai features request body")
+				t.Error("expected both copilot policies to be present in the generative ai features request body")
 				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
 			}
 
