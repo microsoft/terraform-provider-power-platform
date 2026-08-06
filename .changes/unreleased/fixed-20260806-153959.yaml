@@ -1,0 +1,5 @@
+kind: fixed
+body: Fixed `powerplatform_environment_group_rule_set` losing `maker_welcome_content` after the rule was edited in the Power Platform admin center. Maker welcome content is now written to the rule-based policies API, which is where the admin center stores it, and is still read from the legacy rule set for rule sets created before the move
+time: 2026-08-06T15:39:59.797176015Z
+custom:
+    Issue: "1210"
