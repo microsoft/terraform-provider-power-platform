@@ -408,6 +408,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
 				),
 			},
@@ -419,11 +420,13 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 						environment_type                       	  = "Sandbox"
 
 						allow_bing_search                = false
+						allow_microsoft_365_services     = false
 						allow_moving_data_across_regions = true
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
 				),
 			},
@@ -435,11 +438,31 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 						environment_type                       	  = "Sandbox"
 
 						allow_bing_search                = false
+						allow_microsoft_365_services     = true
+						allow_moving_data_across_regions = true
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
+				),
+			},
+			{
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "europe"
+						environment_type                       	  = "Sandbox"
+
+						allow_bing_search                = false
+						allow_microsoft_365_services     = false
 						allow_moving_data_across_regions = false
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "false"),
 				),
 			},
@@ -461,6 +484,7 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_US_Region_U
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "false"),
 				),
 			},
@@ -472,12 +496,14 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_US_Region_U
 						environment_type                       	  = "Sandbox"
 
 						allow_bing_search                = true
+						allow_microsoft_365_services     = true
 						//on usa region, moving data across regions is not allowed and always false
 						allow_moving_data_across_regions = false
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "true"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "false"),
 				),
 			},
@@ -489,11 +515,13 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_US_Region_U
 						environment_type                       	  = "Sandbox"
 
 						allow_bing_search                = false
+						allow_microsoft_365_services     = false
 						allow_moving_data_across_regions = false
 					}
 				`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "false"),
 					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "false"),
 				),
 			},
@@ -536,6 +564,29 @@ func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Regi
 						environment_type                       	  = "Sandbox"
 
 						allow_bing_search                = true
+						allow_moving_data_across_regions = false
+					}
+				`,
+				Check: resource.ComposeAggregateTestCheckFunc(),
+			},
+		},
+	})
+}
+
+func TestAccEnvironmentsResource_Validate_CreateGenerativeAiFeatures_Non_US_Region_Microsoft_365_Services_Expect_Fail(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*to enable ai generative features, moving data across regions must be enabled.*"),
+				Config: `
+					resource "powerplatform_environment" "development" {
+						display_name                              = "` + fmt.Sprintf("%s_%d", t.Name(), rand.Intn(100000)) + `"
+						location                                  = "europe"
+						environment_type                       	  = "Sandbox"
+
+						allow_bing_search                = false
+						allow_microsoft_365_services     = true
 						allow_moving_data_across_regions = false
 					}
 				`,
