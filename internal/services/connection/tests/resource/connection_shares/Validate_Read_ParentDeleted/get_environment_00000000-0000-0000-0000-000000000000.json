@@ -1,0 +1,7 @@
+{
+    "error": {
+        "code": "EnvironmentNotFound",
+        "message": "The environment '00000000-0000-0000-0000-000000000000' could not be found in the tenant.",
+        "detailUrlType": "NotSpecified"
+    }
+}

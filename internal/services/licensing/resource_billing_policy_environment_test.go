@@ -403,3 +403,64 @@ func TestUnitBillingPolicyResourceEnvironment_Validate_Update(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitBillingPolicyResourceEnvironment_Validate_Read_ParentDeleted(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	var getEnvironmentsCallCount = 0
+	// First calls (Create + post-Create reads) succeed; step 2 refresh returns 403 to simulate an ambiguous error.
+	httpmock.RegisterResponder("GET", `https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000000/environments?api-version=2022-03-01-preview`,
+		func(req *http.Request) (*http.Response, error) {
+			getEnvironmentsCallCount++
+			if getEnvironmentsCallCount <= 3 {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("test/resource/environments/Validate_Create/get_environments_for_policy.json").String()), nil
+			}
+			// Simulate 403 when the billing policy is no longer accessible.
+			return httpmock.NewStringResponse(http.StatusForbidden, `{"error":{"code":"Forbidden","message":"Access denied"}}`), nil
+		})
+
+	// When GetEnvironmentsForBillingPolicy fails with a non-ErrObjectNotFound error,
+	// the provider checks whether the parent billing policy still exists. Return 404.
+	httpmock.RegisterResponder("GET", `https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000000?api-version=2022-03-01-preview`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("test/resource/environments/Validate_Read_ParentDeleted/get_billing_policy.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", `https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000000/environments/remove?api-version=2022-03-01-preview`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	httpmock.RegisterResponder("POST", `https://api.powerplatform.com/licensing/billingPolicies/00000000-0000-0000-0000-000000000000/environments/add?api-version=2022-03-01-preview`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the billing policy environment association successfully.
+				Config: `
+				resource "powerplatform_billing_policy_environment" "pay_as_you_go_policy_envs" {
+					billing_policy_id = "00000000-0000-0000-0000-000000000000"
+					environments      = ["00000000-0000-0000-0000-000000000001"]
+				}`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_billing_policy_environment.pay_as_you_go_policy_envs", "environments.#", "1"),
+				),
+			},
+			{
+				// Step 2: refresh when the parent billing policy has been deleted out-of-band.
+				// The GetEnvironmentsForBillingPolicy call returns 403; the provider detects the
+				// parent billing policy is gone (404) and removes the resource from state.
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}

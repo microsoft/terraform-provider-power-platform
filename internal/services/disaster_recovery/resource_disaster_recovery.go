@@ -166,6 +166,12 @@ func (r *DisasterRecoveryResource) Read(ctx context.Context, req resource.ReadRe
 			resp.State.RemoveResource(ctx)
 			return
 		}
+		// For ambiguous errors, check whether the parent environment still exists.
+		_, envErr := r.client.environmentClient.GetEnvironment(ctx, environmentId)
+		if errors.Is(envErr, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}

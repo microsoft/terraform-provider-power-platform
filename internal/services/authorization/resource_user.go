@@ -254,6 +254,12 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 			resp.State.RemoveResource(ctx)
 			return
 		}
+		// For ambiguous errors, check whether the parent environment still exists.
+		_, envErr := r.UserClient.environmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
+		if errors.Is(envErr, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
@@ -267,6 +273,12 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 				resp.State.RemoveResource(ctx)
 				return
 			}
+			// For ambiguous errors, check whether the parent environment still exists.
+			_, envErr := r.UserClient.environmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
+			if errors.Is(envErr, customerrors.ErrObjectNotFound) {
+				resp.State.RemoveResource(ctx)
+				return
+			}
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 			return
 		}
@@ -275,6 +287,12 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		user, err := r.UserClient.GetEnvironmentUserByAadObjectId(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString())
 		if err != nil {
 			if errors.Is(err, customerrors.ErrObjectNotFound) {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			// For ambiguous errors, check whether the parent environment still exists.
+			_, envErr := r.UserClient.environmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
+			if errors.Is(envErr, customerrors.ErrObjectNotFound) {
 				resp.State.RemoveResource(ctx)
 				return
 			}
