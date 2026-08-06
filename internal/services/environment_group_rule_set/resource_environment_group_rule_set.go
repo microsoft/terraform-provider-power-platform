@@ -70,19 +70,15 @@ func (r *environmentGroupRuleSetResource) Schema(ctx context.Context, req resour
 				Delete: true,
 				Read:   true,
 			}),
+			// id and policy_id become null when the last rule backed by their respective API is
+			// removed, so they cannot be carried forward from prior state.
 			"id": schema.StringAttribute{
 				MarkdownDescription: "Unique id of the environment group ruleset",
 				Computed:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"policy_id": schema.StringAttribute{
-				MarkdownDescription: "Unique id of the rule-based policy backing `advanced_connector_policies_only`, `content_security_policy` and `advanced_connector_policies`. Null when none of those rules are configured.",
+				MarkdownDescription: "Unique id of the rule-based policy backing `maker_welcome_content`, `advanced_connector_policies_only`, `content_security_policy` and `advanced_connector_policies`. Null when none of those rules are configured.",
 				Computed:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"environment_group_id": schema.StringAttribute{
 				MarkdownDescription: "Unique id of the environment group",

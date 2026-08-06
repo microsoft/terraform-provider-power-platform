@@ -4,7 +4,9 @@
 package environment_group_rule_set_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"regexp"
 	"testing"
@@ -14,13 +16,107 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
 
-// mockNoPolicyAssignments makes the rule-based policies side of the resource report "nothing assigned",
-// so tests that only exercise legacy rules don't need policy fixtures.
-func mockNoPolicyAssignments() {
-	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`https://api\.powerplatform\.com/governance/ruleBasedPolicies/environmentGroups/[^/]+/assignments`),
+const mockPolicyId = "00000000-0000-0000-0000-0000000000aa"
+
+// mockRuleBasedPolicy stands in for the rule-based policies API, which now backs
+// maker_welcome_content as well as the connector and CSP rules. It echoes back whatever
+// rule sets are submitted so the tests exercise the real request/response shapes.
+func mockRuleBasedPolicy() {
+	policy := map[string]any{}
+	created := false
+
+	readBody := func(req *http.Request) map[string]any {
+		body := map[string]any{}
+		if raw, err := io.ReadAll(req.Body); err == nil {
+			_ = json.Unmarshal(raw, &body)
+		}
+		return body
+	}
+
+	store := func(body map[string]any) {
+		policy = body
+		policy["id"] = mockPolicyId
+		created = true
+	}
+
+	base := `https://api\.powerplatform\.com/governance/ruleBasedPolicies`
+
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(base+`/environmentGroups/[^/]+/assignments`),
 		func(_ *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			if !created {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{"value":[{"policyId":%q,"resourceType":"EnvironmentGroup"}]}`, mockPolicyId)), nil
 		})
+
+	httpmock.RegisterRegexpResponder("POST", regexp.MustCompile(base+`/[0-9a-f-]+/environmentGroups/[^/]+/assignments`),
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusCreated, fmt.Sprintf(`{"policyId":%q}`, mockPolicyId)), nil
+		})
+
+	httpmock.RegisterRegexpResponder("DELETE", regexp.MustCompile(base+`/[0-9a-f-]+/environmentGroups/[^/]+/assignments`),
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterRegexpResponder("PATCH", regexp.MustCompile(base+`/[0-9a-f-]+/removeRule`),
+		func(req *http.Request) (*http.Response, error) {
+			removed := map[string]bool{}
+			for _, rs := range asRuleSets(readBody(req)) {
+				removed[rs["id"].(string)] = true
+			}
+			kept := []any{}
+			for _, rs := range asRuleSets(policy) {
+				if !removed[rs["id"].(string)] {
+					kept = append(kept, rs)
+				}
+			}
+			policy["ruleSets"] = kept
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	httpmock.RegisterRegexpResponder("PUT", regexp.MustCompile(base+`/[0-9a-f-]+\?`),
+		func(req *http.Request) (*http.Response, error) {
+			store(readBody(req))
+			out, _ := json.Marshal(policy)
+			return httpmock.NewStringResponse(http.StatusOK, string(out)), nil
+		})
+
+	httpmock.RegisterRegexpResponder("DELETE", regexp.MustCompile(base+`/[0-9a-f-]+\?`),
+		func(_ *http.Request) (*http.Response, error) {
+			policy, created = map[string]any{}, false
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(base+`/[0-9a-f-]+\?`),
+		func(_ *http.Request) (*http.Response, error) {
+			if !created {
+				return httpmock.NewStringResponse(http.StatusNotFound, `{}`), nil
+			}
+			out, _ := json.Marshal(policy)
+			return httpmock.NewStringResponse(http.StatusOK, string(out)), nil
+		})
+
+	httpmock.RegisterRegexpResponder("POST", regexp.MustCompile(base+`\?`),
+		func(req *http.Request) (*http.Response, error) {
+			store(readBody(req))
+			out, _ := json.Marshal(policy)
+			return httpmock.NewStringResponse(http.StatusCreated, string(out)), nil
+		})
+}
+
+func asRuleSets(body map[string]any) []map[string]any {
+	raw, ok := body["ruleSets"].([]any)
+	if !ok {
+		return nil
+	}
+	out := make([]map[string]any, 0, len(raw))
+	for _, r := range raw {
+		if m, ok := r.(map[string]any); ok {
+			out = append(out, m)
+		}
+	}
+	return out
 }
 
 func TestAccEnvironmentGroupRuleSetResource_Validate_Create(t *testing.T) {
@@ -87,7 +183,7 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Create(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
-	mockNoPolicyAssignments()
+	mockRuleBasedPolicy()
 
 	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
@@ -303,7 +399,7 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Update(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
-	mockNoPolicyAssignments()
+	mockRuleBasedPolicy()
 
 	post_rule_set_inx := -1
 	get_rule_set_inx := -1
@@ -453,7 +549,7 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Import(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
-	mockNoPolicyAssignments()
+	mockRuleBasedPolicy()
 
 	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {
@@ -524,7 +620,7 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Import_Empty_Ruleset(t *te
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 	mocks.ActivateEnvironmentHttpMocks()
-	mockNoPolicyAssignments()
+	mockRuleBasedPolicy()
 
 	httpmock.RegisterResponder("POST", `https://000000000000000000000000000000.01.tenant.api.powerplatform.com/governance/environmentGroups/00000000-0000-0000-0000-000000000000/ruleSets?api-version=2021-10-01-preview`,
 		func(_ *http.Request) (*http.Response, error) {

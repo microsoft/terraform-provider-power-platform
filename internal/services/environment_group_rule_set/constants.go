@@ -24,10 +24,14 @@ const (
 )
 
 const (
-	MAKER_WELCOME_CONTENT      = "MakerOnboarding"
-	MAKER_ONBOARDING_URL       = "makerOnboardingUrl"
-	MAKER_ONBOARDING_MARKDOWN  = "makerOnboardingMarkdown"
-	MAKER_ONBOARDING_TIMESTAMP = "makerOnboardingTimestamp"
+	MAKER_WELCOME_CONTENT             = "MakerOnboarding"
+	MAKER_ONBOARDING_URL              = "makerOnboardingUrl"
+	MAKER_ONBOARDING_MARKDOWN         = "makerOnboardingMarkdown"
+	MAKER_ONBOARDING_TIMESTAMP        = "makerOnboardingTimestamp"
+	MAKER_ONBOARDING_CONTENT_ID       = "MakerOnboardingContent"
+	MAKER_ONBOARDING_CONTENT_VERSION  = "1.0"
+	MAKER_ONBOARDING_PORTALS          = "makerOnboardingPortals"
+	MAKER_ONBOARDING_CONSENT_REQUIRED = "makerOnboardingConsentRequired"
 )
 
 const (

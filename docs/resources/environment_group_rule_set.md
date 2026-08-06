@@ -122,7 +122,7 @@ resource "powerplatform_environment_group_rule_set" "example_group_rule_set" {
 ### Read-Only
 
 - `id` (String) Unique id of the environment group ruleset
-- `policy_id` (String) Unique id of the rule-based policy backing `advanced_connector_policies_only`, `content_security_policy` and `advanced_connector_policies`. Null when none of those rules are configured.
+- `policy_id` (String) Unique id of the rule-based policy backing `maker_welcome_content`, `advanced_connector_policies_only`, `content_security_policy` and `advanced_connector_policies`. Null when none of those rules are configured.
 
 <a id="nestedatt--rules"></a>
 ### Nested Schema for `rules`

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -70,7 +71,6 @@ func convertEnvironmentGroupRuleSetResourceModelToDto(ctx context.Context, model
 		ruleAttrs := model.Rules.Attributes()
 		convertSharingControls(ctx, ruleAttrs, &dto)
 		convertUsageInsights(ctx, ruleAttrs, &dto)
-		convertMakerWelcomeContent(ctx, ruleAttrs, &dto)
 		convertSolutionCheckerEnforcement(ctx, ruleAttrs, &dto)
 		if err := convertBackupRetention(ctx, ruleAttrs, &dto); err != nil {
 			return dto, err
@@ -234,46 +234,6 @@ func convertSolutionCheckerEnforcement(ctx context.Context, attrs map[string]att
 	}
 }
 
-func convertMakerWelcomeContent(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
-	makerWelcomeContentObj := attrs["maker_welcome_content"]
-	if !makerWelcomeContentObj.IsNull() && !makerWelcomeContentObj.IsUnknown() {
-		objectValue, ok := makerWelcomeContentObj.(basetypes.ObjectValue)
-		if !ok {
-			return // Skip conversion if type assertion fails
-		}
-
-		var makerWelcomeContent environmentGroupRuleSetMakerWelcomeContentModel
-		objectValue.As(ctx, &makerWelcomeContent, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true})
-
-		hasStatedChanges := true
-
-		rule := environmentGroupRuleSetParameterDto{
-			HasStagedChanges: &hasStatedChanges,
-			Type:             MAKER_WELCOME_CONTENT,
-			ResourceType:     NOT_SPECIFIED,
-			Value:            make([]environmentGroupRuleSetValueDto, 0),
-		}
-
-		if dto.Parameters == nil {
-			dto.Parameters = make([]*environmentGroupRuleSetParameterDto, 0)
-		}
-		dto.Parameters = append(dto.Parameters, &rule)
-
-		rule.Value = append(rule.Value, environmentGroupRuleSetValueDto{
-			Id:    MAKER_ONBOARDING_URL,
-			Value: makerWelcomeContent.MakerOnboardingUrl.ValueString(),
-		})
-		rule.Value = append(rule.Value, environmentGroupRuleSetValueDto{
-			Id:    MAKER_ONBOARDING_MARKDOWN,
-			Value: makerWelcomeContent.MakerOnboardingMarkdown.ValueString(),
-		})
-		rule.Value = append(rule.Value, environmentGroupRuleSetValueDto{
-			Id:    MAKER_ONBOARDING_TIMESTAMP,
-			Value: time.Now().UTC().Format(time.RFC3339),
-		})
-	}
-}
-
 func convertUsageInsights(ctx context.Context, attrs map[string]attr.Value, dto *EnvironmentGroupRuleSetValueSetDto) {
 	usageInsightsObj := attrs["usage_insights"]
 	if !usageInsightsObj.IsNull() && !usageInsightsObj.IsUnknown() {
@@ -397,7 +357,7 @@ func convertRulesDtoToModel(dto *EnvironmentGroupRuleSetValueSetDto, policy *rul
 	if err != nil {
 		return types.ObjectNull(map[string]attr.Type{}), err
 	}
-	makerWelcomeContentType, makerWelcomeContentValue, err := convertMakerWelcomeContentDtoToModel(getParameterByType(dto, MAKER_WELCOME_CONTENT))
+	makerWelcomeContentType, makerWelcomeContentValue, err := convertMakerWelcomeContentDtoToModel(policyRuleSetsOf(policy), getParameterByType(dto, MAKER_WELCOME_CONTENT))
 	if err != nil {
 		return types.ObjectNull(map[string]attr.Type{}), err
 	}
@@ -572,29 +532,45 @@ func convertSolutionCheckerEnforcementDtoToModel(dto *environmentGroupRuleSetPar
 	return types.ObjectType{AttrTypes: attrType}, types.ObjectValueMust(attrType, attrValue), nil
 }
 
-func convertMakerWelcomeContentDtoToModel(dto *environmentGroupRuleSetParameterDto) (basetypes.ObjectType, basetypes.ObjectValue, error) {
+// convertMakerWelcomeContentDtoToModel prefers the policy rule set, falling back to the legacy
+// parameter for rule sets written before maker welcome content moved to the policies API.
+func convertMakerWelcomeContentDtoToModel(policyRuleSets []policyRuleSetDto, dto *environmentGroupRuleSetParameterDto) (basetypes.ObjectType, basetypes.ObjectValue, error) {
 	attrType := map[string]attr.Type{
 		"maker_onboarding_url":      types.StringType,
 		"maker_onboarding_markdown": types.StringType,
 	}
+	objType := types.ObjectType{AttrTypes: attrType}
+
+	if ruleSet := findPolicyRuleSet(policyRuleSets, MAKER_ONBOARDING_CONTENT_ID); ruleSet != nil {
+		asString := func(key string) types.String {
+			if s, ok := ruleSet.Inputs[key].(string); ok {
+				return types.StringValue(s)
+			}
+			return types.StringValue("")
+		}
+		return objType, types.ObjectValueMust(attrType, map[string]attr.Value{
+			"maker_onboarding_url":      asString(MAKER_ONBOARDING_URL),
+			"maker_onboarding_markdown": asString(MAKER_ONBOARDING_MARKDOWN),
+		}), nil
+	}
 
 	if dto == nil || len(dto.Value) == 0 {
-		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), nil
+		return objType, types.ObjectNull(attrType), nil
 	}
 
 	makerOnboardingUrl := tryGetRuleValueFromDto(dto.Value, MAKER_ONBOARDING_URL)
 	if makerOnboardingUrl == nil {
-		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", MAKER_ONBOARDING_URL)
+		return objType, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", MAKER_ONBOARDING_URL)
 	}
 	makerOnboardingMarkdown := tryGetRuleValueFromDto(dto.Value, MAKER_ONBOARDING_MARKDOWN)
 	if makerOnboardingMarkdown == nil {
-		return types.ObjectType{AttrTypes: attrType}, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", MAKER_ONBOARDING_MARKDOWN)
+		return objType, types.ObjectNull(attrType), fmt.Errorf("%s value not found in response", MAKER_ONBOARDING_MARKDOWN)
 	}
-	attrValue := map[string]attr.Value{}
-	attrValue["maker_onboarding_url"] = types.StringValue(makerOnboardingUrl.Value)
-	attrValue["maker_onboarding_markdown"] = types.StringValue(makerOnboardingMarkdown.Value)
 
-	return types.ObjectType{AttrTypes: attrType}, types.ObjectValueMust(attrType, attrValue), nil
+	return objType, types.ObjectValueMust(attrType, map[string]attr.Value{
+		"maker_onboarding_url":      types.StringValue(makerOnboardingUrl.Value),
+		"maker_onboarding_markdown": types.StringValue(makerOnboardingMarkdown.Value),
+	}), nil
 }
 
 func convertUsageInsightsDtoToModel(dto *environmentGroupRuleSetParameterDto) (basetypes.ObjectType, basetypes.ObjectValue, error) {
@@ -729,10 +705,11 @@ var managedPolicyRuleSetIds = map[string]string{
 	ADVANCED_CONNECTOR_POLICIES_ONLY_ID: ADVANCED_CONNECTOR_POLICIES_VERSION,
 	CONTENT_SECURITY_POLICY_ID:          CONTENT_SECURITY_POLICY_VERSION,
 	CONNECTOR_MANAGEMENT_ID:             CONNECTOR_MANAGEMENT_VERSION,
+	MAKER_ONBOARDING_CONTENT_ID:         MAKER_ONBOARDING_CONTENT_VERSION,
 }
 
 // policyRuleAttributeNames are the rules under `rules` that are backed by the rule-based policies API.
-var policyRuleAttributeNames = []string{"advanced_connector_policies_only", "content_security_policy", "advanced_connector_policies"}
+var policyRuleAttributeNames = []string{"advanced_connector_policies_only", "content_security_policy", "advanced_connector_policies", "maker_welcome_content"}
 
 // hasPolicyRules reports whether the configuration sets any rule backed by the rule-based policies API.
 func hasPolicyRules(rules basetypes.ObjectValue) bool {
@@ -825,7 +802,33 @@ func convertRulesModelToPolicyDto(ctx context.Context, model environmentGroupRul
 		dto.RuleSets = append(dto.RuleSets, connRuleSet)
 	}
 
+	if obj, ok := attrs["maker_welcome_content"].(basetypes.ObjectValue); ok && !obj.IsNull() && !obj.IsUnknown() {
+		var makerWelcomeContent environmentGroupRuleSetMakerWelcomeContentModel
+		if diags := obj.As(ctx, &makerWelcomeContent, basetypes.ObjectAsOptions{UnhandledNullAsEmpty: true, UnhandledUnknownAsEmpty: true}); diags.HasError() {
+			return dto, fmt.Errorf("failed to convert maker_welcome_content: %v", diags)
+		}
+		dto.RuleSets = append(dto.RuleSets, policyRuleSetDto{
+			Id:      MAKER_ONBOARDING_CONTENT_ID,
+			Version: MAKER_ONBOARDING_CONTENT_VERSION,
+			Inputs: map[string]any{
+				MAKER_ONBOARDING_URL:              makerWelcomeContent.MakerOnboardingUrl.ValueString(),
+				MAKER_ONBOARDING_MARKDOWN:         makerWelcomeContent.MakerOnboardingMarkdown.ValueString(),
+				MAKER_ONBOARDING_PORTALS:          "",
+				MAKER_ONBOARDING_TIMESTAMP:        time.Now().UTC().Format(http.TimeFormat),
+				MAKER_ONBOARDING_CONSENT_REQUIRED: false,
+			},
+		})
+	}
+
 	return dto, nil
+}
+
+// policyRuleSetsOf returns the policy's rule sets, tolerating a nil policy.
+func policyRuleSetsOf(policy *ruleBasedPolicyDto) []policyRuleSetDto {
+	if policy == nil {
+		return nil
+	}
+	return policy.RuleSets
 }
 
 func findPolicyRuleSet(ruleSets []policyRuleSetDto, id string) *policyRuleSetDto {
