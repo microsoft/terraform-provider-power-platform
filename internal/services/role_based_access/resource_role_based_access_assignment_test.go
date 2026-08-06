@@ -5,6 +5,7 @@ package role_based_access_test
 
 import (
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -51,6 +52,39 @@ func TestUnitRoleBasedAccessAssignmentResource_Validate_Create(t *testing.T) {
 					resource.TestCheckResourceAttr("powerplatform_role_based_access_assignment.test", "scope", "/tenants/00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_role_based_access_assignment.test", "created_on", "2026-06-22T15:09:35Z"),
 				),
+			},
+			{
+				ResourceName:      "powerplatform_role_based_access_assignment.test",
+				ImportState:       true,
+				ImportStateId:     "11111111-1111-1111-1111-111111111111",
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestUnitRoleBasedAccessAssignmentResource_Validate_Create_Error(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	httpmock.RegisterResponder("POST", `https://api.powerplatform.com/authorization/roleAssignments?api-version=2024-10-01`,
+		func(_ *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusForbidden, `{"error":{"code":"Forbidden","message":"Access denied"}}`), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_role_based_access_assignment" "test" {
+					enterprise_application_object_id = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+					principal_type                   = "ApplicationUser"
+					role_definition_id               = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+				}`,
+				ExpectError: regexp.MustCompile(`Failed to create role assignment`),
 			},
 		},
 	})

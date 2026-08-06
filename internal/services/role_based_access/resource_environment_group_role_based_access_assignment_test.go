@@ -5,6 +5,7 @@ package role_based_access_test
 
 import (
 	"net/http"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -53,6 +54,38 @@ func TestUnitEnvironmentGroupRoleBasedAccessAssignmentResource_Validate_Create(t
 					resource.TestCheckResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "scope", "/tenants/00000000-0000-0000-0000-000000000001/environmentGroups/dddddddd-dddd-dddd-dddd-dddddddddddd"),
 					resource.TestCheckResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "created_on", "2026-06-22T16:00:00Z"),
 				),
+			},
+			{
+				ResourceName:      "powerplatform_environment_group_role_based_access_assignment.test",
+				ImportState:       true,
+				ImportStateId:     "dddddddd-dddd-dddd-dddd-dddddddddddd/22222222-2222-2222-2222-222222222222",
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentGroupRoleBasedAccessAssignmentResource_Validate_Import_InvalidId(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+	mocks.ActivateEnvironmentHttpMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment_group_role_based_access_assignment" "test" {
+					environment_group_id             = "dddddddd-dddd-dddd-dddd-dddddddddddd"
+					enterprise_application_object_id = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+					principal_type                   = "ApplicationUser"
+					role_definition_id               = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+				}`,
+				ResourceName:  "powerplatform_environment_group_role_based_access_assignment.test",
+				ImportState:   true,
+				ImportStateId: "22222222-2222-2222-2222-222222222222",
+				ExpectError:   regexp.MustCompile(`Invalid import ID`),
 			},
 		},
 	})

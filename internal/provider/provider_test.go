@@ -76,6 +76,9 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		tenant.NewTenantDataSource(),
 		solution_checker_rules.NewSolutionCheckerRulesDataSource(),
 		role_based_access.NewRoleDefinitionsDataSource(),
+		role_based_access.NewRoleBasedAccessAssignmentsDataSource(),
+		role_based_access.NewEnvironmentRoleBasedAccessAssignmentsDataSource(),
+		role_based_access.NewEnvironmentGroupRoleBasedAccessAssignmentsDataSource(),
 	}
 	datasources := provider.NewPowerPlatformProvider(context.Background())().(*provider.PowerPlatformProvider).DataSources(context.Background())
 
