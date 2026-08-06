@@ -1,0 +1,11 @@
+{
+  "roleAssignmentId": "33333333-3333-3333-3333-333333333333",
+  "scope": "/environments/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+  "principalType": "ApplicationUser",
+  "principalObjectId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "roleDefinitionId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+  "createdByPrincipalType": "User",
+  "createdByPrincipalObjectId": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+  "createdOn": "2026-06-22T17:00:00Z",
+  "expiresOn": null
+}

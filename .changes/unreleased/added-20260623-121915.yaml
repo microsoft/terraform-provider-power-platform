@@ -1,0 +1,5 @@
+kind: added
+body: Add `powerplatform_environment_group_rule_based_policy` resource for managing rule-based policies on environment groups. Supports AdvancedConnectorPoliciesOnly, Content Security Policy (PowerAppsContentSecurityPolicy), and Advanced Connector Policies (ConnectorManagement) rule sets. Adopts existing policies if already assigned.
+time: 2026-06-23T12:19:15.004Z
+custom:
+    Issue: "0"

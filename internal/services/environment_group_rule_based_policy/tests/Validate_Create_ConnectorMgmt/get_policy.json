@@ -1,0 +1,28 @@
+{
+  "id": "00000000-0000-0000-0000-000000000004",
+  "name": "terraform-managed-00000000-0000-0000-0000-000000000000",
+  "tenantId": "00000000-0000-0000-0000-000000000099",
+  "lastModified": "2024-06-01T10:00:00Z",
+  "ruleSetCount": 1,
+  "ruleSets": [
+    {
+      "id": "ConnectorManagement",
+      "version": "1.0",
+      "inputs": {
+        "AllowedConnectorList": [
+          {
+            "AllowedActionsMode": "AllAllowed",
+            "AllowedConnectionTypesMode": "AllAllowed",
+            "AllowedConnector": "/providers/Microsoft.PowerApps/apis/shared_commondataservice"
+          },
+          {
+            "AllowedActionsMode": "SomeAllowed",
+            "AllowedConnectionTypesMode": "AllAllowed",
+            "AllowedConnector": "/providers/Microsoft.PowerApps/apis/shared_office365",
+            "AllowedActions": ["SendEmail", "GetEvents"]
+          }
+        ]
+      }
+    }
+  ]
+}
