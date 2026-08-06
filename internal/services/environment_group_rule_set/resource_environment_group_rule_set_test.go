@@ -14,7 +14,6 @@ import (
 )
 
 func TestAccEnvironmentGroupRuleSetResource_Validate_Create(t *testing.T) {
-	t.Skip("creating rule sets with SP is NOT yet supported")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
@@ -149,7 +148,6 @@ func TestUnitEnvironmentGroupRuleSetResource_Validate_Create(t *testing.T) {
 }
 
 func TestAccEnvironmentGroupRuleSetResource_Validate_Update(t *testing.T) {
-	t.Skip("creating rule sets with SP is NOT yet supported")
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{

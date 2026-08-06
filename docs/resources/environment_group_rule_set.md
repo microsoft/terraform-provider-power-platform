@@ -4,17 +4,11 @@ page_title: "powerplatform_environment_group_rule_set Resource - Power Platform"
 subcategory: ""
 description: |-
   Allows the creation of environment group rulesets. See Power Platform documentation https://learn.microsoft.com/power-platform/admin/environment-groups for more information on the available rules that can be applied to an environment group.
-  Note: This resource is available as preview
-  Known Limitations: This resource is not supported for with service principal authentication.
 ---
 
 # powerplatform_environment_group_rule_set (Resource)
 
 Allows the creation of environment group rulesets. See [Power Platform documentation](https://learn.microsoft.com/power-platform/admin/environment-groups) for more information on the available rules that can be applied to an environment group.
-
-**Note:** This resource is available as **preview**
-
-**Known Limitations:** This resource is not supported for with service principal authentication.
 
 ## Example Usage
 
