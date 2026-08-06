@@ -11,7 +11,7 @@ import (
 
 type environmentGroupRuleBasedPolicyResource struct {
 	helpers.TypeInfo
-	RuleBasedPolicyClient Client
+	RuleBasedPolicyClient client
 }
 
 type environmentGroupRuleBasedPolicyResourceModel struct {

@@ -13,15 +13,15 @@ type roleAssignmentRequestDto struct {
 }
 
 type roleAssignmentDto struct {
-	RoleAssignmentId          string  `json:"roleAssignmentId"`
-	Scope                     string  `json:"scope"`
-	PrincipalType             string  `json:"principalType"`
-	PrincipalObjectId         string  `json:"principalObjectId"`
-	RoleDefinitionId          string  `json:"roleDefinitionId"`
-	CreatedByPrincipalType    string  `json:"createdByPrincipalType"`
-	CreatedByPrincipalObjectId string `json:"createdByPrincipalObjectId"`
-	CreatedOn                 string  `json:"createdOn"`
-	ExpiresOn                 *string `json:"expiresOn"`
+	RoleAssignmentId           string  `json:"roleAssignmentId"`
+	Scope                      string  `json:"scope"`
+	PrincipalType              string  `json:"principalType"`
+	PrincipalObjectId          string  `json:"principalObjectId"`
+	RoleDefinitionId           string  `json:"roleDefinitionId"`
+	CreatedByPrincipalType     string  `json:"createdByPrincipalType"`
+	CreatedByPrincipalObjectId string  `json:"createdByPrincipalObjectId"`
+	CreatedOn                  string  `json:"createdOn"`
+	ExpiresOn                  *string `json:"expiresOn"`
 }
 
 type roleAssignmentsListDto struct {

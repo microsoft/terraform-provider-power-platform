@@ -92,7 +92,7 @@ func (d *roleDefinitionsDataSource) Configure(ctx context.Context, req datasourc
 		)
 		return
 	}
-	d.Client = NewRoleBasedAccessClient(providerClient.Api)
+	d.Client = newRoleBasedAccessClient(providerClient.Api)
 }
 
 func (d *roleDefinitionsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

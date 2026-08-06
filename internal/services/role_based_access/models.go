@@ -13,17 +13,17 @@ import (
 
 type roleBasedAccessAssignmentResource struct {
 	helpers.TypeInfo
-	Client RoleBasedAccessClient
+	Client client
 }
 
 type environmentGroupRoleBasedAccessAssignmentResource struct {
 	helpers.TypeInfo
-	Client RoleBasedAccessClient
+	Client client
 }
 
 type environmentRoleBasedAccessAssignmentResource struct {
 	helpers.TypeInfo
-	Client RoleBasedAccessClient
+	Client client
 }
 
 // Resource models
@@ -64,7 +64,7 @@ type environmentRoleBasedAccessAssignmentResourceModel struct {
 
 type roleDefinitionsDataSource struct {
 	helpers.TypeInfo
-	Client RoleBasedAccessClient
+	Client client
 }
 
 type roleDefinitionsDataSourceModel struct {

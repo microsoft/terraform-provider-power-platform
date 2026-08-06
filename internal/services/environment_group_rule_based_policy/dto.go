@@ -22,20 +22,20 @@ const (
 	CONTENT_SECURITY_POLICY_ID      = "PowerAppsContentSecurityPolicy"
 	CONTENT_SECURITY_POLICY_VERSION = "1.0"
 
-	CSP_IS_ENABLED_KEY                         = "IsContentSecurityPolicyEnabled"
-	CSP_IS_ENABLED_FOR_CANVAS_KEY              = "IsContentSecurityPolicyEnabledForCanvas"
-	CSP_IS_ENABLED_FOR_CODE_APPS_KEY           = "IsContentSecurityPolicyEnabledForCodeApps"
-	CSP_OPTIONS_KEY                            = "ContentSecurityPolicyOptions"
-	CSP_REPORT_URI_KEY                         = "ContentSecurityPolicyReportUri"
-	CSP_REPORTING_ENDPOINT_KEY                 = "ContentSecurityPolicyReportingEndpoint"
-	CSP_CONFIGURATION_KEY                      = "ContentSecurityPolicyConfiguration"
-	CSP_CONFIGURATION_FOR_CANVAS_KEY           = "ContentSecurityPolicyConfigurationForCanvas"
-	CSP_CONFIGURATION_FOR_CODE_APPS_KEY        = "ContentSecurityPolicyConfigurationForCodeApps"
+	CSP_IS_ENABLED_KEY                  = "IsContentSecurityPolicyEnabled"
+	CSP_IS_ENABLED_FOR_CANVAS_KEY       = "IsContentSecurityPolicyEnabledForCanvas"
+	CSP_IS_ENABLED_FOR_CODE_APPS_KEY    = "IsContentSecurityPolicyEnabledForCodeApps"
+	CSP_OPTIONS_KEY                     = "ContentSecurityPolicyOptions"
+	CSP_REPORT_URI_KEY                  = "ContentSecurityPolicyReportUri"
+	CSP_REPORTING_ENDPOINT_KEY          = "ContentSecurityPolicyReportingEndpoint"
+	CSP_CONFIGURATION_KEY               = "ContentSecurityPolicyConfiguration"
+	CSP_CONFIGURATION_FOR_CANVAS_KEY    = "ContentSecurityPolicyConfigurationForCanvas"
+	CSP_CONFIGURATION_FOR_CODE_APPS_KEY = "ContentSecurityPolicyConfigurationForCodeApps"
 
-	CONNECTOR_MANAGEMENT_ID                    = "ConnectorManagement"
-	CONNECTOR_MANAGEMENT_VERSION               = "1.0"
-	CONNECTOR_MANAGEMENT_ALLOWED_LIST_KEY      = "AllowedConnectorList"
-	CONNECTOR_API_PREFIX                       = "/providers/Microsoft.PowerApps/apis/"
+	CONNECTOR_MANAGEMENT_ID               = "ConnectorManagement"
+	CONNECTOR_MANAGEMENT_VERSION          = "1.0"
+	CONNECTOR_MANAGEMENT_ALLOWED_LIST_KEY = "AllowedConnectorList"
+	CONNECTOR_API_PREFIX                  = "/providers/Microsoft.PowerApps/apis/"
 )
 
 type ruleBasedPolicyDto struct {
@@ -280,9 +280,9 @@ type cspSourceDto struct {
 	Source string `json:"source"`
 }
 
-// cspConfigurationAttrTypes returns the Terraform attribute types for a CSP configuration block.
-func cspConfigurationAttrTypes(includeStrictCsp bool) map[string]attr.Type {
-	attrTypes := map[string]attr.Type{
+// cspDirectiveAttrTypes returns the Terraform attribute types shared by every CSP configuration block.
+func cspDirectiveAttrTypes() map[string]attr.Type {
+	return map[string]attr.Type{
 		"img_src":        types.ListType{ElemType: types.StringType},
 		"style_src":      types.ListType{ElemType: types.StringType},
 		"form_action":    types.ListType{ElemType: types.StringType},
@@ -292,24 +292,32 @@ func cspConfigurationAttrTypes(includeStrictCsp bool) map[string]attr.Type {
 		"script_src":     types.ListType{ElemType: types.StringType},
 		"frame_ancestor": types.ListType{ElemType: types.StringType},
 	}
-	if includeStrictCsp {
-		attrTypes["strict_csp"] = types.BoolType
-	}
+}
+
+// cspConfigurationAttrTypes returns the Terraform attribute types for a CSP configuration block that supports strict CSP.
+func cspConfigurationAttrTypes() map[string]attr.Type {
+	attrTypes := cspDirectiveAttrTypes()
+	attrTypes["strict_csp"] = types.BoolType
 	return attrTypes
+}
+
+// cspCodeAppsConfigurationAttrTypes returns the Terraform attribute types for the code-first apps CSP configuration block.
+func cspCodeAppsConfigurationAttrTypes() map[string]attr.Type {
+	return cspDirectiveAttrTypes()
 }
 
 // contentSecurityPolicyAttrTypes returns the Terraform attribute types for the CSP rule set.
 func contentSecurityPolicyAttrTypes() map[string]attr.Type {
-	configType := types.ObjectType{AttrTypes: cspConfigurationAttrTypes(true)}
-	codeAppsConfigType := types.ObjectType{AttrTypes: cspConfigurationAttrTypes(false)}
+	configType := types.ObjectType{AttrTypes: cspConfigurationAttrTypes()}
+	codeAppsConfigType := types.ObjectType{AttrTypes: cspCodeAppsConfigurationAttrTypes()}
 	return map[string]attr.Type{
-		"enabled":                    types.BoolType,
-		"enabled_for_canvas":         types.BoolType,
-		"enabled_for_code_apps":      types.BoolType,
-		"report_uri":                 types.StringType,
-		"reporting_endpoint":         types.StringType,
-		"configuration":              configType,
-		"configuration_for_canvas":   configType,
+		"enabled":                     types.BoolType,
+		"enabled_for_canvas":          types.BoolType,
+		"enabled_for_code_apps":       types.BoolType,
+		"report_uri":                  types.StringType,
+		"reporting_endpoint":          types.StringType,
+		"configuration":               configType,
+		"configuration_for_canvas":    configType,
 		"configuration_for_code_apps": codeAppsConfigType,
 	}
 }
@@ -321,9 +329,7 @@ func convertContentSecurityPolicyModelToDto(ctx context.Context, objectValue bas
 	}
 
 	// Calculate ContentSecurityPolicyOptions from strict_csp booleans
-	modelDrivenStrict := getStrictCspFromConfig(ctx, csp.Configuration)
-	canvasStrict := getStrictCspFromConfig(ctx, csp.ConfigurationForCanvas)
-	options := calculateCspOptions(modelDrivenStrict, canvasStrict)
+	options := calculateCspOptions(ctx, csp.Configuration, csp.ConfigurationForCanvas)
 
 	inputs := map[string]any{
 		CSP_IS_ENABLED_KEY:               csp.Enabled.ValueBool(),
@@ -385,14 +391,14 @@ func getStrictCspFromConfig(_ context.Context, configObj types.Object) bool {
 	return false
 }
 
-// calculateCspOptions computes the ContentSecurityPolicyOptions integer from strict_csp flags.
+// calculateCspOptions computes the ContentSecurityPolicyOptions integer from the strict_csp flags of both configurations.
 // model-driven strict only = 1, canvas strict only = 8, both = 9, neither = 0.
-func calculateCspOptions(modelDrivenStrict, canvasStrict bool) int64 {
+func calculateCspOptions(ctx context.Context, modelDrivenConfig, canvasConfig types.Object) int64 {
 	var options int64
-	if modelDrivenStrict {
-		options += 1
+	if getStrictCspFromConfig(ctx, modelDrivenConfig) {
+		options++
 	}
-	if canvasStrict {
+	if getStrictCspFromConfig(ctx, canvasConfig) {
 		options += 8
 	}
 	return options
@@ -501,16 +507,28 @@ func convertContentSecurityPolicyDtoToModel(ruleSets []ruleSetDto) (basetypes.Ob
 		return types.StringNull()
 	}
 
-	getConfigValue := func(key string, includeStrictCsp bool, strictCspValue bool) (basetypes.ObjectValue, error) {
+	getConfigValue := func(key string, strictCspValue bool) (basetypes.ObjectValue, error) {
 		v, ok := inputs[key]
 		if !ok || v == nil {
-			return types.ObjectNull(cspConfigurationAttrTypes(includeStrictCsp)), nil
+			return types.ObjectNull(cspConfigurationAttrTypes()), nil
 		}
 		jsonStr, ok := v.(string)
 		if !ok {
-			return types.ObjectNull(cspConfigurationAttrTypes(includeStrictCsp)), nil
+			return types.ObjectNull(cspConfigurationAttrTypes()), nil
 		}
-		return convertCspConfigJsonToModel(jsonStr, includeStrictCsp, strictCspValue)
+		return convertCspConfigJsonToModel(jsonStr, strictCspValue)
+	}
+
+	getCodeAppsConfigValue := func(key string) (basetypes.ObjectValue, error) {
+		v, ok := inputs[key]
+		if !ok || v == nil {
+			return types.ObjectNull(cspCodeAppsConfigurationAttrTypes()), nil
+		}
+		jsonStr, ok := v.(string)
+		if !ok {
+			return types.ObjectNull(cspCodeAppsConfigurationAttrTypes()), nil
+		}
+		return convertCspCodeAppsConfigJsonToModel(jsonStr)
 	}
 
 	// Derive strict_csp booleans from ContentSecurityPolicyOptions
@@ -519,45 +537,40 @@ func convertContentSecurityPolicyDtoToModel(ruleSets []ruleSetDto) (basetypes.Ob
 	modelDrivenStrict := (optionsInt & 1) != 0
 	canvasStrict := (optionsInt & 8) != 0
 
-	configValue, err := getConfigValue(CSP_CONFIGURATION_KEY, true, modelDrivenStrict)
+	configValue, err := getConfigValue(CSP_CONFIGURATION_KEY, modelDrivenStrict)
 	if err != nil {
 		return objType, types.ObjectNull(cspAttrTypes), fmt.Errorf("failed to parse %s: %w", CSP_CONFIGURATION_KEY, err)
 	}
 
-	canvasValue, err := getConfigValue(CSP_CONFIGURATION_FOR_CANVAS_KEY, true, canvasStrict)
+	canvasValue, err := getConfigValue(CSP_CONFIGURATION_FOR_CANVAS_KEY, canvasStrict)
 	if err != nil {
 		return objType, types.ObjectNull(cspAttrTypes), fmt.Errorf("failed to parse %s: %w", CSP_CONFIGURATION_FOR_CANVAS_KEY, err)
 	}
 
-	codeAppsValue, err := getConfigValue(CSP_CONFIGURATION_FOR_CODE_APPS_KEY, false, false)
+	codeAppsValue, err := getCodeAppsConfigValue(CSP_CONFIGURATION_FOR_CODE_APPS_KEY)
 	if err != nil {
 		return objType, types.ObjectNull(cspAttrTypes), fmt.Errorf("failed to parse %s: %w", CSP_CONFIGURATION_FOR_CODE_APPS_KEY, err)
 	}
 
 	attrValues := map[string]attr.Value{
-		"enabled":                    getBool(CSP_IS_ENABLED_KEY),
-		"enabled_for_canvas":         getBool(CSP_IS_ENABLED_FOR_CANVAS_KEY),
-		"enabled_for_code_apps":      getBool(CSP_IS_ENABLED_FOR_CODE_APPS_KEY),
-		"report_uri":                 getNullableString(CSP_REPORT_URI_KEY),
-		"reporting_endpoint":         getNullableString(CSP_REPORTING_ENDPOINT_KEY),
-		"configuration":              configValue,
-		"configuration_for_canvas":   canvasValue,
+		"enabled":                     getBool(CSP_IS_ENABLED_KEY),
+		"enabled_for_canvas":          getBool(CSP_IS_ENABLED_FOR_CANVAS_KEY),
+		"enabled_for_code_apps":       getBool(CSP_IS_ENABLED_FOR_CODE_APPS_KEY),
+		"report_uri":                  getNullableString(CSP_REPORT_URI_KEY),
+		"reporting_endpoint":          getNullableString(CSP_REPORTING_ENDPOINT_KEY),
+		"configuration":               configValue,
+		"configuration_for_canvas":    canvasValue,
 		"configuration_for_code_apps": codeAppsValue,
 	}
 
 	return objType, types.ObjectValueMust(cspAttrTypes, attrValues), nil
 }
 
-func convertCspConfigJsonToModel(jsonStr string, includeStrictCsp bool, strictCspValue bool) (basetypes.ObjectValue, error) {
-	configAttrTypes := cspConfigurationAttrTypes(includeStrictCsp)
-
-	if jsonStr == "" || jsonStr == "{}" {
-		return types.ObjectNull(configAttrTypes), nil
-	}
-
+// parseCspConfigDirectives unmarshals a CSP configuration JSON payload into Terraform list attribute values.
+func parseCspConfigDirectives(jsonStr string) (map[string]attr.Value, error) {
 	var dto cspConfigurationDto
 	if err := json.Unmarshal([]byte(jsonStr), &dto); err != nil {
-		return types.ObjectNull(configAttrTypes), fmt.Errorf("failed to unmarshal CSP configuration JSON: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal CSP configuration JSON: %w", err)
 	}
 
 	directiveToList := func(d *cspDirectiveDto) types.List {
@@ -572,7 +585,7 @@ func convertCspConfigJsonToModel(jsonStr string, includeStrictCsp bool, strictCs
 		return list
 	}
 
-	attrValues := map[string]attr.Value{
+	return map[string]attr.Value{
 		"img_src":        directiveToList(dto.ImgSrc),
 		"style_src":      directiveToList(dto.StyleSrc),
 		"form_action":    directiveToList(dto.FormAction),
@@ -581,10 +594,35 @@ func convertCspConfigJsonToModel(jsonStr string, includeStrictCsp bool, strictCs
 		"font_src":       directiveToList(dto.FontSrc),
 		"script_src":     directiveToList(dto.ScriptSrc),
 		"frame_ancestor": directiveToList(dto.FrameAncestor),
+	}, nil
+}
+
+func convertCspConfigJsonToModel(jsonStr string, strictCspValue bool) (basetypes.ObjectValue, error) {
+	configAttrTypes := cspConfigurationAttrTypes()
+
+	if jsonStr == "" || jsonStr == "{}" {
+		return types.ObjectNull(configAttrTypes), nil
 	}
 
-	if includeStrictCsp {
-		attrValues["strict_csp"] = types.BoolValue(strictCspValue)
+	attrValues, err := parseCspConfigDirectives(jsonStr)
+	if err != nil {
+		return types.ObjectNull(configAttrTypes), err
+	}
+	attrValues["strict_csp"] = types.BoolValue(strictCspValue)
+
+	return types.ObjectValueMust(configAttrTypes, attrValues), nil
+}
+
+func convertCspCodeAppsConfigJsonToModel(jsonStr string) (basetypes.ObjectValue, error) {
+	configAttrTypes := cspCodeAppsConfigurationAttrTypes()
+
+	if jsonStr == "" || jsonStr == "{}" {
+		return types.ObjectNull(configAttrTypes), nil
+	}
+
+	attrValues, err := parseCspConfigDirectives(jsonStr)
+	if err != nil {
+		return types.ObjectNull(configAttrTypes), err
 	}
 
 	return types.ObjectValueMust(configAttrTypes, attrValues), nil

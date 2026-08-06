@@ -16,17 +16,17 @@ import (
 
 const apiVersion = "2024-10-01"
 
-func NewRuleBasedPolicyClient(apiClient *api.Client) Client {
-	return Client{
+func newRuleBasedPolicyClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type Client struct {
+type client struct {
 	Api *api.Client
 }
 
-func (client *Client) CreatePolicy(ctx context.Context, request ruleBasedPolicyRequestDto) (*ruleBasedPolicyDto, error) {
+func (client *client) CreatePolicy(ctx context.Context, request ruleBasedPolicyRequestDto) (*ruleBasedPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -57,7 +57,7 @@ func (e *PolicyConflictError) Error() string {
 	return "a rule-based policy already exists for this tenant"
 }
 
-func (client *Client) GetPolicy(ctx context.Context, policyId string) (*ruleBasedPolicyDto, error) {
+func (client *client) GetPolicy(ctx context.Context, policyId string) (*ruleBasedPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -85,7 +85,7 @@ func (client *Client) GetPolicy(ctx context.Context, policyId string) (*ruleBase
 	return &policy, nil
 }
 
-func (client *Client) UpdatePolicy(ctx context.Context, policyId string, request ruleBasedPolicyRequestDto) (*ruleBasedPolicyDto, error) {
+func (client *client) UpdatePolicy(ctx context.Context, policyId string, request ruleBasedPolicyRequestDto) (*ruleBasedPolicyDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -105,7 +105,7 @@ func (client *Client) UpdatePolicy(ctx context.Context, policyId string, request
 	return &policy, nil
 }
 
-func (client *Client) RemoveRuleFromPolicy(ctx context.Context, policyId string, policyName string, ruleSetId string, version string) error {
+func (client *client) RemoveRuleFromPolicy(ctx context.Context, policyId string, policyName string, ruleSetId string, version string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -134,7 +134,7 @@ func (client *Client) RemoveRuleFromPolicy(ctx context.Context, policyId string,
 	return nil
 }
 
-func (client *Client) CreateEnvironmentGroupAssignment(ctx context.Context, policyId string, groupId string) (*ruleAssignmentDto, error) {
+func (client *client) CreateEnvironmentGroupAssignment(ctx context.Context, policyId string, groupId string) (*ruleAssignmentDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -146,7 +146,7 @@ func (client *Client) CreateEnvironmentGroupAssignment(ctx context.Context, poli
 	apiUrl.RawQuery = values.Encode()
 
 	request := policyAssignmentRequestDto{
-		AssignmentOverrides: []interface{}{},
+		AssignmentOverrides: []any{},
 	}
 
 	assignment := ruleAssignmentDto{}
@@ -158,7 +158,7 @@ func (client *Client) CreateEnvironmentGroupAssignment(ctx context.Context, poli
 	return &assignment, nil
 }
 
-func (client *Client) ListAssignmentsByEnvironmentGroup(ctx context.Context, groupId string) ([]ruleAssignmentDto, error) {
+func (client *client) ListAssignmentsByEnvironmentGroup(ctx context.Context, groupId string) ([]ruleAssignmentDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,

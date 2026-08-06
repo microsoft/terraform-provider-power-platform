@@ -15,34 +15,34 @@ import (
 
 const apiVersion = "2024-10-01"
 
-func NewRoleBasedAccessClient(apiClient *api.Client) RoleBasedAccessClient {
-	return RoleBasedAccessClient{
+func newRoleBasedAccessClient(apiClient *api.Client) client {
+	return client{
 		Api: apiClient,
 	}
 }
 
-type RoleBasedAccessClient struct {
+type client struct {
 	Api *api.Client
 }
 
 // CreateRoleAssignment creates a role assignment at tenant level.
-func (client *RoleBasedAccessClient) CreateRoleAssignment(ctx context.Context, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
+func (client *client) CreateRoleAssignment(ctx context.Context, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
 	return client.createRoleAssignmentAtPath(ctx, "/authorization/roleAssignments", request)
 }
 
 // CreateEnvironmentGroupRoleAssignment creates a role assignment for an environment group.
-func (client *RoleBasedAccessClient) CreateEnvironmentGroupRoleAssignment(ctx context.Context, environmentGroupId string, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
+func (client *client) CreateEnvironmentGroupRoleAssignment(ctx context.Context, environmentGroupId string, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
 	path := fmt.Sprintf("/authorization/environmentGroups/%s/roleAssignments", environmentGroupId)
 	return client.createRoleAssignmentAtPath(ctx, path, request)
 }
 
 // CreateEnvironmentRoleAssignment creates a role assignment for an environment.
-func (client *RoleBasedAccessClient) CreateEnvironmentRoleAssignment(ctx context.Context, environmentId string, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
+func (client *client) CreateEnvironmentRoleAssignment(ctx context.Context, environmentId string, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
 	path := fmt.Sprintf("/authorization/environments/%s/roleAssignments", environmentId)
 	return client.createRoleAssignmentAtPath(ctx, path, request)
 }
 
-func (client *RoleBasedAccessClient) createRoleAssignmentAtPath(ctx context.Context, path string, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
+func (client *client) createRoleAssignmentAtPath(ctx context.Context, path string, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -61,23 +61,23 @@ func (client *RoleBasedAccessClient) createRoleAssignmentAtPath(ctx context.Cont
 }
 
 // ListRoleAssignments lists role assignments at tenant level.
-func (client *RoleBasedAccessClient) ListRoleAssignments(ctx context.Context) ([]roleAssignmentDto, error) {
+func (client *client) ListRoleAssignments(ctx context.Context) ([]roleAssignmentDto, error) {
 	return client.listRoleAssignmentsAtPath(ctx, "/authorization/roleAssignments")
 }
 
 // ListEnvironmentGroupRoleAssignments lists role assignments for an environment group.
-func (client *RoleBasedAccessClient) ListEnvironmentGroupRoleAssignments(ctx context.Context, environmentGroupId string) ([]roleAssignmentDto, error) {
+func (client *client) ListEnvironmentGroupRoleAssignments(ctx context.Context, environmentGroupId string) ([]roleAssignmentDto, error) {
 	path := fmt.Sprintf("/authorization/environmentGroups/%s/roleAssignments", environmentGroupId)
 	return client.listRoleAssignmentsAtPath(ctx, path)
 }
 
 // ListEnvironmentRoleAssignments lists role assignments for an environment.
-func (client *RoleBasedAccessClient) ListEnvironmentRoleAssignments(ctx context.Context, environmentId string) ([]roleAssignmentDto, error) {
+func (client *client) ListEnvironmentRoleAssignments(ctx context.Context, environmentId string) ([]roleAssignmentDto, error) {
 	path := fmt.Sprintf("/authorization/environments/%s/roleAssignments", environmentId)
 	return client.listRoleAssignmentsAtPath(ctx, path)
 }
 
-func (client *RoleBasedAccessClient) listRoleAssignmentsAtPath(ctx context.Context, path string) ([]roleAssignmentDto, error) {
+func (client *client) listRoleAssignmentsAtPath(ctx context.Context, path string) ([]roleAssignmentDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -96,24 +96,24 @@ func (client *RoleBasedAccessClient) listRoleAssignmentsAtPath(ctx context.Conte
 }
 
 // DeleteRoleAssignment deletes a role assignment at tenant level.
-func (client *RoleBasedAccessClient) DeleteRoleAssignment(ctx context.Context, roleAssignmentId string) error {
+func (client *client) DeleteRoleAssignment(ctx context.Context, roleAssignmentId string) error {
 	path := fmt.Sprintf("/authorization/roleAssignments/%s", roleAssignmentId)
 	return client.deleteRoleAssignmentAtPath(ctx, path)
 }
 
 // DeleteEnvironmentGroupRoleAssignment deletes a role assignment for an environment group.
-func (client *RoleBasedAccessClient) DeleteEnvironmentGroupRoleAssignment(ctx context.Context, environmentGroupId, roleAssignmentId string) error {
+func (client *client) DeleteEnvironmentGroupRoleAssignment(ctx context.Context, environmentGroupId, roleAssignmentId string) error {
 	path := fmt.Sprintf("/authorization/environmentGroups/%s/roleAssignments/%s", environmentGroupId, roleAssignmentId)
 	return client.deleteRoleAssignmentAtPath(ctx, path)
 }
 
 // DeleteEnvironmentRoleAssignment deletes a role assignment for an environment.
-func (client *RoleBasedAccessClient) DeleteEnvironmentRoleAssignment(ctx context.Context, environmentId, roleAssignmentId string) error {
+func (client *client) DeleteEnvironmentRoleAssignment(ctx context.Context, environmentId, roleAssignmentId string) error {
 	path := fmt.Sprintf("/authorization/environments/%s/roleAssignments/%s", environmentId, roleAssignmentId)
 	return client.deleteRoleAssignmentAtPath(ctx, path)
 }
 
-func (client *RoleBasedAccessClient) deleteRoleAssignmentAtPath(ctx context.Context, path string) error {
+func (client *client) deleteRoleAssignmentAtPath(ctx context.Context, path string) error {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,
@@ -128,7 +128,7 @@ func (client *RoleBasedAccessClient) deleteRoleAssignmentAtPath(ctx context.Cont
 }
 
 // ListRoleDefinitions lists available role definitions.
-func (client *RoleBasedAccessClient) ListRoleDefinitions(ctx context.Context) ([]roleDefinitionDto, error) {
+func (client *client) ListRoleDefinitions(ctx context.Context) ([]roleDefinitionDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.PowerPlatformUrl,

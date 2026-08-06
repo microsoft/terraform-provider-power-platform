@@ -120,7 +120,7 @@ func (r *environmentGroupRoleBasedAccessAssignmentResource) Configure(ctx contex
 		)
 		return
 	}
-	r.Client = NewRoleBasedAccessClient(providerClient.Api)
+	r.Client = newRoleBasedAccessClient(providerClient.Api)
 }
 
 func (r *environmentGroupRoleBasedAccessAssignmentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {

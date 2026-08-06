@@ -117,9 +117,9 @@ func (r *environmentGroupRuleBasedPolicyResource) Schema(ctx context.Context, re
 								MarkdownDescription: "Reporting endpoint for CSP violations",
 								Optional:            true,
 							},
-							"configuration":               cspConfigurationSchema("model-driven apps", true),
-							"configuration_for_canvas":    cspConfigurationSchema("canvas apps", true),
-							"configuration_for_code_apps": cspConfigurationSchema("code-first apps", false),
+							"configuration":               cspConfigurationSchema("model-driven apps"),
+							"configuration_for_canvas":    cspConfigurationSchema("canvas apps"),
+							"configuration_for_code_apps": cspCodeAppsConfigurationSchema("code-first apps"),
 						},
 					},
 					"advanced_connector_policies": schema.SingleNestedAttribute{
@@ -155,8 +155,8 @@ func (r *environmentGroupRuleBasedPolicyResource) Schema(ctx context.Context, re
 	}
 }
 
-func cspConfigurationSchema(appType string, includeStrictCsp bool) schema.SingleNestedAttribute {
-	attrs := map[string]schema.Attribute{
+func cspDirectiveSchemaAttributes() map[string]schema.Attribute {
+	return map[string]schema.Attribute{
 		"img_src": schema.ListAttribute{
 			MarkdownDescription: "Allowed sources for images (`img-src` directive)",
 			Optional:            true,
@@ -198,20 +198,29 @@ func cspConfigurationSchema(appType string, includeStrictCsp bool) schema.Single
 			ElementType:         types.StringType,
 		},
 	}
+}
 
-	if includeStrictCsp {
-		attrs["strict_csp"] = schema.BoolAttribute{
-			MarkdownDescription: fmt.Sprintf("When `true`, enables strict Content Security Policy enforcement for %s. This contributes to the computed `ContentSecurityPolicyOptions` value sent to the API.", appType),
-			Optional:            true,
-			Computed:            true,
-			Default:             booldefault.StaticBool(false),
-		}
+func cspConfigurationSchema(appType string) schema.SingleNestedAttribute {
+	attrs := cspDirectiveSchemaAttributes()
+	attrs["strict_csp"] = schema.BoolAttribute{
+		MarkdownDescription: fmt.Sprintf("When `true`, enables strict Content Security Policy enforcement for %s. This contributes to the computed `ContentSecurityPolicyOptions` value sent to the API.", appType),
+		Optional:            true,
+		Computed:            true,
+		Default:             booldefault.StaticBool(false),
 	}
 
 	return schema.SingleNestedAttribute{
 		MarkdownDescription: fmt.Sprintf("CSP directive configuration for %s. Each attribute is a list of allowed source URIs.", appType),
 		Optional:            true,
 		Attributes:          attrs,
+	}
+}
+
+func cspCodeAppsConfigurationSchema(appType string) schema.SingleNestedAttribute {
+	return schema.SingleNestedAttribute{
+		MarkdownDescription: fmt.Sprintf("CSP directive configuration for %s. Each attribute is a list of allowed source URIs.", appType),
+		Optional:            true,
+		Attributes:          cspDirectiveSchemaAttributes(),
 	}
 }
 
@@ -231,7 +240,7 @@ func (r *environmentGroupRuleBasedPolicyResource) Configure(ctx context.Context,
 		)
 		return
 	}
-	r.RuleBasedPolicyClient = NewRuleBasedPolicyClient(providerClient.Api)
+	r.RuleBasedPolicyClient = newRuleBasedPolicyClient(providerClient.Api)
 }
 
 func (r *environmentGroupRuleBasedPolicyResource) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
