@@ -1,0 +1,5 @@
+kind: added
+body: '`powerplatform_environment` and `powerplatform_environments` adding `allow_microsoft_365_services` and `allow_flex_routing` attributes'
+time: 2026-08-06T11:18:56.718626657Z
+custom:
+    Issue: "1209"
