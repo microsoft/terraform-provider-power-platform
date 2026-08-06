@@ -73,7 +73,7 @@ type GenerativeAiFeaturesDto struct {
 type GenerativeAiFeaturesPropertiesDto struct {
 	CopilotPolicies *CopilotPoliciesDto `json:"copilotPolicies,omitempty"`
 	BingChatEnabled bool                `json:"bingChatEnabled"`
-	M365Enabled     bool                `json:"m365Enabled,omitempty"`
+	M365Enabled     bool                `json:"m365Enabled"`
 }
 
 type CopilotPoliciesDto struct {

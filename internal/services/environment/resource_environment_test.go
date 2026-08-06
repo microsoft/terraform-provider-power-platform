@@ -4,6 +4,7 @@
 package environment_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"net/http"
@@ -1983,6 +1984,146 @@ func TestUnitEnvironmentsResource_Validate_Create_No_Dataverse(t *testing.T) {
 					resource.TestCheckNoResourceAttr("powerplatform_environment.development", "dataverse.version"),
 					resource.TestCheckNoResourceAttr("powerplatform_environment.development", "dataverse.unique_name"),
 				),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_Update_Microsoft_365_Services(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	microsoft365ServicesEnabled := true
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			responseFile := "get_environment_enabled.json"
+			if !microsoft365ServicesEnabled {
+				responseFile = "get_environment_disabled.json"
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Microsoft_365_Services/"+responseFile).String()), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/environments?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Microsoft_365_Services/get_lifecycle.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy&api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/b03e1e6d-73db-4367-90e1-2e378bf7e2fc?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("PATCH", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2021-04-01",
+		func(req *http.Request) (*http.Response, error) {
+			var body struct {
+				Properties struct {
+					M365Enabled *bool `json:"m365Enabled"`
+				} `json:"properties"`
+			}
+			if err := json.NewDecoder(req.Body).Decode(&body); err != nil {
+				return nil, err
+			}
+			// the value must always be serialized, otherwise the service cannot be turned off
+			if body.Properties.M365Enabled == nil {
+				t.Errorf("expected 'm365Enabled' to be present in the generative ai features request body")
+				return httpmock.NewStringResponse(http.StatusBadRequest, ""), nil
+			}
+			microsoft365ServicesEnabled = *body.Properties.M365Enabled
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/([\d-]+)\z`,
+		func(req *http.Request) (*http.Response, error) {
+			resp := httpmock.NewStringResponse(http.StatusAccepted, "")
+			resp.Header.Add("Location", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01")
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://europe.api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/lifecycleOperations/00000000-0000-0000-0000-000000000001?api-version=2023-06-01",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/Validate_Update_Microsoft_365_Services/get_lifecycle_delete.json").String()), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					description                               = "description"
+					cadence								      = "Moderate"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					allow_bing_search                         = true
+					allow_microsoft_365_services              = true
+					allow_moving_data_across_regions          = true
+				}`,
+
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
+				),
+			},
+			{
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					description                               = "description"
+					cadence								      = "Moderate"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					allow_bing_search                         = true
+					allow_microsoft_365_services              = false
+					allow_moving_data_across_regions          = true
+				}`,
+
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_bing_search", "true"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_microsoft_365_services", "false"),
+					resource.TestCheckResourceAttr("powerplatform_environment.development", "allow_moving_data_across_regions", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitEnvironmentsResource_Validate_Microsoft_365_Services_Requires_Moving_Data_Across_Regions(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				ExpectError: regexp.MustCompile(".*to enable ai generative features, moving data across regions must be enabled.*"),
+				Config: `
+				resource "powerplatform_environment" "development" {
+					display_name                              = "displayname"
+					location                                  = "europe"
+					environment_type                          = "Sandbox"
+					allow_microsoft_365_services              = true
+					allow_moving_data_across_regions          = false
+				}`,
+
+				Check: resource.ComposeTestCheckFunc(),
 			},
 		},
 	})

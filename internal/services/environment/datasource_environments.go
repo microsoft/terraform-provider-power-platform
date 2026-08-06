@@ -147,8 +147,8 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 							MarkdownDescription: "Allow Bing search in the environment",
 							Computed:            true,
 						},
-						"allow_m365_enabled": schema.BoolAttribute{
-							MarkdownDescription: "Allow M365 in the environment",
+						"allow_microsoft_365_services": schema.BoolAttribute{
+							MarkdownDescription: "Allows users in the environment to use features powered by Microsoft 365 services. When enabled, data is sent to Microsoft 365 services that operate outside of the Azure compliance boundary and are governed by the Microsoft 365 terms. When disabled, features powered by Microsoft 365 services are unavailable. See [Microsoft 365 services in Power Platform](https://go.microsoft.com/fwlink/?linkid=2302907) for more information.",
 							Computed:            true,
 						},
 						"allow_moving_data_across_regions": schema.BoolAttribute{
