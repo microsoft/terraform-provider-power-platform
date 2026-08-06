@@ -6,6 +6,7 @@ package environment_group_rule_based_policy
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -52,9 +53,9 @@ type ruleBasedPolicyRequestDto struct {
 }
 
 type ruleSetDto struct {
-	Id      string                 `json:"id"`
-	Version string                 `json:"version"`
-	Inputs  map[string]interface{} `json:"inputs"`
+	Id      string         `json:"id"`
+	Version string         `json:"version"`
+	Inputs  map[string]any `json:"inputs"`
 }
 
 type ruleAssignmentDto struct {
@@ -70,7 +71,7 @@ type ruleAssignmentsResponseDto struct {
 }
 
 type policyAssignmentRequestDto struct {
-	AssignmentOverrides []interface{} `json:"assignmentOverrides"`
+	AssignmentOverrides []any `json:"assignmentOverrides"`
 }
 
 type removeRuleRequestDto struct {
@@ -116,7 +117,7 @@ func convertModelToDto(ctx context.Context, model environmentGroupRuleBasedPolic
 		ruleSet := ruleSetDto{
 			Id:      ADVANCED_CONNECTOR_POLICIES_ONLY_ID,
 			Version: ADVANCED_CONNECTOR_POLICIES_VERSION,
-			Inputs: map[string]interface{}{
+			Inputs: map[string]any{
 				ENABLE_ADVANCED_CONNECTOR_POLICIES_KEY: advancedConnector.Enabled.ValueBool(),
 			},
 		}
@@ -259,7 +260,7 @@ func convertAdvancedConnectorPoliciesDtoToModel(ruleSets []ruleSetDto) (basetype
 	return types.ObjectType{AttrTypes: attrType}, types.ObjectValueMust(attrType, attrValue), nil
 }
 
-// CSP configuration DTO types for JSON serialization
+// CSP configuration DTO types for JSON serialization.
 type cspConfigurationDto struct {
 	ImgSrc        *cspDirectiveDto `json:"Img-Src,omitempty"`
 	StyleSrc      *cspDirectiveDto `json:"Style-Src,omitempty"`
@@ -324,7 +325,7 @@ func convertContentSecurityPolicyModelToDto(ctx context.Context, objectValue bas
 	canvasStrict := getStrictCspFromConfig(ctx, csp.ConfigurationForCanvas)
 	options := calculateCspOptions(modelDrivenStrict, canvasStrict)
 
-	inputs := map[string]interface{}{
+	inputs := map[string]any{
 		CSP_IS_ENABLED_KEY:               csp.Enabled.ValueBool(),
 		CSP_IS_ENABLED_FOR_CANVAS_KEY:    csp.EnabledForCanvas.ValueBool(),
 		CSP_IS_ENABLED_FOR_CODE_APPS_KEY: csp.EnabledForCodeApps.ValueBool(),
@@ -385,7 +386,7 @@ func getStrictCspFromConfig(_ context.Context, configObj types.Object) bool {
 }
 
 // calculateCspOptions computes the ContentSecurityPolicyOptions integer from strict_csp flags.
-// model-driven strict only = 1, canvas strict only = 8, both = 9, neither = 0
+// model-driven strict only = 1, canvas strict only = 8, both = 9, neither = 0.
 func calculateCspOptions(modelDrivenStrict, canvasStrict bool) int64 {
 	var options int64
 	if modelDrivenStrict {
@@ -614,7 +615,7 @@ func convertConnectorManagementModelToDto(ctx context.Context, objectValue baset
 	attrs := objectValue.Attributes()
 	connListAttr, ok := attrs["allowed_connectors"]
 	if !ok {
-		return ruleSetDto{}, fmt.Errorf("missing allowed_connectors attribute")
+		return ruleSetDto{}, errors.New("missing allowed_connectors attribute")
 	}
 
 	connList, ok := connListAttr.(types.List)
@@ -622,7 +623,7 @@ func convertConnectorManagementModelToDto(ctx context.Context, objectValue baset
 		return ruleSetDto{
 			Id:      CONNECTOR_MANAGEMENT_ID,
 			Version: CONNECTOR_MANAGEMENT_VERSION,
-			Inputs:  map[string]interface{}{CONNECTOR_MANAGEMENT_ALLOWED_LIST_KEY: []allowedConnectorDto{}},
+			Inputs:  map[string]any{CONNECTOR_MANAGEMENT_ALLOWED_LIST_KEY: []allowedConnectorDto{}},
 		}, nil
 	}
 
@@ -683,7 +684,7 @@ func convertConnectorManagementModelToDto(ctx context.Context, objectValue baset
 	return ruleSetDto{
 		Id:      CONNECTOR_MANAGEMENT_ID,
 		Version: CONNECTOR_MANAGEMENT_VERSION,
-		Inputs:  map[string]interface{}{CONNECTOR_MANAGEMENT_ALLOWED_LIST_KEY: dtoList},
+		Inputs:  map[string]any{CONNECTOR_MANAGEMENT_ALLOWED_LIST_KEY: dtoList},
 	}, nil
 }
 
@@ -711,8 +712,8 @@ func convertConnectorManagementDtoToModel(ruleSets []ruleSetDto) (basetypes.Obje
 		}), nil
 	}
 
-	// rawList is []interface{} from JSON unmarshalling
-	rawSlice, ok := rawList.([]interface{})
+	// rawList is []any from JSON unmarshalling
+	rawSlice, ok := rawList.([]any)
 	if !ok {
 		emptyList, _ := types.ListValue(types.ObjectType{AttrTypes: allowedConnectorAttrTypes()}, []attr.Value{})
 		return objType, types.ObjectValueMust(attrTypes, map[string]attr.Value{
@@ -724,7 +725,7 @@ func convertConnectorManagementDtoToModel(ruleSets []ruleSetDto) (basetypes.Obje
 	connectorElems := make([]attr.Value, 0, len(rawSlice))
 
 	for _, raw := range rawSlice {
-		entry, ok := raw.(map[string]interface{})
+		entry, ok := raw.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -750,7 +751,7 @@ func convertConnectorManagementDtoToModel(ruleSets []ruleSetDto) (basetypes.Obje
 
 		var allowedActionsList types.List
 		if actionsMode == actionsModeSomeAllowed {
-			if rawActions, ok := entry["AllowedActions"].([]interface{}); ok {
+			if rawActions, ok := entry["AllowedActions"].([]any); ok {
 				actionElems := make([]attr.Value, 0, len(rawActions))
 				for _, a := range rawActions {
 					if s, ok := a.(string); ok {

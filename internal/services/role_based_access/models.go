@@ -71,9 +71,3 @@ type roleDefinitionsDataSourceModel struct {
 	Timeouts        timeouts.Value `tfsdk:"timeouts"`
 	RoleDefinitions types.List     `tfsdk:"role_definitions"`
 }
-
-type roleDefinitionModel struct {
-	RoleDefinitionId   types.String `tfsdk:"role_definition_id"`
-	RoleDefinitionName types.String `tfsdk:"role_definition_name"`
-	Permissions        types.List   `tfsdk:"permissions"`
-}
