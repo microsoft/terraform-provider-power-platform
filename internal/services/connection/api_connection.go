@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
@@ -29,6 +30,19 @@ type client struct {
 }
 
 func (client *client) CreateConnection(ctx context.Context, environmentId, connectorName string, connectionToCreate createDto) (*connectionDto, error) {
+	return client.createConnectionWithRetry(ctx, environmentId, connectorName, connectionToCreate, 0)
+}
+
+// isEnvironmentNotYetVisible reports whether the connectivity service does not know about the environment yet,
+// which happens for a short period after an environment is provisioned.
+func isEnvironmentNotYetVisible(resp *api.Response) bool {
+	return resp != nil &&
+		resp.HttpResponse != nil &&
+		resp.HttpResponse.StatusCode == http.StatusNotFound &&
+		strings.Contains(string(resp.BodyAsBytes), "ServiceToServiceEnvironmentNotFound")
+}
+
+func (client *client) createConnectionWithRetry(ctx context.Context, environmentId, connectorName string, connectionToCreate createDto, retryCount int) (*connectionDto, error) {
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   helpers.BuildEnvironmentHostUri(environmentId, client.Api.GetConfig().Urls.PowerPlatformUrl),
@@ -40,8 +54,15 @@ func (client *client) CreateConnection(ctx context.Context, environmentId, conne
 	apiUrl.RawQuery = values.Encode()
 
 	connection := connectionDto{}
-	_, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, connectionToCreate, []int{http.StatusCreated}, &connection)
+	resp, err := client.Api.Execute(ctx, nil, "PUT", apiUrl.String(), nil, connectionToCreate, []int{http.StatusCreated}, &connection)
 	if err != nil {
+		if isEnvironmentNotYetVisible(resp) && retryCount < constants.MAX_RETRY_COUNT {
+			tflog.Debug(ctx, fmt.Sprintf("Environment '%s' is not visible to the connectivity service yet. Retrying connection creation (%d/%d)", environmentId, retryCount+1, constants.MAX_RETRY_COUNT))
+			if sleepErr := client.Api.SleepWithContext(ctx, api.DefaultRetryAfter()); sleepErr != nil {
+				return nil, sleepErr
+			}
+			return client.createConnectionWithRetry(ctx, environmentId, connectorName, connectionToCreate, retryCount+1)
+		}
 		return nil, fmt.Errorf("failed to create connection: %w", err)
 	}
 

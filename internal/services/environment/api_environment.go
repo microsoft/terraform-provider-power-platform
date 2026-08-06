@@ -244,6 +244,10 @@ func (client *Client) GetEnvironmentHostById(ctx context.Context, environmentId 
 }
 
 func (client *Client) GetEnvironment(ctx context.Context, environmentId string) (*EnvironmentDto, error) {
+	if environmentId == "" {
+		return nil, errors.New("environment id cannot be empty")
+	}
+
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   client.Api.GetConfig().Urls.BapiUrl,
@@ -257,10 +261,14 @@ func (client *Client) GetEnvironment(ctx context.Context, environmentId string) 
 	env := EnvironmentDto{}
 	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
 	if err != nil {
-		if resp != nil && resp.HttpResponse.StatusCode == http.StatusNotFound {
+		if resp != nil && resp.HttpResponse != nil && resp.HttpResponse.StatusCode == http.StatusNotFound {
 			return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("environment '%s' not found", environmentId))
 		}
 		return nil, err
+	}
+
+	if env.Properties == nil {
+		return nil, fmt.Errorf("environment '%s' response did not contain any properties", environmentId)
 	}
 
 	if env.Properties.LinkedEnvironmentMetadata != nil && env.Properties.LinkedEnvironmentMetadata.SecurityGroupId == "" {
@@ -503,14 +511,16 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 			return nil, err
 		}
 
-		if lifecycleResponse.State.Id == "Succeeded" {
-			parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
-			if len(parts) == 0 {
-				return nil, errors.New("can't parse environment id from response " + lifecycleResponse.Links.Environment.Path)
-			}
-			createdEnvironmentId = parts[len(parts)-1]
-			tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
+		if lifecycleResponse.State.Id != "Succeeded" {
+			return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_CREATION), fmt.Sprintf("environment creation failed. lifecycle state: '%s'", lifecycleResponse.State.Id))
 		}
+
+		parts := strings.Split(lifecycleResponse.Links.Environment.Path, "/")
+		createdEnvironmentId = parts[len(parts)-1]
+		if createdEnvironmentId == "" {
+			return nil, errors.New("can't parse environment id from response " + lifecycleResponse.Links.Environment.Path)
+		}
+		tflog.Debug(ctx, "Created Environment Id: "+createdEnvironmentId)
 
 	case http.StatusCreated:
 		envCreatedResponse := lifecycleCreatedDto{}
@@ -524,6 +534,10 @@ func (client *Client) createEnvironmentWithRetry(ctx context.Context, environmen
 		createdEnvironmentId = envCreatedResponse.Name
 	default:
 		return nil, fmt.Errorf("unexpected HTTP status code: %d", apiResponse.HttpResponse.StatusCode)
+	}
+
+	if createdEnvironmentId == "" {
+		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_ENVIRONMENT_CREATION), "environment creation did not return an environment id")
 	}
 
 	env, err := client.GetEnvironment(ctx, createdEnvironmentId)

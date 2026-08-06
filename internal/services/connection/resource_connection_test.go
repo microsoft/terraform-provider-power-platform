@@ -4,11 +4,13 @@
 package connection_test
 
 import (
+	"fmt"
 	"net/http"
 	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/jarcoal/httpmock"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
@@ -48,7 +50,7 @@ func TestAccConnectionsResource_Validate_Create(t *testing.T) {
 						display_name   = "OpenAI Connection ` + mocks.TestName() + `"
 						connection_parameters = jsonencode({
 							"azureOpenAIResourceName" : "aaa",
-							"azureOpenAIApiKey" : "bbb"
+							"azureOpenAIApiKey" : "bbb",
 							"azureSearchEndpointUrl" : "ccc",
 							"azureSearchApiKey" : "ddd"
 						})
@@ -69,6 +71,71 @@ func TestAccConnectionsResource_Validate_Create(t *testing.T) {
 					resource.TestCheckNoResourceAttr("powerplatform_connection.azure_openai_connection", "connections.0.connection_parameters_set"),
 					resource.TestCheckResourceAttr("powerplatform_connection.azure_openai_connection", "status.#", "1"),
 					resource.TestCheckResourceAttr("powerplatform_connection.azure_openai_connection", "status.0", "Connected"),
+				),
+			},
+		},
+	})
+}
+
+func TestUnitConnectionsResource_Validate_Create_Retry_On_Environment_Not_Found(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	putAttempts := 0
+
+	httpmock.RegisterRegexpResponder("PUT", regexp.MustCompile(`^https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1$`),
+		func(req *http.Request) (*http.Response, error) {
+			putAttempts++
+			if putAttempts <= 2 {
+				return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/resource/connections/Validate_Create_Retry_On_Environment_Not_Found/put_connection_environment_not_found.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusCreated, httpmock.File("tests/resource/connections/Validate_Create_Retry_On_Environment_Not_Found/put_connection.json").String()), nil
+		})
+
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1$`),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/connections/Validate_Create_Retry_On_Environment_Not_Found/put_connection.json").String()), nil
+		})
+
+	httpmock.RegisterRegexpResponder("DELETE", regexp.MustCompile(`^https://000000000000000000000000000000\.00\.environment\.api\.powerplatform\.com/connectivity/connectors/shared_azureopenai/connections/(.*)?%24filter=environment\+eq\+%2700000000-0000-0000-0000-000000000000%27&api-version=1$`),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest: true,
+
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+					resource "powerplatform_connection" "azure_openai_connection" {
+						environment_id = "00000000-0000-0000-0000-000000000000"
+						name           = "shared_azureopenai"
+						display_name   = "OpenAI Connection"
+						connection_parameters = jsonencode({
+							"azureOpenAIResourceName" : "aaa",
+							"azureOpenAIApiKey" : "bbb",
+							"azureSearchEndpointUrl" : "ccc",
+							"azureSearchApiKey" : "ddd"
+						})
+
+						lifecycle {
+							ignore_changes = [
+								connection_parameters
+							]
+						}
+					}
+					`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_connection.azure_openai_connection", "id", "d4e4a6ff9a67492aa1f6de854528668c"),
+					resource.TestCheckResourceAttr("powerplatform_connection.azure_openai_connection", "status.0", "Connected"),
+					func(_ *terraform.State) error {
+						if putAttempts != 3 {
+							return fmt.Errorf("expected 3 connection create attempts, got %d", putAttempts)
+						}
+						return nil
+					},
 				),
 			},
 		},
