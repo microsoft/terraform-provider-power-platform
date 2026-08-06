@@ -460,6 +460,13 @@ func (p *PowerPlatformProvider) DataSources(ctx context.Context) []func() dataso
 		func() datasource.DataSource { return tenant.NewTenantDataSource() },
 		func() datasource.DataSource { return solution_checker_rules.NewSolutionCheckerRulesDataSource() },
 		func() datasource.DataSource { return role_based_access.NewRoleDefinitionsDataSource() },
+		func() datasource.DataSource { return role_based_access.NewRoleBasedAccessAssignmentsDataSource() },
+		func() datasource.DataSource {
+			return role_based_access.NewEnvironmentRoleBasedAccessAssignmentsDataSource()
+		},
+		func() datasource.DataSource {
+			return role_based_access.NewEnvironmentGroupRoleBasedAccessAssignmentsDataSource()
+		},
 	}
 }
 

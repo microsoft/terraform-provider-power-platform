@@ -5,39 +5,73 @@ package role_based_access
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/constants"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/tenant"
 )
 
 const apiVersion = "2024-10-01"
 
+// The RBAC API rejects a freshly created environment or environment group until its id propagates.
+var scopePropagationErrorCodes = []string{"EnvironmentIdInvalid", "EnvironmentGroupIdInvalid"}
+
 func newRoleBasedAccessClient(apiClient *api.Client) client {
 	return client{
-		Api: apiClient,
+		Api:       apiClient,
+		TenantApi: tenant.NewTenantClient(apiClient),
 	}
 }
 
 type client struct {
-	Api *api.Client
+	Api       *api.Client
+	TenantApi tenant.Client
+}
+
+// tenantScope returns the fully qualified tenant scope string required by the RBAC API.
+func (client *client) tenantScope(ctx context.Context) (string, error) {
+	tenantDto, err := client.TenantApi.GetTenant(ctx)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("/tenants/%s", tenantDto.TenantId), nil
 }
 
 // CreateRoleAssignment creates a role assignment at tenant level.
 func (client *client) CreateRoleAssignment(ctx context.Context, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
+	scope, err := client.tenantScope(ctx)
+	if err != nil {
+		return nil, err
+	}
+	request.Scope = scope
 	return client.createRoleAssignmentAtPath(ctx, "/authorization/roleAssignments", request)
 }
 
 // CreateEnvironmentGroupRoleAssignment creates a role assignment for an environment group.
 func (client *client) CreateEnvironmentGroupRoleAssignment(ctx context.Context, environmentGroupId string, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
+	scope, err := client.tenantScope(ctx)
+	if err != nil {
+		return nil, err
+	}
+	request.Scope = fmt.Sprintf("%s/environmentGroups/%s", scope, environmentGroupId)
 	path := fmt.Sprintf("/authorization/environmentGroups/%s/roleAssignments", environmentGroupId)
 	return client.createRoleAssignmentAtPath(ctx, path, request)
 }
 
 // CreateEnvironmentRoleAssignment creates a role assignment for an environment.
 func (client *client) CreateEnvironmentRoleAssignment(ctx context.Context, environmentId string, request roleAssignmentRequestDto) (*roleAssignmentDto, error) {
+	scope, err := client.tenantScope(ctx)
+	if err != nil {
+		return nil, err
+	}
+	request.Scope = fmt.Sprintf("%s/environments/%s", scope, environmentId)
 	path := fmt.Sprintf("/authorization/environments/%s/roleAssignments", environmentId)
 	return client.createRoleAssignmentAtPath(ctx, path, request)
 }
@@ -53,11 +87,34 @@ func (client *client) createRoleAssignmentAtPath(ctx context.Context, path strin
 	apiUrl.RawQuery = values.Encode()
 
 	response := roleAssignmentDto{}
-	_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, request, []int{http.StatusCreated}, &response)
-	if err != nil {
-		return nil, err
+	for {
+		_, err := client.Api.Execute(ctx, nil, "POST", apiUrl.String(), nil, request, []int{http.StatusOK, http.StatusCreated}, &response)
+		if err == nil {
+			return &response, nil
+		}
+		if !isScopeNotYetPropagated(err) {
+			return nil, err
+		}
+
+		waitFor := api.DefaultRetryAfter()
+		tflog.Debug(ctx, fmt.Sprintf("Scope %s is not yet available for role assignments, retrying after %s", request.Scope, waitFor))
+		if sleepErr := client.Api.SleepWithContext(ctx, waitFor); sleepErr != nil {
+			return nil, err
+		}
 	}
-	return &response, nil
+}
+
+func isScopeNotYetPropagated(err error) bool {
+	var httpErr customerrors.UnexpectedHttpStatusCodeError
+	if !errors.As(err, &httpErr) || httpErr.StatusCode != http.StatusBadRequest {
+		return false
+	}
+	for _, code := range scopePropagationErrorCodes {
+		if strings.Contains(string(httpErr.Body), code) {
+			return true
+		}
+	}
+	return false
 }
 
 // ListRoleAssignments lists role assignments at tenant level.
@@ -123,7 +180,7 @@ func (client *client) deleteRoleAssignmentAtPath(ctx context.Context, path strin
 	values.Add("api-version", apiVersion)
 	apiUrl.RawQuery = values.Encode()
 
-	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusNoContent}, nil)
+	_, err := client.Api.Execute(ctx, nil, "DELETE", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNoContent}, nil)
 	return err
 }
 

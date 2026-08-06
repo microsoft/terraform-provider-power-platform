@@ -9,7 +9,7 @@ type roleAssignmentRequestDto struct {
 	PrincipalObjectId string `json:"principalObjectId"`
 	PrincipalType     string `json:"principalType"`
 	RoleDefinitionId  string `json:"roleDefinitionId"`
-	Scope             string `json:"scope,omitempty"`
+	Scope             string `json:"scope"`
 }
 
 type roleAssignmentDto struct {

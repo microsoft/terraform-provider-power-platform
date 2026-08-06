@@ -39,18 +39,18 @@ func TestUnitEnvironmentRoleBasedAccessAssignmentResource_Validate_Create(t *tes
 			{
 				Config: `
 				resource "powerplatform_environment_role_based_access_assignment" "test" {
-					environment_id      = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
-					principal_object_id = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
-					principal_type      = "ApplicationUser"
-					role_definition_id  = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+					environment_id                   = "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"
+					enterprise_application_object_id = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+					principal_type                   = "ApplicationUser"
+					role_definition_id               = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment_role_based_access_assignment.test", "id", "33333333-3333-3333-3333-333333333333"),
 					resource.TestCheckResourceAttr("powerplatform_environment_role_based_access_assignment.test", "environment_id", "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"),
-					resource.TestCheckResourceAttr("powerplatform_environment_role_based_access_assignment.test", "principal_object_id", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+					resource.TestCheckResourceAttr("powerplatform_environment_role_based_access_assignment.test", "enterprise_application_object_id", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
 					resource.TestCheckResourceAttr("powerplatform_environment_role_based_access_assignment.test", "principal_type", "ApplicationUser"),
 					resource.TestCheckResourceAttr("powerplatform_environment_role_based_access_assignment.test", "role_definition_id", "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
-					resource.TestCheckResourceAttr("powerplatform_environment_role_based_access_assignment.test", "scope", "/environments/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"),
+					resource.TestCheckResourceAttr("powerplatform_environment_role_based_access_assignment.test", "scope", "/tenants/00000000-0000-0000-0000-000000000001/environments/eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"),
 					resource.TestCheckResourceAttr("powerplatform_environment_role_based_access_assignment.test", "created_on", "2026-06-22T17:00:00Z"),
 				),
 			},

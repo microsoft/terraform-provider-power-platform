@@ -1,14 +1,14 @@
 {
   "value": [
     {
-      "roleAssignmentId": "11111111-1111-1111-1111-111111111111",
-      "scope": "/tenants/00000000-0000-0000-0000-000000000001",
+      "roleAssignmentId": "44444444-4444-4444-4444-444444444444",
+      "scope": "/environmentGroups/ffffffff-ffff-ffff-ffff-ffffffffffff",
       "principalType": "ApplicationUser",
       "principalObjectId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
       "roleDefinitionId": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
       "createdByPrincipalType": "User",
       "createdByPrincipalObjectId": "cccccccc-cccc-cccc-cccc-cccccccccccc",
-      "createdOn": "2026-06-22T15:09:35Z",
+      "createdOn": "2026-06-22T17:00:00Z",
       "expiresOn": null
     }
   ]

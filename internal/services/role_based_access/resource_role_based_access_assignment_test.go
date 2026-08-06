@@ -39,16 +39,16 @@ func TestUnitRoleBasedAccessAssignmentResource_Validate_Create(t *testing.T) {
 			{
 				Config: `
 				resource "powerplatform_role_based_access_assignment" "test" {
-					principal_object_id = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
-					principal_type      = "ApplicationUser"
-					role_definition_id  = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+					enterprise_application_object_id = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+					principal_type                   = "ApplicationUser"
+					role_definition_id               = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_role_based_access_assignment.test", "id", "11111111-1111-1111-1111-111111111111"),
-					resource.TestCheckResourceAttr("powerplatform_role_based_access_assignment.test", "principal_object_id", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+					resource.TestCheckResourceAttr("powerplatform_role_based_access_assignment.test", "enterprise_application_object_id", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
 					resource.TestCheckResourceAttr("powerplatform_role_based_access_assignment.test", "principal_type", "ApplicationUser"),
 					resource.TestCheckResourceAttr("powerplatform_role_based_access_assignment.test", "role_definition_id", "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
-					resource.TestCheckResourceAttr("powerplatform_role_based_access_assignment.test", "scope", "/tenants/99999999-9999-9999-9999-999999999999"),
+					resource.TestCheckResourceAttr("powerplatform_role_based_access_assignment.test", "scope", "/tenants/00000000-0000-0000-0000-000000000001"),
 					resource.TestCheckResourceAttr("powerplatform_role_based_access_assignment.test", "created_on", "2026-06-22T15:09:35Z"),
 				),
 			},

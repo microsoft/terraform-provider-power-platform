@@ -39,18 +39,18 @@ func TestUnitEnvironmentGroupRoleBasedAccessAssignmentResource_Validate_Create(t
 			{
 				Config: `
 				resource "powerplatform_environment_group_role_based_access_assignment" "test" {
-					environment_group_id = "dddddddd-dddd-dddd-dddd-dddddddddddd"
-					principal_object_id  = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
-					principal_type       = "ApplicationUser"
-					role_definition_id   = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+					environment_group_id             = "dddddddd-dddd-dddd-dddd-dddddddddddd"
+					enterprise_application_object_id = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+					principal_type                   = "ApplicationUser"
+					role_definition_id               = "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
 				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "id", "22222222-2222-2222-2222-222222222222"),
 					resource.TestCheckResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "environment_group_id", "dddddddd-dddd-dddd-dddd-dddddddddddd"),
-					resource.TestCheckResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "principal_object_id", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "enterprise_application_object_id", "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
 					resource.TestCheckResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "principal_type", "ApplicationUser"),
 					resource.TestCheckResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "role_definition_id", "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
-					resource.TestCheckResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "scope", "/environmentGroups/dddddddd-dddd-dddd-dddd-dddddddddddd"),
+					resource.TestCheckResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "scope", "/tenants/00000000-0000-0000-0000-000000000001/environmentGroups/dddddddd-dddd-dddd-dddd-dddddddddddd"),
 					resource.TestCheckResourceAttr("powerplatform_environment_group_role_based_access_assignment.test", "created_on", "2026-06-22T16:00:00Z"),
 				),
 			},
