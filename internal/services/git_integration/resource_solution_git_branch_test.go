@@ -34,22 +34,22 @@ func TestUnitSolutionGitBranchResource_Validate_Create_And_Update(t *testing.T) 
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.2/solutions\?.*solutionid\+eq\+33333333-3333-3333-3333-333333333333.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"solutionid":"33333333-3333-3333-3333-333333333333","uniquename":"sample_solution","friendlyname":"Sample Solution","ismanaged":false,"isvisible":true,"enabledforsourcecontrolintegration":false,"version":"1.0.0.0"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_solution_33333333.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/organizations(\?.*)?$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationid":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","orgdborgsettings":"<OrgSettings><SourceControlIntegrationScope>SolutionScope</SourceControlIntegrationScope></OrgSettings>"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_organizations_solution_scope.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/gitbranches\?%24filter=.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo","branchname":"main"},{"organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo","branchname":"develop"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_gitbranches_main_develop.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/gitrepositories\?%24filter=.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo","defaultbranch":"refs/heads/main"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_gitrepositories.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolconfigurations%2811111111-1111-1111-1111-111111111111%29$`),
@@ -84,38 +84,38 @@ func TestUnitSolutionGitBranchResource_Validate_Create_And_Update(t *testing.T) 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolbranchconfigurations\?partitionId=33333333-3333-3333-3333-333333333333$`),
 		func(req *http.Request) (*http.Response, error) {
 			if !createdBranch {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_empty_value_list.json").String()), nil
 			}
 
 			if deletedBranch {
 				deleteReadCount++
 				if deleteReadCount == 1 {
-					return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"sourcecontrolbranchconfigurationid":"22222222-2222-2222-2222-222222222222","partitionid":"33333333-3333-3333-3333-333333333333","statuscode":1}]}`), nil
+					return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_sourcecontrolbranchconfigurations_33333333_inactive.json").String()), nil
 				}
 
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_empty_value_list.json").String()), nil
 			}
 
 			if !updatedBranch {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"sourcecontrolbranchconfigurationid":"22222222-2222-2222-2222-222222222222","name":"33333333-3333-3333-3333-333333333333","partitionid":"33333333-3333-3333-3333-333333333333","branchname":"main","upstreambranchname":"main","rootfolderpath":"solutions/sample-solution","branchsyncedcommitid":"abc123","upstreambranchsyncedcommitid":"abc123","statuscode":0,"_sourcecontrolconfigurationid_value":"11111111-1111-1111-1111-111111111111"}]}`), nil
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_sourcecontrolbranchconfigurations_33333333_1.json").String()), nil
 			}
 
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"sourcecontrolbranchconfigurationid":"22222222-2222-2222-2222-222222222222","name":"33333333-3333-3333-3333-333333333333","partitionid":"33333333-3333-3333-3333-333333333333","branchname":"develop","upstreambranchname":"main","rootfolderpath":"solutions/sample-solution-updated","branchsyncedcommitid":"def456","upstreambranchsyncedcommitid":"def456","statuscode":0,"_sourcecontrolconfigurationid_value":"11111111-1111-1111-1111-111111111111"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_sourcecontrolbranchconfigurations_33333333_2.json").String()), nil
 		},
 	)
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/sourcecontrolbranchconfigurations?partitionId=00000000-0000-0000-0000-000000000000",
 		func(req *http.Request) (*http.Response, error) {
 			if !rootBranchCreated {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_empty_value_list.json").String()), nil
 			}
 
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"sourcecontrolbranchconfigurationid":"44444444-4444-4444-4444-444444444444","partitionid":"00000000-0000-0000-0000-000000000000","branchname":"main","upstreambranchname":"main","rootfolderpath":"dataverse","branchsyncedcommitid":"abc123","upstreambranchsyncedcommitid":"abc123","statuscode":0,"_sourcecontrolconfigurationid_value":"11111111-1111-1111-1111-111111111111"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_sourcecontrolbranchconfigurations_root.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/PreValidateGitComponents",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"ValidationMessages":""}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/post_prevalidategitcomponents.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("PATCH", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolbranchconfigurations%28sourcecontrolbranchconfigurationid=22222222-2222-2222-2222-222222222222,partitionid=%2733333333-3333-3333-3333-333333333333%27%29$`),
@@ -202,29 +202,29 @@ func TestUnitSolutionGitBranchResource_Validate_Delete_When_Parent_Environment_I
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001\?%24expand=permissions%2Cproperties\.capacity%2Cproperties%2FbillingPolicy(%2Cproperties%2FcopilotPolicies)?&api-version=2023-06-01$`),
 		func(req *http.Request) (*http.Response, error) {
 			if environmentDeleted {
-				return httpmock.NewStringResponse(http.StatusNotFound, `{"error":{"code":"EnvironmentNotFound","message":"environment not found"}}`), nil
+				return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/shared/error_environment_not_found.json").String()), nil
 			}
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.2/solutions\?.*solutionid\+eq\+33333333-3333-3333-3333-333333333333.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"solutionid":"33333333-3333-3333-3333-333333333333","uniquename":"sample_solution","friendlyname":"Sample Solution","ismanaged":false,"isvisible":true,"enabledforsourcecontrolintegration":false,"version":"1.0.0.0"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_solution_33333333.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/organizations(\?.*)?$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationid":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","orgdborgsettings":"<OrgSettings><SourceControlIntegrationScope>SolutionScope</SourceControlIntegrationScope></OrgSettings>"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_organizations_solution_scope.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/gitbranches\?%24filter=.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo","branchname":"main"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_gitbranches_main.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/gitrepositories\?%24filter=.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo","defaultbranch":"refs/heads/main"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_gitrepositories.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolconfigurations%2811111111-1111-1111-1111-111111111111%29$`),
@@ -259,22 +259,22 @@ func TestUnitSolutionGitBranchResource_Validate_Delete_When_Parent_Environment_I
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolbranchconfigurations\?partitionId=33333333-3333-3333-3333-333333333333$`),
 		func(req *http.Request) (*http.Response, error) {
 			if !createdBranch {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_empty_value_list.json").String()), nil
 			}
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"sourcecontrolbranchconfigurationid":"22222222-2222-2222-2222-222222222222","name":"33333333-3333-3333-3333-333333333333","partitionid":"33333333-3333-3333-3333-333333333333","branchname":"main","upstreambranchname":"main","rootfolderpath":"solutions/sample-solution","branchsyncedcommitid":"abc123","upstreambranchsyncedcommitid":"abc123","statuscode":0,"_sourcecontrolconfigurationid_value":"11111111-1111-1111-1111-111111111111"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_sourcecontrolbranchconfigurations_33333333_1.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/sourcecontrolbranchconfigurations?partitionId=00000000-0000-0000-0000-000000000000",
 		func(req *http.Request) (*http.Response, error) {
 			if !rootBranchCreated {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_empty_value_list.json").String()), nil
 			}
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"sourcecontrolbranchconfigurationid":"44444444-4444-4444-4444-444444444444","partitionid":"00000000-0000-0000-0000-000000000000","branchname":"main","upstreambranchname":"main","rootfolderpath":"dataverse","branchsyncedcommitid":"abc123","upstreambranchsyncedcommitid":"abc123","statuscode":0,"_sourcecontrolconfigurationid_value":"11111111-1111-1111-1111-111111111111"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_sourcecontrolbranchconfigurations_root.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/PreValidateGitComponents",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"ValidationMessages":""}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/post_prevalidategitcomponents.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -333,12 +333,12 @@ func TestUnitSolutionGitBranchResource_Validate_ScopeMismatch(t *testing.T) {
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.2/solutions\?.*solutionid\+eq\+33333333-3333-3333-3333-333333333333.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"solutionid":"33333333-3333-3333-3333-333333333333","uniquename":"sample_solution","friendlyname":"Sample Solution","ismanaged":false,"isvisible":true,"enabledforsourcecontrolintegration":false,"version":"1.0.0.0"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_solution_33333333.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/organizations(\?.*)?$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationid":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","orgdborgsettings":"<OrgSettings><SourceControlIntegrationScope>EnvironmentScope</SourceControlIntegrationScope></OrgSettings>"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_organizations_environment_scope.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolconfigurations%2811111111-1111-1111-1111-111111111111%29$`),
@@ -379,12 +379,12 @@ func TestUnitSolutionGitBranchResource_Validate_DuplicateBinding(t *testing.T) {
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.2/solutions\?.*solutionid\+eq\+33333333-3333-3333-3333-333333333333.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"solutionid":"33333333-3333-3333-3333-333333333333","uniquename":"sample_solution","friendlyname":"Sample Solution","ismanaged":false,"isvisible":true,"enabledforsourcecontrolintegration":false,"version":"1.0.0.0"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_solution_33333333.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/organizations(\?.*)?$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationid":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","orgdborgsettings":"<OrgSettings><SourceControlIntegrationScope>SolutionScope</SourceControlIntegrationScope></OrgSettings>"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_organizations_solution_scope.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolconfigurations%2811111111-1111-1111-1111-111111111111%29$`),
@@ -394,12 +394,12 @@ func TestUnitSolutionGitBranchResource_Validate_DuplicateBinding(t *testing.T) {
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/gitbranches\?%24filter=.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo","branchname":"main"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_gitbranches_main.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolbranchconfigurations\?partitionId=33333333-3333-3333-3333-333333333333$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"sourcecontrolbranchconfigurationid":"22222222-2222-2222-2222-222222222222","name":"33333333-3333-3333-3333-333333333333","partitionid":"33333333-3333-3333-3333-333333333333","branchname":"main","upstreambranchname":"main","rootfolderpath":"solutions/sample-solution","_sourcecontrolconfigurationid_value":"11111111-1111-1111-1111-111111111111"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/solution_git_branch/get_sourcecontrolbranchconfigurations_33333333_duplicate.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{

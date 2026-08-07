@@ -1,0 +1,16 @@
+{
+  "value": [
+    {
+      "organizationname": "example-org",
+      "projectname": "example-project",
+      "repositoryname": "example-repo",
+      "branchname": "main"
+    },
+    {
+      "organizationname": "example-org",
+      "projectname": "example-project",
+      "repositoryname": "example-repo",
+      "branchname": "develop"
+    }
+  ]
+}

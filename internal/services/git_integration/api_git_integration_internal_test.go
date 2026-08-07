@@ -28,27 +28,16 @@ func TestUnitDeleteSolutionGitBranch_UsesLookedUpBranchID(t *testing.T) {
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001\?%24expand=permissions%2Cproperties\.capacity%2Cproperties%2FbillingPolicy(%2Cproperties%2FcopilotPolicies)?&api-version=2023-06-01$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-				"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
-				"name": "00000000-0000-0000-0000-000000000001",
-				"type": "Microsoft.BusinessAppPlatform/scopes/admin/environments",
-				"location": "europe",
-				"properties": {
-					"displayName": "Test",
-					"linkedEnvironmentMetadata": {
-						"instanceUrl": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"
-					}
-				}
-			}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/api/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/sourcecontrolbranchconfigurations?partitionId=33333333-3333-3333-3333-333333333333",
 		func(req *http.Request) (*http.Response, error) {
 			if deleted {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_empty_value_list.json").String()), nil
 			}
 
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"sourcecontrolbranchconfigurationid":"22222222-2222-2222-2222-222222222222","partitionid":"33333333-3333-3333-3333-333333333333","statuscode":0,"_sourcecontrolconfigurationid_value":"11111111-1111-1111-1111-111111111111"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/api/get_sourcecontrolbranchconfigurations_33333333.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("PATCH", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolbranchconfigurations%28sourcecontrolbranchconfigurationid=22222222-2222-2222-2222-222222222222,partitionid=%2733333333-3333-3333-3333-333333333333%27%29$`),
@@ -81,23 +70,12 @@ func TestUnitGetSourceControlIntegrationScope_RejectsUnknownScope(t *testing.T) 
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001\?%24expand=permissions%2Cproperties\.capacity%2Cproperties%2FbillingPolicy(%2Cproperties%2FcopilotPolicies)?&api-version=2023-06-01$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-				"id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
-				"name": "00000000-0000-0000-0000-000000000001",
-				"type": "Microsoft.BusinessAppPlatform/scopes/admin/environments",
-				"location": "europe",
-				"properties": {
-					"displayName": "Test",
-					"linkedEnvironmentMetadata": {
-						"instanceUrl": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/"
-					}
-				}
-			}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/api/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/organizations?%24select=organizationid%2Corgdborgsettings",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationid":"44444444-4444-4444-4444-444444444444","orgdborgsettings":"<OrgSettings><SourceControlIntegrationScope>BrokenScope</SourceControlIntegrationScope></OrgSettings>"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/api/get_organizations_broken_scope.json").String()), nil
 		})
 
 	cfg := &config.ProviderConfig{

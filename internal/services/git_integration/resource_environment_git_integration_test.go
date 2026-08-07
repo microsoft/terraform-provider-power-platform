@@ -39,46 +39,58 @@ func TestUnitEnvironmentGitIntegrationResource_Validate_Create_And_Update(t *tes
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/gitorganizations",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_gitorganizations.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/organizations(\?.*)?$`),
 		func(req *http.Request) (*http.Response, error) {
 			if !updatedConfiguration {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationid":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","orgdborgsettings":"<OrgSettings><SourceControlIntegrationScope>SolutionScope</SourceControlIntegrationScope></OrgSettings>"}]}`), nil
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_organizations_solution_scope.json").String()), nil
 			}
 
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationid":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","orgdborgsettings":"<OrgSettings><SourceControlIntegrationScope>EnvironmentScope</SourceControlIntegrationScope></OrgSettings>"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_organizations_environment_scope.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/gitprojects\?%24filter=%28organizationname\+eq\+%27example-org%27%29$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org","projectname":"example-project"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_gitprojects.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/gitrepositories\?%24filter=.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo","defaultbranch":"refs/heads/main"},{"organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo-updated","defaultbranch":"refs/heads/main"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_gitrepositories_with_updated.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.2/solutions\?.*ismanaged\+eq\+false.*isvisible\+eq\+true.*enabledforsourcecontrolintegration.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{"value":[
-{"solutionid":"00000001-0000-0000-0001-00000000009b","uniquename":"common-default","friendlyname":"Common Data Services Default Solution","ismanaged":false,"isvisible":true,"enabledforsourcecontrolintegration":false},
-{"solutionid":"fd140aaf-4df4-11dd-bd17-0019b9312238","uniquename":"Default","friendlyname":"Default Solution","ismanaged":false,"isvisible":true,"enabledforsourcecontrolintegration":false},
-{"solutionid":"33333333-3333-3333-3333-333333333333","uniquename":"solution-one","friendlyname":"solution-one","ismanaged":false,"isvisible":true,"enabledforsourcecontrolintegration":%t},
-{"solutionid":"44444444-4444-4444-4444-444444444444","uniquename":"solution-two","friendlyname":"solution-two","ismanaged":false,"isvisible":true,"enabledforsourcecontrolintegration":%t}
-]}`, environmentScopeEnabled["33333333-3333-3333-3333-333333333333"], environmentScopeEnabled["44444444-4444-4444-4444-444444444444"])), nil
+			// Solutions are enabled sequentially in list order, so the payload
+			// progresses from none enabled, to solution-one enabled, to all enabled.
+			switch {
+			case environmentScopeEnabled["33333333-3333-3333-3333-333333333333"] && environmentScopeEnabled["44444444-4444-4444-4444-444444444444"]:
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_solutions_3.json").String()), nil
+			case environmentScopeEnabled["33333333-3333-3333-3333-333333333333"]:
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_solutions_2.json").String()), nil
+			default:
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_solutions_1.json").String()), nil
+			}
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.2/solutions\?.*solutionid\+eq\+33333333-3333-3333-3333-333333333333.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{"value":[{"solutionid":"33333333-3333-3333-3333-333333333333","uniquename":"solution-one","friendlyname":"solution-one","ismanaged":false,"isvisible":true,"enabledforsourcecontrolintegration":%t,"version":"1.0.0.0"}]}`, environmentScopeEnabled["33333333-3333-3333-3333-333333333333"])), nil
+			if !environmentScopeEnabled["33333333-3333-3333-3333-333333333333"] {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_solution_33333333_1.json").String()), nil
+			}
+
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_solution_33333333_2.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.2/solutions\?.*solutionid\+eq\+44444444-4444-4444-4444-444444444444.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{"value":[{"solutionid":"44444444-4444-4444-4444-444444444444","uniquename":"solution-two","friendlyname":"solution-two","ismanaged":false,"isvisible":true,"enabledforsourcecontrolintegration":%t,"version":"1.0.0.0"}]}`, environmentScopeEnabled["44444444-4444-4444-4444-444444444444"])), nil
+			if !environmentScopeEnabled["44444444-4444-4444-4444-444444444444"] {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_solution_44444444_1.json").String()), nil
+			}
+
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_solution_44444444_2.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/sourcecontrolconfigurations",
@@ -89,14 +101,14 @@ func TestUnitEnvironmentGitIntegrationResource_Validate_Create_And_Update(t *tes
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/sourcecontrolconfigurations",
 		func(req *http.Request) (*http.Response, error) {
 			if configurationImplicitlyDeleted {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_empty_value_list.json").String()), nil
 			}
 
 			if !updatedConfiguration {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"sourcecontrolconfigurationid":"11111111-1111-1111-1111-111111111111","organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo","gitprovider":0}]}`), nil
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_sourcecontrolconfigurations_1.json").String()), nil
 			}
 
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"sourcecontrolconfigurationid":"11111111-1111-1111-1111-111111111111","organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo-updated","gitprovider":0}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_sourcecontrolconfigurations_2.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/sourcecontrolbranchconfigurations",
@@ -158,34 +170,27 @@ func TestUnitEnvironmentGitIntegrationResource_Validate_Create_And_Update(t *tes
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolconfigurations%28[0-9a-f-]{36}%29$`),
 		func(req *http.Request) (*http.Response, error) {
 			if configurationImplicitlyDeleted {
-				return httpmock.NewStringResponse(http.StatusNotFound, `{"error":{"code":"0x80040217","message":"source control configuration not found"}}`), nil
+				return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/resource/environment_git_integration/error_sourcecontrolconfiguration_not_found.json").String()), nil
 			}
 
 			if !updatedConfiguration {
 				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_sourcecontrolconfiguration_1.json").String()), nil
 			}
 
-			return httpmock.NewStringResponse(http.StatusOK, `{
-				"sourcecontrolconfigurationid":"11111111-1111-1111-1111-111111111111",
-				"name":"",
-				"organizationname":"example-org",
-				"projectname":"example-project",
-				"repositoryname":"example-repo-updated",
-				"gitprovider":0
-			}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_sourcecontrolconfiguration_2.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/sourcecontrolbranchconfigurations?partitionId=00000000-0000-0000-0000-000000000000",
 		func(req *http.Request) (*http.Response, error) {
 			if !rootBranchCreated {
-				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_empty_value_list.json").String()), nil
 			}
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"sourcecontrolbranchconfigurationid":"22222222-2222-2222-2222-222222222222","partitionid":"00000000-0000-0000-0000-000000000000","branchname":"main","upstreambranchname":"main","rootfolderpath":"dataverse","branchsyncedcommitid":"abc123","upstreambranchsyncedcommitid":"abc123","statuscode":0,"_sourcecontrolconfigurationid_value":"11111111-1111-1111-1111-111111111111"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_sourcecontrolbranchconfigurations_root.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/PreValidateGitComponents",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"ValidationMessages":""}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/post_prevalidategitcomponents.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("PATCH", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolbranchconfigurations%28sourcecontrolbranchconfigurationid=22222222-2222-2222-2222-222222222222,partitionid=%2700000000-0000-0000-0000-000000000000%27%29$`),
@@ -197,7 +202,7 @@ func TestUnitEnvironmentGitIntegrationResource_Validate_Create_And_Update(t *tes
 	httpmock.RegisterRegexpResponder("DELETE", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolconfigurations%2811111111-1111-1111-1111-111111111111%29$`),
 		func(req *http.Request) (*http.Response, error) {
 			configurationImplicitlyDeleted = true
-			return httpmock.NewStringResponse(http.StatusBadRequest, `{"error":{"code":"0x80040265","message":"Existing source control configurations can't be deleted."}}`), nil
+			return httpmock.NewStringResponse(http.StatusBadRequest, httpmock.File("tests/resource/environment_git_integration/error_sourcecontrolconfiguration_delete_conflict.json").String()), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -289,29 +294,29 @@ func TestUnitEnvironmentGitIntegrationResource_Validate_Delete_When_Parent_Envir
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001\?%24expand=permissions%2Cproperties\.capacity%2Cproperties%2FbillingPolicy(%2Cproperties%2FcopilotPolicies)?&api-version=2023-06-01$`),
 		func(req *http.Request) (*http.Response, error) {
 			if environmentDeleted {
-				return httpmock.NewStringResponse(http.StatusNotFound, `{"error":{"code":"EnvironmentNotFound","message":"environment not found"}}`), nil
+				return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/shared/error_environment_not_found.json").String()), nil
 			}
 			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/gitorganizations",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_gitorganizations.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/organizations(\?.*)?$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationid":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","orgdborgsettings":"<OrgSettings><SourceControlIntegrationScope>SolutionScope</SourceControlIntegrationScope></OrgSettings>"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_organizations_solution_scope.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/gitprojects\?%24filter=%28organizationname\+eq\+%27example-org%27%29$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org","projectname":"example-project"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_gitprojects.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/gitrepositories\?%24filter=.*$`),
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo","defaultbranch":"refs/heads/main"}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_gitrepositories.json").String()), nil
 		})
 
 	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/sourcecontrolconfigurations",
@@ -321,7 +326,7 @@ func TestUnitEnvironmentGitIntegrationResource_Validate_Delete_When_Parent_Envir
 
 	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/sourcecontrolconfigurations",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"sourcecontrolconfigurationid":"11111111-1111-1111-1111-111111111111","organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo","gitprovider":0}]}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_sourcecontrolconfigurations_1.json").String()), nil
 		})
 
 	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolconfigurations%28[0-9a-f-]{36}%29$`),

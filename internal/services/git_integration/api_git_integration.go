@@ -21,9 +21,9 @@ import (
 )
 
 const (
-	sourceControlBranchConfigurationStatusActive   = 0
-	sourceControlBranchConfigurationStatusInactive = 1
-	stabilizedReadCountRequired                    = 2
+	SourceControlBranchConfigurationStatusActive   = 0
+	SourceControlBranchConfigurationStatusInactive = 1
+	StabilizedReadCountRequired                    = 2
 )
 
 func newGitIntegrationClient(apiClient *api.Client) client {
@@ -125,7 +125,7 @@ func (c *client) WaitForEnvironmentGitIntegrationReady(ctx context.Context, envi
 			stableReads = 0
 		} else {
 			stableReads++
-			if stableReads >= stabilizedReadCountRequired {
+			if stableReads >= StabilizedReadCountRequired {
 				return configuration, nil
 			}
 		}
@@ -144,7 +144,7 @@ func (c *client) EnsureRootBranchConfiguration(ctx context.Context, environmentI
 
 	existingBranch, err := c.lookupAnySolutionGitBranchByPartition(ctx, environmentID, configurationID, rootPartitionID)
 	if err == nil {
-		if existingBranch.StatusCode == sourceControlBranchConfigurationStatusActive &&
+		if existingBranch.StatusCode == SourceControlBranchConfigurationStatusActive &&
 			strings.EqualFold(existingBranch.BranchName, defaultBranch) &&
 			strings.EqualFold(existingBranch.UpstreamBranchName, defaultBranch) &&
 			strings.EqualFold(existingBranch.RootFolderPath, rootFolderPath) {
@@ -152,7 +152,7 @@ func (c *client) EnsureRootBranchConfiguration(ctx context.Context, environmentI
 			return err
 		}
 
-		if existingBranch.StatusCode == sourceControlBranchConfigurationStatusActive {
+		if existingBranch.StatusCode == SourceControlBranchConfigurationStatusActive {
 			_, err = c.UpdateSolutionGitBranch(ctx, environmentID, existingBranch.ID, configurationID, rootPartitionID, updateSourceControlBranchConfigurationDto{
 				BranchName:         defaultBranch,
 				UpstreamBranchName: defaultBranch,
@@ -359,7 +359,7 @@ func (c *client) waitForBranchConfigurationState(ctx context.Context, environmen
 				strings.EqualFold(branch.UpstreamBranchName, upstreamBranchName) &&
 				strings.EqualFold(branch.RootFolderPath, rootFolder) &&
 				strings.EqualFold(branch.SourceControlConfiguration, configurationID) &&
-				branch.StatusCode == sourceControlBranchConfigurationStatusActive &&
+				branch.StatusCode == SourceControlBranchConfigurationStatusActive &&
 				branch.BranchSyncedCommitID != "" &&
 				branch.UpstreamBranchSyncedCommit != "" {
 				if uniqueName != "" {
@@ -374,7 +374,7 @@ func (c *client) waitForBranchConfigurationState(ctx context.Context, environmen
 				}
 
 				stableReads++
-				if stableReads >= stabilizedReadCountRequired {
+				if stableReads >= StabilizedReadCountRequired {
 					return branch, nil
 				}
 			} else {
@@ -423,7 +423,7 @@ func (c *client) DeleteSolutionGitBranch(ctx context.Context, environmentID, con
 		return err
 	}
 
-	if existingBranch.StatusCode == sourceControlBranchConfigurationStatusInactive {
+	if existingBranch.StatusCode == SourceControlBranchConfigurationStatusInactive {
 		return c.waitForSolutionGitBranchRemoval(ctx, environmentID, existingBranch.ID, configurationID, partitionID)
 	}
 
@@ -436,7 +436,7 @@ func (c *client) DeleteSolutionGitBranch(ctx context.Context, environmentID, con
 	headers := http.Header{}
 	headers.Set("If-Match", "*")
 	resp, err := c.Api.Execute(ctx, nil, http.MethodPatch, apiURL, headers, disableSourceControlBranchConfigurationDto{
-		StatusCode: sourceControlBranchConfigurationStatusInactive,
+		StatusCode: SourceControlBranchConfigurationStatusInactive,
 	}, []int{http.StatusNoContent, http.StatusNotFound, http.StatusForbidden}, nil)
 	if err != nil {
 		return err
@@ -486,7 +486,7 @@ func (c *client) lookupActiveSolutionGitBranchByPartition(ctx context.Context, e
 	}
 
 	for _, branch := range branches {
-		if strings.EqualFold(branch.SourceControlConfiguration, configurationID) && branch.StatusCode == sourceControlBranchConfigurationStatusActive {
+		if strings.EqualFold(branch.SourceControlConfiguration, configurationID) && branch.StatusCode == SourceControlBranchConfigurationStatusActive {
 			return &branch, nil
 		}
 	}
@@ -736,7 +736,7 @@ func (c *client) waitForEnvironmentScopeSolutionEnabled(ctx context.Context, env
 			}
 			if preValidated {
 				stableReads++
-				if stableReads >= stabilizedReadCountRequired {
+				if stableReads >= StabilizedReadCountRequired {
 					return nil
 				}
 			} else {

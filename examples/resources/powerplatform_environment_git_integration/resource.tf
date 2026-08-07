@@ -19,23 +19,23 @@ provider "powerplatform" {
 # enables eligible visible unmanaged solutions in the environment. Built-in
 # platform solutions are excluded automatically.
 resource "powerplatform_environment" "example" {
-  display_name     = var.environment_display_name
+  display_name     = "example-git-integration-environment"
   description      = "Example environment for validating Dataverse Git integration."
-  location         = var.location
-  azure_region     = var.azure_region
+  location         = "europe"
+  azure_region     = "northeurope"
   environment_type = "Sandbox"
   dataverse = {
     language_code     = "1033"
     currency_code     = "USD"
-    security_group_id = var.security_group_id
+    security_group_id = "00000000-0000-0000-0000-000000000000"
   }
 }
 
 resource "powerplatform_environment_git_integration" "example" {
   environment_id    = powerplatform_environment.example.id
-  git_provider      = var.git_provider
-  scope             = var.scope
-  organization_name = var.organization_name
-  project_name      = var.project_name
-  repository_name   = var.repository_name
+  git_provider      = "AzureDevOps"
+  scope             = "Environment"
+  organization_name = "contoso-org"
+  project_name      = "PowerPlatform Solutions"
+  repository_name   = "power-platform-solutions"
 }

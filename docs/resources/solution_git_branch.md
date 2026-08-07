@@ -18,17 +18,11 @@ Known limitation: the underlying Power Platform Git integration bootstrap curren
 ```terraform
 terraform {
   required_providers {
-    local = {
-      source  = "hashicorp/local"
-      version = "2.6.2"
-    }
     powerplatform = {
       source = "microsoft/power-platform"
     }
   }
 }
-
-provider "local" {}
 
 provider "powerplatform" {
   use_cli = true
@@ -38,74 +32,27 @@ provider "powerplatform" {
 # user principal authentication that also has Azure DevOps repository access.
 # Service principal, app-only, and OIDC pipeline identities are not supported.
 
-resource "local_file" "solution_settings_file" {
-  filename = "${path.module}/solution_settings.json"
-  content  = <<EOF
-{
-  "EnvironmentVariables": [
-    {
-      "SchemaName": "cra6e_SolutionVariableDataSource",
-      "Value": "/sites/Shared Documents"
-    },
-    {
-      "SchemaName": "cra6e_SolutionVariableJson",
-      "Value": "{ \"value\": 1234, \"text\": \"abc\" }"
-    },
-    {
-      "SchemaName": "cra6e_SolutionVariableText",
-      "Value": "${powerplatform_environment.example.id}"
-    }
-  ],
-  "ConnectionReferences": [
-    {
-      "LogicalName": "cra6e_ConnectionReferenceSharePoint",
-      "ConnectionId": "00000000-0000-0000-0000-000000000000",
-      "ConnectorId": "/providers/Microsoft.PowerApps/apis/shared_sharepointonline"
-    }
-  ]
-}
-EOF
-}
-
-resource "powerplatform_environment" "example" {
-  display_name     = var.environment_display_name
-  description      = "Example environment for validating Dataverse Git branch bindings."
-  location         = var.location
-  azure_region     = var.azure_region
-  environment_type = "Sandbox"
-  dataverse = {
-    language_code     = "1033"
-    currency_code     = "USD"
-    security_group_id = var.security_group_id
-  }
-}
-
-resource "powerplatform_solution" "example" {
-  environment_id = powerplatform_environment.example.id
-  solution_file  = coalesce(var.solution_file, "${path.module}/../powerplatform_solution/TerraformTestSolution_Complex_1_1_0_0.zip")
-  settings_file  = local_file.solution_settings_file.filename
-}
-
+# The environment Git integration must use `scope = "Solution"` so that
+# individual solutions can be bound to Git branches.
 resource "powerplatform_environment_git_integration" "example" {
-  count = var.enable_git_binding ? 1 : 0
-
-  environment_id    = powerplatform_environment.example.id
-  git_provider      = var.git_provider
-  scope             = var.scope
-  organization_name = var.organization_name
-  project_name      = var.project_name
-  repository_name   = var.repository_name
+  environment_id    = "00000000-0000-0000-0000-000000000001"
+  git_provider      = "AzureDevOps"
+  scope             = "Solution"
+  organization_name = "contoso-org"
+  project_name      = "PowerPlatform Solutions"
+  repository_name   = "power-platform-solutions"
 }
 
+# `solution_id` uses the provider solution ID format
+# (`<environment_id>_<dataverse_solution_id>`) of an existing unmanaged
+# solution in the same environment, such as the `id` of a
+# `powerplatform_solution` resource.
 resource "powerplatform_solution_git_branch" "example" {
-  count = var.enable_git_binding ? 1 : 0
-
-  environment_id       = powerplatform_environment.example.id
-  git_integration_id   = powerplatform_environment_git_integration.example[0].id
-  solution_id          = powerplatform_solution.example.id
-  branch_name          = var.branch_name
-  upstream_branch_name = var.upstream_branch_name
-  root_folder_path     = var.root_folder_path
+  environment_id     = "00000000-0000-0000-0000-000000000001"
+  git_integration_id = powerplatform_environment_git_integration.example.id
+  solution_id        = "00000000-0000-0000-0000-000000000001_22222222-2222-2222-2222-222222222222"
+  branch_name        = "main"
+  root_folder_path   = "solutions/sample-solution"
 }
 ```
 
@@ -148,5 +95,5 @@ The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/c
 ```shell
 # Solution Git branch resources can be imported using environment_id/git_integration_id/solution_id
 # The final segment can be either the raw Dataverse solution id or the provider-formatted powerplatform_solution.id
-terraform import powerplatform_solution_git_branch.example 00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111/00000000-0000-0000-0000-000000000000_22222222-2222-2222-2222-222222222222
+terraform import powerplatform_solution_git_branch.example 00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111/22222222-2222-2222-2222-222222222222
 ```
