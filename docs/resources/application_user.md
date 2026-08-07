@@ -3,12 +3,12 @@
 page_title: "powerplatform_application_user Resource - Power Platform"
 subcategory: ""
 description: |-
-  Creates a Dataverse application user for a Microsoft Entra service principal within an environment using the Dataverse systemusers API. The user is created as a non-interactive application user (accessmode = 4). Dataverse security-role assignment is managed separately.
+  Manages the unique active Dataverse application user for a Microsoft Entra service principal within an environment using the Dataverse systemusers API. Create adopts an existing active user with the same environment and application id, or creates a non-interactive application user (accessmode = 4) when absent. Adoption fails on multiple active matches or an explicitly configured business-unit mismatch, and reconciles the requested disabled state. Dataverse security-role assignment is managed separately.
 ---
 
 # powerplatform_application_user (Resource)
 
-Creates a Dataverse application user for a Microsoft Entra service principal within an environment using the Dataverse `systemusers` API. The user is created as a non-interactive application user (`accessmode = 4`). Dataverse security-role assignment is managed separately.
+Manages the unique active Dataverse application user for a Microsoft Entra service principal within an environment using the Dataverse `systemusers` API. Create adopts an existing active user with the same environment and application id, or creates a non-interactive application user (`accessmode = 4`) when absent. Adoption fails on multiple active matches or an explicitly configured business-unit mismatch, and reconciles the requested disabled state. Dataverse security-role assignment is managed separately.
 
 ## Example Usage
 
@@ -30,6 +30,7 @@ resource "powerplatform_application_user" "example" {
 ### Optional
 
 - `business_unit_id` (String) Business unit ID for the application user. Defaults to the root business unit when omitted.
+- `disabled` (Boolean) Whether the Dataverse application user is disabled. Defaults to `false` and is actively reconciled by the resource.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only

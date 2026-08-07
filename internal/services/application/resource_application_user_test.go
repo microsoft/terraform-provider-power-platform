@@ -233,6 +233,9 @@ func TestUnitEnvironmentApplicationUserResource_RecreatesDeletedUser(t *testing.
 
 	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
+			if createCount == 0 {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			}
 			body := fmt.Sprintf(`{"systemuserid":"%s","applicationid":"%s","fullname":"Example Application User","_businessunitid_value":"%s","isdisabled":false,"deletedstate":%d,"systemuserroles_association":[]}`,
 				currentSystemUserID, applicationID, rootBusinessID, boolToDeletedState(userDeleted))
 
@@ -412,7 +415,7 @@ func TestUnitEnvironmentApplicationUserResource_Read_NotFound(t *testing.T) {
 	})
 }
 
-func TestUnitEnvironmentApplicationUserResource_CreateAlreadyExists(t *testing.T) {
+func TestUnitEnvironmentApplicationUserResource_CreateAdoptsExistingAndReconcilesDisabled(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
@@ -422,6 +425,9 @@ func TestUnitEnvironmentApplicationUserResource_CreateAlreadyExists(t *testing.T
 		systemUserID   = "00000000-0000-0000-0000-000000000008"
 		businessUnitID = "00000000-0000-0000-0000-000000000003"
 	)
+	postAttempts := 0
+	patchAttempts := 0
+	userDisabled := true
 
 	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
 		func(req *http.Request) (*http.Response, error) {
@@ -436,14 +442,33 @@ func TestUnitEnvironmentApplicationUserResource_CreateAlreadyExists(t *testing.T
 
 	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers$`,
 		func(req *http.Request) (*http.Response, error) {
+			postAttempts++
 			return httpmock.NewStringResponse(http.StatusBadRequest, `{"error":{"message":"A record with matching applicationid already exists."}}`), nil
 		})
 
 	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
 		func(req *http.Request) (*http.Response, error) {
-			body := fmt.Sprintf(`{"value":[{"systemuserid":"%s","applicationid":"%s","fullname":"Existing Application User","_businessunitid_value":"%s","isdisabled":false,"systemuserroles_association":[]}]}`,
-				systemUserID, applicationID, businessUnitID)
-			return httpmock.NewStringResponse(http.StatusOK, body), nil
+			row := fmt.Sprintf(`{"systemuserid":"%s","applicationid":"%s","fullname":"Existing Application User","_businessunitid_value":"%s","isdisabled":%t,"deletedstate":0,"systemuserroles_association":[]}`,
+				systemUserID, applicationID, businessUnitID, userDisabled)
+			if strings.Contains(req.URL.Path, "/systemusers("+systemUserID+")") || strings.Contains(req.URL.RawPath, "/systemusers%28"+systemUserID+"%29") {
+				return httpmock.NewStringResponse(http.StatusOK, row), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{"value":[%s]}`, row)), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			patchAttempts++
+			userDisabled = false
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+	httpmock.RegisterResponder("PATCH", `=~^https://test-env.crm.dynamics.com/api/data/v9.0/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
 		})
 
 	resource.Test(t, resource.TestCase{
@@ -457,10 +482,117 @@ func TestUnitEnvironmentApplicationUserResource_CreateAlreadyExists(t *testing.T
 					application_id = "` + applicationID + `"
 				}
 				`,
-				ExpectError: regexp.MustCompile(`(?s)already exists.*cannot adopt existing application users during create`),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_application_user.test", "id", systemUserID),
+					resource.TestCheckResourceAttr("powerplatform_application_user.test", "system_user_id", systemUserID),
+					resource.TestCheckResourceAttr("powerplatform_application_user.test", "business_unit_id", businessUnitID),
+					resource.TestCheckResourceAttr("powerplatform_application_user.test", "disabled", "false"),
+				),
 			},
 		},
 	})
+	if postAttempts != 0 {
+		t.Fatalf("existing application user should be adopted without POST; observed %d create attempt(s)", postAttempts)
+	}
+	if patchAttempts < 1 {
+		t.Fatal("adopted disabled state was not reconciled")
+	}
+}
+
+func TestUnitEnvironmentApplicationUserResource_CreateFailsOnAmbiguousActiveUsers(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const (
+		environmentID  = "00000000-0000-0000-0000-000000000001"
+		applicationID  = "00000000-0000-0000-0000-000000000002"
+		businessUnitID = "00000000-0000-0000-0000-000000000003"
+	)
+	postAttempts := 0
+
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{"value":[
+				{"systemuserid":"00000000-0000-0000-0000-000000000008","applicationid":"%s","_businessunitid_value":"%s","isdisabled":false,"deletedstate":0,"systemuserroles_association":[]},
+				{"systemuserid":"00000000-0000-0000-0000-000000000009","applicationid":"%s","_businessunitid_value":"%s","isdisabled":false,"deletedstate":0,"systemuserroles_association":[]}
+			]}`, applicationID, businessUnitID, applicationID, businessUnitID)), nil
+		})
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers$`,
+		func(req *http.Request) (*http.Response, error) {
+			postAttempts++
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{{
+			Config: `
+			resource "powerplatform_application_user" "test" {
+				environment_id = "` + environmentID + `"
+				application_id = "` + applicationID + `"
+			}
+			`,
+			ExpectError: regexp.MustCompile(`(?s)multiple active application\s+users found.*00000000-0000-0000-0000-000000000008.*00000000-0000-0000-0000-000000000009`),
+		}},
+	})
+	if postAttempts != 0 {
+		t.Fatalf("ambiguous application users must fail before POST; observed %d create attempt(s)", postAttempts)
+	}
+}
+
+func TestUnitEnvironmentApplicationUserResource_AdoptionFailureNeverDeletesExistingUser(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const (
+		environmentID  = "00000000-0000-0000-0000-000000000001"
+		applicationID  = "00000000-0000-0000-0000-000000000002"
+		systemUserID   = "00000000-0000-0000-0000-000000000008"
+		businessUnitID = "00000000-0000-0000-0000-000000000003"
+	)
+	deleteAttempts := 0
+
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			row := fmt.Sprintf(`{"systemuserid":"%s","applicationid":"%s","_businessunitid_value":"%s","isdisabled":true,"deletedstate":0,"systemuserroles_association":[]}`,
+				systemUserID, applicationID, businessUnitID)
+			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{"value":[%s]}`, row)), nil
+		})
+	httpmock.RegisterResponder("PATCH", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusBadRequest, `{"error":{"message":"reconciliation failed"}}`), nil
+		})
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			deleteAttempts++
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{{
+			Config: `
+			resource "powerplatform_application_user" "test" {
+				environment_id = "` + environmentID + `"
+				application_id = "` + applicationID + `"
+			}
+			`,
+			ExpectError: regexp.MustCompile(`(?s)Failed to reconcile disabled state for adopted application user.*pre-existing application user was not deleted`),
+		}},
+	})
+	if deleteAttempts != 0 {
+		t.Fatalf("failed adoption must never delete the pre-existing user; observed %d delete attempt(s)", deleteAttempts)
+	}
 }
 
 func TestUnitEnvironmentApplicationUserResource_CreatePurgesDeletedConflict(t *testing.T) {

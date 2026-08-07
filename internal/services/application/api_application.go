@@ -137,19 +137,33 @@ func (client *client) GetApplicationUser(ctx context.Context, environmentId stri
 		return nil, err
 	}
 
+	active := make([]applicationUserDto, 0, len(users))
 	for _, user := range users {
-		if user.DeletedState != 0 {
-			continue
+		if user.DeletedState == 0 {
+			active = append(active, user)
 		}
-
-		sort.Slice(user.SecurityRoles, func(i, j int) bool {
-			return user.SecurityRoles[i].RoleId < user.SecurityRoles[j].RoleId
-		})
-
-		return &user, nil
 	}
 
-	return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("application user '%s' not found in environment '%s'", applicationId, environmentId))
+	switch len(active) {
+	case 0:
+		return nil, customerrors.WrapIntoProviderError(nil, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("application user '%s' not found in environment '%s'", applicationId, environmentId))
+	case 1:
+		sort.Slice(active[0].SecurityRoles, func(i, j int) bool {
+			return active[0].SecurityRoles[i].RoleId < active[0].SecurityRoles[j].RoleId
+		})
+		return &active[0], nil
+	default:
+		ids := make([]string, 0, len(active))
+		for _, user := range active {
+			ids = append(ids, user.SystemUserId)
+		}
+		sort.Strings(ids)
+		return nil, fmt.Errorf(
+			"multiple active application users found for application '%s' in environment '%s': %s",
+			applicationId,
+			environmentId,
+			strings.Join(ids, ", "))
+	}
 }
 
 func (client *client) getApplicationUsersByApplicationId(ctx context.Context, environmentId string, applicationId string) ([]applicationUserDto, error) {

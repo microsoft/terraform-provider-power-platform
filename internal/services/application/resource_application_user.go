@@ -51,8 +51,9 @@ func (r *ApplicationUserResource) Schema(ctx context.Context, req resource.Schem
 	defer exitContext()
 
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Creates a Dataverse application user for a Microsoft Entra service principal within an environment using the Dataverse `systemusers` API. " +
-			"The user is created as a non-interactive application user (`accessmode = 4`). Dataverse security-role assignment is managed separately.",
+		MarkdownDescription: "Manages the unique active Dataverse application user for a Microsoft Entra service principal within an environment using the Dataverse `systemusers` API. " +
+			"Create adopts an existing active user with the same environment and application id, or creates a non-interactive application user (`accessmode = 4`) when absent. " +
+			"Adoption fails on multiple active matches or an explicitly configured business-unit mismatch, and reconciles the requested disabled state. Dataverse security-role assignment is managed separately.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,
@@ -154,21 +155,12 @@ func (r *ApplicationUserResource) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	businessUnitID := plan.BusinessUnitId.ValueString()
-	if businessUnitID == "" {
-		businessUnitID, err = r.ApplicationClient.GetRootBusinessUnitId(ctx, plan.EnvironmentId.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError(
-				fmt.Sprintf("Failed to resolve root business unit for environment '%s'", plan.EnvironmentId.ValueString()),
-				err.Error(),
-			)
-			return
-		}
-	}
-
-	user, err := r.ApplicationClient.CreateScopedApplicationUser(ctx, plan.EnvironmentId.ValueString(), plan.ApplicationId.ValueString(), businessUnitID)
+	user, created, err := r.resolveApplicationUserForCreate(ctx, &plan)
 	if err != nil {
-		r.addCreateFailureDiagnostics(ctx, resp, plan.EnvironmentId.ValueString(), plan.ApplicationId.ValueString(), err)
+		resp.Diagnostics.AddError(
+			fmt.Sprintf("Failed to create or adopt application user '%s' in environment '%s'", plan.ApplicationId.ValueString(), plan.EnvironmentId.ValueString()),
+			err.Error(),
+		)
 		return
 	}
 
@@ -182,14 +174,21 @@ func (r *ApplicationUserResource) Create(ctx context.Context, req resource.Creat
 			desiredDisabled,
 		)
 		if err != nil {
-			r.addCreateFailureWithCleanupDiagnostics(
-				ctx,
-				resp,
-				plan.EnvironmentId.ValueString(),
-				user.SystemUserId,
-				fmt.Sprintf("Failed to reconcile disabled state for application user '%s'", plan.ApplicationId.ValueString()),
-				err,
-			)
+			if created {
+				r.addCreateFailureWithCleanupDiagnostics(
+					ctx,
+					resp,
+					plan.EnvironmentId.ValueString(),
+					user.SystemUserId,
+					fmt.Sprintf("Failed to reconcile disabled state for application user '%s'", plan.ApplicationId.ValueString()),
+					err,
+				)
+			} else {
+				resp.Diagnostics.AddError(
+					fmt.Sprintf("Failed to reconcile disabled state for adopted application user '%s'", plan.ApplicationId.ValueString()),
+					fmt.Sprintf("%s\n\nThe pre-existing application user was not deleted.", err.Error()),
+				)
+			}
 			return
 		}
 	}
@@ -202,30 +201,64 @@ func (r *ApplicationUserResource) Create(ctx context.Context, req resource.Creat
 	stateDiags := resp.State.Set(ctx, &plan)
 	resp.Diagnostics.Append(stateDiags...)
 	if resp.Diagnostics.HasError() {
-		r.addCreateFailureWithCleanupDiagnostics(ctx, resp, plan.EnvironmentId.ValueString(), user.SystemUserId, fmt.Sprintf("Failed to persist state for application user '%s'", plan.ApplicationId.ValueString()), errors.New("terraform state update failed after remote application user creation"))
+		if created {
+			r.addCreateFailureWithCleanupDiagnostics(ctx, resp, plan.EnvironmentId.ValueString(), user.SystemUserId, fmt.Sprintf("Failed to persist state for application user '%s'", plan.ApplicationId.ValueString()), errors.New("terraform state update failed after remote application user creation"))
+		}
 		return
 	}
 }
 
-func (r *ApplicationUserResource) addCreateFailureDiagnostics(ctx context.Context, resp *resource.CreateResponse, environmentID, applicationID string, err error) {
-	exists, existsErr := r.ApplicationClient.ApplicationUserExists(ctx, environmentID, applicationID)
-	if existsErr == nil && exists {
-		resp.Diagnostics.AddError(
-			fmt.Sprintf("Application user '%s' already exists in environment '%s'", applicationID, environmentID),
-			fmt.Sprintf("Terraform cannot adopt existing application users during create. Import it instead with '%s/%s'. Original create error: %s", environmentID, applicationID, err.Error()),
-		)
-		return
+func (r *ApplicationUserResource) resolveApplicationUserForCreate(ctx context.Context, plan *ApplicationUserResourceModel) (*applicationUserDto, bool, error) {
+	environmentID := plan.EnvironmentId.ValueString()
+	applicationID := plan.ApplicationId.ValueString()
+	existing, err := r.ApplicationClient.GetApplicationUser(ctx, environmentID, applicationID)
+	if err == nil {
+		if configuredBusinessUnitID := plan.BusinessUnitId.ValueString(); configuredBusinessUnitID != "" && !strings.EqualFold(configuredBusinessUnitID, existing.BusinessUnitId) {
+			return nil, false, fmt.Errorf(
+				"existing application user '%s' belongs to business unit '%s', but business_unit_id is configured as '%s'",
+				existing.SystemUserId,
+				existing.BusinessUnitId,
+				configuredBusinessUnitID)
+		}
+		return existing, false, nil
+	}
+	if !errors.Is(err, customerrors.ErrObjectNotFound) {
+		return nil, false, fmt.Errorf("failed to inspect existing application users: %w", err)
 	}
 
-	detail := err.Error()
-	if existsErr != nil {
-		detail = fmt.Sprintf("%s\n\nAn additional existence check failed: %s", detail, existsErr.Error())
+	configuredBusinessUnitID := plan.BusinessUnitId.ValueString()
+	businessUnitID := configuredBusinessUnitID
+	if businessUnitID == "" {
+		businessUnitID, err = r.ApplicationClient.GetRootBusinessUnitId(ctx, environmentID)
+		if err != nil {
+			return nil, false, fmt.Errorf("failed to resolve root business unit: %w", err)
+		}
 	}
 
-	resp.Diagnostics.AddError(
-		fmt.Sprintf("Failed to create application user '%s' in environment '%s'", applicationID, environmentID),
-		detail,
-	)
+	created, createErr := r.ApplicationClient.CreateScopedApplicationUser(ctx, environmentID, applicationID, businessUnitID)
+	if createErr == nil {
+		return created, true, nil
+	}
+
+	// A concurrent graph or a pre-existing row discovered only after Dataverse's
+	// uniqueness response can still converge by the same semantic identity. The
+	// read remains ambiguity-aware and never adopts deleted rows.
+	existing, lookupErr := r.ApplicationClient.GetApplicationUser(ctx, environmentID, applicationID)
+	if lookupErr == nil {
+		if configuredBusinessUnitID != "" && !strings.EqualFold(configuredBusinessUnitID, existing.BusinessUnitId) {
+			return nil, false, fmt.Errorf(
+				"create failed and the existing application user '%s' belongs to business unit '%s', not requested business unit '%s': %w",
+				existing.SystemUserId,
+				existing.BusinessUnitId,
+				configuredBusinessUnitID,
+				createErr)
+		}
+		return existing, false, nil
+	}
+	if !errors.Is(lookupErr, customerrors.ErrObjectNotFound) {
+		return nil, false, fmt.Errorf("%w\n\nAn additional adoption lookup failed: %s", createErr, lookupErr.Error())
+	}
+	return nil, false, createErr
 }
 
 func (r *ApplicationUserResource) addCreateFailureWithCleanupDiagnostics(ctx context.Context, resp *resource.CreateResponse, environmentID, systemUserID, summary string, err error) {
