@@ -250,6 +250,16 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 
 	hasEnvDataverse, err := r.UserClient.EnvironmentHasDataverse(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		// For ambiguous errors, check whether the parent environment still exists.
+		_, envErr := r.UserClient.environmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
+		if errors.Is(envErr, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 		return
 	}
@@ -263,25 +273,37 @@ func (r *UserResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 				resp.State.RemoveResource(ctx)
 				return
 			}
+			// For ambiguous errors, check whether the parent environment still exists.
+			_, envErr := r.UserClient.environmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
+			if errors.Is(envErr, customerrors.ErrObjectNotFound) {
+				resp.State.RemoveResource(ctx)
+				return
+			}
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 			return
 		}
 		updateUser = *user
 	} else {
 		user, err := r.UserClient.GetEnvironmentUserByAadObjectId(ctx, state.EnvironmentId.ValueString(), state.AadId.ValueString())
-		// if all the security roles are removed, the user will not be found
-		if user.AadObjectId == "" {
-			user.AadObjectId = state.AadId.ValueString()
-			user.DomainName = state.UserPrincipalName.ValueString()
-		}
-
 		if err != nil {
 			if errors.Is(err, customerrors.ErrObjectNotFound) {
 				resp.State.RemoveResource(ctx)
 				return
 			}
+			// For ambiguous errors, check whether the parent environment still exists.
+			_, envErr := r.UserClient.environmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
+			if errors.Is(envErr, customerrors.ErrObjectNotFound) {
+				resp.State.RemoveResource(ctx)
+				return
+			}
 			resp.Diagnostics.AddError(fmt.Sprintf("Client error when reading %s", r.FullTypeName()), err.Error())
 			return
+		}
+		// if all the security roles are removed, the user will not be found in the role assignments response
+		if user.AadObjectId == "" {
+			user.Id = state.AadId.ValueString()
+			user.AadObjectId = state.AadId.ValueString()
+			user.DomainName = state.UserPrincipalName.ValueString()
 		}
 
 		rolesBytes, err := json.Marshal(user.SecurityRoles)
@@ -439,6 +461,10 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 
 	hasEnvDataverse, err := r.UserClient.EnvironmentHasDataverse(ctx, state.EnvironmentId.ValueString())
 	if err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
@@ -473,6 +499,7 @@ func (r *UserResource) Delete(ctx context.Context, req resource.DeleteRequest, r
 			return
 		}
 	}
+	resp.State.RemoveResource(ctx)
 	tflog.Debug(ctx, fmt.Sprintf("DELETE RESOURCE END: %s", r.FullTypeName()))
 }
 

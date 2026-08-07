@@ -1,0 +1,5 @@
+kind: fixed
+body: Preserve dataverse security group updates when updating existing environments
+time: 2026-04-07T20:20:00.000000000Z
+custom:
+    Issue: "1130"

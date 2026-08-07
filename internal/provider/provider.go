@@ -6,8 +6,9 @@ package provider
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"os"
+
+	"github.com/google/uuid"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore/cloud"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -33,6 +34,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/copilot_studio_application_insights"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/currencies"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/data_record"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/disaster_recovery"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/dlp_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/enterprise_policy"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
@@ -419,6 +421,7 @@ func (p *PowerPlatformProvider) Resources(ctx context.Context) []func() resource
 		},
 		func() resource.Resource { return application.NewEnvironmentApplicationAdminResource() },
 		func() resource.Resource { return tenant_isolation_policy.NewTenantIsolationPolicyResource() },
+		func() resource.Resource { return disaster_recovery.NewDisasterRecoveryResource() },
 	}
 }
 
