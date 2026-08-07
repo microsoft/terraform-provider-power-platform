@@ -217,7 +217,11 @@ func (client *Client) validateSolutionImportResult(ctx context.Context, environm
 		return err
 	}
 	if response.SolutionOperationResult.Status != "Passed" {
-		return fmt.Errorf("solution import failed: %s", response.SolutionOperationResult.ErrorMessages...)
+		messages := make([]string, 0, len(response.SolutionOperationResult.ErrorMessages))
+		for _, message := range response.SolutionOperationResult.ErrorMessages {
+			messages = append(messages, fmt.Sprint(message))
+		}
+		return fmt.Errorf("solution import failed: %s", strings.Join(messages, "; "))
 	}
 	return nil
 }
@@ -459,6 +463,40 @@ func parseSolutionRef(input string) (name string, version string, err error) {
 	return name, version, nil
 }
 
+// compareVersionStringsIgnoringBuild compares only major.minor.patch, deliberately
+// tolerating build-segment drift: dependency declarations captured from a package's
+// MissingDependencies frequently pin a build number that floats independently of the
+// installed dependency's build (e.g. PCF support solutions), and requiring an exact
+// or higher build would fail deployments that are actually compatible.
+func compareVersionStringsIgnoringBuild(left, right string) (int, error) {
+	leftParts, err := normalizeVersionParts(left)
+	if err != nil {
+		return 0, err
+	}
+	rightParts, err := normalizeVersionParts(right)
+	if err != nil {
+		return 0, err
+	}
+
+	for len(leftParts) < 3 {
+		leftParts = append(leftParts, 0)
+	}
+	for len(rightParts) < 3 {
+		rightParts = append(rightParts, 0)
+	}
+
+	for i := 0; i < 3; i++ {
+		if leftParts[i] < rightParts[i] {
+			return -1, nil
+		}
+		if leftParts[i] > rightParts[i] {
+			return 1, nil
+		}
+	}
+
+	return 0, nil
+}
+
 func compareVersionStrings(left, right string) (int, error) {
 	leftParts, err := normalizeVersionParts(left)
 	if err != nil {
@@ -482,35 +520,6 @@ func compareVersionStrings(left, right string) (int, error) {
 	}
 
 	for i := 0; i < maxLen; i++ {
-		if leftParts[i] < rightParts[i] {
-			return -1, nil
-		}
-		if leftParts[i] > rightParts[i] {
-			return 1, nil
-		}
-	}
-
-	return 0, nil
-}
-
-func compareVersionStringsIgnoringBuild(left, right string) (int, error) {
-	leftParts, err := normalizeVersionParts(left)
-	if err != nil {
-		return 0, err
-	}
-	rightParts, err := normalizeVersionParts(right)
-	if err != nil {
-		return 0, err
-	}
-
-	for len(leftParts) < 3 {
-		leftParts = append(leftParts, 0)
-	}
-	for len(rightParts) < 3 {
-		rightParts = append(rightParts, 0)
-	}
-
-	for i := 0; i < 3; i++ {
 		if leftParts[i] < rightParts[i] {
 			return -1, nil
 		}

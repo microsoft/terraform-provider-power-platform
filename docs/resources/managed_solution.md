@@ -77,7 +77,7 @@ resource "powerplatform_managed_solution" "solution" {
 Optional:
 
 - `path` (String) Local filesystem path to the managed solution zip package.
-- `url` (String) Remote URL to the managed solution zip package.
+- `url` (String, Sensitive) Remote URL to the managed solution zip package. Marked sensitive because artifact URLs commonly embed credentials such as SAS tokens.
 
 
 <a id="nestedatt--timeouts"></a>

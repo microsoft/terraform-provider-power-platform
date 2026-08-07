@@ -99,8 +99,9 @@ func (r *Resource) Schema(ctx context.Context, req resource.SchemaRequest, resp 
 						Optional:            true,
 					},
 					"url": schema.StringAttribute{
-						MarkdownDescription: "Remote URL to the managed solution zip package.",
+						MarkdownDescription: "Remote URL to the managed solution zip package. Marked sensitive because artifact URLs commonly embed credentials such as SAS tokens.",
 						Optional:            true,
+						Sensitive:           true,
 					},
 				},
 			},
