@@ -854,7 +854,6 @@ func isPublisherAlreadyExistsError(err error) bool {
 	return strings.Contains(body, `"code":"0x80040237"`) ||
 		strings.Contains(body, "matching key values already exists")
 }
-
 func nullableInt64Value(value *int64) types.Int64 {
 	if value == nil {
 		return types.Int64Null()
