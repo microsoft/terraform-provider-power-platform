@@ -38,6 +38,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/licensing"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/locations"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/managed_environment"
+	managedsolution "github.com/microsoft/terraform-provider-power-platform/internal/services/managed_solution"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/powerapps"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/rest"
 	"github.com/microsoft/terraform-provider-power-platform/internal/services/solution"
@@ -92,6 +93,7 @@ func TestUnitPowerPlatformProviderHasChildResources_Basic(t *testing.T) {
 		solution.NewSolutionResource(),
 		tenant_settings.NewTenantSettingsResource(),
 		managed_environment.NewManagedEnvironmentResource(),
+		managedsolution.NewManagedSolutionResource(),
 		licensing.NewBillingPolicyResource(),
 		licensing.NewBillingPolicyEnvironmentResource(),
 		authorization.NewUserResource(),
