@@ -277,3 +277,88 @@ func TestUnitEnvironmentApplicationAdminResource_Delete(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitEnvironmentApplicationAdminResource_Read_ParentDeleted(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	var getEnvironmentCallCount = 0
+	// The application client's getEnvironment() (exact URL with api-version only).
+	// Step 1 (Create + Reads) makes 5 calls that succeed; call 6 (step 2 RefreshState)
+	// returns 404 to simulate the environment being deleted out-of-band.
+	// Calls 7+ succeed again to allow orderly post-test cleanup.
+	httpmock.RegisterResponder("GET", `https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001?api-version=2023-06-01`,
+		func(req *http.Request) (*http.Response, error) {
+			getEnvironmentCallCount++
+			if getEnvironmentCallCount == 6 {
+				return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/resource/application_admin/Read_ParentDeleted/get_environment.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+
+	// The EnvironmentClient's GetEnvironment() returns 404 (URL includes $expand query params).
+	// This is only called during tier-2 parent check when the application user read fails.
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001\?.+expand`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/resource/application_admin/Read_ParentDeleted/get_environment.json").String()), nil
+		})
+
+	// Add application user
+	httpmock.RegisterResponder("POST", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001/addAppUser`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, "{}"), nil
+		})
+
+	// Check if application user exists
+	httpmock.RegisterResponder("GET", `=~^https://test-env\.crm\.dynamics\.com/api/data/v9\.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			if strings.Contains(req.URL.RawQuery, "00000000-0000-0000-0000-000000000002") {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_applicationusers.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://test-env\.crm\.dynamics\.com/api/data/v9\.0/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			if strings.Contains(req.URL.RawQuery, "systemuserid+eq") {
+				return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_applicationusers.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, ""), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", `=~^https://test-env\.crm\.dynamics\.com/api/data/v9\.0/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterResponder("DELETE", `=~^https://test-env\.crm\.dynamics\.com/api/data/v9\.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the application admin successfully.
+				Config: `
+				resource "powerplatform_environment_application_admin" "test" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					application_id = "00000000-0000-0000-0000-000000000002"
+				}
+				`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment_application_admin.test", "id", "00000000-0000-0000-0000-000000000001/00000000-0000-0000-0000-000000000002"),
+				),
+			},
+			{
+				// Step 2: refresh when the parent environment has been deleted out-of-band.
+				// The ApplicationUserExists call fails because getEnvironment returns 404;
+				// the provider detects the parent is gone and removes the resource from state.
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
