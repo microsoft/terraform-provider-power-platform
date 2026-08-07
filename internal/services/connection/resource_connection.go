@@ -23,6 +23,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
 var _ resource.Resource = &Resource{}
@@ -139,6 +140,7 @@ func (r *Resource) Configure(ctx context.Context, req resource.ConfigureRequest,
 		return
 	}
 	r.ConnectionsClient = newConnectionsClient(client.Api)
+	r.EnvironmentClient = environment.NewEnvironmentClient(client.Api)
 }
 
 func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -220,6 +222,12 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	connection, err := r.ConnectionsClient.GetConnection(ctx, state.EnvironmentId.ValueString(), state.Name.ValueString(), state.Id.ValueString())
 	if err != nil {
 		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		// For ambiguous errors, check whether the parent environment still exists.
+		_, envErr := r.EnvironmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
+		if errors.Is(envErr, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}

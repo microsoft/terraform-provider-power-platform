@@ -70,12 +70,20 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 
 	for {
 		lifecycleResponse := LifecycleDto{}
-		response, err = client.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusConflict}, &lifecycleResponse)
+		response, err = client.Execute(ctx, nil, "GET", locationHeader, nil, nil, []int{http.StatusOK, http.StatusConflict, http.StatusNotFound}, &lifecycleResponse)
 		if err != nil {
 			return nil, err
 		}
 
 		tflog.Debug(ctx, "Lifecycle Operation HTTP Status: '"+response.HttpResponse.Status+"'")
+
+		if response.HttpResponse.StatusCode == http.StatusNotFound {
+			tflog.Debug(ctx, "Lifecycle operation returned 404 - resource already gone, treating as success")
+			// Return a non-nil LifecycleDto sentinel so callers can safely dereference the result.
+			lifecycleResponse.State.Id = "Succeeded"
+			return &lifecycleResponse, nil
+		}
+
 		if response.HttpResponse.StatusCode == http.StatusConflict {
 			err = client.SleepWithContext(ctx, waitFor)
 			if err != nil {
@@ -84,7 +92,6 @@ func (client *Client) DoWaitForLifecycleOperationStatus(ctx context.Context, res
 			continue
 		}
 		tflog.Debug(ctx, "Lifecycle Operation State: '"+lifecycleResponse.State.Id+"'")
-
 		if lifecycleResponse.State.Id == "Succeeded" || lifecycleResponse.State.Id == "Failed" {
 			return &lifecycleResponse, nil
 		}

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -28,6 +29,9 @@ func TestName() string {
 }
 
 func TestsEntraLicesingGroupName() string {
+	if name := os.Getenv("ACCEPTANCE_TESTS_LICENSING_GROUP_NAME"); name != "" {
+		return name
+	}
 	return "pptestusers"
 }
 

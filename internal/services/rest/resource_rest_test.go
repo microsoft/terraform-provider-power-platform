@@ -18,6 +18,11 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -31,6 +36,12 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 						currency_code     = "USD"
 						security_group_id = "00000000-0000-0000-0000-000000000000"
 					}
+				}
+
+				resource "time_sleep" "wait_for_dataverse" {
+					create_duration = "120s"
+
+					depends_on = [powerplatform_environment.env]
 				}
 
 				locals {
@@ -89,7 +100,7 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 						method = "DELETE"
 					}
 
-					depends_on = [powerplatform_environment.env]
+					depends_on = [time_sleep.wait_for_dataverse]
 
 					lifecycle {
 						ignore_changes = [
@@ -113,6 +124,12 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 					currency_code     = "USD"
 					security_group_id = "00000000-0000-0000-0000-000000000000"
 				}
+			}
+
+			resource "time_sleep" "wait_for_dataverse" {
+				create_duration = "120s"
+
+				depends_on = [powerplatform_environment.env]
 			}
 
 				locals {
@@ -171,7 +188,7 @@ func TestAccTestRest_Validate_Create(t *testing.T) {
 						method = "DELETE"
 					}
 
-					depends_on = [powerplatform_environment.env]
+					depends_on = [time_sleep.wait_for_dataverse]
 
 					lifecycle {
 						ignore_changes = [
