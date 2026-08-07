@@ -17,8 +17,8 @@ import (
 
 const (
 	unmanagedSolutionEnvironmentID = "00000000-0000-0000-0000-000000000001"
-	unmanagedSolutionID            = "86928ed8-df37-4ce2-add5-47030a833bff"
-	unmanagedPublisherID           = "aa47dc6c-bf13-490b-a007-1da95a0d1e3f"
+	unmanagedSolutionID            = "00000000-0000-0000-0000-000000000002"
+	unmanagedPublisherID           = "00000000-0000-0000-0000-000000000003"
 )
 
 func TestUnitUnmanagedSolutionResource_Validate_Create(t *testing.T) {
@@ -76,7 +76,7 @@ func TestUnitUnmanagedSolutionResource_Validate_Create(t *testing.T) {
 				ResourceName:      "powerplatform_unmanaged_solution.solution",
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateId:     unmanagedSolutionEnvironmentID + "_" + unmanagedSolutionID,
+				ImportStateId:     unmanagedSolutionEnvironmentID + "/" + unmanagedSolutionID,
 			},
 		},
 	})
@@ -453,7 +453,6 @@ func TestAccUnmanagedSolutionResource_Validate_Create_Update(t *testing.T) {
 					"TerraformUnmanagedSolutionAcc",
 					"Terraform Unmanaged Solution",
 					"Created by Terraform acceptance test",
-					true,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestMatchResourceAttr("powerplatform_unmanaged_solution.solution", "id", regexp.MustCompile(helpers.GuidRegex)),
@@ -475,7 +474,6 @@ func TestAccUnmanagedSolutionResource_Validate_Create_Update(t *testing.T) {
 					"TerraformUnmanagedSolutionAcc",
 					"Terraform Unmanaged Solution Updated",
 					"Updated by Terraform acceptance test",
-					true,
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_unmanaged_solution.solution", "display_name", "Terraform Unmanaged Solution Updated"),
@@ -488,17 +486,14 @@ func TestAccUnmanagedSolutionResource_Validate_Create_Update(t *testing.T) {
 	})
 }
 
-func testAccUnmanagedSolutionConfig(environmentDisplayName, uniqueName, displayName, description string, includeLookup bool) string {
-	lookupBlock := ""
-	if includeLookup {
-		lookupBlock = `
+func testAccUnmanagedSolutionConfig(environmentDisplayName, uniqueName, displayName, description string) string {
+	lookupBlock := `
 
 				data "powerplatform_unmanaged_solution" "lookup" {
 					depends_on     = [powerplatform_unmanaged_solution.solution]
 					environment_id = powerplatform_environment.environment.id
 					uniquename     = powerplatform_unmanaged_solution.solution.uniquename
 				}`
-	}
 
 	return fmt.Sprintf(`
 

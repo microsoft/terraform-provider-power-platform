@@ -252,7 +252,7 @@ func (r *UnmanagedSolutionResource) ImportState(ctx context.Context, req resourc
 	if len(idParts) != 2 {
 		resp.Diagnostics.AddError(
 			"Invalid import ID",
-			fmt.Sprintf("Expected import ID in format 'environment_id_solution_id', got '%s'", req.ID),
+			fmt.Sprintf("Expected import ID in format 'environment_id/solution_id', got '%s'", req.ID),
 		)
 		return
 	}
@@ -280,7 +280,7 @@ func validateUnmanagedSolution(solution *SolutionDto, typeName string) error {
 }
 
 func splitSolutionCompositeID(id string) []string {
-	return strings.SplitN(id, "_", 2)
+	return strings.SplitN(id, "/", 2)
 }
 
 func normalizeNullableDescription(value string, existing types.String) types.String {

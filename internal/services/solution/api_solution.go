@@ -303,7 +303,7 @@ func (client *Client) CreateUnmanagedSolution(ctx context.Context, environmentId
 		}
 	}
 
-	return client.WaitForUnmanagedSolution(ctx, environmentId, solutionID, uniqueName)
+	return client.waitForUnmanagedSolution(ctx, environmentId, solutionID, uniqueName)
 }
 
 func (client *Client) UpdateUnmanagedSolution(ctx context.Context, environmentId, solutionId, displayName, description string) (*SolutionDto, error) {
@@ -337,7 +337,7 @@ func (client *Client) UpdateUnmanagedSolution(ctx context.Context, environmentId
 	return client.GetSolutionById(ctx, environmentId, solutionId)
 }
 
-func (client *Client) WaitForUnmanagedSolution(ctx context.Context, environmentId, solutionId, uniqueName string) (*SolutionDto, error) {
+func (client *Client) waitForUnmanagedSolution(ctx context.Context, environmentId, solutionId, uniqueName string) (*SolutionDto, error) {
 	var lastErr error
 
 	for {

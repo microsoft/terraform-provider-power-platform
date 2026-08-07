@@ -58,6 +58,6 @@ Import is supported using the following syntax:
 The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/commands/import) can be used, for example:
 
 ```shell
-# Unmanaged solution resources can be imported using the provider id format {environment_id}_{solution_id}
-terraform import powerplatform_unmanaged_solution.solution 00000000-0000-0000-0000-000000000000_00000000-0000-0000-0000-000000000001
+# Unmanaged solution resources can be imported using the provider id format {environment_id}/{solution_id}
+terraform import powerplatform_unmanaged_solution.solution 00000000-0000-0000-0000-000000000000/00000000-0000-0000-0000-000000000001
 ```
