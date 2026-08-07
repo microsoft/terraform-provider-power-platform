@@ -198,13 +198,8 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 	plan.Status = types.SetValueMust(types.StringType, statuses)
 	plan.DisplayName = types.String(conectionState.DisplayName)
 	plan.Name = types.String(conectionState.Name)
-	if conectionState.ConnectionParameters == types.StringNull() {
-		plan.ConnectionParameters = types.StringValue("")
-	}
-
-	if conectionState.ConnectionParametersSet == types.StringNull() {
-		plan.ConnectionParametersSet = types.StringValue("")
-	}
+	plan.ConnectionParameters = normalizeConnectionParameter(plan.ConnectionParameters, conectionState.ConnectionParameters)
+	plan.ConnectionParametersSet = normalizeConnectionParameter(plan.ConnectionParametersSet, conectionState.ConnectionParametersSet)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -244,8 +239,8 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	}
 	state.Status = types.SetValueMust(types.StringType, statuses)
 	state.Name = types.String(conectionState.Name)
-	state.ConnectionParameters = types.String(conectionState.ConnectionParameters)
-	state.ConnectionParametersSet = types.String(conectionState.ConnectionParametersSet)
+	state.ConnectionParameters = normalizeConnectionParameter(state.ConnectionParameters, conectionState.ConnectionParameters)
+	state.ConnectionParametersSet = normalizeConnectionParameter(state.ConnectionParametersSet, conectionState.ConnectionParametersSet)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -297,13 +292,8 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 		statuses = append(statuses, types.StringValue(status))
 	}
 	plan.Status = types.SetValueMust(types.StringType, statuses)
-
-	if conectionState.ConnectionParameters == types.StringNull() {
-		plan.ConnectionParameters = types.StringValue("")
-	}
-	if conectionState.ConnectionParametersSet == types.StringNull() {
-		plan.ConnectionParametersSet = types.StringValue("")
-	}
+	plan.ConnectionParameters = normalizeConnectionParameter(plan.ConnectionParameters, conectionState.ConnectionParameters)
+	plan.ConnectionParametersSet = normalizeConnectionParameter(plan.ConnectionParametersSet, conectionState.ConnectionParametersSet)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -330,4 +320,16 @@ func (r *Resource) ImportState(ctx context.Context, req resource.ImportStateRequ
 	defer exitContext()
 
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func normalizeConnectionParameter(existing, actual types.String) types.String {
+	if !existing.IsNull() && !existing.IsUnknown() {
+		return existing
+	}
+
+	if !actual.IsNull() && !actual.IsUnknown() {
+		return actual
+	}
+
+	return types.StringNull()
 }
