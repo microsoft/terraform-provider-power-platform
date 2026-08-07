@@ -15,15 +15,18 @@ type Resource struct {
 }
 
 type ResourceModel struct {
-	Timeouts             timeouts.Value `tfsdk:"timeouts"`
-	Id                   types.String   `tfsdk:"id"`
-	EnvironmentId        types.String   `tfsdk:"environment_id"`
-	UniqueName           types.String   `tfsdk:"unique_name"`
-	Version              types.String   `tfsdk:"version"`
-	ConnectionReferences types.Map      `tfsdk:"connection_references"`
-	Source               *SourceModel   `tfsdk:"source"`
-	DisplayName          types.String   `tfsdk:"display_name"`
-	SolutionId           types.String   `tfsdk:"solution_id"`
+	Timeouts                      timeouts.Value `tfsdk:"timeouts"`
+	Id                            types.String   `tfsdk:"id"`
+	EnvironmentId                 types.String   `tfsdk:"environment_id"`
+	UniqueName                    types.String   `tfsdk:"unique_name"`
+	Version                       types.String   `tfsdk:"version"`
+	ConnectionReferences          types.Map      `tfsdk:"connection_references"`
+	EnvironmentVariables          types.Map      `tfsdk:"environment_variables"`
+	SkipProductUpdateDependencies types.Bool     `tfsdk:"skip_product_update_dependencies"`
+	PublishAllCustomizations      types.Bool     `tfsdk:"publish_all_customizations"`
+	Source                        *SourceModel   `tfsdk:"source"`
+	DisplayName                   types.String   `tfsdk:"display_name"`
+	SolutionId                    types.String   `tfsdk:"solution_id"`
 }
 
 type SourceModel struct {

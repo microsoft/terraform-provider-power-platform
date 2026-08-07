@@ -21,7 +21,7 @@ func TestSourcesAreEquivalent_IgnoresQueryAndFragment(t *testing.T) {
 	}
 }
 
-func TestSourcesAreEquivalent_DetectsTransportChange(t *testing.T) {
+func TestSourcesAreEquivalent_IgnoresTransportLocatorChangeForExactIdentity(t *testing.T) {
 	t.Parallel()
 
 	plan := &SourceModel{
@@ -31,12 +31,12 @@ func TestSourcesAreEquivalent_DetectsTransportChange(t *testing.T) {
 		URL: types.StringValue("http://localhost:45265/archive/legacy.zip"),
 	}
 
-	if sourcesAreEquivalent(plan, state) {
-		t.Fatal("expected URLs with different transport and path values to be treated as different")
+	if !sourcesAreEquivalent(plan, state) {
+		t.Fatal("expected delivery URLs to be equivalent when managed solution identity and version are unchanged")
 	}
 }
 
-func TestSourcesAreEquivalent_DetectsPathChange(t *testing.T) {
+func TestSourcesAreEquivalent_IgnoresEphemeralWorkspacePathChange(t *testing.T) {
 	t.Parallel()
 
 	plan := &SourceModel{
@@ -46,8 +46,19 @@ func TestSourcesAreEquivalent_DetectsPathChange(t *testing.T) {
 		Path: types.StringValue("/tmp/old-package.zip"),
 	}
 
+	if !sourcesAreEquivalent(plan, state) {
+		t.Fatal("expected run-local source paths to be equivalent when managed solution identity and version are unchanged")
+	}
+}
+
+func TestSourcesAreEquivalent_RejectsMissingDeliverySource(t *testing.T) {
+	t.Parallel()
+
+	plan := &SourceModel{}
+	state := &SourceModel{Path: types.StringValue("/tmp/package.zip")}
+
 	if sourcesAreEquivalent(plan, state) {
-		t.Fatal("expected different local source paths to be treated as different")
+		t.Fatal("expected a missing configured delivery source to remain a plan difference")
 	}
 }
 
@@ -61,5 +72,25 @@ func TestNormalizeSolutionVersion_PadsMissingSegments(t *testing.T) {
 
 	if normalized != "1.3.5.0" {
 		t.Fatalf("expected normalized version to be 1.3.5.0, got %s", normalized)
+	}
+}
+
+func TestReconcileSolutionVersion_PreservesEquivalentDeclaredVersion(t *testing.T) {
+	t.Parallel()
+
+	actual := reconcileSolutionVersion(types.StringValue("0.1.39"), "0.1.39.0")
+
+	if actual.ValueString() != "0.1.39" {
+		t.Fatalf("expected equivalent declared version to remain 0.1.39, got %s", actual.ValueString())
+	}
+}
+
+func TestReconcileSolutionVersion_ReportsRemoteVersionDrift(t *testing.T) {
+	t.Parallel()
+
+	actual := reconcileSolutionVersion(types.StringValue("0.1.39"), "0.1.40.0")
+
+	if actual.ValueString() != "0.1.40.0" {
+		t.Fatalf("expected remote version drift to be reflected as 0.1.40.0, got %s", actual.ValueString())
 	}
 }

@@ -46,6 +46,10 @@ func (client *Client) GetSolutionUniqueName(ctx context.Context, environmentId, 
 	return client.SolutionClient.GetSolutionUniqueName(ctx, environmentId, name)
 }
 
+func (client *Client) GetSolutionById(ctx context.Context, environmentId, solutionId string) (*solution.SolutionDto, error) {
+	return client.SolutionClient.GetSolutionById(ctx, environmentId, solutionId)
+}
+
 func (client *Client) GetSolutions(ctx context.Context, environmentId string) ([]solution.SolutionDto, error) {
 	return client.SolutionClient.GetSolutions(ctx, environmentId)
 }
@@ -58,7 +62,7 @@ func (client *Client) DeleteSolution(ctx context.Context, environmentId, solutio
 	return client.SolutionClient.DeleteSolution(ctx, environmentId, solutionId)
 }
 
-func (client *Client) CreateManagedSolution(ctx context.Context, environmentId string, content []byte, componentParameters []any) (*solution.SolutionDto, error) {
+func (client *Client) ApplyManagedSolution(ctx context.Context, environmentId string, content []byte, componentParameters []any, stageAndUpgrade bool, skipProductUpdateDependencies bool) (*solution.SolutionDto, error) {
 	environmentHost, err := client.SolutionClient.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -103,20 +107,25 @@ func (client *Client) CreateManagedSolution(ctx context.Context, environmentId s
 
 	importRequestBody := importSolutionDto{
 		PublishWorkflows:                 true,
-		OverwriteUnmanagedCustomizations: false,
+		OverwriteUnmanagedCustomizations: true,
+		SkipProductUpdateDependencies:    skipProductUpdateDependencies,
 		ComponentParameters:              componentParameters,
 		SolutionParameters: importSolutionParametersDto{
 			StageSolutionUploadId: stageResponse.StageSolutionResults.StageSolutionUploadId,
 		},
 	}
 
+	operation := "ImportSolutionAsync"
+	if stageAndUpgrade {
+		operation = "StageAndUpgradeAsync"
+	}
 	importURL := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   environmentHost,
-		Path:   "/api/data/v9.2/ImportSolutionAsync",
+		Path:   "/api/data/v9.2/" + operation,
 	}
 	importResponse := importSolutionResponseDto{}
-	resp, err = client.Api.Execute(ctx, nil, "POST", importURL.String(), nil, importRequestBody, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &importResponse)
+	resp, err = client.Api.ExecuteWithoutRetry(ctx, nil, "POST", importURL.String(), nil, importRequestBody, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &importResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -161,6 +170,27 @@ func (client *Client) CreateManagedSolution(ctx context.Context, environmentId s
 			return nil, err
 		}
 	}
+}
+
+func (client *Client) PublishAllCustomizations(ctx context.Context, environmentId string) error {
+	environmentHost, err := client.SolutionClient.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return err
+	}
+
+	publishURL := &url.URL{
+		Scheme: constants.HTTPS,
+		Host:   environmentHost,
+		Path:   "/api/data/v9.2/PublishAllXml",
+	}
+	resp, err := client.Api.Execute(ctx, nil, "POST", publishURL.String(), nil, struct{}{}, []int{http.StatusOK, http.StatusNoContent, http.StatusForbidden, http.StatusNotFound}, nil)
+	if err != nil {
+		return err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return err
+	}
+	return client.Api.HandleNotFoundResponse(resp)
 }
 
 func (client *Client) validateSolutionImportResult(ctx context.Context, environmentHost, importJobKey string) error {
@@ -544,6 +574,24 @@ func buildConnectionParameters(packageRefs map[string]packageConnectionReference
 	return parameters, nil
 }
 
+func buildEnvironmentVariableParameters(configured map[string]string) []any {
+	keys := make([]string, 0, len(configured))
+	for key := range configured {
+		keys = append(keys, key)
+	}
+	slices.Sort(keys)
+
+	parameters := make([]any, 0, len(keys))
+	for _, schemaName := range keys {
+		parameters = append(parameters, importSolutionEnvironmentVariableDto{
+			Type:       "Microsoft.Dynamics.CRM.environmentvariablevalue",
+			SchemaName: schemaName,
+			Value:      configured[schemaName],
+		})
+	}
+	return parameters
+}
+
 func validateConnectionReferences(packageRefs map[string]packageConnectionReference, configuredRefs map[string]string) error {
 	packageKeys := make([]string, 0, len(packageRefs))
 	for key := range packageRefs {
@@ -585,8 +633,13 @@ func validateConnectionReferences(packageRefs map[string]packageConnectionRefere
 	return fmt.Errorf("connection reference validation failed: %s", strings.Join(messages, "; "))
 }
 
-func validateEnvironmentVariables(packageVars map[string]packageEnvironmentVariable, existingValues map[string]bool) error {
+func validateEnvironmentVariables(packageVars map[string]packageEnvironmentVariable, configuredValues map[string]string, existingValues map[string]bool) error {
 	problems := make([]string, 0)
+	for key := range configuredValues {
+		if _, exists := packageVars[key]; !exists {
+			problems = append(problems, fmt.Sprintf("%s was configured but is not declared by the solution package", key))
+		}
+	}
 
 	keys := make([]string, 0, len(packageVars))
 	for key := range packageVars {
@@ -601,6 +654,9 @@ func validateEnvironmentVariables(packageVars map[string]packageEnvironmentVaria
 			continue
 		}
 		if packageVar.HasDefaultValue {
+			continue
+		}
+		if _, configured := configuredValues[key]; configured {
 			continue
 		}
 		if existingValues[key] {
@@ -630,6 +686,10 @@ func validateDependencies(required map[string]string, installed []solution.Solut
 	slices.Sort(keys)
 
 	for _, dependencyName := range keys {
+		if isBuiltInSolutionDependency(dependencyName) {
+			continue
+		}
+
 		requiredVersion := required[dependencyName]
 		installedSolution, exists := installedByName[strings.ToLower(dependencyName)]
 		if !exists {

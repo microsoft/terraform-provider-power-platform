@@ -138,9 +138,41 @@ func TestUnitValidateEnvironmentVariables_FailsWithoutDefaultOrExistingValue(t *
 			SchemaName:      "codeeditor_text",
 			HasDefaultValue: false,
 		},
-	}, map[string]bool{})
+	}, map[string]string{}, map[string]bool{})
 	if err == nil {
 		t.Fatal("expected validateEnvironmentVariables to fail")
+	}
+}
+
+func TestUnitValidateEnvironmentVariables_AllowsConfiguredImportValue(t *testing.T) {
+	err := validateEnvironmentVariables(map[string]packageEnvironmentVariable{
+		"sch_PortalDataverseEnvironmentUrl": {
+			SchemaName:      "sch_PortalDataverseEnvironmentUrl",
+			HasDefaultValue: false,
+		},
+	}, map[string]string{
+		"sch_PortalDataverseEnvironmentUrl": "https://safety.crm6.dynamics.com/",
+	}, map[string]bool{})
+	if err != nil {
+		t.Fatalf("expected configured import value to satisfy variable: %v", err)
+	}
+}
+
+func TestUnitBuildEnvironmentVariableParameters(t *testing.T) {
+	parameters := buildEnvironmentVariableParameters(map[string]string{
+		"sch_PortalDataverseEnvironmentUrl": "https://safety.crm6.dynamics.com/",
+	})
+	if len(parameters) != 1 {
+		t.Fatalf("expected one component parameter, got %d", len(parameters))
+	}
+	parameter, ok := parameters[0].(importSolutionEnvironmentVariableDto)
+	if !ok {
+		t.Fatalf("expected environment variable component parameter, got %T", parameters[0])
+	}
+	if parameter.Type != "Microsoft.Dynamics.CRM.environmentvariablevalue" ||
+		parameter.SchemaName != "sch_PortalDataverseEnvironmentUrl" ||
+		parameter.Value != "https://safety.crm6.dynamics.com/" {
+		t.Fatalf("unexpected environment variable component parameter: %#v", parameter)
 	}
 }
 

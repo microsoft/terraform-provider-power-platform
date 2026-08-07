@@ -95,6 +95,7 @@ type stageSolutionDetailsDto struct {
 type importSolutionDto struct {
 	PublishWorkflows                 bool                        `json:"PublishWorkflows"`
 	OverwriteUnmanagedCustomizations bool                        `json:"OverwriteUnmanagedCustomizations"`
+	SkipProductUpdateDependencies    bool                        `json:"SkipProductUpdateDependencies"`
 	ComponentParameters              []any                       `json:"ComponentParameters,omitempty"`
 	SolutionParameters               importSolutionParametersDto `json:"SolutionParameters"`
 }
@@ -152,6 +153,12 @@ type environmentVariableValueDto struct {
 	Id         string  `json:"environmentvariablevalueid"`
 	SchemaName string  `json:"schemaname"`
 	Value      *string `json:"value"`
+}
+
+type importSolutionEnvironmentVariableDto struct {
+	Type       string `json:"@odata.type"`
+	SchemaName string `json:"schemaname"`
+	Value      string `json:"value"`
 }
 
 type packageEnvironmentVariable struct {

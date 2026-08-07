@@ -213,6 +213,96 @@ resource "powerplatform_managed_solution" "solution" {
 	})
 }
 
+func TestUnitManagedSolutionResource_AdoptsExactInstalledManagedSolution_AndImportsState(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+	solutionPath := createTestSolutionZip(t, map[string]string{
+		"solution.xml":       `<ImportExportXml><SolutionManifest><UniqueName>MetaForm</UniqueName><Version>2.0.246</Version><Managed>1</Managed><LocalizedNames><LocalizedName description="Meta Form" /></LocalizedNames></SolutionManifest></ImportExportXml>`,
+		"customizations.xml": `<ImportExportXml></ImportExportXml>`,
+	})
+	registerManagedSolutionEnvironmentResponder()
+
+	const installed = `{"value":[{"solutionid":"86928ed8-df37-4ce2-add5-47030a833bff","uniquename":"MetaForm","friendlyname":"Meta Form","ismanaged":true,"version":"2.0.246.0"}]}`
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24orderby=createdon+desc",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, installed), nil
+		})
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=uniquename+eq+%27MetaForm%27",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, installed), nil
+		})
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions?%24expand=publisherid&%24filter=solutionid+eq+86928ed8-df37-4ce2-add5-47030a833bff",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, installed), nil
+		})
+	httpmock.RegisterResponder("GET", "https://000000000000000000000000000000.01.environment.api.powerplatform.com/connectivity/connections?api-version=1",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+		})
+	importStarts := 0
+	httpmock.RegisterResponder("POST", `=~^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.2/(StageSolution|ImportSolutionAsync|StageAndUpgradeAsync)$`,
+		func(req *http.Request) (*http.Response, error) {
+			importStarts++
+			return httpmock.NewStringResponse(http.StatusInternalServerError, "existing exact solution must be adopted"), nil
+		})
+	httpmock.RegisterResponder("DELETE", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.2/solutions%2886928ed8-df37-4ce2-add5-47030a833bff%29",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	config := fmt.Sprintf(`
+resource "powerplatform_managed_solution" "solution" {
+  environment_id = "00000000-0000-0000-0000-000000000001"
+  unique_name    = "MetaForm"
+  version        = "2.0.246"
+
+  source = {
+    path = %q
+  }
+}
+`, solutionPath)
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "id", "00000000-0000-0000-0000-000000000001_86928ed8-df37-4ce2-add5-47030a833bff"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "solution_id", "86928ed8-df37-4ce2-add5-47030a833bff"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "version", "2.0.246"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "skip_product_update_dependencies", "true"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "publish_all_customizations", "false"),
+				),
+			},
+			{
+				ResourceName:      "powerplatform_managed_solution.solution",
+				ImportState:       true,
+				ImportStateId:     "00000000-0000-0000-0000-000000000001_86928ed8-df37-4ce2-add5-47030a833bff",
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"source",
+					"version",
+					"skip_product_update_dependencies",
+					"publish_all_customizations",
+				},
+			},
+			{
+				Config: config,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "version", "2.0.246"),
+					resource.TestCheckResourceAttr("powerplatform_managed_solution.solution", "source.path", solutionPath),
+				),
+			},
+		},
+	})
+	if importStarts != 0 {
+		t.Fatalf("exact installed managed solution should be adopted without an import; observed %d import request(s)", importStarts)
+	}
+}
+
 func TestUnitManagedSolutionResource_Validate_Create_Fails_When_ConnectionReferenceMissing(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()

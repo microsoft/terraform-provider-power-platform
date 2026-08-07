@@ -3,12 +3,12 @@
 page_title: "powerplatform_managed_solution Resource - Power Platform"
 subcategory: ""
 description: |-
-  Resource for deploying managed Power Platform solutions using solution identity (unique_name + version) instead of package checksums. The resource verifies that the package is managed, validates package identity at apply time, requires explicit connection reference bindings, checks that referenced environment variables are already satisfiable in the target environment, and validates solution dependencies before import.
+  Resource for deploying managed Power Platform solutions using solution identity (unique_name + version) instead of package checksums or delivery locations. Changing only a local path or signed URL does not replay an unchanged version. Initial creation installs the managed package or adopts an exact already-installed managed version only when no target-specific component parameters must be applied. Exact or same-version target bindings use an ordinary managed re-import; a higher version uses Dataverse stage-and-upgrade so omitted components are removed, and lower versions are rejected before import. Import state uses {environment_id}_{solution_id} and the first configured apply adopts the package source without replaying only when no target bindings require reconciliation. The resource verifies managed package identity, connection bindings, environment-variable satisfiability, and solution dependencies before import. Import-start requests are never retried after an ambiguous response.
 ---
 
 # powerplatform_managed_solution (Resource)
 
-Resource for deploying managed Power Platform solutions using solution identity (`unique_name` + `version`) instead of package checksums. The resource verifies that the package is managed, validates package identity at apply time, requires explicit connection reference bindings, checks that referenced environment variables are already satisfiable in the target environment, and validates solution dependencies before import.
+Resource for deploying managed Power Platform solutions using solution identity (`unique_name` + `version`) instead of package checksums or delivery locations. Changing only a local path or signed URL does not replay an unchanged version. Initial creation installs the managed package or adopts an exact already-installed managed version only when no target-specific component parameters must be applied. Exact or same-version target bindings use an ordinary managed re-import; a higher version uses Dataverse stage-and-upgrade so omitted components are removed, and lower versions are rejected before import. Import state uses `{environment_id}_{solution_id}` and the first configured apply adopts the package source without replaying only when no target bindings require reconciliation. The resource verifies managed package identity, connection bindings, environment-variable satisfiability, and solution dependencies before import. Import-start requests are never retried after an ambiguous response.
 
 ## Example Usage
 
@@ -60,6 +60,9 @@ resource "powerplatform_managed_solution" "solution" {
 ### Optional
 
 - `connection_references` (Map of String) Map of connection reference logical name to environment connection id. Every connection reference declared by the package must be bound here.
+- `environment_variables` (Map of String) Map of environment variable schema name to target-specific value supplied as a managed import component parameter. Configured values satisfy package definitions that have no default or existing target value.
+- `publish_all_customizations` (Boolean) Publish all Dataverse customizations after the managed import completes. This is opt-in because managed solution import already publishes its own solution components.
+- `skip_product_update_dependencies` (Boolean) Skip Dataverse product-update dependency processing during managed import. The package graph remains responsible for satisfying declared solution dependencies.
 - `timeouts` (Attributes) (see [below for nested schema](#nestedatt--timeouts))
 
 ### Read-Only
