@@ -5,6 +5,7 @@ package environmentvariable
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
+	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
@@ -170,7 +172,9 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 
 	resolved, err := r.Client.GetEnvironmentVariable(ctx, state.EnvironmentId.ValueString(), state.SchemaName.ValueString())
 	if err != nil {
-		if isEnvironmentVariableDefinitionNotFound(err) {
+		// The definition being gone and the parent environment being gone (deleted out of band)
+		// both mean the value no longer exists — remove it from state instead of failing refresh.
+		if isEnvironmentVariableDefinitionNotFound(err) || errors.Is(err, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -217,6 +221,11 @@ func (r *Resource) Delete(ctx context.Context, req resource.DeleteRequest, resp 
 
 	err := r.Client.DeleteEnvironmentVariableValue(ctx, state.EnvironmentId.ValueString(), state.SchemaName.ValueString())
 	if err != nil {
+		// A missing definition or a parent environment deleted out of band both mean the
+		// value is already gone; treat the delete as complete.
+		if isEnvironmentVariableDefinitionNotFound(err) || errors.Is(err, customerrors.ErrObjectNotFound) {
+			return
+		}
 		resp.Diagnostics.AddError("Failed to delete environment variable value", err.Error())
 		return
 	}
