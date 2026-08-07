@@ -73,13 +73,6 @@ func (r *EnvironmentGitIntegrationResource) Schema(ctx context.Context, req reso
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"git_provider": schema.StringAttribute{
-				MarkdownDescription: "Git provider for the repository binding. Supported value is `AzureDevOps`.",
-				Required:            true,
-				Validators: []validator.String{
-					stringvalidator.OneOf(gitProviderAzureDevOps),
-				},
-			},
 			"scope": schema.StringAttribute{
 				MarkdownDescription: "Source control integration scope for the environment. Use `Solution` for solution-level branch bindings and `Environment` for an environment-level binding. In `Environment` scope, the provider manages the root branch binding and proactively enables eligible visible unmanaged solutions in the environment while excluding platform-owned default solutions.",
 				Required:            true,
@@ -141,7 +134,7 @@ func (r *EnvironmentGitIntegrationResource) ValidateConfig(ctx context.Context, 
 		resp.Diagnostics.AddAttributeError(
 			path.Root("project_name"),
 			"Missing project_name for AzureDevOps",
-			"The `project_name` attribute is required when `git_provider` is `AzureDevOps`.",
+			"The `project_name` attribute is required for Azure DevOps Git integrations.",
 		)
 	}
 }
@@ -162,7 +155,6 @@ func (r *EnvironmentGitIntegrationResource) Create(ctx context.Context, req reso
 		OrganizationName: plan.OrganizationName.ValueString(),
 		ProjectName:      plan.ProjectName.ValueString(),
 		RepositoryName:   plan.RepositoryName.ValueString(),
-		GitProvider:      gitProviderToInt(plan.GitProvider.ValueString()),
 	}
 
 	r.validateRemoteConfiguration(ctx, plan, &resp.Diagnostics)
@@ -255,7 +247,6 @@ func (r *EnvironmentGitIntegrationResource) Update(ctx context.Context, req reso
 		OrganizationName: plan.OrganizationName.ValueString(),
 		ProjectName:      plan.ProjectName.ValueString(),
 		RepositoryName:   plan.RepositoryName.ValueString(),
-		GitProvider:      gitProviderToInt(plan.GitProvider.ValueString()),
 	}
 
 	r.validateRemoteConfiguration(ctx, plan, &resp.Diagnostics)

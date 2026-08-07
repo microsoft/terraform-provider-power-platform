@@ -4,11 +4,36 @@
 package git_integration_test
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/microsoft/terraform-provider-power-platform/internal/mocks"
 )
+
+func TestUnitEnvironmentGitIntegrationResource_Validate_GitProviderAttributeRemoved(t *testing.T) {
+	t.Parallel()
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "powerplatform_environment_git_integration" "test" {
+  environment_id    = "00000000-0000-0000-0000-000000000001"
+  git_provider      = "AzureDevOps"
+  scope             = "Solution"
+  organization_name = "example-org"
+  project_name      = "example-project"
+  repository_name   = "example-repo"
+}
+`,
+				ExpectError: regexp.MustCompile(`argument named "git_provider" is not\s+expected`),
+			},
+		},
+	})
+}
 
 func TestUnitEnvironmentGitIntegrationResource_ValidateConfig_AllowsUnknownProjectName(t *testing.T) {
 	t.Parallel()
@@ -23,7 +48,6 @@ func TestUnitEnvironmentGitIntegrationResource_ValidateConfig_AllowsUnknownProje
 				Config: `
 resource "powerplatform_environment_git_integration" "seed" {
   environment_id    = "00000000-0000-0000-0000-000000000001"
-  git_provider      = "AzureDevOps"
   scope             = "Solution"
   organization_name = "example-org"
   project_name      = "example-project"
@@ -32,7 +56,6 @@ resource "powerplatform_environment_git_integration" "seed" {
 
 resource "powerplatform_environment_git_integration" "test" {
   environment_id    = "00000000-0000-0000-0000-000000000001"
-  git_provider      = "AzureDevOps"
   scope             = "Solution"
   organization_name = "example-org"
   project_name      = powerplatform_environment_git_integration.seed.id

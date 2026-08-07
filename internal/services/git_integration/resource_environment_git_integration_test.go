@@ -233,7 +233,6 @@ variable "repository_name" {
 
 resource "powerplatform_environment_git_integration" "test" {
   environment_id    = var.environment_id
-  git_provider      = "AzureDevOps"
   scope             = "Solution"
   organization_name = var.organization_name
   project_name      = var.project_name
@@ -241,7 +240,6 @@ resource "powerplatform_environment_git_integration" "test" {
 }
 `,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment_git_integration.test", "git_provider", "AzureDevOps"),
 					resource.TestCheckResourceAttr("powerplatform_environment_git_integration.test", "scope", "Solution"),
 					resource.TestCheckResourceAttr("powerplatform_environment_git_integration.test", "organization_name", "example-org"),
 					resource.TestCheckResourceAttr("powerplatform_environment_git_integration.test", "project_name", "example-project"),
@@ -252,7 +250,6 @@ resource "powerplatform_environment_git_integration" "test" {
 				Config: `
 resource "powerplatform_environment_git_integration" "test" {
   environment_id    = "00000000-0000-0000-0000-000000000001"
-  git_provider      = "AzureDevOps"
   scope             = "Environment"
   organization_name = "example-org"
   project_name      = "example-project"
@@ -260,7 +257,6 @@ resource "powerplatform_environment_git_integration" "test" {
 }
 `,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment_git_integration.test", "git_provider", "AzureDevOps"),
 					resource.TestCheckResourceAttr("powerplatform_environment_git_integration.test", "scope", "Environment"),
 					resource.TestCheckResourceAttr("powerplatform_environment_git_integration.test", "organization_name", "example-org"),
 					resource.TestCheckResourceAttr("powerplatform_environment_git_integration.test", "project_name", "example-project"),
@@ -347,7 +343,6 @@ func TestUnitEnvironmentGitIntegrationResource_Validate_Delete_When_Parent_Envir
 				Config: `
 resource "powerplatform_environment_git_integration" "test" {
   environment_id    = "00000000-0000-0000-0000-000000000001"
-  git_provider      = "AzureDevOps"
   scope             = "Solution"
   organization_name = "example-org"
   project_name      = "example-project"
@@ -372,7 +367,6 @@ resource "powerplatform_environment_git_integration" "test" {
 				Config: `
 resource "powerplatform_environment_git_integration" "test" {
   environment_id    = "00000000-0000-0000-0000-000000000001"
-  git_provider      = "AzureDevOps"
   scope             = "Solution"
   organization_name = "example-org"
   project_name      = "example-project"

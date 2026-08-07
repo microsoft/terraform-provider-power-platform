@@ -33,7 +33,6 @@ resource "powerplatform_environment" "example" {
 
 resource "powerplatform_environment_git_integration" "example" {
   environment_id    = powerplatform_environment.example.id
-  git_provider      = "AzureDevOps"
   scope             = "Environment"
   organization_name = "contoso-org"
   project_name      = "PowerPlatform Solutions"

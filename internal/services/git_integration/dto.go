@@ -72,7 +72,6 @@ type sourceControlConfigurationDto struct {
 	OrganizationName string `json:"organizationname,omitempty"`
 	ProjectName      string `json:"projectname,omitempty"`
 	RepositoryName   string `json:"repositoryname,omitempty"`
-	GitProvider      int    `json:"gitprovider,omitempty"`
 }
 
 type sourceControlConfigurationArrayDto struct {
@@ -102,7 +101,6 @@ type createSourceControlConfigurationDto struct {
 	OrganizationName string `json:"organizationname,omitempty"`
 	ProjectName      string `json:"projectname,omitempty"`
 	RepositoryName   string `json:"repositoryname,omitempty"`
-	GitProvider      int    `json:"gitprovider,omitempty"`
 }
 
 type updateSourceControlConfigurationDto struct {
@@ -110,7 +108,6 @@ type updateSourceControlConfigurationDto struct {
 	OrganizationName string `json:"organizationname,omitempty"`
 	ProjectName      string `json:"projectname,omitempty"`
 	RepositoryName   string `json:"repositoryname,omitempty"`
-	GitProvider      int    `json:"gitprovider,omitempty"`
 }
 
 type createSourceControlBranchConfigurationDto struct {

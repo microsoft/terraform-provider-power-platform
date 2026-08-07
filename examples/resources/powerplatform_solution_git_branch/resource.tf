@@ -18,7 +18,6 @@ provider "powerplatform" {
 # individual solutions can be bound to Git branches.
 resource "powerplatform_environment_git_integration" "example" {
   environment_id    = "00000000-0000-0000-0000-000000000001"
-  git_provider      = "AzureDevOps"
   scope             = "Solution"
   organization_name = "contoso-org"
   project_name      = "PowerPlatform Solutions"

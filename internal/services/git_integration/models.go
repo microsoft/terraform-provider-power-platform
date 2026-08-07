@@ -4,15 +4,12 @@
 package git_integration
 
 import (
-	"strings"
-
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
 )
 
 const (
-	gitProviderAzureDevOps                = "AzureDevOps"
 	scopeEnvironment                      = "Environment"
 	scopeSolution                         = "Solution"
 	rootPartitionID                       = "00000000-0000-0000-0000-000000000000"
@@ -33,7 +30,6 @@ type EnvironmentGitIntegrationResourceModel struct {
 	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 	ID               types.String   `tfsdk:"id"`
 	EnvironmentID    types.String   `tfsdk:"environment_id"`
-	GitProvider      types.String   `tfsdk:"git_provider"`
 	Scope            types.String   `tfsdk:"scope"`
 	OrganizationName types.String   `tfsdk:"organization_name"`
 	ProjectName      types.String   `tfsdk:"project_name"`
@@ -56,29 +52,10 @@ type SolutionGitBranchResourceModel struct {
 	RootFolderPath     types.String   `tfsdk:"root_folder_path"`
 }
 
-func gitProviderToInt(value string) int {
-	switch strings.TrimSpace(value) {
-	case "", gitProviderAzureDevOps:
-		return 0
-	default:
-		return -1
-	}
-}
-
-func gitProviderFromInt(value int) string {
-	switch value {
-	case 0:
-		return gitProviderAzureDevOps
-	default:
-		return ""
-	}
-}
-
 func convertSourceControlConfigurationDtoToModel(environmentID, scope string, dto sourceControlConfigurationDto) EnvironmentGitIntegrationResourceModel {
 	return EnvironmentGitIntegrationResourceModel{
 		ID:               types.StringValue(dto.ID),
 		EnvironmentID:    types.StringValue(environmentID),
-		GitProvider:      types.StringValue(gitProviderFromInt(dto.GitProvider)),
 		Scope:            types.StringValue(scope),
 		OrganizationName: types.StringValue(dto.OrganizationName),
 		ProjectName:      types.StringValue(dto.ProjectName),

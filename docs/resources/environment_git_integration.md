@@ -51,7 +51,6 @@ resource "powerplatform_environment" "example" {
 
 resource "powerplatform_environment_git_integration" "example" {
   environment_id    = powerplatform_environment.example.id
-  git_provider      = "AzureDevOps"
   scope             = "Environment"
   organization_name = "contoso-org"
   project_name      = "PowerPlatform Solutions"
@@ -65,7 +64,6 @@ resource "powerplatform_environment_git_integration" "example" {
 ### Required
 
 - `environment_id` (String) Environment ID of the Dataverse environment where the Git repository binding will be created.
-- `git_provider` (String) Git provider for the repository binding. Supported value is `AzureDevOps`.
 - `organization_name` (String) Organization or owner name for the configured Git provider.
 - `project_name` (String) Project name for the Azure DevOps repository binding.
 - `repository_name` (String) Repository name that the environment will bind to.
