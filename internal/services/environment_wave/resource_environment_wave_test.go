@@ -292,3 +292,59 @@ func TestUnitEnvironmentWaveResource_Timeout(t *testing.T) {
 		},
 	})
 }
+
+func TestUnitEnvironmentWaveResource_Read_ParentDeleted(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	var getEnvironmentCallCount = 0
+	// Step 1 (Create + Reads) calls succeed; step 2 refresh returns 404
+	// to simulate the environment being deleted out-of-band.
+	httpmock.RegisterResponder("GET", `=~^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001(\?.+)?$`,
+		func(req *http.Request) (*http.Response, error) {
+			getEnvironmentCallCount++
+			if getEnvironmentCallCount <= 6 {
+				return httpmock.NewStringResponse(http.StatusOK, loadTestResponse(t, "EnvironmentWaveResource_Create", "get_environment_00000000-0000-0000-0000-000000000001.json")), nil
+			}
+			return httpmock.NewStringResponse(http.StatusNotFound, loadTestResponse(t, "EnvironmentWaveResource_Read_ParentDeleted", "get_environment_00000000-0000-0000-0000-000000000001.json")), nil
+		})
+
+	registerOrganizationsMock(t, "EnvironmentWaveResource_Create")
+
+	httpmock.RegisterResponder("POST", `=~^https://api\.admin\.powerplatform\.microsoft\.com/api/environments/00000000-0000-0000-0000-000000000001/features/October2024Update/enable$`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, ""), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://api\.admin\.powerplatform\.microsoft\.com/api/environments/00000000-0000-0000-0000-000000000001/features$`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, loadTestResponse(t, "EnvironmentWaveResource_Create", "get_features_enabled.json")), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the wave feature successfully.
+				Config: `
+				resource "powerplatform_environment_wave" "test" {
+					environment_id = "00000000-0000-0000-0000-000000000001"
+					feature_name  = "October2024Update"
+				}`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment_wave.test", "state", "enabled"),
+				),
+			},
+			{
+				// Step 2: refresh when the parent environment has been deleted out-of-band.
+				// GetFeature fails because GetOrgEnvironmentId → GetEnvironment returns 404;
+				// the provider detects the parent is gone and removes the resource from state.
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
