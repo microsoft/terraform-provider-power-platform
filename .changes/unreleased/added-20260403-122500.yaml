@@ -1,0 +1,5 @@
+kind: added
+body: Add Azure DevOps-backed Dataverse Git integration resources for environment bindings and solution branch bindings, including environment-scope solution enablement behavior and known authentication limitations.
+time: 2026-04-03T12:25:00Z
+custom:
+    Issue: "1104"

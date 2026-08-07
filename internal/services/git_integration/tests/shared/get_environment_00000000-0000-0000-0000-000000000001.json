@@ -1,0 +1,13 @@
+{
+  "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+  "name": "00000000-0000-0000-0000-000000000001",
+  "type": "Microsoft.BusinessAppPlatform/scopes/environments",
+  "location": "unitedstates",
+  "properties": {
+    "displayName": "Git Integration Test Environment",
+    "environmentSku": "Sandbox",
+    "linkedEnvironmentMetadata": {
+      "instanceUrl": "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com"
+    }
+  }
+}
