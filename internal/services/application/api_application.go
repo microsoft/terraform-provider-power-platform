@@ -551,9 +551,12 @@ func (client *client) getEnvironment(ctx context.Context, environmentId string) 
 	apiUrl.RawQuery = values.Encode()
 
 	env := environmentIdDto{}
-	_, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK}, &env)
+	resp, err := client.Api.Execute(ctx, nil, "GET", apiUrl.String(), nil, nil, []int{http.StatusOK, http.StatusNotFound}, &env)
 	if err != nil {
 		return nil, err
+	}
+	if resp != nil && resp.HttpResponse.StatusCode == http.StatusNotFound {
+		return nil, customerrors.WrapIntoProviderError(err, customerrors.ErrorCode(constants.ERROR_OBJECT_NOT_FOUND), fmt.Sprintf("environment %s not found", environmentId))
 	}
 
 	return &env, nil

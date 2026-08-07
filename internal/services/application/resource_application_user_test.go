@@ -694,3 +694,90 @@ func TestUnitEnvironmentApplicationUserResource_CreatePurgesDeletedConflict(t *t
 		},
 	})
 }
+
+func TestUnitApplicationUserResource_Validate_Read_ParentDeleted(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const (
+		environmentID  = "00000000-0000-0000-0000-000000000001"
+		applicationID  = "00000000-0000-0000-0000-000000000002"
+		systemUserID   = "00000000-0000-0000-0000-000000000008"
+		rootBusinessID = "00000000-0000-0000-0000-000000000003"
+	)
+
+	environmentDeleted := false
+	userCreated := false
+
+	// The application client's getEnvironment(). Once the parent environment has been
+	// deleted out-of-band (step 2), it returns 404 so an ErrObjectNotFound surfaces.
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
+		func(req *http.Request) (*http.Response, error) {
+			if environmentDeleted {
+				return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/resource/application_admin/Read_ParentDeleted/get_environment.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/businessunits.*`,
+		func(req *http.Request) (*http.Response, error) {
+			body := fmt.Sprintf(`{"value":[{"businessunitid":"%s","name":"root"}]}`, rootBusinessID)
+			return httpmock.NewStringResponse(http.StatusOK, body), nil
+		})
+
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers$`,
+		func(req *http.Request) (*http.Response, error) {
+			userCreated = true
+			resp := httpmock.NewStringResponse(http.StatusNoContent, "")
+			resp.Header.Set("OData-EntityId", fmt.Sprintf("https://test-env.crm.dynamics.com/api/data/v9.2/systemusers(%s)", systemUserID))
+			return resp, nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			if !userCreated {
+				return httpmock.NewStringResponse(http.StatusOK, `{"value":[]}`), nil
+			}
+
+			body := fmt.Sprintf(`{"systemuserid":"%s","applicationid":"%s","fullname":"Example Application User","_businessunitid_value":"%s","isdisabled":false,"systemuserroles_association":[]}`,
+				systemUserID, applicationID, rootBusinessID)
+			if strings.Contains(req.URL.Path, "/systemusers("+systemUserID+")") || strings.Contains(req.URL.RawPath, "/systemusers%28"+systemUserID+"%29") {
+				return httpmock.NewStringResponse(http.StatusOK, body), nil
+			}
+
+			return httpmock.NewStringResponse(http.StatusOK, fmt.Sprintf(`{"value":[%s]}`, body)), nil
+		})
+
+	httpmock.RegisterResponder("PATCH", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the application user successfully.
+				Config: `
+				resource "powerplatform_application_user" "test" {
+					environment_id = "` + environmentID + `"
+					application_id = "` + applicationID + `"
+				}
+				`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_application_user.test", "id", systemUserID),
+					resource.TestCheckResourceAttr("powerplatform_application_user.test", "system_user_id", systemUserID),
+				),
+			},
+			{
+				// Step 2: refresh when the parent environment has been deleted out-of-band.
+				// getEnvironment returns 404 -> ErrObjectNotFound -> the resource is removed
+				// from state instead of failing the refresh; the follow-up plan recreates it.
+				PreConfig:          func() { environmentDeleted = true },
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}

@@ -215,3 +215,81 @@ func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Import(t *testing.
 		},
 	})
 }
+
+func TestUnitEnvironmentApplicationUserRoleAssignmentResource_Validate_Read_ParentDeleted(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	const (
+		environmentID  = "00000000-0000-0000-0000-000000000001"
+		applicationID  = "00000000-0000-0000-0000-000000000002"
+		principalID    = "00000000-0000-0000-0000-000000000008"
+		rootBusinessID = "00000000-0000-0000-0000-000000000003"
+		roleAdminID    = "7d0690d3-6af6-f011-8407-000d3a7a035d"
+	)
+
+	environmentDeleted := false
+	roleAssigned := false
+
+	// The application client's getEnvironment(). Once the parent environment has been
+	// deleted out-of-band (step 2), it returns 404 so an ErrObjectNotFound surfaces.
+	httpmock.RegisterResponder("GET", `=~^https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001`,
+		func(req *http.Request) (*http.Response, error) {
+			if environmentDeleted {
+				return httpmock.NewStringResponse(http.StatusNotFound, httpmock.File("tests/resource/application_admin/Read_ParentDeleted/get_environment.json").String()), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/application_admin/Create/get_environment.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers.*`,
+		func(req *http.Request) (*http.Response, error) {
+			rolePayload := ""
+			if roleAssigned {
+				rolePayload = fmt.Sprintf(`{"roleid":"%s","name":"MetaForm Global Admin","_businessunitid_value":"%s"}`, roleAdminID, rootBusinessID)
+			}
+			body := fmt.Sprintf(`{"systemuserid":"%s","applicationid":"%s","fullname":"Example Application User","_businessunitid_value":"%s","isdisabled":false,"systemuserroles_association":[%s]}`,
+				principalID, applicationID, rootBusinessID, rolePayload)
+			return httpmock.NewStringResponse(http.StatusOK, body), nil
+		})
+
+	httpmock.RegisterResponder("GET", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/roles.*`,
+		func(req *http.Request) (*http.Response, error) {
+			body := fmt.Sprintf(`{"value":[{"roleid":"%s","name":"MetaForm Global Admin","_businessunitid_value":"%s"}]}`, roleAdminID, rootBusinessID)
+			return httpmock.NewStringResponse(http.StatusOK, body), nil
+		})
+
+	httpmock.RegisterResponder("POST", `=~^https://test-env.crm.dynamics.com/api/data/v9.2/systemusers%2800000000-0000-0000-0000-000000000008%29/systemuserroles_association/\$ref$`,
+		func(req *http.Request) (*http.Response, error) {
+			roleAssigned = true
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				// Step 1: create the role assignment successfully.
+				Config: `
+				resource "powerplatform_role_assignment" "test" {
+					environment_id     = "` + environmentID + `"
+					principal_id       = "` + principalID + `"
+					security_role_name = "MetaForm Global Admin"
+				}
+				`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "id", environmentID+"/"+principalID+"/MetaForm Global Admin"),
+					resource.TestCheckResourceAttr("powerplatform_role_assignment.test", "role_id", roleAdminID),
+				),
+			},
+			{
+				// Step 2: refresh when the parent environment has been deleted out-of-band.
+				// getEnvironment returns 404 -> ErrObjectNotFound -> the resource is removed
+				// from state instead of failing the refresh; the follow-up plan recreates it.
+				PreConfig:          func() { environmentDeleted = true },
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
