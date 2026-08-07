@@ -550,9 +550,9 @@ func (r *Resource) applyManagedSolution(ctx context.Context, plan *ResourceModel
 		return nil
 	}
 
-	stageAndUpgrade := false
+	operation := importOperationInstall
 	if installedErr == nil {
-		adoptExact, upgrade, decisionErr := managedSolutionImportDecision(
+		adoptExact, decidedOperation, decisionErr := managedSolutionImportDecision(
 			installed.Version,
 			normalizedConfiguredVersion,
 			allowExactAdoption,
@@ -571,7 +571,7 @@ func (r *Resource) applyManagedSolution(ctx context.Context, plan *ResourceModel
 			}
 			return result
 		}
-		stageAndUpgrade = upgrade
+		operation = decidedOperation
 	}
 
 	solutionState, err := r.Client.ApplyManagedSolution(
@@ -579,7 +579,7 @@ func (r *Resource) applyManagedSolution(ctx context.Context, plan *ResourceModel
 		plan.EnvironmentId.ValueString(),
 		content,
 		componentParameters,
-		stageAndUpgrade,
+		operation,
 		plan.SkipProductUpdateDependencies.ValueBool())
 	if err != nil {
 		diagnostics.AddError("Unable to apply managed solution", err.Error())
@@ -601,14 +601,14 @@ func (r *Resource) applyManagedSolution(ctx context.Context, plan *ResourceModel
 // create carrying connection/environment bindings, uses ImportSolutionAsync so target wiring is made
 // authoritative without pretending that immutable package content changed. A higher version uses
 // StageAndUpgradeAsync so omitted managed components are removed.
-func managedSolutionImportDecision(installedVersion, configuredVersion string, allowExactAdoption, hasComponentParameters bool) (adoptExact bool, stageAndUpgrade bool, err error) {
+func managedSolutionImportDecision(installedVersion, configuredVersion string, allowExactAdoption, hasComponentParameters bool) (adoptExact bool, operation importOperation, err error) {
 	installed, err := normalizedSolutionVersionParts(installedVersion)
 	if err != nil {
-		return false, false, fmt.Errorf("installed managed solution version %q is invalid: %w", installedVersion, err)
+		return false, importOperationInstall, fmt.Errorf("installed managed solution version %q is invalid: %w", installedVersion, err)
 	}
 	configured, err := normalizedSolutionVersionParts(configuredVersion)
 	if err != nil {
-		return false, false, fmt.Errorf("configured managed solution version %q is invalid: %w", configuredVersion, err)
+		return false, importOperationInstall, fmt.Errorf("configured managed solution version %q is invalid: %w", configuredVersion, err)
 	}
 
 	comparison := 0
@@ -625,14 +625,14 @@ func managedSolutionImportDecision(installedVersion, configuredVersion string, a
 
 	switch {
 	case comparison < 0:
-		return false, false, fmt.Errorf(
+		return false, importOperationInstall, fmt.Errorf(
 			"configured version %q is lower than installed version %q; managed solution deployment must move forward",
 			configuredVersion,
 			installedVersion)
 	case comparison > 0:
-		return false, true, nil
+		return false, importOperationStageAndUpgrade, nil
 	default:
-		return allowExactAdoption && !hasComponentParameters, false, nil
+		return allowExactAdoption && !hasComponentParameters, importOperationInstall, nil
 	}
 }
 

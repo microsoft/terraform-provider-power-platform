@@ -63,7 +63,7 @@ func TestUnitManagedSolutionImportDecisionSeparatesPackageUpgradeFromTargetRebin
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			adopt, upgrade, err := managedSolutionImportDecision(
+			adopt, operation, err := managedSolutionImportDecision(
 				test.installed,
 				test.configured,
 				test.allowAdoption,
@@ -75,7 +75,11 @@ func TestUnitManagedSolutionImportDecisionSeparatesPackageUpgradeFromTargetRebin
 
 			require.NoError(t, err)
 			require.Equal(t, test.wantAdoption, adopt)
-			require.Equal(t, test.wantStageAndUpgrade, upgrade)
+			wantOperation := importOperationInstall
+			if test.wantStageAndUpgrade {
+				wantOperation = importOperationStageAndUpgrade
+			}
+			require.Equal(t, wantOperation, operation)
 		})
 	}
 }
@@ -140,7 +144,7 @@ func TestUnitApplyManagedSolution_UsesStageAndUpgradeForUpdates(t *testing.T) {
 		"00000000-0000-0000-0000-000000000001",
 		[]byte("managed-package"),
 		nil,
-		true,
+		importOperationStageAndUpgrade,
 		true)
 
 	require.NoError(t, err)
@@ -174,7 +178,7 @@ func TestUnitApplyManagedSolution_DoesNotReplayAmbiguousImportStart(t *testing.T
 		"00000000-0000-0000-0000-000000000001",
 		[]byte("managed-package"),
 		nil,
-		false,
+		importOperationInstall,
 		true)
 
 	require.Error(t, err)

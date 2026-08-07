@@ -62,7 +62,16 @@ func (client *Client) DeleteSolution(ctx context.Context, environmentId, solutio
 	return client.SolutionClient.DeleteSolution(ctx, environmentId, solutionId)
 }
 
-func (client *Client) ApplyManagedSolution(ctx context.Context, environmentId string, content []byte, componentParameters []any, stageAndUpgrade bool, skipProductUpdateDependencies bool) (*solution.SolutionDto, error) {
+// importOperation selects the Dataverse import API used to realize the managed solution:
+// initial installation or in-place staged upgrade of an existing managed install.
+type importOperation string
+
+const (
+	importOperationInstall         importOperation = "ImportSolutionAsync"
+	importOperationStageAndUpgrade importOperation = "StageAndUpgradeAsync"
+)
+
+func (client *Client) ApplyManagedSolution(ctx context.Context, environmentId string, content []byte, componentParameters []any, operation importOperation, skipProductUpdateDependencies bool) (*solution.SolutionDto, error) {
 	environmentHost, err := client.SolutionClient.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
 		return nil, err
@@ -115,14 +124,10 @@ func (client *Client) ApplyManagedSolution(ctx context.Context, environmentId st
 		},
 	}
 
-	operation := "ImportSolutionAsync"
-	if stageAndUpgrade {
-		operation = "StageAndUpgradeAsync"
-	}
 	importURL := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   environmentHost,
-		Path:   "/api/data/v9.2/" + operation,
+		Path:   "/api/data/v9.2/" + string(operation),
 	}
 	importResponse := importSolutionResponseDto{}
 	resp, err = client.Api.ExecuteWithoutRetry(ctx, nil, "POST", importURL.String(), nil, importRequestBody, []int{http.StatusOK, http.StatusForbidden, http.StatusNotFound}, &importResponse)
@@ -773,16 +778,4 @@ func cloneSourceModel(source *SourceModel) *SourceModel {
 		Path: source.Path,
 		URL:  source.URL,
 	}
-}
-
-func mapsEqual(left, right map[string]string) bool {
-	if len(left) != len(right) {
-		return false
-	}
-	for key, value := range left {
-		if right[key] != value {
-			return false
-		}
-	}
-	return true
 }
