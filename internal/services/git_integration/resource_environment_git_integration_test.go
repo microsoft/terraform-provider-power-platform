@@ -277,3 +277,104 @@ resource "powerplatform_environment_git_integration" "test" {
 		},
 	})
 }
+
+func TestUnitEnvironmentGitIntegrationResource_Validate_Delete_When_Parent_Environment_Is_Deleted(t *testing.T) {
+	httpmock.Activate()
+	defer httpmock.DeactivateAndReset()
+
+	mocks.ActivateEnvironmentHttpMocks()
+
+	environmentDeleted := false
+
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://api\.bap\.microsoft\.com/providers/Microsoft\.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001\?%24expand=permissions%2Cproperties\.capacity%2Cproperties%2FbillingPolicy(%2Cproperties%2FcopilotPolicies)?&api-version=2023-06-01$`),
+		func(req *http.Request) (*http.Response, error) {
+			if environmentDeleted {
+				return httpmock.NewStringResponse(http.StatusNotFound, `{"error":{"code":"EnvironmentNotFound","message":"environment not found"}}`), nil
+			}
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/shared/get_environment_00000000-0000-0000-0000-000000000001.json").String()), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/gitorganizations",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org"}]}`), nil
+		})
+
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/organizations(\?.*)?$`),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationid":"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa","orgdborgsettings":"<OrgSettings><SourceControlIntegrationScope>SolutionScope</SourceControlIntegrationScope></OrgSettings>"}]}`), nil
+		})
+
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/gitprojects\?%24filter=%28organizationname\+eq\+%27example-org%27%29$`),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org","projectname":"example-project"}]}`), nil
+		})
+
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/gitrepositories\?%24filter=.*$`),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo","defaultbranch":"refs/heads/main"}]}`), nil
+		})
+
+	httpmock.RegisterResponder("POST", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/sourcecontrolconfigurations",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	httpmock.RegisterResponder("GET", "https://00000000-0000-0000-0000-000000000001.crm4.dynamics.com/api/data/v9.0/sourcecontrolconfigurations",
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, `{"value":[{"sourcecontrolconfigurationid":"11111111-1111-1111-1111-111111111111","organizationname":"example-org","projectname":"example-project","repositoryname":"example-repo","gitprovider":0}]}`), nil
+		})
+
+	httpmock.RegisterRegexpResponder("GET", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/sourcecontrolconfigurations%28[0-9a-f-]{36}%29$`),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/environment_git_integration/get_sourcecontrolconfiguration_1.json").String()), nil
+		})
+
+	httpmock.RegisterRegexpResponder("PATCH", regexp.MustCompile(`^https://00000000-0000-0000-0000-000000000001\.crm4\.dynamics\.com/api/data/v9\.0/organizations%28aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa%29$`),
+		func(req *http.Request) (*http.Response, error) {
+			return httpmock.NewStringResponse(http.StatusNoContent, ""), nil
+		})
+
+	resource.Test(t, resource.TestCase{
+		IsUnitTest:               true,
+		ProtoV6ProviderFactories: mocks.TestUnitTestProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+resource "powerplatform_environment_git_integration" "test" {
+  environment_id    = "00000000-0000-0000-0000-000000000001"
+  git_provider      = "AzureDevOps"
+  scope             = "Solution"
+  organization_name = "example-org"
+  project_name      = "example-project"
+  repository_name   = "example-repo"
+}
+`,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_environment_git_integration.test", "repository_name", "example-repo"),
+				),
+			},
+			{
+				// Simulate the parent environment being deleted out-of-band. The refresh plan
+				// removes the resource from the in-memory state (Read tolerates the missing
+				// environment), and the automatic post-test destroy (which runs with refresh
+				// disabled) exercises Delete against the deleted environment, which must
+				// succeed silently instead of erroring.
+				PreConfig: func() {
+					environmentDeleted = true
+				},
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+				Config: `
+resource "powerplatform_environment_git_integration" "test" {
+  environment_id    = "00000000-0000-0000-0000-000000000001"
+  git_provider      = "AzureDevOps"
+  scope             = "Solution"
+  organization_name = "example-org"
+  project_name      = "example-project"
+  repository_name   = "example-repo"
+}
+`,
+			},
+		},
+	})
+}

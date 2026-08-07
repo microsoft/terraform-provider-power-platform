@@ -261,11 +261,17 @@ func (r *SolutionGitBranchResource) Delete(ctx context.Context, req resource.Del
 
 	solutionID, err := normalizeSolutionID(state.EnvironmentID.ValueString(), state.SolutionID.ValueString())
 	if err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			return
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 		return
 	}
 
 	if err := r.GitIntegrationClient.DeleteSolutionGitBranch(ctx, state.EnvironmentID.ValueString(), state.GitIntegrationID.ValueString(), solutionID); err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			return
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 	}
 }

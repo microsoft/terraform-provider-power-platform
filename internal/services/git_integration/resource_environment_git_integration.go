@@ -309,6 +309,9 @@ func (r *EnvironmentGitIntegrationResource) Delete(ctx context.Context, req reso
 	}
 
 	if err := r.GitIntegrationClient.DeleteEnvironmentGitIntegration(ctx, state.EnvironmentID.ValueString(), state.ID.ValueString()); err != nil {
+		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			return
+		}
 		resp.Diagnostics.AddError(fmt.Sprintf("Client error when deleting %s", r.FullTypeName()), err.Error())
 	}
 }
