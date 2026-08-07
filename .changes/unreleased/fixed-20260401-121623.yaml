@@ -1,0 +1,5 @@
+kind: fixed
+body: Fix powerplatform_environment delete failing when lifecycle operation poll returns 404 after environment is already deleted
+time: 2026-04-01T12:16:23.22418013Z
+custom:
+    Issue: "1102"
