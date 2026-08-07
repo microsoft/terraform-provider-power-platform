@@ -206,13 +206,33 @@ func TestUnitEnvironmentGitIntegrationResource_Validate_Create_And_Update(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config: `
+variable "environment_id" {
+  type    = string
+  default = "00000000-0000-0000-0000-000000000001"
+}
+
+variable "organization_name" {
+  type    = string
+  default = "example-org"
+}
+
+variable "project_name" {
+  type    = string
+  default = "example-project"
+}
+
+variable "repository_name" {
+  type    = string
+  default = "example-repo"
+}
+
 resource "powerplatform_environment_git_integration" "test" {
-  environment_id    = "00000000-0000-0000-0000-000000000001"
+  environment_id    = var.environment_id
   git_provider      = "AzureDevOps"
   scope             = "Solution"
-  organization_name = "example-org"
-  project_name      = "example-project"
-  repository_name   = "example-repo"
+  organization_name = var.organization_name
+  project_name      = var.project_name
+  repository_name   = var.repository_name
 }
 `,
 				Check: resource.ComposeTestCheckFunc(
