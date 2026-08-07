@@ -20,6 +20,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
 func NewEnvironmentApplicationAdminResource() resource.Resource {
@@ -34,6 +35,7 @@ func NewEnvironmentApplicationAdminResource() resource.Resource {
 type EnvironmentApplicationAdminResource struct {
 	helpers.TypeInfo
 	ApplicationClient client
+	EnvironmentClient environment.Client
 }
 
 // EnvironmentApplicationAdminResourceModel describes the resource data model.
@@ -110,6 +112,7 @@ func (r *EnvironmentApplicationAdminResource) Configure(ctx context.Context, req
 		return
 	}
 	r.ApplicationClient = newApplicationClient(client.Api)
+	r.EnvironmentClient = environment.NewEnvironmentClient(client.Api)
 }
 
 func (r *EnvironmentApplicationAdminResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -185,6 +188,12 @@ func (r *EnvironmentApplicationAdminResource) Read(ctx context.Context, req reso
 	if err != nil {
 		if errors.Is(err, customerrors.ErrObjectNotFound) {
 			// Environment doesn't exist or we don't have access, remove resource from state
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		// For ambiguous errors, check whether the parent environment still exists.
+		_, envErr := r.EnvironmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
+		if errors.Is(envErr, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}

@@ -1,0 +1,22 @@
+{
+    "id": "/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/00000000-0000-0000-0000-000000000001",
+    "type": "Microsoft.BusinessAppPlatform/scopes/environments",
+    "location": "europe",
+    "name": "00000000-0000-0000-0000-000000000001",
+    "properties": {
+        "tenantId": "123",
+        "displayName": "TestEnvironmentNoDataverse",
+        "provisioningState": "Succeeded",
+        "environmentSku": "Sandbox",
+        "isDefault": false,
+        "runtimeEndpoints": {
+            "microsoft.BusinessAppPlatform": "https://europe.api.bap.microsoft.com",
+            "microsoft.PowerApps": "https://europe.api.powerapps.com",
+            "microsoft.PowerAppsAdvisor": "https://europe.api.advisor.powerapps.com",
+            "microsoft.Flow": "https://europe.api.flow.microsoft.com"
+        },
+        "governanceConfiguration": {
+            "protectionLevel": "Basic"
+        }
+    }
+}

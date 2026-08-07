@@ -25,6 +25,7 @@ import (
 	"github.com/microsoft/terraform-provider-power-platform/internal/api"
 	"github.com/microsoft/terraform-provider-power-platform/internal/customerrors"
 	"github.com/microsoft/terraform-provider-power-platform/internal/helpers"
+	"github.com/microsoft/terraform-provider-power-platform/internal/services/environment"
 )
 
 func NewDataRecordResource() resource.Resource {
@@ -121,6 +122,7 @@ func (r *DataRecordResource) Configure(ctx context.Context, req resource.Configu
 		return
 	}
 	r.DataRecordClient = newDataRecordClient(providerClient.Api)
+	r.EnvironmentClient = environment.NewEnvironmentClient(providerClient.Api)
 }
 
 func (r *DataRecordResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -173,6 +175,12 @@ func (r *DataRecordResource) Read(ctx context.Context, req resource.ReadRequest,
 	newColumns, err := r.DataRecordClient.GetDataRecord(ctx, state.Id.ValueString(), state.EnvironmentId.ValueString(), state.TableLogicalName.ValueString())
 	if err != nil {
 		if errors.Is(err, customerrors.ErrObjectNotFound) {
+			resp.State.RemoveResource(ctx)
+			return
+		}
+		// For ambiguous errors, check whether the parent environment still exists.
+		_, envErr := r.EnvironmentClient.GetEnvironment(ctx, state.EnvironmentId.ValueString())
+		if errors.Is(envErr, customerrors.ErrObjectNotFound) {
 			resp.State.RemoveResource(ctx)
 			return
 		}
