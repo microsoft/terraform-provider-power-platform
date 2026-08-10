@@ -147,12 +147,16 @@ func (d *EnvironmentsDataSource) Schema(ctx context.Context, req datasource.Sche
 							MarkdownDescription: "Allow Bing search in the environment",
 							Computed:            true,
 						},
-						"allow_m365_enabled": schema.BoolAttribute{
-							MarkdownDescription: "Allow M365 in the environment",
+						"allow_microsoft_365_services": schema.BoolAttribute{
+							MarkdownDescription: "Allows users in the environment to use features powered by Microsoft 365 services. When enabled, data is sent to Microsoft 365 services that operate outside of the Azure compliance boundary and are governed by the Microsoft 365 terms. When disabled, features powered by Microsoft 365 services are unavailable. See [Microsoft 365 services in Power Platform](https://go.microsoft.com/fwlink/?linkid=2302907) for more information.",
 							Computed:            true,
 						},
 						"allow_moving_data_across_regions": schema.BoolAttribute{
 							MarkdownDescription: "Allow moving data across regions",
+							Computed:            true,
+						},
+						"allow_flex_routing": schema.BoolAttribute{
+							MarkdownDescription: "Allows large language model (LLM) inferencing to occur outside of the European Union (EU) Data Boundary during periods of peak load, to help maintain a consistent Copilot experience. Data is encrypted in transit and at rest, and data at rest continues to be stored inside the EU Data Boundary, except for limited pseudonymized data that may be stored outside of it for security and operational purposes. See [Flex routing during peak load periods](https://go.microsoft.com/fwlink/?linkid=2356920) for more information.",
 							Computed:            true,
 						},
 						"dataverse": schema.SingleNestedAttribute{
