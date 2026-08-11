@@ -137,7 +137,7 @@ resource "powerplatform_environment_variable" "text" {
 }
 `,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "id", "00000000-0000-0000-0000-000000000001_contoso_ApiBaseUrl"),
+					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "id", "00000000-0000-0000-0000-000000000001/contoso_ApiBaseUrl"),
 					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "schema_name", "contoso_ApiBaseUrl"),
 					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "display_name", "API Base URL"),
 					resource.TestCheckResourceAttr("powerplatform_environment_variable.text", "description", "Base URL for downstream API"),

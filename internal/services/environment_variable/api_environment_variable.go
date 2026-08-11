@@ -265,13 +265,13 @@ func (client *client) getCurrentValueByID(ctx context.Context, environmentId, va
 }
 
 func environmentVariableResourceID(environmentID, schemaName string) string {
-	return fmt.Sprintf("%s_%s", environmentID, schemaName)
+	return fmt.Sprintf("%s/%s", environmentID, schemaName)
 }
 
 func parseEnvironmentVariableResourceID(id string) (environmentID string, schemaName string, err error) {
-	parts := strings.SplitN(id, "_", 2)
+	parts := strings.SplitN(id, "/", 2)
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("invalid import id %q, expected {environment_id}_{schema_name}", id)
+		return "", "", fmt.Errorf("invalid import id %q, expected {environment_id}/{schema_name}", id)
 	}
 
 	return parts[0], parts[1], nil

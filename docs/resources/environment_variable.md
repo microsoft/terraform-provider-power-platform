@@ -54,7 +54,7 @@ resource "powerplatform_environment_variable" "api_base_url" {
 - `display_name` (String) Display name of the environment variable definition.
 - `environment_variable_definition_id` (String) Dataverse id of the environment variable definition.
 - `environment_variable_value_id` (String) Dataverse id of the current environment variable value record.
-- `id` (String) Composite resource id in the format `{environment_id}_{schema_name}`.
+- `id` (String) Composite resource id in the format `{environment_id}/{schema_name}`.
 - `secret_store` (String) Secret store configured on the environment variable definition.
 - `type` (String) Type of the environment variable definition.
 - `value_schema` (String) Value schema declared on the environment variable definition, when present.
@@ -77,6 +77,6 @@ The [`terraform import` command](https://developer.hashicorp.com/terraform/cli/c
 
 ```shell
 # Environment variable resource can be imported using:
-# {environment_id}_{schema_name}
-terraform import powerplatform_environment_variable.api_base_url 00000000-0000-0000-0000-000000000000_contoso_ApiBaseUrl
+# {environment_id}/{schema_name}
+terraform import powerplatform_environment_variable.api_base_url 00000000-0000-0000-0000-000000000000/contoso_ApiBaseUrl
 ```
