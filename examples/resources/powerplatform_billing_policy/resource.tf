@@ -4,8 +4,7 @@ terraform {
       source = "microsoft/power-platform"
     }
     azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "5.0.1"
+      source = "hashicorp/azurerm"
     }
     azurecaf = {
       source = "aztfmod/azurecaf"
