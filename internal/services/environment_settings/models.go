@@ -83,10 +83,6 @@ type EmailSettingsSourceModel struct {
 	MaxUploadFileSize types.Int64 `tfsdk:"max_upload_file_size_in_bytes"`
 }
 
-type PrivacyAndSecuritySourceModel struct {
-	BlockedAttachmentExtensions types.Set `tfsdk:"blocked_attachment_extensions"`
-}
-
 type ProductSourceModel struct {
 	BehaviorSettings types.Object `tfsdk:"behavior_settings"`
 	Features         types.Object `tfsdk:"features"`
@@ -222,24 +218,27 @@ func convertFromEnvironmentEmailSettings(ctx context.Context, environmentSetting
 	return nil
 }
 
-func convertFromEnvironmentPrivacyAndSecuritySettings(ctx context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentOrgSettingsDto) error {
+func convertFromEnvironmentPrivacyAndSecuritySettings(_ context.Context, environmentSettings EnvironmentSettingsResourceModel, environmentSettingsDto *environmentOrgSettingsDto) error {
 	privacyAndSecurity := environmentSettings.PrivacyAndSecurity
 	if privacyAndSecurity.IsNull() || privacyAndSecurity.IsUnknown() {
 		return nil
 	}
 
-	var privacyAndSecuritySourceModel PrivacyAndSecuritySourceModel
-	if diags := privacyAndSecurity.As(ctx, &privacyAndSecuritySourceModel, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    true,
-		UnhandledUnknownAsEmpty: true,
-	}); diags != nil {
-		return fmt.Errorf("failed to convert privacy and security settings: %v", diags)
+	blockedAttachmentExtensions := privacyAndSecurity.Attributes()["blocked_attachment_extensions"]
+	if blockedAttachmentExtensions == nil || !helpers.IsKnown(blockedAttachmentExtensions) {
+		// The attribute was omitted from the configuration (or is not yet known), so it must be
+		// left out of the PATCH entirely to avoid clearing the server-side setting.
+		return nil
 	}
 
-	if helpers.IsKnown(privacyAndSecuritySourceModel.BlockedAttachmentExtensions) {
-		value := strings.Join(helpers.SetToStringSlice(privacyAndSecuritySourceModel.BlockedAttachmentExtensions), ";")
-		environmentSettingsDto.BlockedAttachments = &value
+	setValue, ok := blockedAttachmentExtensions.(basetypes.SetValue)
+	if !ok {
+		return fmt.Errorf("failed to convert blocked attachment extensions to SetValue, got %T: %+v", blockedAttachmentExtensions, blockedAttachmentExtensions)
 	}
+
+	// An explicitly empty set intentionally clears the setting by sending an empty string.
+	value := strings.Join(helpers.SetToStringSlice(setValue), ";")
+	environmentSettingsDto.BlockedAttachments = &value
 
 	return nil
 }
@@ -465,12 +464,7 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		"max_upload_file_size_in_bytes": types.Int64Type,
 	}
 
-	blockedAttachmentExtensions := []attr.Value{}
-	if environmentOrgSettingsDto.BlockedAttachments != nil && *environmentOrgSettingsDto.BlockedAttachments != "" {
-		for _, extension := range strings.Split(*environmentOrgSettingsDto.BlockedAttachments, ";") {
-			blockedAttachmentExtensions = append(blockedAttachmentExtensions, types.StringValue(extension))
-		}
-	}
+	blockedAttachmentExtensions := convertBlockedAttachmentsToSetValues(environmentOrgSettingsDto.BlockedAttachments)
 
 	attrValuesEmailProperties := map[string]attr.Value{
 		"email_settings": types.ObjectValueMust(attrEmailSettingsObject, map[string]attr.Value{
@@ -612,6 +606,24 @@ func convertFromEnvironmentSettingsDto[T EnvironmentSettingsResourceModel | Envi
 		return environmentSettings, fmt.Errorf("unexpected type %T", environmentSettings)
 	}
 	return environmentSettings, nil
+}
+
+// convertBlockedAttachmentsToSetValues splits the API's semicolon-separated blocked attachments
+// string into set element values, trimming whitespace around tokens and skipping empty tokens
+// (e.g. from trailing semicolons or "exe; dll;").
+func convertBlockedAttachmentsToSetValues(blockedAttachments *string) []attr.Value {
+	values := []attr.Value{}
+	if blockedAttachments == nil {
+		return values
+	}
+	for _, extension := range strings.Split(*blockedAttachments, ";") {
+		extension = strings.TrimSpace(extension)
+		if extension == "" {
+			continue
+		}
+		values = append(values, types.StringValue(extension))
+	}
+	return values
 }
 
 func convertStringToEnum(value string, mapping map[string]string) types.String {

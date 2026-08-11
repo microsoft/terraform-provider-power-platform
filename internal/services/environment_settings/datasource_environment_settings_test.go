@@ -42,8 +42,8 @@ func TestAccTestEnvironmentSettingsDataSource_Validate_Read(t *testing.T) {
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.is_user_access_audit_enabled", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "audit_and_logs.audit_settings.log_retention_period_in_days", "-1"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "email.email_settings.max_upload_file_size_in_bytes", "5242880"),
-					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.#", "96"),
-					resource.TestCheckTypeSetElemAttr("data.powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.*", "js"),
+					// The platform manages the default list of blocked extensions, so only assert that the attribute is populated.
+					resource.TestCheckResourceAttrSet("data.powerplatform_environment_settings.settings", "privacy_and_security.blocked_attachment_extensions.#"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "audit_and_logs.plugin_trace_log_setting", "Off"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.behavior_settings.show_dashboard_cards_in_expanded_state", "false"),
 					resource.TestCheckResourceAttr("data.powerplatform_environment_settings.settings", "product.features.power_apps_component_framework_for_canvas_apps", "false"),
