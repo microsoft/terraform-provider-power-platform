@@ -53,7 +53,8 @@ func (r *ApplicationUserResource) Schema(ctx context.Context, req resource.Schem
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Manages the unique active Dataverse application user for a Microsoft Entra service principal within an environment using the Dataverse `systemusers` API. " +
 			"Create adopts an existing active user with the same environment and application id, or creates a non-interactive application user (`accessmode = 4`) when absent. " +
-			"Adoption fails on multiple active matches or an explicitly configured business-unit mismatch, and reconciles the requested disabled state. Dataverse security-role assignment is managed separately.",
+			"Adoption fails on multiple active matches or an explicitly configured business-unit mismatch, and reconciles the requested disabled state. Dataverse security-role assignment is managed separately. " +
+			"Adoption takes ownership: destroying this resource deactivates and permanently deletes the application user even if it was adopted rather than created by Terraform. To abandon an application user without deleting it, remove the resource from state (for example with `terraform state rm`) instead of destroying it.",
 		Attributes: map[string]schema.Attribute{
 			"timeouts": timeouts.Attributes(ctx, timeouts.Opts{
 				Create: true,

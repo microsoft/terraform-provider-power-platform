@@ -108,7 +108,6 @@ type applicationSecurityRoleDto struct {
 	BusinessUnitId string `json:"_businessunitid_value"`
 }
 
-
 type applicationBusinessUnitArrayDto struct {
 	Value []applicationBusinessUnitDto `json:"value"`
 }

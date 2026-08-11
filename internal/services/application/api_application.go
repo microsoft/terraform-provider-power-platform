@@ -220,7 +220,7 @@ func (client *client) CreateScopedApplicationUser(ctx context.Context, environme
 
 	requestBody := map[string]any{
 		"applicationid":             applicationId,
-		"accessmode":                "4",
+		"accessmode":                4,
 		"isdisabled":                false,
 		"businessunitid@odata.bind": fmt.Sprintf("/businessunits(%s)", businessUnitId),
 	}
@@ -354,12 +354,6 @@ func (client *client) GetPrincipalBySystemUserId(ctx context.Context, environmen
 	return &response, nil
 }
 
-
-
-
-
-
-
 func (client *client) DeactivateSystemUser(ctx context.Context, environmentId string, systemUserId string) error {
 	// Get the application user to find the application ID
 	appUser, err := client.getApplicationUserBySystemId(ctx, environmentId, systemUserId)
@@ -401,7 +395,7 @@ func (client *client) deleteSystemUser(ctx context.Context, environmentId string
 	apiUrl := &url.URL{
 		Scheme: constants.HTTPS,
 		Host:   environmentHost,
-		Path:   fmt.Sprintf("/api/data/v9.2/systemusers(%s)", systemUserId),
+		Path:   fmt.Sprintf("/api/data/%s/systemusers(%s)", constants.DATAVERSE_API_VERSION, systemUserId),
 	}
 
 	// Make the request
