@@ -71,7 +71,7 @@ func TestUnitPowerPlatformProviderHasChildDataSources_Basic(t *testing.T) {
 		connection.NewConnectionsDataSource(),
 		connection.NewConnectionSharesDataSource(),
 		data_record.NewDataRecordDataSource(),
-		publisher.NewPublisherDataSource(),
+		publisher.NewPublishersDataSource(),
 		rest.NewDataverseWebApiDatasource(),
 		capacity.NewTenantCapcityDataSource(),
 		tenant.NewTenantDataSource(),

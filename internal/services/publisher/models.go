@@ -59,8 +59,13 @@ type ResourceModel struct {
 	Address                        []AddressModel `tfsdk:"address"`
 }
 
+type ListDataSourceModel struct {
+	Timeouts      timeouts.Value    `tfsdk:"timeouts"`
+	EnvironmentId types.String      `tfsdk:"environment_id"`
+	Publishers    []DataSourceModel `tfsdk:"publishers"`
+}
+
 type DataSourceModel struct {
-	Timeouts                       timeouts.Value `tfsdk:"timeouts"`
 	Id                             types.String   `tfsdk:"id"`
 	EnvironmentId                  types.String   `tfsdk:"environment_id"`
 	UniqueName                     types.String   `tfsdk:"uniquename"`
