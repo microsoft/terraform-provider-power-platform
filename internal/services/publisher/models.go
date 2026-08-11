@@ -19,7 +19,7 @@ type DataSource struct {
 	PublisherClient client
 }
 
-type PublisherAddressModel struct {
+type AddressModel struct {
 	Slot               types.Int64   `tfsdk:"slot"`
 	AddressId          types.String  `tfsdk:"address_id"`
 	AddressTypeCode    types.Int64   `tfsdk:"address_type_code"`
@@ -45,31 +45,36 @@ type PublisherAddressModel struct {
 }
 
 type ResourceModel struct {
-	Timeouts                       timeouts.Value          `tfsdk:"timeouts"`
-	Id                             types.String            `tfsdk:"id"`
-	EnvironmentId                  types.String            `tfsdk:"environment_id"`
-	UniqueName                     types.String            `tfsdk:"uniquename"`
-	FriendlyName                   types.String            `tfsdk:"friendly_name"`
-	CustomizationPrefix            types.String            `tfsdk:"customization_prefix"`
-	CustomizationOptionValuePrefix types.Int64             `tfsdk:"customization_option_value_prefix"`
-	Description                    types.String            `tfsdk:"description"`
-	EmailAddress                   types.String            `tfsdk:"email_address"`
-	SupportingWebsiteURL           types.String            `tfsdk:"supporting_website_url"`
-	IsReadOnly                     types.Bool              `tfsdk:"is_read_only"`
-	Address                        []PublisherAddressModel `tfsdk:"address"`
+	Timeouts                       timeouts.Value `tfsdk:"timeouts"`
+	Id                             types.String   `tfsdk:"id"`
+	EnvironmentId                  types.String   `tfsdk:"environment_id"`
+	UniqueName                     types.String   `tfsdk:"uniquename"`
+	FriendlyName                   types.String   `tfsdk:"friendly_name"`
+	CustomizationPrefix            types.String   `tfsdk:"customization_prefix"`
+	CustomizationOptionValuePrefix types.Int64    `tfsdk:"customization_option_value_prefix"`
+	Description                    types.String   `tfsdk:"description"`
+	EmailAddress                   types.String   `tfsdk:"email_address"`
+	SupportingWebsiteURL           types.String   `tfsdk:"supporting_website_url"`
+	IsReadOnly                     types.Bool     `tfsdk:"is_read_only"`
+	Address                        []AddressModel `tfsdk:"address"`
+}
+
+type ListDataSourceModel struct {
+	Timeouts      timeouts.Value    `tfsdk:"timeouts"`
+	EnvironmentId types.String      `tfsdk:"environment_id"`
+	Publishers    []DataSourceModel `tfsdk:"publishers"`
 }
 
 type DataSourceModel struct {
-	Timeouts                       timeouts.Value          `tfsdk:"timeouts"`
-	Id                             types.String            `tfsdk:"id"`
-	EnvironmentId                  types.String            `tfsdk:"environment_id"`
-	UniqueName                     types.String            `tfsdk:"uniquename"`
-	FriendlyName                   types.String            `tfsdk:"friendly_name"`
-	CustomizationPrefix            types.String            `tfsdk:"customization_prefix"`
-	CustomizationOptionValuePrefix types.Int64             `tfsdk:"customization_option_value_prefix"`
-	Description                    types.String            `tfsdk:"description"`
-	EmailAddress                   types.String            `tfsdk:"email_address"`
-	SupportingWebsiteURL           types.String            `tfsdk:"supporting_website_url"`
-	IsReadOnly                     types.Bool              `tfsdk:"is_read_only"`
-	Address                        []PublisherAddressModel `tfsdk:"address"`
+	Id                             types.String   `tfsdk:"id"`
+	EnvironmentId                  types.String   `tfsdk:"environment_id"`
+	UniqueName                     types.String   `tfsdk:"uniquename"`
+	FriendlyName                   types.String   `tfsdk:"friendly_name"`
+	CustomizationPrefix            types.String   `tfsdk:"customization_prefix"`
+	CustomizationOptionValuePrefix types.Int64    `tfsdk:"customization_option_value_prefix"`
+	Description                    types.String   `tfsdk:"description"`
+	EmailAddress                   types.String   `tfsdk:"email_address"`
+	SupportingWebsiteURL           types.String   `tfsdk:"supporting_website_url"`
+	IsReadOnly                     types.Bool     `tfsdk:"is_read_only"`
+	Address                        []AddressModel `tfsdk:"address"`
 }

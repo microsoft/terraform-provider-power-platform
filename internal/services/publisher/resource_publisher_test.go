@@ -80,34 +80,34 @@ func TestUnitPublisherResource_Validate_CRUD(t *testing.T) {
 			{
 				ResourceName: "powerplatform_publisher.example",
 				Config: `
-resource "powerplatform_publisher" "example" {
-  environment_id                      = "` + testEnvironmentID + `"
-  uniquename                          = "contoso"
-  friendly_name                       = "Contoso Publisher"
-  customization_prefix                = "cts"
-  description                         = "Initial publisher"
-  email_address                       = "publisher@contoso.example"
-  supporting_website_url              = "https://contoso.example"
+				resource "powerplatform_publisher" "example" {
+					environment_id                      = "` + testEnvironmentID + `"
+					uniquename                          = "contoso"
+					friendly_name                       = "Contoso Publisher"
+					customization_prefix                = "cts"
+					description                         = "Initial publisher"
+					email_address                       = "publisher@contoso.example"
+					supporting_website_url              = "https://contoso.example"
 
-  address = [
-    {
-      slot         = 1
-      line1        = "1 Collins Street"
-      city         = "Melbourne"
-      country      = "Australia"
-      postal_code  = "3000"
-      telephone1   = "+61-3-5555-0101"
-    },
-    {
-      slot         = 2
-      line1        = "100 Queen Street"
-      city         = "Auckland"
-      country      = "New Zealand"
-      postal_code  = "1010"
-      telephone1   = "+64-9-555-0102"
-    }
-  ]
-}`,
+				address = [
+					{
+						slot         = 1
+						line1        = "1 Collins Street"
+						city         = "Melbourne"
+						country      = "Australia"
+						postal_code  = "3000"
+						telephone1   = "+61-3-5555-0101"
+					},
+					{
+						slot         = 2
+						line1        = "100 Queen Street"
+						city         = "Auckland"
+						country      = "New Zealand"
+						postal_code  = "1010"
+						telephone1   = "+64-9-555-0102"
+					}
+				]
+				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_publisher.example", "id", testPublisherID),
 					resource.TestCheckResourceAttr("powerplatform_publisher.example", "friendly_name", "Contoso Publisher"),
@@ -120,27 +120,27 @@ resource "powerplatform_publisher" "example" {
 			{
 				ResourceName: "powerplatform_publisher.example",
 				Config: `
-resource "powerplatform_publisher" "example" {
-  environment_id                      = "` + testEnvironmentID + `"
-  uniquename                          = "contoso"
-  friendly_name                       = "Updated Contoso Publisher"
-  customization_prefix                = "cts"
-  customization_option_value_prefix   = 72710
-  description                         = "Updated publisher"
-  email_address                       = "updated@contoso.example"
-  supporting_website_url              = "https://support.contoso.example"
+				resource "powerplatform_publisher" "example" {
+					environment_id                      = "` + testEnvironmentID + `"
+					uniquename                          = "contoso"
+					friendly_name                       = "Updated Contoso Publisher"
+					customization_prefix                = "cts"
+					customization_option_value_prefix   = 72710
+					description                         = "Updated publisher"
+					email_address                       = "updated@contoso.example"
+					supporting_website_url              = "https://support.contoso.example"
 
-  address = [
-    {
-      slot         = 1
-      line1        = "200 Collins Street"
-      city         = "Sydney"
-      country      = "Australia"
-      postal_code  = "2000"
-      telephone1   = "+61-2-5555-0103"
-    }
-  ]
-}`,
+				address = [
+					{
+						slot         = 1
+						line1        = "200 Collins Street"
+						city         = "Sydney"
+						country      = "Australia"
+						postal_code  = "2000"
+						telephone1   = "+61-2-5555-0103"
+					}
+				]
+				}`,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("powerplatform_publisher.example", "friendly_name", "Updated Contoso Publisher"),
 					resource.TestCheckResourceAttr("powerplatform_publisher.example", "customization_option_value_prefix", "72710"),
@@ -201,61 +201,16 @@ func TestAccPublisherResource_Validate_Create(t *testing.T) {
 func registerPublisherEnvironmentMock() {
 	httpmock.RegisterResponder("GET", "https://api.bap.microsoft.com/providers/Microsoft.BusinessAppPlatform/scopes/admin/environments/"+testEnvironmentID+"?%24expand=permissions%2Cproperties.capacity%2Cproperties%2FbillingPolicy%2Cproperties%2FcopilotPolicies&api-version=2023-06-01",
 		func(req *http.Request) (*http.Response, error) {
-			return httpmock.NewStringResponse(http.StatusOK, `{
-  "name": "`+testEnvironmentID+`",
-  "properties": {
-    "linkedEnvironmentMetadata": {
-      "instanceUrl": "https://`+testPublisherHost+`/"
-    }
-  }
-}`), nil
+			return httpmock.NewStringResponse(http.StatusOK, httpmock.File("tests/resource/PublisherResource_Validate_CRUD/get_environment.json").String()), nil
 		})
 }
 
 func publisherCreateResponse() string {
-	return `{
-  "publisherid": "` + testPublisherID + `",
-  "friendlyname": "Contoso Publisher",
-  "uniquename": "contoso",
-  "customizationprefix": "cts",
-  "customizationoptionvalueprefix": 77074,
-  "description": "Initial publisher",
-  "emailaddress": "publisher@contoso.example",
-  "supportingwebsiteurl": "https://contoso.example",
-  "isreadonly": false,
-  "address1_addressid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-  "address1_city": "Melbourne",
-  "address1_country": "Australia",
-  "address1_line1": "1 Collins Street",
-  "address1_postalcode": "3000",
-  "address1_telephone1": "+61-3-5555-0101",
-  "address2_addressid": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-  "address2_city": "Auckland",
-  "address2_country": "New Zealand",
-  "address2_line1": "100 Queen Street",
-  "address2_postalcode": "1010",
-  "address2_telephone1": "+64-9-555-0102"
-}`
+	return httpmock.File("tests/resource/PublisherResource_Validate_CRUD/get_publisher_created.json").String()
 }
 
 func publisherUpdateResponse() string {
-	return `{
-  "publisherid": "` + testPublisherID + `",
-  "friendlyname": "Updated Contoso Publisher",
-  "uniquename": "contoso",
-  "customizationprefix": "cts",
-  "customizationoptionvalueprefix": 72710,
-  "description": "Updated publisher",
-  "emailaddress": "updated@contoso.example",
-  "supportingwebsiteurl": "https://support.contoso.example",
-  "isreadonly": false,
-  "address1_addressid": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-  "address1_city": "Sydney",
-  "address1_country": "Australia",
-  "address1_line1": "200 Collins Street",
-  "address1_postalcode": "2000",
-  "address1_telephone1": "+61-2-5555-0103"
-}`
+	return httpmock.File("tests/resource/PublisherResource_Validate_CRUD/get_publisher_updated.json").String()
 }
 
 func encodedPublisherURL() string {

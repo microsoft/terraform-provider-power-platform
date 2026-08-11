@@ -77,6 +77,26 @@ func (client *client) GetPublisherById(ctx context.Context, environmentId, publi
 	return &publisher, nil
 }
 
+func (client *client) GetPublishers(ctx context.Context, environmentId string) ([]publisherDto, error) {
+	environmentHost, err := client.environmentClient.GetEnvironmentHostById(ctx, environmentId)
+	if err != nil {
+		return nil, err
+	}
+
+	apiUrl := helpers.BuildDataverseApiUrl(environmentHost, "/api/data/v9.2/publishers", nil)
+
+	publishers := publishersDto{}
+	resp, err := client.Api.Execute(ctx, nil, http.MethodGet, apiUrl, nil, nil, []int{http.StatusOK, http.StatusForbidden}, &publishers)
+	if err != nil {
+		return nil, err
+	}
+	if err := client.Api.HandleForbiddenResponse(resp); err != nil {
+		return nil, err
+	}
+
+	return publishers.Value, nil
+}
+
 func (client *client) GetPublisherByUniqueName(ctx context.Context, environmentId, uniqueName string) (*publisherDto, error) {
 	environmentHost, err := client.environmentClient.GetEnvironmentHostById(ctx, environmentId)
 	if err != nil {
