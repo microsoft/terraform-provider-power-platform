@@ -75,6 +75,100 @@ func TestAccConnectionsResource_Validate_Create(t *testing.T) {
 	})
 }
 
+func TestAccConnectionsResource_Validate_Create_Without_Config_Parameters(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"time": {
+				Source: "hashicorp/time",
+			},
+		},
+		Steps: []resource.TestStep{
+			{
+				Config: `
+					resource "powerplatform_environment" "env" {
+						display_name                              = "` + mocks.TestName() + `"
+						location                                  = "unitedstates"
+						environment_type                          = "Sandbox"
+						dataverse = {
+							language_code                             = "1033"
+							currency_code                             = "USD"
+							security_group_id 						  = "00000000-0000-0000-0000-000000000000"
+						}
+					}
+
+					resource "time_sleep" "wait_for_dataverse" {
+						create_duration = "120s"
+
+						depends_on = [powerplatform_environment.env]
+					}
+
+					resource "powerplatform_connection" "azure_openai_connection" {
+						environment_id = powerplatform_environment.env.id
+						name           = "shared_azureopenai"
+						display_name   = "OpenAI Connection ` + mocks.TestName() + `"
+
+						depends_on = [time_sleep.wait_for_dataverse]
+					}
+					`,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("powerplatform_connection.azure_openai_connection", "name", "shared_azureopenai"),
+					resource.TestCheckResourceAttr("powerplatform_connection.azure_openai_connection", "display_name", "OpenAI Connection "+mocks.TestName()),
+					// Without real credentials the connector genuinely can't connect, so status is "Error".
+					resource.TestCheckResourceAttr("powerplatform_connection.azure_openai_connection", "status.#", "1"),
+					resource.TestCheckResourceAttr("powerplatform_connection.azure_openai_connection", "status.0", "Error"),
+				),
+			},
+			{
+				// Real API omits connectionParameters/connectionParametersSet when they were never
+				// configured; a refresh must not leave the attributes unknown or produce drift.
+				RefreshState: true,
+			},
+		},
+	})
+}
+
+func TestAccConnectionsResource_Validate_Create_Invalid_Connection_Parameters(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+					resource "powerplatform_connection" "azure_openai_connection" {
+						environment_id         = "00000000-0000-0000-0000-000000000000"
+						name                   = "shared_azureopenai"
+						display_name           = "OpenAI Connection ` + mocks.TestName() + `"
+						connection_parameters  = "{"
+					}
+					`,
+				ExpectError: regexp.MustCompile("Failed to convert connection parameters"),
+			},
+		},
+	})
+}
+
+func TestAccConnectionsResource_Validate_Create_Invalid_Connection_Parameters_Set(t *testing.T) {
+	resource.Test(t, resource.TestCase{
+
+		ProtoV6ProviderFactories: mocks.TestAccProtoV6ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: `
+					resource "powerplatform_connection" "azure_openai_connection" {
+						environment_id             = "00000000-0000-0000-0000-000000000000"
+						name                       = "shared_azureopenai"
+						display_name               = "OpenAI Connection ` + mocks.TestName() + `"
+						connection_parameters_set  = "{"
+					}
+					`,
+				ExpectError: regexp.MustCompile("Failed to convert connection parameters set"),
+			},
+		},
+	})
+}
+
 func TestUnitConnectionsResource_Validate_Create(t *testing.T) {
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()

@@ -191,11 +191,7 @@ func (r *Resource) Create(ctx context.Context, req resource.CreateRequest, resp 
 
 	conectionState := ConvertFromConnectionDto(*connection)
 	plan.Id = types.String(conectionState.Id)
-	statuses := []attr.Value{}
-	for _, status := range conectionState.Status {
-		statuses = append(statuses, types.StringValue(status))
-	}
-	plan.Status = types.SetValueMust(types.StringType, statuses)
+	plan.Status = types.SetValueMust(types.StringType, uniqueStatusValues(conectionState.Status))
 	plan.DisplayName = types.String(conectionState.DisplayName)
 	plan.Name = types.String(conectionState.Name)
 	plan.ConnectionParameters = normalizeConnectionParameter(plan.ConnectionParameters, conectionState.ConnectionParameters)
@@ -233,11 +229,7 @@ func (r *Resource) Read(ctx context.Context, req resource.ReadRequest, resp *res
 	conectionState := ConvertFromConnectionDto(*connection)
 	state.Id = types.String(conectionState.Id)
 	state.DisplayName = types.String(conectionState.DisplayName)
-	statuses := []attr.Value{}
-	for _, status := range conectionState.Status {
-		statuses = append(statuses, types.StringValue(status))
-	}
-	state.Status = types.SetValueMust(types.StringType, statuses)
+	state.Status = types.SetValueMust(types.StringType, uniqueStatusValues(conectionState.Status))
 	state.Name = types.String(conectionState.Name)
 	state.ConnectionParameters = normalizeConnectionParameter(state.ConnectionParameters, conectionState.ConnectionParameters)
 	state.ConnectionParametersSet = normalizeConnectionParameter(state.ConnectionParametersSet, conectionState.ConnectionParametersSet)
@@ -287,11 +279,7 @@ func (r *Resource) Update(ctx context.Context, req resource.UpdateRequest, resp 
 	plan.Id = types.String(conectionState.Id)
 	plan.DisplayName = types.String(conectionState.DisplayName)
 	plan.Name = types.String(conectionState.Name)
-	statuses := []attr.Value{}
-	for _, status := range conectionState.Status {
-		statuses = append(statuses, types.StringValue(status))
-	}
-	plan.Status = types.SetValueMust(types.StringType, statuses)
+	plan.Status = types.SetValueMust(types.StringType, uniqueStatusValues(conectionState.Status))
 	plan.ConnectionParameters = normalizeConnectionParameter(plan.ConnectionParameters, conectionState.ConnectionParameters)
 	plan.ConnectionParametersSet = normalizeConnectionParameter(plan.ConnectionParametersSet, conectionState.ConnectionParametersSet)
 
@@ -332,4 +320,18 @@ func normalizeConnectionParameter(existing, actual types.String) types.String {
 	}
 
 	return types.StringNull()
+}
+
+// uniqueStatusValues dedupes API-reported statuses since Terraform sets cannot contain duplicate elements.
+func uniqueStatusValues(statuses []string) []attr.Value {
+	seen := make(map[string]struct{}, len(statuses))
+	values := []attr.Value{}
+	for _, status := range statuses {
+		if _, ok := seen[status]; ok {
+			continue
+		}
+		seen[status] = struct{}{}
+		values = append(values, types.StringValue(status))
+	}
+	return values
 }
